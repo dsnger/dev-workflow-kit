@@ -1,7 +1,14 @@
 #!/bin/sh
 # Codex review gate reminders (CLAUDE.md §5). Non-blocking: ALWAYS exits 0.
-# Reads a Claude Code hook payload (JSON) on stdin, maintains a Gate-B state
-# file, and emits hookSpecificOutput.additionalContext reminders.
+# Reads a Claude Code hook payload (JSON) on stdin, maintains Gate-A/Gate-B state,
+# and emits reminders.
+#
+# Gate B is verified by CONTENT, not by events: the state file holds a hash of the
+# working tree taken at review time, and the commit check recomputes it. An
+# event-based scheme (invalidate on Edit/Write) is blind to a file changed through
+# Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which would leave a
+# stale "reviewed" marker standing. A false ✓ is the dangerous direction, so the
+# hook compares what is actually on disk.
 set -u
 
 payload=$(cat)
@@ -30,21 +37,62 @@ event=$(field hook_event_name)
 tool=$(field tool_name)
 
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
-state_file="$repo_root/.context/codex-gate.gateB"
-off_file="$repo_root/.context/codex-gate.off"
+state_dir="$repo_root/.context"
+state_file="$state_dir/codex-gate.gateB"          # holds the reviewed tree-hash
+off_file="$state_dir/codex-gate.off"
+floor_file="$state_dir/codex-gate.floor"          # optional per-project floor override
+count_file="$state_dir/codex-gate.passCount"      # Gate B (review) passes since last commit
+fresh_file="$state_dir/codex-gate.freshCount"     # Gate B passes covering the CURRENT tree
+countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since last plan execution
+
 # §5 HARD FLOOR: minimum Codex passes per gate before exiting it. The hook can't
 # read Codex's findings (so it can't auto-detect the "zero-findings" early exit
 # — that judgment stays with the model per §5), but it CAN count passes and flag
-# when the floor isn't met. This is what backs Gate A, which has no other
-# mechanism (unlike Gate B, where any edit invalidates the review).
+# when the floor isn't met. This is what backs Gate A, which has no content check
+# behind it (unlike Gate B, where the tree-hash proves what was reviewed).
+# Per-project override: .context/codex-gate.floor holding a positive integer.
 floor=3
-count_file="$repo_root/.context/codex-gate.passCount"    # Gate B (review) passes since last commit
-countA_file="$repo_root/.context/codex-gate.passCountA"  # Gate A (exec) passes since last plan execution
+if [ -f "$floor_file" ]; then
+  f=$(cat "$floor_file" 2>/dev/null | tr -d '[:space:]')
+  # Positive integer only; anything else (0, -1, "three", empty) keeps the default,
+  # so a typo'd override can't silently disable the gate.
+  case "$f" in
+    '' | *[!0-9]*) ;;
+    *) [ "$f" -gt 0 ] 2>/dev/null && floor="$f" ;;
+  esac
+fi
 
 read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0; fi; }
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
+# Hash of everything that could end up in a commit: the diff of tracked files
+# against HEAD (staged + unstaged) plus the untracked file list. `.context/` is
+# excluded because the hook writes its own state there — including it would make
+# the hash change every time the hook runs, so it could never match itself.
+#
+# Untracked files contribute their NAMES, not their contents: an untracked file is
+# not committable until it is `git add`ed, and adding it puts it in `git diff HEAD`,
+# where its content is covered. A brand-new untracked file therefore still
+# invalidates the review (its name is new), which is the required direction.
+tree_hash() {
+  {
+    git -C "$repo_root" diff HEAD 2>/dev/null
+    git -C "$repo_root" status --porcelain 2>/dev/null | grep -v '\.context/'
+  } | {
+    if command -v shasum >/dev/null 2>&1; then shasum
+    elif command -v sha1sum >/dev/null 2>&1; then sha1sum
+    else cksum   # POSIX fallback: weaker, but present everywhere
+    fi
+  } 2>/dev/null | awk '{print $1}'
+}
+
 emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
+  # hookSpecificOutput.additionalContext IS honored on PreToolUse (and PostToolUse):
+  # per https://code.claude.com/docs/en/hooks.md the PreToolUse decision-control
+  # table lists additionalContext as "String added to Claude's context alongside the
+  # tool result". Plain stdout on exit 0 is NOT surfaced to the model, so this is the
+  # supported channel for a non-blocking reminder the model must actually read.
+  #
   # Per-workspace opt-out: while .context/codex-gate.off exists, stay silent.
   # State tracking (SET/INVALIDATE/RESET) keeps running so re-enabling is accurate.
   [ -f "$off_file" ] && return 0
@@ -65,6 +113,13 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
 # leading (^|[^[:alnum:]]) anchors `git` as a word so "digit commit" doesn't
 # false-fire, while still catching `&& git`, `;git`, `/path/git`, etc.
 is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
+
+# A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
+# to make one so `mcp__codex__review` has a non-empty range to read (baseSha=HEAD is
+# an empty HEAD..HEAD range pre-commit). Treating it as a real commit would fire a
+# spurious STOP and reset the very counters the review loop is accumulating — the
+# documented workaround would fight the hook. So: gentle note, no reset.
+is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }
 
 # A commit that stages all tracked changes (-a / -am / --all) also sweeps in
 # tracked-but-unstaged edits that `git diff --cached` alone won't show, so the
@@ -87,10 +142,38 @@ is_docs_only() {
 case "$event" in
   PostToolUse)
     case "$tool" in
-      mcp__codex__review) mkdir -p "$repo_root/.context" 2>/dev/null; touch "$state_file" 2>/dev/null || true; bump_count "$count_file" ;;
-      mcp__codex__exec) mkdir -p "$repo_root/.context" 2>/dev/null; bump_count "$countA_file" ;;
-      Edit | Write | MultiEdit | NotebookEdit) rm -f "$state_file" ;;
-      Bash) is_commit "$(input_field command)" && { rm -f "$state_file" "$count_file"; } ;;
+      mcp__codex__review)
+        mkdir -p "$state_dir" 2>/dev/null
+        h=$(tree_hash)
+        prev=$(cat "$state_file" 2>/dev/null || echo '')
+        # A pass covering the SAME tree as the previous pass adds to the fresh count;
+        # a pass on a changed tree starts the fresh count over. This is what lets the
+        # satisfied message say how many passes cover the code being committed,
+        # rather than how many happened at some point this cycle (Finding 9).
+        if [ "$h" = "$prev" ]; then bump_count "$fresh_file"; else { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true; fi
+        { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
+        bump_count "$count_file"
+        ;;
+      mcp__codex__exec) mkdir -p "$state_dir" 2>/dev/null; bump_count "$countA_file" ;;
+      Bash)
+        cmd=$(input_field command)
+        # RESET on commit closes the Gate-B cycle. A WIP commit does NOT close it
+        # (see is_wip_commit).
+        #
+        # We reset regardless of whether the commit actually SUCCEEDED. The Bash
+        # tool_response shape is documented as {stdout, stderr, interrupted, isImage}
+        # (https://code.claude.com/docs/en/hooks.md) — it carries NO exit status, so a
+        # failed commit is not reliably distinguishable from a successful one, and
+        # scraping stderr for git's error prose would be a guess that breaks silently.
+        # So we take the safe direction: a failed commit that resets costs only
+        # re-running the passes. The opposite error — skipping a reset because we
+        # wrongly judged the commit failed — would carry passes across a real cycle
+        # boundary and produce a false ✓, which is the failure this hook exists to
+        # prevent. Revisit if an exit-status field is ever documented.
+        if is_commit "$cmd" && ! is_wip_commit "$cmd"; then
+          rm -f "$state_file" "$count_file" "$fresh_file"
+        fi
+        ;;
       Skill)
         case "$(input_field skill)" in
           # Reset the Gate-A pass count at both ends of a spec cycle: plan execution
@@ -107,6 +190,9 @@ case "$event" in
       Bash)
         cmd=$(input_field command)
         if is_commit "$cmd"; then
+          if is_wip_commit "$cmd"; then
+            emit "WIP commit — cycle-internal, per CLAUDE.md §5: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here and your pass counters are preserved. Run the review against this commit, then make the real commit when your final pass is clean." "ℹ WIP commit (Codex cycle preserved)"
+          else
           # Docs-only commits (spec/plan .md files) carry no code diff,
           # so Gate B (mcp__codex__review reviews a code diff) cannot apply — emit a
           # gentle note instead of the STOP/floor reminders. Only when the file list
@@ -118,16 +204,26 @@ case "$event" in
             emit "Docs-only commit — no code is staged, so Codex Gate B (mcp__codex__review reviews a code diff) does not apply here. If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
           else
             passes=$(read_count "$count_file")
-            if [ ! -f "$state_file" ]; then
-              # No count ratio here on purpose: an edit invalidated the prior review(s),
-              # so any passes this cycle covered pre-edit code — showing "N/3" would read
-              # as floor progress and contradict "not satisfied".
-              emit "STOP — Codex Gate B not satisfied: no mcp__codex__review has run since your last code edit, so the CURRENT code is unreviewed (the $passes pass(es) earlier this cycle covered pre-edit code). Per CLAUDE.md §5 you MUST re-review after every fix AND reach a minimum of $floor passes per cycle. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B not run"
+            fresh=$(read_count "$fresh_file")
+            reviewed=$(cat "$state_file" 2>/dev/null || echo '')
+            current=$(tree_hash)
+            if [ -z "$reviewed" ]; then
+              # No count ratio here on purpose: nothing has been reviewed this cycle,
+              # so showing "N/3" would read as floor progress.
+              emit "STOP — Codex Gate B not satisfied: no mcp__codex__review has run this cycle, so the CURRENT code is unreviewed. Per CLAUDE.md §5 you MUST reach a minimum of $floor passes per cycle and re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B not run"
+            elif [ "$reviewed" != "$current" ]; then
+              # Content check, not event check: this fires for a change made through
+              # ANY tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
+              emit "STOP — Codex Gate B not satisfied: the working tree has CHANGED since the last mcp__codex__review, so the code you are about to commit is unreviewed (the $passes pass(es) this cycle covered the pre-change tree). Per CLAUDE.md §5 you MUST re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B stale (tree changed since review)"
             elif [ "$passes" -lt "$floor" ]; then
               emit "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per CLAUDE.md §5 the review is a LOOP with a hard minimum of $floor passes — run more (the ONLY early exit is a pass that returned zero findings), or proceed only if this change is trivial." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
-              emit "Codex Gate B satisfied: $passes/$floor mcp__codex__review pass(es) and no code edits since the last review. Per §5, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor passes)"
+              # Distinguish the two counts (Finding 9): the cycle total includes passes
+              # made BEFORE later edits, which no longer cover the code being committed.
+              # Reporting only "$passes/$floor" would read as if all of them did.
+              emit "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT tree (unchanged since that review). The floor counts the cycle; only the fresh pass(es) actually reviewed what you are committing. Per §5, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current code)"
             fi
+          fi
           fi
         fi
         ;;
@@ -136,9 +232,13 @@ case "$event" in
           superpowers:executing-plans | superpowers:subagent-driven-development)
             passesA=$(read_count "$countA_file")
             if [ "$passesA" -lt "$floor" ]; then
-              emit "Codex Gate A floor NOT met: only $passesA/$floor mcp__codex__exec pass(es) on this spec/plan. Per CLAUDE.md §5 Gate A is a LOOP with a hard minimum of $floor passes (start each instruction with the superpowers:brainstorming directive; the ONLY early exit is a pass that returned zero findings). Gate A has no edit-invalidation backing it — this floor is the only thing keeping the spec review honest. Run more passes before executing." "⚠ Codex Gate A below floor ($passesA/$floor)"
+              emit "Codex Gate A floor NOT met: only $passesA/$floor mcp__codex__exec pass(es) on this spec/plan. Per CLAUDE.md §5 Gate A is a LOOP with a hard minimum of $floor passes (start each instruction with the superpowers:brainstorming directive; the ONLY early exit is a pass that returned zero findings). Gate A has no content check behind it — this floor is the only thing keeping the spec review honest. Run more passes before executing." "⚠ Codex Gate A below floor ($passesA/$floor)"
             else
-              emit "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) on the spec/plan (floor met). Proceed only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate A satisfied ($passesA/$floor passes)"
+              # Deliberately weaker wording than Gate B (Finding 12): countA counts
+              # mcp__codex__exec CALLS, bound to no artifact. Hashing the artifact would
+              # be wrong — a spec is SUPPOSED to change between passes — so the hook
+              # cannot verify what was reviewed, and must not imply that it did.
+              emit "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan — floor met by COUNT ONLY. The hook counts calls; it cannot verify what was reviewed or that findings were addressed. Proceed only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
             fi
             ;;
         esac
