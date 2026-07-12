@@ -226,6 +226,13 @@ advisory — validate before applying; dismissed finding → one-line why.
   `wip`-prefixed commit message as cycle-internal, so it neither fires a Gate-B STOP
   nor resets your pass counters. A pre-review snapshot named anything else reads as a
   real commit and closes the cycle, discarding the passes you just accumulated.
+  **Finishing the cycle:** after the final clean pass, close it with
+  `git commit --amend -m "<real message>"` — that replaces the WIP commit, and the hook
+  reads the amend as the real cycle-closing commit. If several WIP snapshots piled up,
+  `git reset --soft <parent-of-first-WIP>` first, then commit once. Amend rather than a
+  follow-up commit for two reasons: a `WIP: …` commit left in history defeats the naming
+  convention it exists for, and a follow-up commit has nothing to commit when the review
+  produced no fixes.
 - **Timeout retry:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user — pass state persists in `.context/`, so an
   aborted call loses nothing.
