@@ -65,6 +65,19 @@ Per-workspace opt-out: `touch .context/codex-gate.off` (delete to re-enable). Th
 gates still apply; only the reminders go quiet. The state machine keeps running while
 off, so re-enabling is accurate rather than stale.
 
+Per-project floor: the gates default to a minimum of 3 passes each. Override it by
+writing a positive integer to `.context/codex-gate.floor` (e.g. `echo 1 >
+.context/codex-gate.floor` for a low-risk repo). Anything that isn't a positive
+integer — `0`, a negative, a word, an empty file — falls back to 3, so a typo cannot
+silently switch the gate off.
+
+Gate B is verified by **content, not by events**: at review time the hook stores a
+hash of the working tree, and re-checks it at commit. A file changed through Bash —
+`sed -i`, `eslint --fix`, `git apply`, a codegen step — therefore invalidates the
+review just like an `Edit` does. An edit-then-undo correctly stays valid, because the
+code being committed is what was reviewed. Pre-review snapshot commits named `WIP: …`
+are treated as cycle-internal: no STOP, and your pass counters survive.
+
 ## Per-project setup
 
 `/workflow-init` is idempotent and never overwrites without asking. It writes:
@@ -121,37 +134,45 @@ record a *verified necessity*, not a hypothesis.
 
 ## Quality of this repo — honestly
 
-**This repo has no quality battery.** There is no typecheck, no linter, no
-dead-code check, and no CI — which is a real gap in a repo whose entire subject is
-repo-enforced quality, and it should be named rather than glossed over.
+**This repo has no quality battery in the sense the workflow means it.** There is no
+typecheck, no linter, and no dead-code check — which is a real gap in a repo whose
+entire subject is repo-enforced quality, and it should be named rather than glossed
+over. The reason is narrow rather than principled: almost everything here is a
+*prompt*, and prompts have no typechecker.
 
-What actually gates changes here:
+What actually gates changes here, all of it running in CI
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) on every PR and push to main:
 
-- **`hooks/codex-gate.test.sh`** — 40-odd assertions over the hook's state machine
-  (SET on review, INVALIDATE on edit, RESET on commit; both pass counters; the
-  docs-only-commit downgrade; the opt-out marker; the no-`jq` fallback; and that a
-  failed state write still exits 0). Run it:
+- **`hooks/codex-gate.test.sh`** — 65 assertions over the hook's state machine: the
+  content-hash Gate-B verification (including a file changed through Bash, a new
+  untracked file, and an edit-then-undo), both pass counters, the fresh-vs-cycle pass
+  distinction, the per-project floor override and its invalid-value fallbacks, the
+  WIP-commit carve-out, the docs-only-commit downgrade, the opt-out marker, the
+  no-`jq` fallback, and that a failed state write still exits 0. Run it locally:
 
   ```sh
   sh plugins/dev-workflow/hooks/codex-gate.test.sh
   ```
 
-- **`claude plugin validate .`** — manifest, frontmatter, and hook JSON schema.
-- **Careful review.** Everything else in this repo is a *prompt*, and prompts have no
-  typechecker. The check that applies to them is
+- **`claude plugin validate . --strict`** — manifest, skill/command frontmatter, and
+  hooks.json schema. It needs no auth or API key, so it runs in CI unchanged.
+
+- **Careful review.** The check that applies to the prompts is
   [`docs/prompt-standards.md`](docs/prompt-standards.md) — this repo's own standard,
   the same checklist it hands to every project it scaffolds. A prompt-quality defect
-  found here is a defect in the shipped product.
+  found here is a defect in the shipped product, and hardening it means changing the
+  plugin, which every downstream project inherits on update.
 
-So: the shell test is real and mechanical; the rest is discipline, and discipline is
-exactly what this workflow exists to stop relying on. Adding a markdown/frontmatter
-linter and running the hook test in CI would close most of the gap, and is the first
-thing worth doing to this repo.
+So: the hook is genuinely, mechanically tested and enforced; the prompts are gated by
+discipline, and discipline is exactly what this workflow exists to stop relying on.
+The honest next step is a markdown/frontmatter linter in the same CI job — that would
+be the first mechanical check the prompts have ever had.
 
 ## Layout
 
 ```
 .claude-plugin/marketplace.json
+.github/workflows/ci.yml          # hook tests + plugin validate
 plugins/dev-workflow/
   .claude-plugin/plugin.json
   skills/{intake,harden-finding}/SKILL.md
