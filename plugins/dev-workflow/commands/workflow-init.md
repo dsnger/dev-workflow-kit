@@ -49,15 +49,26 @@ Check, in order:
    `claude plugin install superpowers@<marketplace>` (the marketplace is whichever
    one provides it, e.g. `obra/superpowers`).
 3. **Codex MCP** — the gates call `mcp__codex__exec` (Gate A, reviews text) and
-   `mcp__codex__review` (Gate B, reviews a diff). Check both:
-   - is a `codex` server configured in `.mcp.json`? (Step 2.8 writes it if not.)
-   - are the tools `mcp__codex__exec` / `mcp__codex__review` actually available to you
-     in this session?
-   Configured-but-unavailable is the common case and has a specific cause worth
-   naming: a newly written `.mcp.json` needs a session restart plus a one-time
-   project-server approval before its tools appear. Say that rather than reporting a
-   bare failure. With no Codex reachable, **both review gates are inoperative** — the
-   single most important thing this command can tell the user.
+   `mcp__codex__review` (Gate B, reviews a diff). These three states have different
+   causes and different fixes, so report the one that actually holds — a single
+   "codex: failed" sends the user hunting in the wrong place:
+
+   | State | How to detect | What to report |
+   |---|---|---|
+   | **1 · not configured** | no `codex` entry in `.mcp.json` (or no `.mcp.json`) | `MISSING — Step 2.8 writes the entry; re-run /workflow-init or add it by hand` |
+   | **2 · configured, not loaded** | the entry exists, but `mcp__codex__exec` / `mcp__codex__review` are not among your available tools | `NOT LOADED — restart the session (a new .mcp.json needs a one-time project-server approval). If it stays unavailable after a restart, the Codex CLI is not installed or not authenticated — it needs an OpenAI account; see the mcp-codex-dev docs.` |
+   | **3 · ok** | both tools are available to you | `ok (pinned mcp-codex-dev@<version>)` |
+
+   Check the tool *names* specifically, not just that "a codex server exists": a
+   different Codex MCP may connect under the same server name while exposing a
+   different tool surface (e.g. `mcp__codex__codex`), and the gates + the hook's pass
+   counters key on `exec`/`review` by name. A server that is reachable but exposes
+   neither is state 2, not state 3.
+
+   With no Codex reachable, **both review gates are inoperative** — the single most
+   important thing this command can tell the user. If the user chooses not to set it
+   up now, switch to the degraded mode in Step 2.12 rather than scaffolding gates that
+   cannot run.
 4. **`gh` CLI** — `command -v gh`. **Optional**: only `/dev-workflow:process-pr-review`
    needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
 5. **AGENTS.md** — present or not. Absent is normal on a first run (Step 3 writes it);
@@ -590,6 +601,32 @@ in the closing checklist as an open item: this ecosystem's way to (a) pin tool
 versions from one source of truth, (b) install from a frozen lockfile, and (c) delay
 brand-new releases.
 
+### 2.12 Degraded mode — only when Codex is unavailable
+
+If the preflight found Codex in state 1 or 2, **ask** whether the user wants to set it
+up now. If they do, stop and let them; the gates are most of the point. If they say
+not now, do not scaffold a workflow that lies about itself — a project with mandatory
+gate instructions that cannot run, plus a Gate-B STOP on every single commit forever,
+is noise that trains the user to ignore the hook, and a hook people ignore is worse
+than no hook. Instead, degrade explicitly:
+
+1. Write `.context/codex-gate.off` so the hook stays silent (it keeps tracking state,
+   so re-enabling later is accurate rather than stale).
+2. Add one line at the very top of §5 in the scaffolded `CLAUDE.md`:
+
+   ```markdown
+   > **INACTIVE — Codex not configured; the gates below do not run.** Re-enable: set up
+   > Codex (closing checklist item 5), then delete `.context/codex-gate.off`.
+   ```
+
+3. Make it the **top item** of the closing checklist, not a footnote.
+
+**Do not offer a same-model fallback reviewer.** Cross-model independence is the whole
+mechanism — a model reviewing its own work reproduces its own blind spots and returns a
+clean review that means nothing, so being explicitly gateless is honest while being
+implicitly self-reviewed is a false ✓, which is the exact failure this workflow exists
+to prevent.
+
 ## Step 3 — Walk the user through `AGENTS.md`
 
 `AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the
@@ -658,6 +695,13 @@ detected and what Steps 2–3 left as TODO:
 ```
 Remaining — stack-specific, yours to decide:
 
+0. GATES INACTIVE — include this item FIRST, and only if degraded mode (2.12) was
+   applied. Codex is not configured, so Gate A and Gate B do not run and the hook
+   is silenced via .context/codex-gate.off. CLAUDE.md §5 is marked INACTIVE. This
+   project currently has NO independent review gate — the cross-model check is the
+   core of the workflow, so treat this as the top priority, not a nice-to-have.
+   Re-enable: do item 5, then delete .context/codex-gate.off.
+
 1. Quality battery — pick the tools behind each role and wire them into ONE
    command, then put that command in AGENTS.md § Commands and in the CI
    TODO(stack) block:
@@ -685,8 +729,14 @@ Remaining — stack-specific, yours to decide:
    and buys false confidence; requiring a real one is the single highest-value
    item on this list.
 
-5. Codex CLI config — add the ~/.codex/config.toml block printed above
-   (home directory; not written by this command).
+5. Codex — the reviewer behind BOTH gates. Three parts, all required:
+     · the Codex CLI, installed and authenticated (it needs an OpenAI account);
+     · the codex MCP server in .mcp.json (Step 2.8 writes it, pinned), exposing
+       mcp__codex__exec + mcp__codex__review — check the tool NAMES, since another
+       Codex MCP can occupy the same server name with a different tool surface;
+     · the ~/.codex/config.toml block printed above (home directory; not written
+       by this command), giving Codex the MCP servers it should reach.
+   Without all three, both gates are inoperative.
 
 6. Superpowers — BLOCKER if the preflight reported it missing. The workflow's
    entire middle (spec -> plan -> execute) is superpowers:brainstorming /
