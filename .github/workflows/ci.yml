@@ -36,5 +36,7 @@ jobs:
       # frontmatter, and hooks.json syntax.
       - name: Validate marketplace + plugin manifests
         run: |
-          npm install -g @anthropic-ai/claude-code
+          # Pinned exactly, never floating: a moving validator makes this check
+          # irreproducible. Bump deliberately (repo's own `dependency-unpinned` class).
+          npm install -g @anthropic-ai/claude-code@2.1.207
           claude plugin validate . --strict
