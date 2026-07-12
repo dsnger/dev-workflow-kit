@@ -85,6 +85,22 @@ rev  # writes state files
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B satisfied' && pass ".context/ churn does not invalidate the hash" || fail ".context/ churn does not invalidate the hash"
 
+# 3f. FINDING B — pure staging must NOT invalidate: `git diff HEAD` covers staged and
+#     unstaged tracked content alike, so `git add` of an already-reviewed file changes
+#     nothing that could end up in the commit.
+reset_all
+printf 'reviewed change\n' >> app.ts
+rev; rev; rev                       # 3 passes covering the modified (unstaged) tree
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on unstaged change" || fail "setup: satisfied on unstaged change"
+git add app.ts >/dev/null 2>&1      # staging only — no content change
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "staging a reviewed tracked file -> still satisfied (Finding B)" || fail "staging a reviewed tracked file -> still satisfied (Finding B)"
+# ...and an untracked file added on top still invalidates (direction preserved)
+printf 'new\n' > also-new.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "untracked file on a staged tree -> NOT satisfied" || fail "untracked file on a staged tree -> NOT satisfied"
+rm -f also-new.ts
+git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
+
 # 4. Gate A exec must NOT satisfy Gate B (separate state)
 reset_all
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null

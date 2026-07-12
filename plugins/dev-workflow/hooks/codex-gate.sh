@@ -66,9 +66,15 @@ read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0;
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
 # Hash of everything that could end up in a commit: the diff of tracked files
-# against HEAD (staged + unstaged) plus the untracked file list. `.context/` is
+# against HEAD (staged + unstaged) plus the untracked file NAMES. `.context/` is
 # excluded because the hook writes its own state there — including it would make
 # the hash change every time the hook runs, so it could never match itself.
+#
+# Tracked CONTENT comes from `git diff HEAD`, which is staging-independent: it sees
+# staged and unstaged edits alike, so `git add` of an already-reviewed file does not
+# change the hash. That is why the porcelain component is filtered to `??` lines —
+# the full porcelain would flip a tracked file's status column on staging (` M` →
+# `M `) and falsely invalidate a review of unchanged content.
 #
 # Untracked files contribute their NAMES, not their contents: an untracked file is
 # not committable until it is `git add`ed, and adding it puts it in `git diff HEAD`,
@@ -77,7 +83,7 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 tree_hash() {
   {
     git -C "$repo_root" diff HEAD 2>/dev/null
-    git -C "$repo_root" status --porcelain 2>/dev/null | grep -v '\.context/'
+    git -C "$repo_root" status --porcelain 2>/dev/null | grep '^??' | grep -v '\.context/'
   } | {
     if command -v shasum >/dev/null 2>&1; then shasum
     elif command -v sha1sum >/dev/null 2>&1; then sha1sum
