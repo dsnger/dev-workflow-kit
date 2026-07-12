@@ -29,7 +29,9 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 **1. Install superpowers**, then this plugin:
 
 ```sh
-claude plugin install superpowers@<marketplace>
+claude plugin marketplace add obra/superpowers-marketplace
+claude plugin install superpowers@superpowers-marketplace
+
 claude plugin marketplace add dsnger/dev-workflow-kit
 claude plugin install dev-workflow@dev-workflow-kit
 ```

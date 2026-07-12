@@ -186,7 +186,8 @@ legitimately N/A per CLAUDE.md §5):
   > plugin is a prerequisite of this workflow and is not installed. Install it, then
   > run brainstorming with this story as its input document:
   >
-  > `claude plugin install superpowers@<marketplace>`
+  > `claude plugin marketplace add obra/superpowers-marketplace`
+  > `claude plugin install superpowers@superpowers-marketplace`
 
 ## Hand-off
 

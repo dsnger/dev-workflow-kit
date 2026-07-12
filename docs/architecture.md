@@ -30,7 +30,7 @@ not read from a `templates/` directory.
 This looks redundant, and isn't. Claude Code does not expand `${CLAUDE_PLUGIN_ROOT}`
 inside command markdown bodies — verified, not assumed — and the variable is also
 absent from the command's Bash environment. An installed plugin lives under a
-version-keyed cache path (`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`),
+version-keyed cache path (`~/.claude/plugins/cache/{marketplace}/{plugin}/{version}/`),
 which is an implementation detail, not an API. So a command that read its templates
 from disk would have to glob for its own installation directory, and would break the
 first time that layout changed.

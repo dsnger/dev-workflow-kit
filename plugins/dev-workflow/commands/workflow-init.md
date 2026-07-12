@@ -45,9 +45,9 @@ Check, in order:
    skill that does not exist, and the gate hook's Gate-A pass counter — which only
    resets on those skill events — silently never fires, so Gate A degrades to no
    enforcement at all while still *looking* enforced. If they are absent, report
-   `MISSING` with the install command:
-   `claude plugin install superpowers@<marketplace>` (the marketplace is whichever
-   one provides it, e.g. `obra/superpowers`).
+   `MISSING` with the install commands:
+   `claude plugin marketplace add obra/superpowers-marketplace` then
+   `claude plugin install superpowers@superpowers-marketplace`.
 3. **Codex MCP** — the gates call `mcp__codex__exec` (Gate A, reviews text) and
    `mcp__codex__review` (Gate B, reviews a diff). These three states have different
    causes and different fixes, so report the one that actually holds — a single
@@ -85,7 +85,8 @@ what's missing while it is still cheap to fix:
 ```
 Prerequisites:
   git repository        ok
-  superpowers plugin    MISSING — claude plugin install superpowers@<marketplace>
+  superpowers plugin    MISSING — claude plugin marketplace add obra/superpowers-marketplace
+                                  claude plugin install superpowers@superpowers-marketplace
   codex MCP             configured, but tools not loaded — restart the session and approve the project server
   gh CLI                ok (optional — only /process-pr-review needs it)
   AGENTS.md             absent — Step 3 will write it
@@ -751,7 +752,8 @@ Remaining — stack-specific, yours to decide:
    does not exist, and the hook's Gate-A counter never fires -- so Gate A looks
    enforced while enforcing nothing. It is an external prerequisite, not a
    dependency this plugin can vendor:
-     claude plugin install superpowers@<marketplace>
+     claude plugin marketplace add obra/superpowers-marketplace
+     claude plugin install superpowers@superpowers-marketplace
    (Omit this item entirely if the preflight found it.)
 
 7. Prompt standards — set the "Verified model-specific notes (read …)" date in
