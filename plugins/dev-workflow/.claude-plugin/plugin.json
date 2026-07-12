@@ -9,7 +9,5 @@
   },
   "license": "MIT",
   "keywords": ["workflow", "code-review", "codex", "quality-gate", "hardening"],
-  "skills": "./skills/",
-  "commands": ["./commands/"],
   "hooks": "./hooks/hooks.json"
 }
