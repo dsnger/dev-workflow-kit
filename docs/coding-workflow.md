@@ -153,6 +153,16 @@ plan — so the reviewer reads the artifact you hand it. Gate B reviews the *dif
 so the reviewer reads the code range. The two must never be confused: reviewing a
 design document as if it were a code range, or vice versa, produces nonsense.
 
+**When no independent reviewer is available, be gateless — not self-reviewed.** The
+tempting fallback is to let the authoring model review its own work. Don't: it
+reproduces its own blind spots and returns a clean review that means nothing, which is
+strictly worse than no review, because a false ✓ *stops you looking*. The honest
+degraded mode is to state plainly that the gates are inactive and silence the
+machinery that pretends otherwise — a reminder that fires on every commit but backs no
+real check is noise, and noise trains people to ignore the gate that will eventually
+matter. Being explicitly gateless is a known gap you can close; being implicitly
+self-reviewed is an unknown one you cannot.
+
 ### The self-hardening ledger
 
 The system learns from its own findings through an **append-only ledger**. Every
