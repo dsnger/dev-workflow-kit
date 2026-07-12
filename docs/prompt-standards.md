@@ -47,7 +47,11 @@ Living references (consult, don't copy — copies go stale):
    task.
 9. **Positive instructions.** Say what to do, not what to avoid ("write
    flowing prose" instead of "don't use markdown"). Why: per Anthropic's best
-   practices, positive framing steers current models more reliably.
+   practices, positive framing steers current models more reliably. The
+   CLAUDE.md §1–3 discipline rules this repo ships as a template are a deliberate
+   exception: their subject *is* the prohibition ("no speculative abstractions",
+   "don't refactor what isn't broken"), and restating a prohibition positively
+   loses the boundary it draws — new prompts need a stated reason to do the same.
 10. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language

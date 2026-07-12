@@ -161,7 +161,10 @@ advisory — validate before applying; dismissed finding → one-line why.
   git range, not the text.
 - **`baseSha`:** against main = merge-base with main (`headSha` = HEAD);
   pre-commit, `baseSha` = HEAD is an empty range (HEAD..HEAD) — make a WIP commit
-  and set `baseSha` to its parent.
+  and set `baseSha` to its parent. **Name that commit `WIP: …`** — the hook treats a
+  `wip`-prefixed commit message as cycle-internal, so it neither fires a Gate-B STOP
+  nor resets your pass counters. A pre-review snapshot named anything else reads as a
+  real commit and closes the cycle, discarding the passes you just accumulated.
 - **Timeout retry:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user — pass state persists in `.context/`, so an
   aborted call loses nothing.
@@ -288,7 +291,11 @@ Living references (consult, don't copy — copies go stale):
    task.
 9. **Positive instructions.** Say what to do, not what to avoid ("write
    flowing prose" instead of "don't use markdown"). Why: per Anthropic's best
-   practices, positive framing steers current models more reliably.
+   practices, positive framing steers current models more reliably. The
+   CLAUDE.md §1–3 discipline rules are a deliberate exception: their subject *is*
+   the prohibition ("no speculative abstractions", "don't refactor what isn't
+   broken"), and restating a prohibition positively loses the boundary it draws —
+   new prompts need a stated reason to do the same.
 10. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
@@ -493,11 +500,27 @@ jobs:
 
       # TODO(stack): build, if the project has one.
       # - run: <build command>
+
+      # Red until the battery above is actually wired. A workflow whose steps are
+      # all commented-out TODOs passes while verifying nothing — and a green check
+      # is exactly what someone reads as "the gate is working". Failing loudly is
+      # the honest direction; delete this step once the TODO(stack) blocks are real
+      # commands.
+      - name: Refuse to be a green no-op
+        run: |
+          if grep -q 'TODO(stack)' .github/workflows/quality.yml; then
+            echo "::error::quality.yml still has TODO(stack) markers — the battery is not wired."
+            echo "This check fails on purpose: it verifies nothing yet, so it must not report green."
+            echo "Wire the toolchain + quality command (see AGENTS.md § Commands), then delete this step."
+            exit 1
+          fi
 ````
 
-After the workflow lands and passes once, the last mile is a **repo setting**, not a
-file: make the `quality` check **required** in branch protection. Until then the gate
-is a convention; after it, the platform enforces it. This is in the closing checklist.
+After the workflow lands **and the battery actually runs green once**, the last mile
+is a **repo setting**, not a file: make the `quality` check **required** in branch
+protection. Order matters — requiring the check while it is still a no-op protects
+nothing and buys false confidence. Until it is required the gate is a convention;
+after, the platform enforces it. This is in the closing checklist.
 
 ### 2.11 Dependency-freshness policy
 
@@ -605,8 +628,11 @@ Remaining — stack-specific, yours to decide:
    invariant from AGENTS.md becomes a mechanical rule — and write your own when
    harden-finding escalates a finding to rung 2.
 
-4. Branch protection — make the CI `quality` check REQUIRED. Until you do, the
-   gate is a convention; after, it is enforced. This is the single highest-value
+4. Branch protection — make the CI `quality` check REQUIRED, but only AFTER the
+   battery in item 1 is wired and has run green once. The scaffolded workflow
+   fails on purpose while its TODO(stack) markers remain, so it cannot report a
+   green check that verifies nothing. Requiring a no-op check protects nothing
+   and buys false confidence; requiring a real one is the single highest-value
    item on this list.
 
 5. Codex CLI config — add the ~/.codex/config.toml block printed above
