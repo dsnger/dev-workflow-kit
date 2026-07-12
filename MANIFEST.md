@@ -1,28 +1,28 @@
-# dev-workflow-kit — Seed (extrahiert aus dem Quellprojekt, Stand 2026-07-10)
+# dev-workflow-kit — seed (extracted from the source project, as of 2026-07-10)
 
-Unveränderte Kopien der Workflow-Artefakte. Quelle wird nicht mehr gebraucht —
-dieses Archiv ist die vollständige Extraktionsbasis.
+Unmodified copies of the workflow artifacts. The source is no longer needed — this
+archive is the complete extraction base.
 
-## source-files/ — was ist was
+## source-files/ — what is what
 
-| Datei/Ordner | Rolle | Plugin-Ziel |
+| File/folder | Role | Plugin target |
 |---|---|---|
-| skills/intake, skills/harden-finding | die zwei Projekt-Skills | Plugin (generalisieren! Taxonomie-Split bei harden-finding) |
-| commands/process-pr-review.md | PR-Bot-Prozessor | Plugin (Bot-Namen konfigurierbar machen) |
-| hooks/codex-gate.sh + .test.sh | Gate-Zähler/Mahner | Plugin (Hook-Registrierung via Plugin-Manifest) |
-| claude-settings.json | zeigt, WIE der Hook verdrahtet ist | Referenz für Plugin-Hook-Registrierung |
-| CLAUDE.md | Disziplinregeln §1–5 | /workflow-init-Template (Projekt-Datei) |
-| prompt-standards.md | 10-Kriterien-Checkliste | Template + eigener Standard des Plugin-Repos |
-| hardening-log.md | NUR als FORMAT-Referenz (sanitisiert: echte Findings entfernt) | Template: leeres Ledger mit Kopfzeile/Konvention |
-| coding-workflow.md | neutrale Gesamt-Doku | Plugin-README-Grundlage |
-| .gitattributes | Union-Merge fürs Ledger | Template-Zeile |
-| pnpm-workspace.yaml | Supply-Chain-Policy (minimumReleaseAge) | Template |
-| ci.yml | Quality-CI-Workflow | Template (Battery-Schritte stack-spezifisch markieren) |
-| knip.json, .fallowrc.jsonc | Battery-Configs | NUR Beispiele — stack-spezifisch, kein Plugin-Inhalt |
-| codex-config.toml, .mcp.json | Reviewer-Pin + MCP-Anbindung | Templates |
-| eslint-rules/ | Custom-Regeln | NUR Beispiel (Convex-spezifisch) — dokumentieren, nicht generalisieren |
+| skills/intake, skills/harden-finding | the two project skills | plugin (generalize! taxonomy split for harden-finding) |
+| commands/process-pr-review.md | PR bot processor | plugin (make bot names configurable) |
+| hooks/codex-gate.sh + .test.sh | gate counter/reminder | plugin (hook registration via the plugin manifest) |
+| claude-settings.json | shows HOW the hook is wired up | reference for plugin hook registration |
+| CLAUDE.md | discipline rules §1–5 | /workflow-init template (project file) |
+| prompt-standards.md | 10-criteria checklist | template + the plugin repo's own standard |
+| hardening-log.md | FORMAT reference ONLY (sanitized: real findings removed) | template: empty ledger with header/convention |
+| coding-workflow.md | neutral overall documentation | basis for the plugin README |
+| .gitattributes | union merge for the ledger | template line |
+| pnpm-workspace.yaml | supply-chain policy (minimumReleaseAge) | template |
+| ci.yml | quality CI workflow | template (mark the battery steps as stack-specific) |
+| knip.json, .fallowrc.jsonc | battery configs | examples ONLY — stack-specific, not plugin content |
+| codex-config.toml, .mcp.json | reviewer pin + MCP wiring | templates |
+| eslint-rules/ | custom rules | example ONLY (Convex-specific) — document, don't generalize |
 
-## Nicht enthalten (bewusst)
-- AGENTS.md (Invarianten des Quellprojekts — pro Projekt neu; /workflow-init führt durch)
-- Ledger-INHALTE, Baselines, todos-Inhalte (Projektzustand)
-- Superpowers (externe Dependency, dokumentieren als Voraussetzung)
+## Not included (deliberately)
+- AGENTS.md (the source project's invariants — written fresh per project; /workflow-init walks you through it)
+- Ledger CONTENTS, baselines, todo contents (project state)
+- Superpowers (external dependency, documented as a prerequisite)
