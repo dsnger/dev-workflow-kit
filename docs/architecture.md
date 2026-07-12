@@ -15,7 +15,7 @@ plugins/dev-workflow/
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
   examples/                       # read, don't install — one stack's answers
-docs/{coding-workflow,prompt-standards,architecture}.md
+docs/{getting-started,coding-workflow,prompt-standards,architecture}.md
 source-files/                     # the extraction seed this repo was built from
 ```
 

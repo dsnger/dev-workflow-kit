@@ -47,13 +47,17 @@ claude plugin install dev-workflow@dev-workflow-kit
 
 **3. Run `/dev-workflow:workflow-init` in each project.** It verifies the rest and tells
 you what's missing — git repo, superpowers, Codex (not configured / not loaded / ok),
-`gh`, `AGENTS.md`, stack — before writing a single file.
+`gh`, `AGENTS.md`, stack — before writing a single file. Then follow
+[`docs/getting-started.md`](docs/getting-started.md) for your first story.
 
 ## Daily use
 
 **idea → `intake` → brainstorm → spec → Gate A → plan → Gate A → implement → quality
 battery → Gate B → PR → `process-pr-review` → merge**, running every finding worth
 keeping through `harden-finding`.
+
+New to the workflow? [`docs/getting-started.md`](docs/getting-started.md) walks one
+feature through every step — what you do, what happens, what you see.
 
 Two per-workspace knobs: `.context/codex-gate.floor` (positive integer; gates default to
 3 passes each) and `.context/codex-gate.off` (silences reminders; state keeps tracking,

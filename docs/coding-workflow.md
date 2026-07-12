@@ -67,6 +67,10 @@ run, a diff, a log line.
 
 ### The pipeline, stage by stage
 
+Why each stage exists, tool-agnostically. For the *how* — one feature walked through
+the actual skills, commands, and hook messages of this plugin — see
+[`getting-started.md`](getting-started.md); it is not repeated here.
+
 **1. Intake — from idea to story.** The front door turns a raw idea into a scoped
 story that captures *what* and defers *how*: the problem, the desired outcome, the
 acceptance criteria, which core invariants the change touches, the open questions,
