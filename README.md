@@ -28,12 +28,25 @@ vendored here. The workflow's middle stages *are* superpowers skills
 Gate-A passes between them. Install it first; without it the intake skill hands off to
 a skill that isn't there.
 
-**A Codex MCP server** — the gates call `mcp__codex__exec` (text: specs and plans) and
-`mcp__codex__review` (a git diff). `/workflow-init` writes the `.mcp.json` entry.
-Cross-model independence is the point, so the reviewer being a different *family* than
-the author is the feature, not a detail.
+**Codex** — the reviewer behind both gates. Cross-model independence is the whole
+mechanism, so the reviewer being a different model *family* than the author is the
+feature, not a detail. Three parts, all required:
 
-**`gh`** — only for `/process-pr-review`.
+1. **The Codex CLI, installed and authenticated.** It needs an **OpenAI account** —
+   this is a real external dependency with its own signup and cost, not just a config
+   line, and it is the piece people most often miss.
+2. **The `codex` MCP server** in `.mcp.json` — `/workflow-init` writes it, pinned.
+3. **The right tool surface.** The gates call `mcp__codex__exec` (Gate A, reviews the
+   spec/plan text) and `mcp__codex__review` (Gate B, reviews a git diff), and the hook
+   counts passes by those exact tool names. Another Codex MCP can connect under the
+   same server name while exposing different tools (e.g. `mcp__codex__codex`) — in
+   which case the gates silently never fire. `/workflow-init` checks the names, not
+   just that "a codex server exists".
+
+Without Codex, both gates are inoperative. That is survivable — see
+[degraded mode](#degraded-mode-no-codex) — but it is not the workflow.
+
+**`gh`** — optional; only `/dev-workflow:process-pr-review` needs it.
 
 ## Quickstart
 
@@ -65,16 +78,20 @@ checks every prerequisite before it writes anything, and prints a status line fo
 Prerequisites:
   git repository        ok
   superpowers plugin    MISSING — claude plugin install superpowers@<marketplace>
-  codex MCP             configured, but tools not loaded — restart the session and approve the project server
+  codex MCP             NOT LOADED — restart the session; if still absent, the Codex
+                        CLI is not installed/authenticated (needs an OpenAI account)
   gh CLI                ok (optional — only /process-pr-review needs it)
   AGENTS.md             absent — Step 3 will write it
   stack                 pnpm · TypeScript · vitest · GitHub Actions
 ```
 
-Only a missing git repo stops it; everything else still scaffolds, and each gap is
-carried into the closing checklist as a named blocker. The one to take seriously is
-Codex: with no `mcp__codex__exec` / `mcp__codex__review` reachable, **both review gates
-are inoperative** — which is most of what you installed this for.
+Codex gets three distinct verdicts, because they have three different fixes and a
+single "codex: failed" would send you hunting in the wrong place: **not configured**
+(no `.mcp.json` entry), **not loaded** (entry present, but the tools aren't in the
+session — restart, or the CLI isn't installed/authenticated), or **ok**.
+
+Only a missing git repo stops the run; everything else still scaffolds, and each gap is
+carried into the closing checklist as a named blocker.
 
 ## What you get
 
@@ -84,27 +101,48 @@ are inoperative** — which is most of what you installed this for.
 | `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule, type constraint, test, or documented convention, at the right rung, recorded in the ledger. |
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
 | `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. |
-| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes and invalidate a Gate-B review as soon as you edit code. Always exits 0. |
+| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and that verify a Gate-B review against the actual content of the working tree. Always exits 0. |
 
-The hook registers itself through the plugin's `hooks/hooks.json` — no
-`settings.json` edit needed, and nothing to keep in sync when the plugin updates.
+The hook registers itself through the plugin's `plugins/dev-workflow/hooks/hooks.json`
+— no `settings.json` edit needed in your project, and nothing to keep in sync when the
+plugin updates.
 
-Per-workspace opt-out: `touch .context/codex-gate.off` (delete to re-enable). The
-gates still apply; only the reminders go quiet. The state machine keeps running while
-off, so re-enabling is accurate rather than stale.
+**Gate B is verified by content, not by events.** At review time the hook stores a hash
+of the working tree; at commit it recomputes and compares. So a file changed through
+Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — invalidates the review
+exactly like an `Edit` does. An event-based check would miss all of those and leave a
+false ✓ standing, which is the dangerous direction. An edit-then-undo correctly stays
+valid, because what you're committing *is* what was reviewed.
 
-Per-project floor: the gates default to a minimum of 3 passes each. Override it by
-writing a positive integer to `.context/codex-gate.floor` (e.g. `echo 1 >
-.context/codex-gate.floor` for a low-risk repo). Anything that isn't a positive
-integer — `0`, a negative, a word, an empty file — falls back to 3, so a typo cannot
-silently switch the gate off.
+**WIP commits are cycle-internal.** CLAUDE.md §5 tells you to make a throwaway commit
+so `mcp__codex__review` has a non-empty range to read. Name it `WIP: …` and the hook
+neither fires a STOP nor resets your pass counters — otherwise the documented
+workaround would destroy the very cycle it exists to serve.
 
-Gate B is verified by **content, not by events**: at review time the hook stores a
-hash of the working tree, and re-checks it at commit. A file changed through Bash —
-`sed -i`, `eslint --fix`, `git apply`, a codegen step — therefore invalidates the
-review just like an `Edit` does. An edit-then-undo correctly stays valid, because the
-code being committed is what was reviewed. Pre-review snapshot commits named `WIP: …`
-are treated as cycle-internal: no STOP, and your pass counters survive.
+**Per-project floor.** The gates default to a minimum of 3 passes each. Override with a
+positive integer in `.context/codex-gate.floor` (e.g. `echo 1 > .context/codex-gate.floor`
+for a low-risk repo). Anything else — `0`, a negative, a word, an empty file — falls
+back to 3, so a typo cannot silently switch the gate off.
+
+**Per-workspace opt-out.** `touch .context/codex-gate.off` (delete to re-enable). Only
+the reminders go quiet; the gates still apply, and the state machine keeps running
+while off, so re-enabling is accurate rather than stale.
+
+### Degraded mode (no Codex)
+
+If you decline to set Codex up, `/workflow-init` will not scaffold a workflow that lies
+about itself. It writes `.context/codex-gate.off`, marks §5 of the generated
+`CLAUDE.md` as **INACTIVE — Codex not configured; the gates below do not run**, and puts
+re-enabling at the *top* of the closing checklist.
+
+The alternative — mandatory gate instructions that cannot run, plus a Gate-B STOP on
+every commit forever — is noise that trains you to ignore the hook, and a hook people
+ignore is worse than no hook.
+
+There is deliberately **no same-model fallback reviewer**: a model reviewing its own
+work reproduces its own blind spots and returns a clean review that means nothing, so
+being explicitly gateless is honest where being implicitly self-reviewed is a false ✓ —
+the exact failure this workflow exists to prevent.
 
 ## Per-project setup
 
@@ -171,7 +209,7 @@ over. The reason is narrow rather than principled: almost everything here is a
 What actually gates changes here, all of it running in CI
 ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) on every PR and push to main:
 
-- **`hooks/codex-gate.test.sh`** — 65 assertions over the hook's state machine: the
+- **`plugins/dev-workflow/hooks/codex-gate.test.sh`** — 65 assertions over the hook's state machine: the
   content-hash Gate-B verification (including a file changed through Bash, a new
   untracked file, and an edit-then-undo), both pass counters, the fresh-vs-cycle pass
   distinction, the per-project floor override and its invalid-value fallbacks, the
