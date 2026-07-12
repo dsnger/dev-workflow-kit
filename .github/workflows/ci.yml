@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # PR events share a per-PR group so new pushes supersede stale runs; non-PR
+  # events (push to main) get a unique per-run group so no pending main run is
+  # ever replaced or canceled.
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The hook is the only executable artifact in this repo, so its test suite is
+      # the only mechanical gate we have. Everything else here is a prompt, and
+      # prompts have no typechecker (see README, "Quality of this repo — honestly").
+      - name: Hook state-machine tests
+        run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # `plugin validate` needs no auth and no API key — verified against a clean
+      # HOME — so it runs in CI unchanged: manifest schema, skill/command
+      # frontmatter, and hooks.json syntax.
+      - name: Validate marketplace + plugin manifests
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate . --strict
