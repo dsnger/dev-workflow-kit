@@ -1,0 +1,8 @@
+# docs/hardening-log.md is an append-only ledger. Parallel worktrees may each
+# append a row; a union merge keeps both lines instead of conflicting, so no
+# hardening record is lost when branches merge.
+docs/hardening-log.md merge=union
+
+# NOT .fallow-baseline.json — it is structured JSON, not a ledger. A union merge
+# would silently interleave both sides into invalid/misleading state; real
+# baseline changes must conflict visibly so a human resolves them.

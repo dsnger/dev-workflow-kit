@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dev-workflow-kit",
+  "description": "Cross-model review workflow: independent Gate A/B review, a self-hardening findings ledger, and repo-enforced quality.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "Daniel Sänger",
+    "email": "daniel@smilefx.io"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "Intake + harden-finding skills, PR-review processor, Codex gate hook, and /workflow-init to scaffold a project."
+    }
+  ]
+}

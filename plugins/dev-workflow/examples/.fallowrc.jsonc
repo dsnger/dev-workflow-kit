@@ -1,0 +1,13 @@
+{
+  // Vendored shadcn/ui primitives — kept complete; mirrors knip.json's ignore.
+  // Use ignoreExports (NOT ignorePatterns): ignorePatterns drops these files from
+  // the graph and then falsely reports their deps (radix-ui, cmdk, next-themes,
+  // class-variance-authority, react-colorful) as unused.
+  "ignoreExports": [{ "file": "src/components/ui/**", "exports": ["*"] }],
+  // vitest `environment: 'edge-runtime'` runtime for convex-test integration
+  // (vitest.config.ts) — referenced by config string, not import, so fallow can't
+  // see it (knip's vitest plugin can).
+  "ignoreDependencies": ["@edge-runtime/vm"],
+  // Convex generated code: server.d.ts references ./dataModel.js (unresolvable).
+  "ignoreUnresolvedImports": ["*dataModel.js"]
+}

@@ -1,0 +1,12 @@
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - esbuild
+  - unrs-resolver
+
+# Supply-chain policy: packages must be ≥24h old at install time (guards
+# against fresh malicious releases). Applies to every machine/CI, not just
+# a local pnpm config. Exceptions: add the package to minimumReleaseAgeExclude
+# with a justification comment — never relax the global value ad hoc.
+minimumReleaseAge: 1440

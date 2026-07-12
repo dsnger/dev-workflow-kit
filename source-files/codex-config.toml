@@ -1,0 +1,7 @@
+[mcp_servers.convex]
+args = [
+    "convex",
+    "mcp",
+    "start",
+]
+command = "npx"

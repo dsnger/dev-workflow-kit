@@ -1,0 +1,644 @@
+---
+description: Scaffold the per-project files of the cross-model review workflow, then walk the user through writing AGENTS.md
+---
+
+Scaffold this project's cross-model review workflow: write the per-project files
+below, then interactively author `AGENTS.md`, then print the stack-specific
+checklist that stays the user's job.
+
+Target model: Claude via Claude Code. This command is a prompt artifact and follows
+the checklist it scaffolds (`docs/prompt-standards.md`).
+
+## Rules
+
+1. **Idempotent.** Run it twice and the second run changes nothing it already wrote.
+2. **Never overwrite without asking.** For each target: missing → write it. Present
+   and byte-identical to the template → report `unchanged`, touch nothing. Present
+   and different → show what differs (a short diff, not the whole file) and ask:
+   overwrite / merge / skip. This matters because these files accumulate real
+   project content after the first run — a silent overwrite destroys it.
+3. **Additive files are merged, never rewritten.** `.gitattributes`, `.mcp.json`,
+   `pnpm-workspace.yaml` and `package.json` belong to the project; add the missing
+   line or key and leave everything else exactly as it was.
+4. **Stack-specific content is marked, not guessed.** Where a template has a
+   `# TODO(stack):` marker, leave the marker in and name it in the closing checklist.
+   A plausible-looking command that was never run is worse than an honest TODO.
+5. **Report what happened per file** — `written` / `unchanged` / `merged` /
+   `skipped (user)` / `asked, overwrote`. No silent no-ops.
+
+## Step 1 — Preflight
+
+- Confirm this is a git repository (`git rev-parse --show-toplevel`). If not, stop
+  and ask — the hook's state directory and the `.gitattributes` union merge both
+  assume one.
+- Detect the stack for the marked TODOs: package manager (`pnpm-lock.yaml` /
+  `package-lock.json` / `bun.lockb` / none), language, test runner, CI provider.
+  Detect, then *state what you detected* — do not silently assume.
+- Note which targets already exist, so Rule 2 applies before you write anything.
+
+## Step 2 — Scaffold the files
+
+Write each target from the template given below. `<YYYY-MM-DD>` is today's local
+date; `<project>` is the repo's directory name unless the user says otherwise.
+
+### 2.1 `CLAUDE.md` — the discipline rules
+
+If a `CLAUDE.md` already exists with unrelated project content, do not overwrite it:
+offer to **append** sections §1–§5 (renumbering only if the file already uses those
+numbers) and say so in the report.
+
+````markdown
+# <project>
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+Ground progress claims: before reporting a step as done, audit the claim against a tool result from this session ("tests green" needs a test run to point to). Report unverified work as unverified — this keeps status reports factual on long runs.
+
+The work loop includes the review gates: **spec ready → Gate A (spec) → plan ready → Gate A (plan) → execute → tests green → Gate B → commit** (see §5).
+
+## 5. Cross-Model Review (Codex) — TWO MANDATORY GATES
+
+Independent second opinion at two gates. Easiest steps to skip, so the discipline is
+yours — a non-blocking hook (shipped by the `dev-workflow` plugin) reminds you at
+each. Opt out per-workspace with `.context/codex-gate.off` (delete to re-enable); the
+gates still apply.
+
+**Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
+only), counted by the hook.** The hook counts passes but can't read findings or
+tell the spec run from the plan run (it resets at `writing-plans`), so Gate A —
+the spec run especially — is instruction-backed: a satisfied count is not a clean
+review. Open a TodoWrite "Codex pass N" per pass; fix Blocker/Major after each. Your
+final pass must be clean — if pass 3 still finds Blocker/Major, keep going until
+clean or clearly stuck → then STOP and surface to the user. The only early exit
+below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
+advisory — validate before applying; dismissed finding → one-line why.
+
+- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
+  **spec** right after brainstorming (before `writing-plans`), then on the
+  **plan** before `executing-plans`/`subagent-driven-development` — catching a
+  spec flaw before it's baked into the plan. Tool: `mcp__codex__exec` (raw;
+  reviews the TEXT you pass, not the git tree). Use ONE broad prompt, re-run it
+  each pass over the revised artifact (don't narrow per-dimension; new findings
+  surface because the artifact changes between passes). The prompt MUST open with
+  *"Use the superpowers:brainstorming skill to review this spec,"* (say "plan" on
+  the plan run), then ask Codex to check it against our settled decisions and
+  surface **contradictions/inconsistencies, missing requirements, unhandled
+  state/edge/error/empty/concurrent paths, and risks to the Key Invariants
+  (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Append the
+  intent + artifact text + which invariants it touches. Each pass: validate,
+  revise, re-run. (Large/high-risk artifact: optional focused per-dimension
+  passes on top.)
+- **Gate B — Code.** Tests green, before `git commit`. Tool: `mcp__codex__review`
+  (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
+  spec + quality in parallel). Skip ONLY trivial changes. Check against
+  @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
+  invalidates the prior pass, which is where the 3 come from. A **docs-only
+  commit** (every staged path is `.md`) has no code diff → covered at Gate A, not
+  here; the hook downgrades its reminder to "N/A". A mixed commit, or any
+  non-`.md` file (incl. under `docs/`), fires full Gate B.
+
+### Mechanics (reference)
+- **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
+  rework) → both must resolve. Minor · Nit → collect, never iterate.
+- **Tool routing:** docs (spec/plan, incl. code snippets) → `mcp__codex__exec`;
+  implemented diff → `mcp__codex__review`. Never `review` a doc — it reads the
+  git range, not the text.
+- **`baseSha`:** against main = merge-base with main (`headSha` = HEAD);
+  pre-commit, `baseSha` = HEAD is an empty range (HEAD..HEAD) — make a WIP commit
+  and set `baseSha` to its parent.
+- **Timeout retry:** a codex call that dies at the MCP tool-call timeout is retried
+  once before surfacing to the user — pass state persists in `.context/`, so an
+  aborted call loses nothing.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+Project architecture, stack-specific patterns, and invariants live in @AGENTS.md
+(single source of truth — also read directly by Codex and the PR review bots). The
+Cross-Model Review gates (§5) check against the invariants there.
+````
+
+### 2.2 `docs/hardening-log.md` — the empty ledger
+
+Write it **empty** (header only, no rows). The header defines the format; the rows
+are this project's own history and start at zero.
+
+````markdown
+# Hardening log
+
+Append-only ledger of review findings hardened via the `dev-workflow:harden-finding`
+skill. One row per hardening (rung 0 "already caught" is not logged). `fingerprint`
+is a canonical class — from the base taxonomy in the `harden-finding` skill, or from
+this project's `docs/hardening-taxonomy.md`; column 2 is the recurrence-grep target.
+Never edit a row; resolve a `pending` row by appending a new row (same fingerprint,
+`ref` naming the prior row's date + anchor).
+
+Columns: `date` (YYYY-MM-DD), `fingerprint` (canonical class), `finding` (short,
+escape `\|`, one line), `source` (gate-a|gate-b|bot|manual),
+`severity` (blocker|major|minor|nit), `rung` (e.g. `2 lint`, `4 test`, `1 prose`,
+`P std`, `pending`), `ref` (rule name / test path / AGENTS.md section / prior row).
+
+| date | fingerprint | finding | source | severity | rung | ref |
+|------|-------------|---------|--------|----------|------|-----|
+````
+
+### 2.3 `docs/hardening-taxonomy.md` — this project's fingerprint classes
+
+Also written **empty of classes**. The `harden-finding` skill ships the stack-neutral
+base classes and reads this file for the project's own — so the shared plugin never
+carries one project's domain vocabulary.
+
+````markdown
+# Hardening taxonomy — <project>
+
+Project-specific fingerprint classes, extending the stack-neutral **base taxonomy**
+in the `dev-workflow:harden-finding` skill. The skill reads both on every fingerprint
+step; the base classes are not repeated here.
+
+A class belongs here (not in the base list) when it names *this* project's entities,
+frameworks, or invariants — e.g. a class about a specific table, a specific auth
+helper, or a specific framework's API.
+
+**Before minting:** grep the base list and this one for a near match. A slightly
+imprecise class you reuse beats a precise class nobody greps for — recurrence
+detection is the entire value, and it only works when the same defect maps to the
+same string twice.
+
+**Format:** kebab-case `domain-problem-class`, one line, with an alias hint naming
+the synonyms a future reader might search for instead.
+
+## Classes
+
+<!-- Add classes as harden-finding mints them, e.g.:
+- `orders-missing-idempotency-key` — a retryable order write accepted without an idempotency key
+-->
+
+_None yet — `dev-workflow:harden-finding` adds them as findings arrive._
+````
+
+### 2.4 `docs/prompt-standards.md` — the prompt checklist
+
+The "Verified model-specific notes" block below carries a **read-date**, and the
+notes under it are only as true as that date. Do not copy the date across: ask the
+user whether they have re-read those pages for the models *they* run. If not, write
+`read <YYYY-MM-DD> — NOT YET VERIFIED for this project's target models` and carry it
+into the closing checklist. An inherited date presented as fresh is exactly the
+failure this line exists to prevent.
+
+````markdown
+# Prompt Standards
+
+Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, and spec/plan
+templates are prompts. When authoring or changing one, it must pass the checklist
+below — Gate A reviews skill specs against these criteria via AGENTS.md.
+
+Living references (consult, don't copy — copies go stale):
+
+- Anthropic prompting best practices: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+- Model-specific pages (pick the target model's page): https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
+- OpenAI/Codex prompting guide — applies to the Codex gate prompts (Gate A/B
+  run on an OpenAI model, not Claude): https://developers.openai.com/codex
+
+## Checklist (each item must be verifiably true)
+
+1. **Target model named.** The prompt states which model executes it (Claude
+   via Claude Code, or Codex via `mcp__codex__*`), and the author checked that
+   model's current prompting page. Why: recommendations differ per model and
+   change between generations.
+2. **Success criteria explicit.** The prompt defines what "done" looks like in
+   checkable terms (e.g. "typecheck exit 0", "story has ≥3 acceptance criteria"),
+   never "make it good". Why: strong criteria let agents loop independently
+   (CLAUDE.md §4).
+3. **Stop conditions defined.** When to stop, escalate, or ask the user —
+   especially for looping/agentic prompts. Why: prevents runaway loops and
+   silent scope drift.
+4. **Output format specified with an example.** Expected structure shown, not
+   described. Why: examples constrain format better than prose.
+5. **Structured sections.** Context → task → rules → output format, separated
+   by headings or XML tags. Why: models parse delimited structure more
+   reliably than flowing prose.
+6. **Rules carry their why.** Each constraint states its reason in one clause.
+   Why: models follow motivated rules better, and reviewers can judge whether
+   the rule still applies.
+7. **No contradictions with CLAUDE.md / AGENTS.md.** New prompt text must not
+   conflict with existing instructions; if it supersedes one, update the old
+   text in the same change. Why: contradictory instructions degrade
+   compliance unpredictably.
+8. **Token-lean.** No duplicated content from AGENTS.md/CLAUDE.md (reference
+   instead), no boilerplate. Why: context budget is shared with the actual
+   task.
+9. **Positive instructions.** Say what to do, not what to avoid ("write
+   flowing prose" instead of "don't use markdown"). Why: per Anthropic's best
+   practices, positive framing steers current models more reliably.
+10. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
+    rules; default to plain wording ("Use X when …"). Why: current models follow
+    instructions more literally and overtrigger on aggressive language
+    (documented in the best-practices page). Existing heavy emphasis (e.g.
+    CLAUDE.md §5 gate language) is a deliberate exception for discipline
+    gates — new prompts need a stated reason to use it.
+
+## Verified model-specific notes (read <YYYY-MM-DD> — re-verify per Revalidation)
+
+Distilled from the model-specific pages; the linked pages are authoritative.
+
+- **Less scaffolding on stronger models.** Skills/prompts written for prior
+  models are often too prescriptive and degrade output quality on newer ones.
+  On a model upgrade, test with instructions *removed* before adding more.
+- **Review prompts: coverage first, filter later.** "Only report high-severity"
+  makes current models silently drop real findings. The finding stage must ask for
+  every issue with confidence + severity; ranking/filtering is a separate step.
+  Gate B's Blocker/Major filter is downstream — the finding prompt itself must
+  request full coverage.
+- **Ground progress claims.** In long runs, instruct: audit each claim against
+  a tool result before reporting; unverified work is reported as unverified.
+  Belongs in executing/TDD prompts.
+- **Fresh-context verifier subagents outperform self-critique** — independent
+  confirmation of the cross-model gate design.
+- **Never instruct "show your reasoning in the response".** Triggers a
+  reasoning-extraction refusal on some current models; read structured thinking
+  output instead.
+- **Literal instruction following.** Current models don't generalize scope on
+  their own — state it ("apply to every section, not just the first").
+
+## Escalation
+
+Recurring prompt-quality findings follow the same ladder as code findings
+(CLAUDE.md): prose note → checklist item here → template change. Prompts are
+artifacts; `harden-finding` treats them like code. Run the
+`dev-workflow:harden-finding` skill to apply a rung and record it in
+`docs/hardening-log.md`.
+
+## Revalidation
+
+On a model generation change (new Claude model in Claude Code, new Codex
+model for the gates): re-check this doc against the then-current
+model-specific pages, and update the read-date above. Tracked with the tooling
+revalidation entry in `todos.md`.
+````
+
+### 2.5 `docs/pr-review-bots.md` — which bot actually finds things
+
+The `/dev-workflow:process-pr-review` command reads this. Fill the table with the
+user — ask which bots are enabled and, for each, **whether it posts line-by-line
+review comments or only a summary**. Do not guess: the whole point of the file is
+that a summary-only bot must never be waited on for line findings.
+
+````markdown
+# PR review bots — <project>
+
+Which automated reviewers run on this repo, and what each one *actually produces*.
+`/dev-workflow:process-pr-review` reads this file to decide **which bots to wait for**
+(only those that post line-by-line findings) and which to treat as context only.
+
+Getting this wrong is expensive in both directions: waiting on a bot that structurally
+cannot post line comments hangs the loop, and reading a summary as a findings source
+silently drops real findings.
+
+| Bot | Enabled | Posts line-by-line findings | Notes (plan/tier limits, quirks) |
+|---|---|---|---|
+| <bot name> | yes/no | **yes** / no — summary only | <e.g. "Free plan: walkthrough only, never line comments"> |
+
+**Wait for:** <the bots with "yes" in column 3 — process starts once each has posted, even with zero comments>
+**Context only:** <the summary-only bots>
+
+**Revisit when:** a bot's plan/tier changes (a Free→Pro upgrade can turn a
+summary-only bot into a findings bot), or a bot is enabled/disabled.
+````
+
+### 2.6 `.gitattributes` — union merge for the ledger
+
+**Merge, don't rewrite.** If the `docs/hardening-log.md` line is already present,
+report `unchanged`. Otherwise append:
+
+```gitattributes
+# docs/hardening-log.md is an append-only ledger. Parallel worktrees may each
+# append a row; a union merge keeps both lines instead of conflicting, so no
+# hardening record is lost when branches merge.
+docs/hardening-log.md merge=union
+```
+
+Do **not** add union merge for structured files (baselines, JSON, lockfiles) — a
+union merge silently interleaves both sides into invalid state. Real changes to those
+must conflict visibly so a human resolves them.
+
+### 2.7 `todos.md` — skeleton
+
+````markdown
+# Todos — <project>
+
+Backlog of stories, follow-ups, and prerequisites referenced by
+`docs/hardening-log.md` (`pending` rows point here by `ref`).
+
+## Now
+
+## Next
+
+## Someday
+
+## Tooling revalidation
+- [ ] Re-check `docs/prompt-standards.md` against the current model-specific
+      prompting pages on every model-generation change (new Claude model in Claude
+      Code, new Codex model for the gates).
+````
+
+### 2.8 `.mcp.json` — the Codex reviewer
+
+**Merge, don't rewrite.** Add only the `codex` server if absent; leave any other
+server untouched.
+
+```json
+{
+  "mcpServers": {
+    "codex": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-codex-dev@1.0.1"],
+      "env": {},
+      "timeout": 2400000
+    }
+  }
+}
+```
+
+Two properties are load-bearing, so state both to the user rather than letting them
+look like arbitrary numbers:
+- The version is **pinned**. An unpinned `npx -y <pkg>` executes latest-on-npm at
+  launch, which bypasses any dependency-freshness policy. Pin it, and check the
+  current version rather than trusting `1.0.1` to still be right.
+- `timeout` is explicit. The default MCP tool-call timeout is very long, so a hung
+  Codex call otherwise blocks until the user notices and aborts by hand.
+
+### 2.9 Codex CLI config — a **manual** step, printed not written
+
+Codex reads `~/.codex/config.toml` — the user's home directory, not this repo. Do not
+write outside the project. Print this for the user to add, and list it in the closing
+checklist:
+
+```toml
+# ~/.codex/config.toml — gives the Codex reviewer the same MCP servers you use.
+# TODO(stack): one [mcp_servers.<name>] block per server Codex should reach
+# (your database/backend MCP, docs MCP, …). Example shape:
+[mcp_servers.<name>]
+command = "npx"
+args = ["<pkg>", "mcp", "start"]
+```
+
+### 2.10 CI — the enforced gate
+
+Write `.github/workflows/quality.yml` (or the equivalent for the detected CI
+provider; if it isn't GitHub Actions, print the template and say you did not write
+it). The **battery steps are stack-specific and stay marked** — a CI file that runs a
+command the project doesn't have is worse than one that admits the gap.
+
+````yaml
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # PR events share a per-PR group so new pushes supersede stale runs; non-PR
+  # events (push to main) get a unique per-run group so no pending main run is
+  # ever replaced or canceled.
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO(stack): toolchain setup for this project's language + package manager.
+      # Install from a FROZEN LOCKFILE — a resolving install can silently pull new
+      # code into CI and makes the run non-reproducible.
+      # (Node/pnpm example:)
+      # - uses: pnpm/action-setup@v4          # reads packageManager from package.json
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: package.json   # reads engines.node
+      #     cache: pnpm
+      # - run: pnpm install --frozen-lockfile
+
+      # TODO(stack): ONE quality command chaining the whole battery, so there is a
+      # single thing CI runs and a single thing a human runs. It must be the same
+      # command named in AGENTS.md § Commands. A typical battery:
+      #   strict typecheck · linter at zero warnings · dead-code check ·
+      #   duplication/health check against a baseline · tests across their environments
+      # - run: <quality command>
+
+      # TODO(stack): build, if the project has one.
+      # - run: <build command>
+````
+
+After the workflow lands and passes once, the last mile is a **repo setting**, not a
+file: make the `quality` check **required** in branch protection. Until then the gate
+is a convention; after it, the platform enforces it. This is in the closing checklist.
+
+### 2.11 Dependency-freshness policy
+
+Only if the project uses pnpm — append to `pnpm-workspace.yaml` (merge; don't touch
+existing keys):
+
+```yaml
+# Supply-chain policy: packages must be ≥24h old at install time (guards
+# against fresh malicious releases). Applies to every machine/CI, not just
+# a local pnpm config. Exceptions: add the package to minimumReleaseAgeExclude
+# with a justification comment — never relax the global value ad hoc.
+minimumReleaseAge: 1440
+```
+
+If the project does **not** use pnpm, do not fake it. Say so, and put the equivalent
+in the closing checklist as an open item: this ecosystem's way to (a) pin tool
+versions from one source of truth, (b) install from a frozen lockfile, and (c) delay
+brand-new releases.
+
+## Step 3 — Walk the user through `AGENTS.md`
+
+`AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the
+project's invariants, and both review gates plus the PR bots check against it. A
+generic AGENTS.md is worse than none — it makes "check this against our invariants"
+read as satisfied when nothing was actually checked.
+
+So: **interview the user, write what they answer, and write nothing they didn't.**
+Ask in small batches (2–4 questions), showing the section you'd write from their
+answers before moving on. Where they don't know yet, write
+`TODO — not yet decided` rather than a plausible guess, and carry it into the closing
+checklist.
+
+Cover, in this order:
+
+1. **What the project is** — one paragraph: domain, users, what it does. Enough that
+   a reviewer with no context can judge whether a change fits.
+2. **Architecture** — the components, the boundaries between them, and the direction
+   dependencies are allowed to point.
+3. **Key invariants** — the heart of the file, and what Gate A/B check. These are the
+   non-negotiables: every rule whose violation is a bug regardless of what the ticket
+   said. Push for *specific and checkable*, not aspirational. Prompt them with the
+   classes that most often belong here:
+   - **Auth / authz:** what must every entry point do before touching data? Name the
+     actual barrier function.
+   - **Multi-tenancy:** what scopes a query — a workspace, an org, an account id?
+   - **Data access:** required indexes, forbidden full scans, soft-delete semantics.
+   - **Validation:** are inputs *and* outputs schema-validated at the boundary?
+   - **Errors:** which error type is thrown, what may reach the client.
+   - **Concurrency:** optimistic locking, idempotency keys, ordering guarantees.
+   For each one they give: write the rule, and write *why* in one clause. A rule with
+   its reason survives a reviewer asking "is this still true?"; a bare rule doesn't.
+4. **Don'ts** — the forbidden patterns, including the dependency-freshness policy
+   from §2.11 and anything the team has already been burned by.
+5. **`## Commands`** — the concrete commands, because `harden-finding`,
+   `process-pr-review` and the quality gate all resolve their generic "the project's
+   lint/typecheck/test/quality command" against this section:
+
+   ````markdown
+   ## Commands
+
+   | Role | Command |
+   |---|---|
+   | quality (the whole battery — what CI runs) | `<cmd>` |
+   | typecheck | `<cmd>` |
+   | lint | `<cmd>` |
+   | test | `<cmd>` |
+   | build | `<cmd>` |
+   ````
+
+   Only fill a row with a command you have **actually run in this session** and seen
+   exit cleanly. An unverified command here silently breaks three other prompts. Run
+   each one; if it fails or doesn't exist yet, write `TODO` and carry it to the
+   checklist.
+
+End Step 3 by showing the complete `AGENTS.md` and getting the user's explicit
+approval before writing it — same rule as everywhere else: they see the bytes that
+land.
+
+## Step 4 — Print the closing checklist
+
+Everything below is deliberately **not** scaffolded, because getting it wrong quietly
+is worse than not having it. Print it as the last thing, tailored to what Step 1
+detected and what Steps 2–3 left as TODO:
+
+```
+Remaining — stack-specific, yours to decide:
+
+1. Quality battery — pick the tools behind each role and wire them into ONE
+   command, then put that command in AGENTS.md § Commands and in the CI
+   TODO(stack) block:
+     · strict typecheck        · linter, zero warnings tolerated
+     · dead-code detection     · duplication/health check
+     · tests, across every environment they need
+   Each tool: add it only when you have run it and seen it catch something real.
+   A config line should record a verified necessity, not a hypothesis.
+
+2. Fresh baselines — any tool that compares against a baseline (duplication,
+   coverage) needs its FIRST baseline generated from this repo, in its own
+   commit. Never bundle a re-baseline with feature work: a baseline that drifts
+   inside a feature commit stops being a record of a decision.
+
+3. Custom lint rules — the plugin ships two as EXAMPLES ONLY
+   (examples/eslint-rules/: auth-before-db, returns-validator). They encode one
+   stack's invariants and will not transfer. Read them for the shape — how an
+   invariant from AGENTS.md becomes a mechanical rule — and write your own when
+   harden-finding escalates a finding to rung 2.
+
+4. Branch protection — make the CI `quality` check REQUIRED. Until you do, the
+   gate is a convention; after, it is enforced. This is the single highest-value
+   item on this list.
+
+5. Codex CLI config — add the ~/.codex/config.toml block printed above
+   (home directory; not written by this command).
+
+6. Superpowers — the workflow calls superpowers:brainstorming / writing-plans /
+   executing-plans. Install it if you haven't: it is a prerequisite, not a
+   dependency this plugin can vendor.
+
+7. Prompt standards — set the "Verified model-specific notes (read …)" date in
+   docs/prompt-standards.md by actually re-reading the model pages for the models
+   you run. It is the one date in this kit that must not be inherited.
+```
+
+Then stop. Do not start using the workflow in the same turn — the user should read
+what landed first.
+
+## Report format
+
+Close with the per-file table (Rule 5) and nothing else:
+
+```
+Scaffolded:
+  CLAUDE.md                        written
+  AGENTS.md                        written (3 TODOs — see checklist)
+  docs/hardening-log.md            written (empty ledger)
+  docs/hardening-taxonomy.md       written (no classes yet)
+  docs/prompt-standards.md         written
+  docs/pr-review-bots.md           written
+  todos.md                         written
+  .gitattributes                   merged (union-merge line added)
+  .mcp.json                        merged (codex server added)
+  .github/workflows/quality.yml    written (2 TODO(stack) blocks)
+  pnpm-workspace.yaml              skipped (not a pnpm project — see checklist item 1)
+```

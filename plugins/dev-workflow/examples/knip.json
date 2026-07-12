@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/router.tsx",
+    "src/routes/**/*.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "convex/*.ts",
+    "convex/**/*.test.ts",
+    "convex/lib/notifyResolvers.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "convex/**/*.ts"],
+  "ignore": ["src/components/ui/**", "scripts/**", "eslint.returns-report.js"],
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css"]
+}

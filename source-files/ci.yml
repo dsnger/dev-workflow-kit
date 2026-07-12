@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # PR events share a per-PR group so new pushes supersede stale runs; non-PR
+  # events (push to main) get a unique per-run group so no pending main run is
+  # ever replaced or canceled.
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FALLOW_UPDATE_CHECK: "off"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # reads packageManager from package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json # reads engines.node
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm quality # tsc + eslint + knip + fallow + all 3 vitest projects
+
+      - run: pnpm build
