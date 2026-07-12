@@ -26,15 +26,65 @@ the checklist it scaffolds (`docs/prompt-standards.md`).
 5. **Report what happened per file** — `written` / `unchanged` / `merged` /
    `skipped (user)` / `asked, overwrote`. No silent no-ops.
 
-## Step 1 — Preflight
+## Step 1 — Preflight: check every prerequisite, then say what's missing
 
-- Confirm this is a git repository (`git rev-parse --show-toplevel`). If not, stop
-  and ask — the hook's state directory and the `.gitattributes` union merge both
-  assume one.
-- Detect the stack for the marked TODOs: package manager (`pnpm-lock.yaml` /
-  `package-lock.json` / `bun.lockb` / none), language, test runner, CI provider.
-  Detect, then *state what you detected* — do not silently assume.
-- Note which targets already exist, so Rule 2 applies before you write anything.
+This is the project's one setup entry point, so it carries the whole "is my setup
+complete?" answer. Check each item below, **state the result for every one** (the
+detect-and-state rule governs this step — a silent pass is indistinguishable from an
+unrun check), and carry every failure into the closing checklist as a named blocker.
+
+Check, in order:
+
+1. **git repository** — `git rev-parse --show-toplevel`. If absent, stop and ask: the
+   hook's `.context/` state directory and the `.gitattributes` union merge both
+   assume one, so nothing below is meaningful without it.
+2. **superpowers plugin** — look for `superpowers:brainstorming`, `superpowers:writing-plans`
+   and `superpowers:executing-plans` in the skills available to you *right now*. This
+   is a hard prerequisite, not a nicety: the workflow's whole middle
+   (spec → plan → execute) *is* those skills. Without them `intake` hands off to a
+   skill that does not exist, and the gate hook's Gate-A pass counter — which only
+   resets on those skill events — silently never fires, so Gate A degrades to no
+   enforcement at all while still *looking* enforced. If they are absent, report
+   `MISSING` with the install command:
+   `claude plugin install superpowers@<marketplace>` (the marketplace is whichever
+   one provides it, e.g. `obra/superpowers`).
+3. **Codex MCP** — the gates call `mcp__codex__exec` (Gate A, reviews text) and
+   `mcp__codex__review` (Gate B, reviews a diff). Check both:
+   - is a `codex` server configured in `.mcp.json`? (Step 2.8 writes it if not.)
+   - are the tools `mcp__codex__exec` / `mcp__codex__review` actually available to you
+     in this session?
+   Configured-but-unavailable is the common case and has a specific cause worth
+   naming: a newly written `.mcp.json` needs a session restart plus a one-time
+   project-server approval before its tools appear. Say that rather than reporting a
+   bare failure. With no Codex reachable, **both review gates are inoperative** — the
+   single most important thing this command can tell the user.
+4. **`gh` CLI** — `command -v gh`. **Optional**: only `/dev-workflow:process-pr-review`
+   needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
+5. **AGENTS.md** — present or not. Absent is normal on a first run (Step 3 writes it);
+   present means Step 3 reviews and extends it instead.
+6. **Stack** — package manager (`pnpm-lock.yaml` / `package-lock.json` / `bun.lockb` /
+   none), language, test runner, CI provider. This resolves the `TODO(stack)` markers.
+   Detect, then *state what you detected* — do not silently assume.
+7. **Existing targets** — note which files from Step 2 already exist, so Rule 2 (never
+   overwrite without asking) applies before you write anything.
+
+Print the result as a status block before you write a single file, so the user sees
+what's missing while it is still cheap to fix:
+
+```
+Prerequisites:
+  git repository        ok
+  superpowers plugin    MISSING — claude plugin install superpowers@<marketplace>
+  codex MCP             configured, but tools not loaded — restart the session and approve the project server
+  gh CLI                ok (optional — only /process-pr-review needs it)
+  AGENTS.md             absent — Step 3 will write it
+  stack                 pnpm · TypeScript · vitest · GitHub Actions
+```
+
+A missing prerequisite does **not** stop the scaffolding (the files are still worth
+having, and a user often installs the missing piece right after). The exception is the
+git check, which does stop. Everything else: scaffold, and name the blocker in the
+closing checklist.
 
 ## Step 2 — Scaffold the files
 
@@ -638,9 +688,14 @@ Remaining — stack-specific, yours to decide:
 5. Codex CLI config — add the ~/.codex/config.toml block printed above
    (home directory; not written by this command).
 
-6. Superpowers — the workflow calls superpowers:brainstorming / writing-plans /
-   executing-plans. Install it if you haven't: it is a prerequisite, not a
-   dependency this plugin can vendor.
+6. Superpowers — BLOCKER if the preflight reported it missing. The workflow's
+   entire middle (spec -> plan -> execute) is superpowers:brainstorming /
+   writing-plans / executing-plans. Without it, intake hands off to a skill that
+   does not exist, and the hook's Gate-A counter never fires -- so Gate A looks
+   enforced while enforcing nothing. It is an external prerequisite, not a
+   dependency this plugin can vendor:
+     claude plugin install superpowers@<marketplace>
+   (Omit this item entirely if the preflight found it.)
 
 7. Prompt standards — set the "Verified model-specific notes (read …)" date in
    docs/prompt-standards.md by actually re-reading the model pages for the models
@@ -652,9 +707,18 @@ what landed first.
 
 ## Report format
 
-Close with the per-file table (Rule 5) and nothing else:
+Close with the prerequisite block (Step 1) and the per-file table (Rule 5), then the
+checklist — and nothing else:
 
 ```
+Prerequisites:
+  git repository        ok
+  superpowers plugin    ok
+  codex MCP             ok (pinned mcp-codex-dev@1.0.1)
+  gh CLI                ok (optional)
+  AGENTS.md             absent — written in Step 3
+  stack                 pnpm · TypeScript · vitest · GitHub Actions
+
 Scaffolded:
   CLAUDE.md                        written
   AGENTS.md                        written (3 TODOs — see checklist)

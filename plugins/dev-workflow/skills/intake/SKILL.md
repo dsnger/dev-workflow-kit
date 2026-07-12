@@ -175,10 +175,23 @@ legitimately N/A per CLAUDE.md §5):
   if any path other than the story file (or a content mismatch) appears at commit.
 - **No AGENTS.md:** stop and offer `/dev-workflow:workflow-init` — Section 4 is
   ungroundable without it.
+- **No `superpowers:brainstorming`:** the hand-off target is missing. Still write and
+  commit the story (it is valuable on its own, and the user is one install away), then
+  **stop and say the next step cannot run**, rather than pointing at a skill that does
+  not exist:
+
+  > Story written: `docs/superpowers/stories/<file>`.
+  >
+  > The next step, `superpowers:brainstorming`, is not available — the superpowers
+  > plugin is a prerequisite of this workflow and is not installed. Install it, then
+  > run brainstorming with this story as its input document:
+  >
+  > `claude plugin install superpowers@<marketplace>`
 
 ## Hand-off
 
-End by naming the next step, and stop:
+Check that `superpowers:brainstorming` is actually available to you before naming it
+(see *Stop and ask*). If it is, end by naming the next step, and stop:
 
 > Next: `superpowers:brainstorming` with `docs/superpowers/stories/<file>` as the
 > input document.

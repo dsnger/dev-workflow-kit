@@ -35,18 +35,46 @@ the author is the feature, not a detail.
 
 **`gh`** — only for `/process-pr-review`.
 
-## Install
+## Quickstart
+
+**1. Install superpowers** (the prerequisite above — do this first, so the next steps
+can verify it):
 
 ```sh
-claude plugin marketplace add smilefx/dev-workflow-kit   # or a local path to this repo
+claude plugin install superpowers@<marketplace>
+```
+
+**2. Install this plugin:**
+
+```sh
+claude plugin marketplace add dsnger/dev-workflow-kit   # or a local path to this repo
 claude plugin install dev-workflow@dev-workflow-kit
 ```
 
-Then, in each project that should use the workflow:
+**3. In each project that should use the workflow, run:**
 
 ```
 /dev-workflow:workflow-init
 ```
+
+It verifies the rest and tells you what's missing. There is no separate `doctor`
+command on purpose — a second entry point would split the setup story. `workflow-init`
+checks every prerequisite before it writes anything, and prints a status line for each:
+
+```
+Prerequisites:
+  git repository        ok
+  superpowers plugin    MISSING — claude plugin install superpowers@<marketplace>
+  codex MCP             configured, but tools not loaded — restart the session and approve the project server
+  gh CLI                ok (optional — only /process-pr-review needs it)
+  AGENTS.md             absent — Step 3 will write it
+  stack                 pnpm · TypeScript · vitest · GitHub Actions
+```
+
+Only a missing git repo stops it; everything else still scaffolds, and each gap is
+carried into the closing checklist as a named blocker. The one to take seriously is
+Codex: with no `mcp__codex__exec` / `mcp__codex__review` reachable, **both review gates
+are inoperative** — which is most of what you installed this for.
 
 ## What you get
 
