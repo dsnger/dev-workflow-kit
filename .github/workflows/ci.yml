@@ -23,7 +23,7 @@ jobs:
 
       # The hook is the only executable artifact in this repo, so its test suite is
       # the only mechanical gate we have. Everything else here is a prompt, and
-      # prompts have no typechecker (see README, "Quality of this repo — honestly").
+      # prompts have no typechecker (see README, "Contributing").
       - name: Hook state-machine tests
         run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
 
