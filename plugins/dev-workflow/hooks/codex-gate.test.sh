@@ -13,6 +13,10 @@ cd "$work" || exit 1
 git init -q
 git config user.email t@t; git config user.name t
 mkdir -p .context
+# This project has adopted the workflow (Finding G) — without a marker the hook is
+# silent by design, and every reminder assertion below would pass vacuously. Section 22
+# covers the non-adopted repo.
+: > .context/codex-gate.on
 state=".context/codex-gate.gateB"
 count=".context/codex-gate.passCount"
 fresh=".context/codex-gate.freshCount"
@@ -87,6 +91,23 @@ printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "revert to reviewed tree
 rev  # writes state files
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B satisfied' && pass ".context/ churn does not invalidate the hash" || fail ".context/ churn does not invalidate the hash"
+
+# 3e-bis. ...including when .context/ is COMMITTED. Filtering only the untracked list
+# leaves tracked state in `git diff HEAD`, where the hook's own writes invalidate the
+# review it just recorded -> a permanent stale STOP. The adoption marker is meant to be
+# shared, so a tracked .context/ is the normal case.
+git add -f .context >/dev/null 2>&1; git commit -qm "track .context" >/dev/null 2>&1
+reset_all
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ state does not invalidate the hash" || fail "tracked .context/ state does not invalidate the hash"
+rev  # more churn against the committed state
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ churn stays satisfied" || fail "tracked .context/ churn stays satisfied"
+# ...while a real code change is still caught
+printf 'code change\n' >> app.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "tracked .context/: real code change still invalidates" || fail "tracked .context/: real code change still invalidates"
+git checkout -- app.ts >/dev/null 2>&1
+git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
+reset_all; rev; rev; rev
 
 # 3f. FINDING B — pure staging must NOT invalidate: `git diff HEAD` covers staged and
 #     unstaged tracked content alike, so `git add` of an already-reviewed file changes
@@ -165,7 +186,7 @@ fi
 rm -rf .context; : > .context  # make .context a FILE so the state dir cannot be created
 printf '%s' '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{}}' | sh "$HOOK"; rc=$?
 [ "$rc" = 0 ] && pass "state-write failure still exits 0" || fail "state-write failure still exits 0 (got $rc)"
-rm -f .context; mkdir -p .context  # restore
+rm -f .context; mkdir -p .context; : > .context/codex-gate.on  # restore (incl. adoption)
 
 # 12. Per-workspace opt-out: .context/codex-gate.off silences reminders
 off=".context/codex-gate.off"
@@ -342,6 +363,113 @@ for bad in 'execTool=' 'execTool=has space' 'execTool=glob*' '# comment' 'bogusK
   codextool mcp__codex__exec >/dev/null
   [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "invalid mapping '$bad' -> default exec name still counts" || fail "invalid mapping '$bad' -> default exec name still counts"
 done
+reset_all
+
+# 22. FINDING G — the hook is global; adoption is per project. A repo that never ran
+#     /workflow-init has no §5 to cite, so it hears nothing at all.
+reset_all
+on=".context/codex-gate.on"
+rm -f "$on"
+rev; rev; rev
+[ -z "$(commitpre)" ] && pass "non-adopted repo: commit -> silent" || fail "non-adopted repo: commit -> silent"
+reset_all
+[ -z "$(commitpre)" ] && pass "non-adopted repo: unreviewed commit -> no STOP" || fail "non-adopted repo: unreviewed commit -> no STOP"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+[ -z "$out" ] && pass "non-adopted repo: Gate A -> silent" || fail "non-adopted repo: Gate A -> silent"
+[ -z "$(codextool mcp__codex__codex)" ] && pass "non-adopted repo: unknown-tool note -> silent" || fail "non-adopted repo: unknown-tool note -> silent"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"wip: x\""}}')
+[ -z "$out" ] && pass "non-adopted repo: WIP note -> silent" || fail "non-adopted repo: WIP note -> silent"
+# Silent is not enough: a non-adopted repo must be INERT. Writing state would litter an
+# unrelated project with a .context/ it never asked for.
+reset_all
+rev; run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
+[ ! -f "$state" ] && [ ! -f "$count" ] && [ ! -f "$countA" ] && pass "non-adopted repo writes no state" || fail "non-adopted repo writes no state"
+# ...even into a .context/ that does not exist yet (the dir itself must not appear)
+sub=$(mktemp -d); (cd "$sub" && git init -q && git config user.email t@t && git config user.name t && printf 'x\n' > a.ts && git add -A && git commit -qm i) >/dev/null 2>&1
+out=$(printf '%s' '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{}}' | (cd "$sub" && sh "$HOOK"))
+[ ! -d "$sub/.context" ] && pass "non-adopted repo: no .context/ directory created" || fail "non-adopted repo: no .context/ directory created"
+rm -rf "$sub"
+
+# 22b. Either adoption marker is enough, and it takes effect without a restart.
+#      (Each CLAUDE.md write is itself a tree change, so the passes are re-run after
+#      one — otherwise a stale-tree STOP would masquerade as non-adoption.)
+reset_all
+printf '# p\n\n## 5. Something else entirely\n' > CLAUDE.md      # a CLAUDE.md without the gates
+rm -f "$on"
+rev; rev; rev                                                    # inert: these must not register
+[ -z "$(commitpre)" ] && pass "unrelated CLAUDE.md -> not adopted" || fail "unrelated CLAUDE.md -> not adopted"
+: > "$on"                                                        # the explicit marker
+rev; rev; rev                                                    # passes only count once adopted
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass ".on marker alone -> adopted" || fail ".on marker alone -> adopted"
+rm -f "$on"
+[ -z "$(commitpre)" ] && pass "removing the marker -> silent again" || fail "removing the marker -> silent again"
+printf '# p\n\n## 5. Cross-Model Review (Codex)\n' > CLAUDE.md   # the committed, team-wide signal
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "CLAUDE.md gate heading -> adopted" || fail "CLAUDE.md gate heading -> adopted"
+
+# 22bis. Adoption needs the gate SECTION, not the words. A substring grep adopts a
+#        project on a passing mention — including one that says the opposite.
+reset_all
+rm -f "$on"
+adopt_md() { printf '%s\n' "$1" > CLAUDE.md; reset_all; rev; rev; rev; }
+# Prose mentions must NOT adopt
+for prose in \
+  'This project does not use Cross-Model Review.' \
+  'We evaluated Cross-Model Review and rejected it.' \
+  '## Appendix: why we dropped Cross-Model Review'
+do
+  adopt_md "# proj
+
+$prose"
+  [ -z "$(commitpre)" ] && pass "prose/mention '$(printf '%.28s' "$prose")…' -> not adopted" || fail "prose/mention '$(printf '%.28s' "$prose")…' -> not adopted"
+done
+# The real heading adopts, at any level, and is cited by its OWN number (the template
+# renumbers the section when the file already uses §5).
+adopt_md "# proj
+
+## 5. Cross-Model Review (Codex) — TWO MANDATORY GATES"
+printf '%s' "$(commitpre)" | grep -q 'CLAUDE.md §5' && pass "gate heading -> adopted, cites §5" || fail "gate heading -> adopted, cites §5"
+adopt_md "# proj
+
+## 7. Cross-Model Review (Codex)"
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'CLAUDE.md §7' && pass "renumbered heading -> cites §7, not §5" || fail "renumbered heading -> cites §7, not §5"
+printf '%s' "$out" | grep -q '§5' && fail "renumbered heading must not cite §5" || pass "renumbered heading never says §5"
+adopt_md "# proj
+
+#### 5. Cross-Model Review (Codex)"
+printf '%s' "$(commitpre)" | grep -q 'Gate B' && pass "deeper heading level -> adopted" || fail "deeper heading level -> adopted"
+adopt_md "# proj
+
+## Cross-Model Review"
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'CLAUDE.md' && pass "unnumbered heading -> cites the file" || fail "unnumbered heading -> cites the file"
+printf '%s' "$out" | grep -q '§' && fail "unnumbered heading must not invent a §" || pass "unnumbered heading invents no §"
+rm -f CLAUDE.md; reset_all
+
+# 22c. The reminders must cite rules the reader can actually open. Adopted via the
+#      marker alone, there is no CLAUDE.md §5 to point at — citing it anyway is the
+#      same misleading noise Finding G is about, just in an adopted project.
+reset_all
+rm -f CLAUDE.md "$on"; : > "$on"      # marker-only adoption, no CLAUDE.md at all
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'STOP' && pass "marker-only: still STOPs" || fail "marker-only: still STOPs"
+printf '%s' "$out" | grep -q 'CLAUDE.md' && fail "marker-only must not cite CLAUDE.md" || pass "marker-only: cites no CLAUDE.md"
+printf '%s' "$out" | grep -q "this project's review policy" && pass "marker-only: cites the project's policy generically" || fail "marker-only: cites the project's policy generically"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q 'CLAUDE.md' && fail "marker-only: Gate A must not cite CLAUDE.md" || pass "marker-only: Gate A cites no CLAUDE.md"
+# A CLAUDE.md WITH the gate section is cited by name — the concrete pointer is the
+# whole value in the common case, so it must survive.
+printf '# p\n\n## 5. Cross-Model Review (Codex)\n' > CLAUDE.md
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'CLAUDE.md §5' && pass "with §5: reminder cites CLAUDE.md §5 by name" || fail "with §5: reminder cites CLAUDE.md §5 by name"
+# .off still wins over adoption (an adopted project can still ask for quiet)
+: > "$off"
+[ -z "$(commitpre)" ] && pass "off marker beats adoption" || fail "off marker beats adoption"
+rm -f "$off"
+rm -f CLAUDE.md
+: > "$on"   # restore the suite's adopted baseline
+git checkout -- . >/dev/null 2>&1
 reset_all
 
 echo "---"

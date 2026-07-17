@@ -67,3 +67,8 @@ non-trivial work, judgment is allowed. Two knobs: `.context/codex-gate.floor` (a
 positive integer) moves the 3-pass floor, and `touch .context/codex-gate.off`
 silences the reminders in a scratch workspace (delete to re-enable; state keeps
 tracking while off, so nothing goes stale).
+
+The hook is installed once per machine but speaks only in projects you initialized —
+everywhere else it stays quiet, so nothing above happens in a repo where you never ran
+`/workflow-init`. If a project of yours goes unexpectedly silent, that's the first
+thing to check: the gates need `.context/codex-gate.on` or §5 in its `CLAUDE.md`.

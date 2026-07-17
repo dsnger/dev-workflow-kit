@@ -67,7 +67,7 @@ Check, in order:
 
    With no Codex reachable, **both review gates are inoperative** — the single most
    important thing this command can tell the user. If the user chooses not to set it
-   up now, switch to the degraded mode in Step 2.12 rather than scaffolding gates that
+   up now, switch to the degraded mode in Step 2.13 rather than scaffolding gates that
    cannot run.
 4. **`gh` CLI** — `command -v gh`. **Optional**: only `/dev-workflow:process-pr-review`
    needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
@@ -612,7 +612,27 @@ in the closing checklist as an open item: this ecosystem's way to (a) pin tool
 versions from one source of truth, (b) install from a frozen lockfile, and (c) delay
 brand-new releases.
 
-### 2.12 Degraded mode — only when Codex is unavailable
+### 2.12 `.context/codex-gate.on` — the adoption marker
+
+Write an empty `.context/codex-gate.on`. The gate hook is installed globally but the
+workflow is adopted per project, so the hook stays **silent** in any repo that shows no
+adoption — otherwise it would STOP commits in every unrelated project on the machine,
+citing a `CLAUDE.md §5` that exists nowhere.
+
+The hook accepts either signal: the §5 gate heading in `CLAUDE.md`, or this marker. §5
+alone would do for a standard scaffold; write the marker anyway, because it is the one
+that survives a project keeping its gate rules somewhere other than `CLAUDE.md`, and it
+states the adoption instead of inferring it from a heading someone may reword.
+
+**Commit it.** `CLAUDE.md` is committed, so a clone is adopted the moment it lands;
+leaving the marker untracked would make adoption depend on who ran this command. (The
+hook excludes `.context/` from its tree hash on both the tracked and untracked side, so
+a committed marker does not disturb Gate B.)
+
+Say in the report that this is what makes the hook speak in this project, and that
+deleting it plus the §5 heading is the way to make it stop.
+
+### 2.13 Degraded mode — only when Codex is unavailable
 
 If the preflight found Codex in state 1 or 2, **ask** whether the user wants to set it
 up now. If they do, stop and let them; the gates are most of the point. If they say
@@ -706,7 +726,7 @@ detected and what Steps 2–3 left as TODO:
 ```
 Remaining — stack-specific, yours to decide:
 
-0. GATES INACTIVE — include this item FIRST, and only if degraded mode (2.12) was
+0. GATES INACTIVE — include this item FIRST, and only if degraded mode (2.13) was
    applied. Codex is not configured, so Gate A and Gate B do not run and the hook
    is silenced via .context/codex-gate.off. CLAUDE.md §5 is marked INACTIVE. This
    project currently has NO independent review gate — the cross-model check is the

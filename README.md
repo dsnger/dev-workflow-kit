@@ -59,6 +59,10 @@ keeping through `harden-finding`.
 New to the workflow? [`docs/getting-started.md`](docs/getting-started.md) walks one
 feature through every step — what you do, what happens, what you see.
 
+The hook only speaks up in **initialized projects** — the ones where `/workflow-init`
+has run (it writes `.context/codex-gate.on`, and its `CLAUDE.md` §5 counts too). The
+plugin is installed once per machine; every other repo you open hears nothing from it.
+
 Per-workspace knobs, all files under `.context/`:
 
 | `codex-gate.floor` | a positive integer; moves the 3-passes-per-gate floor. |
