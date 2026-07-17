@@ -13,7 +13,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__codex__review|mcp__codex__exec|Skill",
+        "matcher": "^(Bash|Skill|mcp__codex__.*)$",
         "hooks": [
           {
             "type": "command",

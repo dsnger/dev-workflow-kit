@@ -41,6 +41,8 @@ state_dir="$repo_root/.context"
 state_file="$state_dir/codex-gate.gateB"          # holds the reviewed tree-hash
 off_file="$state_dir/codex-gate.off"
 floor_file="$state_dir/codex-gate.floor"          # optional per-project floor override
+tools_file="$state_dir/codex-gate.tools"          # optional Codex tool-name mapping
+noted_file="$state_dir/codex-gate.toolNote"       # marks the unknown-tool note as said
 count_file="$state_dir/codex-gate.passCount"      # Gate B (review) passes since last commit
 fresh_file="$state_dir/codex-gate.freshCount"     # Gate B passes covering the CURRENT tree
 countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since last plan execution
@@ -60,6 +62,35 @@ if [ -f "$floor_file" ]; then
     '' | *[!0-9]*) ;;
     *) [ "$f" -gt 0 ] 2>/dev/null && floor="$f" ;;
   esac
+fi
+
+# Which Codex MCP tools back the gates. The pinned mcp-codex-dev server (written by
+# /workflow-init) exposes exec + review, which map 1:1 onto Gate A (reviews TEXT) and
+# Gate B (reviews a DIFF). Other Codex servers expose other surfaces — notably the
+# official `codex mcp-server`, whose single `codex` tool cannot be attributed to either
+# gate. Counting an unattributable tool toward a gate would be a false ✓, so unmapped
+# tools are NOT counted; the note below tells the user instead of silently doing nothing.
+# Per-project override: .context/codex-gate.tools with `execTool=<name>` / `reviewTool=<name>`.
+exec_tool=mcp__codex__exec
+review_tool=mcp__codex__review
+if [ -f "$tools_file" ]; then
+  # `|| [ -n "$k" ]` so a final line without a trailing newline is still read.
+  while IFS='=' read -r k v || [ -n "${k:-}" ]; do
+    # Trim the EDGES only. Deleting all whitespace would rewrite `execTool=has space`
+    # into the perfectly valid name `hasspace` and honor it — turning a typo into a
+    # gate pointed at a tool that never fires, which is the failure this parse guards.
+    trim='s/^[[:space:]]*//; s/[[:space:]]*$//'
+    k=$(printf '%s' "${k:-}" | sed "$trim")
+    v=$(printf '%s' "${v:-}" | sed "$trim")
+    # Same rigor as the floor file: only a plausible tool name is honored. Anything
+    # else — empty, a comment, a glob character, an unknown key — is ignored, so a
+    # typo'd mapping can't silently point a gate at a tool that never fires.
+    case "$v" in '' | *[!A-Za-z0-9_-]*) continue ;; esac
+    case "$k" in
+      execTool) exec_tool="$v" ;;
+      reviewTool) review_tool="$v" ;;
+    esac
+  done < "$tools_file" 2>/dev/null
 fi
 
 read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0; fi; }
@@ -101,7 +132,11 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
   #
   # Per-workspace opt-out: while .context/codex-gate.off exists, stay silent.
   # State tracking (SET/INVALIDATE/RESET) keeps running so re-enabling is accurate.
-  [ -f "$off_file" ] && return 0
+  #
+  # Returns 1 when suppressed, 0 when something was actually written — callers that
+  # dedupe a one-time note key their marker off that, so a note suppressed here is
+  # still available once the workspace opts back in.
+  [ -f "$off_file" ] && return 1
   if command -v jq >/dev/null 2>&1; then
     # jq encodes the strings, so any character (incl. control chars) is escaped correctly.
     jq -cn --arg ev "$event" --arg ctx "$1" --arg msg "$2" \
@@ -113,6 +148,7 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
     msg=$(printf '%s' "$2" | sed 's/\\/\\\\/g; s/"/\\"/g')
     printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"%s"},"systemMessage":"%s"}\n' "$event" "$ctx" "$msg"
   fi
+  return 0
 }
 
 # Loose by design (a missed commit = false ✓ = the dangerous direction). The
@@ -148,7 +184,7 @@ is_docs_only() {
 case "$event" in
   PostToolUse)
     case "$tool" in
-      mcp__codex__review)
+      "$review_tool")
         mkdir -p "$state_dir" 2>/dev/null
         h=$(tree_hash)
         prev=$(cat "$state_file" 2>/dev/null || echo '')
@@ -160,7 +196,19 @@ case "$event" in
         { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
         bump_count "$count_file"
         ;;
-      mcp__codex__exec) mkdir -p "$state_dir" 2>/dev/null; bump_count "$countA_file" ;;
+      "$exec_tool") mkdir -p "$state_dir" 2>/dev/null; bump_count "$countA_file" ;;
+      mcp__codex__*)
+        # FINDING F: a Codex server is connected, but under tool names the gates can't
+        # attribute. Left silent, this is the worst failure mode the hook has: reviews
+        # run, counters stay 0, and the STOP fires on every commit forever — which
+        # trains the user to ignore the hook. Say it once (the marker), not per call.
+        if [ ! -f "$noted_file" ]; then
+          if emit "Codex tool '$tool' is not counted by the review gates. The gates count '$exec_tool' (Gate A, reviews TEXT) and '$review_tool' (Gate B, reviews a DIFF); your Codex server exposes a surface that cannot be attributed to one gate or the other, so passes made through it stay invisible and Gate B will keep reporting 'not run'. The fix is to install the pinned mcp-codex-dev server, which exposes both (/dev-workflow:workflow-init writes it into .mcp.json). Mapping the names in .context/codex-gate.tools ('execTool=<name>' / 'reviewTool=<name>') is only an option if your server genuinely has two tools that separate reviewing TEXT from reviewing a DIFF — pointing both gates at one general-purpose tool moves the counters without either gate meaning what it says, which is a false ✓ and worse than this note. Said once per workspace." "ℹ Codex tool '$tool' is not counted by the gates — see the note"; then
+            mkdir -p "$state_dir" 2>/dev/null
+            { : > "$noted_file"; } 2>/dev/null || true
+          fi
+        fi
+        ;;
       Bash)
         cmd=$(input_field command)
         # RESET on commit closes the Gate-B cycle. A WIP commit does NOT close it

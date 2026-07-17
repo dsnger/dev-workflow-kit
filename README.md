@@ -59,9 +59,11 @@ keeping through `harden-finding`.
 New to the workflow? [`docs/getting-started.md`](docs/getting-started.md) walks one
 feature through every step — what you do, what happens, what you see.
 
-Two per-workspace knobs: `.context/codex-gate.floor` (positive integer; gates default to
-3 passes each) and `.context/codex-gate.off` (silences reminders; state keeps tracking,
-so re-enabling is accurate).
+Per-workspace knobs, all files under `.context/`:
+
+| `codex-gate.floor` | a positive integer; moves the 3-passes-per-gate floor. |
+| `codex-gate.off` | silences the reminders; state keeps tracking, so re-enabling is accurate. |
+| `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>` — counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Unparseable lines are ignored, so a typo can't quietly unhook a gate. |
 
 **Without Codex**, `/workflow-init` degrades honestly instead of scaffolding gates that
 can't run: it silences the hook and marks CLAUDE.md §5 `INACTIVE` with the re-enable

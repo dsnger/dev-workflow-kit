@@ -179,7 +179,10 @@ The work loop includes the review gates: **spec ready → Gate A (spec) → plan
 Independent second opinion at two gates. Easiest steps to skip, so the discipline is
 yours — a non-blocking hook (shipped by the `dev-workflow` plugin) reminds you at
 each. Opt out per-workspace with `.context/codex-gate.off` (delete to re-enable); the
-gates still apply.
+gates still apply. The hook counts passes by TOOL NAME (`mcp__codex__exec` /
+`mcp__codex__review`); if your Codex MCP server names them differently, map it in
+`.context/codex-gate.tools` (`execTool=<name>` / `reviewTool=<name>`) — otherwise your
+reviews are invisible to the counters and Gate B reports "not run" forever.
 
 **Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
 only), counted by the hook.** The hook counts passes but can't read findings or

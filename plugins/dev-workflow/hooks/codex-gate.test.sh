@@ -18,6 +18,8 @@ count=".context/codex-gate.passCount"
 fresh=".context/codex-gate.freshCount"
 countA=".context/codex-gate.passCountA"
 floorf=".context/codex-gate.floor"
+toolsf=".context/codex-gate.tools"
+notedf=".context/codex-gate.toolNote"
 
 # A HEAD commit must exist so `git diff HEAD` (the tree-hash input) is meaningful.
 printf 'v1\n' > app.ts
@@ -28,7 +30,8 @@ run() { printf '%s' "$1" | sh "$HOOK"; }
 rev() { run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{}}' >/dev/null; }
 commitpre() { run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'; }
 commitpost() { run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}' >/dev/null; }
-reset_all() { rm -f "$state" "$count" "$fresh" "$countA" "$floorf"; }
+reset_all() { rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf"; }
+codextool() { run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"$1\",\"tool_input\":{}}"; }
 
 # 1. SET on review + bump pass count
 rev
@@ -288,6 +291,58 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command"
 # A real (non-WIP) commit still resets
 commitpost
 [ ! -f "$count" ] && pass "non-WIP commit still resets counters" || fail "non-WIP commit still resets counters"
+
+# 20. FINDING F — a Codex server whose tools the gates can't attribute
+reset_all
+out=$(codextool mcp__codex__codex)
+printf '%s' "$out" | grep -q 'not counted' && pass "unknown codex tool -> note" || fail "unknown codex tool -> note"
+printf '%s' "$out" | grep -q 'mcp__codex__codex' && pass "note names the offending tool" || fail "note names the offending tool"
+printf '%s' "$out" | grep -q 'codex-gate.tools' && pass "note points at the mapping file" || fail "note points at the mapping file"
+[ ! -f "$state" ] && [ ! -f "$countA" ] && pass "unknown codex tool bumps no counter" || fail "unknown codex tool bumps no counter"
+# ...and it stays said exactly once
+out=$(codextool mcp__codex__codex)
+[ -z "$out" ] && pass "unknown codex tool note is one-time" || fail "unknown codex tool note is one-time"
+out=$(codextool mcp__codex__codex-reply)
+[ -z "$out" ] && pass "marker also silences a second unknown tool" || fail "marker also silences a second unknown tool"
+# A suppressed note must not burn the marker — else re-enabling never surfaces it.
+reset_all
+: > "$off"
+out=$(codextool mcp__codex__codex)
+[ -z "$out" ] && pass "off marker silences the unknown-tool note" || fail "off marker silences the unknown-tool note"
+[ ! -f "$notedf" ] && pass "suppressed note does not burn its one-time marker" || fail "suppressed note does not burn its one-time marker"
+rm -f "$off"
+out=$(codextool mcp__codex__codex)
+printf '%s' "$out" | grep -q 'not counted' && pass "re-enable still surfaces the note" || fail "re-enable still surfaces the note"
+
+# 21. FINDING F — .context/codex-gate.tools maps the gates onto other tool names
+reset_all
+printf 'execTool=mcp__codex__codex\nreviewTool=mcp__codex__codex_review\n' > "$toolsf"
+codextool mcp__codex__codex >/dev/null
+[ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "mapped execTool bumps Gate A count" || fail "mapped execTool bumps Gate A count"
+codextool mcp__codex__codex_review >/dev/null
+[ "$(cat "$count" 2>/dev/null)" = 1 ] && pass "mapped reviewTool bumps Gate B count" || fail "mapped reviewTool bumps Gate B count"
+[ -s "$state" ] && pass "mapped reviewTool sets the tree hash" || fail "mapped reviewTool sets the tree hash"
+printf '5' > "$floorf"; codextool mcp__codex__codex_review >/dev/null
+out=$(commitpre)
+printf '%s' "$out" | grep -q '2/5' && pass "mapped review passes reach the Gate B reminder" || fail "mapped review passes reach the Gate B reminder"
+rm -f "$floorf"
+# A mapping is a replacement, not an addition: the default names now go uncounted,
+# and the unknown-tool note is what tells the user so.
+out=$(codextool mcp__codex__exec)
+printf '%s' "$out" | grep -q 'not counted' && pass "mapping displaces the default names" || fail "mapping displaces the default names"
+# No trailing newline on the last line must still parse
+reset_all
+printf 'execTool=mcp__codex__codex' > "$toolsf"
+codextool mcp__codex__codex >/dev/null
+[ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "mapping without trailing newline parses" || fail "mapping without trailing newline parses"
+# Invalid mappings are ignored -> defaults stand (a typo must not silently unhook a gate)
+for bad in 'execTool=' 'execTool=has space' 'execTool=glob*' '# comment' 'bogusKey=x' ''; do
+  reset_all
+  printf '%s\n' "$bad" > "$toolsf"
+  codextool mcp__codex__exec >/dev/null
+  [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "invalid mapping '$bad' -> default exec name still counts" || fail "invalid mapping '$bad' -> default exec name still counts"
+done
+reset_all
 
 echo "---"
 [ "$fails" -eq 0 ] && { echo "all passed"; exit 0; } || { echo "$fails failed"; exit 1; }
