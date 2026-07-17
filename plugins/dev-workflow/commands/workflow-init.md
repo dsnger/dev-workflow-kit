@@ -61,9 +61,31 @@ Check, in order:
 
    Check the tool *names* specifically, not just that "a codex server exists": a
    different Codex MCP may connect under the same server name while exposing a
-   different tool surface (e.g. `mcp__codex__codex`), and the gates + the hook's pass
-   counters key on `exec`/`review` by name. A server that is reachable but exposes
-   neither is state 2, not state 3.
+   different tool surface, and the gates + the hook's pass counters key on
+   `exec`/`review` by name. A server that is reachable but exposes neither is state 2,
+   not state 3.
+
+   This is the most likely way a setup that *looks* complete still counts nothing, so
+   name it rather than leaving the user to infer it. The gates need **a Codex MCP server
+   that exposes `exec` and `review`** — Step 2.8 pins `mcp-codex-dev`, which does. The
+   official `codex mcp-server` is a different server: it exposes one `codex` tool (plus
+   `codex-reply`), which cannot be attributed to Gate A (reviews TEXT) or Gate B (reviews
+   a DIFF), so reviews run through it are invisible to the counters. If that is what is
+   connected, report it as its own state and give both fixes:
+
+   ```
+   codex MCP             WRONG SERVER — connected, but exposes mcp__codex__codex, not
+                                        exec/review. The gates cannot count it. Either
+                                        switch to the pinned mcp-codex-dev (Step 2.8),
+                                        or map the names in .context/codex-gate.tools:
+                                          execTool=mcp__codex__codex
+                                          reviewTool=<the diff-reviewing tool>
+   ```
+
+   Prefer switching servers over mapping: a mapping can only be honest if the server
+   really has two tools that split text-review from diff-review. Mapping both gates onto
+   one general-purpose tool makes the counters move without either gate meaning what it
+   claims — a false ✓, which is worse than the STOP it silences.
 
    With no Codex reachable, **both review gates are inoperative** — the single most
    important thing this command can tell the user. If the user chooses not to set it

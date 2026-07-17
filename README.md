@@ -42,7 +42,12 @@ claude plugin install dev-workflow@dev-workflow-kit
   `intake` hands off to nothing and Gate A never fires.
 - **Codex** — the reviewer behind both gates. Needs the **Codex CLI, authenticated with
   an OpenAI account** — a real external dependency, not just the `.mcp.json` entry
-  `/workflow-init` writes for you.
+  `/workflow-init` writes for you. It also needs **a Codex MCP server that exposes
+  `exec` and `review`** — the gates and their pass counters key on those two tool names.
+  Use the `mcp-codex-dev` server `/workflow-init` pins, which has both. The official
+  `codex mcp-server` is a *different* server exposing a single `codex` tool, which can't
+  be attributed to Gate A (reviews text) or Gate B (reviews a diff): with it connected,
+  no pass ever counts and Gate B reports "not run" forever (the hook says so, once).
 - **`gh`** — optional; only `/dev-workflow:process-pr-review` uses it.
 
 **3. Run `/dev-workflow:workflow-init` in each project.** It verifies the rest and tells
