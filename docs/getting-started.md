@@ -72,3 +72,23 @@ The hook is installed once per machine but speaks only in projects you initializ
 everywhere else it stays quiet, so nothing above happens in a repo where you never ran
 `/workflow-init`. If a project of yours goes unexpectedly silent, that's the first
 thing to check: the gates need `.context/codex-gate.on` or §5 in its `CLAUDE.md`.
+
+## Opting out
+
+The workflow is opt-in per project, and leaving it has clean levels — pick the
+smallest that matches your intent:
+
+1. **Don't adopt:** never run `/workflow-init` in a project → the plugin does
+   nothing there.
+2. **One trivial change:** just commit — the hook warns, it never blocks, and §5
+   explicitly leaves trivial changes to your judgment.
+3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable;
+   state keeps tracking, so nothing goes stale).
+4. **Leave for good:** remove §5 from the project's `CLAUDE.md` (and
+   `.context/codex-gate.on`) — the project reads as not adopted again. The other
+   scaffolds (ledger, CI, `AGENTS.md`) work fine without the gates.
+5. **Machine-wide:** `claude plugin disable dev-workflow`.
+
+One honest rule of thumb: if `.off` stays in a project for weeks, level 4 is the
+truthful choice. A project officially without gates beats one that has them and
+ignores them.
