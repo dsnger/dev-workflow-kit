@@ -78,11 +78,13 @@ Living references (consult, don't copy — copies go stale):
     it), and prose claiming the gate hook matched a path its regex does not match. One
     was written into the same document that records this pattern.
 
+    When the mechanism turns out not to exist, say what actually happens instead —
+    "this is a rule the agent keeps; nothing counts for it".
+
     Worth knowing how that count was arrived at: it was first asserted as six without
     checking, then "corrected" to five from memory, and only settled at six by reading
     the commits. Both wrong numbers were themselves unverified claims — which is the
-    strongest available argument for this item. When the mechanism turns out not to exist, say what actually happens
-    instead ("this is a rule the agent keeps; nothing counts for it").
+    strongest available argument for this item.
 12. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language

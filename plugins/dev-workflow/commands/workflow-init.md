@@ -559,8 +559,10 @@ silently drops real findings.
 
 **Wait for — this list is authoritative.** <the bots whose findings you actually act
 on; ask the user, do not derive it from column 3, which records where findings appear
-rather than whether they matter. Processing starts once each listed bot has posted,
-even with zero comments, and both its channels are read.>
+rather than whether they matter. Processing starts once each listed bot has reached the
+completion signal recorded in its Notes — which may be a status check rather than a
+comment, since a bot that finds nothing can finish without posting anything at all.
+Waiting for a post from a zero-finding bot hangs forever. Then read both its channels.>
 **Context only:** <bots you deliberately do not act on — e.g. one that only reports it
 is disabled. Not "the summary-only bots": a summary can carry real findings.>
 
