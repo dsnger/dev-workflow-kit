@@ -4,6 +4,26 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 `docs/hardening-log.md` (`pending` rows point here by `ref`).
 
 ## Now
+
+### Policy: the self-hosting milestone is closed (2026-07-18)
+
+This repo now improves itself **reactively only**. A change starts because a finding
+surfaced — through the gates, a PR bot, or real use — goes through
+`dev-workflow:harden-finding`, and lands via the normal PR flow. There are no
+proactive self-improvement sweeps: no auditing our own files looking for things to
+harden, no pre-emptively broadening a checker, no tidying passes.
+
+Everything parked below **stays parked** until its trigger condition fires or Daniel
+explicitly pulls it. A parked item is not a to-do list to work down; several are
+deliberately deferred trade-offs, and re-opening one without its trigger is the
+anticipation-driven escalation the ladder exists to prevent.
+
+Why this is written down: self-initialization is exactly the phase that generates
+appetite for more self-work, and the ledger's own escalation rules assume changes are
+driven by recurrence rather than by enthusiasm.
+
+### Parked (trigger-gated)
+
 - [ ] **Gate-B hash misses staged-vs-worktree divergence (false ✓, invariant 3).**
       Both hash components describe the worktree, but `git commit` commits the INDEX.
       Repro: `git add app.ts` with new content, then revert `app.ts` on disk to HEAD —
