@@ -1,6 +1,6 @@
 # Subagent definition: finding-triage — Design
 
-**Date:** 2026-07-18 · **Status:** narrowed after Gate A pass 4, revised after pass 5 · **Version target:** 0.4.0
+**Date:** 2026-07-18 · **Status:** narrowed after Gate A pass 4, revised after pass 5; Gate A clean at pass 6 (SHIP) · **Version target:** 0.4.0
 
 **Kill condition.** If Gate A on this narrowed spec does not converge — final pass
 clean or trivially close — **within two passes**, the feature is dropped. Four passes on
@@ -152,14 +152,15 @@ records that Anthropic's prompting page was checked on 2026-07-18.
 Any missing field returns `escalate-to-user` naming it. **Never infer a missing field** —
 guessing the alleged defect is what would make the check worthless.
 
-**Why the attestation is a field and not just a rule.** Plugin agents are discoverable:
-Claude can invoke this one from its description, outside `process-pr-review` and without
-the §4.2 precheck. Making the attestation a required input means an invocation that
-skipped the precheck cannot supply it, and the agent returns `escalate-to-user` instead
-of running. That is a real check the agent performs on its own input — not a guarantee
-against a caller that lies, which nothing at this layer could provide. The description
-is also written to invite delegation only from PR-review processing, which reduces
-accidental invocation without preventing it.
+**What the attestation is, exactly.** Plugin agents are discoverable: Claude can invoke
+this one from its description, outside `process-pr-review` and without the §4.2
+precheck. The attestation is a **declarative checklist field, fail-closed on omission**:
+the agent rejects an invocation that does not carry it. That is all it does. It does not
+establish that the precheck actually ran — the field is caller-authored text, and a
+caller that asserts it falsely passes. Its value is catching the *accidental*
+invocation, which arrives without the field at all; the narrowed description is the
+other half of that mitigation. Nothing at this layer can do better, and saying otherwise
+would be the unsupported-enforcement pattern §10 exists to harden against.
 
 The caller passes locations, never file contents, so the agent cannot be handed a
 curated excerpt.
@@ -211,9 +212,15 @@ Exactly one block, three labelled fields, no surrounding prose:
 ```
 CLAIM    <the claim, echoed verbatim as delegated>
 VERDICT  accept | dismiss | escalate-to-user
-REASON   <non-empty; cites file:line evidence, or for a `repository` claim, the
-         search performed and what it did or did not find>
+REASON   <non-empty; one of three forms:
+         · file:line evidence, for a verdict reached by reading code
+         · for a `repository` claim, the search performed and what it did or did not find
+         · for a diagnostic escalation — missing field, unusable path, compound input,
+           budget exhausted — the exact cause and what the caller must supply or fix>
 ```
+
+The third form exists because those exits have no code evidence to cite: without it the
+agent would have to break the output contract or invent a citation.
 
 The caller validates: exactly one block, `VERDICT` one of the three literal values,
 `REASON` non-empty, and `CLAIM` equal to the delegated claim. A mismatched `CLAIM` is
@@ -291,20 +298,26 @@ its claims are.
 Two defects often share a line and one defect often spans several, so collapsing by
 location would drop valid claims before checking them.
 
-**Skips:** comments asserting no defect (praise, summaries, bot status notes), and
-claims superseded by another.
+**Skips, applied before the tracked claim set is formed:** comments asserting no defect
+(praise, summaries, bot status notes), and claims superseded by another. Excluding them
+up front rather than after means `## Done` can require a verdict for every *tracked*
+claim without that being unsatisfiable for a claim deliberately never dispatched.
 
 **Hold the tree still while triage is outstanding.** The caller applies no fix until
-every dispatched claim has returned. If it knowingly changes the tree mid-batch — a
-manual edit, another tool — it re-runs the affected claims. This is the one caller rule
-that replaces the removed snapshot barrier, and it is deliberately the cheap version:
-edits made by something outside the session are undetectable here and remain an accepted
-residual risk, stated rather than engineered against.
+**every queued claim across every batch** has returned — not merely the current batch,
+or it could mutate between batches and leave later verdicts describing a different tree.
+If it knowingly changes the tree mid-run — a manual edit, another tool — it re-runs the
+affected claims before acting on them. This is the one caller rule replacing the removed
+snapshot barrier, and it is deliberately the cheap version: edits from outside the
+session are undetectable here and remain an accepted residual risk, stated rather than
+engineered against.
 
-**Dispatch in bounded batches.** Spawn limits are a real failure mode, and a PR with
+**Dispatch in bounded batches of 4.** Spawn limits are a real failure mode, and a PR with
 many claims would otherwise turn ordinary work into a wave of retries and escalations.
-The caller queues claims at the platform's supported concurrency and applies the retry
-rule below per batch.
+Four is a deliberate conservative constant rather than a discovered limit: the effective
+ceiling is configurable, and a spec that names an environment variable nobody verified
+would be documenting a mechanism it did not check. A caller that knows its own ceiling
+may raise it; the retry rule applies per batch.
 
 **On subagent failure** — no successful completion (launch failure, spawn limit,
 timeout, transport error), *regardless of any partial output*, or output failing §5.4
