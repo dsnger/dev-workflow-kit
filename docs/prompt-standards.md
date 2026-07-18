@@ -15,7 +15,9 @@ Living references (consult, don't copy — copies go stale):
 - Anthropic prompting best practices: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 - Model-specific pages (pick the target model's page): https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
 - OpenAI/Codex prompting guide — applies to the Codex gate prompts (Gate A/B
-  run on an OpenAI model, not Claude): https://developers.openai.com/codex
+  run on an OpenAI model, not Claude): https://learn.chatgpt.com/docs/prompting
+  (Codex-specific workflows are a section of that page; the old
+  `developers.openai.com/codex` now 308-redirects to `learn.chatgpt.com/docs`.)
 
 ## Checklist (each item must be verifiably true)
 

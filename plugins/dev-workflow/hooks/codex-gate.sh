@@ -148,12 +148,13 @@ read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0;
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
 # Hash of everything that could end up in a commit: the diff of tracked files
-# against HEAD (staged + unstaged) plus the untracked file NAMES. `.context/` is
+# against HEAD (staged + unstaged) plus the untracked files' paths, contents and
+# modes, via a throwaway-index tree id (see below). `.context/` is
 # excluded because the hook writes its own state there — including it would make
 # the hash change every time the hook runs, so it could never match itself.
 #
-# BOTH components must exclude it, and for different reasons. Untracked state is
-# filtered out of the porcelain list. Tracked state needs the `:(exclude)` pathspec:
+# BOTH components must exclude it, and for different reasons. Untracked state is kept
+# out by the same `:(exclude)` pathspec on `add -A`. Tracked state needs it too:
 # `.context/` is committed in some projects — the adoption marker is meant to be
 # shared, so this is the normal case, not an exotic one — and a tracked state file
 # lands in `git diff HEAD`, where the hook's own write would invalidate the review it
@@ -161,18 +162,64 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 #
 # Tracked CONTENT comes from `git diff HEAD`, which is staging-independent: it sees
 # staged and unstaged edits alike, so `git add` of an already-reviewed file does not
-# change the hash. That is why the porcelain component is filtered to `??` lines —
-# the full porcelain would flip a tracked file's status column on staging (` M` →
-# `M `) and falsely invalidate a review of unchanged content.
+# change the hash — status output would have flipped that file's column on staging
+# (` M` → `M `) and falsely invalidated a review of unchanged content.
 #
-# Untracked files contribute their NAMES, not their contents: an untracked file is
-# not committable until it is `git add`ed, and adding it puts it in `git diff HEAD`,
-# where its content is covered. A brand-new untracked file therefore still
-# invalidates the review (its name is new), which is the required direction.
+# KNOWN GAP (tracked in todos.md): both components describe the WORKTREE, so a tracked
+# file whose staged content differs from its worktree content — `git add` it, then
+# revert the file on disk — is committed from the index but hashed from disk, and reads
+# as unchanged. Closing it means hashing the index tree separately, which also makes a
+# bare `git add` invalidate a review; that trade needs its own change and tests.
+#
+# Untracked files contribute NAME AND CONTENT. Name alone is not enough: `git add f
+# && git commit` is one Bash call, so the hook is consulted while `f` is still
+# untracked — and if `f` already existed at review time, editing its contents would
+# leave the hash unchanged and hand the commit a stale ✓ on unreviewed content. That
+# is the false-✓ direction invariant 3 exists to close, so content is hashed here
+# rather than relied upon to show up later in `git diff HEAD`.
+#
+# That component is produced by staging into a THROWAWAY index and asking git for the
+# tree id, rather than by walking the file list and reading each file in shell. The
+# shell version has to re-derive what git already knows, and got it wrong three
+# separate ways: git C-quotes a non-ASCII path (`"caf\303\251.txt"`, quotes included)
+# so the read silently missed it; `cat` follows a symlink to its referent, while a
+# commit stores the link target, so a retargeted symlink looked unchanged — and could
+# hang outright on a link to a FIFO or /dev/zero; and concatenating name+content with
+# no framing lets two different layouts hash alike. `write-tree` has none of those
+# failure modes because it is the same code path a real commit takes: exact bytes,
+# file modes, symlinks as targets, non-regular files skipped, any path encoding.
+#
+# GIT_INDEX_FILE keeps this off the real index, so the user's staging area is
+# untouched. `add -A` respects .gitignore, so ignored files stay out.
 tree_hash() {
   {
     git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null
-    git -C "$repo_root" status --porcelain 2>/dev/null | grep '^??' | grep -v '\.context/'
+    # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable
+    # name is a symlink target an attacker can plant, and the seed copy below would
+    # then write index data through it into a file we do not own.
+    tmp_dir=$(mktemp -d 2>/dev/null) || tmp_dir=''
+    if [ -n "$tmp_dir" ]; then
+      tmp_index="$tmp_dir/index"
+      # Seed from the real index so git's stat cache still applies and only genuinely
+      # changed files get re-hashed. Starting empty is correct but re-hashes the entire
+      # repo on every hook invocation, which on a large repo is the difference between
+      # imperceptible and unusable. Copy failure is fine — an absent seed just means a
+      # cold, slower, equally correct index.
+      cp "$(git -C "$repo_root" rev-parse --git-path index 2>/dev/null)" "$tmp_index" 2>/dev/null || true
+      GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
+        -- . ':(exclude).context' >/dev/null 2>&1 &&
+        GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
+      tree_rc=$?
+      rm -rf "$tmp_dir"
+    else
+      tree_rc=1
+    fi
+    # If the tree could not be computed, emit a value that cannot match ANY stored
+    # hash, so the gate reads as unreviewed. Staying silent would drop the component
+    # and let an unwritable TMPDIR collapse the hash to a constant — a permanent
+    # false ✓, the one direction invariant 3 exists to prevent. Firing wrongly is the
+    # accepted cost (invariant 2).
+    [ "${tree_rc:-1}" -eq 0 ] || printf 'tree-unavailable-%s\n' "$(date +%s 2>/dev/null)$$"
   } | {
     if command -v shasum >/dev/null 2>&1; then shasum
     elif command -v sha1sum >/dev/null 2>&1; then sha1sum
@@ -227,15 +274,34 @@ is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:
 # dashes and never matches, so it isn't mistaken for -a.)
 has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--all)([[:space:]]|$)'; }
 
+# Prompts are Markdown too, and a prompt is product, not documentation: skills,
+# slash commands, plugin content and the instruction files all end in .md. Exempting
+# them would hand a false "N/A" to exactly the change that most needs Gate B — the
+# dangerous direction. These are Claude Code convention paths, not this repo's
+# layout, so the test stays project-neutral.
+#
+# The directory names match at ANY depth, deliberately: a monorepo keeps prompts at
+# `packages/*/.claude/`, and root-anchoring would miss them (a false N/A, the wrong
+# direction — invariant 2). The price is that prose under a directory happening to be
+# named `commands/` or `skills/` — e.g. `docs/commands/reference.md` — fires Gate B
+# too. That is a redundant reminder on an advisory hook, which is the cost invariant 2
+# accepts by name.
+is_prompt_path() {
+  printf '%s\n' "$1" |
+    grep -Eq '(^|/)(CLAUDE|AGENTS)\.md$|(^|/)(\.claude|plugins|skills|commands)/'
+}
+
 # True ONLY when the file list is non-empty AND every path is a doc artifact
-# (*.md anywhere, or under .context/). Restricted to the .md extension on purpose:
-# a non-Markdown file under docs/ (e.g. a script) IS code and must still hit Gate
-# B, so we do NOT exempt the docs/ directory wholesale. An empty/undeterminable
-# list returns false, so the caller falls through to the loose Gate-B default
-# (fire) — keeping "missed code commit" the safe direction.
+# (*.md anywhere, or under .context/) AND none of them is a prompt. Restricted to
+# the .md extension on purpose: a non-Markdown file under docs/ (e.g. a script) IS
+# code and must still hit Gate B, so we do NOT exempt the docs/ directory
+# wholesale. An empty/undeterminable list returns false, so the caller falls
+# through to the loose Gate-B default (fire) — keeping "missed code commit" the
+# safe direction.
 is_docs_only() {
   [ -n "$1" ] || return 1
   printf '%s\n' "$1" | grep -vE '(\.md$|^\.context/)' | grep -q . && return 1
+  is_prompt_path "$1" && return 1
   return 0
 }
 

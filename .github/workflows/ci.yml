@@ -17,19 +17,41 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # Actions pinned to commit SHAs, like every other tool here (invariant 5): a
+    # major-only `@v4` moves under us, which is the irreproducibility the pinned
+    # shellcheck image and claude CLI avoid. The runner is pinned to an OS release
+    # rather than `ubuntu-latest` — GitHub still refreshes that image's contents
+    # weekly, so this bounds the drift, it does not eliminate it. Full image
+    # reproducibility would need a container, which this three-check battery
+    # doesn't warrant.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      # The hook is the only executable artifact in this repo, so its test suite is
-      # the only mechanical gate we have. Everything else here is a prompt, and
-      # prompts have no typechecker (see README, "Contributing").
+      # The hook is the only executable artifact in this repo, so lint plus its test
+      # suite are the only mechanical gates we have. Everything else here is a prompt,
+      # and prompts have no typechecker (see README, "Contributing").
+
+      # Enforces the POSIX-sh invariant mechanically: the hook runs under whatever
+      # /bin/sh a user has, so a bash-ism is a portability bug, not a style opinion.
+      # Pinned to an exact image tag — a moving linter makes the gate irreproducible.
+      - name: Lint hook scripts (POSIX sh)
+        run: |
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh plugins/dev-workflow/hooks/codex-gate.sh
+          # The test file's only findings are SC2015 on `[ c ] && pass "x" || fail "x"`.
+          # `pass` is a bare printf whose sole failure mode is a broken stdout, which
+          # runs `fail` too — a spurious FAIL, never a false pass. Excluded by code, so
+          # every other check still applies to this file.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh
+
       - name: Hook state-machine tests
         run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: 22.23.1
 
       # `plugin validate` needs no auth and no API key — verified against a clean
       # HOME — so it runs in CI unchanged: manifest schema, skill/command

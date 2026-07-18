@@ -228,17 +228,34 @@ advisory — validate before applying; dismissed finding → one-line why.
   surface **contradictions/inconsistencies, missing requirements, unhandled
   state/edge/error/empty/concurrent paths, and risks to the Key Invariants
   (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Append the
-  intent + artifact text + which invariants it touches. Each pass: validate,
-  revise, re-run. (Large/high-risk artifact: optional focused per-dimension
-  passes on top.)
+  intent + artifact text + which invariants it touches. Ask for **every** finding
+  with severity and confidence — you filter to Blocker/Major downstream, Codex
+  never does, because a model told to report only high severity drops real
+  findings silently. Ask for one line per finding and a literal `NO FINDINGS`
+  when a pass is clean — the explicit clean signal is what lets you exit the loop:
+
+  ```
+  MAJOR | high | §3 "Retry policy" | retry count unbounded | a poisoned job loops forever | cap at 5, then dead-letter
+  NO FINDINGS
+  ```
+
+  Each pass: validate, revise, re-run. (Large/high-risk artifact: optional focused
+  per-dimension passes on top.)
 - **Gate B — Code.** Tests green, before `git commit`. Tool: `mcp__codex__review`
   (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
   spec + quality in parallel). Skip ONLY trivial changes. Check against
   @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
-  invalidates the prior pass, which is where the 3 come from. A **docs-only
-  commit** (every staged path is `.md`) has no code diff → covered at Gate A, not
-  here; the hook downgrades its reminder to "N/A". A mixed commit, or any
-  non-`.md` file (incl. under `docs/`), fires full Gate B.
+  invalidates the prior pass, which is where the 3 come from. Same coverage rule
+  as Gate A: put "report every finding with severity and confidence; say
+  `NO FINDINGS` if clean" in `additionalContext`, with the same one-line format.
+
+  **What counts as prose (the only Gate-B exemption).** Every staged path is
+  explanatory documentation — `docs/**.md`, `README.md` → N/A. Those describe the
+  product rather than being it, so they carry no gate at all. **Prompts are not
+  prose:** skills, slash commands, agent instructions and anything under
+  `.claude/` or `plugins/` are product even though they are `.md`, and so are
+  `CLAUDE.md`/`AGENTS.md` — all fire full Gate B, as does any mixed commit or any
+  non-`.md` file. The hook classifies paths the same way.
 
 ### Mechanics (reference)
 - **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
@@ -353,7 +370,8 @@ Living references (consult, don't copy — copies go stale):
 - Anthropic prompting best practices: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 - Model-specific pages (pick the target model's page): https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
 - OpenAI/Codex prompting guide — applies to the Codex gate prompts (Gate A/B
-  run on an OpenAI model, not Claude): https://developers.openai.com/codex
+  run on an OpenAI model, not Claude): https://learn.chatgpt.com/docs/prompting
+  (Codex-specific workflows are a section of that page.)
 
 ## Checklist (each item must be verifiably true)
 
@@ -540,7 +558,9 @@ checklist:
 # (your database/backend MCP, docs MCP, …). Example shape:
 [mcp_servers.<name>]
 command = "npx"
-args = ["<pkg>", "mcp", "start"]
+# Pin the package exactly — a bare `<pkg>` resolves to whatever is newest at run
+# time, so the reviewer's own toolchain would drift between runs. Bump deliberately.
+args = ["<pkg>@<exact-version>", "mcp", "start"]
 ```
 
 ### 2.10 CI — the enforced gate
@@ -570,16 +590,20 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # Pin the runner to an OS release, not `ubuntu-latest`, and every action to a
+    # commit SHA with a version comment: a major-only `@v4` moves under you, and a
+    # moving CI dependency makes the run irreproducible. Resolve a tag to its SHA
+    # with `gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`. Bump deliberately.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       # TODO(stack): toolchain setup for this project's language + package manager.
       # Install from a FROZEN LOCKFILE — a resolving install can silently pull new
       # code into CI and makes the run non-reproducible.
-      # (Node/pnpm example:)
-      # - uses: pnpm/action-setup@v4          # reads packageManager from package.json
-      # - uses: actions/setup-node@v4
+      # (Node/pnpm example — resolve these SHAs yourself before uncommenting:)
+      # - uses: pnpm/action-setup@<sha>       # reads packageManager from package.json
+      # - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       #   with:
       #     node-version-file: package.json   # reads engines.node
       #     cache: pnpm
