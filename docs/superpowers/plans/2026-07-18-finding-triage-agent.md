@@ -327,6 +327,23 @@ Expected: at least `5`.
 **Interfaces:**
 - Consumes: nothing. Produces: nothing.
 
+- [ ] **Step 0: Run the mandatory pre-edit check (AGENTS.md Don'ts)**
+
+Run this here even though Task 2 ran the same check. If tasks are executed by a fresh
+subagent each — the recommended mode — the worker holding this task did not see Task 2
+and would otherwise edit `docs/architecture.md`'s manifest and convention-loading claims
+without ever reading the manifest. That is the drift path behind the 0.2.1
+duplicate-hooks failure, and it puts invariant 6 at risk.
+
+```bash
+grep -rniE 'declare[sd]?|convention[- ]load' --include='*.md' . | grep -v source-files/
+cat plugins/dev-workflow/.claude-plugin/plugin.json
+```
+
+Confirm the manifest declares **no** component keys. Read `AGENTS.md`'s Boundaries
+paragraph directly too — the grep matches `convention-load`, not the reverse word order
+"loaded by convention" that Boundaries actually uses, as AGENTS.md's own note records.
+
 - [ ] **Step 1: `docs/architecture.md` — layout tree**
 
 Find:
@@ -864,7 +881,7 @@ that such a commit is never final.
 
 - [ ] **Step 7: Close the cycle**
 
-After the final clean pass, with every fix already amended in by Step 6.4, replace only
+After the final clean pass, with every fix already amended in by Step 6.5, replace only
 the message — never add a follow-up commit, which would leave `WIP:` in history:
 
 ```bash
