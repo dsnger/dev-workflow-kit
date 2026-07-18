@@ -54,8 +54,13 @@ You run as Claude via Claude Code. (Anthropic's prompting guidance was checked o
 2026-07-18; re-check on a model-generation change, per `docs/prompt-standards.md`.)
 
 Do not delete the `tools:` line above. A subagent with no `tools:` field inherits
-**every** tool, including Edit, Write and Bash — so removing that line silently turns
-this read-only checker into one that can modify the repository.
+every tool, including Edit, Write and Bash — so removing that line turns this read-only
+checker into one that can modify the repository.
+
+What that allowlist gives you is exact: you cannot directly invoke a Claude Code write
+or shell tool. It is narrower than "nothing changes on disk" — hooks configured in the
+user's own settings can run on your tool calls and have side effects of their own, which
+is outside this plugin's control.
 
 ## What you do
 
@@ -116,9 +121,11 @@ Read widely enough to be right. A claim of "missing validation" is false if vali
 sits in a shared middleware two files away, and finding that is the job.
 
 **Stop at 25 tool calls** — Read, Grep and Glob counted alike, repeats included — or at
-your first verdict, whichever comes first. Nothing counts these for you; this is a rule
-you keep. On reaching 25 without settling the claim, return `escalate-to-user` and name
-the evidence that would settle it.
+your first verdict, whichever comes first. The number is a deliberate ceiling: a claim
+that needs more than about two dozen reads is one that reading cannot settle, and
+saying so is more useful than a fortieth file. Nothing counts these for you; this is a
+rule you keep. On reaching 25 without settling the claim, return `escalate-to-user` and
+name the evidence that would settle it.
 
 Stop immediately, without further searching, when: a required field is missing, a path
 is unusable, or the input holds more than one claim.
@@ -152,9 +159,12 @@ REASON   <non-empty>
 - **the exact cause and what the caller must supply or fix**, for a diagnostic
   escalation — a missing field, an unusable path, a compound claim, an exhausted budget
 
-Echo `CLAIM` unchanged. The caller matches it against what it sent you to attach your
-verdict to the right review thread; an altered claim means the verdict lands on the
-wrong one.
+Echo `CLAIM` unchanged. The caller matches it against what it sent, to attach your
+verdict to the right review thread, and rejects the block when it does not match — so an
+altered claim costs a retry rather than a misfiled verdict.
+
+Each field starts on its own line. `REASON` may wrap onto following lines as long as
+they are indented; the block ends at the first unindented line.
 
 Worked examples:
 
@@ -437,11 +447,12 @@ Replace with:
 ```
 0. **Instruction-path precheck.** If the PR touches any instruction-bearing path,
    skip subagent triage for this PR entirely: validate the comments yourself and say
-   so in each reply. The paths are `CLAUDE.md` and `CLAUDE.local.md` and `AGENTS.md`
-   at any depth, anything under `.claude/`, `plugins/`, `skills/`, `commands/` or
-   `agents/`, and any file transitively imported by those. If an import cannot be
-   resolved — malformed, missing, outside the checkout — skip triage rather than
-   proceed on a partial set.
+   so in each reply. The paths are `CLAUDE.md`, `CLAUDE.local.md` and `AGENTS.md` at
+   any depth, anything under `.claude/`, `plugins/`, `skills/`, `commands/` or
+   `agents/`, and every file reached by expanding `@path` imports from those files,
+   transitively. Skip triage — do not proceed on a partial set — whenever an import
+   is malformed, missing, resolves outside the checkout, or resolves more than one
+   way.
 
    Why: a subagent loads the whole `CLAUDE.md` hierarchy and there is no per-agent
    opt-out, so a PR that edits an instruction file would be rewriting the rules its
@@ -454,10 +465,24 @@ Replace with:
    bot status notes) and claims superseded by another **before** forming the tracked
    set, so every tracked claim can be required to reach a verdict.
 
-   Unless step 0 said otherwise, delegate each claim to a `dev-workflow:finding-triage`
-   subagent with fresh context, in **batches of 4**. Pass it: the canonical claim, one
-   or more repository-relative locations you have resolved and proven to sit inside the
-   checkout, the path to `AGENTS.md`, and your attestation that step 0 ran and passed.
+   If no tracked claims remain after those drops, spawn nothing: report that the PR
+   drew no defect claims, still answer any thread that needs an answer, and go on to
+   the final CI and merge checks.
+
+   Unless step 0 said otherwise, delegate each remaining claim to a
+   `dev-workflow:finding-triage` subagent with fresh context, in **batches of 4**.
+   Pass it four things:
+
+   - the canonical single-line claim
+   - **where to look**: the repository-relative locations, each resolved against the
+     checkout root *with symlinks followed*, and passed only when you can show the
+     result stays inside it — a lexically clean path through a checked-in symlink
+     still escapes. Skip a claim whose locations you cannot prove confined. When the
+     claim names no particular file, pass the literal token `repository` instead.
+   - **`AGENTS.md`**: its confined path if the project has one, otherwise the explicit
+     statement that the project has none — do not invent a path
+   - your attestation that step 0 ran and passed
+
    It returns `accept`, `dismiss` or `escalate-to-user` — a judgment of whether the
    claim is **true**, and nothing more.
 
@@ -468,8 +493,11 @@ Replace with:
    Do not quietly validate the claim yourself instead: that is the self-review the
    subagent exists to replace.
 
-   Apply no fix until every queued claim has returned. If you knowingly change the tree
-   mid-run, re-run the affected claims before acting on them. Reply on the PR thread
+   Apply no fix until every queued claim across every batch has returned. If you
+   knowingly change the tree mid-run, re-run the affected claims before acting on them.
+   Nothing pins the checkout while agents read, and an edit from outside this session
+   is undetectable here — so a verdict is best-effort against the tree as it was read,
+   which is why it informs your decision rather than making it. Reply on the PR thread
    either way (`gh pr comment` / review-thread reply) — an unanswered bot comment is
    indistinguishable from a missed one. One reply per thread, covering every claim on it.
 
@@ -536,35 +564,59 @@ enumerations Task 2 and Task 3 fixed in the repo's own files. Left alone, every 
 `/workflow-init` touches inherits a Gate-B rule and a prompt-standards scope blind to
 agent definitions.
 
-- [ ] **Step 1: The inline `prompt-standards.md` template — scope paragraph**
+- [ ] **Step 1: The inline `prompt-standards.md` template — scope sentence**
 
-In the fenced `prompt-standards.md` template, find the sentence enumerating prompt
-artifacts (it mirrors `docs/prompt-standards.md`'s opening) and add agent definitions to
-it. Word it for a project that has none yet:
+Find (inside the fenced `prompt-standards.md` template, just under `# Prompt Standards`):
 
 ```
-This repository ships prompts. Its skills, slash commands, agent definitions (if any),
-hook reminder messages, and every template it scaffolds are prompt artifacts — they are
-the product, not documentation of it.
+Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, and spec/plan
+templates are prompts. When authoring or changing one, it must pass the checklist
+below — Gate A reviews skill specs against these criteria via AGENTS.md.
 ```
 
-- [ ] **Step 2: The inline `CLAUDE.md` template — §5 artifact-kind list**
-
-In the fenced `CLAUDE.md` template, find the Gate-B "Prompts are not prose" paragraph
-and add `agents/` to its directory list and agent definitions to its artifact list, so
-the scaffolded rule matches the repo's own:
+Replace with:
 
 ```
-  **Prompts are not prose:** `CLAUDE.md`/`AGENTS.md`, and anything under a `.claude/`,
-  `plugins/`, `skills/`, `commands/` or `agents/` directory **at any depth** — skills,
-  commands, agent definitions, hook reminder text, inline templates — are product even
-  though they are `.md`, and all fire full Gate B.
+Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, agent definitions
+(`.claude/agents/`, if this project has any), and spec/plan templates are prompts. When
+authoring or changing one, it must pass the checklist below — Gate A reviews skill specs
+against these criteria via AGENTS.md.
 ```
 
-- [ ] **Step 3: Verify both templates mention agents**
+The "if this project has any" is deliberate: a freshly initialized project has no
+agents, and a scaffolded rule that reads as though it must is a rule its reader
+discounts.
 
-Run: `grep -c 'agent definitions\|agents/' plugins/dev-workflow/commands/workflow-init.md`
-Expected: at least `2`.
+- [ ] **Step 2: The inline `CLAUDE.md` template — the Gate-B artifact-kind list**
+
+Find (inside the fenced `CLAUDE.md` template):
+
+```
+  prose:** `CLAUDE.md`/`AGENTS.md`, and anything under a `.claude/`, `plugins/`,
+  `skills/` or `commands/` directory **at any depth**, are product even though they
+  are `.md` — all fire full Gate B, as does any mixed commit or any non-`.md` file.
+```
+
+Replace with:
+
+```
+  prose:** `CLAUDE.md`/`AGENTS.md`, and anything under a `.claude/`, `plugins/`,
+  `skills/`, `commands/` or `agents/` directory **at any depth**, are product even
+  though they are `.md` — all fire full Gate B, as does any mixed commit or any
+  non-`.md` file.
+```
+
+- [ ] **Step 3: Verify each template independently**
+
+A combined count would pass when only one template changed, because a single
+replacement can match on two lines. Check them separately:
+
+```bash
+grep -c 'agent definitions' plugins/dev-workflow/commands/workflow-init.md   # expect 1
+grep -c "or \`agents/\` directory" plugins/dev-workflow/commands/workflow-init.md  # expect 1
+```
+
+Expected: `1` and `1`.
 
 ---
 
@@ -607,9 +659,10 @@ Replace with:
 
 ```
 `/dev-workflow:process-pr-review`. Every comment is validated against code and
-invariants — each claim checked by a fresh-context `dev-workflow:finding-triage`
-subagent, so the agent that formed a belief is not the one grading it — answered on the
-thread, and, if accepted and in scope, fixed (substantial fixes go through Gate B
+invariants — usually by a fresh-context `dev-workflow:finding-triage` subagent per
+claim, so the agent that formed a belief is not the one grading it; on a PR that edits
+instruction files the command checks them itself instead, and says so — then answered on
+the thread, and, if accepted and in scope, fixed (substantial fixes go through Gate B
 again). Nothing silently ignored, nothing blindly applied.
 ```
 
@@ -656,67 +709,110 @@ Expected: every part passes; final line `✔ Validation passed`; exit 0.
 Run: `git status --short plugins/dev-workflow/hooks/`
 Expected: no output. If anything appears, revert it — the spec settled that the hook is untouched.
 
-- [ ] **Step 3: 11-item prompt-standards self-review of the agent definition**
+- [ ] **Step 3: 11-item prompt-standards review of EVERY changed prompt artifact**
 
-Read `docs/prompt-standards.md` and state, per item, whether
-`plugins/dev-workflow/agents/finding-triage.md` satisfies it and how. Write the result
-into the commit message. Items likeliest to fail and what satisfies them here:
+Invariant 11 covers "any skill, command, agent definition, hook message, or scaffolded
+template" — so this is not only the new agent. Review and record a per-item result for
+each changed prompt artifact:
 
-| Item | Satisfied by |
-|---|---|
-| 1 target model named | the opening line naming Claude via Claude Code, with the check date |
-| 3 stop conditions | the 25-call budget and the immediate-stop list |
-| 4 output format with example | the three-field block plus three worked examples |
-| 9 positive instructions | "Read widely enough to be right", "follow the smallest evidence path" — the prohibitions that remain are boundaries whose subject *is* the prohibition |
-| 10 diagnostic states name causes | each `escalate-to-user` cause paired with what the caller must supply |
-| 11 calibrated emphasis | no ALL-CAPS; bold only on the two load-bearing rules |
+- `plugins/dev-workflow/agents/finding-triage.md` (new)
+- `plugins/dev-workflow/commands/process-pr-review.md` (Task 4 rewrote its Step 3)
+- `plugins/dev-workflow/commands/workflow-init.md` — **both** inline templates (Task 5)
+- `CLAUDE.md` §5 and `AGENTS.md` (Tasks 2–3)
+- `plugins/dev-workflow/skills/harden-finding/SKILL.md` (Task 3)
 
-- [ ] **Step 4: Check for unsupported enforcement claims**
+For the smaller edits, a per-item result can be brief — most items are unaffected by a
+one-line enumeration change — but state that rather than skipping the artifact.
 
-Run: `grep -nE 'enforc|guarante|prevent|cannot' plugins/dev-workflow/agents/finding-triage.md`
+Judge item 11 (calibrated emphasis) by **inventorying the actual emphasis in the text**
+and asking whether each use is load-bearing. Do not copy a conclusion from this plan:
+the agent body bolds several phrases, and an inventory is the only way to tell whether
+that is calibrated or drift.
 
-For each hit, confirm the sentence either names the mechanism or explicitly disclaims.
-This is the Global Constraint above; Gate A caught four violations of it in the spec.
+- [ ] **Step 4: Check for unsupported enforcement claims — semantically**
 
-- [ ] **Step 5: Stage everything and confirm the file list**
+This is the Global Constraint. Gate A caught four instances in the spec and a fifth in
+the first draft of the agent body, so treat grep as an aid and the reading as the check.
+
+Run, across every artifact changed in Tasks 1–6:
+
+```
+grep -nE 'enforc|guarante|prevent|ensur|cannot|never|always|impossible|read-only'
+```
+
+Then read each changed file's new sentences and ask of every absolute: **what mechanism
+makes this true, and did I verify it exists?** The fifth instance — "an altered claim
+means the verdict lands on the wrong one" — contains none of `enforce`, `guarantee` or
+`prevent`, which is why the vocabulary list alone would have missed it.
+
+- [ ] **Step 5: Stage exactly the target paths, then confirm**
+
+Do **not** `git add -A` — it would sweep in any unrelated working-tree change and
+"noticing it in the file list" does not unstage it. Check the tree is otherwise clean
+first, then stage the 13 paths by name:
 
 ```bash
-git add -A
+git status --short          # expect only the 13 target paths
+git add .claude-plugin/marketplace.json AGENTS.md CLAUDE.md README.md \
+  docs/architecture.md docs/getting-started.md docs/prompt-standards.md \
+  plugins/dev-workflow/.claude-plugin/plugin.json \
+  plugins/dev-workflow/agents/finding-triage.md \
+  plugins/dev-workflow/commands/process-pr-review.md \
+  plugins/dev-workflow/commands/workflow-init.md \
+  plugins/dev-workflow/skills/harden-finding/SKILL.md \
+  scripts/check-invariants.sh
 git diff --cached --name-only
 ```
 
-Expected exactly: `.claude-plugin/marketplace.json`, `AGENTS.md`, `CLAUDE.md`,
-`README.md`, `docs/architecture.md`, `docs/getting-started.md`,
-`docs/prompt-standards.md`, `plugins/dev-workflow/.claude-plugin/plugin.json`,
-`plugins/dev-workflow/agents/finding-triage.md`,
-`plugins/dev-workflow/commands/process-pr-review.md`,
-`plugins/dev-workflow/commands/workflow-init.md`,
-`plugins/dev-workflow/skills/harden-finding/SKILL.md`, `scripts/check-invariants.sh`.
+Expected: exactly those 13, and nothing under `plugins/dev-workflow/hooks/`.
 
-Nothing under `plugins/dev-workflow/hooks/`.
+- [ ] **Step 6: WIP commit, then the Gate-B loop**
 
-- [ ] **Step 6: WIP commit, then Gate B**
-
-Gate B needs a non-empty range, and `baseSha` = HEAD is empty pre-commit. Make a
-`WIP:`-named commit (the hook treats a `wip`-prefixed message as cycle-internal, so it
-neither fires a STOP nor resets the pass counters), then run `mcp__codex__review` with
-`baseSha` set to its parent. Minimum three passes; fix Blocker/Major between them; the
-final pass must be clean.
+Gate B needs a non-empty range; `baseSha` = HEAD is an empty range pre-commit. Make a
+`WIP:`-named commit — the hook treats a `wip`-prefixed message as cycle-internal, so it
+neither fires a STOP nor resets the pass counters.
 
 ```bash
 git commit -m "WIP: finding-triage agent"
-git rev-parse HEAD~1   # this is baseSha
+git rev-parse HEAD~1   # baseSha for every pass
 ```
 
-- [ ] **Step 7: Close the cycle with the real commit**
+Then loop. **The order inside the loop is the part that matters:**
 
-After the final clean Gate-B pass, replace the WIP commit — do not add a follow-up:
+1. Run `mcp__codex__review` with `baseSha` = that parent and `headSha` = current HEAD.
+2. Validate each finding against the code; fix the Blocker/Major ones. Note a dismissal
+   with a one-line reason.
+3. **Re-run the full quality command and the scope checks from Steps 1, 2 and 4** — a
+   review fix can break validation, touch the hook, or introduce a new unsupported
+   claim.
+4. **Stage the changed files and `git commit --amend --no-edit`**, keeping the WIP
+   message.
+5. Go to 1.
+
+Step 4 is not optional and is easy to skip. `mcp__codex__review` reads the **committed**
+git range: a fix left in the working tree is invisible to it, so the next pass would
+re-review the same stale diff and report the same findings, and the final commit would
+ship without the fixes. Amending keeps the reviewed range and the eventual commit the
+same object.
+
+**Floor:** three passes, unless a pass returns zero findings — CLAUDE.md §5 allows that
+as the one early exit, so do not manufacture passes after a genuinely clean one.
+Otherwise continue past three until a pass is clean, or until clearly stuck, then stop
+and surface to the user.
+
+- [ ] **Step 7: Close the cycle**
+
+After the final clean pass, with every fix already amended in by Step 6.4, replace only
+the message — never add a follow-up commit, which would leave `WIP:` in history:
 
 ```bash
 git commit --amend -m "feat(agents): add finding-triage, a read-only PR-comment checker
 
-<per-item prompt-standards result from Step 3>"
+<per-artifact prompt-standards results from Step 3>"
 ```
+
+Verify before pushing: `git log --oneline -1` shows no `WIP:`, and
+`git status --short` is clean.
 
 ---
 
@@ -728,13 +824,11 @@ git commit --amend -m "feat(agents): add finding-triage, a read-only PR-comment 
 needs no task by construction. §10's follow-up harden-finding is explicitly *after* this
 PR and is not in scope here.
 
-**Placeholders.** None. Every edit gives find-text and replace-text verbatim; the one
-deliberate exception is Task 5, where the inline templates are located by description
-rather than quoted, because the surrounding fenced block is long and quoting it whole
-would be more error-prone than locating it — the replacement text is given in full.
+**Placeholders.** None. Every edit gives find-text and replace-text verbatim, including
+Task 5's two inline templates.
 
 **Type consistency.** The agent's contract is named identically everywhere: frontmatter
 `name: finding-triage`; prose and delegation `dev-workflow:finding-triage`; the output
-labels `CLAIM`/`VERDICT`/`REASON` in Task 1 are the same labels Task 4's validation
-checks; the three verdict values match across Task 1 and Task 4; "batches of 4" in
-Task 4 matches the spec's §6.1.
+labels `CLAIM`/`VERDICT`/`REASON` in Task 1 are the labels Task 4's validation checks;
+the three verdict values match across Task 1 and Task 4; "batches of 4" in Task 4 matches
+the spec's §6.1; the four input fields in Task 1 are the four Task 4 passes.
