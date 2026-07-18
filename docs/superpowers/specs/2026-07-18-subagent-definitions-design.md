@@ -1,134 +1,78 @@
-# Subagent definitions: task-verifier + finding-triage — Design
+# Subagent definition: finding-triage — Design
 
-**Date:** 2026-07-18 · **Status:** approved, pre-Gate-A
+**Date:** 2026-07-18 · **Status:** revised after Gate A pass 1 · **Version target:** 0.4.0
+
+Originally scoped as two agents. `task-verifier` was dropped at Gate A when review
+showed it duplicated an existing superpowers mechanism; see §8.2. One agent ships.
 
 ## 1. Problem
 
-Two points in the workflow ask the main agent to check its own work, which is the
-one thing it is worst at: confirming a plan task actually meets its success criteria,
-and deciding whether a PR-bot comment is right. In both cases the agent that judges
-is the agent that just formed the belief being judged, so it shares every assumption
-that produced the belief.
+`/dev-workflow:process-pr-review` asks the main agent to decide whether each PR-bot
+comment is right. That is the agent judging a belief it just formed, sharing every
+assumption that produced it. Bot comments are also the case where being wrong is
+expensive in both directions: accepting a false finding produces a pointless change,
+dismissing a true one silently drops a real defect.
 
-Claude Code subagents give each check its own context window. That does not make the
-check independent of the *model* — it makes it independent of the *conversation*,
-which is what these two checks actually need.
+A subagent gives each comment its own context window. That does not make the check
+independent of the *model* — it makes it independent of the *conversation*, which is
+what this check needs.
 
 ## 2. Scope
 
-Add two agent definitions to the plugin. Integrate them at six documented points.
-Nothing else becomes an agent, and the hook is not touched.
+Add one agent definition, `finding-triage`, and integrate it at the documented points
+in §7. Nothing else becomes an agent. The hook is not touched.
 
-**Explicit non-goal:** these agents do not replace, supplement, or count toward the
-Codex gates. See §5.
+**Explicit non-goal:** this agent does not substitute for the Codex gates (§5).
 
 ## 3. Verified platform facts
 
-Read from the Claude Code docs before designing; recorded here so a future reader can
-tell what was checked from what was assumed.
+Read from the Claude Code docs on 2026-07-18 before designing, and recorded so a
+future reader can tell what was checked from what was assumed.
 
 | Fact | Source |
 |---|---|
-| Plugin agents live in `agents/` in the plugin root, as markdown with YAML frontmatter | plugins reference, "Agents" |
-| Only `name` and `description` are required | sub-agents, "Supported frontmatter fields" |
+| Plugin agents live in `agents/` in the plugin root, markdown with YAML frontmatter | [plugins reference § Agents](https://code.claude.com/docs/en/plugins-reference) |
+| Only `name` and `description` are required | [sub-agents § Supported frontmatter fields](https://code.claude.com/docs/en/sub-agents) |
 | `tools` is an allowlist — **inherits all tools if omitted** | same |
 | `disallowedTools` removes tools "from inherited or specified list" | same |
 | `model` defaults to `inherit` when omitted | same |
-| `permissionMode`, `hooks` and `mcpServers` are **ignored for plugin agents** | plugins reference + sub-agents note |
-| Plugin agents are invoked as `plugin-name:agent-name` | plugins reference, "Integration points" |
+| `permissionMode`, `hooks`, `mcpServers` are **ignored for plugin agents** | [plugins reference](https://code.claude.com/docs/en/plugins-reference) + sub-agents note |
+| Plugin agents are invoked as `plugin-name:agent-name` | plugins reference § Integration points |
 
-The last two drive two decisions below: there is no per-agent way to constrain Bash,
-and prose must use the scoped name.
-
-## 4. The read-only constraint, and where it is real
-
-Both agents are verifiers, not builders. Neither may edit.
+## 4. Read-only, with no residual
 
 `finding-triage` gets `tools: Read, Grep, Glob`. It needs no shell, so its read-only
-property is **mechanically enforced with no residual**.
+property is **mechanically enforced**: the allowlist omits Edit, Write and Bash, and
+the agent is incapable of mutating anything.
 
-`task-verifier` must run the project's test and quality commands — producing its own
-evidence is the entire point — which requires `Bash`, and `Bash` can write. The
-per-agent escapes are all closed: `permissionMode` is ignored for plugin agents,
-per-agent `hooks` are ignored, and `permissions.allow` in settings is session-wide
-rather than per-agent. So for this one agent, read-only is **partly instruction-backed
-and that is stated in the definition rather than implied away.**
+This is why the agent that survived review is the one that never needed Bash. The
+dropped `task-verifier` required it (§8.2), and with it came an instruction-backed
+gap that could not be closed per-agent: `permissionMode` is ignored for plugin
+agents, per-agent `hooks` are ignored, and `permissions.allow` is session-wide.
 
-Two things bound the residual:
+`disallowedTools` is **not** set. Against a `tools` allowlist that already omits every
+write tool it would be redundant today, and its only value — a backstop if a future
+edit deletes the `tools:` line, since omission inherits everything — is better served
+by the comment in the definition telling the reader not to delete that line.
 
-1. `disallowedTools: Edit, Write, NotebookEdit` closes the convenient write paths.
-   This is redundant against today's allowlist and is kept deliberately, with its
-   reason written next to it: because `tools` inherits *everything* when omitted,
-   the denylist is the backstop if a future edit deletes the `tools:` line. It
-   survives that mistake; the allowlist alone does not.
-2. Any write the verifier does make changes the working tree, which flips the
-   content-hash Gate-B state to unreviewed. A verifier that breaks its contract
-   cannot do so invisibly — the hook cannot attribute the change, but it does catch
-   the side effect. Defense in depth, not a loophole.
+**On detecting a rogue subagent write.** No Bash-capable agent ships here, so the
+question is largely moot. Where it still matters — anyone adding one later — the
+honest statement is that the Gate-B content hash gives **best-effort detection of
+most commit-relevant worktree changes**, not a guarantee. Known gaps, all recorded in
+`todos.md`: staged-vs-worktree divergence, a compound `mutate && git commit` hashed
+before the mutation, `.context/` exclusion, and gitignored paths. A claim in one
+document must not overstate what another document in the same repo already refutes.
 
-## 5. Neither agent is a gate
+## 5. Not a gate
 
-Each definition carries one line stating that it never counts as a Gate A or Gate B
-pass: CLAUDE.md §5 requires cross-model independence, and a same-model subagent
-shares this model's blind spots. The agents complement the gates; they never
-substitute for one.
+The definition carries one line stating it never counts as a Gate A or Gate B pass:
+CLAUDE.md §5 requires cross-model independence, and a same-model subagent shares this
+model's blind spots. It **complements** the gates and never **substitutes** for one.
 
-This is in the definitions rather than only in the docs because the definition is
-what the agent itself reads.
+It lives in the definition, not only in the docs, because the definition is what the
+agent itself reads.
 
-## 6. The definitions
-
-### 6.1 `task-verifier`
-
-```yaml
----
-name: task-verifier
-description: Verifies an implemented plan task against its success criteria with
-  fresh context. Use after a task is implemented, before marking it done.
-tools: Read, Grep, Glob, Bash
-disallowedTools: Edit, Write, NotebookEdit
----
-```
-
-`model`, `effort` and `maxTurns` are omitted. The first two default to `inherit`,
-which is what a verifier wants. `maxTurns` is omitted because an arbitrary cap can
-truncate a legitimate verification mid-way; the stop condition belongs in the prompt
-body, where prompt-standards item 3 requires it regardless.
-
-**Input contract**, stated in the definition: the task's text from the plan (files,
-interfaces, steps, success criteria) plus the current diff.
-
-**Behavior:** check each success criterion against evidence the agent produces
-itself — run the project's test command resolved from `AGENTS.md § Commands`, read
-the diff, read the touched files.
-
-**Bash scope**, phrased positively per item 9: use Bash to run the project's
-test/quality commands as resolved from `AGENTS.md § Commands`, and nothing else.
-Then the two constraint sentences from §4.
-
-**Verdict per criterion:** `met` (with the tool result that proves it) / `not met`
-(with what is missing) / `not verifiable` (with why).
-
-**Hard boundary:** no fixes and no suggestions beyond the verdict. A verifier that
-starts patching has spent the fresh context that made it worth calling.
-
-**Output format** (shown, per item 4):
-
-```
-CRITERION  typecheck exits 0
-VERDICT    met
-EVIDENCE   `pnpm typecheck` → exit 0, 0 errors
-
-CRITERION  invalid input returns 422
-VERDICT    not met
-MISSING    no test covers a malformed body; the handler has no validation branch
-
-CRITERION  p95 latency under 200ms
-VERDICT    not verifiable
-WHY        no load-test harness in this repo
-```
-
-### 6.2 `finding-triage`
+## 6. The definition
 
 ```yaml
 ---
@@ -139,14 +83,70 @@ tools: Read, Grep, Glob
 ---
 ```
 
-**Input contract:** one comment (text, file, line), the relevant code, and
-`AGENTS.md`. One comment per invocation — the isolation is the point.
+`model` and `effort` are omitted: both default to `inherit`, which is what a checker
+wants. `maxTurns` is omitted because one comment against one file is bounded by the
+stop conditions below, and an arbitrary cap can truncate a legitimate check.
 
-**Verdict:** `accept` / `dismiss` / `escalate-to-user`, each with a one-line reason.
-A dismissal must cite what in the code or in the invariants contradicts the comment;
-"looks fine" is not a dismissal.
+**Target model** (item 1): the body states it runs as Claude via Claude Code, and
+records that Anthropic's current prompting page was checked on 2026-07-18.
 
-**Output format** (shown, per item 4):
+### 6.1 Input contract
+
+The caller passes, per invocation:
+
+| Field | Required | On absence |
+|---|---|---|
+| comment text | yes | `escalate-to-user`, naming the missing field |
+| file path and line | yes | `escalate-to-user`, naming the missing field |
+| the head SHA the comment was made against | yes | `escalate-to-user` |
+| path to `AGENTS.md` (or a statement that the project has none) | yes | `escalate-to-user` |
+
+**One comment per invocation.** The isolation is the point; batching re-creates the
+shared context the agent exists to avoid.
+
+The agent reads the code itself via Read/Grep/Glob — the caller passes locations, not
+file contents, so the agent cannot be fed a curated excerpt.
+
+**Never infer a missing field.** An incomplete payload returns `escalate-to-user`
+naming exactly which fields are missing. Guessing the alleged defect is the failure
+mode that makes the whole check worthless.
+
+### 6.2 Staleness and moved code
+
+The agent compares the comment's head SHA against the current checkout's HEAD. If
+they differ, it says so in its reason — a verdict reached against different code than
+the comment was written against is not a verdict.
+
+If the referenced file or line no longer holds the code described:
+
+- the code is findable elsewhere (moved/renamed) → judge it there, verdict as normal,
+  reason naming the new location
+- the described defect is already fixed → `dismiss`, reason "already resolved at
+  `<location>`"
+- the code cannot be located → `escalate-to-user`
+
+### 6.3 Verdicts
+
+Three, mutually exclusive. **Factual validity and actionability are separate
+questions**; conflating them is how a technically-correct comment turns into an
+out-of-scope change.
+
+| Verdict | When |
+|---|---|
+| `accept` | the comment identifies a real defect in this PR's changes, and fixing it belongs in this PR |
+| `dismiss` | the comment is factually wrong, already resolved, or a duplicate of another comment on the same code — the reason must cite what in the code or in the invariants contradicts it |
+| `escalate-to-user` | valid but not actionable here: pre-existing and outside this PR's diff, a scope expansion, contradicts a settled decision — **or** any required input is missing, the code cannot be located, or the SHAs diverge |
+
+"Looks fine" is not a dismissal. A dismissal cites evidence.
+
+### 6.4 Stop conditions (item 3)
+
+Stop and emit the verdict block as soon as one verdict is reached for the comment.
+Escalate immediately rather than continuing on: a missing required field, an
+unlocatable file, or a SHA mismatch. Never search beyond the file and its immediate
+callers looking for a way to make a comment true.
+
+### 6.5 Output format (item 4 — shown, all three verdicts)
 
 ```
 COMMENT  src/orders.ts:42 — "missing tenant scope on this query"
@@ -158,75 +158,134 @@ COMMENT  src/orders.ts:88 — "unvalidated input"
 VERDICT  dismiss
 REASON   validation happens in the caller at src/orders.ts:31, outside the
          comment's context window
+
+COMMENT  src/legacy/report.ts:12 — "N+1 query in this loop"
+VERDICT  escalate-to-user
+REASON   real, but pre-existing and untouched by this PR's diff — fixing it is a
+         scope expansion
 ```
 
 ## 7. Integration
 
-Each is one sentence unless noted. Every mention uses the scoped name
-(`dev-workflow:task-verifier`), matching the existing skill rows; frontmatter carries
-the unscoped name. Same name, differently qualified — no drift.
+Every mention uses the scoped name `dev-workflow:finding-triage`, matching the
+existing skill rows; frontmatter carries the unscoped `finding-triage`. Same name,
+differently qualified.
 
 | # | File | Change |
 |---|---|---|
-| 1 | `commands/process-pr-review.md`, Step 3 | each comment MAY be validated by a `dev-workflow:finding-triage` subagent with fresh context, in parallel; the main agent aggregates and stays responsible for replies and fixes |
-| 2 | `commands/workflow-init.md`, §4 template | task completion claims can be checked by `dev-workflow:task-verifier`; its verdict is the "tool result" a progress claim points to |
-| 3 | `README.md` component table | two rows, one line each |
-| 4 | `docs/getting-started.md` | one sentence in step 5 (verifier), one in step 8 (triage) — see length rule below |
-| 5 | `AGENTS.md` architecture tree | add `agents/` |
-| 6 | `docs/architecture.md` layout | add `agents/` |
+| 1 | `commands/process-pr-review.md`, Step 3 | each comment is validated by a `dev-workflow:finding-triage` subagent with fresh context, in parallel; the main agent aggregates and stays responsible for replies and fixes |
+| 2 | `README.md` component table | one row |
+| 3 | `docs/getting-started.md`, step 8 | one sentence |
+| 4 | `AGENTS.md` architecture tree | add `agents/` |
+| 5 | `AGENTS.md` **Boundaries** paragraph | add `agents/` to the convention-loaded enumeration |
+| 6 | `AGENTS.md` **invariant 6** | add `agents/` to the components the manifest must not re-declare |
+| 7 | `AGENTS.md` **invariant 11** | add agent definitions to the governed prompt artifacts |
+| 8 | `docs/architecture.md` layout + convention-loading prose | add `agents/` in both places |
+| 9 | `docs/prompt-standards.md` scope paragraph | add agent definitions to the enumerated prompt artifacts |
 
-Rows 5 and 6 are additions to the brief, required by this repo's own Don'ts: "the
-layout tree above is part of the surface that drifts."
+Rows 4–9 are additions to the original brief. Rows 4, 5, 6 and 8 are required by this
+repo's own Don'ts — "the layout tree above is part of the surface that drifts" — and
+by the grep recipe added with the manifest rule, which finds every convention-loading
+declaration rather than only the tree.
 
-**Length rule for row 4, made explicit.** No length budget for
-`docs/getting-started.md` is documented anywhere, so "respect the budget" was
-ambiguous. Resolved here rather than left to interpretation: the file is 94 lines
-today and its worth is being readable in one sitting, so it **ends at 100 lines or
-fewer**. If the two sentences would push it past that, trim adjacent prose in the same
-change instead of letting the file grow. This is a rule for this change, not a new
-project-wide invariant — it is not added to `AGENTS.md`.
+Rows 7 and 9 close a gap this change itself creates: invariant 11 and
+`docs/prompt-standards.md` currently enumerate skills, commands, hook messages and
+templates. Adding `agents/` is precisely what makes that enumeration incomplete, so
+the change that introduces the gap closes it. Without this, the spec would assert a
+checklist governs artifacts its own scope excludes.
 
-**Invariant 6:** `agents/` is convention-loaded, so nothing is added to
-`plugin.json`. `scripts/check-invariants.sh` already greps for an `agents` key in the
-manifest, so that regression is mechanically caught.
+**`/workflow-init` note:** the §4 template integration from the original brief is
+dropped with `task-verifier`. `docs/prompt-standards.md` is scaffolded into initialized
+projects, so row 9's wording must read correctly for a project that has no agents yet.
 
-## 8. Not built: `ledger-scribe`
+**Invariant 6:** `agents/` is convention-loaded, so nothing is added to `plugin.json`.
+`scripts/check-invariants.sh` already greps for an `agents` key, so that regression is
+mechanically caught.
 
-A third agent was scoped to map a finding to taxonomy classes and draft a ledger row
-for approval. It is **not** built.
+**Invocation is the default, not an option.** Step 3 triages every comment that
+asserts a defect. Legitimate skips, stated: a comment that asserts no defect (praise,
+a summary, a bot's own status note), and a comment superseded by another on the same
+lines. Everything else is triaged. Contradictory verdicts across parallel invocations
+are resolved by the main agent before replying — it aggregates by file and line and
+escalates a genuine conflict rather than picking one.
 
-The motivation was real: the risk it addressed is the unwritten ledger row at the end
-of a long cycle, when attention is spent. That concern is already carried by
-`harden-finding`'s own flow and by `process-pr-review` step 4, which mandates the
-ledger check — so the problem was **located elsewhere, not dismissed**.
+**No length cap on `getting-started.md`.** Pass 1 flagged that the 100-line budget in
+the previous draft was invented, and that authorizing "trim adjacent prose" to meet an
+invented number licenses unrelated edits against CLAUDE.md §§2–3. Add the sentence and
+judge readability directly.
 
-The constraint was **expressible but redundant**. Expressible: `tools: Read, Grep,
-Glob` with no Write, Edit or Bash makes the agent mechanically incapable of touching
-`docs/hardening-log.md`, cleanly, with no instruction-backed residual. Redundant:
-`harden-finding` already greps the base taxonomy and the project taxonomy and maps
-the finding to a canonical class. Fresh context is a *disadvantage* there — correct
-fingerprinting depends on the conversation the finding arose in.
+## 8. Not built
 
-That wording tells a future reader what would have to change for the agent to become
-worth adding: `harden-finding` losing its fingerprint step, or classification
-becoming genuinely context-free.
+### 8.1 `ledger-scribe`
+
+Scoped to map a finding to taxonomy classes and draft a ledger row for approval.
+
+The motivation was real: the unwritten ledger row at the end of a long cycle, when
+attention is spent. That concern is already carried by `harden-finding`'s own flow and
+by `process-pr-review` step 4, which mandates the ledger check — the problem was
+**located elsewhere, not dismissed**.
+
+**Expressible but redundant.** Expressible: `tools: Read, Grep, Glob` makes it
+mechanically incapable of touching `docs/hardening-log.md`. Redundant:
+`harden-finding` already greps both taxonomies and maps the finding to a canonical
+class. That redundancy alone is sufficient reason. A secondary judgment — that fresh
+context is a disadvantage for fingerprinting, since classification draws on how the
+finding arose — is offered as opinion, not established fact; `harden-finding` takes an
+explicit intake contract, so a parameterized agent could receive the same inputs.
+
+What would have to change for it to be worth adding: `harden-finding` losing its
+fingerprint step, or classification becoming genuinely context-free.
+
+### 8.2 `task-verifier`
+
+Scoped to verify an implemented plan task against its success criteria with fresh
+context. Dropped at Gate A pass 1.
+
+**Duplicates an existing mechanism.** `superpowers:subagent-driven-development`
+already dispatches "a task review (spec compliance + code quality) after each" task,
+with a re-review loop after fixes. "Spec compliance" is "checks the success criteria."
+The remaining path, `executing-plans`, explicitly says: "If subagents are available,
+use superpowers:subagent-driven-development instead of this skill." So on the platform
+where a subagent can run, the reviewer already exists; the path lacking one is the
+path that cannot run subagents. The niche collapses.
+
+This is the same redundancy test applied to `ledger-scribe`, applied consistently.
+
+**The residual distinction is real but thin.** Per-criterion verdicts backed by
+self-produced evidence serve CLAUDE.md §4's "ground progress claims against a tool
+result" *outside* plan execution — for example, fixes made during
+`process-pr-review`, where no superpowers reviewer is dispatched at all.
+
+**Trigger condition.** If progress claims outside `subagent-driven-development`
+repeatedly turn out ungrounded in real use, that recurrence justifies a
+narrowly-scoped verifier — rescoped to **claims**, not plan tasks, and reconciled
+against superpowers' reviewer inside the definition. Until that recurrence, adding it
+is speculative (CLAUDE.md §2).
 
 ## 9. Verification
 
-No new tests. Prompts have no typechecker; this repo's answer to that is review
-against `docs/prompt-standards.md`.
+No new tests. Prompts have no typechecker; this repo's answer is review against
+`docs/prompt-standards.md`.
 
-- `claude plugin validate . --strict` passes with the new `agents/` directory
-- both definitions self-reviewed against all 11 prompt-standards items, result
-  stated per item
-- the hook suite still passes, unchanged — nothing in `hooks/` is touched
-- `scripts/check-invariants.sh` passes
-- every mention of an agent matches its frontmatter name
+- the canonical quality command from `AGENTS.md § Commands` is run **verbatim** and
+  its observed result reported — not a hand-picked subset
+- `claude plugin validate . --strict` passes with the new `agents/` directory (it is
+  part of that command)
+- the definition is self-reviewed against all 11 prompt-standards items, result stated
+  per item
+- nothing in `hooks/` changes
+- every mention of the agent resolves to the frontmatter name: prose uses
+  `dev-workflow:finding-triage`, frontmatter uses `finding-triage`. The check is that
+  the unscoped basename matches and the scope prefix is correct for context — not
+  literal string equality, which the settled naming rule would fail by design
 
 ## 10. Delivery
 
-Three commits: `task-verifier`, `finding-triage`, then integration + docs + version.
+**One commit.** Dropping `task-verifier` makes the change small enough that the
+original three-commit plan would create three Gate-B cycles for one coherent unit —
+every commit resets the cycle and none could share a final pass. One commit, one
+cycle, one Gate-B loop closing it.
 
 Version `0.4.0` in `plugins/dev-workflow/.claude-plugin/plugin.json` — minor, new
-capability, no breaking change to existing components. Nothing else in that manifest
-changes (invariant 6).
+capability, no breaking change. One new agent is still a new capability. Nothing else
+in that manifest changes (invariant 6).
