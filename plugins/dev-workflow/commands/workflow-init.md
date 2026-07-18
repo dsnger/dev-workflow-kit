@@ -56,8 +56,50 @@ Check, in order:
    | State | How to detect | What to report |
    |---|---|---|
    | **1 · not configured** | no `codex` entry in `.mcp.json` (or no `.mcp.json`) | `MISSING — Step 2.8 writes the entry; re-run /workflow-init or add it by hand` |
-   | **2 · configured, not loaded** | the entry exists, but `mcp__codex__exec` / `mcp__codex__review` are not among your available tools | `NOT LOADED — restart the session (a new .mcp.json needs a one-time project-server approval). If it stays unavailable after a restart, the Codex CLI is not installed or not authenticated — it needs an OpenAI account; see the mcp-codex-dev docs.` |
+   | **2 · configured, not loaded** | the entry exists, but `mcp__codex__exec` / `mcp__codex__review` are not among your available tools | `NOT LOADED — check the six causes below in order; they need different fixes and "restart the session" only fixes the first.` |
    | **3 · ok** | both tools are available to you | `ok (pinned mcp-codex-dev@<version>)` |
+
+   **State 2 has six causes, and reporting only the first sends the user in a loop.**
+   Run `claude mcp list` and check them in this order — the fixes do not overlap:
+
+   1. **Not yet approved** — the server is listed but the session predates
+      `.mcp.json`. Fix: restart the session and approve the project server. Only this
+      cause is fixed by restarting, so do not offer it as the general remedy.
+   2. **A same-named server in a HIGHER-precedence scope wins.** Precedence is
+      **local → project → user** ([scope hierarchy](https://code.claude.com/docs/en/mcp#scope-hierarchy-and-precedence)),
+      and the whole entry from the winning scope is used — fields are never merged. So
+      only a **local**-scope `codex` can shadow this project's entry; restarting will
+      never change that. Fix: confirm which entry actually wins with
+      `claude mcp get codex`, then remove that one by its real scope —
+      `claude mcp remove codex -s <scope>`. Alternatively rename the project entry and
+      mirror the new name in `.context/codex-gate.tools`.
+
+      **A *user*-scope `codex` is NOT this cause.** User scope loses to project scope,
+      so a user entry alongside a project entry that is merely unapproved is cause 1 —
+      approve the project server. Telling someone to delete their user config there
+      removes a harmless setting and leaves the real problem in place, which is the
+      wrong-remedy loop this whole list exists to break.
+   3. **Codex CLI not installed** — `command -v codex` finds nothing. Fix: install it,
+      then re-check.
+   4. **Codex CLI installed but not authenticated** — `codex login status` reports no
+      session. Fix: log in; it needs an OpenAI account. Kept separate from cause 3
+      because "install it" and "log in" are different actions and the symptom does not
+      distinguish them.
+   5. **A codex server IS connected, but exposes the wrong tools.** It answers, yet
+      `mcp__codex__exec` / `mcp__codex__review` are absent — the official
+      `codex mcp-server` exposes a single `codex` tool (plus `codex-reply`), and other
+      servers expose other surfaces. Neither can be attributed to Gate A (reviews
+      TEXT) or Gate B (reviews a DIFF), so every review through them is invisible to
+      the counters. Report it as WRONG SERVER with both fixes (see the block below).
+      This is numbered here, ahead of the fallback, because it is a *known* cause with
+      a known fix — reaching "unexplained" with a perfectly healthy server connected
+      would be the wrong answer.
+   6. **None of the above** — binary present, logged in, a correctly-shaped server
+      still does not come up. Say exactly that rather than guessing: report the failure
+      as unexplained, quote whatever the server printed, and point at the
+      mcp-codex-dev docs. An invented cause is worse than an admitted unknown, because
+      the user spends their time on it. This is the catch-all, and it is strictly last —
+      never reach for it while any numbered cause above is still untested.
 
    Check the tool *names* specifically, not just that "a codex server exists": a
    different Codex MCP may connect under the same server name while exposing a
@@ -109,7 +151,11 @@ Prerequisites:
   git repository        ok
   superpowers plugin    MISSING — claude plugin marketplace add obra/superpowers-marketplace
                                   claude plugin install superpowers@superpowers-marketplace
-  codex MCP             configured, but tools not loaded — restart the session and approve the project server
+  codex MCP             NOT LOADED — `claude mcp get codex` shows a local-scope entry
+                                     winning over this project's, so exec/review never
+                                     load. Restarting will not help: remove the winning
+                                     entry (claude mcp remove codex -s local), or rename
+                                     this one and mirror it in .context/codex-gate.tools
   gh CLI                ok (optional — only /process-pr-review needs it)
   AGENTS.md             absent — Step 3 will write it
   stack                 pnpm · TypeScript · vitest · GitHub Actions
@@ -412,7 +458,13 @@ Living references (consult, don't copy — copies go stale):
    the prohibition ("no speculative abstractions", "don't refactor what isn't
    broken"), and restating a prohibition positively loses the boundary it draws —
    new prompts need a stated reason to do the same.
-10. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
+10. **Diagnostic states name their causes.** A prompt that reports a failure state
+    ("NOT LOADED", "MISSING", "unavailable") enumerates the distinct causes that
+    produce that state, gives a check that tells them apart, and pairs each with its
+    own fix. Why: causes with an identical symptom but different fixes are the case
+    the reader cannot resolve alone — offering only the most common one sends them
+    round a loop that never terminates.
+11. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
     (documented in the best-practices page). Existing heavy emphasis (e.g.

@@ -12,7 +12,7 @@ archive is the complete extraction base.
 | hooks/codex-gate.sh + .test.sh | gate counter/reminder | plugin (loaded by convention from `hooks/hooks.json` — never declared in the manifest) |
 | claude-settings.json | shows HOW the hook is wired up in a *project* (settings.json), which the plugin replaces with convention loading | reference only |
 | CLAUDE.md | discipline rules §1–5 | /workflow-init template (project file) |
-| prompt-standards.md | 10-criteria checklist | template + the plugin repo's own standard |
+| prompt-standards.md | 11-criteria checklist | template + the plugin repo's own standard |
 | hardening-log.md | FORMAT reference ONLY (sanitized: real findings removed) | template: empty ledger with header/convention |
 | coding-workflow.md | neutral overall documentation | basis for the plugin README |
 | .gitattributes | union merge for the ledger | template line |
