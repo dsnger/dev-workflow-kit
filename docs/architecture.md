@@ -19,6 +19,7 @@ scripts/check-invariants.sh       # invariants 5 and 6, mechanically (+ .test.sh
 plugins/dev-workflow/
   .claude-plugin/plugin.json
   skills/{intake,harden-finding}/SKILL.md
+  agents/finding-triage.md
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
   examples/                       # read, don't install — one stack's answers
@@ -27,7 +28,7 @@ docs/{hardening-log,hardening-taxonomy,pr-review-bots}.md
 source-files/                     # the extraction seed this repo was built from
 ```
 
-The plugin manifest declares no components at all: `skills/`, `commands/` and
+The plugin manifest declares no components at all: `skills/`, `commands/`, `agents/` and
 `hooks/hooks.json` are each discovered by convention from their paths, so naming any of
 them again would be two sources of truth for the same fact. For hooks it is worse than
 redundant — a `hooks` manifest key alongside the convention-loaded file is a

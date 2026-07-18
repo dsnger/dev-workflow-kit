@@ -47,7 +47,7 @@ project's actual config files and commands from `AGENTS.md § Commands`.
 | 2 · lint | a mechanical code pattern | the project's linter/static-analysis config | the project's lint command |
 | 3 · type | expressible in the type system | the project's type config / shared types | the project's typecheck command |
 | 4 · test | a behavioral / logic invariant | the project's test suite, next to the code under test | the project's test command |
-| P · prompt-standard | the finding is in a prompt artifact (skill, gate prompt, hook, command) | `docs/prompt-standards.md` | checklist self-review |
+| P · prompt-standard | the finding is in a prompt artifact (skill, gate prompt, hook, command, agent definition) | `docs/prompt-standards.md` | checklist self-review |
 
 - A non-blocking **warning** (a `warn`-level rule, a diagnostic that doesn't fail the
   quality command) is **not** rung 0 — it slipped through because nothing blocked it.

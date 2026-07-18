@@ -301,6 +301,9 @@ advisory — validate before applying; dismissed finding → one-line why.
   prose:** `CLAUDE.md`/`AGENTS.md`, and anything under a `.claude/`, `plugins/`,
   `skills/` or `commands/` directory **at any depth**, are product even though they
   are `.md` — all fire full Gate B, as does any mixed commit or any non-`.md` file.
+  Agent definitions are covered by that list, not listed separately: they live in
+  `.claude/agents/` or `plugins/*/agents/`, both already matched. A bare top-level
+  `agents/` is not matched, so do not add one and assume the gate sees it.
   The hook classifies paths the same way. Those directory names match at any depth
   deliberately, so a root-level `skills/` and a monorepo's `packages/*/.claude/` are
   both covered; the cost is that prose under a same-named directory
@@ -411,9 +414,10 @@ failure this line exists to prevent.
 ````markdown
 # Prompt Standards
 
-Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, and spec/plan
-templates are prompts. When authoring or changing one, it must pass the checklist
-below — Gate A reviews skill specs against these criteria via AGENTS.md.
+Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, agent definitions
+(`.claude/agents/` or `plugins/*/agents/`, if this project has any), and spec/plan
+templates are prompts. When authoring or changing one, it must pass the checklist below —
+Gate A reviews prompt specs against these criteria via AGENTS.md.
 
 Living references (consult, don't copy — copies go stale):
 

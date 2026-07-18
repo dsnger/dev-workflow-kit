@@ -11,7 +11,7 @@
     {
       "name": "dev-workflow",
       "source": "./plugins/dev-workflow",
-      "description": "Intake + harden-finding skills, PR-review processor, Codex gate hook, and /workflow-init to scaffold a project."
+      "description": "Intake + harden-finding skills, PR-review processor with fresh-context finding triage, Codex gate hook, and /workflow-init to scaffold a project."
     }
   ]
 }

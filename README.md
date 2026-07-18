@@ -21,6 +21,7 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 | `dev-workflow:intake` | skill — a raw idea or voice transcript (German or English) becomes a reviewable story. Captures WHAT and WHY; refuses to invent the parts that aren't there. |
 | `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule, type constraint, test, or documented convention, at the right rung, recorded in the ledger. |
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
+| `dev-workflow:finding-triage` | agent — read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
 | `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. |
 | codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and verify a Gate-B review against the actual content of the working tree. Always exits 0. |
 

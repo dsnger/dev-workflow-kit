@@ -1,7 +1,8 @@
 # Prompt Standards
 
 This repository ships prompts. The skills (`plugins/dev-workflow/skills/`), the slash
-commands (`plugins/dev-workflow/commands/`), the hook's reminder messages
+commands (`plugins/dev-workflow/commands/`), the agent definitions
+(`plugins/dev-workflow/agents/`), the hook's reminder messages
 (`plugins/dev-workflow/hooks/codex-gate.sh`), and every template `/workflow-init`
 writes are all prompt artifacts — they are the product, not documentation of it.
 
@@ -99,8 +100,9 @@ Recurring prompt-quality findings follow the same ladder as code findings: prose
 → checklist item here → template change. Prompts are artifacts; `harden-finding`
 treats them like code (rung `P`).
 
-Note the reflexive case: a prompt-quality defect found in *this repo's* skills or
-commands is a defect in the shipped product, and hardening it means changing the
+Note the reflexive case: a prompt-quality defect found in *this repo's* skills,
+commands, agent definitions, hook messages or scaffolded templates is a defect in the
+shipped product, and hardening it means changing the
 plugin — which every downstream project then inherits on update.
 
 ## Revalidation
