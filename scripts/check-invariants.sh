@@ -16,6 +16,8 @@
 # would slip past. Locations are also recovered from grep's `file:line:` output, which
 # assumes the filename has no colon in it. Both are accepted limits of a ~90-line
 # checker — it raises the floor, it is not a proof.
+#
+# TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 set -u
 
 root=$(cd "$(dirname "$0")/.." && pwd)
