@@ -150,7 +150,10 @@ reader can judge whether it still holds.
   Before editing any of those three, find every site that makes such a claim:
   `grep -rniE 'declare[sd]?|convention[- ]load' --include='*.md' . | grep -v source-files/`
   (A narrower pattern like `"manifest declares"` misses the ones phrased as "never
-  declared in the manifest" or "loaded by convention" — which is most of them.)
+  declared in the manifest" — which is most of them. Note `convention[- ]load` only
+  matches that word order, i.e. "convention-loaded" / "convention loading"; a sentence
+  reading "loaded by convention" is caught by the `declare[sd]?` arm only when it also
+  contains a form of *declare*, so read the hits rather than trusting the count.)
 - **Never rename or delete a doc section without grepping for references first.**
   `ci.yml` once pointed at a deleted README section; `MANIFEST.md` listed a `CLAUDE.md`
   that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is

@@ -96,7 +96,16 @@ bad_uses=$(scan 'uses:' | strip_comment | unquote | while IFS= read -r rec; do
     # image (which resolves to :latest), float exactly like `@v4` does.
     if [ "${ref_part#docker://}" != "$ref_part" ]; then
       img=${ref_part#docker://}
-      if [ "${img#*@sha256:}" != "$img" ]; then continue; fi   # digest-pinned
+      # Digest-pinned — but only if the digest is real. Accepting any `@sha256:`
+      # suffix let `@sha256:abc123` and even a bare `@sha256:` read as pinned, which
+      # is the checker asserting something it had not actually checked.
+      if [ "${img#*@sha256:}" != "$img" ]; then
+        dig=${img##*@sha256:}
+        if [ "${#dig}" -eq 64 ] && [ -z "$(printf '%s' "$dig" | tr -d '0-9a-f')" ]; then
+          continue
+        fi
+        printf '%s\n' "$occ"; continue
+      fi
       # Look for the tag in the FINAL path component only: a registry port
       # (`reg:5000/img`) also contains a colon, and treating that as the tag read an
       # untagged image as pinned.

@@ -42,3 +42,11 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
       prompting pages on every model-generation change (new Claude model in Claude
       Code, new Codex model for the gates).
+- [ ] **Invariant checker does not see Docker images outside a `docker://` action ref.**
+      `FROM alpine:latest` in a Dockerfile and `docker run alpine` in a script are
+      executable dependencies that invariant 5 covers, but every Docker rule is
+      downstream of the action-ref scan, so neither is looked at. Raised by CodeRabbit on
+      PR #2. Deferred rather than fixed there because it is a new surface (Dockerfiles,
+      shell `docker run`), not a gap in a spelling the checker already claims — and
+      the ledger ref is worded to claim only the latter. Needs its own reject/accept
+      fixtures.

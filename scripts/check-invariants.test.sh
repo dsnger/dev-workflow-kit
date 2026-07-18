@@ -12,7 +12,13 @@ pass_n=0; fail_n=0
 pass() { pass_n=$((pass_n + 1)); printf 'ok   - %s\n' "$1"; }
 fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 
-work=$(mktemp -d)
+work=$(mktemp -d) || work=''
+# Abort rather than continue with an empty $work: every path below is built as
+# "$work/r", so an empty value turns the fixture reset into `rm -rf /r`.
+if [ -z "$work" ] || [ ! -d "$work" ]; then
+  printf 'FAIL - could not create a temporary directory; refusing to run\n' >&2
+  exit 1
+fi
 trap 'rm -rf "$work"' EXIT
 
 # Build a minimal repo whose only content is $1 (a workflow file body), run the
@@ -91,7 +97,14 @@ expect_accept "$PINNED
 expect_accept "$PINNED
       - uses: \"docker://alpine:3.19\"" "quoted docker ref accepted"
 expect_accept "$PINNED
-      - uses: docker://alpine@sha256:abc123" "docker:// digest accepted"
+      - uses: docker://alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "docker:// full 64-hex digest accepted"
+# A digest is only a pin if it is a real one; accepting any @sha256: suffix meant the
+# checker asserted something it had not checked.
+expect_reject "$PINNED
+      - uses: docker://alpine@sha256:abc123" "docker:// truncated digest rejected" "" "" "$ACTION"
+expect_reject "$PINNED
+      - uses: docker://alpine@sha256:" "docker:// empty digest rejected" "" "" "$ACTION"
 expect_reject "$PINNED
       - uses: docker://alpine:latest" "docker:// :latest rejected" "" "" "$ACTION"
 expect_reject "$PINNED
