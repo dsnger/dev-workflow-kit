@@ -55,6 +55,12 @@ driven by recurrence rather than by enthusiasm.
       `GIT_OBJECT_DIRECTORY` with the real store as an alternate would avoid the churn.
 
 ## Next
+- [ ] **Upstream-report candidate: `claude plugin update <bare-name>`.** The CLI docs
+      document the bare plugin name as a valid argument for `install`/`uninstall`/`update`
+      alike, but `claude plugin update dev-workflow` errors "Plugin 'dev-workflow' not
+      found" on CLI 2.1.x while `dev-workflow@dev-workflow-kit` works. README documents
+      the qualified form as a workaround; file via `/feedback` so the behaviour and the
+      docs stop disagreeing.
 
 ## Someday
 
