@@ -557,14 +557,18 @@ silently drops real findings.
 |---|---|---|---|
 | <bot name> | yes/no | inline / summary / both / **inconsistent** | <where observed and when; how you know it has finished — a status check is not guaranteed> |
 
-**Wait for — this list is authoritative.** <the bots whose findings you actually act
-on; ask the user, do not derive it from column 3, which records where findings appear
-rather than whether they matter. Processing starts once each listed bot has reached the
-completion signal recorded in its Notes — which may be a status check rather than a
-comment, since a bot that finds nothing can finish without posting anything at all.
-Waiting for a post from a zero-finding bot hangs forever. Then read both its channels.>
-**Context only:** <bots you deliberately do not act on — e.g. one that only reports it
-is disabled. Not "the summary-only bots": a summary can carry real findings.>
+**Routing — these lists are authoritative.** Ask the user; do not derive these from
+column 3, which records where findings appear rather than how to act on them.
+
+- **Wait for (block on it):** <bots with a completion signal you can block on — usually
+  a status check. Blocking on a *post* hangs when the bot finds nothing and posts
+  nothing.>
+- **Process opportunistically (never block):** <bots that produce real findings but give
+  no reliable completion signal. Read what they have posted when the pass begins, both
+  channels; handle later arrivals as a follow-up. This category exists because such bots
+  are real: blocking on one hangs the loop, dropping it loses findings.>
+- **Ignore:** <bots you deliberately do not act on — e.g. one that only reports it is
+  disabled. Not "the summary-only bots": a summary can carry real findings.>
 
 **Revisit when:** a bot's plan/tier changes (a Free→Pro upgrade can turn a
 summary-only bot into a findings bot), or a bot is enabled/disabled.

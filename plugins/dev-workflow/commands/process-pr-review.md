@@ -10,9 +10,11 @@ Target model: Claude via Claude Code.
 
 ## Step 0 — Load this project's bot matrix
 
-Read `docs/pr-review-bots.md`. Its **Wait for** list is the routing authority — the
-table beside it is descriptive, recording *where* each bot's findings have been seen
-and how you know it has finished. A bot's channel can vary between PRs, so a row may
+Read `docs/pr-review-bots.md`. Its **Routing** lists are the authority — the table
+beside them is descriptive, recording *where* each bot's findings have been seen and how
+you know it has finished. A bot sits in one of three categories: **wait for** it (it has
+a completion signal you can block on), **process it opportunistically** (it produces
+real findings but nothing proves it has finished), or **ignore** it. A bot's channel can vary between PRs, so a row may
 honestly read `inconsistent`; that is an observation, never a routing instruction.
 
 Getting this wrong is expensive in both directions: waiting on a channel a bot never
@@ -35,15 +37,17 @@ the end.
 
 ## Step 2 — Wait for the findings bots
 
-Route on that file's **Wait for** list, which is authoritative. Wait for every bot
-named there, and read **both** channels for each — inline review comments *and* the
-PR-level summary body. Do not route on the table's column: it describes where a bot's
-findings tend to appear and may read `inconsistent`, which is an observation, not an
-instruction.
+Block only on the bots under **Wait for**, using the completion signal its row names —
+which may be a status check rather than a comment, since a bot that finds nothing can
+finish without posting at all. Waiting for a *post* from a zero-finding bot hangs.
 
-A bot absent from **Wait for** is not waited for. A bot present there is a findings
-source in whichever channel it used, and its row names the completion signal to watch
-— which is not always a check: a bot can post findings without ever posting a status.
+Then, without blocking, read whatever each **Process opportunistically** bot has posted
+at that moment — both channels, inline comments *and* the PR-level summary body. If one
+posts after you have begun, handle it as a follow-up rather than waiting for it up
+front.
+
+Do not route on the table's column: it records where findings have been observed and may
+be ambiguous, which is not an instruction.
 
 ## Step 3 — Process
 

@@ -11,24 +11,44 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. |
-| Greptile | yes | **inconsistent — see notes** | **PR #1:** a single PR-level summary and nothing inline; its two findings sat *inside* that summary under "Comments Outside Diff". **PR #4:** two inline P2 comments, both valid and both accepted. Same repo, same account, the same day roughly seven hours apart (PR #4's inline comments are timestamped 2026-07-18T19:12Z). Behaviour is not predictable from two observations, so read **both** the inline comments and the summary body. Re-evaluate after the next observation, and keep this as `inconsistent` until evidence explains a *stable rule* — one more data point may add a third behaviour rather than settle anything, and reclassifying on thin evidence is what produced the wrong entry the first time. Took ~5–10 min to post on both. |
+| Greptile | yes | **summary always; inline usually** | Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
-**Wait for — this list is authoritative.** CodeRabbit (inline findings) and Greptile
-(inline *and* summary — check both, see its row).
+**Routing — these lists are authoritative.**
 
-**Completion signal, per bot.** CodeRabbit posts a status, so `gh pr checks` shows it.
-Greptile's is unreliable: `gh pr checks` listed a "Greptile Review" entry for PR #4
-while it was open, but the check-runs and statuses API for that same head
-(`bf875b1`) returns only `quality` and `CodeRabbit` — so do not treat `gh pr checks`
-alone as proof Greptile has finished. Wait for its review or summary comment to
-appear via `gh pr view --json comments,reviews`.
+- **Wait for (block on it):** CodeRabbit. It has a status check, so `gh pr checks`
+  going non-pending is proof it finished.
+- **Process opportunistically (never block):** Greptile. Read whatever it has posted
+  when the CodeRabbit-gated pass begins, in both channels. If it posts later, handle it
+  as a follow-up.
+- **Ignore:** Cursor Bugbot — disabled for this account, and it says so itself.
 
-`/dev-workflow:process-pr-review` routes on **this list**, not on the table's column.
-The column is descriptive — it says where a bot's findings tend to appear, and may read
-`inconsistent`, which is not a routing instruction. A bot named here is waited for and
-both of its channels are read; a bot absent here is not waited for.
-**Context only:** _(none)_ — Cursor Bugbot is disabled, not context.
+**Completion signal, per bot.** CodeRabbit posts a status, so `gh pr checks` shows it
+and you can block on it.
+
+**Greptile has no signal you can block on**, across four PRs: `gh pr checks` displayed a
+"Greptile Review" entry for #4 and #5, while the check-runs and statuses APIs return no
+Greptile entry for any observed head. Two tools, two answers, so neither is proof.
+
+So: **process Greptile opportunistically, never block on it.** Do the CodeRabbit-gated
+pass, and read whatever Greptile has posted at that moment via
+`gh pr view --json comments,reviews` plus `gh api .../pulls/N/comments`. If it posts
+later, process it as a follow-up. Waiting on it risks hanging forever; ignoring it drops
+real findings, since every observed PR carried some.
+
+**When querying, match the login exactly.** Issue comments are authored by
+`greptile-apps[bot]`; a filter on `greptile-apps` returns zero and looks like absence.
+That mistake is why an earlier version of this row claimed PR #1 had no summary.
+
+`/dev-workflow:process-pr-review` routes on **these lists**, not on the table's column.
+The column is descriptive — it records where a bot's findings have been observed, and
+may be ambiguous, which is not a routing instruction.
+
+The opportunistic category exists because Greptile forced it: a bot can be a real
+findings source with no signal that says it has finished. Blocking on such a bot hangs
+the loop; dropping it loses findings. Reading what is there and revisiting later is the
+only option that does neither.
+
 
 A bot belongs under **Wait for** only once it has been *seen* producing findings
 here. Listing an unconfirmed bot there is the failure this file exists to prevent —
