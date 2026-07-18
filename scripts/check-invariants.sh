@@ -212,7 +212,7 @@ bad_npx=$(
 [ -n "$bad_npx" ] && fail "Invariant 5: npx package launched without an exact @version." "$bad_npx"
 
 # --- Invariant 6: the manifest never re-declares convention-loaded components ------
-# skills/, commands/ and hooks/hooks.json load from their paths. A `hooks` key
+# skills/, commands/, agents/ and hooks/hooks.json load from their paths. A `hooks` key
 # alongside the convention-loaded file is a duplicate-hooks error that stops the
 # plugin loading at all — the 0.2.1 failure. Manifest keys are only for files
 # OUTSIDE the convention paths. Newlines are squeezed first so a key and its colon

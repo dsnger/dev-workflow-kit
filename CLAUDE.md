@@ -121,8 +121,8 @@ advisory — validate before applying; dismissed finding → one-line why.
   not because some earlier gate covered them (Gate A runs on specs and plans,
   which a README edit doesn't have). **Prompts are not prose:** `CLAUDE.md` and
   `AGENTS.md` themselves, and anything under a `.claude/`, `plugins/`, `skills/` or
-  `commands/` directory **at any depth** — skills, commands, hook reminder text,
-  inline templates — are the product (@AGENTS.md, "What this project is"), so they
+  `commands/` directory **at any depth** — skills, commands, agent definitions, hook
+  reminder text, inline templates — are the product (@AGENTS.md, "What this project is"), so they
   fire full Gate B even though they are `.md`. So does any mixed commit, and any
   non-`.md` file. The hook classifies paths the same way, matching those directory
   names at any depth on purpose: root-level `skills/` and a monorepo's

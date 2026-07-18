@@ -12,8 +12,9 @@ design at Gate A and the diff at Gate B), a fingerprinted hardening ledger where
 recurring finding escalates one rung harder (prose → lint → type → test), and one
 repo-enforced quality command. Users are developers running Claude Code.
 
-**The product is prompts.** Skills, slash commands, hook reminder messages and every
-template `/workflow-init` scaffolds are the deliverable — plus one POSIX-shell hook.
+**The product is prompts.** Skills, slash commands, agent definitions, hook reminder
+messages and every template `/workflow-init` scaffolds are the deliverable — plus one
+POSIX-shell hook.
 There is no application code, so there is no typechecker to catch a defect; review and
 `docs/prompt-standards.md` are the only gates a prompt passes through.
 
@@ -38,6 +39,7 @@ scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
   skills/{intake,harden-finding}/SKILL.md
+  agents/finding-triage.md        # read-only PR-comment checker (convention-loaded)
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
   examples/                       # read, don't install — one stack's answers
@@ -52,7 +54,7 @@ docs/
 source-files/                     # the extraction seed this repo was built from
 ```
 
-**Boundaries.** `skills/`, `commands/` and `hooks/hooks.json` are loaded by convention
+**Boundaries.** `skills/`, `commands/`, `agents/` and `hooks/hooks.json` are loaded by convention
 from their paths. The executable artifacts are the hook and its test, plus
 `scripts/check-invariants.sh` and its test (the hook ships in the plugin; the checker
 is repo-local CI); everything else is text
@@ -104,7 +106,7 @@ reader can judge whether it still holds.
    prerequisite plugins (superpowers, this kit) are addressed by name and revalidated
    on update, not pinned.
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
-   `commands/` and `hooks/hooks.json` load automatically; a manifest key for them is
+   `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not
    load at all; fixed in 0.2.1). Manifest keys only for files outside convention paths.
 7. **`examples/` is read-only reference.** Never installed, never copied by a command,
@@ -125,7 +127,7 @@ reader can judge whether it still holds.
     `docs/hardening-taxonomy.md`, never into the `harden-finding` skill. Otherwise one
     project leaks into every other.
 11. **Prompt changes pass `docs/prompt-standards.md`** — all 11 checklist items, for
-    any skill, command, hook message, or scaffolded template. The prompts are the
+    any skill, command, agent definition, hook message, or scaffolded template. The prompts are the
     product and nothing mechanical checks them.
 
 ## Don'ts
