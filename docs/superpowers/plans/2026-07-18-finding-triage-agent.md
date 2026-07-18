@@ -213,6 +213,22 @@ Expected: no output.
 - Consumes: the directory `plugins/dev-workflow/agents/` from Task 1.
 - Produces: nothing later tasks depend on.
 
+- [ ] **Step 0: Run the mandatory pre-edit check (AGENTS.md Don'ts)**
+
+Editing a statement about what the manifest declares or what loads by convention
+requires reading the manifest first — this is the rule whose absence produced the 0.2.1
+duplicate-hooks failure, and no later quality check can detect a false prose claim.
+
+```bash
+grep -rniE 'declare[sd]?|convention[- ]load' --include='*.md' . | grep -v source-files/
+cat plugins/dev-workflow/.claude-plugin/plugin.json
+```
+
+Confirm the manifest still declares **no** component keys, and that every hit the grep
+returns is either edited by Task 2/3 or genuinely unrelated. The grep misses "loaded by
+convention" — the reverse word order, as AGENTS.md's own note records — so read the
+Boundaries paragraph directly as well.
+
 - [ ] **Step 1: Architecture tree — add the agents line**
 
 Find (line ~40):
@@ -477,8 +493,13 @@ Replace with:
    - **where to look**: the repository-relative locations, each resolved against the
      checkout root *with symlinks followed*, and passed only when you can show the
      result stays inside it — a lexically clean path through a checked-in symlink
-     still escapes. Skip a claim whose locations you cannot prove confined. When the
-     claim names no particular file, pass the literal token `repository` instead.
+     still escapes. When the claim names no particular file, pass the literal token
+     `repository` instead.
+
+     A claim whose locations you cannot prove confined is **not dropped**: it stays
+     tracked, spawns no subagent, and takes an `escalate-to-user` disposition naming
+     which path failed which check. Dropping it would leave a tracked claim with no
+     verdict, which `## Done` cannot accept.
    - **`AGENTS.md`**: its confined path if the project has one, otherwise the explicit
      statement that the project has none — do not invent a path
    - your attestation that step 0 ran and passed
@@ -492,6 +513,15 @@ Replace with:
    produced — or its output fails that check, retry once, then escalate to the user.
    Do not quietly validate the claim yourself instead: that is the self-review the
    subagent exists to replace.
+
+   **Keep each claim's parent thread id.** Tracking is per claim, replies are per
+   thread: one reply on a thread reports every claim belonging to it, and a comment is
+   done only when all of its claims are.
+
+   **Deduplicate by claim, never by location.** File and line only group candidates for
+   comparison; two claims are duplicates when they assert the same defect about the same
+   evidence. Two distinct defects often share a line and one defect often spans several,
+   so collapsing by location drops valid claims before anything checks them.
 
    Apply no fix until every queued claim across every batch has returned. If you
    knowingly change the tree mid-run, re-run the affected claims before acting on them.
@@ -768,37 +798,69 @@ Expected: exactly those 13, and nothing under `plugins/dev-workflow/hooks/`.
 
 - [ ] **Step 6: WIP commit, then the Gate-B loop**
 
-Gate B needs a non-empty range; `baseSha` = HEAD is an empty range pre-commit. Make a
-`WIP:`-named commit — the hook treats a `wip`-prefixed message as cycle-internal, so it
-neither fires a STOP nor resets the pass counters.
+Gate B needs a non-empty range; `baseSha` = HEAD is empty pre-commit. Make a `WIP:`-named
+commit — the hook treats a `wip`-prefixed message as cycle-internal, so it neither fires
+a STOP nor resets the pass counters.
 
 ```bash
 git commit -m "WIP: finding-triage agent"
-git rev-parse HEAD~1   # baseSha for every pass
+BASE=$(git rev-parse HEAD~1)   # fixed for every pass; save it, you need it to abort
+echo "$BASE"
 ```
 
-Then loop. **The order inside the loop is the part that matters:**
+Then loop. **The order matters, and so does where the loop exits:**
 
-1. Run `mcp__codex__review` with `baseSha` = that parent and `headSha` = current HEAD.
-2. Validate each finding against the code; fix the Blocker/Major ones. Note a dismissal
-   with a one-line reason.
-3. **Re-run the full quality command and the scope checks from Steps 1, 2 and 4** — a
-   review fix can break validation, touch the hook, or introduce a new unsupported
-   claim.
-4. **Stage the changed files and `git commit --amend --no-edit`**, keeping the WIP
+1. **Review.** Run `mcp__codex__review` with `baseSha` = `$BASE` and `headSha` = the
+   *current* HEAD. Each amend below produces a new HEAD, so re-read it every pass rather
+   than reusing the previous value.
+
+   If the call dies at the MCP tool-call timeout, retry it **once** (CLAUDE.md §5; pass
+   state lives in `.context/`, so an aborted call loses nothing). A failed or aborted
+   call never counts as a pass. If the retry also fails, take the abort path below.
+
+2. **Decide whether to continue, before doing any work.**
+   - zero findings → the loop is over, go to Step 7. This is §5's one early exit; do not
+     manufacture further passes after a genuinely clean pass.
+   - no Blocker/Major, floor of three passes already met → the loop is over, go to
+     Step 7. Collect the Minor/Nit; do not iterate on them.
+   - otherwise → continue to 3.
+
+3. **Fix** the Blocker/Major findings, validating each against the code first. Record a
+   one-line reason for any you dismiss.
+
+4. **Re-verify everything, not a subset.** Re-run Step 1 (the full quality command),
+   Step 2 (hook untouched), Step 4 (enforcement-claim reading), **and Step 3's 11-item
+   review for every prompt artifact this fix touched** — a Gate-B fix to a shipped
+   prompt invalidates the recorded result, and the real commit message must carry the
+   final one. Also re-run the Step 5 scope check: `git status --short` must show only
+   the 13 authorized paths. Anything else appeared during the loop — stop and surface it
+   rather than amending it in.
+
+5. **Stage by name and amend.** Stage the same 13 paths explicitly (never `-A`), confirm
+   `git diff --cached --name-only`, then `git commit --amend --no-edit`, keeping the WIP
    message.
-5. Go to 1.
 
-Step 4 is not optional and is easy to skip. `mcp__codex__review` reads the **committed**
-git range: a fix left in the working tree is invisible to it, so the next pass would
-re-review the same stale diff and report the same findings, and the final commit would
-ship without the fixes. Amending keeps the reviewed range and the eventual commit the
-same object.
+   This step is easy to skip and skipping it defeats the gate: `mcp__codex__review`
+   reads the **committed** range, so a fix sitting in the working tree is invisible to
+   it — the next pass would re-read the same diff, return the same findings, and the
+   final commit would ship without the fix. Amending keeps the range one commit against
+   the same `$BASE` parent; it does *not* preserve the commit object, which is why
+   step 1 re-reads HEAD each time.
 
-**Floor:** three passes, unless a pass returns zero findings — CLAUDE.md §5 allows that
-as the one early exit, so do not manufacture passes after a genuinely clean one.
-Otherwise continue past three until a pass is clean, or until clearly stuck, then stop
-and surface to the user.
+6. Go to 1.
+
+**If the loop cannot finish** — repeated timeouts, a verification failure you cannot
+resolve, an unrelated path in the tree, or Blocker/Major findings that keep recurring
+past the point of progress — do not leave the branch on a `WIP:` commit:
+
+```bash
+git reset --soft "$BASE"     # keeps every change staged, removes the WIP commit
+git status --short           # work preserved, nothing committed
+```
+
+Then surface to the user with what is unresolved. A stranded `WIP:` commit is the one
+outcome this plan must never produce, because the naming convention exists precisely so
+that such a commit is never final.
 
 - [ ] **Step 7: Close the cycle**
 
