@@ -27,6 +27,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # checkout writes the job token into .git/config by default, where any
+          # later step — or anything a step runs — can read it. Nothing here needs
+          # authenticated git after the clone, so don't leave it lying around.
+          persist-credentials: false
 
       # The hook is the only executable artifact in this repo, so lint plus its test
       # suite are the only mechanical gates we have. Everything else here is a prompt,

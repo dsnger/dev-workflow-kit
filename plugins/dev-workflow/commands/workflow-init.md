@@ -606,6 +606,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # checkout writes the job token into .git/config by default, where any
+          # later step — or anything a step runs — can read it. Drop it unless a
+          # later step genuinely needs authenticated git (a tag push, a release
+          # commit); then set this true on that job alone, not everywhere.
+          persist-credentials: false
 
       # TODO(stack): toolchain setup for this project's language + package manager.
       # Install from a FROZEN LOCKFILE — a resolving install can silently pull new
