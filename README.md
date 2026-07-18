@@ -37,6 +37,18 @@ claude plugin marketplace add dsnger/dev-workflow-kit
 claude plugin install dev-workflow@dev-workflow-kit
 ```
 
+To update later:
+
+```sh
+claude plugin marketplace update dev-workflow-kit
+claude plugin update dev-workflow@dev-workflow-kit   # qualified form is a workaround: the bare
+                                                     # name is documented but errors "Plugin
+                                                     # 'dev-workflow' not found" (CLI 2.1.x)
+```
+
+Updates arrive only when the plugin version is bumped, and a running session keeps the
+old version until you restart it or run `/reload-plugins`.
+
 **2. Prerequisites:**
 
 - **superpowers** — not vendored. The workflow's middle *is* its skills; without it,
