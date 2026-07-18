@@ -80,7 +80,70 @@ printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfie
 printf 'new\n' > brand-new.ts
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "untracked new file after review -> NOT satisfied" || fail "untracked new file after review -> NOT satisfied"
+
+# 3c-bis. Untracked CONTENT counts, not just the name. `git add f && git commit` is one
+# Bash call, so the hook sees `f` still untracked — a name-only hash would hand that
+# commit a stale ✓ on edited content (invariant 3).
+reset_all; rev; rev; rev   # re-review with brand-new.ts present, so its name is known
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with untracked file present" || fail "setup: satisfied with untracked file present"
+printf 'edited\n' > brand-new.ts   # same name, different content
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited untracked file -> NOT satisfied" || fail "edited untracked file -> NOT satisfied"
+
+# ...and a file inside a NEW untracked directory too: porcelain would collapse that to
+# a single `dir/` entry and never hash what is in it.
+reset_all; rev; rev; rev
+mkdir -p newdir && printf 'a\n' > newdir/f.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked dir -> NOT satisfied" || fail "new untracked dir -> NOT satisfied"
+reset_all; rev; rev; rev
+printf 'b\n' > newdir/f.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited file in untracked dir -> NOT satisfied" || fail "edited file in untracked dir -> NOT satisfied"
+rm -rf newdir
+
+# ...and paths git does not print literally. It C-quotes non-ASCII and control
+# characters ("caf\303\251.txt", quotes included), which names no real file, so a
+# shell-side content read would silently come back empty.
+for name in "café ñ.ts" "$(printf 'tab\tnewline\nname.ts')"; do
+  reset_all; rev; rev; rev
+  printf 'a\n' > "$name"
+  printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new exotic-path untracked file -> NOT satisfied" || fail "new exotic-path untracked file -> NOT satisfied"
+  reset_all; rev; rev; rev
+  printf 'b\n' > "$name"
+  printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited exotic-path untracked file -> NOT satisfied" || fail "edited exotic-path untracked file -> NOT satisfied"
+  rm -f "$name"
+done
+
+# A commit stores a symlink's TARGET, so retargeting one is a content change even when
+# both targets are absent — and reading through the link instead would compare the
+# referents, or block forever on a link to a FIFO.
+reset_all; rev; rev; rev
+ln -s absent-a link.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked symlink -> NOT satisfied" || fail "new untracked symlink -> NOT satisfied"
+reset_all; rev; rev; rev
+rm -f link.ts; ln -s absent-b link.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "retargeted untracked symlink -> NOT satisfied" || fail "retargeted untracked symlink -> NOT satisfied"
+rm -f link.ts
+
+# NOTE: the "tree could not be computed" guard in tree_hash has no regression test.
+# Forcing it portably means making mktemp or git fail on demand — TMPDIR=/dev/null
+# looks like it does that but BSD/macOS mktemp silently falls back to /var/folders, so
+# such a test passes for the wrong reason. Tracked in todos.md.
+
+# A FIFO is not committable content; hashing must skip it rather than block on a
+# reader that never arrives. The hook is advisory and must not be able to wedge a
+# commit — so this asserts termination, not a particular verdict.
+if command -v mkfifo >/dev/null 2>&1; then
+  reset_all; rev; rev; rev
+  mkfifo pipe.ts 2>/dev/null
+  ( commitpre >/dev/null 2>&1 ) & fifo_pid=$!
+  ( sleep 10; kill -9 $fifo_pid 2>/dev/null ) & killer=$!
+  wait $fifo_pid 2>/dev/null; fifo_rc=$?
+  kill $killer 2>/dev/null
+  [ "$fifo_rc" -ne 137 ] && pass "untracked FIFO does not hang the hook" || fail "untracked FIFO does not hang the hook"
+  rm -f pipe.ts
+fi
+
 rm -f brand-new.ts
+reset_all; rev; rev; rev
 
 # 3d. Reverting the tree back to the reviewed content -> satisfied again
 #     (content-based, so an edit-then-undo is correctly NOT stale)
@@ -227,6 +290,31 @@ printf '%s' "$out" | grep -q 'STOP' && fail "docs-only must not STOP" || pass "d
 printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B' && pass "mixed staged -> Gate B fires" || fail "mixed staged -> Gate B fires"
+git rm -q --cached extra.ts >/dev/null 2>&1; rm -f extra.ts
+
+# Prompt Markdown is product, not docs: a .md-only commit touching a skill, a slash
+# command, plugin content or an instruction file must still fire Gate B.
+for p in skills/x/SKILL.md commands/y.md plugins/p/skills/z/SKILL.md .claude/w.md CLAUDE.md AGENTS.md; do
+  mkdir -p "$(dirname "$p")" 2>/dev/null
+  printf 'prompt\n' > "$p"; git add "$p" >/dev/null 2>&1
+  out=$(commitpre)
+  # Assert positively on the reminder AND negatively on the N/A note: checking only
+  # for the absence of "docs-only commit" would pass on empty output.
+  printf '%s' "$out" | grep -q 'Gate B' && pass "prompt .md ($p) -> Gate B fires" || fail "prompt .md ($p) -> Gate B fires"
+  printf '%s' "$out" | grep -q 'docs-only commit' && fail "prompt .md ($p) must not be N/A" || pass "prompt .md ($p) not N/A"
+  git rm -q --cached "$p" >/dev/null 2>&1; rm -f "$p"
+done
+
+# The any-depth match is deliberate (invariant 2): prose under a directory named
+# `commands/` fires too. Pinned as intended behaviour, not left to be "fixed" later.
+mkdir -p docs/commands
+printf 'prose\n' > docs/commands/reference.md; git add docs/commands/reference.md >/dev/null 2>&1
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'Gate B' && pass "docs/commands/*.md over-fires by design" || fail "docs/commands/*.md over-fires by design"
+git rm -q --cached docs/commands/reference.md >/dev/null 2>&1
+rm -rf docs/commands
+rm -rf skills commands plugins .claude CLAUDE.md AGENTS.md
+printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 git commit -qm seed >/dev/null 2>&1
 printf 'spec1b\n' >> docs/plan.md; git add docs/plan.md >/dev/null 2>&1
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -am x"}}')

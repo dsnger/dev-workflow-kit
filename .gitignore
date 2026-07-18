@@ -3,3 +3,12 @@
 
 # Not part of this repo — parked unrelated session output
 _unrelated-seo-work/
+
+# Generated MCP reviewer session state — ephemeral, never committed
+.mcp/
+
+# Hook state. The adoption marker `.context/codex-gate.on` is meant to be committed
+# and shared; the mutable counters are per-clone scratch and must not be — a committed
+# passCount hands every fresh clone a pre-counted Gate-B pass.
+.context/*
+!.context/codex-gate.on

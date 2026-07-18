@@ -6,9 +6,15 @@ subject — that lives in [`coding-workflow.md`](coding-workflow.md).
 
 ## Layout
 
+A selective view — the loaded surface plus the workflow's own project files. Repo
+furniture (`.gitignore`, `.claude/`, generated state) is omitted on purpose.
+
 ```
+README.md, MANIFEST.md, AGENTS.md, CLAUDE.md, todos.md
+.gitattributes                    # union merge for the append-only ledger
+.mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json
-.github/workflows/ci.yml          # hook tests + plugin validate
+.github/workflows/ci.yml          # shellcheck lint + hook tests + plugin validate
 plugins/dev-workflow/
   .claude-plugin/plugin.json
   skills/{intake,harden-finding}/SKILL.md
@@ -16,11 +22,16 @@ plugins/dev-workflow/
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
   examples/                       # read, don't install — one stack's answers
 docs/{getting-started,coding-workflow,prompt-standards,architecture}.md
+docs/{hardening-log,hardening-taxonomy,pr-review-bots}.md
 source-files/                     # the extraction seed this repo was built from
 ```
 
-The plugin manifest declares only `hooks`; `skills/` and `commands/` are discovered by
-convention, so naming them again would be two sources of truth for the same fact.
+The plugin manifest declares no components at all: `skills/`, `commands/` and
+`hooks/hooks.json` are each discovered by convention from their paths, so naming any of
+them again would be two sources of truth for the same fact. For hooks it is worse than
+redundant — a `hooks` manifest key alongside the convention-loaded file is a
+duplicate-hooks error that stops the whole plugin from loading (hit and fixed in
+0.2.1). Manifest keys are only for files outside the convention paths.
 
 ## Why `/workflow-init`'s templates are inline
 
@@ -45,8 +56,12 @@ It doesn't, because that is blind to a file changed through Bash — `sed -i`,
 `eslint --fix`, `git apply`, a codegen step — which emits no such event and would leave
 a stale "reviewed" marker standing.
 
-Instead the hook stores a hash of the working tree (`git diff HEAD` plus the untracked
-file list) at review time and recomputes it at commit. Any change by any tool
+Instead the hook stores a hash of the working tree at review time and recomputes it at
+commit: `git diff HEAD` for tracked content, plus a tree id written from a throwaway
+index so untracked files count by path, content and mode. (Asking git for the tree
+rather than walking the files in shell is deliberate — a hand-rolled walk has to
+re-derive symlink targets, git's path quoting and non-regular files, and got all three
+wrong before this was reduced to `git write-tree`.) Any change by any tool
 invalidates; an edit-then-undo correctly stays valid, because what is being committed
 *is* what was reviewed. A false ✓ is the dangerous direction, so the check is tied to
 what is actually on disk rather than to what the harness happened to notice.

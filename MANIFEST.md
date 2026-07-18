@@ -9,8 +9,8 @@ archive is the complete extraction base.
 |---|---|---|
 | skills/intake, skills/harden-finding | the two project skills | plugin (generalize! taxonomy split for harden-finding) |
 | commands/process-pr-review.md | PR bot processor | plugin (make bot names configurable) |
-| hooks/codex-gate.sh + .test.sh | gate counter/reminder | plugin (hook registration via the plugin manifest) |
-| claude-settings.json | shows HOW the hook is wired up | reference for plugin hook registration |
+| hooks/codex-gate.sh + .test.sh | gate counter/reminder | plugin (loaded by convention from `hooks/hooks.json` — never declared in the manifest) |
+| claude-settings.json | shows HOW the hook is wired up in a *project* (settings.json), which the plugin replaces with convention loading | reference only |
 | CLAUDE.md | discipline rules §1–5 | /workflow-init template (project file) |
 | prompt-standards.md | 10-criteria checklist | template + the plugin repo's own standard |
 | hardening-log.md | FORMAT reference ONLY (sanitized: real findings removed) | template: empty ledger with header/convention |
