@@ -51,8 +51,9 @@ the WIP via `git commit --amend`.
 `/dev-workflow:process-pr-review`. Every comment is validated against code and
 invariants — usually by a fresh-context `dev-workflow:finding-triage` subagent per claim,
 so the agent that formed a belief is not the one grading it; on a PR that edits
-instruction files the command checks them itself instead, and says so — then answered on
-the thread, and, if accepted and in scope, fixed (substantial fixes go through Gate B
+instruction files the command checks them itself instead, and says so. Triage judges only
+whether a claim is *true*; the command then decides separately whether fixing it belongs
+in this PR. Each comment is answered on the thread, and, if accepted and actionable, fixed (substantial fixes go through Gate B
 again). Nothing silently ignored, nothing blindly applied.
 
 **9. Close the class, not the instance.** Any finding from steps 3, 7, or 8 that

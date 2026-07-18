@@ -84,7 +84,7 @@ run at all.** The main agent validates those comments itself, and the reply says
 
 Instruction-bearing paths, defined once and deliberately generously:
 
-```
+```text
 CLAUDE.md at any depth        CLAUDE.local.md at any depth
 AGENTS.md at any depth        the AGENTS.md path passed to the agent, whatever it is
 .claude/**                    plugins/**
@@ -209,7 +209,7 @@ settle the claim.
 
 Exactly one block, three labelled fields, no surrounding prose:
 
-```
+```text
 CLAIM    <the claim, echoed verbatim as delegated>
 VERDICT  accept | dismiss | escalate-to-user
 REASON   <non-empty; one of three forms:
@@ -278,17 +278,24 @@ Today Step 3 has two verdicts and checks scope separately at 3.3.
   asked afterwards, re-creating the conflation the split exists to end. The mapping is
   stated so it is not re-invented per PR:
 
+  Rows are tested **in order**, first match wins — a defect can be both introduced by
+  this PR *and* contrary to a settled decision, so provenance alone does not partition
+  them. (Gate B found this: the earlier ordering did not guarantee the "exactly one
+  disposition" the split depends on.)
+
   | The defect is | Disposition |
   |---|---|
+  | contrary to a settled decision (checked first) | 3.4, to the user |
   | introduced by this PR's diff | fix in this PR (3.3) |
   | pre-existing, and the fix is small and local to code this PR already touches | fix in this PR, and say so in the reply |
-  | pre-existing, anything larger | do **not** fix here — reply saying it is valid and out of scope, and record it in `todos.md` so a true finding is not lost |
-  | contrary to a settled decision | 3.4, to the user |
+  | pre-existing, anything larger | do **not** fix here — reply saying it is valid and out of scope, and record it in `todos.md` so a true finding is not lost. **Terminal**: it does not also go to 3.4, and the hardening step does not harden it |
 - **3.3** — implement accepted **and** actionable findings; severity gate unchanged.
 - **3.4** — to the user: `escalate-to-user` verdicts, and accepted-but-not-actionable
   findings.
 - **`## Done`** — every *claim* has a verdict; every *thread* has a reply; each claim
-  ends in a fix, a documented dismissal, or an answered escalation.
+  ends in **exactly one** of: a fix, a documented dismissal, a valid-but-out-of-scope
+  finding recorded in `todos.md`, or an answered escalation. The out-of-scope terminal
+  is listed explicitly because omitting it made that path unable to satisfy completion.
 
 **Tracking is claim-level, replies are thread-level.** Each claim keeps its parent
 thread id; one reply reports every claim on that thread. A comment is done only when all

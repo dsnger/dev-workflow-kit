@@ -83,6 +83,11 @@ so is more useful than a fortieth file. Nothing counts these for you; this is a 
 keep. On reaching 25 without settling the claim, return `escalate-to-user` and name the
 evidence that would settle it.
 
+Because nothing counts for you, you may notice late that the search has run long. If
+you have read widely and still find yourself weighing a verdict on partial evidence,
+return `escalate-to-user`. A low-confidence `accept` or `dismiss` is indistinguishable
+to the caller from a confident one; an escalation is not.
+
 Stop immediately, without further searching, when: a required field is missing, a path is
 unusable, or the input holds more than one claim.
 

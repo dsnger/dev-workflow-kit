@@ -52,6 +52,12 @@ comments from them.
    reviewer runs under. This list is deliberately wider than the gate hook's, because a
    missed reminder and an injected instruction are not the same failure.
 
+   Bare `agents/` is redundant against `.claude/` and `plugins/` — the two standard
+   locations — and is kept only to cover a non-standard layout. It costs a project that
+   uses `agents/` for application code a fallback to manual validation on those PRs,
+   which is the safe direction here. Widening this list further needs the same
+   justification; over-skipping is cheap, under-skipping is not.
+
 1. Form the tracked claim set. Split a comment making
    several claims into one claim each, and reduce each to a single whitespace-normalized
    line. Drop comments asserting no defect (praise, summaries, bot status notes) and

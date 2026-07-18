@@ -783,9 +783,13 @@ the first draft of the agent body, so treat grep as an aid and the reading as th
 
 Run, across every artifact changed in Tasks 1–6:
 
+```bash
+git diff --name-only <BASE> HEAD | xargs grep -nE \
+  'enforc|guarante|prevent|ensur|cannot|never|always|impossible|read-only'
 ```
-grep -nE 'enforc|guarante|prevent|ensur|cannot|never|always|impossible|read-only'
-```
+
+The file operands matter: `grep -nE 'pattern'` with no paths reads standard input and
+waits, which looks like a hung step rather than a scan.
 
 Then read each changed file's new sentences and ask of every absolute: **what mechanism
 makes this true, and did I verify it exists?** The fifth instance — "an altered claim

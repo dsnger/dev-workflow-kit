@@ -415,9 +415,9 @@ failure this line exists to prevent.
 # Prompt Standards
 
 Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, agent definitions
-(`.claude/agents/`, if this project has any), and spec/plan templates are prompts. When
-authoring or changing one, it must pass the checklist below — Gate A reviews skill specs
-against these criteria via AGENTS.md.
+(`.claude/agents/` or `plugins/*/agents/`, if this project has any), and spec/plan
+templates are prompts. When authoring or changing one, it must pass the checklist below —
+Gate A reviews prompt specs against these criteria via AGENTS.md.
 
 Living references (consult, don't copy — copies go stale):
 
