@@ -648,18 +648,30 @@ jobs:
   quality:
     # Pin the runner to an OS release, not `ubuntu-latest`, and every action to a
     # commit SHA with a version comment: a major-only `@v4` moves under you, and a
-    # moving CI dependency makes the run irreproducible. Resolve a tag to its SHA
-    # with `gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`. Bump deliberately.
+    # moving CI dependency makes the run irreproducible. Bump deliberately, and when
+    # you do, verify rather than trust the comment:
+    #   gh api repos/<owner>/<repo>/commits/<tag> --jq .sha        # tag -> SHA
+    #   gh api repos/<owner>/<repo>/releases/tags/<tag> --jq .published_at
+    # The second one matters: a release published hours ago has had no time to be
+    # found wanting, which is the same reason a package manager has a minimum
+    # release age. The SHAs below were checked this way.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # checkout writes the job token into .git/config by default, where any
+          # later step — or anything a step runs — can read it. Drop it unless a
+          # later step genuinely needs authenticated git (a tag push, a release
+          # commit); then set this true on that job alone, not everywhere.
+          persist-credentials: false
 
       # TODO(stack): toolchain setup for this project's language + package manager.
       # Install from a FROZEN LOCKFILE — a resolving install can silently pull new
       # code into CI and makes the run non-reproducible.
-      # (Node/pnpm example — resolve these SHAs yourself before uncommenting:)
-      # - uses: pnpm/action-setup@<sha>       # reads packageManager from package.json
-      # - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      # (Node/pnpm example — SHAs are real and verified; re-check them when you
+      # uncomment, since this template ages between releases:)
+      # - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9 — reads packageManager from package.json
+      # - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       #   with:
       #     node-version-file: package.json   # reads engines.node
       #     cache: pnpm

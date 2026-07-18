@@ -26,7 +26,12 @@ jobs:
     # doesn't warrant.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # checkout writes the job token into .git/config by default, where any
+          # later step — or anything a step runs — can read it. Nothing here needs
+          # authenticated git after the clone, so don't leave it lying around.
+          persist-credentials: false
 
       # The hook, the invariant checker and their two suites are the only executables here, so lint plus their test
       # suite are the only mechanical gates we have. Everything else here is a prompt,
@@ -63,7 +68,7 @@ jobs:
           sh scripts/check-invariants.test.sh
           sh scripts/check-invariants.sh
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.23.1
 
