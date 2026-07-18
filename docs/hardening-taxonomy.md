@@ -18,8 +18,12 @@ the synonyms a future reader might search for instead.
 
 ## Classes
 
-<!-- Add classes as harden-finding mints them, e.g.:
-- `orders-missing-idempotency-key` — a retryable order write accepted without an idempotency key
--->
+- `prompt-diagnostic-cause-unnamed` — a prompt reports a failure state but names only
+  one of the causes that produce it, so the reader gets a fix that cannot work.
+  Aliases: misleading remedy, wrong-fix loop, undiagnosed state, symptom collision,
+  "restart the session" for a cause a restart never fixes.
 
-_None yet — `dev-workflow:harden-finding` adds them as findings arrive._
+**Promotion candidate.** This class is stack-neutral, not project vocabulary, so it
+belongs in the `harden-finding` base list rather than here. It lives here because the
+skill says to mint into this file (the plugin ships the base classes, the project owns
+its own). Move it up when the base taxonomy is next revised.

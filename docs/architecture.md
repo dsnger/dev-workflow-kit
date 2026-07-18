@@ -14,7 +14,8 @@ README.md, MANIFEST.md, AGENTS.md, CLAUDE.md, todos.md
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json
-.github/workflows/ci.yml          # shellcheck lint + hook tests + plugin validate
+.github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
+scripts/check-invariants.sh       # invariants 5 and 6, mechanically (+ .test.sh)
 plugins/dev-workflow/
   .claude-plugin/plugin.json
   skills/{intake,harden-finding}/SKILL.md

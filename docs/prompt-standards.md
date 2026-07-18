@@ -54,7 +54,16 @@ Living references (consult, don't copy — copies go stale):
    exception: their subject *is* the prohibition ("no speculative abstractions",
    "don't refactor what isn't broken"), and restating a prohibition positively
    loses the boundary it draws — new prompts need a stated reason to do the same.
-10. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
+10. **Diagnostic states name their causes.** A prompt that reports a failure state
+    ("NOT LOADED", "MISSING", "unavailable") enumerates the distinct causes that
+    produce that state, gives a check that tells them apart, and pairs each with its
+    own fix. Why: causes with an identical symptom but different fixes are the case
+    the reader cannot resolve alone — offering only the most common one sends them
+    round a loop that never terminates. This is a real failure: `/workflow-init`'s
+    preflight reported "restart the session" for every not-loaded Codex, so a
+    same-named server winning on scope precedence went undiagnosed through this repo's
+    own initialization.
+11. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
     (documented in the best-practices page). Existing heavy emphasis (e.g. the

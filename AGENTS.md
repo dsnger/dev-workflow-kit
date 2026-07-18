@@ -32,7 +32,9 @@ todos.md                          # backlog; `pending` ledger rows point here by
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json
-.github/workflows/ci.yml          # lint + hook tests + plugin validate
+.github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
+scripts/check-invariants.sh       # invariants 5 and 6, mechanically (rung 2)
+scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
   skills/{intake,harden-finding}/SKILL.md
@@ -43,7 +45,7 @@ docs/
   architecture.md                 # layout + the two non-obvious design decisions
   coding-workflow.md              # the methodology this plugin encodes
   getting-started.md              # first story, end to end
-  prompt-standards.md             # the 10-item checklist every prompt must pass
+  prompt-standards.md             # the 11-item checklist every prompt must pass
   hardening-log.md                # append-only findings ledger (union-merged)
   hardening-taxonomy.md           # this project's fingerprint classes
   pr-review-bots.md               # which bot posts line findings vs. summary only
@@ -51,7 +53,9 @@ source-files/                     # the extraction seed this repo was built from
 ```
 
 **Boundaries.** `skills/`, `commands/` and `hooks/hooks.json` are loaded by convention
-from their paths. The hook is the only executable artifact; everything else is text
+from their paths. The executable artifacts are the hook and its test, plus
+`scripts/check-invariants.sh` and its test (the hook ships in the plugin; the checker
+is repo-local CI); everything else is text
 read by a model. `examples/` is reference material, outside the loaded surface.
 
 **Dependency direction.** The plugin depends on superpowers (skills it hands off to)
@@ -120,7 +124,7 @@ reader can judge whether it still holds.
     helpers, framework APIs — goes only in that project's
     `docs/hardening-taxonomy.md`, never into the `harden-finding` skill. Otherwise one
     project leaks into every other.
-11. **Prompt changes pass `docs/prompt-standards.md`** — all 10 checklist items, for
+11. **Prompt changes pass `docs/prompt-standards.md`** — all 11 checklist items, for
     any skill, command, hook message, or scaffolded template. The prompts are the
     product and nothing mechanical checks them.
 
@@ -134,6 +138,22 @@ reader can judge whether it still holds.
 - **Never document a command that wasn't run.** An unverified command in § Commands
   silently breaks `harden-finding`, `process-pr-review` and the quality gate, which all
   resolve their generic command names against it.
+- **Never state what the manifest declares without reading it.** Any sentence
+  describing which components are declared vs. convention-loaded must be checked
+  against `plugins/*/.claude-plugin/plugin.json` in the same change. Three sites said
+  it declares `hooks` when it declares nothing at all: `docs/architecture.md` and
+  `MANIFEST.md` shipped that claim, and this file's own layout tree was written with
+  it before being corrected in the same PR. It is the same wrong belief that produced
+  the 0.2.1 duplicate-hooks load failure, surviving in prose long after the code was
+  fixed. `scripts/check-invariants.sh` pins the manifest itself; nothing mechanical
+  can tell whether a sentence about it is true, so this rule is the only guard.
+  Before editing any of those three, find every site that makes such a claim:
+  `grep -rniE 'declare[sd]?|convention[- ]load' --include='*.md' . | grep -v source-files/`
+  (A narrower pattern like `"manifest declares"` misses the ones phrased as "never
+  declared in the manifest" — which is most of them. Note `convention[- ]load` only
+  matches that word order, i.e. "convention-loaded" / "convention loading"; a sentence
+  reading "loaded by convention" is caught by the `declare[sd]?` arm only when it also
+  contains a form of *declare*, so read the hits rather than trusting the count.)
 - **Never rename or delete a doc section without grepping for references first.**
   `ci.yml` once pointed at a deleted README section; `MANIFEST.md` listed a `CLAUDE.md`
   that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is
@@ -150,10 +170,11 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && sh plugins/dev-workflow/hooks/codex-gate.test.sh && claude plugin validate . --strict` |
+| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && sh plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && claude plugin validate . --strict` |
 | typecheck | n/a — no typed sources (shell + markdown) |
-| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh` |
+| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh` |
 | test | `sh plugins/dev-workflow/hooks/codex-gate.test.sh` |
+| invariant checks (5 pinning, 6 manifest) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | build | n/a — nothing is compiled or bundled |
 
 **Prerequisites and pinning.** The quality command needs `shellcheck` (0.11.0 locally;
@@ -166,5 +187,5 @@ disable: every other shellcheck rule still applies to that file. Its hits are al
 mode is a broken stdout — which runs `fail` as well, producing a spurious FAIL rather
 than a false pass. Revisit if `pass`/`fail` ever gain logic that can legitimately fail.
 
-CI runs the four halves as separate steps for readable failures; the chained form above
+CI runs the parts as separate steps for readable failures; the chained form above
 is the single command a human runs.
