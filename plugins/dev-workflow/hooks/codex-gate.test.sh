@@ -137,8 +137,13 @@ if command -v mkfifo >/dev/null 2>&1; then
   ( commitpre >/dev/null 2>&1 ) & fifo_pid=$!
   ( sleep 10; kill -9 $fifo_pid 2>/dev/null ) & killer=$!
   wait $fifo_pid 2>/dev/null; fifo_rc=$?
+  # Reap the watchdog, don't just signal it: an unreaped killed job makes the shell
+  # print "Terminated: 15" into the quality command's output on every green run.
   kill $killer 2>/dev/null
-  [ "$fifo_rc" -ne 137 ] && pass "untracked FIFO does not hang the hook" || fail "untracked FIFO does not hang the hook"
+  wait $killer 2>/dev/null || true
+  # Any signal death is >128; testing only 137 assumes a SIGKILL status POSIX does
+  # not guarantee. What is asserted is termination, not a particular verdict.
+  [ "$fifo_rc" -le 128 ] && pass "untracked FIFO does not hang the hook" || fail "untracked FIFO does not hang the hook"
   rm -f pipe.ts
 fi
 

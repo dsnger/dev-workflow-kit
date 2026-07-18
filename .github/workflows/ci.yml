@@ -22,7 +22,7 @@ jobs:
     # shellcheck image and claude CLI avoid. The runner is pinned to an OS release
     # rather than `ubuntu-latest` — GitHub still refreshes that image's contents
     # weekly, so this bounds the drift, it does not eliminate it. Full image
-    # reproducibility would need a container, which this three-check battery
+    # reproducibility would need a container, which this four-check battery
     # doesn't warrant.
     runs-on: ubuntu-24.04
     steps:
@@ -33,7 +33,7 @@ jobs:
           # authenticated git after the clone, so don't leave it lying around.
           persist-credentials: false
 
-      # The hook is the only executable artifact in this repo, so lint plus its test
+      # The hook, the invariant checker and their two suites are the only executables here, so lint plus their test
       # suite are the only mechanical gates we have. Everything else here is a prompt,
       # and prompts have no typechecker (see README, "Contributing").
 
@@ -50,9 +50,23 @@ jobs:
           # every other check still applies to this file.
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh
+          # The invariant checker is the repo's second executable artifact and is a
+          # CI gate itself, so it gets the same POSIX lint as the hook.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh scripts/check-invariants.sh
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh
 
       - name: Hook state-machine tests
         run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
+
+      # Invariants 5 and 6, mechanically. Both were prose first and both were
+      # violated anyway — a floating action ref shipped in this very workflow, and a
+      # duplicate hooks manifest key stopped the plugin loading in 0.2.1.
+      - name: Invariant checks (pinning, manifest)
+        run: |
+          sh scripts/check-invariants.test.sh
+          sh scripts/check-invariants.sh
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:

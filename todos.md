@@ -42,3 +42,22 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
       prompting pages on every model-generation change (new Claude model in Claude
       Code, new Codex model for the gates).
+- [ ] **Escalation trigger for the invariant checker — read this before patching it.**
+      The checker asserts only the spellings its fixtures cover. Adding one more regex
+      arm per newly-discovered spelling is *not* the ladder working; it is the same
+      rung applied repeatedly. **If a fifth unhandled spelling turns up in the wild,
+      that is the recurrence**, and the answer is a real YAML/shell parse logged as the
+      next rung — not another patch. Anticipating that today would be escalating
+      without recurrence, which the ladder exists to prevent. Count so far: the
+      spellings found during development were fixed as part of building the rung and
+      do not count toward the five.
+- [ ] **Invariant checker does not see Docker images outside a `docker://` action ref.**
+      `FROM alpine:latest` in a Dockerfile and `docker run alpine` in a script are
+      executable dependencies that invariant 5 covers, but every Docker rule is
+      downstream of the action-ref scan, so neither is looked at. Raised by CodeRabbit on
+      PR #2. Deferred rather than fixed there because it is a new surface (Dockerfiles,
+      shell `docker run`), not a gap in a spelling the checker already claims — and
+      the ledger ref is worded to claim only the latter. Needs its own reject/accept
+      fixtures. Part of that story: `ci.yml`'s `koalaman/shellcheck:v0.11.0` is
+      tag-pinned by luck, not by the gate — a tag can be repointed, so digest-pinning
+      it belongs to whoever takes the Docker surface on.

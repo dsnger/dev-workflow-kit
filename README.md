@@ -97,10 +97,12 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 
 ## Contributing
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs three checks on every
-PR and push to main: `shellcheck --shell=sh` over the hook and its test file, the hook's
-test suite, and `claude plugin validate . --strict`. The single command that runs the
-whole battery locally is in [`AGENTS.md`](AGENTS.md) under "Commands".
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
+PR and push to main: `shellcheck --shell=sh` over both executables and their test
+files, the hook's test suite, the invariant checks
+([`scripts/check-invariants.sh`](scripts/check-invariants.sh) and its own suite), and
+`claude plugin validate . --strict`. The single command that runs the whole battery
+locally is in [`AGENTS.md`](AGENTS.md) under "Commands".
 
 Everything else here is a **prompt**, and prompts have no typechecker — they are
 reviewed against [`docs/prompt-standards.md`](docs/prompt-standards.md), this repo's own
