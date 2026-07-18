@@ -10,11 +10,14 @@ Target model: Claude via Claude Code.
 
 ## Step 0 — Load this project's bot matrix
 
-Read `docs/pr-review-bots.md`. It states which bots run on this repo, **which of
-them actually post line-by-line findings**, and which only post a summary. This
-distinction is the whole point of the file: waiting on a bot that structurally
-cannot post line comments hangs the loop forever, and treating a summary as a
-findings source silently drops real findings.
+Read `docs/pr-review-bots.md`. Its **Wait for** list is the routing authority — the
+table beside it is descriptive, recording *where* each bot's findings have been seen
+and how you know it has finished. A bot's channel can vary between PRs, so a row may
+honestly read `inconsistent`; that is an observation, never a routing instruction.
+
+Getting this wrong is expensive in both directions: waiting on a channel a bot never
+uses hangs the loop forever, and treating a findings source as context silently drops
+real findings.
 
 If `docs/pr-review-bots.md` is missing: do not guess the matrix. Run
 `gh pr view --json comments,reviews` to see which bots have actually posted on this
@@ -32,10 +35,15 @@ the end.
 
 ## Step 2 — Wait for the findings bots
 
-Wait only for the bots `docs/pr-review-bots.md` lists as **posting line-by-line
-findings**. Once each of those has posted its review (even with zero comments),
-begin. Summary-only bots are context, never a findings source — do not wait for line
-comments from them.
+Route on that file's **Wait for** list, which is authoritative. Wait for every bot
+named there, and read **both** channels for each — inline review comments *and* the
+PR-level summary body. Do not route on the table's column: it describes where a bot's
+findings tend to appear and may read `inconsistent`, which is an observation, not an
+instruction.
+
+A bot absent from **Wait for** is not waited for. A bot present there is a findings
+source in whichever channel it used, and its row names the completion signal to watch
+— which is not always a check: a bot can post findings without ever posting a status.
 
 ## Step 3 — Process
 

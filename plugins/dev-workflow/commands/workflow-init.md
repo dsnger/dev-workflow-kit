@@ -291,8 +291,20 @@ advisory — validate before applying; dismissed finding → one-line why.
   (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
   spec + quality in parallel). Skip ONLY trivial changes. Check against
   @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
-  invalidates the prior pass, which is where the 3 come from. Same coverage rule
-  as Gate A: put "report every finding with severity and confidence; say
+  invalidates the prior pass, which is where the 3 come from.
+
+  **A fix that changes specified behaviour updates the spec in the same commit.** If a
+  Gate-B fix alters something the approved spec pins down — an ordering, a terminal
+  state, a contract — the spec is stale the moment you commit, and the next reader
+  trusts it. Update both, and let the re-review cover both. This is not hypothetical:
+  a Gate-B fix here reordered a precedence rule and added a terminal state, the spec
+  was left describing the old behaviour, and a PR bot found the disagreement after
+  merge-readiness. Neither gate caught it *in that run*: Gate A had already passed the
+  spec before the fix existed, and the Gate-B call was given only the diff. A reviewer
+  handed both artifacts could catch it — which is why this is a rule about what you
+  commit, not a claim about what the gates detect.
+
+  Same coverage rule as Gate A: put "report every finding with severity and confidence; say
   `NO FINDINGS` if clean" in `additionalContext`, with the same one-line format.
 
   **What counts as prose (the only Gate-B exemption).** Every staged path is
@@ -468,7 +480,14 @@ Living references (consult, don't copy — copies go stale):
     own fix. Why: causes with an identical symptom but different fixes are the case
     the reader cannot resolve alone — offering only the most common one sends them
     round a loop that never terminates.
-11. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
+11. **Enforcement claims name their mechanism.** Any sentence saying something is
+    enforced, caught, guaranteed or prevented names *what does it*, and the author
+    verified that mechanism exists before writing it — by reading the code, running the
+    command, or checking the doc it relies on. Why: an unverified guarantee is worse
+    than an admitted gap, because a reader stops looking. When the mechanism turns out
+    not to exist, say what actually happens instead ("this is a rule the agent keeps;
+    nothing counts for it").
+12. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
     (documented in the best-practices page). Existing heavy emphasis (e.g.
@@ -517,27 +536,33 @@ revalidation entry in `todos.md`.
 ### 2.5 `docs/pr-review-bots.md` — which bot actually finds things
 
 The `/dev-workflow:process-pr-review` command reads this. Fill the table with the
-user — ask which bots are enabled and, for each, **whether it posts line-by-line
-review comments or only a summary**. Do not guess: the whole point of the file is
-that a summary-only bot must never be waited on for line findings.
+user — ask which bots are enabled and, for each, **where its findings appear**: inline
+review comments, the PR summary body, or both. Do not guess, and do not assume the
+answer is stable: a bot can post a summary on one PR and inline comments on the next,
+so a column may honestly read `inconsistent`. Record what was observed and when.
 
 ````markdown
 # PR review bots — <project>
 
 Which automated reviewers run on this repo, and what each one *actually produces*.
-`/dev-workflow:process-pr-review` reads this file to decide **which bots to wait for**
-(only those that post line-by-line findings) and which to treat as context only.
+`/dev-workflow:process-pr-review` routes on the **Wait for** list below — that list is
+authoritative. The table is descriptive: it records where each bot's findings have been
+seen, which may be `inconsistent`.
 
-Getting this wrong is expensive in both directions: waiting on a bot that structurally
-cannot post line comments hangs the loop, and reading a summary as a findings source
+Getting this wrong is expensive in both directions: waiting on a bot that never posts
+in the channel you are watching hangs the loop, and treating a channel as context
 silently drops real findings.
 
-| Bot | Enabled | Posts line-by-line findings | Notes (plan/tier limits, quirks) |
+| Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
-| <bot name> | yes/no | **yes** / no — summary only | <e.g. "Free plan: walkthrough only, never line comments"> |
+| <bot name> | yes/no | inline / summary / both / **inconsistent** | <where observed and when; how you know it has finished — a status check is not guaranteed> |
 
-**Wait for:** <the bots with "yes" in column 3 — process starts once each has posted, even with zero comments>
-**Context only:** <the summary-only bots>
+**Wait for — this list is authoritative.** <the bots whose findings you actually act
+on; ask the user, do not derive it from column 3, which records where findings appear
+rather than whether they matter. Processing starts once each listed bot has posted,
+even with zero comments, and both its channels are read.>
+**Context only:** <bots you deliberately do not act on — e.g. one that only reports it
+is disabled. Not "the summary-only bots": a summary can carry real findings.>
 
 **Revisit when:** a bot's plan/tier changes (a Free→Pro upgrade can turn a
 summary-only bot into a findings bot), or a bot is enabled/disabled.

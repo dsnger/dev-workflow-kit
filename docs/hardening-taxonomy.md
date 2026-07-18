@@ -23,7 +23,21 @@ the synonyms a future reader might search for instead.
   Aliases: misleading remedy, wrong-fix loop, undiagnosed state, symptom collision,
   "restart the session" for a cause a restart never fixes.
 
-**Promotion candidate.** This class is stack-neutral, not project vocabulary, so it
-belongs in the `harden-finding` base list rather than here. It lives here because the
-skill says to mint into this file (the plugin ships the base classes, the project owns
-its own). Move it up when the base taxonomy is next revised.
+- `unverified-enforcement-claim` — a prompt, spec or doc asserts that something is
+  enforced, caught, guaranteed or prevented, where no mechanism does it. Aliases:
+  claimed guarantee, asserted enforcement, false backstop, "the check catches it",
+  security theatre, a rule described as automatic that is instruction-only.
+
+  **Not the same as `docs-drift`**, though they overlap. `docs-drift` is two documents
+  (or a document and the code) disagreeing; grep it when the fix is to make them
+  agree. This class is a single claim that is untrue on its own terms even with
+  nothing to contradict it — "output validation catches a budget overrun" was false
+  because the output carries no call count, not because another file said otherwise.
+  The fix differs too: drift is detected by comparing the two artifacts and fixed by
+  updating whichever is stale; this one is fixed by verifying the mechanism exists
+  before the sentence is written.
+
+**Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
+they belong in the `harden-finding` base list rather than here. They live here because
+the skill says to mint into this file (the plugin ships the base classes, the project
+owns its own). Move them up when the base taxonomy is next revised.

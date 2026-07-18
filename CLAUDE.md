@@ -109,8 +109,20 @@ advisory — validate before applying; dismissed finding → one-line why.
   (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
   spec + quality in parallel). Skip ONLY trivial changes. Check against
   @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
-  invalidates the prior pass, which is where the 3 come from. Same coverage rule
-  as Gate A: put "report every finding with severity and confidence; say
+  invalidates the prior pass, which is where the 3 come from.
+
+  **A fix that changes specified behaviour updates the spec in the same commit.** If a
+  Gate-B fix alters something the approved spec pins down — an ordering, a terminal
+  state, a contract — the spec is stale the moment you commit, and the next reader
+  trusts it. Update both, and let the re-review cover both. This is not hypothetical:
+  a Gate-B fix here reordered a precedence rule and added a terminal state, the spec
+  was left describing the old behaviour, and a PR bot found the disagreement after
+  merge-readiness. Neither gate caught it *in that run*: Gate A had already passed the
+  spec before the fix existed, and the Gate-B call was given only the diff. A reviewer
+  handed both artifacts could catch it — which is why this is a rule about what you
+  commit, not a claim about what the gates detect.
+
+  Same coverage rule as Gate A: put "report every finding with severity and confidence; say
   `NO FINDINGS` if clean" in `additionalContext`, with the same one-line format.
   You filter to Blocker/Major, Codex never does.
 
