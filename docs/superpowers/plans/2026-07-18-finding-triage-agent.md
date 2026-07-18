@@ -1,5 +1,10 @@
 # finding-triage Agent Implementation Plan
 
+> **Historical note (added 2026-07-18, after merge).** References here to an "11-item"
+> checklist and to "item 11" (calibrated emphasis) describe `docs/prompt-standards.md`
+> as it stood when this plan was approved. It now has 12 items, and item 11 is
+> "enforcement claims name their mechanism".
+>
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship one read-only subagent, `finding-triage`, that judges whether a single PR-review defect claim is true of the code, and wire it into `process-pr-review`.

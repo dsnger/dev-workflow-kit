@@ -47,10 +47,10 @@ docs/
   architecture.md                 # layout + the two non-obvious design decisions
   coding-workflow.md              # the methodology this plugin encodes
   getting-started.md              # first story, end to end
-  prompt-standards.md             # the 11-item checklist every prompt must pass
+  prompt-standards.md             # the 12-item checklist every prompt must pass
   hardening-log.md                # append-only findings ledger (union-merged)
   hardening-taxonomy.md           # this project's fingerprint classes
-  pr-review-bots.md               # which bot posts line findings vs. summary only
+  pr-review-bots.md               # the Wait-for routing list + where each bot's findings appear
 source-files/                     # the extraction seed this repo was built from
 ```
 
@@ -126,7 +126,7 @@ reader can judge whether it still holds.
     helpers, framework APIs — goes only in that project's
     `docs/hardening-taxonomy.md`, never into the `harden-finding` skill. Otherwise one
     project leaks into every other.
-11. **Prompt changes pass `docs/prompt-standards.md`** — all 11 checklist items, for
+11. **Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for
     any skill, command, agent definition, hook message, or scaffolded template. The prompts are the
     product and nothing mechanical checks them.
 

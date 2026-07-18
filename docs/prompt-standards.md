@@ -64,7 +64,28 @@ Living references (consult, don't copy — copies go stale):
     preflight reported "restart the session" for every not-loaded Codex, so a
     same-named server winning on scope precedence went undiagnosed through this repo's
     own initialization.
-11. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
+11. **Enforcement claims name their mechanism.** Any sentence saying something is
+    enforced, caught, guaranteed or prevented names *what does it*, and the author
+    verified that mechanism exists before writing the sentence — by reading the code,
+    running the command, or checking the doc it relies on. Why: an unverified guarantee
+    is worse than an admitted gap, because a reader stops looking. This one is
+    load-bearing: six instances are citable from this repo's own history, each caught by a
+    review gate and none by the author — "a rogue write cannot be invisible" (refuted by
+    `todos.md`), "all four gaps are recorded in todos.md" (two were), "output validation
+    catches a budget overrun" (the output carries no call count), a precheck attestation
+    described as proving a check ran when it is caller-authored text (commit `e30568d`),
+    "an altered claim lands on the wrong thread" (the caller's equality check rejects
+    it), and prose claiming the gate hook matched a path its regex does not match. One
+    was written into the same document that records this pattern.
+
+    When the mechanism turns out not to exist, say what actually happens instead —
+    "this is a rule the agent keeps; nothing counts for it".
+
+    Worth knowing how that count was arrived at: it was first asserted as six without
+    checking, then "corrected" to five from memory, and only settled at six by reading
+    the commits. Both wrong numbers were themselves unverified claims — which is the
+    strongest available argument for this item.
+12. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
     (documented in the best-practices page). Existing heavy emphasis (e.g. the

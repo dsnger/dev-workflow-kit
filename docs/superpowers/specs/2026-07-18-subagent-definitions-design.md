@@ -1,5 +1,12 @@
 # Subagent definition: finding-triage — Design
 
+> **Historical note (added 2026-07-18, after merge).** This document and its plan
+> reference an 11-item `docs/prompt-standards.md` and use "item 11" to mean *calibrated
+> emphasis*. A twelfth item was added afterwards — "enforcement claims name their
+> mechanism", now item 11 — so present-tense numbering here refers to the checklist as
+> it stood when this was approved. The change is itself a hardening of a pattern this
+> document's own review exposed.
+
 **Date:** 2026-07-18 · **Status:** narrowed after Gate A pass 4, revised after pass 5; Gate A clean at pass 6 (SHIP) · **Version target:** 0.4.0
 
 **Kill condition.** If Gate A on this narrowed spec does not converge — final pass
