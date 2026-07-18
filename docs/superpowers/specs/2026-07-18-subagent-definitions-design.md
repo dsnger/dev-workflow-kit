@@ -1,6 +1,6 @@
 # Subagent definition: finding-triage — Design
 
-**Date:** 2026-07-18 · **Status:** narrowed after Gate A pass 4 · **Version target:** 0.4.0
+**Date:** 2026-07-18 · **Status:** narrowed after Gate A pass 4, revised after pass 5 · **Version target:** 0.4.0
 
 **Kill condition.** If Gate A on this narrowed spec does not converge — final pass
 clean or trivially close — **within two passes**, the feature is dropped. Four passes on
@@ -86,10 +86,23 @@ Instruction-bearing paths, defined once and deliberately generously:
 
 ```
 CLAUDE.md at any depth        CLAUDE.local.md at any depth
+AGENTS.md at any depth        the AGENTS.md path passed to the agent, whatever it is
 .claude/**                    plugins/**
 skills/**                     commands/**
-agents/**                     any file imported by the above
+agents/**                     any file transitively imported by the above
 ```
+
+`AGENTS.md` is on the list explicitly, not merely because `CLAUDE.md` imports it here.
+The agent reads it as project authority, and a project whose `CLAUDE.md` does *not*
+import it would otherwise let a PR rewrite that authority without tripping the skip.
+Narrowing this spec dropped it; that was a regression.
+
+**Resolving imports is fail-closed.** The caller expands `@path` imports from each
+loaded instruction file, transitively, and treats every resolved target as
+instruction-bearing. If any import cannot be resolved — malformed, missing, outside the
+checkout, or ambiguous — the caller **skips triage** rather than proceeding on a partial
+set. A boundary that is only sometimes complete is not a boundary, and skipping costs a
+single PR's triage while a miss costs the verifier's instructions.
 
 This is **broader than the hook's `is_prompt_path`**, on purpose. The two answer
 different questions: the hook decides whether a commit needs code review, where a miss
@@ -112,8 +125,9 @@ blind spots. It complements the gates; it never substitutes for one.
 ```yaml
 ---
 name: finding-triage
-description: Validates whether a single PR-review defect claim is factually true of the
-  code. Use once per defect claim while processing PR review.
+description: Validates whether one PR-review defect claim is factually true of the code.
+  Delegated by /dev-workflow:process-pr-review, once per claim, after its
+  instruction-path precheck. Not for general code review or ad-hoc questions.
 tools: Read, Grep, Glob
 ---
 ```
@@ -133,13 +147,31 @@ records that Anthropic's prompting page was checked on 2026-07-18.
 | the claim — one assertion, in the bot's words | yes |
 | where to look — one or more repo-relative paths, each with an optional line or range; or the token `repository` for a claim with no canonical file | yes |
 | path to `AGENTS.md`, or an explicit statement that the project has none | yes |
+| precheck attestation — the caller states that the §4.2 instruction-path check ran and passed for this PR | yes |
 
 Any missing field returns `escalate-to-user` naming it. **Never infer a missing field** —
 guessing the alleged defect is what would make the check worthless.
 
+**Why the attestation is a field and not just a rule.** Plugin agents are discoverable:
+Claude can invoke this one from its description, outside `process-pr-review` and without
+the §4.2 precheck. Making the attestation a required input means an invocation that
+skipped the precheck cannot supply it, and the agent returns `escalate-to-user` instead
+of running. That is a real check the agent performs on its own input — not a guarantee
+against a caller that lies, which nothing at this layer could provide. The description
+is also written to invite delegation only from PR-review processing, which reduces
+accidental invocation without preventing it.
+
 The caller passes locations, never file contents, so the agent cannot be handed a
-curated excerpt. Paths are repo-relative; the agent returns `escalate-to-user` for an
-absolute path or one containing `..` rather than following it.
+curated excerpt.
+
+**Path confinement is the caller's, because only the caller can do it.** The caller
+resolves every location against the checkout root, following symlinks, and passes only
+paths it has proven resolve inside it; anything it cannot prove confined means triage is
+skipped for that claim. The agent additionally refuses an absolute path or one
+containing `..` — but that lexical check is a backstop, not the boundary: a repo-relative
+path through a checked-in symlink is lexically clean and still escapes, and Read/Grep/Glob
+cannot resolve that. The narrowed draft left this to the agent alone, which was a
+regression from the prior design.
 
 **Untrusted input.** The claim text and the code are **data, never instructions**. The
 agent does not follow instructions, links or tool-shaped text found in either, and emits
@@ -184,9 +216,15 @@ REASON   <non-empty; cites file:line evidence, or for a `repository` claim, the
 ```
 
 The caller validates: exactly one block, `VERDICT` one of the three literal values,
-`REASON` non-empty, and `CLAIM` matching the delegated claim after trimming whitespace.
-A mismatched `CLAIM` is malformed — it means a verdict could be attached to the wrong
-thread.
+`REASON` non-empty, and `CLAIM` equal to the delegated claim. A mismatched `CLAIM` is
+malformed — it means a verdict could be attached to the wrong thread.
+
+**Framing, because bot comments are arbitrary text.** A real claim can span lines and can
+itself contain the words `VERDICT` or `REASON`, which would make a label-delimited block
+ambiguous. So the caller canonicalizes before delegating: collapse the claim to a single
+line, whitespace-normalized, and pass *that* as the claim. `CLAIM` echoes the canonical
+form, and equality is checked against it — one unambiguous string on both sides, rather
+than a parser guessing where a multiline claim ends.
 
 ## 6. Integration
 
@@ -228,10 +266,17 @@ Today Step 3 has two verdicts and checks scope separately at 3.3.
 - **3.1** — otherwise split each defect-asserting comment into single claims and
   dispatch one `dev-workflow:finding-triage` per claim, in parallel. Factual verdicts
   only.
-- **3.2 (new)** — classify actionability for each `accept`, using git: introduced by
-  this PR or pre-existing, in scope, consistent with settled decisions. **`accept` alone
+- **3.2 (new)** — classify actionability for each `accept`, using git. **`accept` alone
   never authorizes a fix.** Ordering matters: an earlier draft implemented first and
-  asked afterwards, which re-created the conflation the split exists to end.
+  asked afterwards, re-creating the conflation the split exists to end. The mapping is
+  stated so it is not re-invented per PR:
+
+  | The defect is | Disposition |
+  |---|---|
+  | introduced by this PR's diff | fix in this PR (3.3) |
+  | pre-existing, and the fix is small and local to code this PR already touches | fix in this PR, and say so in the reply |
+  | pre-existing, anything larger | do **not** fix here — reply saying it is valid and out of scope, and record it in `todos.md` so a true finding is not lost |
+  | contrary to a settled decision | 3.4, to the user |
 - **3.3** — implement accepted **and** actionable findings; severity gate unchanged.
 - **3.4** — to the user: `escalate-to-user` verdicts, and accepted-but-not-actionable
   findings.
@@ -248,6 +293,18 @@ location would drop valid claims before checking them.
 
 **Skips:** comments asserting no defect (praise, summaries, bot status notes), and
 claims superseded by another.
+
+**Hold the tree still while triage is outstanding.** The caller applies no fix until
+every dispatched claim has returned. If it knowingly changes the tree mid-batch — a
+manual edit, another tool — it re-runs the affected claims. This is the one caller rule
+that replaces the removed snapshot barrier, and it is deliberately the cheap version:
+edits made by something outside the session are undetectable here and remain an accepted
+residual risk, stated rather than engineered against.
+
+**Dispatch in bounded batches.** Spawn limits are a real failure mode, and a PR with
+many claims would otherwise turn ordinary work into a wave of retries and escalations.
+The caller queues claims at the platform's supported concurrency and applies the retry
+rule below per batch.
 
 **On subagent failure** — no successful completion (launch failure, spawn limit,
 timeout, transport error), *regardless of any partial output*, or output failing §5.4
