@@ -119,11 +119,17 @@ advisory — validate before applying; dismissed finding → one-line why.
   These describe the product rather than being it, so a wrong sentence costs a
   confused reader, not broken behaviour; that is why they carry no gate at all,
   not because some earlier gate covered them (Gate A runs on specs and plans,
-  which a README edit doesn't have). **Prompts are not prose:** anything under
-  `plugins/**` (skills, commands, hook reminder text, inline templates) and
-  `CLAUDE.md`/`AGENTS.md` themselves are the product (@AGENTS.md, "What this
-  project is"), so they fire full Gate B even though they are `.md`. So does any
-  mixed commit, and any non-`.md` file. The hook classifies paths the same way.
+  which a README edit doesn't have). **Prompts are not prose:** `CLAUDE.md` and
+  `AGENTS.md` themselves, and anything under a `.claude/`, `plugins/`, `skills/` or
+  `commands/` directory **at any depth** — skills, commands, hook reminder text,
+  inline templates — are the product (@AGENTS.md, "What this project is"), so they
+  fire full Gate B even though they are `.md`. So does any mixed commit, and any
+  non-`.md` file. The hook classifies paths the same way, matching those directory
+  names at any depth on purpose: root-level `skills/` and a monorepo's
+  `packages/*/.claude/` are both real layouts, and missing one would be a false
+  "N/A" — the dangerous direction. The price is that prose under a directory that
+  merely shares the name (`docs/commands/reference.md`) fires too, which is the
+  redundant reminder invariant 2 accepts by name.
 
 ### Mechanics (reference)
 - **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →

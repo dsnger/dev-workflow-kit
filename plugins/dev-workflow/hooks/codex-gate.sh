@@ -205,7 +205,12 @@ tree_hash() {
       # repo on every hook invocation, which on a large repo is the difference between
       # imperceptible and unusable. Copy failure is fine — an absent seed just means a
       # cold, slower, equally correct index.
-      cp "$(git -C "$repo_root" rev-parse --git-path index 2>/dev/null)" "$tmp_index" 2>/dev/null || true
+      # --absolute-git-dir, not --git-path: the latter answers relative to git's cwd
+      # ("​.git/index"), but the `cp` resolves against the SHELL's cwd — which is
+      # wherever the harness invoked the hook, not necessarily the repo root. From any
+      # subdirectory the copy then fails silently and every run falls back to a cold
+      # index, i.e. re-hashing the whole repo, which is exactly what seeding avoids.
+      cp "$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null)/index" "$tmp_index" 2>/dev/null || true
       GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
         -- . ':(exclude).context' >/dev/null 2>&1 &&
         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null

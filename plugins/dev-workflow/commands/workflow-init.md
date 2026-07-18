@@ -252,10 +252,14 @@ advisory — validate before applying; dismissed finding → one-line why.
   **What counts as prose (the only Gate-B exemption).** Every staged path is
   explanatory documentation — `docs/**.md`, `README.md` → N/A. Those describe the
   product rather than being it, so they carry no gate at all. **Prompts are not
-  prose:** skills, slash commands, agent instructions and anything under
-  `.claude/` or `plugins/` are product even though they are `.md`, and so are
-  `CLAUDE.md`/`AGENTS.md` — all fire full Gate B, as does any mixed commit or any
-  non-`.md` file. The hook classifies paths the same way.
+  prose:** `CLAUDE.md`/`AGENTS.md`, and anything under a `.claude/`, `plugins/`,
+  `skills/` or `commands/` directory **at any depth**, are product even though they
+  are `.md` — all fire full Gate B, as does any mixed commit or any non-`.md` file.
+  The hook classifies paths the same way. Those directory names match at any depth
+  deliberately, so a root-level `skills/` and a monorepo's `packages/*/.claude/` are
+  both covered; the cost is that prose under a same-named directory
+  (`docs/commands/reference.md`) fires too — a redundant reminder, never a missed
+  review.
 
 ### Mechanics (reference)
 - **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
