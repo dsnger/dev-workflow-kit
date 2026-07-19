@@ -106,7 +106,8 @@ policy=$(gate_citation) || policy="this project's review policy"
 # — that judgment stays with the model per §5), but it CAN count passes and flag
 # when the floor isn't met. This is what backs Gate A, which has no content check
 # behind it (unlike Gate B, which at least compares a content fingerprint — though
-# that proves the content is unchanged since the review, not that Codex read it).
+# that proves the current fingerprint matches the recorded one, not that Codex read
+# those bytes).
 # Per-project override: .context/codex-gate.floor holding a positive integer.
 floor=3
 if [ -f "$floor_file" ]; then
@@ -363,7 +364,8 @@ case "$event" in
         mkdir -p "$state_dir" 2>/dev/null
         h=$(tree_hash)
         prev=$(cat "$state_file" 2>/dev/null || echo '')
-        # A pass covering the SAME tree as the previous pass adds to the fresh count;
+        # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
+        # count;
         # a pass on a changed tree starts the fresh count over. This is what lets the
         # satisfied message say how many passes cover the code being committed,
         # rather than how many happened at some point this cycle (Finding 9).
@@ -470,7 +472,7 @@ case "$event" in
               emit "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes — run more (the ONLY early exit is a pass that returned zero findings), or proceed only if this change is trivial." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
-              # made BEFORE later edits, which no longer cover the code being committed.
+              # made BEFORE later edits, so they carry a different fingerprint.
               # FINGERPRINT EQUALITY IS ALL THIS PROVES. The hook compares a hash of
               # disk; mcp__codex__review reads a git range — so a match does NOT
               # establish that Codex read these bytes (spec §7, and the review-range row

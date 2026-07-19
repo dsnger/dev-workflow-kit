@@ -46,7 +46,7 @@ range to read; the hook knows WIP doesn't end the cycle), then loops
 formatter, flips it back to unsatisfied (`.context/` and untracked ignored paths are
 excluded) (staging counts too: the fingerprint covers the index, because
 that is what a commit carries, as of the hook's invocation). On
-`✓ Codex Gate B satisfied (3/3 cycle, 3 on current code)`, the real commit replaces
+`✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)`, the real commit replaces
 the WIP via `git commit --amend`.
 
 **8. PR and bots.** Open the PR as usual; once the bots have commented, run
