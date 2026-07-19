@@ -217,15 +217,23 @@ tree_hash() {
         ok=0
       fi
 
-      # (1) WORKTREE tree, from a throwaway index. Task 2 adds the INDEX tree here.
-      # git_dir must RESOLVE: unchecked, a failure yields "/index", which does not
-      # exist, so the absent-index carve-out below would read it as "nothing staged"
-      # and hand back the empty tree — a constant that matches itself.
-      # The chain's status is consumed by `if` directly; a trailing `[ $? -eq 0 ]` is
-      # SC2181 and the hook is linted with no exclusions.
+      # (1) INDEX tree and (2) WORKTREE tree, from one throwaway index.
+      # The index tree is taken BEFORE `add -A` brings the temp index up to the
+      # worktree, because `git commit` commits the index — that is the whole defect.
+      # `eff_index`, not `$git_dir/index`: git honours GIT_INDEX_FILE, and a missing
+      # alternate index is an EMPTY index to git, so the carve-out must follow the same
+      # path git will.
+      # `rm -rfq --cached`: without -f git refuses to remove a path whose staged content
+      # differs from both HEAD and the worktree — exactly the divergent state this story
+      # is about — and does so silently, since stderr is redirected. It runs against the
+      # THROWAWAY index; the user's real staging area is untouched.
       if git_dir=$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null) &&
          [ -n "$git_dir" ] &&
-         { [ ! -e "$git_dir/index" ] || cp "$git_dir/index" "$tmp_index" 2>/dev/null; } &&
+         eff_index=${GIT_INDEX_FILE:-$git_dir/index} &&
+         { [ ! -e "$eff_index" ] || cp "$eff_index" "$tmp_index" 2>/dev/null; } &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" rm -rfq --cached \
+           --ignore-unmatch -- .context >/dev/null 2>&1 &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null &&
          GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
            -- . ':(exclude).context' >/dev/null 2>&1 &&
          GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null

@@ -177,21 +177,26 @@ git checkout -- app.ts >/dev/null 2>&1
 git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
 reset_all; rev; rev; rev
 
-# 3f. FINDING B — pure staging must NOT invalidate: `git diff HEAD` covers staged and
-#     unstaged tracked content alike, so `git add` of an already-reviewed file changes
-#     nothing that could end up in the commit.
+# 3f. DECIDED at spec §2 (2026-07-19-gate-b-index-tree-design.md): staging
+#     already-reviewed content DOES invalidate. The hash covers the index tree, and
+#     `git add` changes it. The bytes that would be committed are unchanged, so this is
+#     a false invalidation — accepted under invariant 2 ("loose in the firing
+#     direction"), and the STOP message explains that staging alone can cause it.
+#     This test previously asserted the OPPOSITE as though it were a principle; the
+#     behaviour was never decided, it fell out of an implementation choice.
 reset_all
 printf 'reviewed change\n' >> app.ts
 rev; rev; rev                       # 3 passes covering the modified (unstaged) tree
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on unstaged change" || fail "setup: satisfied on unstaged change"
 git add app.ts >/dev/null 2>&1      # staging only — no content change
-out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "staging a reviewed tracked file -> still satisfied (Finding B)" || fail "staging a reviewed tracked file -> still satisfied (Finding B)"
-# ...and an untracked file added on top still invalidates (direction preserved)
-printf 'new\n' > also-new.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "untracked file on a staged tree -> NOT satisfied" || fail "untracked file on a staged tree -> NOT satisfied"
-rm -f also-new.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
+  && pass "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)" \
+  || fail "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)"
+# The old trailing assertion ("untracked file on a staged tree -> not satisfied") is
+# GONE on purpose: once staging alone invalidates, it passes regardless of the untracked
+# file and tests nothing. Test 3c already covers untracked content.
 git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
+reset_all; rev; rev; rev
 
 # 4. Gate A exec must NOT satisfy Gate B (separate state)
 reset_all
@@ -659,6 +664,80 @@ unborn=$(mktemp -d)
 ) && pass "unborn repo hashes, self-matches, and can reach satisfied" \
   || fail "unborn repo hashes, self-matches, and can reach satisfied"
 rm -rf "$unborn"
+
+# 26. THE DEFECT (spec §1): staged content diverging from the worktree.
+#     NOTE: the revert is a direct byte write, NOT `git checkout -- app.ts` — checkout
+#     restores the worktree FROM THE INDEX, which would install v2 on disk and destroy
+#     the divergence, making this test pass against the unfixed hook.
+reset_all
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setup: satisfied on clean tree"
+printf 'v2\n' > app.ts; git add app.ts >/dev/null 2>&1   # index: v2
+printf 'v1\n' > app.ts                                   # worktree: back to HEAD bytes
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
+  && pass "staged-vs-worktree divergence -> NOT satisfied" \
+  || fail "staged-vs-worktree divergence -> NOT satisfied"
+git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
+
+# 27. Ambient alternate index. Three shapes: a negative-only test would be satisfied by
+#     an implementation that fires whenever GIT_INDEX_FILE is set — a permanent STOP.
+alt_dir=$(mktemp -d)
+# 27a. divergent: fingerprint recorded WITHOUT the alternate index, alternate enabled
+#      only for the commit check.
+reset_all; printf '1' > "$floorf"
+rev
+cp .git/index "$alt_dir/alt"
+printf 'SNEAKY\n' > app.ts; GIT_INDEX_FILE="$alt_dir/alt" git add app.ts >/dev/null 2>&1
+printf 'v1\n' > app.ts
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'not satisfied' \
+  && pass "ambient divergent alternate index -> NOT satisfied" \
+  || fail "ambient divergent alternate index -> NOT satisfied"
+# 27b. stable: same unchanged alternate index across review AND commit -> satisfied,
+#      with each index file byte-identical to its OWN pre-hook snapshot.
+cp .git/index "$alt_dir/default.before"; cp "$alt_dir/alt" "$alt_dir/alt.before"
+reset_all; printf '1' > "$floorf"
+GIT_INDEX_FILE="$alt_dir/alt" rev
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B satisfied' \
+  && pass "ambient stable alternate index -> satisfied" \
+  || fail "ambient stable alternate index -> satisfied"
+cmp -s .git/index "$alt_dir/default.before" && pass "default index untouched" || fail "default index untouched"
+cmp -s "$alt_dir/alt" "$alt_dir/alt.before" && pass "alternate index untouched" || fail "alternate index untouched"
+# 27c. missing path: git treats a nonexistent GIT_INDEX_FILE as an EMPTY index, so the
+#      hook must hash and self-match rather than returning `unavailable`.
+reset_all; printf '1' > "$floorf"
+GIT_INDEX_FILE="$alt_dir/does-not-exist" rev
+h1=$(cat "$state" 2>/dev/null)
+GIT_INDEX_FILE="$alt_dir/does-not-exist" rev
+h2=$(cat "$state" 2>/dev/null)
+{ [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ]; } \
+  && pass "missing alternate index hashes and self-matches" \
+  || fail "missing alternate index hashes and self-matches"
+rm -rf "$alt_dir"; rm -f "$floorf"
+git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
+reset_all; rev; rev; rev
+
+# 28. Tracked .context/ diverging THREE ways (index differs from both HEAD and worktree)
+#     is exactly the state where `git rm --cached` refuses without -f, silently (stderr
+#     is redirected). The hash must still be computable and self-match, and the user's
+#     real index must be untouched — the forced removal runs on the throwaway index only.
+git add -f .context >/dev/null 2>&1; git commit -qm "track .context" >/dev/null 2>&1
+printf 'staged\n' > .context/codex-gate.on; git add .context/codex-gate.on >/dev/null 2>&1
+printf 'worktree\n' > .context/codex-gate.on
+cp .git/index "$work/index.before"
+before_tree=$(git write-tree 2>/dev/null)
+before_blob=$(git rev-parse :.context/codex-gate.on 2>/dev/null)
+reset_all
+rev; h1=$(cat "$state" 2>/dev/null)
+rev; h2=$(cat "$state" 2>/dev/null)
+{ [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ]; } \
+  && pass "three-way .context divergence hashes and self-matches" \
+  || fail "three-way .context divergence hashes and self-matches"
+[ "$(git write-tree 2>/dev/null)" = "$before_tree" ] && pass "real index tree unchanged" || fail "real index tree unchanged"
+[ "$(git rev-parse :.context/codex-gate.on 2>/dev/null)" = "$before_blob" ] && pass "staged .context blob unchanged" || fail "staged .context blob unchanged"
+cmp -s .git/index "$work/index.before" && pass "real index bytes unchanged" || fail "real index bytes unchanged"
+: > .context/codex-gate.on
+git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
+reset_all; rev; rev; rev
 
 echo "---"
 [ "$fails" -eq 0 ] && { echo "all passed"; exit 0; } || { echo "$fails failed"; exit 1; }
