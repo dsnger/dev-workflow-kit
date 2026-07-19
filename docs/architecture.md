@@ -16,15 +16,18 @@ README.md, MANIFEST.md, AGENTS.md, CLAUDE.md, todos.md
 .claude-plugin/marketplace.json
 .github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
 scripts/check-invariants.sh       # invariants 5 and 6, mechanically (+ .test.sh)
+scripts/check-version-bump.sh     # invariant 12, PR-only, mechanically (+ .test.sh)
 plugins/dev-workflow/
   .claude-plugin/plugin.json
+  CHANGELOG.md                    # every manifest version, newest first
   skills/{intake,harden-finding}/SKILL.md
   agents/finding-triage.md
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
-  examples/                       # read, don't install — one stack's answers
+  examples/                       # ships, but never scaffolded — one stack's answers
 docs/{getting-started,coding-workflow,prompt-standards,architecture}.md
 docs/{hardening-log,hardening-taxonomy,pr-review-bots}.md
+docs/superpowers/{specs,plans,stories}/  # approved artifacts behind past changes
 source-files/                     # the extraction seed this repo was built from
 ```
 

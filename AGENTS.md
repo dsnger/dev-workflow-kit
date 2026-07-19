@@ -26,7 +26,7 @@ under `.mcp/`) is deliberately absent, not overlooked.
 
 ```
 README.md                         # what the kit is, setup, daily use, contributing
-MANIFEST.md                       # what each shipped file is and where it comes from
+MANIFEST.md                       # inventory of source-files/, the frozen extraction seed
 AGENTS.md                         # this file — the invariants both gates check
 CLAUDE.md                         # discipline rules + the two review gates
 todos.md                          # backlog; `pending` ledger rows point here by ref
@@ -36,13 +36,16 @@ todos.md                          # backlog; `pending` ledger rows point here by
 .github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
 scripts/check-invariants.sh       # invariants 5 and 6, mechanically (rung 2)
 scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
+scripts/check-version-bump.sh     # invariant 12, mechanically — PR-only (rung 2)
+scripts/check-version-bump.test.sh # its regression suite — policy/operational/accept
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
+  CHANGELOG.md                    # every manifest version, newest first
   skills/{intake,harden-finding}/SKILL.md
   agents/finding-triage.md        # read-only PR-comment checker (convention-loaded)
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
-  examples/                       # read, don't install — one stack's answers
+  examples/                       # ships, but never scaffolded — one stack's answers
 docs/
   architecture.md                 # layout + the two non-obvious design decisions
   coding-workflow.md              # the methodology this plugin encodes
@@ -51,14 +54,17 @@ docs/
   hardening-log.md                # append-only findings ledger (union-merged)
   hardening-taxonomy.md           # this project's fingerprint classes
   pr-review-bots.md               # the Wait-for routing list + where each bot's findings appear
+  superpowers/{specs,plans,stories}/ # the approved artifacts behind past changes
 source-files/                     # the extraction seed this repo was built from
 ```
 
 **Boundaries.** `skills/`, `commands/`, `agents/` and `hooks/hooks.json` are loaded by convention
-from their paths. The executable artifacts are the hook and its test, plus
-`scripts/check-invariants.sh` and its test (the hook ships in the plugin; the checker
-is repo-local CI); everything else is text
-read by a model. `examples/` is reference material, outside the loaded surface.
+from their paths. The executable artifacts are the hook and its test, plus the two
+repo-local CI checkers and their tests (`scripts/check-invariants.{sh,test.sh}` and
+`scripts/check-version-bump.{sh,test.sh}`) — the hook ships in the plugin, the checkers
+do not; everything else is text read by a model. `examples/` is reference material,
+outside the loaded surface: never scaffolded or copied into a user's project, though it
+does ship inside the plugin package.
 
 **Dependency direction.** The plugin depends on superpowers (skills it hands off to)
 and on a Codex MCP server exposing both `exec` and `review` (the gates key on those
@@ -109,8 +115,34 @@ reader can judge whether it still holds.
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not
    load at all; fixed in 0.2.1). Manifest keys only for files outside convention paths.
-7. **`examples/` is read-only reference.** Never installed, never copied by a command,
-   never presented as a default — it encodes one stack's answers and will not transfer.
+7. **`examples/` is read-only reference.** Never scaffolded or copied into a user's
+   project, never presented as a default — it encodes one stack's answers and will not
+   transfer. It *does* ship inside the plugin package (the cache copies the plugin
+   directory wholesale), which is why invariant 12 covers it: shipped-but-not-scaffolded
+   is not the same claim as not-shipped, and reading it as the latter once made
+   `examples/` look out of scope for the version-bump rule.
+12. **A plugin change requires a version bump.** A pull request that changes any path
+    under a `plugins/<name>/` directory **that still exists at HEAD** — `examples/`
+    included, and no exemptions among the paths inside such a directory — must also
+    change that plugin manifest's `version`, or CI fails. (Deleting a whole plugin
+    directory is the one shape outside the rule, since nothing of it ships afterwards;
+    deleting only its manifest while the directory survives fails closed.) The checker is
+    `scripts/check-version-bump.sh`, run **on pull requests only**, with
+    `scripts/check-version-bump.test.sh` as its suite. An installed copy lives under a
+    version-keyed cache path, so an un-bumped change never reaches it: the machine keeps
+    running the old code with no signal that it is stale. This was a convention first,
+    and it failed twice — a machine ran 0.1.0 while main was at 0.4.0, and the 0.4.0
+    bump had to be asked for during review; main was still carrying two un-released
+    plugin commits when the check was written.
+    **What the check does not catch** — the same list the script header and the ledger
+    row carry, because a partial list is an overclaim: it verifies that a bump is
+    *present*, not that it is right. It does not check: semantic correctness (a patch
+    where a minor was due passes); direction (any different string passes, including a
+    decrease); anything outside a `pull_request` event (a direct push to main bypasses it
+    entirely); deletion of an entire plugin directory; any change to which directory the
+    marketplace entry
+    points at (rename, copy, or `source` repoint); two PRs branched from the same version
+    each bumping to the same new one; and whether the version was ever released or tagged.
 
 ### Prompts and scaffolding
 
@@ -172,11 +204,12 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && sh plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && claude plugin validate . --strict` |
+| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && sh plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && claude plugin validate . --strict` |
 | typecheck | n/a — no typed sources (shell + markdown) |
-| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh` |
+| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh` |
 | test | `sh plugins/dev-workflow/hooks/codex-gate.test.sh` |
 | invariant checks (5 pinning, 6 manifest) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
 
 **Prerequisites and pinning.** The quality command needs `shellcheck` (0.11.0 locally;
@@ -189,5 +222,14 @@ disable: every other shellcheck rule still applies to that file. Its hits are al
 mode is a broken stdout — which runs `fail` as well, producing a spurious FAIL rather
 than a false pass. Revisit if `pass`/`fail` ever gain logic that can legitimately fail.
 
+**`check-version-bump.sh main` has a precondition**, unlike everything else in the
+battery: it compares *commits*, so run it once the work is committed (the Gate-B WIP
+commit is the natural point) and against a base ref that is current. Run mid-loop with
+the plugin edits still in the working tree, it reports clean — correctly, and
+uselessly. CI passes the PR's own base ref instead of `main`. It is in the quality row
+because that row claims to be what CI runs, and as of invariant 12 that includes this.
+
 CI runs the parts as separate steps for readable failures; the chained form above
-is the single command a human runs.
+is the single command a human runs. One difference is deliberate: CI's version-bump
+step is `pull_request`-only, while the local battery always runs it (on `main`, where
+the merge-base is HEAD, it passes trivially).

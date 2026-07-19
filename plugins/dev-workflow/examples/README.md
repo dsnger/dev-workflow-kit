@@ -1,8 +1,10 @@
-# Examples — read, don't install
+# Examples — read, don't scaffold
 
-Nothing in this directory is plugin content. These files are **one project's**
-answers to questions the plugin deliberately leaves open, kept because the *shape* of
-a good answer is hard to describe and easy to show.
+These files **ship** with the plugin: they arrive with every install, because the cache
+copies the plugin directory wholesale. What they are not is *project* content — nothing
+here is ever scaffolded or copied into your repo, and none of it is offered as a
+default. They are **one project's** answers to questions the plugin deliberately leaves
+open, kept because the *shape* of a good answer is hard to describe and easy to show.
 
 They are Convex + TypeScript + pnpm specific. Copying them into another stack will
 not work, and `/dev-workflow:workflow-init` will not install them.
