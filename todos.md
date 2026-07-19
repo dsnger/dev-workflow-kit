@@ -35,8 +35,8 @@ driven by recurrence rather than by enthusiasm.
       command segment preceding `git commit` as uncertain and firing.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** codex-gate.test.sh now covers the "tree unavailable" guard for
-      checksum, seed-copy, git-dir and `git diff` failures, but a `git add`/`write-tree`
-      failure inside the throwaway index stays untested — it needs a portable way to
+      checksum, seed-copy, git-dir and `git diff` failures. Four seams stay untested:
+      `mktemp -d`, the throwaway-index `git rm --cached`, `git add`, and `write-tree` — it needs a portable way to
       make those two calls fail on demand without breaking anything else the test
       relies on (a stub `git` earlier on `PATH` is one candidate).
 - [ ] **Gate-B fingerprints disk; the reviewer reads history.** A review pass records a
@@ -48,6 +48,19 @@ driven by recurrence rather than by enthusiasm.
       reviewed range, i.e. mandating a WIP commit for every review. That redefines the
       gate rather than fixing a hash, so it needs its own story and its own decision.
       CLAUDE.md §5's WIP-commit flow is the current mitigation.
+- [ ] **`check-invariants.sh` scans untracked scratch directories, so local scratch can
+      fail it.** It greps the working tree recursively, not the tracked set, so a
+      gitignored scratch file that merely *quotes* a violating pattern trips it. Hit for
+      real: the SDD scratch under `.superpowers/` held pasted test output in which the
+      word `npx` sat next to a `--yes` flag inside one of the checker's OWN test
+      descriptions, and the checker then reported an unpinned-npx violation against a
+      repo containing no such call. (This row deliberately does not quote that string
+      verbatim — doing so put the pattern into a tracked file and made the checker fail
+      on this very commit, which is the bug demonstrating itself.) A false positive, so it is the safe direction — but it is confusing,
+      and it makes "the battery is green" depend on what else happens to be on disk.
+      Surfaced by real use during the index-tree story, not by a gate. Fix would be to
+      scan tracked files (or honour `.gitignore`), with a reject/accept fixture for a
+      violating pattern inside an ignored path.
 - [ ] **Temp-index writes land in the real object database.** `git add -A` against the
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary
