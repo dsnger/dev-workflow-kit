@@ -151,10 +151,10 @@ fi
 read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0; fi; }
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
-# Hash of everything that could end up in a commit: the diff of tracked files
-# against HEAD (staged + unstaged), a tree id for the EFFECTIVE INDEX, and a tree id
-# for the WORKTREE's untracked paths, contents and modes, via a throwaway-index (see
-# below). `.context/` is excluded because the hook writes its own state there —
+# Fingerprint used for the Gate-B comparison, computed at hook invocation: the diff of
+# tracked files against HEAD (staged + unstaged), a tree id for the EFFECTIVE INDEX, and
+# a tree id for the WORKTREE's untracked paths, contents and modes, via a throwaway
+# index (see below). `.context/` is excluded because the hook writes its own state there —
 # including it would make the hash change every time the hook runs, so it could never
 # match itself.
 #

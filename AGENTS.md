@@ -83,11 +83,12 @@ reader can judge whether it still holds.
 2. **Loose in the firing direction.** On uncertainty, fire. A missed commit (false ✓)
    is the dangerous direction; a redundant warning is the accepted price.
 3. **Gate-B validity is content-derived, never event-derived.** Invalidation compares a
-   fingerprint of everything a commit could carry, as of the hook's invocation:
-   `git diff HEAD` for tracked content, a tree id written from the **effective index**
-   (`GIT_INDEX_FILE` when set, else the git-dir index), and a tree id written from a
-   throwaway index brought up to the
-   worktree — so untracked paths, contents and file modes all count, minus `.context/`.
+   fingerprint of the effective index plus the included worktree content, as of the
+   hook's invocation — a deliberate superset of any one commit's payload, so the gate
+   errs toward firing: `git diff HEAD` for tracked content, a tree id written from the
+   **effective index** (`GIT_INDEX_FILE` when set, else the git-dir index), and a tree
+   id written from a throwaway index brought up to the worktree — so untracked paths,
+   contents and file modes all count, minus `.context/`.
    The index component exists because `git commit` commits the index: without it, staging
    a change and reverting the file on disk read as unchanged and reported satisfied. An
    event-derived check misses a file changed through Bash (`sed -i`, `git apply`,
