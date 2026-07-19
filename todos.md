@@ -34,7 +34,7 @@ driven by recurrence rather than by enthusiasm.
       runs, so the commit carries content the hash never saw. Consider treating any
       command segment preceding `git commit` as uncertain and firing.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
-      index.** Derived from the code, not recalled: sections 24a-24e stub FOUR seams —
+      index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
       seed `cp`, `git diff HEAD`, and `rev-parse --absolute-git-dir`. SEVEN have no
       targeted test: `mktemp -d`; the non-symbolic unresolvable-HEAD branch (the

@@ -689,6 +689,11 @@ reset_all; rev; rev; rev
 # variables instead of just PATH.
 [ "$PATH" = "$path_before_24" ] && pass "PATH not leaked out of section 24" || fail "PATH not leaked out of section 24"
 [ -z "${REAL_GIT+x}" ] && pass "REAL_GIT unset after section 24" || fail "REAL_GIT unset after section 24"
+# ...and the stub directory itself. Guarding only the variables was the same partial
+# fix again: dropping `rm -rf "$stub_dir"` left every assertion green, so the suite
+# could leak a temp dir per run undetected. $work's EXIT trap does not cover it —
+# stub_dir is its own mktemp -d outside that tree.
+[ ! -d "$stub_dir" ] && pass "stub_dir removed after section 24" || fail "stub_dir removed after section 24"
 
 # 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
 #     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
