@@ -149,17 +149,20 @@ read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0;
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
 # Hash of everything that could end up in a commit: the diff of tracked files
-# against HEAD (staged + unstaged) plus the untracked files' paths, contents and
-# modes, via a throwaway-index tree id (see below). `.context/` is
-# excluded because the hook writes its own state there — including it would make
-# the hash change every time the hook runs, so it could never match itself.
+# against HEAD (staged + unstaged), a tree id for the EFFECTIVE INDEX, and a tree id
+# for the WORKTREE's untracked paths, contents and modes, via a throwaway-index (see
+# below). `.context/` is excluded because the hook writes its own state there —
+# including it would make the hash change every time the hook runs, so it could never
+# match itself.
 #
-# BOTH components must exclude it, and for different reasons. Untracked state is kept
-# out by the same `:(exclude)` pathspec on `add -A`. Tracked state needs it too:
-# `.context/` is committed in some projects — the adoption marker is meant to be
-# shared, so this is the normal case, not an exotic one — and a tracked state file
-# lands in `git diff HEAD`, where the hook's own write would invalidate the review it
-# just recorded and STOP every commit forever.
+# ALL THREE components must exclude it, and each does so a different way. The tracked
+# diff excludes it via a `:(exclude)` pathspec. The index tree excludes it by `git rm
+# --cached` against the throwaway index before that tree is written. The worktree tree
+# excludes it via the same `:(exclude)` pathspec on `add -A`. `.context/` is committed
+# in some projects — the adoption marker is meant to be shared, so this is the normal
+# case, not an exotic one — and a tracked state file left in would land in `git diff
+# HEAD`, where the hook's own write would invalidate the review it just recorded and
+# STOP every commit forever.
 #
 # Tracked CONTENT comes from `git diff HEAD`, which is staging-independent. The INDEX
 # tree is hashed separately, so `git add` of an already-reviewed file DOES invalidate:
