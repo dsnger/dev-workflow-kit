@@ -83,12 +83,18 @@ reader can judge whether it still holds.
 2. **Loose in the firing direction.** On uncertainty, fire. A missed commit (false ✓)
    is the dangerous direction; a redundant warning is the accepted price.
 3. **Gate-B validity is content-derived, never event-derived.** Invalidation compares a
-   hash of the working tree — `git diff HEAD` plus a tree id written from a throwaway
-   index, so untracked paths, contents and file modes all count, minus `.context/`. An
+   fingerprint of everything a commit could carry: `git diff HEAD` for tracked content,
+   a tree id written from the **effective index** (`GIT_INDEX_FILE` when set, else the
+   git-dir index), and a tree id written from a throwaway index brought up to the
+   worktree — so untracked paths, contents and file modes all count, minus `.context/`.
+   The index component exists because `git commit` commits the index: without it, staging
+   a change and reverting the file on disk read as unchanged and reported satisfied. An
    event-derived check misses a file changed through Bash (`sed -i`, `git apply`,
    codegen) and leaves a stale ✓ standing; so does a name-only view of untracked files,
    or any hand-rolled walk that re-derives what `git write-tree` already gets right
-   (symlink targets, exotic path encodings, non-regular files).
+   (symlink targets, exotic path encodings, non-regular files). When the fingerprint
+   cannot be computed it is the literal `unavailable`, which never matches — including
+   against itself.
 4. **POSIX `sh`, and `jq` is optional.** No bash-isms; correct behaviour via fallback
    parsing when `jq` is absent. The hook runs on machines whose environment we do not
    control, and CI invokes it with `sh`. Enforced mechanically by the lint command

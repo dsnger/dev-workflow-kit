@@ -43,7 +43,8 @@ skipping locally only postpones the red.
 range to read; the hook knows WIP doesn't end the cycle), then loops
 `mcp__codex__review` the same way: three passes, final clean. Verification is by
 **content** — any file change after the last review, even from a formatter, flips
-it back to unsatisfied (staging alone doesn't; `git add` changes no content). On
+it back to unsatisfied (staging counts too: the fingerprint covers the index, because
+that is what a commit carries). On
 `✓ Codex Gate B satisfied (3/3 cycle, 3 on current code)`, the real commit replaces
 the WIP via `git commit --amend`.
 

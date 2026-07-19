@@ -775,8 +775,8 @@ states the adoption instead of inferring it from a heading someone may reword.
 
 **Commit it.** `CLAUDE.md` is committed, so a clone is adopted the moment it lands;
 leaving the marker untracked would make adoption depend on who ran this command. (The
-hook excludes `.context/` from its tree hash on both the tracked and untracked side, so
-a committed marker does not disturb Gate B.)
+hook excludes `.context/` from its tree hash from all three of its fingerprint
+components, so a committed marker does not disturb Gate B.)
 
 Say in the report that this is what makes the hook speak in this project, and that
 deleting it plus the §5 heading is the way to make it stop.

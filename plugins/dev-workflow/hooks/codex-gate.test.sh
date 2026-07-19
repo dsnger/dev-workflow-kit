@@ -123,10 +123,9 @@ rm -f link.ts; ln -s absent-b link.ts
 printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "retargeted untracked symlink -> NOT satisfied" || fail "retargeted untracked symlink -> NOT satisfied"
 rm -f link.ts
 
-# NOTE: the "tree could not be computed" guard in tree_hash has no regression test.
-# Forcing it portably means making mktemp or git fail on demand — TMPDIR=/dev/null
-# looks like it does that but BSD/macOS mktemp silently falls back to /var/folders, so
-# such a test passes for the wrong reason. Tracked in todos.md.
+# NOTE: sections 24-25 cover the "could not be computed" guard for checksum, seed-copy,
+# git-dir and diff failures. Still uncovered: a `git add`/`write-tree` failure inside the
+# throwaway index (see the tree-unavailable row in todos.md, which stays parked).
 
 # A FIFO is not committable content; hashing must skip it rather than block on a
 # reader that never arrives. The hook is advisory and must not be able to wedge a

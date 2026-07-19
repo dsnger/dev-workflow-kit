@@ -3,12 +3,12 @@
 # Reads a Claude Code hook payload (JSON) on stdin, maintains Gate-A/Gate-B state,
 # and emits reminders.
 #
-# Gate B is verified by CONTENT, not by events: the state file holds a hash of the
-# working tree taken at review time, and the commit check recomputes it. An
-# event-based scheme (invalidate on Edit/Write) is blind to a file changed through
-# Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which would leave a
-# stale "reviewed" marker standing. A false ✓ is the dangerous direction, so the
-# hook compares what is actually on disk.
+# Gate B is verified by CONTENT, not by events: the state file holds a fingerprint of
+# the index and the working tree taken at review time, and the commit check
+# recomputes it. An event-based scheme (invalidate on Edit/Write) is blind to a file
+# changed through Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which
+# would leave a stale "reviewed" marker standing. A false ✓ is the dangerous
+# direction, so the hook compares what a commit would actually carry.
 set -u
 
 payload=$(cat)
@@ -102,7 +102,8 @@ policy=$(gate_citation) || policy="this project's review policy"
 # read Codex's findings (so it can't auto-detect the "zero-findings" early exit
 # — that judgment stays with the model per §5), but it CAN count passes and flag
 # when the floor isn't met. This is what backs Gate A, which has no content check
-# behind it (unlike Gate B, where the tree-hash proves what was reviewed).
+# behind it (unlike Gate B, which at least compares a content fingerprint — though
+# that proves the content is unchanged since the review, not that Codex read it).
 # Per-project override: .context/codex-gate.floor holding a positive integer.
 floor=3
 if [ -f "$floor_file" ]; then
@@ -160,16 +161,15 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 # lands in `git diff HEAD`, where the hook's own write would invalidate the review it
 # just recorded and STOP every commit forever.
 #
-# Tracked CONTENT comes from `git diff HEAD`, which is staging-independent: it sees
-# staged and unstaged edits alike, so `git add` of an already-reviewed file does not
-# change the hash — status output would have flipped that file's column on staging
-# (` M` → `M `) and falsely invalidated a review of unchanged content.
+# Tracked CONTENT comes from `git diff HEAD`, which is staging-independent. The INDEX
+# tree is hashed separately, so `git add` of an already-reviewed file DOES invalidate:
+# decided at docs/superpowers/specs/2026-07-19-gate-b-index-tree-design.md §2. The
+# committed bytes are unchanged in that case, so it is a false invalidation — accepted
+# under invariant 2, and the STOP message says staging alone can cause it.
 #
-# KNOWN GAP (tracked in todos.md): both components describe the WORKTREE, so a tracked
-# file whose staged content differs from its worktree content — `git add` it, then
-# revert the file on disk — is committed from the index but hashed from disk, and reads
-# as unchanged. Closing it means hashing the index tree separately, which also makes a
-# bare `git add` invalidate a review; that trade needs its own change and tests.
+# The seed copy is correctness-critical, not just a speed optimisation: `write-tree` on
+# an empty index SUCCEEDS with the well-known empty tree, so a silently-failed copy would
+# make the index component a constant that matches itself.
 #
 # Untracked files contribute NAME AND CONTENT. Name alone is not enough: `git add f
 # && git commit` is one Bash call, so the hook is consulted while `f` is still

@@ -61,15 +61,17 @@ It doesn't, because that is blind to a file changed through Bash — `sed -i`,
 `eslint --fix`, `git apply`, a codegen step — which emits no such event and would leave
 a stale "reviewed" marker standing.
 
-Instead the hook stores a hash of the working tree at review time and recomputes it at
-commit: `git diff HEAD` for tracked content, plus a tree id written from a throwaway
-index so untracked files count by path, content and mode. (Asking git for the tree
+Instead the hook stores a fingerprint of the index and the working tree at review time
+and recomputes it at commit: `git diff HEAD` for tracked content, a tree id for the
+effective index, and a tree id written from a throwaway index brought up to the
+worktree so untracked files count by path, content and mode. (Asking git for the tree
 rather than walking the files in shell is deliberate — a hand-rolled walk has to
 re-derive symlink targets, git's path quoting and non-regular files, and got all three
 wrong before this was reduced to `git write-tree`.) Any change by any tool
-invalidates; an edit-then-undo correctly stays valid, because what is being committed
+invalidates; an unstaged edit-then-undo still matches, because what is being committed
 *is* what was reviewed. A false ✓ is the dangerous direction, so the check is tied to
-what is actually on disk rather than to what the harness happened to notice.
+what a commit would carry — the index as well as the worktree — rather than to what
+the harness happened to notice.
 
 Two consequences worth knowing:
 
