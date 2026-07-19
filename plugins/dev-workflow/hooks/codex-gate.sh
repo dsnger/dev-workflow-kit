@@ -441,21 +441,33 @@ case "$event" in
             if [ -z "$reviewed" ]; then
               # No count ratio here on purpose: nothing has been reviewed this cycle,
               # so showing "N/3" would read as floor progress.
-              emit "STOP — Codex Gate B not satisfied: no mcp__codex__review has run this cycle, so the CURRENT code is unreviewed. Per $policy you MUST reach a minimum of $floor passes per cycle and re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B not run"
+              # `-z "$reviewed"` no longer means only "no pass this cycle": a pass whose
+              # state write failed, or a state file that cannot be read back, leaves it
+              # empty too. The message names the absent FINGERPRINT, not an absent review.
+              emit "STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass." "⚠ Codex Gate B: no recorded review"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.
             elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
                  [ "$reviewed" != "$current" ]; then
-              # Content check, not event check: this fires for a change made through
-              # ANY tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
-              emit "STOP — Codex Gate B not satisfied: the working tree has CHANGED since the last mcp__codex__review, so the code you are about to commit is unreviewed (the $passes pass(es) this cycle covered the pre-change tree). Per $policy you MUST re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B stale (tree changed since review)"
+              # Content check, not event check: this fires for a change made through ANY
+              # tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
+              # It names the STATE, never a cause: five states reach here and the hook
+              # cannot tell them apart (spec §4). Do not "improve" this into asserting
+              # that the tree changed — under a repeated computation failure nothing
+              # changed, and under a failed state write the content may be exactly what
+              # was reviewed.
+              emit "STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B not satisfied (cannot confirm review)"
             elif [ "$passes" -lt "$floor" ]; then
               emit "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes — run more (the ONLY early exit is a pass that returned zero findings), or proceed only if this change is trivial." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, which no longer cover the code being committed.
-              # Reporting only "$passes/$floor" would read as if all of them did.
-              emit "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT tree (unchanged since that review). The floor counts the cycle; only the fresh pass(es) actually reviewed what you are committing. Per $policy, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current code)"
+              # FINGERPRINT EQUALITY IS ALL THIS PROVES. The hook compares a hash of
+              # disk; mcp__codex__review reads a git range — so a match does NOT
+              # establish that Codex read these bytes (spec §7, and the review-range row
+              # in todos.md). The stronger phrasing was here and was removed; do not
+              # restore it as a clarity improvement.
+              emit "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current fingerprint)"
             fi
           fi
           fi

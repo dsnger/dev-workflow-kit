@@ -60,7 +60,7 @@ printf 'v2\n' >> app.ts
 run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "Edit-tool change -> not satisfied" || fail "Edit-tool change -> not satisfied"
-printf '%s' "$out" | grep -q 'tree has CHANGED' && pass "Edit-tool change -> reported as stale tree" || fail "Edit-tool change -> reported as stale tree"
+printf '%s' "$out" | grep -q 'cannot confirm' && pass "Edit-tool change -> reported as unconfirmed" || fail "Edit-tool change -> reported as unconfirmed"
 
 # 3b. THE MAJOR: a file changed through BASH (no Edit/Write event at all) -> stale.
 #     Under the old event-based scheme this produced a false ✓.
@@ -791,6 +791,121 @@ rev; h2=$(cat "$state" 2>/dev/null)
 cmp -s .git/index "$work/index.before" && pass "real index bytes unchanged" || fail "real index bytes unchanged"
 : > .context/codex-gate.on
 git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
+reset_all; rev; rev; rev
+
+# 29. Message contracts (spec §4). These are shipped prompts: an unasserted clause can
+#     regress with the suite green.
+# A `rev` baseline is required before the edit: without one, `reviewed` is empty and
+# the edit below lands in the EMPTY-STATE branch, not the STALE branch these clauses
+# describe (matches the existing pattern in section 3a).
+reset_all; rev
+printf 'edit\n' >> app.ts
+run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
+out=$(commitpre)
+for clause in 'cannot confirm' 'only staged already-reviewed content' \
+              'upgraded and the recorded fingerprint uses the older format' \
+              'one clean pass is the complete remedy' \
+              'could not be computed or could not be stored' '.context/' 'TMPDIR' \
+              'shasum' 'git status' 'disk is not full' \
+              'run one more pass to record a usable fingerprint'; do
+  printf '%s' "$out" | grep -qF -- "$clause" \
+    && pass "stale message carries: $clause" || fail "stale message carries: $clause"
+done
+git checkout -- app.ts >/dev/null 2>&1
+
+# 29b. the SATISFIED branch must not claim Codex read the bytes. The hook fingerprints
+#      disk; mcp__codex__review reads a git range. Spec §7.
+reset_all; rev; rev; rev
+out=$(commitpre)
+printf '%s' "$out" | grep -qF 'actually reviewed what you are committing' \
+  && fail "satisfied message drops the 'actually reviewed' claim" \
+  || pass "satisfied message drops the 'actually reviewed' claim"
+printf '%s' "$out" | grep -qF 'fingerprint' \
+  && pass "satisfied message claims fingerprint equality" \
+  || fail "satisfied message claims fingerprint equality"
+
+# 29c. the empty-state branch must admit an unwritten or unreadable fingerprint
+reset_all
+out=$(commitpre)
+printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
+  && pass "empty-state message names an absent fingerprint" \
+  || fail "empty-state message names an absent fingerprint"
+printf '%s' "$out" | grep -qF 'could not be written or read back' \
+  && pass "empty-state message admits a failed store" \
+  || fail "empty-state message admits a failed store"
+# the systemMessage is a separate shipped string and regresses independently
+printf '%s' "$out" | grep -qF 'no recorded review' \
+  && pass "empty-state systemMessage says 'no recorded review'" \
+  || fail "empty-state systemMessage says 'no recorded review'"
+printf '%s' "$out" | grep -qF 'Codex Gate B not run' \
+  && fail "empty-state systemMessage drops the old 'not run' claim" \
+  || pass "empty-state systemMessage drops the old 'not run' claim"
+reset_all; rev; rev; rev
+
+# 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
+#     writes with `2>/dev/null || true` because the hook must always exit 0, so a pass can
+#     hash perfectly and still leave the old fingerprint behind. Three shapes, because
+#     they reach the branch by different routes.
+#     Each shape depends on chmod actually DENYING access, which is false under an
+#     effective root uid — a root-run CI job would take the success path and then fail the
+#     assertion, reporting a product defect that is really a privilege artefact. Probe the
+#     exact operation each shape needs, restore what the probe changed, and skip loudly.
+probe_denies() {   # $1 = probe command; returns 0 when the operation was DENIED
+  ( eval "$1" ) >/dev/null 2>&1 && return 1 || return 0
+}
+skip() { printf 'skip - %s\n' "$1"; }
+
+# 30a. replacement fails: the state file itself is read-only
+reset_all; rev
+before=$(cat "$state")
+chmod 0444 "$state" 2>/dev/null
+if probe_denies "printf x >> \"$state\""; then
+  printf 'later edit\n' >> app.ts
+  rev                                   # hashes fine, but cannot replace the fingerprint
+  [ "$(cat "$state")" = "$before" ] && pass "unwritable state file keeps the old fingerprint" || fail "unwritable state file keeps the old fingerprint"
+  printf '%s' "$(commitpre)" | grep -q 'cannot confirm' \
+    && pass "stale fingerprint after a failed store -> cannot confirm" \
+    || fail "stale fingerprint after a failed store -> cannot confirm"
+else
+  skip "unwritable state file (chmod does not deny writes here — running as root?)"
+fi
+chmod 0644 "$state" 2>/dev/null
+git checkout -- app.ts >/dev/null 2>&1
+
+# 30b. first write fails: no prior state, and the directory refuses a new file
+reset_all
+chmod 0555 .context 2>/dev/null
+if probe_denies "touch .context/probe-$$"; then
+  rev                                   # cannot create the state file at all
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
+    && pass "unwritable .context -> empty-state branch" || fail "unwritable .context -> empty-state branch"
+  printf '%s' "$out" | grep -qF 'could not be written or read back' \
+    && pass "empty-state branch admits a failed first write" || fail "empty-state branch admits a failed first write"
+else
+  skip "unwritable .context directory (chmod does not deny creation here — running as root?)"
+fi
+chmod 0755 .context 2>/dev/null; rm -f ".context/probe-$$"
+
+# 30c. read fails: the state file exists and is non-empty but cannot be read
+reset_all; rev
+chmod 0000 "$state" 2>/dev/null
+if probe_denies "cat \"$state\""; then
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
+    && pass "unreadable state file -> empty-state branch" || fail "unreadable state file -> empty-state branch"
+  # invariant 1: advisory hook, always exit 0, even when its own state is unreadable.
+  # Checked with `if`, not `[ $? -eq 0 ]` — the latter is SC2181 and the test file
+  # excludes only SC2015, so it would fail lint.
+  if run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}' >/dev/null 2>&1; then
+    pass "unreadable state file -> hook still exits 0"
+  else
+    fail "unreadable state file -> hook still exits 0"
+  fi
+else
+  skip "unreadable state file (chmod does not deny reads here — running as root?)"
+fi
+chmod 0644 "$state" 2>/dev/null
 reset_all; rev; rev; rev
 
 echo "---"
