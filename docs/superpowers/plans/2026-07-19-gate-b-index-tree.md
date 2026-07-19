@@ -585,66 +585,58 @@ printf '%s' "$out" | grep -q 'cannot confirm' && pass "Edit-tool change -> repor
 Append to `plugins/dev-workflow/hooks/codex-gate.test.sh`:
 
 ```sh
-# 29. Message contracts (spec §4). These are shipped prompts: an unasserted clause can
-#     regress with the suite green.
+# 29. Message contracts (spec §4). These are shipped prompts — the product itself, not
+#     incidental output — so each branch's COMPLETE additionalContext and systemMessage
+#     is pinned as a golden fixture and compared EXACTLY, replacing per-clause greps: a
+#     clause list only catches a regression someone thought to enumerate (inserting
+#     "do not " before an asserted clause, or "Usually" -> "Always", stays green under
+#     it); an exact comparison catches any wording change. $passes, $floor and $fresh
+#     are pinned by the setup immediately before each assertion, so every fixture below
+#     is deterministic.
+json_field() { # $1 = json text, $2 = key -> prints the string value. No jq required —
+                # same fallback idiom as the hook's own field(): safe here because none
+                # of the three golden messages below contain a literal backslash or quote.
+  printf '%s' "$1" | grep -o "\"$2\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n1 | sed 's/^.*:[[:space:]]*"\(.*\)"$/\1/'
+}
+
+# 29a. STALE branch: 1 recorded pass this cycle, default floor 3, no CLAUDE.md (so the
+#      generic policy phrase), a change made through the Edit tool.
 # A `rev` baseline is required before the edit: without one, `reviewed` is empty and
-# the edit below lands in the EMPTY-STATE branch, not the STALE branch these clauses
-# describe (matches the existing pattern in section 3a).
+# the edit below lands in the EMPTY-STATE branch, not the STALE branch this fixture
+# describes (matches the existing pattern in section 3a).
 reset_all; rev
 printf 'edit\n' >> app.ts
 run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
 out=$(commitpre)
-for clause in 'cannot confirm' 'only staged already-reviewed content' \
-              'upgraded and the recorded fingerprint uses the older format' \
-              'one clean pass is the complete remedy' \
-              'could not be computed or could not be stored' '.context/' 'TMPDIR' \
-              'shasum' 'git status' 'disk is not full' \
-              'run one more pass to record a usable fingerprint'; do
-  printf '%s' "$out" | grep -qF -- "$clause" \
-    && pass "stale message carries: $clause" || fail "stale message carries: $clause"
-done
-# the systemMessage is a separate shipped string from the additionalContext above and
-# regresses independently — pin it exactly, and assert the old causal label is gone.
-printf '%s' "$out" | grep -qF 'Codex Gate B not satisfied (cannot confirm review)' \
-  && pass "stale systemMessage: 'Codex Gate B not satisfied (cannot confirm review)'" \
-  || fail "stale systemMessage: 'Codex Gate B not satisfied (cannot confirm review)'"
-if printf '%s' "$out" | grep -qF 'Codex Gate B stale (tree changed since review)'; then
-  fail "stale systemMessage does not regress to the old causal label"
-else
-  pass "stale systemMessage does not regress to the old causal label"
-fi
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw (1 recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per this project's review policy you MUST re-review after every fix."
+expected_msg="⚠ Codex Gate B not satisfied (cannot confirm review)"
+[ "$ctx" = "$expected_ctx" ] && pass "stale additionalContext matches exactly" || fail "stale additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "stale systemMessage matches exactly" || fail "stale systemMessage matches exactly"
 git checkout -- app.ts >/dev/null 2>&1
 
-# 29b. the SATISFIED branch must not claim Codex read the bytes. The hook fingerprints
-#      disk; mcp__codex__review reads a git range. Spec §7.
+# 29b. SATISFIED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook
+#      fingerprints disk; mcp__codex__review reads a git range (spec §7) — the exact
+#      fixture below is what pins that the message never claims Codex read the bytes.
 reset_all; rev; rev; rev
 out=$(commitpre)
-printf '%s' "$out" | grep -qF 'actually reviewed what you are committing' \
-  && fail "satisfied message drops the 'actually reviewed' claim" \
-  || pass "satisfied message drops the 'actually reviewed' claim"
-for clause in 'cover the CURRENT content fingerprint' \
-              'carry the same fingerprint as what you are committing' \
-              'commit only if your final pass was clean'; do
-  printf '%s' "$out" | grep -qF -- "$clause" \
-    && pass "satisfied message carries: $clause" || fail "satisfied message carries: $clause"
-done
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean — no new Blocker/Major."
+expected_msg="✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)"
+[ "$ctx" = "$expected_ctx" ] && pass "satisfied additionalContext matches exactly" || fail "satisfied additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "satisfied systemMessage matches exactly" || fail "satisfied systemMessage matches exactly"
 
-# 29c. the empty-state branch must admit an unwritten or unreadable fingerprint
+# 29c. EMPTY-STATE branch: no fingerprint recorded this cycle, default floor 3.
 reset_all
 out=$(commitpre)
-printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
-  && pass "empty-state message names an absent fingerprint" \
-  || fail "empty-state message names an absent fingerprint"
-printf '%s' "$out" | grep -qF 'could not be written or read back' \
-  && pass "empty-state message admits a failed store" \
-  || fail "empty-state message admits a failed store"
-# the systemMessage is a separate shipped string and regresses independently
-printf '%s' "$out" | grep -qF 'no recorded review' \
-  && pass "empty-state systemMessage says 'no recorded review'" \
-  || fail "empty-state systemMessage says 'no recorded review'"
-printf '%s' "$out" | grep -qF 'Codex Gate B not run' \
-  && fail "empty-state systemMessage drops the old 'not run' claim" \
-  || pass "empty-state systemMessage drops the old 'not run' claim"
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per this project's review policy you MUST reach a minimum of 3 passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass."
+expected_msg="⚠ Codex Gate B: no recorded review"
+[ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
 reset_all; rev; rev; rev
 
 # 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
@@ -717,11 +709,13 @@ reset_all; rev; rev; rev
 - [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `sh plugins/dev-workflow/hooks/codex-gate.test.sh 2>&1 | grep -E '^FAIL'`
-Expected: FAIL for every clause in section 29, plus `satisfied message drops the 'actually
-reviewed' claim`, both 29c assertions, and section 30's `cannot confirm` /
-`no fingerprint is recorded` / `could not be written or read back` assertions. Any `skip -`
-lines are acceptable only if you are running as root; on a normal account all three shapes
-must execute.
+Expected: FAIL for all six section-29 exact-match assertions (`stale additionalContext
+matches exactly`, `stale systemMessage matches exactly`, `satisfied additionalContext
+matches exactly`, `satisfied systemMessage matches exactly`, `empty-state
+additionalContext matches exactly`, `empty-state systemMessage matches exactly`), plus
+section 30's `cannot confirm` / `no fingerprint is recorded` / `could not be written or
+read back` assertions. Any `skip -` lines are acceptable only if you are running as
+root; on a normal account all three shapes must execute.
 
 - [ ] **Step 4: Rewrite the three messages**
 
