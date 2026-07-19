@@ -70,8 +70,10 @@ re-derive symlink targets, git's path quoting and non-regular files, and got all
 wrong before this was reduced to `git write-tree`.) Any change by any tool
 invalidates; an unstaged edit-then-undo still matches, because what is being committed
 *is* what was reviewed. A false ✓ is the dangerous direction, so the check is tied to
-what a commit would carry — the index as well as the worktree — rather than to what
-the harness happened to notice.
+what a commit would carry as of the hook's invocation — the index as well as the
+worktree — rather than to what the harness happened to notice. (A mutation after that
+invocation, such as the compound `printf x > f && git commit -am y`, is still unseen —
+a separate, parked defect, not this one.)
 
 Two consequences worth knowing:
 

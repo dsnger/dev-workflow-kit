@@ -8,7 +8,8 @@
 # recomputes it. An event-based scheme (invalidate on Edit/Write) is blind to a file
 # changed through Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which
 # would leave a stale "reviewed" marker standing. A false ✓ is the dangerous
-# direction, so the hook compares what a commit would actually carry.
+# direction, so the hook compares what a commit would actually carry as of the
+# hook's invocation.
 set -u
 
 payload=$(cat)

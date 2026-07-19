@@ -23,7 +23,7 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
 | `dev-workflow:finding-triage` | agent — read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
 | `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. |
-| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and verify a Gate-B review against a fingerprint of the index and working tree — what a commit would actually carry. Always exits 0. |
+| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and verify a Gate-B review against a fingerprint of the index and working tree — what a commit would actually carry as of the hook's invocation. Always exits 0. |
 
 ## Setup
 
