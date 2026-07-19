@@ -8,8 +8,10 @@
 # recomputes it. An event-based scheme (invalidate on Edit/Write) is blind to a file
 # changed through Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which
 # would leave a stale "reviewed" marker standing. A false ✓ is the dangerous
-# direction, so the hook compares what a commit would actually carry as of the
-# hook's invocation.
+# direction, so the hook compares three components at invocation time: `git diff HEAD`
+# for tracked content, a tree id for the effective index, and a tree id for the worktree.
+# That is a deliberate SUPERSET of any one commit's payload — a plain `git commit` carries
+# only the index — because firing on more than strictly necessary is the safe direction.
 set -u
 
 payload=$(cat)

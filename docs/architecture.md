@@ -68,16 +68,17 @@ worktree so untracked files count by path, content and mode. (Asking git for the
 rather than walking the files in shell is deliberate — a hand-rolled walk has to
 re-derive symlink targets, git's path quoting and non-regular files, and got all three
 wrong before this was reduced to `git write-tree`.) Any change to *included* content,
-made by any tool and present when the hook runs, invalidates — `.context/` and ignored
-paths are excluded by design, and a mutation after the hook fires is not seen at all. An
-unstaged edit-then-undo still matches, because it restores the fingerprint; that says the
-content is unchanged since the review, not that Codex read it — the hook compares a
-fingerprint of disk while the reviewer reads a git range (see the hook's own note at
-`codex-gate.sh:105`). A false ✓ is the dangerous direction, so the check is tied to
-what a commit would carry as of the hook's invocation — the index as well as the
-worktree — rather than to what the harness happened to notice. (A mutation after that
-invocation, such as the compound `printf x > f && git commit -am y`, is still unseen —
-a separate, parked defect, not this one.)
+made by any tool and present when the hook runs, invalidates — `.context/` and
+untracked ignored paths are excluded by design (a *tracked* file still counts even if it
+matches `.gitignore`). An unstaged edit-then-undo still matches, because it restores
+the fingerprint — which says the content is unchanged since the review, not that Codex
+read it: the hook compares a fingerprint of disk while the reviewer reads a git range
+(see the hook's own note at `codex-gate.sh:105`). A false ✓ is the dangerous direction,
+so the check is tied to the effective index plus the included worktree content as of
+the hook's invocation — a superset of any one commit's payload, chosen so the gate errs
+toward firing — rather than to what the harness happened to notice. (A mutation after
+that invocation, such as the compound `printf x > f && git commit -am y`, is still
+unseen — a separate, parked defect, not this one.)
 
 Two consequences worth knowing:
 
