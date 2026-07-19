@@ -24,16 +24,6 @@ driven by recurrence rather than by enthusiasm.
 
 ### Parked (trigger-gated)
 
-- [ ] **Gate-B hash misses staged-vs-worktree divergence (false ✓, invariant 3).**
-      Both hash components describe the worktree, but `git commit` commits the INDEX.
-      Repro: `git add app.ts` with new content, then revert `app.ts` on disk to HEAD —
-      the commit carries the staged content while the hash reads the tree as unchanged,
-      so Gate B reports satisfied on unreviewed content. Pre-existing, not introduced by
-      the write-tree change. Fix means hashing the index tree as a third component
-      (`git rm --cached -r .context` on the temp index first, or the tracked adoption
-      marker re-invalidates forever) — which also makes a bare `git add` invalidate a
-      review, so the existing "add does not change the hash" test has to be re-decided.
-      Own branch, own tests.
 - [ ] **jq-free parser stops at an escaped JSON quote.** A payload containing
       `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
       wrong direction under invariant 2, and only on machines without `jq`. Needs
@@ -43,12 +33,21 @@ driven by recurrence rather than by enthusiasm.
       && git commit -am x` is one PreToolUse event: the hook hashes before the mutation
       runs, so the commit carries content the hash never saw. Consider treating any
       command segment preceding `git commit` as uncertain and firing.
-- [ ] **No regression test for tree_hash's "tree unavailable" guard.** The guard emits
-      a never-matching value when `mktemp`/`git add`/`write-tree` fails, so the gate
-      reads unreviewed instead of collapsing to a constant. Testing it needs a portable
-      way to make those fail on demand — `TMPDIR=/dev/null` is not one (BSD/macOS
-      `mktemp` falls back to `/var/folders`, so the test would pass for the wrong
-      reason). Consider a stub `git` earlier on `PATH`.
+- [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
+      index.** codex-gate.test.sh now covers the "tree unavailable" guard for
+      checksum, seed-copy, git-dir and `git diff` failures, but a `git add`/`write-tree`
+      failure inside the throwaway index stays untested — it needs a portable way to
+      make those two calls fail on demand without breaking anything else the test
+      relies on (a stub `git` earlier on `PATH` is one candidate).
+- [ ] **Gate-B fingerprints disk; the reviewer reads history.** A review pass records a
+      fingerprint of the index and worktree, but `mcp__codex__review` reads a **git
+      range** — so content that is staged and never committed can be fingerprinted as
+      reviewed without Codex having read it, and three such passes reach ✓. Raised at
+      Gate A pass 8 of the index-tree story and deliberately deferred there: closing it
+      means refusing to satisfy Gate B unless the index and worktree correspond to the
+      reviewed range, i.e. mandating a WIP commit for every review. That redefines the
+      gate rather than fixing a hash, so it needs its own story and its own decision.
+      CLAUDE.md §5's WIP-commit flow is the current mitigation.
 - [ ] **Temp-index writes land in the real object database.** `git add -A` against the
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary
