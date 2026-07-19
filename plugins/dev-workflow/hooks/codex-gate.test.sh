@@ -696,7 +696,11 @@ printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'not satisfie
 #      with each index file byte-identical to its OWN pre-hook snapshot.
 cp .git/index "$alt_dir/default.before"; cp "$alt_dir/alt" "$alt_dir/alt.before"
 reset_all; printf '1' > "$floorf"
-GIT_INDEX_FILE="$alt_dir/alt" rev
+# Subshell: a prefix assignment on a SHELL FUNCTION call (rev/commitpre are functions,
+# not external commands) persists in the shell after the call returns — unlike the same
+# prefix on an external command. Without containment, GIT_INDEX_FILE leaks out of
+# section 27 and corrupts every later section's fixtures (notably section 28).
+( GIT_INDEX_FILE="$alt_dir/alt" rev )
 printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B satisfied' \
   && pass "ambient stable alternate index -> satisfied" \
   || fail "ambient stable alternate index -> satisfied"
@@ -705,9 +709,9 @@ cmp -s "$alt_dir/alt" "$alt_dir/alt.before" && pass "alternate index untouched" 
 # 27c. missing path: git treats a nonexistent GIT_INDEX_FILE as an EMPTY index, so the
 #      hook must hash and self-match rather than returning `unavailable`.
 reset_all; printf '1' > "$floorf"
-GIT_INDEX_FILE="$alt_dir/does-not-exist" rev
+( GIT_INDEX_FILE="$alt_dir/does-not-exist" rev )
 h1=$(cat "$state" 2>/dev/null)
-GIT_INDEX_FILE="$alt_dir/does-not-exist" rev
+( GIT_INDEX_FILE="$alt_dir/does-not-exist" rev )
 h2=$(cat "$state" 2>/dev/null)
 { [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ]; } \
   && pass "missing alternate index hashes and self-matches" \
@@ -716,6 +720,11 @@ rm -rf "$alt_dir"; rm -f "$floorf"
 git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
 reset_all; rev; rev; rev
 
+# 27d. Guard: confirm section 27's containment held. If a future edit reintroduces the
+# leak (e.g. drops a subshell above), this fails loudly instead of section 28 quietly
+# going vacuous against a stale, since-deleted GIT_INDEX_FILE path.
+[ -z "${GIT_INDEX_FILE+x}" ] && pass "GIT_INDEX_FILE not leaked out of section 27" || fail "GIT_INDEX_FILE not leaked out of section 27"
+
 # 28. Tracked .context/ diverging THREE ways (index differs from both HEAD and worktree)
 #     is exactly the state where `git rm --cached` refuses without -f, silently (stderr
 #     is redirected). The hash must still be computable and self-match, and the user's
@@ -723,9 +732,13 @@ reset_all; rev; rev; rev
 git add -f .context >/dev/null 2>&1; git commit -qm "track .context" >/dev/null 2>&1
 printf 'staged\n' > .context/codex-gate.on; git add .context/codex-gate.on >/dev/null 2>&1
 printf 'worktree\n' > .context/codex-gate.on
-cp .git/index "$work/index.before"
 before_tree=$(git write-tree 2>/dev/null)
 before_blob=$(git rev-parse :.context/codex-gate.on 2>/dev/null)
+# Snapshot AFTER the two read-only commands above, not before: `write-tree` and
+# `rev-parse` can trigger git's benign racy-clean stat-cache rewrite of .git/index,
+# which would flip index bytes with no content change and make the byte comparison
+# below flaky for reasons unrelated to tree_hash().
+cp .git/index "$work/index.before"
 reset_all
 rev; h1=$(cat "$state" 2>/dev/null)
 rev; h2=$(cat "$state" 2>/dev/null)
