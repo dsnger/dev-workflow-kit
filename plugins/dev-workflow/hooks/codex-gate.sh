@@ -439,11 +439,11 @@ case "$event" in
             reviewed=$(cat "$state_file" 2>/dev/null || echo '')
             current=$(tree_hash)
             if [ -z "$reviewed" ]; then
-              # No count ratio here on purpose: nothing has been reviewed this cycle,
-              # so showing "N/3" would read as floor progress.
-              # `-z "$reviewed"` no longer means only "no pass this cycle": a pass whose
-              # state write failed, or a state file that cannot be read back, leaves it
-              # empty too. The message names the absent FINGERPRINT, not an absent review.
+              # No count ratio here on purpose: no fingerprint is recorded for this
+              # cycle, so showing "N/3" would read as floor progress. `-z "$reviewed"`
+              # does not mean only "no pass this cycle": a pass whose state write
+              # failed, or a state file that cannot be read back, leaves it empty too.
+              # The message names the absent FINGERPRINT, not an absent review.
               emit "STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass." "⚠ Codex Gate B: no recorded review"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.

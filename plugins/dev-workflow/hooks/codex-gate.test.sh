@@ -811,6 +811,16 @@ for clause in 'cannot confirm' 'only staged already-reviewed content' \
   printf '%s' "$out" | grep -qF -- "$clause" \
     && pass "stale message carries: $clause" || fail "stale message carries: $clause"
 done
+# the systemMessage is a separate shipped string from the additionalContext above and
+# regresses independently — pin it exactly, and assert the old causal label is gone.
+printf '%s' "$out" | grep -qF 'Codex Gate B not satisfied (cannot confirm review)' \
+  && pass "stale systemMessage: 'Codex Gate B not satisfied (cannot confirm review)'" \
+  || fail "stale systemMessage: 'Codex Gate B not satisfied (cannot confirm review)'"
+if printf '%s' "$out" | grep -qF 'Codex Gate B stale (tree changed since review)'; then
+  fail "stale systemMessage does not regress to the old causal label"
+else
+  pass "stale systemMessage does not regress to the old causal label"
+fi
 git checkout -- app.ts >/dev/null 2>&1
 
 # 29b. the SATISFIED branch must not claim Codex read the bytes. The hook fingerprints
@@ -820,9 +830,12 @@ out=$(commitpre)
 printf '%s' "$out" | grep -qF 'actually reviewed what you are committing' \
   && fail "satisfied message drops the 'actually reviewed' claim" \
   || pass "satisfied message drops the 'actually reviewed' claim"
-printf '%s' "$out" | grep -qF 'fingerprint' \
-  && pass "satisfied message claims fingerprint equality" \
-  || fail "satisfied message claims fingerprint equality"
+for clause in 'cover the CURRENT content fingerprint' \
+              'carry the same fingerprint as what you are committing' \
+              'commit only if your final pass was clean'; do
+  printf '%s' "$out" | grep -qF -- "$clause" \
+    && pass "satisfied message carries: $clause" || fail "satisfied message carries: $clause"
+done
 
 # 29c. the empty-state branch must admit an unwritten or unreadable fingerprint
 reset_all
