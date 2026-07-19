@@ -55,6 +55,26 @@ driven by recurrence rather than by enthusiasm.
       `GIT_OBJECT_DIRECTORY` with the real store as an alternate would avoid the churn.
 
 ## Next
+
+Roadmap items below are **kit-side only** and carry the same trigger discipline as
+Parked: each names the condition that starts it, and none starts early. Product-side
+work — wiring a security battery, a validation lane, coded E2E — is deliberately absent.
+That belongs in each product project's own `todos.md` once `/workflow-init` has run
+there, not here: this repo ships the workflow, it does not hold another project's
+backlog.
+
+- [ ] **P2 + P6 — risk/security profiles, and security sections in the intake, spec and
+      gate templates.** One story: the profile is what the sections key off, so shipping
+      the sections without it just adds a heading nobody knows how to fill in.
+      *Trigger: the first real intake in a product project* — the first time a story
+      exists whose risk profile is a real answer rather than a guess about what product
+      projects might need.
+- [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** Identifiers
+      that survive from story to plan to review, so an acceptance criterion can be cited
+      instead of re-described. *Trigger: rides with P2* — the IDs exist to label what P2's
+      sections produce, so landing them first would ship a numbering scheme with nothing
+      to number.
+
 - [ ] **Upstream-report candidate: `claude plugin update <bare-name>`.** The CLI docs
       document the bare plugin name as a valid argument for `install`/`uninstall`/`update`
       alike, but `claude plugin update dev-workflow` errors "Plugin 'dev-workflow' not
@@ -63,6 +83,28 @@ driven by recurrence rather than by enthusiasm.
       docs stop disagreeing.
 
 ## Someday
+
+- [ ] **P1 — `workflow-status` → `workflow-next`, staged.** Report where a story stands
+      first; only once that read is reliably right does it get to recommend the next
+      step. Staged deliberately: a "next" that is wrong is worse than no command at all,
+      because it is followed. *Trigger: 3–5 real stories completed in a product project*
+      — fewer than that and the state machine would be modelled on this repo's own
+      atypical usage.
+- [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
+      second implementation of the same checks: the point is a **single shared check
+      source** that both the initializer and the doctor call, or the two drift and the
+      doctor starts blessing setups init would reject. *Trigger: the next setup incident,
+      or before the second project init* — whichever comes first; the second init is
+      where a divergence would first cost someone real time.
+- [ ] **P8 — passive metrics, read-only over the ledger and git.** Analysis only: no new
+      state file, no instrumentation, nothing written back. It answers questions the
+      ledger already contains the data for (which fingerprints recur, how often a rung
+      holds). *Trigger: 10 stories or 20 ledger rows* — below that the sample says more
+      about the last week than about the workflow.
+- [ ] **`/capture-finding` as an intake extension of `harden-finding`.** An extension,
+      not a sibling command: a finding captured outside the ladder is how a ledger
+      quietly acquires two formats. *Trigger: the first production finding* — one that
+      arrives from real use rather than from a gate or a bot.
 
 ## Tooling revalidation
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
