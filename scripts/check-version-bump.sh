@@ -136,9 +136,12 @@ for dir in $dirs; do
   # to git as a literal path makes `diff` report a non-existent path as unchanged, so
   # the plugin would be skipped in silence. POSIX sh cannot read NUL-delimited input,
   # so -z is not an option.
+  # No IFS/`set -f` restore before any `die` below: `die` exits the shell, so nothing
+  # after it runs and the restore would be dead code. Two of these paths used to carry
+  # one, which was harmless but implied the cleanup was sometimes load-bearing. One
+  # convention, stated once: `die` exits, restores happen after the loop.
   case "$name" in
     ''|*[!A-Za-z0-9._-]*)
-      IFS=$saved_ifs; set +f
       die "plugin directory name '$name' is outside [A-Za-z0-9._-]+; refusing to guess."
       ;;
   esac
@@ -150,7 +153,7 @@ for dir in $dirs; do
   case $? in
     0) continue ;;
     1) ;;
-    *) IFS=$saved_ifs; set +f; die "git diff of $dir/ failed." ;;
+    *) die "git diff of $dir/ failed." ;;
   esac
 
   # The directory is still in HEAD's tree and something in it changed, so this plugin

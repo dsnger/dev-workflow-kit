@@ -108,6 +108,19 @@ bump() { # $1 = version, $2 = plugin dir name (default alpha)
 
 commit_all() { ( cd "$work/r" && gitc add -A && gitc commit -qm "$1" ); }
 
+# Put `feature` on top of main, and FAIL LOUDLY if that does not happen. A suppressed
+# rebase (`|| true`) leaves `feature` at its old base, so the malformed manifest never
+# reaches the merge-base and the row it sets up passes for the wrong reason — the
+# quietest way a suite can lie about what it covers.
+rebase_onto_main() { # $1 = row name, for the diagnostic
+  if ! ( cd "$work/r" && gitc checkout -q feature && gitc rebase -q main ) >/dev/null 2>&1
+  then
+    fail "$1 setup: rebase onto main failed; the fixture is not what the row assumes"
+    ( cd "$work/r" && gitc rebase --abort >/dev/null 2>&1 || true )
+    return 1
+  fi
+}
+
 printf '\n--- policy rejects ---\n'
 
 # P1 — the case the check exists for.
@@ -219,7 +232,7 @@ mkrepo
 ( cd "$work/r" && gitc checkout -q main )
 printf '{"name": "alpha"}\n' > "$work/r/plugins/alpha/$MANIFEST"
 commit_all o5-base
-( cd "$work/r" && gitc checkout -q feature && gitc rebase -q main >/dev/null 2>&1 || true )
+rebase_onto_main o5
 printf 'changed\n' >> "$work/r/plugins/alpha/skills/s.md"
 bump 0.5.0
 commit_all o5
@@ -229,7 +242,7 @@ mkrepo
 ( cd "$work/r" && gitc checkout -q main )
 printf '{"version": "0.4.0", "nested": {"version": "1.1.1"}}\n' > "$work/r/plugins/alpha/$MANIFEST"
 commit_all o6-base
-( cd "$work/r" && gitc checkout -q feature && gitc rebase -q main >/dev/null 2>&1 || true )
+rebase_onto_main o6
 printf 'changed\n' >> "$work/r/plugins/alpha/skills/s.md"
 bump 0.5.0
 commit_all o6
