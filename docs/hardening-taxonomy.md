@@ -37,6 +37,18 @@ the synonyms a future reader might search for instead.
   updating whichever is stale; this one is fixed by verifying the mechanism exists
   before the sentence is written.
 
+- `artifact-version-not-bumped` — a change to a versioned artifact this repo *ships*
+  merges without changing the version consumers key on, so installed copies stay on the
+  old code with no signal. Aliases: stale install, cache key unchanged, forgot to bump,
+  release not cut, propagation failure, "it's merged but my machine still runs the old
+  one".
+
+  **Not `dependency-unpinned`**, though both are about versions. That class is about
+  *this* repo consuming something floating — the risk runs inbound, and the fix is to
+  pin. This one runs outbound: our own artifact fails to reach its consumers, and the
+  fix is to force the version forward. Grep this one when the sentence is "nobody got
+  the change"; grep the other when it is "we don't know what we got".
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project

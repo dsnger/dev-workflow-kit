@@ -111,11 +111,17 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 ## Contributing
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
-PR and push to main: `shellcheck --shell=sh` over both executables and their test
-files, the hook's test suite, the invariant checks
-([`scripts/check-invariants.sh`](scripts/check-invariants.sh) and its own suite), and
-`claude plugin validate . --strict`. The single command that runs the whole battery
-locally is in [`AGENTS.md`](AGENTS.md) under "Commands".
+PR and push to main: `shellcheck --shell=sh` over all three executables and their test
+files, the hook's test suite,
+[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6) plus
+both checkers' regression suites, and `claude plugin validate . --strict`.
+
+A fifth check runs **on pull requests only**:
+[`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which
+needs a base branch to diff against. Its *suite* runs unconditionally with the others;
+the checker itself does not, so a commit pushed straight to main is never version-bump
+checked. The single command that runs the whole battery locally is in
+[`AGENTS.md`](AGENTS.md) under "Commands".
 
 Everything else here is a **prompt**, and prompts have no typechecker — they are
 reviewed against [`docs/prompt-standards.md`](docs/prompt-standards.md), this repo's own

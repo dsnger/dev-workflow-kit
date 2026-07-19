@@ -22,7 +22,7 @@ jobs:
     # shellcheck image and claude CLI avoid. The runner is pinned to an OS release
     # rather than `ubuntu-latest` — GitHub still refreshes that image's contents
     # weekly, so this bounds the drift, it does not eliminate it. Full image
-    # reproducibility would need a container, which this four-check battery
+    # reproducibility would need a container, which this check battery
     # doesn't warrant.
     runs-on: ubuntu-24.04
     steps:
@@ -32,15 +32,22 @@ jobs:
           # later step — or anything a step runs — can read it. Nothing here needs
           # authenticated git after the clone, so don't leave it lying around.
           persist-credentials: false
+          # The version-bump check diffs against the merge-base with the PR's base
+          # branch, and the default depth-1 clone has neither the base branch nor a
+          # merge-base. ~50 commits, so the full history costs nothing here.
+          fetch-depth: 0
 
-      # The hook, the invariant checker and their two suites are the only executables here, so lint plus their test
-      # suite are the only mechanical gates we have. Everything else here is a prompt,
-      # and prompts have no typechecker (see README, "Contributing").
+      # The hook, the two checkers and their three suites are the only executables here,
+      # so lint plus those suites are the only mechanical gates we have. Everything else
+      # here is a prompt, and prompts have no typechecker (see README, "Contributing").
 
-      # Enforces the POSIX-sh invariant mechanically: the hook runs under whatever
-      # /bin/sh a user has, so a bash-ism is a portability bug, not a style opinion.
+      # POSIX sh, for two different reasons that must not be blurred: the HOOK is bound
+      # by invariant 4, because it runs under whatever /bin/sh a user has, so a bash-ism
+      # there is a portability bug rather than a style opinion; the two repo-local
+      # checkers are bound by this workflow invoking them with `sh`, which is their own
+      # requirement and not invariant 4's reach.
       # Pinned to an exact image tag — a moving linter makes the gate irreproducible.
-      - name: Lint hook scripts (POSIX sh)
+      - name: Lint shell scripts (POSIX sh)
         run: |
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh plugins/dev-workflow/hooks/codex-gate.sh
@@ -50,23 +57,48 @@ jobs:
           # every other check still applies to this file.
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh
-          # The invariant checker is the repo's second executable artifact and is a
-          # CI gate itself, so it gets the same POSIX lint as the hook.
+          # The two repo-local checkers are CI gates themselves, so they get the same
+          # POSIX lint as the hook.
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh scripts/check-invariants.sh
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh
+          # No exclusion on this pair: unlike the two suites above, it has no
+          # `[ c ] && pass || fail` lines, so every rule applies as-is.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh scripts/check-version-bump.sh
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh scripts/check-version-bump.test.sh
 
       - name: Hook state-machine tests
         run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
 
-      # Invariants 5 and 6, mechanically. Both were prose first and both were
-      # violated anyway — a floating action ref shipped in this very workflow, and a
-      # duplicate hooks manifest key stopped the plugin loading in 0.2.1.
-      - name: Invariant checks (pinning, manifest)
+      # Invariants 5 and 6 mechanically, plus BOTH checkers' regression suites. The
+      # invariant-12 checker itself is not here — it needs a PR base and runs in the
+      # step below, so naming this step "version bump" would show a green version-bump
+      # label on a push that was never version-bump checked.
+      # Each rule was prose first and each was violated anyway — a floating action ref
+      # shipped in this very workflow, a duplicate hooks manifest key stopped the plugin
+      # loading in 0.2.1, and the plugin shipped changes without a bump twice.
+      - name: Invariant checks (pinning, manifest) + both checker suites
         run: |
           sh scripts/check-invariants.test.sh
           sh scripts/check-invariants.sh
+          sh scripts/check-version-bump.test.sh
+
+      # Invariant 12 itself needs a base to diff against, so it runs only on pull
+      # requests — a push to main has no PR base, and diffing the push range would just
+      # re-check what the PR run already gated. Consequence, stated rather than implied:
+      # a commit pushed straight to main bypasses this check entirely.
+      #
+      # base_ref goes through env, never into the run script via ${{ }}: git ref names
+      # may contain shell metacharacters, and direct interpolation would splice a branch
+      # name in as code rather than pass it as data.
+      - name: Version bump required for plugin changes (invariant 12)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: sh scripts/check-version-bump.sh "origin/$BASE_REF"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:

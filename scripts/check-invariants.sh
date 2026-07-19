@@ -7,7 +7,9 @@
 # duplicate-hooks manifest key stopped the plugin loading entirely (0.2.1). A rule a
 # reader has to remember is worth less than one that fails the build.
 #
-# POSIX sh, no jq (invariant 4). Prints every offending line, not just the first.
+# POSIX sh, no jq — this script's own requirement, because CI invokes it with `sh`.
+# (NOT invariant 4: that one is about the hook running on machines we don't control.)
+# Prints every offending line, not just the first.
 # Regression suite: scripts/check-invariants.test.sh (run by the same CI step).
 #
 # Scope, stated so the gaps are known rather than assumed away: this is a
