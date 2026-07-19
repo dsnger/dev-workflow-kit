@@ -169,6 +169,29 @@ rev; rev; rev
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ state does not invalidate the hash" || fail "tracked .context/ state does not invalidate the hash"
 rev  # more churn against the committed state
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ churn stays satisfied" || fail "tracked .context/ churn stays satisfied"
+
+# 3e-ter. GAP 1 — the INDEX-tree component must exclude .context/ too, not just the
+# diff-HEAD and worktree-tree components (each guarded by its own `:(exclude)`
+# pathspec, untouched by this bug). Unstaged .context/ churn never reaches the real git
+# index, so the two assertions above never exercise the `git rm --cached ... .context`
+# line at all: nothing forces it to matter. STAGING the churn is the only way to make it
+# matter — but staging .context ALONE trips the docs-only branch (is_docs_only treats
+# .context/ as documentation) before Gate B is even evaluated, so a second staged,
+# non-.context file is needed just to reach the fingerprint comparison at all.
+# sidefile.ts is a throwaway file kept byte-identical for the whole test, so it cannot
+# be the thing that (in)validates — only the .context staging can.
+printf 'side\n' > sidefile.ts; git add sidefile.ts >/dev/null 2>&1
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with sidefile.ts staged" || fail "setup: satisfied with sidefile.ts staged"
+rev                                       # hook writes fresh state into .context/
+git add -f .context >/dev/null 2>&1       # stage the hook's own churn (sidefile.ts untouched)
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'Gate B satisfied' \
+  && pass "staged .context churn does not invalidate (index-tree .context exclusion)" \
+  || fail "staged .context churn does not invalidate (index-tree .context exclusion)"
+git rm -q --cached sidefile.ts >/dev/null 2>&1; rm -f sidefile.ts
+git reset -q -- .context >/dev/null 2>&1  # unstage; real index back to HEAD for .context/
+
 # ...while a real code change is still caught
 printf 'code change\n' >> app.ts
 printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "tracked .context/: real code change still invalidates" || fail "tracked .context/: real code change still invalidates"
@@ -608,6 +631,16 @@ out=$(PATH="$stub_dir:$PATH" commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "checksum prints then fails -> not satisfied"
 [ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "unhashable pass leaves freshCount 0" || fail "unhashable pass leaves freshCount 0"
 
+# 24b-bis. GAP 2 — a SECOND consecutive unhashable pass must not be treated as a
+# fresh-fingerprint match. Both fingerprints are the literal marker `unavailable`, and
+# the guard against that is `[ "$h" != unavailable ] && [ "$h" = "$prev" ]`; a single
+# unhashable pass can't distinguish it from the weaker `[ "$h" = "$prev" ]`, because
+# `prev` is still empty on the first pass either way. Only a second consecutive
+# unhashable pass gives `prev` the value `unavailable`, which is the only case where
+# the two conditions disagree.
+( PATH="$stub_dir:$PATH" rev )
+[ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "second consecutive unhashable pass still leaves freshCount 0" || fail "second consecutive unhashable pass still leaves freshCount 0"
+
 # 24c. seed-copy failure (stub cp) must fire, not silently hash an empty index
 printf '#!/bin/sh\nexit 1\n' > "$stub_dir/cp"; chmod +x "$stub_dir/cp"
 rm -f "$stub_dir/shasum" "$stub_dir/sha1sum" "$stub_dir/cksum"
@@ -642,13 +675,20 @@ reset_all; printf '1' > "$floorf"
 printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
   && pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"
 rm -f "$stub_dir/git"
+rm -rf "$stub_dir"   # GAP 3 — stub_dir (mktemp -d) outlives its own guard otherwise
+unset REAL_GIT       # GAP 3 — exported at 24d, never unset otherwise
 rm -f "$floorf"
 reset_all; rev; rev; rev
 
-# 24f. Guard: confirm section 24's PATH containment held. If a future edit
-# reintroduces the leak (e.g. drops a subshell above), this fails loudly instead of
-# a stale stub PATH silently weakening isolation in every later section.
+# 24f. Guard: confirm section 24's PATH containment held, and that REAL_GIT (exported
+# at 24d for the selective git wrappers) was unset again. If a future edit
+# reintroduces either leak (e.g. drops a subshell above, or a new `export REAL_GIT`
+# without matching cleanup), this fails loudly instead of stale state silently
+# weakening isolation in every later section — the same "guard the variable you
+# happened to remember" gap this section's own comment warns about, closed for both
+# variables instead of just PATH.
 [ "$PATH" = "$path_before_24" ] && pass "PATH not leaked out of section 24" || fail "PATH not leaked out of section 24"
+[ -z "${REAL_GIT+x}" ] && pass "REAL_GIT unset after section 24" || fail "REAL_GIT unset after section 24"
 
 # 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
 #     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
