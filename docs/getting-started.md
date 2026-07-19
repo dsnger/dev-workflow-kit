@@ -43,9 +43,9 @@ skipping locally only postpones the red.
 range to read; the hook knows WIP doesn't end the cycle), then loops
 `mcp__codex__review` the same way: three passes, final clean. Verification is by
 **content** — any change to included content present when the hook runs, even from a
-formatter, flips it back to unsatisfied (`.context/` and untracked ignored paths are
-excluded) (staging counts too: the fingerprint covers the index, because
-that is what a commit carries, as of the hook's invocation). On
+formatter, flips it back to unsatisfied; `.context/` and untracked ignored paths are
+excluded, and staging counts, because the fingerprint covers the index and that is what
+a commit carries. On
 `✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)`, the real commit replaces
 the WIP via `git commit --amend`.
 

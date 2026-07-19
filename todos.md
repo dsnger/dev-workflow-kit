@@ -34,11 +34,19 @@ driven by recurrence rather than by enthusiasm.
       runs, so the commit carries content the hash never saw. Consider treating any
       command segment preceding `git commit` as uncertain and firing.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
-      index.** codex-gate.test.sh now covers the "tree unavailable" guard for
-      checksum, seed-copy, git-dir and `git diff` failures. Four seams stay untested:
-      `mktemp -d`, the throwaway-index `git rm --cached`, `git add`, and `write-tree` — it needs a portable way to
-      make those two calls fail on demand without breaking anything else the test
-      relies on (a stub `git` earlier on `PATH` is one candidate).
+      index.** Derived from the code, not recalled: sections 24a-24e stub FOUR seams —
+      every checksum tool failing silently, a checksum printing a token then failing, the
+      seed `cp`, `git diff HEAD`, and `rev-parse --absolute-git-dir`. SEVEN have no
+      targeted test: `mktemp -d`; the non-symbolic unresolvable-HEAD branch (the
+      `else ok=0` arm); the throwaway-index `git rm -rfq --cached`; the first
+      `write-tree` (index tree); `git add -A`; the second `write-tree` (worktree tree);
+      and failure of the redirect that creates the buffered stream. The two `write-tree`
+      calls are distinct sites needing distinct tests — one covers the index component,
+      the other the worktree component. Each needs a portable way to fail exactly one
+      call without disturbing the rest; a selective `git` wrapper earlier on `PATH` (as
+      24d/24e already use) is the seam for the git ones. This row was written three
+      times from memory and understated the gap every time — re-derive from the code
+      before trusting it.
 - [ ] **Gate-B fingerprints disk; the reviewer reads history.** A review pass records a
       fingerprint of the index and worktree, but `mcp__codex__review` reads a **git
       range** — so content that is staged and never committed can be fingerprinted as

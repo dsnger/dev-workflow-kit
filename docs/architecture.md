@@ -73,7 +73,8 @@ untracked ignored paths are excluded by design (a *tracked* file still counts ev
 matches `.gitignore`). An unstaged edit-then-undo still matches, because it restores
 the fingerprint — which says the content is unchanged since the review, not that Codex
 read it: the hook compares a fingerprint of disk while the reviewer reads a git range
-(see the hook's own note at `codex-gate.sh:105`). A false ✓ is the dangerous direction,
+(the hook's own hard-floor comment, above `floor=3`, says the same). A false ✓ is the
+dangerous direction,
 so the check is tied to the effective index plus the included worktree content as of
 the hook's invocation — a superset of any one commit's payload, chosen so the gate errs
 toward firing — rather than to what the harness happened to notice. (A mutation after

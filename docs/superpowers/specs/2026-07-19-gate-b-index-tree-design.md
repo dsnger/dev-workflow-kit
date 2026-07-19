@@ -107,6 +107,10 @@ tree_hash() {
     if git_dir=$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null) &&
        [ -n "$git_dir" ] &&
        eff_index=${GIT_INDEX_FILE:-$git_dir/index} &&
+       case "$eff_index" in            # a RELATIVE GIT_INDEX_FILE must be normalized
+         /*) : ;;                      # against $repo_root — see below
+         *) eff_index="$repo_root/$eff_index" ;;
+       esac &&
        { [ ! -e "$eff_index" ] || cp "$eff_index" "$tmp_index" 2>/dev/null; } &&
        GIT_INDEX_FILE=… git rm -rfq --cached --ignore-unmatch -- .context >/dev/null 2>&1 &&
        GIT_INDEX_FILE=… git write-tree              &&   # (1) INDEX tree
@@ -236,6 +240,19 @@ call and unaffected.
 
 A *command-local* override (`GIT_INDEX_FILE=alt git commit`) is invisible to the hook's
 environment and is **not** handled here — that is story 2 (§7).
+
+**A relative `GIT_INDEX_FILE` must be normalized against `$repo_root`.** Added at Gate B
+on Task 2 (commit `92a23f0`), after this spec was approved — recorded here because
+CLAUDE.md §5 requires a fix that changes specified behaviour to update the spec in the
+same commit, and leaving it out is the docs-drift class this project already records
+against itself. The `[ ! -e ]` test and the `cp` are plain shell commands resolved
+against the HOOK's cwd, while every git call uses `-C "$repo_root"` and git resolves a
+relative `GIT_INDEX_FILE` against the repository TOP-LEVEL (verified: from a
+subdirectory, an index existing only at the top level resolves, and one existing only in
+that subdirectory yields the empty tree). Without the normalization, the hook run from a
+subdirectory takes the absent-index carve-out, the index component becomes the constant
+empty tree, and the staged-vs-worktree false-PASS this story closes silently returns.
+Test 27e covers it.
 
 **`git rm` needs `-f`.** Without it, git refuses to remove a path whose staged content
 differs from both HEAD and the worktree — exactly the divergent state this story is
