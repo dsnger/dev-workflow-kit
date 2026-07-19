@@ -223,6 +223,17 @@ tree_hash() {
       # `eff_index`, not `$git_dir/index`: git honours GIT_INDEX_FILE, and a missing
       # alternate index is an EMPTY index to git, so the carve-out must follow the same
       # path git will.
+      # A RELATIVE GIT_INDEX_FILE must then be normalized against $repo_root before the
+      # `[ ! -e ]` test and `cp` below: those are plain shell commands, resolved against
+      # the hook's OWN cwd — while every git call here uses `-C "$repo_root"`, and git
+      # itself resolves a relative GIT_INDEX_FILE against the repository TOP-LEVEL, not
+      # the caller's cwd. Left unnormalized, running the hook from a subdirectory with a
+      # relative ambient GIT_INDEX_FILE makes the shell half look in the wrong place,
+      # find nothing, and take the absent-index carve-out — hashing a CONSTANT empty tree
+      # while the real index has content (a false "satisfied", not a false STOP).
+      # $repo_root is already absolute (from `git rev-parse --show-toplevel`), so
+      # prefixing it is enough; an already-absolute eff_index (incl. the $git_dir/index
+      # default) is left as-is.
       # `rm -rfq --cached`: without -f git refuses to remove a path whose staged content
       # differs from both HEAD and the worktree — exactly the divergent state this story
       # is about — and does so silently, since stderr is redirected. It runs against the
@@ -230,6 +241,10 @@ tree_hash() {
       if git_dir=$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null) &&
          [ -n "$git_dir" ] &&
          eff_index=${GIT_INDEX_FILE:-$git_dir/index} &&
+         case "$eff_index" in
+           /*) : ;;
+           *) eff_index="$repo_root/$eff_index" ;;
+         esac &&
          { [ ! -e "$eff_index" ] || cp "$eff_index" "$tmp_index" 2>/dev/null; } &&
          GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" rm -rfq --cached \
            --ignore-unmatch -- .context >/dev/null 2>&1 &&

@@ -575,6 +575,12 @@ reset_all
 #     Each fault spans BOTH the stored and the recomputed fingerprint — with the fault
 #     applied only at commit time, a mismatch proves nothing about the handling.
 stub_dir=$(mktemp -d)
+# Snapshot PATH before any stubbing, for the containment guard at the end of this
+# section (24f) — a prefix assignment on a SHELL FUNCTION call (rev/commitpre are
+# functions, not external commands) persists in the shell after the call returns,
+# same defect class as the GIT_INDEX_FILE leak fixed in section 27. Every bare
+# (not already inside `$(...)`) `PATH=... rev` below must be run in a subshell.
+path_before_24="$PATH"
 reset_all
 printf '1' > "$floorf"        # floor is checked LAST; without this a faulted run
                               # reports "below floor" and the test passes vacuously
@@ -583,7 +589,7 @@ printf '1' > "$floorf"        # floor is checked LAST; without this a faulted ru
 for t in shasum sha1sum cksum; do
   printf '#!/bin/sh\nexit 0\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
 done
-PATH="$stub_dir:$PATH" rev
+( PATH="$stub_dir:$PATH" rev )
 out=$(PATH="$stub_dir:$PATH" commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "silent checksum -> not satisfied" || fail "silent checksum -> not satisfied"
 # Absence is asserted by inverting the RESULT, not with `grep -v` — `grep -qv` means
@@ -598,7 +604,7 @@ for t in shasum sha1sum cksum; do
   printf '#!/bin/sh\nprintf "deadbeef  -\\n"\nexit 1\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
 done
 reset_all; printf '1' > "$floorf"
-PATH="$stub_dir:$PATH" rev
+( PATH="$stub_dir:$PATH" rev )
 out=$(PATH="$stub_dir:$PATH" commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "checksum prints then fails -> not satisfied"
 [ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "unhashable pass leaves freshCount 0" || fail "unhashable pass leaves freshCount 0"
@@ -607,7 +613,7 @@ printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails
 printf '#!/bin/sh\nexit 1\n' > "$stub_dir/cp"; chmod +x "$stub_dir/cp"
 rm -f "$stub_dir/shasum" "$stub_dir/sha1sum" "$stub_dir/cksum"
 reset_all; printf '1' > "$floorf"
-PATH="$stub_dir:$PATH" rev
+( PATH="$stub_dir:$PATH" rev )
 printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
   && pass "seed-copy failure -> not satisfied" || fail "seed-copy failure -> not satisfied"
 rm -f "$stub_dir/cp"
@@ -621,7 +627,7 @@ STUB
 chmod +x "$stub_dir/git"
 REAL_GIT=$(command -v git); export REAL_GIT
 reset_all; printf '1' > "$floorf"
-PATH="$stub_dir:$PATH" rev
+( PATH="$stub_dir:$PATH" rev )
 printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
   && pass "git diff failure -> not satisfied" || fail "git diff failure -> not satisfied"
 
@@ -633,12 +639,17 @@ exec "$REAL_GIT" "$@"
 STUB
 chmod +x "$stub_dir/git"
 reset_all; printf '1' > "$floorf"
-PATH="$stub_dir:$PATH" rev
+( PATH="$stub_dir:$PATH" rev )
 printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
   && pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"
 rm -f "$stub_dir/git"
 rm -f "$floorf"
 reset_all; rev; rev; rev
+
+# 24f. Guard: confirm section 24's PATH containment held. If a future edit
+# reintroduces the leak (e.g. drops a subshell above), this fails loudly instead of
+# a stale stub PATH silently weakening isolation in every later section.
+[ "$PATH" = "$path_before_24" ] && pass "PATH not leaked out of section 24" || fail "PATH not leaked out of section 24"
 
 # 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
 #     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
@@ -724,6 +735,36 @@ reset_all; rev; rev; rev
 # leak (e.g. drops a subshell above), this fails loudly instead of section 28 quietly
 # going vacuous against a stale, since-deleted GIT_INDEX_FILE path.
 [ -z "${GIT_INDEX_FILE+x}" ] && pass "GIT_INDEX_FILE not leaked out of section 27" || fail "GIT_INDEX_FILE not leaked out of section 27"
+
+# 27e. FINDING 1 — a RELATIVE ambient GIT_INDEX_FILE must resolve against the
+#      repository TOP-LEVEL, exactly as git itself does — not against the hook's own
+#      cwd. The shell-side `[ ! -e ]` test and `cp` are plain shell commands (unlike
+#      every git call in the hook, which uses `-C "$repo_root"`), so an unnormalized
+#      relative path resolves differently depending on where the hook happens to run
+#      from. Run BOTH the review pass and the commit check from a SUBDIRECTORY with a
+#      relative alt index that actually lives at the repo root: an unnormalized hook
+#      can't find it either time, takes the same absent-index carve-out both times, and
+#      the two constant empty-tree hashes MATCH — a false "satisfied" even though the
+#      alt index stages content the worktree does not have.
+#      The alt index file lives under `.context/` — excluded from the diff-HEAD and
+#      worktree-tree components by their own `:(exclude).context` pathspec — so it is
+#      never picked up as an untracked file by `add -A` itself; the only way it can
+#      affect the hash is through eff_index resolution, which is exactly what this
+#      test needs to isolate.
+reset_all; printf '1' > "$floorf"
+mkdir -p sub
+cp .git/index "$work/.context/rel-idx"          # a copy of the CURRENT (matching) index
+( cd sub && GIT_INDEX_FILE=.context/rel-idx rev )   # review, from a subdir, relative alt index
+printf 'SNEAKY\n' > app.ts
+GIT_INDEX_FILE="$work/.context/rel-idx" git add app.ts >/dev/null 2>&1   # stage into the ALT index only
+printf 'v1\n' > app.ts                          # worktree stays at the reviewed bytes
+out=$(cd sub && GIT_INDEX_FILE=.context/rel-idx commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' \
+  && pass "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)" \
+  || fail "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)"
+rm -f "$work/.context/rel-idx"; rm -rf sub
+git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
+reset_all; rev; rev; rev
 
 # 28. Tracked .context/ diverging THREE ways (index differs from both HEAD and worktree)
 #     is exactly the state where `git rm --cached` refuses without -f, silently (stderr
