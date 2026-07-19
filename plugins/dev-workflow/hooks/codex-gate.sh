@@ -365,12 +365,13 @@ case "$event" in
         h=$(tree_hash)
         prev=$(cat "$state_file" 2>/dev/null || echo '')
         # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
-        # count;
-        # a pass on a changed tree starts the fresh count over. This is what lets the
-        # satisfied message say how many passes cover the code being committed,
-        # rather than how many happened at some point this cycle (Finding 9).
-        # An unhashable pass covers nothing, so it neither counts as "same tree as last
-        # pass" nor starts a fresh streak at 1 — two `unavailable` values are not a match.
+        # count; a pass on a changed fingerprint starts the count over. That is what lets
+        # the satisfied message report how many passes carry the CURRENT fingerprint,
+        # rather than how many happened at some point this cycle (Finding 9). It does not
+        # establish that Codex read those bytes — see the note at the satisfied branch.
+        # An unhashable pass carries no fingerprint, so it neither counts as a match with
+        # the last pass nor starts a fresh streak at 1 — two `unavailable` values are not
+        # a match.
         if [ "$h" != unavailable ] && [ "$h" = "$prev" ]; then
           bump_count "$fresh_file"
         elif [ "$h" = unavailable ]; then
