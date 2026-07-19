@@ -565,5 +565,100 @@ rm -f CLAUDE.md
 git checkout -- . >/dev/null 2>&1
 reset_all
 
+# 24. Failure contract: an uncomputable hash must never satisfy, and repeated failures
+#     must never match each other. Spec §3 "The nonce goes away".
+#     Each fault spans BOTH the stored and the recomputed fingerprint — with the fault
+#     applied only at commit time, a mismatch proves nothing about the handling.
+stub_dir=$(mktemp -d)
+reset_all
+printf '1' > "$floorf"        # floor is checked LAST; without this a faulted run
+                              # reports "below floor" and the test passes vacuously
+
+# 24a. every checksum tool fails silently (exit 0, no output)
+for t in shasum sha1sum cksum; do
+  printf '#!/bin/sh\nexit 0\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
+done
+PATH="$stub_dir:$PATH" rev
+out=$(PATH="$stub_dir:$PATH" commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' && pass "silent checksum -> not satisfied" || fail "silent checksum -> not satisfied"
+# Absence is asserted by inverting the RESULT, not with `grep -v` — `grep -qv` means
+# "some line lacks the pattern", which is a different question and was observed to
+# return 1 regardless on the dev machine.
+printf '%s' "$out" | grep -qF 'no mcp__codex__review has run' \
+  && fail "silent checksum -> not the never-run branch" \
+  || pass "silent checksum -> not the never-run branch"
+
+# 24b. a checksum that PRINTS a plausible token and then fails
+for t in shasum sha1sum cksum; do
+  printf '#!/bin/sh\nprintf "deadbeef  -\\n"\nexit 1\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
+done
+reset_all; printf '1' > "$floorf"
+PATH="$stub_dir:$PATH" rev
+out=$(PATH="$stub_dir:$PATH" commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "checksum prints then fails -> not satisfied"
+[ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "unhashable pass leaves freshCount 0" || fail "unhashable pass leaves freshCount 0"
+
+# 24c. seed-copy failure (stub cp) must fire, not silently hash an empty index
+printf '#!/bin/sh\nexit 1\n' > "$stub_dir/cp"; chmod +x "$stub_dir/cp"
+rm -f "$stub_dir/shasum" "$stub_dir/sha1sum" "$stub_dir/cksum"
+reset_all; printf '1' > "$floorf"
+PATH="$stub_dir:$PATH" rev
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "seed-copy failure -> not satisfied" || fail "seed-copy failure -> not satisfied"
+rm -f "$stub_dir/cp"
+
+# 24d. a selective git wrapper that fails ONLY `diff`
+cat > "$stub_dir/git" <<'STUB'
+#!/bin/sh
+for a in "$@"; do case "$a" in diff) exit 1 ;; esac; done
+exec "$REAL_GIT" "$@"
+STUB
+chmod +x "$stub_dir/git"
+REAL_GIT=$(command -v git); export REAL_GIT
+reset_all; printf '1' > "$floorf"
+PATH="$stub_dir:$PATH" rev
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "git diff failure -> not satisfied" || fail "git diff failure -> not satisfied"
+
+# 24e. a selective git wrapper that fails ONLY `rev-parse --absolute-git-dir`
+cat > "$stub_dir/git" <<'STUB'
+#!/bin/sh
+case "$*" in *"--absolute-git-dir"*) exit 1 ;; esac
+exec "$REAL_GIT" "$@"
+STUB
+chmod +x "$stub_dir/git"
+reset_all; printf '1' > "$floorf"
+PATH="$stub_dir:$PATH" rev
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"
+rm -f "$stub_dir/git"
+rm -f "$floorf"
+reset_all; rev; rev; rev
+
+# 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
+#     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
+#     failed copy".
+unborn=$(mktemp -d)
+(
+  cd "$unborn" || exit 1
+  git init -q; git config user.email t@t; git config user.name t
+  mkdir -p .context; : > .context/codex-gate.on
+  printf '1' > .context/codex-gate.floor      # one pass is enough for this fixture
+  printf 'x\n' > a.ts
+  R='{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{}}'
+  printf '%s' "$R" | sh "$HOOK" >/dev/null
+  h1=$(cat .context/codex-gate.gateB 2>/dev/null)
+  printf '%s' "$R" | sh "$HOOK" >/dev/null
+  h2=$(cat .context/codex-gate.gateB 2>/dev/null)
+  [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ] || exit 1
+  # ...and the FIRST commit must actually be able to reach satisfied. Hashing and
+  # self-matching is not enough: a consumer-side regression could still STOP every
+  # first commit forever, which is the failure this fixture exists to catch.
+  out=$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --allow-empty -m init"}}' | sh "$HOOK")
+  printf '%s' "$out" | grep -q 'Gate B satisfied' || exit 1
+) && pass "unborn repo hashes, self-matches, and can reach satisfied" \
+  || fail "unborn repo hashes, self-matches, and can reach satisfied"
+rm -rf "$unborn"
+
 echo "---"
 [ "$fails" -eq 0 ] && { echo "all passed"; exit 0; } || { echo "$fails failed"; exit 1; }

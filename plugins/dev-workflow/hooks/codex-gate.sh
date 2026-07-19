@@ -192,45 +192,62 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 # GIT_INDEX_FILE keeps this off the real index, so the user's staging area is
 # untouched. `add -A` respects .gitignore, so ignored files stay out.
 tree_hash() {
-  {
-    git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null
-    # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable
-    # name is a symlink target an attacker can plant, and the seed copy below would
-    # then write index data through it into a file we do not own.
-    tmp_dir=$(mktemp -d 2>/dev/null) || tmp_dir=''
-    if [ -n "$tmp_dir" ]; then
-      tmp_index="$tmp_dir/index"
-      # Seed from the real index so git's stat cache still applies and only genuinely
-      # changed files get re-hashed. Starting empty is correct but re-hashes the entire
-      # repo on every hook invocation, which on a large repo is the difference between
-      # imperceptible and unusable. Copy failure is fine — an absent seed just means a
-      # cold, slower, equally correct index.
-      # --absolute-git-dir, not --git-path: the latter answers relative to git's cwd
-      # ("​.git/index"), but the `cp` resolves against the SHELL's cwd — which is
-      # wherever the harness invoked the hook, not necessarily the repo root. From any
-      # subdirectory the copy then fails silently and every run falls back to a cold
-      # index, i.e. re-hashing the whole repo, which is exactly what seeding avoids.
-      cp "$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null)/index" "$tmp_index" 2>/dev/null || true
-      GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
-        -- . ':(exclude).context' >/dev/null 2>&1 &&
-        GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
-      tree_rc=$?
-      rm -rf "$tmp_dir"
-    else
-      tree_rc=1
+  ok=1
+  # Same fallback order as before; no checksum tool at all is itself a failure.
+  sum_cmd=$(command -v shasum || command -v sha1sum || command -v cksum) || ok=0
+  # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable name
+  # is a symlink target an attacker can plant.
+  tmp_dir=$(mktemp -d 2>/dev/null) || { tmp_dir=''; ok=0; }
+  if [ -n "$tmp_dir" ]; then
+    tmp_index="$tmp_dir/index"
+    # The component stream is BUFFERED and checksummed only on full success (below).
+    # Printing a failure marker in-stream would checksum the marker together with the
+    # partial output, so no consumer would ever see the literal `unavailable` and two
+    # failing runs could produce equal hashes — the false-✓ direction.
+    {
+      # (0) tracked content. `git diff HEAD` is staging-independent, so it sees staged
+      # and unstaged edits alike. An unborn branch is identified POSITIVELY: a bare
+      # "--verify failed" also covers a corrupt or unreadable HEAD, and emitting the
+      # constant `no-head` for those would self-match.
+      if git -C "$repo_root" rev-parse --verify -q HEAD >/dev/null 2>&1; then
+        git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null || ok=0
+      elif git -C "$repo_root" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        printf 'no-head\n'
+      else
+        ok=0
+      fi
+
+      # (1) WORKTREE tree, from a throwaway index. Task 2 adds the INDEX tree here.
+      # git_dir must RESOLVE: unchecked, a failure yields "/index", which does not
+      # exist, so the absent-index carve-out below would read it as "nothing staged"
+      # and hand back the empty tree — a constant that matches itself.
+      # The chain's status is consumed by `if` directly; a trailing `[ $? -eq 0 ]` is
+      # SC2181 and the hook is linted with no exclusions.
+      if git_dir=$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null) &&
+         [ -n "$git_dir" ] &&
+         { [ ! -e "$git_dir/index" ] || cp "$git_dir/index" "$tmp_index" 2>/dev/null; } &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
+           -- . ':(exclude).context' >/dev/null 2>&1 &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
+      then :; else ok=0; fi
+    } > "$tmp_dir/stream" 2>/dev/null || ok=0
+  fi
+
+  h=''
+  if [ "$ok" -eq 1 ]; then
+    # The checksum's OWN status must be seen: `cmd < file | awk` reports awk's status,
+    # so a checksum failing after emitting a partial line would be stored as a real
+    # fingerprint. Parse with a shell expansion — `${raw%% *}` has no exit status to mask.
+    if raw=$("$sum_cmd" < "$tmp_dir/stream" 2>/dev/null); then
+      h=${raw%% *}
     fi
-    # If the tree could not be computed, emit a value that cannot match ANY stored
-    # hash, so the gate reads as unreviewed. Staying silent would drop the component
-    # and let an unwritable TMPDIR collapse the hash to a constant — a permanent
-    # false ✓, the one direction invariant 3 exists to prevent. Firing wrongly is the
-    # accepted cost (invariant 2).
-    [ "${tree_rc:-1}" -eq 0 ] || printf 'tree-unavailable-%s\n' "$(date +%s 2>/dev/null)$$"
-  } | {
-    if command -v shasum >/dev/null 2>&1; then shasum
-    elif command -v sha1sum >/dev/null 2>&1; then sha1sum
-    else cksum   # POSIX fallback: weaker, but present everywhere
-    fi
-  } 2>/dev/null | awk '{print $1}'
+  fi
+  if [ -n "${tmp_dir:-}" ]; then rm -rf "$tmp_dir" 2>/dev/null; fi
+  # A checksum that runs but emits nothing is a failure too, not an empty tree. The
+  # marker is a CONSTANT, not a nonce: `date +%s`+`$$` can repeat under PID reuse inside
+  # one second, and two colliding failures would compare equal and report satisfied.
+  # Never-matching is enforced at the comparison sites instead.
+  if [ -n "$h" ]; then printf '%s\n' "$h"; else printf 'unavailable\n'; fi
 }
 
 emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
@@ -321,7 +338,15 @@ case "$event" in
         # a pass on a changed tree starts the fresh count over. This is what lets the
         # satisfied message say how many passes cover the code being committed,
         # rather than how many happened at some point this cycle (Finding 9).
-        if [ "$h" = "$prev" ]; then bump_count "$fresh_file"; else { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true; fi
+        # An unhashable pass covers nothing, so it neither counts as "same tree as last
+        # pass" nor starts a fresh streak at 1 — two `unavailable` values are not a match.
+        if [ "$h" != unavailable ] && [ "$h" = "$prev" ]; then
+          bump_count "$fresh_file"
+        elif [ "$h" = unavailable ]; then
+          { printf '%s' 0 > "$fresh_file"; } 2>/dev/null || true
+        else
+          { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true
+        fi
         { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
         bump_count "$count_file"
         ;;
@@ -394,7 +419,10 @@ case "$event" in
               # No count ratio here on purpose: nothing has been reviewed this cycle,
               # so showing "N/3" would read as floor progress.
               emit "STOP — Codex Gate B not satisfied: no mcp__codex__review has run this cycle, so the CURRENT code is unreviewed. Per $policy you MUST reach a minimum of $floor passes per cycle and re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B not run"
-            elif [ "$reviewed" != "$current" ]; then
+            # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
+            # must read as unverified, and two of them must not cancel out.
+            elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
+                 [ "$reviewed" != "$current" ]; then
               # Content check, not event check: this fires for a change made through
               # ANY tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
               emit "STOP — Codex Gate B not satisfied: the working tree has CHANGED since the last mcp__codex__review, so the code you are about to commit is unreviewed (the $passes pass(es) this cycle covered the pre-change tree). Per $policy you MUST re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B stale (tree changed since review)"
