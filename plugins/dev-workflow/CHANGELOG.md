@@ -43,9 +43,11 @@ AGENTS.md invariant 12 carries the complete list.
   `full` and would otherwise run the other reviewer into the wrong slot.
 - **What this does not do**, stated in the template rather than implied: nothing checks
   the terminator mechanically — the protocol is instruction-backed by design, and a
-  recurrence is the trigger to build the checker. The hook counts on `PostToolUse`, which
-  fires only after a *successful* call, so a call that returns and then fails validation
-  still increments the counter you are discounting.
+  recurrence is the trigger to build the checker. The hook counts on `PostToolUse`, so a
+  call that returns and then fails validation still increments the counter you are
+  discounting — and so does a *failed* review, because the pinned `mcp-codex-dev` returns
+  its own errors and timeouts as ordinary results rather than throwing, which makes the
+  tool call itself succeed. Discount every incomplete pass whatever the counter says.
 - No hook, script, CI checker or other executable machinery changed. The behaviour of
   both gates *does* change — in this repo the prompts are the product — and that change
   is instruction-backed, living in prompts and templates only.

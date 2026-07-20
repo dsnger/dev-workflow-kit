@@ -58,9 +58,9 @@ terminator the reader verifies.
 >
 > | Gate | `<slot>` |
 > |---|---|
-> | Gate A, spec run | `gate-a-spec-pass-<n>` |
-> | Gate A, plan run | `gate-a-plan-pass-<n>` |
-> | Gate B | `gate-b-<your review type: spec\|quality>-pass-<n>` |
+> | Gate A, spec run | `gate-a-spec-pass-<p>` |
+> | Gate A, plan run | `gate-a-plan-pass-<p>` |
+> | Gate B | `gate-b-<your review type: spec\|quality>-pass-<p>` |
 >
 > Write one finding per line, exactly in the format given above
 > (`SEVERITY | confidence | location | what is wrong | why it matters | suggested fix`):
@@ -79,7 +79,7 @@ terminator the reader verifies.
 > the two branch lines in the server's own merged-review formatting, which is expected —
 > in one of these two forms:
 >
-> ```
+> ```text
 > <gate> | pass <p> | <n> findings | <path>
 > INCOMPLETE | <cause> | <path>
 > ```
@@ -89,7 +89,7 @@ terminator the reader verifies.
 >
 > for example:
 >
-> ```
+> ```text
 > gate-a-spec | pass 2 | 10 findings | .context/codex-reviews/gate-a-spec-pass-2.md
 > INCOMPLETE | permission denied creating .context/codex-reviews/ | .context/codex-reviews/gate-b-spec-pass-1.md
 > ```
