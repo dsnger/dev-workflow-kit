@@ -129,9 +129,14 @@ both checkers' regression suites, and `claude plugin validate . --strict`.
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which
 needs a base branch to diff against. Its *suite* runs unconditionally with the others;
-the checker itself does not, so a commit pushed straight to main is never version-bump
-checked. The single command that runs the whole battery locally is in
-[`AGENTS.md`](AGENTS.md) under "Commands".
+the checker itself does not. That is sufficient here because main accepts changes only
+through a PR: a branch ruleset (`protect-main.`, active since 2026-07-19) requires a
+pull request and a green `quality` check, and the version-bump step runs inside that
+`quality` job — so there is no push path into main that skips it. The single command
+that runs the whole battery locally is in [`AGENTS.md`](AGENTS.md) under "Commands".
+
+Main is protected: a PR with a green `quality` check is the only way in, admins
+included — the ruleset lists no bypass actors.
 
 Everything else here is a **prompt**, and prompts have no typechecker — they are
 reviewed against [`docs/prompt-standards.md`](docs/prompt-standards.md), this repo's own
