@@ -819,11 +819,14 @@ printf 'staged\n' > .context/codex-gate.on; git add .context/codex-gate.on >/dev
 printf 'worktree\n' > .context/codex-gate.on
 before_tree=$(git write-tree 2>/dev/null)
 before_blob=$(git rev-parse :.context/codex-gate.on 2>/dev/null)
-# Snapshot AFTER the two read-only commands above, not before: `write-tree` and
-# `rev-parse` can trigger git's benign racy-clean stat-cache rewrite of .git/index,
-# which would flip index bytes with no content change and make the byte comparison
-# below flaky for reasons unrelated to tree_hash().
-cp .git/index "$work/index.before"
+# Compare the index's ENTRIES, not its bytes. An earlier version of this test ran
+# `cmp` on .git/index and passed on macOS while failing on Linux CI: git rewrites the
+# index's stat cache during ordinary read-only operations, and the hook runs
+# `git diff HEAD`, so byte-identity is a property the hook neither guarantees nor
+# claims. `ls-files --stage` covers mode, object id, stage and path for EVERY entry,
+# which is the property actually asserted — the hook must not change what the user's
+# index means — and it is immune to benign stat-cache rewrites.
+before_stage=$(git ls-files --stage 2>/dev/null)
 reset_all
 rev; h1=$(cat "$state" 2>/dev/null)
 rev; h2=$(cat "$state" 2>/dev/null)
@@ -832,7 +835,8 @@ rev; h2=$(cat "$state" 2>/dev/null)
   || fail "three-way .context divergence hashes and self-matches"
 [ "$(git write-tree 2>/dev/null)" = "$before_tree" ] && pass "real index tree unchanged" || fail "real index tree unchanged"
 [ "$(git rev-parse :.context/codex-gate.on 2>/dev/null)" = "$before_blob" ] && pass "staged .context blob unchanged" || fail "staged .context blob unchanged"
-cmp -s .git/index "$work/index.before" && pass "real index bytes unchanged" || fail "real index bytes unchanged"
+[ "$(git ls-files --stage 2>/dev/null)" = "$before_stage" ] \
+  && pass "real index entries unchanged" || fail "real index entries unchanged"
 : > .context/codex-gate.on
 git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
 reset_all; rev; rev; rev
