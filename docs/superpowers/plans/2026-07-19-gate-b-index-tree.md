@@ -523,7 +523,7 @@ constant empty tree, a false "satisfied". Fixed by normalizing `eff_index` again
 default, pass through unchanged). Covered by test 27e below.
 
 Run: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
-Expected: `0`
+Expected: `exit=0 FAIL=0`, and the command itself exits 0 — it returns success only when both are zero.
 
 - [ ] **Step 5: Mutation-verify each guard**
 
@@ -535,7 +535,7 @@ Each mutation must turn a specific test red. Apply, run, revert.
    test 27a must FAIL.
 
 Run after each: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
-Expected: at least 1 before reverting; 0 after reverting all three.
+Expected: before reverting, `FAIL` is at least 1 and the command exits non-zero; after reverting all three, `exit=0 FAIL=0` and it exits 0.
 
 - [ ] **Step 6: Run the full battery**
 
@@ -769,7 +769,7 @@ pass(es) this cycle" — with:
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
-Expected: `0`
+Expected: `exit=0 FAIL=0`, and the command itself exits 0 — it returns success only when both are zero.
 
 - [ ] **Step 6: Check the prompts against the standards**
 

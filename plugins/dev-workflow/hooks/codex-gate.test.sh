@@ -45,7 +45,7 @@ rev
 
 # 2. Below floor (1/3) -> NOT satisfied yet; reaching floor (3/3) -> satisfied
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'below floor\|floor NOT met' && pass "1/3 passes -> below floor" || fail "1/3 passes -> below floor"
+printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 passes -> below floor" || fail "1/3 passes -> below floor"
 printf '%s' "$out" | grep -q 'hookSpecificOutput' && pass "emits JSON additionalContext" || fail "emits JSON additionalContext"
 rev; rev  # reach the floor: 3 passes total, tree unchanged
 out=$(commitpre)
@@ -365,13 +365,13 @@ rm -f "$countA"
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "exec bumps Gate A count to 1" || fail "exec bumps Gate A count to 1"
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
-printf '%s' "$out" | grep -q 'below floor\|floor NOT met' && pass "1/3 exec -> Gate A below floor" || fail "1/3 exec -> Gate A below floor"
+printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 exec -> Gate A below floor" || fail "1/3 exec -> Gate A below floor"
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
 printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A satisfied" || fail "3/3 exec -> Gate A satisfied"
 # FINDING 12: the Gate-A satisfied wording must NOT overstate — it counts calls only.
-printf '%s' "$out" | grep -q 'count only\|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)" || fail "Gate A satisfied says 'count only' (Finding 12)"
+printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)" || fail "Gate A satisfied says 'count only' (Finding 12)"
 run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
 [ ! -f "$countA" ] && pass "plan execution resets Gate A count" || fail "plan execution resets Gate A count"
 
@@ -412,7 +412,12 @@ printf 'post-review rewrite\n' >> app.ts   # big change AFTER the passes
 rev                      # one fresh pass on the new tree
 out=$(commitpre)
 printf '%s' "$out" | grep -q '4/3' && pass "cycle total counts all 4 passes" || fail "cycle total counts all 4 passes"
-printf '%s' "$out" | grep -q '1 cover the CURRENT tree\|of which 1' && pass "fresh count reports only 1 pass covers current code (Finding 9)" || fail "fresh count reports only 1 pass covers current code (Finding 9)"
+# -F on the real wording: the old pattern's first alternative ("1 cover the CURRENT
+# tree") was renamed to "CURRENT content fingerprint" by this PR and matched nothing,
+# leaving the assertion resting on `\|` — alternation only under GNU-style BRE, literal
+# under POSIX, so it would have failed on a stock BSD grep (invariant 4: machines we do
+# not control).
+printf '%s' "$out" | grep -qF 'of which 1 cover the CURRENT content fingerprint' && pass "fresh count reports only 1 pass covers current code (Finding 9)" || fail "fresh count reports only 1 pass covers current code (Finding 9)"
 git checkout -- app.ts >/dev/null 2>&1
 reset_all
 
