@@ -262,6 +262,91 @@ clean or clearly stuck → then STOP and surface to the user. The only early exi
 below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
 advisory — validate before applying; dismissed finding → one-line why.
 
+**Findings go to a FILE, not the response — both gates.** Long finding lists come back
+cut off, and a cut that lands between findings is indistinguishable from a short list:
+silently dropped findings, the dangerous direction. Claude Code both limits MCP tool
+output (25,000 tokens by default, `MAX_MCP_OUTPUT_TOKENS`) and persists over-threshold
+results to disk behind a file reference; the protocol below is correct under either,
+because the response stops carrying the findings at all. Append to the gate prompt:
+
+> Pass the reviewed repo root as `workingDirectory`. Write the FULL findings list to
+> `.context/codex-reviews/<slot>.md` (create the directory if needed; the path is
+> relative to that root — Codex resolves writes against its working directory, so
+> without this a valid file can land in a different checkout). `<slot>` is
+> `gate-a-spec-pass-<p>`, `gate-a-plan-pass-<p>`, or `gate-b-<spec|quality>-pass-<p>`.
+>
+> One finding per line in the format above; escape a literal pipe inside a field as
+> `\|`. Every line before the terminator is exactly one finding line — no blank lines,
+> headings, prose or wrapped continuations. End the file with a final line reading
+> exactly `END OF FINDINGS (<n> total)`, `<n>` being the number of finding lines. A
+> clean pass is the single body line `NO FINDINGS` with `END OF FINDINGS (0 total)`.
+>
+> Then reply with ONLY one line per branch — `<gate> | pass <p> | <n> findings | <path>`
+> — or `INCOMPLETE | <cause> | <path>` if you could not write the file. An unwritten
+> file behind a normal-looking reply is the one outcome the reader cannot diagnose.
+
+**Gate B takes one file per branch** because `reviewType: full` runs the spec and
+quality reviewers in parallel from one `additionalContext`. Aimed at a single path they
+race, and the second writer leaves a correctly terminated, correctly counted file
+holding half the findings — with every check still passing.
+
+**Before each call, delete every target file and confirm it is gone.** A call that dies
+part-way leaves the prior attempt's valid file behind, and no terminator can tell that
+from a fresh one. If a target survives deletion, stop and name the cause — path resolved
+against the wrong root, permissions, a *directory* at the target, or a file reappearing
+(another writer) each need a different fix, and "delete failed" alone sends you retrying
+the delete. Run one pass at a time: the slot name has no invocation-unique component, so
+two concurrent calls on one slot race. Passes are sequential by construction, so that is
+a stated limitation, not a guarded one.
+
+**Accept a pass only when** the file exists and is readable; its last line is exactly
+`END OF FINDINGS (<n> total)`; it contains exactly `<n>` finding lines *and nothing
+else* (or the single line `NO FINDINGS` when `<n>` is 0 — "n valid lines somewhere in
+the file" would accept a truncated file padded with fragments); and, for a `full` Gate-B
+pass, both branch files satisfy all of that. Anything else — missing, unreadable or
+empty file, wrong path, malformed terminator, count mismatch, extra lines, one branch
+file, an `INCOMPLETE` reply — is an **INCOMPLETE pass**, which is not a review: don't
+act on the partial list, don't count it toward the 3-pass floor, and don't read "no
+Blocker/Major visible" as clean.
+
+**Recovery: one attempt per pass**, shared across timeout, an `INCOMPLETE` reply and
+failed validation — the Mechanics timeout-retry rule widened, not a second budget beside
+it, since two budgets let a pass alternate between them indefinitely. The attempt is a
+fresh re-run, deleting exactly what it will rewrite: both branch files for a full
+re-run, only the failed branch for a single-branch resume — deleting both and recreating
+one makes the both-files check fail by construction, spending the attempt on a path that
+cannot succeed. Prefer a resume only when the reply shows the review ran and just the
+write failed: pass the `sessionId` from the original tool result back, and for a Gate-B
+branch pass its `reviewType` alongside (`spec` with `specSessionId`, `quality` with
+`qualitySessionId`) — the tool defaults to `full`, and a resume that omits it can run the
+other reviewer and write the wrong slot, which no check detects, because the file is
+well-formed and merely from the wrong branch. Whether a resumed session re-executes the
+write or just returns its prior summary is not established; if it returns the summary,
+that was the attempt. Spent and still incomplete → STOP and surface, naming which check
+failed.
+
+**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name, and
+never sees the file. Claude Code fires `PostToolUse` after a *successful* call and routes
+a failed one to `PostToolUseFailure`, which the plugin registers no handler for — but do
+not infer from that which failures escape counting: the pinned `mcp-codex-dev` catches
+its own errors, executor timeouts and aborts included, and returns them as a normal
+result carrying `success: false` rather than throwing or setting `isError`. A failed
+review therefore looks like a successful tool call and increments the counter. So does a
+call that returns and then fails validation. The rule that follows is the simple one:
+**discount every incomplete pass regardless of what the counter says** — a "satisfied"
+count can overstate the passes you actually hold, and reasoning about which failure took
+which event path will get it wrong. Nothing checks the terminator mechanically; this is
+instruction-backed by design, and a recurring truncation incident is the trigger to build
+the checker, not a reason to build it now. Detection is conditional: it catches an absent
+or malformed terminator, a count mismatch and a missing branch file *in the artifact you
+actually read*; it does not catch a model that writes a wrong count with a matching
+number of lines, nor a stale file if you skip the delete.
+
+**Why `.context/codex-reviews/`:** the hook excludes `.context/` from all three of its
+fingerprint components, so review artifacts cannot invalidate the review they document.
+Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not all of
+`.context/`, which would strip the committed `codex-gate.on` adoption marker.
+
 - **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
   **spec** right after brainstorming (before `writing-plans`), then on the
   **plan** before `executing-plans`/`subagent-driven-development` — catching a
@@ -341,9 +426,14 @@ advisory — validate before applying; dismissed finding → one-line why.
   follow-up commit for two reasons: a `WIP: …` commit left in history defeats the naming
   convention it exists for, and a follow-up commit has nothing to commit when the review
   produced no fixes.
-- **Timeout retry:** a codex call that dies at the MCP tool-call timeout is retried
-  once before surfacing to the user — pass state persists in `.context/`, so an
-  aborted call loses nothing.
+- **Timeout / abort:** a codex call that dies at the MCP tool-call timeout is retried
+  once before surfacing to the user, and that retry *is* the single shared recovery
+  attempt above — not a second one. An abort is an incomplete pass, so treat it as one:
+  it may already have moved the hook's counter (the pinned server returns its own
+  timeouts as ordinary results), and it may have left a partial or stale target file, so
+  delete the targets and confirm them gone before retrying, then validate the result like
+  any other pass. Counter and workspace state persist in `.context/`; the *pass* does
+  not.
 
 ---
 
