@@ -49,6 +49,29 @@ the synonyms a future reader might search for instead.
   fix is to force the version forward. Grep this one when the sentence is "nobody got
   the change"; grep the other when it is "we don't know what we got".
 
+- `truncated-tool-output-read-as-complete` — a tool result that arrived incomplete is
+  consumed as if whole, because nothing in it distinguishes the two. Aliases: cut-off
+  response, output limit hit, silent drop, partial list read as the full list, "the
+  reviewer only found three things", findings lost in transport, response persisted to
+  disk and never re-read.
+
+  **Not the same as `verification-masks-failure`**, the nearest class, though the
+  surfaces rhyme — both end with a bad signal accepted as a good one. The difference is
+  origin and fix. There, an author wrote a check that reports the wrong thing (a pipe
+  returning grep's exit status instead of the runner's), and the fix is to make the
+  check report the real status. Here the author's reasoning is sound and the *delivery*
+  drops data underneath it, so the fix is to make incompleteness detectable — a
+  terminator, a declared count, a re-read. Grep this one when the sentence is "we never
+  saw all of it"; grep the other when it is "we looked at the wrong thing".
+
+- `verification-masks-failure` — a check reports success because of how it was wired,
+  not because the thing it checks succeeded. Aliases: exit status swallowed, pipeline
+  status masked, green that proves nothing, the check that cannot fail, asserting on the
+  wrong command's result.
+
+  (Defined here retroactively: the 2026-07-20 ledger row used this class before any
+  definition existed. Recorded now so the recurrence grep has something to land on.)
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project

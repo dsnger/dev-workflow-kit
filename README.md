@@ -61,6 +61,16 @@ old version until you restart it or run `/reload-plugins`.
   `codex mcp-server` is a *different* server exposing a single `codex` tool, which can't
   be attributed to Gate A (reviews text) or Gate B (reviews a diff): with it connected,
   no pass ever counts and Gate B reports "not run" forever (the hook says so, once).
+
+  Both gates have Codex write its findings to a file under `.context/codex-reviews/` and
+  reply with a one-line summary, because a long finding list returned inline can come
+  back cut off — and a cut between findings looks exactly like a short list. Claude Code
+  limits MCP tool output to 25,000 tokens by default; `MAX_MCP_OUTPUT_TOKENS` raises
+  that, which is worth trying as a *secondary* mitigation but is not the fix. It moves
+  the ceiling rather than removing it, and it applies only to tools that don't declare
+  their own text limit via `anthropic/maxResultSizeChars` — whether `mcp-codex-dev`
+  declares one is not established here. The file protocol is what actually keeps
+  findings out of the response.
 - **`gh`** — optional; only `/dev-workflow:process-pr-review` uses it.
 
 **3. Run `/dev-workflow:workflow-init` in each project.** It verifies the rest and tells

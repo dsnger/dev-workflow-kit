@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.5.1
+
+- **Gate findings go to a file, not the MCP response.** Long finding lists came back cut
+  off on effectively every substantial Gate A pass in the field, and a cut landing
+  between findings looks exactly like a short list — so dropped findings read as a clean
+  review. Both gate prompts in the `/workflow-init` CLAUDE.md template now have Codex
+  write the full list to `.context/codex-reviews/<slot>.md`, end it with
+  `END OF FINDINGS (<n> total)`, and reply with one line. The reader accepts a pass only
+  when the terminator is present, the count matches, the file holds nothing but finding
+  lines, and — for a Gate-B `full` review — both branch files pass.
+- **Gate B writes one file per reviewer branch.** `reviewType: full` runs the spec and
+  quality reviewers in parallel from a single `additionalContext`. Aimed at one path they
+  race, and the second writer leaves a correctly terminated, correctly counted file
+  holding half the findings, with every check still passing.
+- **Bounded recovery.** An incomplete pass gets one attempt, shared with the existing
+  timeout retry rather than added beside it, then STOP — two budgets let a pass alternate
+  between them indefinitely. Delete exactly what the re-run rewrites; a resumed Gate-B
+  branch must carry its `reviewType` alongside its session id, since the tool defaults to
+  `full` and would otherwise run the other reviewer into the wrong slot.
+- **What this does not do**, stated in the template rather than implied: nothing checks
+  the terminator mechanically — the protocol is instruction-backed by design, and a
+  recurrence is the trigger to build the checker. The hook counts on `PostToolUse`, so a
+  call that returns and then fails validation still increments the counter you are
+  discounting — and so does a *failed* review, because the pinned `mcp-codex-dev` returns
+  its own errors and timeouts as ordinary results rather than throwing, which makes the
+  tool call itself succeed. Discount every incomplete pass whatever the counter says.
+- No hook, script, CI checker or other executable machinery changed. The behaviour of
+  both gates *does* change — in this repo the prompts are the product — and that change
+  is instruction-backed, living in prompts and templates only.
+
 ## 0.5.0
 
 - **Gate-B fingerprint covers the index.** `git commit` commits the index, but both hash
