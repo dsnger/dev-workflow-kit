@@ -203,8 +203,10 @@ reader can judge whether it still holds.
   what was reviewed", then "what is being committed is what was reviewed", then "what a
   commit would actually carry", then "everything a commit could carry". Every round
   searched for the previous **phrase**, so a synonym survived. Search for the **claim**:
-  `grep -rniE '(everything|anything|all content|any change)[^.]{0,80}(commit|fingerprint|hash)|((commit|fingerprint|hash)[^.]{0,80}(everything|anything|all content|any change))' --include='*.md' --include='*.sh' . | grep -vE 'source-files/|docs/superpowers/'`
-  Two things this does NOT do, stated so nobody mistakes it for a guard: nothing runs it
+  `grep -rniE '(everything|anything|all content|any change)[^.]{0,80}\b(commit|fingerprint|hash)\b|\b(commit|fingerprint|hash)\b[^.]{0,80}(everything|anything|all content|any change)' --include='*.md' --include='*.sh' . | grep -vE 'source-files/|docs/superpowers/'`
+  (The `\b` boundaries matter: without them `commit` matches `committed` and the
+  recipe reports its own false positives.) Two things this does NOT do, stated so
+  nobody mistakes it for a guard: nothing runs it
   in CI — it is a recipe a human runs — and an overclaim phrased without those totality
   words escapes it entirely. It raises the floor; it does not close the class. The
   underlying rule is the check itself: for every sentence about a gate, name the exact

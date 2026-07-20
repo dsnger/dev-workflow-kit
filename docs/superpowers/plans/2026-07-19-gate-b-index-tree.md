@@ -460,7 +460,10 @@ reset_all; rev; rev; rev
 > Capture the runner's exit status separately from the `FAIL` count. Piping straight
 > into `grep -c` reports the *grep's* status, so a suite that dies part-way — or exits
 > non-zero without printing `FAIL` — reads as `0` and looks green. Both numbers matter:
-> `exit=0` **and** a count of `0`.
+> `exit=0` **and** a count of `0` — so the command below *returns* success only when
+> both hold, rather than printing them for you to eyeball. The output file is per-run
+> (`mktemp`), not a fixed path: two concurrent runs sharing `/tmp/suite.out` could read
+> each other's results.
 
 Run: `sh plugins/dev-workflow/hooks/codex-gate.test.sh 2>&1 | grep -E '^FAIL'`
 Expected: FAIL for `staged-vs-worktree divergence -> NOT satisfied`, `staging a reviewed
@@ -519,7 +522,7 @@ constant empty tree, a false "satisfied". Fixed by normalizing `eff_index` again
 `$repo_root` with a `case` (already-absolute paths, including the `$git_dir/index`
 default, pass through unchanged). Covered by test 27e below.
 
-Run: `sh plugins/dev-workflow/hooks/codex-gate.test.sh > /tmp/suite.out 2>&1; echo "exit=$?"; grep -cE '^FAIL' /tmp/suite.out`
+Run: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
 Expected: `0`
 
 - [ ] **Step 5: Mutation-verify each guard**
@@ -531,7 +534,7 @@ Each mutation must turn a specific test red. Apply, run, revert.
 3. Change `eff_index=${GIT_INDEX_FILE:-$git_dir/index}` to `eff_index=$git_dir/index` →
    test 27a must FAIL.
 
-Run after each: `sh plugins/dev-workflow/hooks/codex-gate.test.sh > /tmp/suite.out 2>&1; echo "exit=$?"; grep -cE '^FAIL' /tmp/suite.out`
+Run after each: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
 Expected: at least 1 before reverting; 0 after reverting all three.
 
 - [ ] **Step 6: Run the full battery**
@@ -765,7 +768,7 @@ pass(es) this cycle" — with:
 
 - [ ] **Step 5: Run the tests to verify they pass**
 
-Run: `sh plugins/dev-workflow/hooks/codex-gate.test.sh > /tmp/suite.out 2>&1; echo "exit=$?"; grep -cE '^FAIL' /tmp/suite.out`
+Run: `suite_out=$(mktemp) && sh plugins/dev-workflow/hooks/codex-gate.test.sh >"$suite_out" 2>&1; suite_status=$?; fail_count=$(grep -cE '^FAIL' "$suite_out" || :); rm -f "$suite_out"; printf 'exit=%s FAIL=%s\n' "$suite_status" "$fail_count"; [ "$suite_status" -eq 0 ] && [ "$fail_count" -eq 0 ]`
 Expected: `0`
 
 - [ ] **Step 6: Check the prompts against the standards**
