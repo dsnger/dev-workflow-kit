@@ -34,14 +34,23 @@ driven by recurrence rather than by enthusiasm.
       classifies it as a **successful** tool call, so `PostToolUse` fires rather than
       `PostToolUseFailure`. The hook's `PostToolUse` branch inspects nothing about the
       result: for `$review_tool` it computes `tree_hash`, **stores that fingerprint**,
-      and bumps both counters; for `$exec_tool` it bumps `countA` unconditionally.
+      bumps the cycle counter unconditionally, and sets the fresh-streak counter to 0
+      (fingerprint unavailable), 1 (fingerprint changed) or its prior value plus one
+      (fingerprint unchanged) — the streak is not a second cumulative counter; for
+      `$exec_tool` it bumps `countA` unconditionally.
       Consequence: three timed-out Gate-A calls satisfy the Gate-A floor, and one
       timed-out Gate-B call stores a current-content fingerprint for a review that read
       nothing — the satisfied message then reports a fresh pass covering exactly the
-      content nobody reviewed. This is a false ✓, the direction invariant 2 calls
-      dangerous, and unlike the counter-overstatement the 0.5.1 prompts document, **no
-      instruction discounts it**: the reader never sees a finding list to judge, because
-      the call died.
+      content nobody reviewed. That is a false ✓ in the hook's recorded state, the
+      direction invariant 2 calls dangerous.
+      *What the shipped 0.5.1 prompts already do about it, stated so nobody over-scopes
+      the fix:* they classify a timeout or abort as an incomplete pass, require every
+      incomplete pass to be discounted **regardless of what the counter says**, and allow
+      one recovery attempt. So the residual defect is not "no mitigation exists" — an
+      earlier draft of this row claimed that and contradicted text shipped in the same
+      PR — it is that the mitigation is instruction-backed and depends on the agent
+      noticing and obeying the failed result, while the hook's own state is wrong either
+      way and stays wrong for anyone reading it later.
       *Candidate fix, explicitly unverified:* skip the bump and the fingerprint store
       when the result reports failure. The `PostToolUse` payload is documented to carry
       `tool_response`, but **what it actually contains for an MCP tool on this server is
