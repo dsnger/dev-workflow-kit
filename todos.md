@@ -64,11 +64,18 @@ driven by recurrence rather than by enthusiasm.
       descriptions, and the checker then reported an unpinned-npx violation against a
       repo containing no such call. (This row deliberately does not quote that string
       verbatim — doing so put the pattern into a tracked file and made the checker fail
-      on this very commit, which is the bug demonstrating itself.) A false positive, so it is the safe direction — but it is confusing,
-      and it makes "the battery is green" depend on what else happens to be on disk.
-      Surfaced by real use during the index-tree story, not by a gate. Fix would be to
-      scan tracked files (or honour `.gitignore`), with a reject/accept fixture for a
-      violating pattern inside an ignored path.
+      on this very commit, which is the bug demonstrating itself.) A false positive, so
+      it is the safe direction — but it is confusing, and it makes "the battery is
+      green" depend on what else happens to be on disk. Surfaced by real use during the
+      index-tree story, not by a gate. Fix would be to scan tracked files (or honour
+      `.gitignore`), with a reject/accept fixture for a violating pattern inside an
+      ignored path.
+      **Occurrence 2 (candidate note, not a fix): recurring operator friction.** Closing
+      that same story, the battery had to be run with `.superpowers/sdd/` moved aside
+      *again* — by hand, remembered rather than prompted. So this is not only a
+      confusing one-off red: it is a step a human must know about and repeat, on a
+      command AGENTS.md presents as "what CI runs". Two occurrences of the same class
+      now; counts toward whatever trigger this row is eventually escalated on.
 - [ ] **Temp-index writes land in the real object database.** `git add -A` against the
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary
