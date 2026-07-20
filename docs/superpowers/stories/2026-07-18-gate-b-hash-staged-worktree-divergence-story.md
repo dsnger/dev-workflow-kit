@@ -16,7 +16,9 @@ deferred there, because the fix contains a decision rather than just a correctio
 ## 2. Desired outcome
 
 A commit whose staged content differs from what was reviewed is never reported as
-Gate-B satisfied, regardless of how the divergence arose. Alongside that, the project
+Gate-B satisfied, as of the hook's invocation: a compound `git add X && git commit`
+stages after the PreToolUse fingerprint and remains the separate Parked defect.
+Alongside that, the project
 has an explicit, recorded answer to the question the fix forces: whether merely staging
 already-reviewed content should invalidate a review. Today that behaviour is asserted
 by a passing test but was never actually decided — it fell out of an implementation
@@ -52,13 +54,14 @@ choice.
 ## 5. Open questions
 
 - Should staging already-reviewed content (a bare `git add` that changes nothing about
-  the bytes) invalidate the review? Invariant 2 argues yes; day-to-day usability argues
-  no, since `review → stage → commit` is normal and a STOP there is noise on every
-  commit.
+  the bytes) invalidate the review? **Settled: yes** — staging invalidates (spec §2).
 - Should the answer depend on the commit's shape — `git commit` (index only) vs
   `git commit -a` vs `git add X && git commit` — or should one rule cover all three?
+  **Settled:** one content rule covers every commit shape, but only as of the hook's
+  invocation, so `git add X && git commit` — which stages after the PreToolUse
+  fingerprint — stays parked.
 - Does invariant 3's wording need amending, given "working tree" is the referent that
-  turned out to be wrong?
+  turned out to be wrong? **Settled: yes**, it did (Step 2).
 
 ## 6. Suggested size
 

@@ -45,7 +45,7 @@ rev
 
 # 2. Below floor (1/3) -> NOT satisfied yet; reaching floor (3/3) -> satisfied
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'below floor\|floor NOT met' && pass "1/3 passes -> below floor" || fail "1/3 passes -> below floor"
+printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 passes -> below floor" || fail "1/3 passes -> below floor"
 printf '%s' "$out" | grep -q 'hookSpecificOutput' && pass "emits JSON additionalContext" || fail "emits JSON additionalContext"
 rev; rev  # reach the floor: 3 passes total, tree unchanged
 out=$(commitpre)
@@ -60,7 +60,7 @@ printf 'v2\n' >> app.ts
 run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'not satisfied' && pass "Edit-tool change -> not satisfied" || fail "Edit-tool change -> not satisfied"
-printf '%s' "$out" | grep -q 'tree has CHANGED' && pass "Edit-tool change -> reported as stale tree" || fail "Edit-tool change -> reported as stale tree"
+printf '%s' "$out" | grep -q 'cannot confirm' && pass "Edit-tool change -> reported as unconfirmed" || fail "Edit-tool change -> reported as unconfirmed"
 
 # 3b. THE MAJOR: a file changed through BASH (no Edit/Write event at all) -> stale.
 #     Under the old event-based scheme this produced a false ✓.
@@ -123,10 +123,9 @@ rm -f link.ts; ln -s absent-b link.ts
 printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "retargeted untracked symlink -> NOT satisfied" || fail "retargeted untracked symlink -> NOT satisfied"
 rm -f link.ts
 
-# NOTE: the "tree could not be computed" guard in tree_hash has no regression test.
-# Forcing it portably means making mktemp or git fail on demand — TMPDIR=/dev/null
-# looks like it does that but BSD/macOS mktemp silently falls back to /var/folders, so
-# such a test passes for the wrong reason. Tracked in todos.md.
+# NOTE: sections 24-25 cover the "could not be computed" guard for checksum, seed-copy,
+# git-dir and diff failures. Still uncovered: a `git add`/`write-tree` failure inside the
+# throwaway index (see the tree-unavailable row in todos.md, which stays parked).
 
 # A FIFO is not committable content; hashing must skip it rather than block on a
 # reader that never arrives. The hook is advisory and must not be able to wedge a
@@ -170,6 +169,29 @@ rev; rev; rev
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ state does not invalidate the hash" || fail "tracked .context/ state does not invalidate the hash"
 rev  # more churn against the committed state
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ churn stays satisfied" || fail "tracked .context/ churn stays satisfied"
+
+# 3e-ter. GAP 1 — the INDEX-tree component must exclude .context/ too, not just the
+# diff-HEAD and worktree-tree components (each guarded by its own `:(exclude)`
+# pathspec, untouched by this bug). Unstaged .context/ churn never reaches the real git
+# index, so the two assertions above never exercise the `git rm --cached ... .context`
+# line at all: nothing forces it to matter. STAGING the churn is the only way to make it
+# matter — but staging .context ALONE trips the docs-only branch (is_docs_only treats
+# .context/ as documentation) before Gate B is even evaluated, so a second staged,
+# non-.context file is needed just to reach the fingerprint comparison at all.
+# sidefile.ts is a throwaway file kept byte-identical for the whole test, so it cannot
+# be the thing that (in)validates — only the .context staging can.
+printf 'side\n' > sidefile.ts; git add sidefile.ts >/dev/null 2>&1
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with sidefile.ts staged" || fail "setup: satisfied with sidefile.ts staged"
+rev                                       # hook writes fresh state into .context/
+git add -f .context >/dev/null 2>&1       # stage the hook's own churn (sidefile.ts untouched)
+out=$(commitpre)
+printf '%s' "$out" | grep -q 'Gate B satisfied' \
+  && pass "staged .context churn does not invalidate (index-tree .context exclusion)" \
+  || fail "staged .context churn does not invalidate (index-tree .context exclusion)"
+git rm -q --cached sidefile.ts >/dev/null 2>&1; rm -f sidefile.ts
+git reset -q -- .context >/dev/null 2>&1  # unstage; real index back to HEAD for .context/
+
 # ...while a real code change is still caught
 printf 'code change\n' >> app.ts
 printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "tracked .context/: real code change still invalidates" || fail "tracked .context/: real code change still invalidates"
@@ -177,21 +199,26 @@ git checkout -- app.ts >/dev/null 2>&1
 git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
 reset_all; rev; rev; rev
 
-# 3f. FINDING B — pure staging must NOT invalidate: `git diff HEAD` covers staged and
-#     unstaged tracked content alike, so `git add` of an already-reviewed file changes
-#     nothing that could end up in the commit.
+# 3f. DECIDED at spec §2 (2026-07-19-gate-b-index-tree-design.md): staging
+#     already-reviewed content DOES invalidate. The hash covers the index tree, and
+#     `git add` changes it. The bytes that would be committed are unchanged, so this is
+#     a false invalidation — accepted under invariant 2 ("loose in the firing
+#     direction"), and the STOP message explains that staging alone can cause it.
+#     This test previously asserted the OPPOSITE as though it were a principle; the
+#     behaviour was never decided, it fell out of an implementation choice.
 reset_all
 printf 'reviewed change\n' >> app.ts
 rev; rev; rev                       # 3 passes covering the modified (unstaged) tree
 printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on unstaged change" || fail "setup: satisfied on unstaged change"
 git add app.ts >/dev/null 2>&1      # staging only — no content change
-out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "staging a reviewed tracked file -> still satisfied (Finding B)" || fail "staging a reviewed tracked file -> still satisfied (Finding B)"
-# ...and an untracked file added on top still invalidates (direction preserved)
-printf 'new\n' > also-new.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "untracked file on a staged tree -> NOT satisfied" || fail "untracked file on a staged tree -> NOT satisfied"
-rm -f also-new.ts
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
+  && pass "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)" \
+  || fail "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)"
+# The old trailing assertion ("untracked file on a staged tree -> not satisfied") is
+# GONE on purpose: once staging alone invalidates, it passes regardless of the untracked
+# file and tests nothing. Test 3c already covers untracked content.
 git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
+reset_all; rev; rev; rev
 
 # 4. Gate A exec must NOT satisfy Gate B (separate state)
 reset_all
@@ -338,13 +365,13 @@ rm -f "$countA"
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "exec bumps Gate A count to 1" || fail "exec bumps Gate A count to 1"
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
-printf '%s' "$out" | grep -q 'below floor\|floor NOT met' && pass "1/3 exec -> Gate A below floor" || fail "1/3 exec -> Gate A below floor"
+printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 exec -> Gate A below floor" || fail "1/3 exec -> Gate A below floor"
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{}}' >/dev/null
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
 printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A satisfied" || fail "3/3 exec -> Gate A satisfied"
 # FINDING 12: the Gate-A satisfied wording must NOT overstate — it counts calls only.
-printf '%s' "$out" | grep -q 'count only\|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)" || fail "Gate A satisfied says 'count only' (Finding 12)"
+printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)" || fail "Gate A satisfied says 'count only' (Finding 12)"
 run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
 [ ! -f "$countA" ] && pass "plan execution resets Gate A count" || fail "plan execution resets Gate A count"
 
@@ -385,7 +412,12 @@ printf 'post-review rewrite\n' >> app.ts   # big change AFTER the passes
 rev                      # one fresh pass on the new tree
 out=$(commitpre)
 printf '%s' "$out" | grep -q '4/3' && pass "cycle total counts all 4 passes" || fail "cycle total counts all 4 passes"
-printf '%s' "$out" | grep -q '1 cover the CURRENT tree\|of which 1' && pass "fresh count reports only 1 pass covers current code (Finding 9)" || fail "fresh count reports only 1 pass covers current code (Finding 9)"
+# -F on the real wording: the old pattern's first alternative ("1 cover the CURRENT
+# tree") was renamed to "CURRENT content fingerprint" by this PR and matched nothing,
+# leaving the assertion resting on `\|` — alternation only under GNU-style BRE, literal
+# under POSIX, so it would have failed on a stock BSD grep (invariant 4: machines we do
+# not control).
+printf '%s' "$out" | grep -qF 'of which 1 cover the CURRENT content fingerprint' && pass "fresh count reports only 1 pass covers current code (Finding 9)" || fail "fresh count reports only 1 pass covers current code (Finding 9)"
 git checkout -- app.ts >/dev/null 2>&1
 reset_all
 
@@ -564,6 +596,375 @@ rm -f CLAUDE.md
 : > "$on"   # restore the suite's adopted baseline
 git checkout -- . >/dev/null 2>&1
 reset_all
+
+# 24. Failure contract: an uncomputable hash must never satisfy, and repeated failures
+#     must never match each other. Spec §3 "The nonce goes away".
+#     Each fault spans BOTH the stored and the recomputed fingerprint — with the fault
+#     applied only at commit time, a mismatch proves nothing about the handling.
+stub_dir=$(mktemp -d)
+# Snapshot PATH before any stubbing, for the containment guard at the end of this
+# section (24f) — a prefix assignment on a SHELL FUNCTION call (rev/commitpre are
+# functions, not external commands) persists in the shell after the call returns,
+# same defect class as the GIT_INDEX_FILE leak fixed in section 27. Every bare
+# (not already inside `$(...)`) `PATH=... rev` below must be run in a subshell.
+path_before_24="$PATH"
+reset_all
+printf '1' > "$floorf"        # floor is checked LAST; without this a faulted run
+                              # reports "below floor" and the test passes vacuously
+
+# 24a. every checksum tool fails silently (exit 0, no output)
+for t in shasum sha1sum cksum; do
+  printf '#!/bin/sh\nexit 0\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
+done
+( PATH="$stub_dir:$PATH" rev )
+out=$(PATH="$stub_dir:$PATH" commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' && pass "silent checksum -> not satisfied" || fail "silent checksum -> not satisfied"
+# Absence is asserted by inverting the RESULT, not with `grep -v` — `grep -qv` means
+# "some line lacks the pattern", which is a different question and was observed to
+# return 1 regardless on the dev machine.
+printf '%s' "$out" | grep -qF 'no mcp__codex__review has run' \
+  && fail "silent checksum -> not the never-run branch" \
+  || pass "silent checksum -> not the never-run branch"
+
+# 24b. a checksum that PRINTS a plausible token and then fails
+for t in shasum sha1sum cksum; do
+  printf '#!/bin/sh\nprintf "deadbeef  -\\n"\nexit 1\n' > "$stub_dir/$t"; chmod +x "$stub_dir/$t"
+done
+reset_all; printf '1' > "$floorf"
+( PATH="$stub_dir:$PATH" rev )
+out=$(PATH="$stub_dir:$PATH" commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "checksum prints then fails -> not satisfied"
+[ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "unhashable pass leaves freshCount 0" || fail "unhashable pass leaves freshCount 0"
+
+# 24b-bis. GAP 2 — a SECOND consecutive unhashable pass must not be treated as a
+# fresh-fingerprint match. Both fingerprints are the literal marker `unavailable`, and
+# the guard against that is `[ "$h" != unavailable ] && [ "$h" = "$prev" ]`; a single
+# unhashable pass can't distinguish it from the weaker `[ "$h" = "$prev" ]`, because
+# `prev` is still empty on the first pass either way. Only a second consecutive
+# unhashable pass gives `prev` the value `unavailable`, which is the only case where
+# the two conditions disagree.
+( PATH="$stub_dir:$PATH" rev )
+[ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "second consecutive unhashable pass still leaves freshCount 0" || fail "second consecutive unhashable pass still leaves freshCount 0"
+
+# 24c. seed-copy failure (stub cp) must fire, not silently hash an empty index
+printf '#!/bin/sh\nexit 1\n' > "$stub_dir/cp"; chmod +x "$stub_dir/cp"
+rm -f "$stub_dir/shasum" "$stub_dir/sha1sum" "$stub_dir/cksum"
+reset_all; printf '1' > "$floorf"
+( PATH="$stub_dir:$PATH" rev )
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "seed-copy failure -> not satisfied" || fail "seed-copy failure -> not satisfied"
+rm -f "$stub_dir/cp"
+
+# 24d. a selective git wrapper that fails ONLY `diff`
+cat > "$stub_dir/git" <<'STUB'
+#!/bin/sh
+for a in "$@"; do case "$a" in diff) exit 1 ;; esac; done
+exec "$REAL_GIT" "$@"
+STUB
+chmod +x "$stub_dir/git"
+REAL_GIT=$(command -v git); export REAL_GIT
+reset_all; printf '1' > "$floorf"
+( PATH="$stub_dir:$PATH" rev )
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "git diff failure -> not satisfied" || fail "git diff failure -> not satisfied"
+
+# 24e. a selective git wrapper that fails ONLY `rev-parse --absolute-git-dir`
+cat > "$stub_dir/git" <<'STUB'
+#!/bin/sh
+case "$*" in *"--absolute-git-dir"*) exit 1 ;; esac
+exec "$REAL_GIT" "$@"
+STUB
+chmod +x "$stub_dir/git"
+reset_all; printf '1' > "$floorf"
+( PATH="$stub_dir:$PATH" rev )
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
+  && pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"
+rm -f "$stub_dir/git"
+rm -rf "$stub_dir"   # GAP 3 — stub_dir (mktemp -d) outlives its own guard otherwise
+unset REAL_GIT       # GAP 3 — exported at 24d, never unset otherwise
+rm -f "$floorf"
+reset_all; rev; rev; rev
+
+# 24f. Guard: confirm section 24's PATH containment held, and that REAL_GIT (exported
+# at 24d for the selective git wrappers) was unset again. If a future edit
+# reintroduces either leak (e.g. drops a subshell above, or a new `export REAL_GIT`
+# without matching cleanup), this fails loudly instead of stale state silently
+# weakening isolation in every later section — the same "guard the variable you
+# happened to remember" gap this section's own comment warns about, closed for both
+# variables instead of just PATH.
+[ "$PATH" = "$path_before_24" ] && pass "PATH not leaked out of section 24" || fail "PATH not leaked out of section 24"
+[ -z "${REAL_GIT+x}" ] && pass "REAL_GIT unset after section 24" || fail "REAL_GIT unset after section 24"
+# ...and the stub directory itself. Guarding only the variables was the same partial
+# fix again: dropping `rm -rf "$stub_dir"` left every assertion green, so the suite
+# could leak a temp dir per run undetected. $work's EXIT trap does not cover it —
+# stub_dir is its own mktemp -d outside that tree.
+[ ! -d "$stub_dir" ] && pass "stub_dir removed after section 24" || fail "stub_dir removed after section 24"
+
+# 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
+#     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
+#     failed copy".
+unborn=$(mktemp -d)
+(
+  cd "$unborn" || exit 1
+  git init -q; git config user.email t@t; git config user.name t
+  mkdir -p .context; : > .context/codex-gate.on
+  printf '1' > .context/codex-gate.floor      # one pass is enough for this fixture
+  printf 'x\n' > a.ts
+  R='{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{}}'
+  printf '%s' "$R" | sh "$HOOK" >/dev/null
+  h1=$(cat .context/codex-gate.gateB 2>/dev/null)
+  printf '%s' "$R" | sh "$HOOK" >/dev/null
+  h2=$(cat .context/codex-gate.gateB 2>/dev/null)
+  [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ] || exit 1
+  # ...and the FIRST commit must actually be able to reach satisfied. Hashing and
+  # self-matching is not enough: a consumer-side regression could still STOP every
+  # first commit forever, which is the failure this fixture exists to catch.
+  out=$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --allow-empty -m init"}}' | sh "$HOOK")
+  printf '%s' "$out" | grep -q 'Gate B satisfied' || exit 1
+) && pass "unborn repo hashes, self-matches, and can reach satisfied" \
+  || fail "unborn repo hashes, self-matches, and can reach satisfied"
+rm -rf "$unborn"
+
+# 26. THE DEFECT (spec §1): staged content diverging from the worktree.
+#     NOTE: the revert is a direct byte write, NOT `git checkout -- app.ts` — checkout
+#     restores the worktree FROM THE INDEX, which would install v2 on disk and destroy
+#     the divergence, making this test pass against the unfixed hook.
+reset_all
+rev; rev; rev
+printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setup: satisfied on clean tree"
+printf 'v2\n' > app.ts; git add app.ts >/dev/null 2>&1   # index: v2
+printf 'v1\n' > app.ts                                   # worktree: back to HEAD bytes
+printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
+  && pass "staged-vs-worktree divergence -> NOT satisfied" \
+  || fail "staged-vs-worktree divergence -> NOT satisfied"
+git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
+
+# 27. Ambient alternate index. Three shapes: a negative-only test would be satisfied by
+#     an implementation that fires whenever GIT_INDEX_FILE is set — a permanent STOP.
+alt_dir=$(mktemp -d)
+# 27a. divergent: fingerprint recorded WITHOUT the alternate index, alternate enabled
+#      only for the commit check.
+reset_all; printf '1' > "$floorf"
+rev
+cp .git/index "$alt_dir/alt"
+printf 'SNEAKY\n' > app.ts; GIT_INDEX_FILE="$alt_dir/alt" git add app.ts >/dev/null 2>&1
+printf 'v1\n' > app.ts
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'not satisfied' \
+  && pass "ambient divergent alternate index -> NOT satisfied" \
+  || fail "ambient divergent alternate index -> NOT satisfied"
+# 27b. stable: same unchanged alternate index across review AND commit -> satisfied,
+#      with each index file byte-identical to its OWN pre-hook snapshot.
+cp .git/index "$alt_dir/default.before"; cp "$alt_dir/alt" "$alt_dir/alt.before"
+reset_all; printf '1' > "$floorf"
+# Subshell: a prefix assignment on a SHELL FUNCTION call (rev/commitpre are functions,
+# not external commands) persists in the shell after the call returns — unlike the same
+# prefix on an external command. Without containment, GIT_INDEX_FILE leaks out of
+# section 27 and corrupts every later section's fixtures (notably section 28).
+( GIT_INDEX_FILE="$alt_dir/alt" rev )
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B satisfied' \
+  && pass "ambient stable alternate index -> satisfied" \
+  || fail "ambient stable alternate index -> satisfied"
+cmp -s .git/index "$alt_dir/default.before" && pass "default index untouched" || fail "default index untouched"
+cmp -s "$alt_dir/alt" "$alt_dir/alt.before" && pass "alternate index untouched" || fail "alternate index untouched"
+# 27c. missing path: git treats a nonexistent GIT_INDEX_FILE as an EMPTY index, so the
+#      hook must hash and self-match rather than returning `unavailable`.
+reset_all; printf '1' > "$floorf"
+( GIT_INDEX_FILE="$alt_dir/does-not-exist" rev )
+h1=$(cat "$state" 2>/dev/null)
+( GIT_INDEX_FILE="$alt_dir/does-not-exist" rev )
+h2=$(cat "$state" 2>/dev/null)
+{ [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ]; } \
+  && pass "missing alternate index hashes and self-matches" \
+  || fail "missing alternate index hashes and self-matches"
+rm -rf "$alt_dir"; rm -f "$floorf"
+git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
+reset_all; rev; rev; rev
+
+# 27d. Guard: confirm section 27's containment held. If a future edit reintroduces the
+# leak (e.g. drops a subshell above), this fails loudly instead of section 28 quietly
+# going vacuous against a stale, since-deleted GIT_INDEX_FILE path.
+[ -z "${GIT_INDEX_FILE+x}" ] && pass "GIT_INDEX_FILE not leaked out of section 27" || fail "GIT_INDEX_FILE not leaked out of section 27"
+
+# 27e. FINDING 1 — a RELATIVE ambient GIT_INDEX_FILE must resolve against the
+#      repository TOP-LEVEL, exactly as git itself does — not against the hook's own
+#      cwd. The shell-side `[ ! -e ]` test and `cp` are plain shell commands (unlike
+#      every git call in the hook, which uses `-C "$repo_root"`), so an unnormalized
+#      relative path resolves differently depending on where the hook happens to run
+#      from. Run BOTH the review pass and the commit check from a SUBDIRECTORY with a
+#      relative alt index that actually lives at the repo root: an unnormalized hook
+#      can't find it either time, takes the same absent-index carve-out both times, and
+#      the two constant empty-tree hashes MATCH — a false "satisfied" even though the
+#      alt index stages content the worktree does not have.
+#      The alt index file lives under `.context/` — excluded from the diff-HEAD and
+#      worktree-tree components by their own `:(exclude).context` pathspec — so it is
+#      never picked up as an untracked file by `add -A` itself; the only way it can
+#      affect the hash is through eff_index resolution, which is exactly what this
+#      test needs to isolate.
+reset_all; printf '1' > "$floorf"
+mkdir -p sub
+cp .git/index "$work/.context/rel-idx"          # a copy of the CURRENT (matching) index
+( cd sub && GIT_INDEX_FILE=.context/rel-idx rev )   # review, from a subdir, relative alt index
+printf 'SNEAKY\n' > app.ts
+GIT_INDEX_FILE="$work/.context/rel-idx" git add app.ts >/dev/null 2>&1   # stage into the ALT index only
+printf 'v1\n' > app.ts                          # worktree stays at the reviewed bytes
+out=$(cd sub && GIT_INDEX_FILE=.context/rel-idx commitpre)
+printf '%s' "$out" | grep -q 'not satisfied' \
+  && pass "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)" \
+  || fail "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)"
+rm -f "$work/.context/rel-idx"; rm -rf sub
+git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
+reset_all; rev; rev; rev
+
+# 28. Tracked .context/ diverging THREE ways (index differs from both HEAD and worktree)
+#     is exactly the state where `git rm --cached` refuses without -f, silently (stderr
+#     is redirected). The hash must still be computable and self-match, and the user's
+#     real index must be untouched — the forced removal runs on the throwaway index only.
+git add -f .context >/dev/null 2>&1; git commit -qm "track .context" >/dev/null 2>&1
+printf 'staged\n' > .context/codex-gate.on; git add .context/codex-gate.on >/dev/null 2>&1
+printf 'worktree\n' > .context/codex-gate.on
+before_tree=$(git write-tree 2>/dev/null)
+before_blob=$(git rev-parse :.context/codex-gate.on 2>/dev/null)
+# Compare the index's ENTRIES, not its bytes. An earlier version of this test ran
+# `cmp` on .git/index and passed on macOS while failing on Linux CI: git rewrites the
+# index's stat cache during ordinary read-only operations, and the hook runs
+# `git diff HEAD`, so byte-identity is a property the hook neither guarantees nor
+# claims. `ls-files --stage` covers mode, object id, stage and path for EVERY entry,
+# which is the property actually asserted — the hook must not change what the user's
+# index means — and it is immune to benign stat-cache rewrites.
+before_stage=$(git ls-files --stage 2>/dev/null)
+reset_all
+rev; h1=$(cat "$state" 2>/dev/null)
+rev; h2=$(cat "$state" 2>/dev/null)
+{ [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ]; } \
+  && pass "three-way .context divergence hashes and self-matches" \
+  || fail "three-way .context divergence hashes and self-matches"
+[ "$(git write-tree 2>/dev/null)" = "$before_tree" ] && pass "real index tree unchanged" || fail "real index tree unchanged"
+[ "$(git rev-parse :.context/codex-gate.on 2>/dev/null)" = "$before_blob" ] && pass "staged .context blob unchanged" || fail "staged .context blob unchanged"
+[ "$(git ls-files --stage 2>/dev/null)" = "$before_stage" ] \
+  && pass "real index entries unchanged" || fail "real index entries unchanged"
+: > .context/codex-gate.on
+git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
+reset_all; rev; rev; rev
+
+# 29. Message contracts (spec §4). These are shipped prompts — the product itself, not
+#     incidental output — so each branch's COMPLETE additionalContext and systemMessage
+#     is pinned as a golden fixture and compared EXACTLY, replacing the old per-clause
+#     greps: a clause list only catches a regression someone thought to enumerate
+#     (inserting "do not " before an asserted clause, or "Usually" -> "Always", stayed
+#     green under it); an exact comparison catches any wording change. $passes, $floor
+#     and $fresh are pinned by the setup immediately before each assertion, so every
+#     fixture below is deterministic.
+json_field() { # $1 = json text, $2 = key -> prints the string value. No jq required —
+                # same fallback idiom as the hook's own field(): safe here because none
+                # of the three golden messages below contain a literal backslash or quote.
+  printf '%s' "$1" | grep -o "\"$2\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n1 | sed 's/^.*:[[:space:]]*"\(.*\)"$/\1/'
+}
+
+# 29a. STALE branch: 1 recorded pass this cycle, default floor 3, no CLAUDE.md (so the
+#      generic policy phrase), a change made through the Edit tool.
+# A `rev` baseline is required before the edit: without one, `reviewed` is empty and
+# the edit below lands in the EMPTY-STATE branch, not the STALE branch this fixture
+# describes (matches the existing pattern in section 3a).
+reset_all; rev
+printf 'edit\n' >> app.ts
+run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
+out=$(commitpre)
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw (1 recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per this project's review policy you MUST re-review after every fix."
+expected_msg="⚠ Codex Gate B not satisfied (cannot confirm review)"
+[ "$ctx" = "$expected_ctx" ] && pass "stale additionalContext matches exactly" || fail "stale additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "stale systemMessage matches exactly" || fail "stale systemMessage matches exactly"
+git checkout -- app.ts >/dev/null 2>&1
+
+# 29b. SATISFIED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook
+#      fingerprints disk; mcp__codex__review reads a git range (spec §7) — the exact
+#      fixture below is what pins that the message never claims Codex read the bytes.
+reset_all; rev; rev; rev
+out=$(commitpre)
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean — no new Blocker/Major."
+expected_msg="✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)"
+[ "$ctx" = "$expected_ctx" ] && pass "satisfied additionalContext matches exactly" || fail "satisfied additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "satisfied systemMessage matches exactly" || fail "satisfied systemMessage matches exactly"
+
+# 29c. EMPTY-STATE branch: no fingerprint recorded this cycle, default floor 3.
+reset_all
+out=$(commitpre)
+ctx=$(json_field "$out" additionalContext)
+msg=$(json_field "$out" systemMessage)
+expected_ctx="STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per this project's review policy you MUST reach a minimum of 3 passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass."
+expected_msg="⚠ Codex Gate B: no recorded review"
+[ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
+reset_all; rev; rev; rev
+
+# 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
+#     writes with `2>/dev/null || true` because the hook must always exit 0, so a pass can
+#     hash perfectly and still leave the old fingerprint behind. Three shapes, because
+#     they reach the branch by different routes.
+#     Each shape depends on chmod actually DENYING access, which is false under an
+#     effective root uid — a root-run CI job would take the success path and then fail the
+#     assertion, reporting a product defect that is really a privilege artefact. Probe the
+#     exact operation each shape needs, restore what the probe changed, and skip loudly.
+probe_denies() {   # $1 = probe command; returns 0 when the operation was DENIED
+  ( eval "$1" ) >/dev/null 2>&1 && return 1 || return 0
+}
+skip() { printf 'skip - %s\n' "$1"; }
+
+# 30a. replacement fails: the state file itself is read-only
+reset_all; rev
+before=$(cat "$state")
+chmod 0444 "$state" 2>/dev/null
+if probe_denies "printf x >> \"$state\""; then
+  printf 'later edit\n' >> app.ts
+  rev                                   # hashes fine, but cannot replace the fingerprint
+  [ "$(cat "$state")" = "$before" ] && pass "unwritable state file keeps the old fingerprint" || fail "unwritable state file keeps the old fingerprint"
+  printf '%s' "$(commitpre)" | grep -q 'cannot confirm' \
+    && pass "stale fingerprint after a failed store -> cannot confirm" \
+    || fail "stale fingerprint after a failed store -> cannot confirm"
+else
+  skip "unwritable state file (chmod does not deny writes here — running as root?)"
+fi
+chmod 0644 "$state" 2>/dev/null
+git checkout -- app.ts >/dev/null 2>&1
+
+# 30b. first write fails: no prior state, and the directory refuses a new file
+reset_all
+chmod 0555 .context 2>/dev/null
+if probe_denies "touch .context/probe-$$"; then
+  rev                                   # cannot create the state file at all
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
+    && pass "unwritable .context -> empty-state branch" || fail "unwritable .context -> empty-state branch"
+  printf '%s' "$out" | grep -qF 'could not be written or read back' \
+    && pass "empty-state branch admits a failed first write" || fail "empty-state branch admits a failed first write"
+else
+  skip "unwritable .context directory (chmod does not deny creation here — running as root?)"
+fi
+chmod 0755 .context 2>/dev/null; rm -f ".context/probe-$$"
+
+# 30c. read fails: the state file exists and is non-empty but cannot be read
+reset_all; rev
+chmod 0000 "$state" 2>/dev/null
+if probe_denies "cat \"$state\""; then
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'no fingerprint is recorded' \
+    && pass "unreadable state file -> empty-state branch" || fail "unreadable state file -> empty-state branch"
+  # invariant 1: advisory hook, always exit 0, even when its own state is unreadable.
+  # Checked with `if`, not `[ $? -eq 0 ]` — the latter is SC2181 and the test file
+  # excludes only SC2015, so it would fail lint.
+  if run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}' >/dev/null 2>&1; then
+    pass "unreadable state file -> hook still exits 0"
+  else
+    fail "unreadable state file -> hook still exits 0"
+  fi
+else
+  skip "unreadable state file (chmod does not deny reads here — running as root?)"
+fi
+chmod 0644 "$state" 2>/dev/null
+reset_all; rev; rev; rev
 
 echo "---"
 [ "$fails" -eq 0 ] && { echo "all passed"; exit 0; } || { echo "$fails failed"; exit 1; }

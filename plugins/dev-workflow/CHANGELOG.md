@@ -22,6 +22,32 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.5.0
+
+- **Gate-B fingerprint covers the index.** `git commit` commits the index, but both hash
+  components described the worktree, so staging a change and then reverting the file on
+  disk reported Gate B satisfied on content nobody reviewed. The fingerprint now includes
+  a tree id from the effective index (`GIT_INDEX_FILE` when set, else the git-dir index).
+- **Staging now invalidates a review.** `git add` of already-reviewed content changes the
+  index tree, so the fingerprint changes. The committed bytes are unchanged, making this
+  a false invalidation — accepted under the "loose in the firing direction" invariant, and
+  the reminder explains that staging alone can cause it. One clean pass clears it.
+- **Upgrading invalidates any in-flight review once.** The fingerprint's composition
+  changed, so a fingerprint recorded by 0.4.x cannot match one computed by 0.5.0. The
+  first Gate-B-applicable commit attempt after upgrading reports "cannot confirm" (a
+  `WIP:` commit or a docs-only commit bypasses the comparison); a single review pass
+  clears it. This is expected, not a bug.
+- **An uncomputable fingerprint now fails closed.** The failure value is a constant that
+  never matches — including against itself — replacing a `date`+PID nonce that could
+  collide under PID reuse and report satisfied.
+- **Reminder text no longer asserts causes it cannot know.** The stale reminder names the
+  state ("cannot confirm") rather than claiming the tree changed, and describes the causes
+  that can produce it; the satisfied reminder claims fingerprint equality rather than that
+  Codex read the bytes. The message-contract tests in `codex-gate.test.sh` section 29 are
+  what keep this true: they compare each branch's complete `additionalContext` and
+  `systemMessage` against a golden fixture, so any reworded or reversed clause fails the
+  suite rather than only the clauses someone thought to enumerate.
+
 ## 0.4.1
 
 - **A plugin change now requires a version bump**, checked in CI on every pull request

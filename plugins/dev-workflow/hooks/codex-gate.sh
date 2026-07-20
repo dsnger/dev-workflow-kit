@@ -3,12 +3,15 @@
 # Reads a Claude Code hook payload (JSON) on stdin, maintains Gate-A/Gate-B state,
 # and emits reminders.
 #
-# Gate B is verified by CONTENT, not by events: the state file holds a hash of the
-# working tree taken at review time, and the commit check recomputes it. An
-# event-based scheme (invalidate on Edit/Write) is blind to a file changed through
-# Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which would leave a
-# stale "reviewed" marker standing. A false ✓ is the dangerous direction, so the
-# hook compares what is actually on disk.
+# Gate B is verified by CONTENT, not by events: the state file holds a fingerprint of
+# the index and the working tree taken at review time, and the commit check
+# recomputes it. An event-based scheme (invalidate on Edit/Write) is blind to a file
+# changed through Bash — `sed -i`, `eslint --fix`, `git apply`, a codegen step — which
+# would leave a stale "reviewed" marker standing. A false ✓ is the dangerous
+# direction, so the hook compares three components at invocation time: `git diff HEAD`
+# for tracked content, a tree id for the effective index, and a tree id for the worktree.
+# That is a deliberate SUPERSET of any one commit's payload — a plain `git commit` carries
+# only the index — because firing on more than strictly necessary is the safe direction.
 set -u
 
 payload=$(cat)
@@ -102,7 +105,9 @@ policy=$(gate_citation) || policy="this project's review policy"
 # read Codex's findings (so it can't auto-detect the "zero-findings" early exit
 # — that judgment stays with the model per §5), but it CAN count passes and flag
 # when the floor isn't met. This is what backs Gate A, which has no content check
-# behind it (unlike Gate B, where the tree-hash proves what was reviewed).
+# behind it (unlike Gate B, which at least compares a content fingerprint — though
+# that proves the current fingerprint matches the recorded one, not that Codex read
+# those bytes).
 # Per-project override: .context/codex-gate.floor holding a positive integer.
 floor=3
 if [ -f "$floor_file" ]; then
@@ -147,29 +152,31 @@ fi
 read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0; fi; }
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
-# Hash of everything that could end up in a commit: the diff of tracked files
-# against HEAD (staged + unstaged) plus the untracked files' paths, contents and
-# modes, via a throwaway-index tree id (see below). `.context/` is
-# excluded because the hook writes its own state there — including it would make
-# the hash change every time the hook runs, so it could never match itself.
+# Fingerprint used for the Gate-B comparison, computed at hook invocation: the diff of
+# tracked files against HEAD (staged + unstaged), a tree id for the EFFECTIVE INDEX, and
+# a tree id for the WORKTREE's untracked paths, contents and modes, via a throwaway
+# index (see below). `.context/` is excluded because the hook writes its own state there —
+# including it would make the hash change every time the hook runs, so it could never
+# match itself.
 #
-# BOTH components must exclude it, and for different reasons. Untracked state is kept
-# out by the same `:(exclude)` pathspec on `add -A`. Tracked state needs it too:
-# `.context/` is committed in some projects — the adoption marker is meant to be
-# shared, so this is the normal case, not an exotic one — and a tracked state file
-# lands in `git diff HEAD`, where the hook's own write would invalidate the review it
-# just recorded and STOP every commit forever.
+# ALL THREE components must exclude it, and each does so a different way. The tracked
+# diff excludes it via a `:(exclude)` pathspec. The index tree excludes it by `git rm
+# --cached` against the throwaway index before that tree is written. The worktree tree
+# excludes it via the same `:(exclude)` pathspec on `add -A`. `.context/` is committed
+# in some projects — the adoption marker is meant to be shared, so this is the normal
+# case, not an exotic one — and a tracked state file left in would land in `git diff
+# HEAD`, where the hook's own write would invalidate the review it just recorded and
+# STOP every commit forever.
 #
-# Tracked CONTENT comes from `git diff HEAD`, which is staging-independent: it sees
-# staged and unstaged edits alike, so `git add` of an already-reviewed file does not
-# change the hash — status output would have flipped that file's column on staging
-# (` M` → `M `) and falsely invalidated a review of unchanged content.
+# Tracked CONTENT comes from `git diff HEAD`, which is staging-independent. The INDEX
+# tree is hashed separately, so `git add` of an already-reviewed file DOES invalidate:
+# decided at docs/superpowers/specs/2026-07-19-gate-b-index-tree-design.md §2. The
+# committed bytes are unchanged in that case, so it is a false invalidation — accepted
+# under invariant 2, and the STOP message says staging alone can cause it.
 #
-# KNOWN GAP (tracked in todos.md): both components describe the WORKTREE, so a tracked
-# file whose staged content differs from its worktree content — `git add` it, then
-# revert the file on disk — is committed from the index but hashed from disk, and reads
-# as unchanged. Closing it means hashing the index tree separately, which also makes a
-# bare `git add` invalidate a review; that trade needs its own change and tests.
+# The seed copy is correctness-critical, not just a speed optimisation: `write-tree` on
+# an empty index SUCCEEDS with the well-known empty tree, so a silently-failed copy would
+# make the index component a constant that matches itself.
 #
 # Untracked files contribute NAME AND CONTENT. Name alone is not enough: `git add f
 # && git commit` is one Bash call, so the hook is consulted while `f` is still
@@ -192,45 +199,85 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 # GIT_INDEX_FILE keeps this off the real index, so the user's staging area is
 # untouched. `add -A` respects .gitignore, so ignored files stay out.
 tree_hash() {
-  {
-    git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null
-    # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable
-    # name is a symlink target an attacker can plant, and the seed copy below would
-    # then write index data through it into a file we do not own.
-    tmp_dir=$(mktemp -d 2>/dev/null) || tmp_dir=''
-    if [ -n "$tmp_dir" ]; then
-      tmp_index="$tmp_dir/index"
-      # Seed from the real index so git's stat cache still applies and only genuinely
-      # changed files get re-hashed. Starting empty is correct but re-hashes the entire
-      # repo on every hook invocation, which on a large repo is the difference between
-      # imperceptible and unusable. Copy failure is fine — an absent seed just means a
-      # cold, slower, equally correct index.
-      # --absolute-git-dir, not --git-path: the latter answers relative to git's cwd
-      # ("​.git/index"), but the `cp` resolves against the SHELL's cwd — which is
-      # wherever the harness invoked the hook, not necessarily the repo root. From any
-      # subdirectory the copy then fails silently and every run falls back to a cold
-      # index, i.e. re-hashing the whole repo, which is exactly what seeding avoids.
-      cp "$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null)/index" "$tmp_index" 2>/dev/null || true
-      GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
-        -- . ':(exclude).context' >/dev/null 2>&1 &&
-        GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
-      tree_rc=$?
-      rm -rf "$tmp_dir"
-    else
-      tree_rc=1
+  ok=1
+  # Same fallback order as before; no checksum tool at all is itself a failure.
+  sum_cmd=$(command -v shasum || command -v sha1sum || command -v cksum) || ok=0
+  # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable name
+  # is a symlink target an attacker can plant.
+  tmp_dir=$(mktemp -d 2>/dev/null) || { tmp_dir=''; ok=0; }
+  if [ -n "$tmp_dir" ]; then
+    tmp_index="$tmp_dir/index"
+    # The component stream is BUFFERED and checksummed only on full success (below).
+    # Printing a failure marker in-stream would checksum the marker together with the
+    # partial output, so no consumer would ever see the literal `unavailable` and two
+    # failing runs could produce equal hashes — the false-✓ direction.
+    {
+      # (0) tracked content. `git diff HEAD` is staging-independent, so it sees staged
+      # and unstaged edits alike. An unborn branch is identified POSITIVELY: a bare
+      # "--verify failed" also covers a corrupt or unreadable HEAD, and emitting the
+      # constant `no-head` for those would self-match.
+      if git -C "$repo_root" rev-parse --verify -q HEAD >/dev/null 2>&1; then
+        git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null || ok=0
+      elif git -C "$repo_root" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        printf 'no-head\n'
+      else
+        ok=0
+      fi
+
+      # (1) INDEX tree and (2) WORKTREE tree, from one throwaway index.
+      # The index tree is taken BEFORE `add -A` brings the temp index up to the
+      # worktree, because `git commit` commits the index — that is the whole defect.
+      # `eff_index`, not `$git_dir/index`: git honours GIT_INDEX_FILE, and a missing
+      # alternate index is an EMPTY index to git, so the carve-out must follow the same
+      # path git will.
+      # A RELATIVE GIT_INDEX_FILE must then be normalized against $repo_root before the
+      # `[ ! -e ]` test and `cp` below: those are plain shell commands, resolved against
+      # the hook's OWN cwd — while every git call here uses `-C "$repo_root"`, and git
+      # itself resolves a relative GIT_INDEX_FILE against the repository TOP-LEVEL, not
+      # the caller's cwd. Left unnormalized, running the hook from a subdirectory with a
+      # relative ambient GIT_INDEX_FILE makes the shell half look in the wrong place,
+      # find nothing, and take the absent-index carve-out — hashing a CONSTANT empty tree
+      # while the real index has content (a false "satisfied", not a false STOP).
+      # $repo_root is already absolute (from `git rev-parse --show-toplevel`), so
+      # prefixing it is enough; an already-absolute eff_index (incl. the $git_dir/index
+      # default) is left as-is.
+      # `rm -rfq --cached`: without -f git refuses to remove a path whose staged content
+      # differs from both HEAD and the worktree — exactly the divergent state this story
+      # is about — and does so silently, since stderr is redirected. It runs against the
+      # THROWAWAY index; the user's real staging area is untouched.
+      if git_dir=$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null) &&
+         [ -n "$git_dir" ] &&
+         eff_index=${GIT_INDEX_FILE:-$git_dir/index} &&
+         case "$eff_index" in
+           /*) : ;;
+           *) eff_index="$repo_root/$eff_index" ;;
+         esac &&
+         { [ ! -e "$eff_index" ] || cp "$eff_index" "$tmp_index" 2>/dev/null; } &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" rm -rfq --cached \
+           --ignore-unmatch -- .context >/dev/null 2>&1 &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
+           -- . ':(exclude).context' >/dev/null 2>&1 &&
+         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
+      then :; else ok=0; fi
+    } > "$tmp_dir/stream" 2>/dev/null || ok=0
+  fi
+
+  h=''
+  if [ "$ok" -eq 1 ]; then
+    # The checksum's OWN status must be seen: `cmd < file | awk` reports awk's status,
+    # so a checksum failing after emitting a partial line would be stored as a real
+    # fingerprint. Parse with a shell expansion — `${raw%% *}` has no exit status to mask.
+    if raw=$("$sum_cmd" < "$tmp_dir/stream" 2>/dev/null); then
+      h=${raw%% *}
     fi
-    # If the tree could not be computed, emit a value that cannot match ANY stored
-    # hash, so the gate reads as unreviewed. Staying silent would drop the component
-    # and let an unwritable TMPDIR collapse the hash to a constant — a permanent
-    # false ✓, the one direction invariant 3 exists to prevent. Firing wrongly is the
-    # accepted cost (invariant 2).
-    [ "${tree_rc:-1}" -eq 0 ] || printf 'tree-unavailable-%s\n' "$(date +%s 2>/dev/null)$$"
-  } | {
-    if command -v shasum >/dev/null 2>&1; then shasum
-    elif command -v sha1sum >/dev/null 2>&1; then sha1sum
-    else cksum   # POSIX fallback: weaker, but present everywhere
-    fi
-  } 2>/dev/null | awk '{print $1}'
+  fi
+  if [ -n "${tmp_dir:-}" ]; then rm -rf "$tmp_dir" 2>/dev/null; fi
+  # A checksum that runs but emits nothing is a failure too, not an empty tree. The
+  # marker is a CONSTANT, not a nonce: `date +%s`+`$$` can repeat under PID reuse inside
+  # one second, and two colliding failures would compare equal and report satisfied.
+  # Never-matching is enforced at the comparison sites instead.
+  if [ -n "$h" ]; then printf '%s\n' "$h"; else printf 'unavailable\n'; fi
 }
 
 emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
@@ -317,11 +364,21 @@ case "$event" in
         mkdir -p "$state_dir" 2>/dev/null
         h=$(tree_hash)
         prev=$(cat "$state_file" 2>/dev/null || echo '')
-        # A pass covering the SAME tree as the previous pass adds to the fresh count;
-        # a pass on a changed tree starts the fresh count over. This is what lets the
-        # satisfied message say how many passes cover the code being committed,
-        # rather than how many happened at some point this cycle (Finding 9).
-        if [ "$h" = "$prev" ]; then bump_count "$fresh_file"; else { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true; fi
+        # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
+        # count; a pass on a changed fingerprint starts the count over. That is what lets
+        # the satisfied message report how many passes carry the CURRENT fingerprint,
+        # rather than how many happened at some point this cycle (Finding 9). It does not
+        # establish that Codex read those bytes — see the note at the satisfied branch.
+        # An unhashable pass carries no fingerprint, so it neither counts as a match with
+        # the last pass nor starts a fresh streak at 1 — two `unavailable` values are not
+        # a match.
+        if [ "$h" != unavailable ] && [ "$h" = "$prev" ]; then
+          bump_count "$fresh_file"
+        elif [ "$h" = unavailable ]; then
+          { printf '%s' 0 > "$fresh_file"; } 2>/dev/null || true
+        else
+          { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true
+        fi
         { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
         bump_count "$count_file"
         ;;
@@ -391,20 +448,38 @@ case "$event" in
             reviewed=$(cat "$state_file" 2>/dev/null || echo '')
             current=$(tree_hash)
             if [ -z "$reviewed" ]; then
-              # No count ratio here on purpose: nothing has been reviewed this cycle,
-              # so showing "N/3" would read as floor progress.
-              emit "STOP — Codex Gate B not satisfied: no mcp__codex__review has run this cycle, so the CURRENT code is unreviewed. Per $policy you MUST reach a minimum of $floor passes per cycle and re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B not run"
-            elif [ "$reviewed" != "$current" ]; then
-              # Content check, not event check: this fires for a change made through
-              # ANY tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
-              emit "STOP — Codex Gate B not satisfied: the working tree has CHANGED since the last mcp__codex__review, so the code you are about to commit is unreviewed (the $passes pass(es) this cycle covered the pre-change tree). Per $policy you MUST re-review after every fix. Run Gate B (mcp__codex__review) now, or proceed only if this change is trivial." "⚠ Codex Gate B stale (tree changed since review)"
+              # No count ratio here on purpose: no fingerprint is recorded for this
+              # cycle, so showing "N/3" would read as floor progress. `-z "$reviewed"`
+              # does not mean only "no pass this cycle": a FIRST write that fails (no
+              # prior fingerprint to fall back to), or a state file that cannot be read
+              # back, leaves it empty too. A failed REPLACEMENT write is different — it
+              # preserves the older, now-stale fingerprint, which reaches the STALE
+              # branch below, not this one. The message names the absent FINGERPRINT,
+              # not an absent review.
+              emit "STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass." "⚠ Codex Gate B: no recorded review"
+            # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
+            # must read as unverified, and two of them must not cancel out.
+            elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
+                 [ "$reviewed" != "$current" ]; then
+              # Content check, not event check: this fires for a change made through ANY
+              # tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
+              # It names the STATE, never a cause: five states reach here and the hook
+              # cannot tell them apart (spec §4). Do not "improve" this into asserting
+              # that the tree changed — under a repeated computation failure nothing
+              # changed, and under a failed state write the content may be exactly what
+              # was reviewed.
+              emit "STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B not satisfied (cannot confirm review)"
             elif [ "$passes" -lt "$floor" ]; then
               emit "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes — run more (the ONLY early exit is a pass that returned zero findings), or proceed only if this change is trivial." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
-              # made BEFORE later edits, which no longer cover the code being committed.
-              # Reporting only "$passes/$floor" would read as if all of them did.
-              emit "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT tree (unchanged since that review). The floor counts the cycle; only the fresh pass(es) actually reviewed what you are committing. Per $policy, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current code)"
+              # made BEFORE later edits, so they carry a different fingerprint.
+              # FINGERPRINT EQUALITY IS ALL THIS PROVES. The hook compares a hash of
+              # disk; mcp__codex__review reads a git range — so a match does NOT
+              # establish that Codex read these bytes (spec §7, and the review-range row
+              # in todos.md). The stronger phrasing was here and was removed; do not
+              # restore it as a clarity improvement.
+              emit "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current fingerprint)"
             fi
           fi
           fi

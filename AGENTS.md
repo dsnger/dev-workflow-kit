@@ -83,12 +83,20 @@ reader can judge whether it still holds.
 2. **Loose in the firing direction.** On uncertainty, fire. A missed commit (false ✓)
    is the dangerous direction; a redundant warning is the accepted price.
 3. **Gate-B validity is content-derived, never event-derived.** Invalidation compares a
-   hash of the working tree — `git diff HEAD` plus a tree id written from a throwaway
-   index, so untracked paths, contents and file modes all count, minus `.context/`. An
+   fingerprint of the effective index plus the included worktree content, as of the
+   hook's invocation — a deliberate superset of any one commit's payload, so the gate
+   errs toward firing: `git diff HEAD` for tracked content, a tree id written from the
+   **effective index** (`GIT_INDEX_FILE` when set, else the git-dir index), and a tree
+   id written from a throwaway index brought up to the worktree — so untracked paths,
+   contents and file modes all count, minus `.context/`.
+   The index component exists because `git commit` commits the index: without it, staging
+   a change and reverting the file on disk read as unchanged and reported satisfied. An
    event-derived check misses a file changed through Bash (`sed -i`, `git apply`,
    codegen) and leaves a stale ✓ standing; so does a name-only view of untracked files,
    or any hand-rolled walk that re-derives what `git write-tree` already gets right
-   (symlink targets, exotic path encodings, non-regular files).
+   (symlink targets, exotic path encodings, non-regular files). When the fingerprint
+   cannot be computed it is the literal `unavailable`, which never matches — including
+   against itself.
 4. **POSIX `sh`, and `jq` is optional.** No bash-isms; correct behaviour via fallback
    parsing when `jq` is absent. The hook runs on machines whose environment we do not
    control, and CI invokes it with `sh`. Enforced mechanically by the lint command
@@ -188,6 +196,21 @@ reader can judge whether it still holds.
   matches that word order, i.e. "convention-loaded" / "convention loading"; a sentence
   reading "loaded by convention" is caught by the `declare[sd]?` arm only when it also
   contains a form of *declare*, so read the hits rather than trusting the count.)
+- **Never describe what a gate proves without checking what it actually compares.**
+  Prose that overstates a mechanism is this repo's most persistent defect, and it
+  regenerates: fixing the index-tree story took four Gate-B rounds because *each
+  correction introduced a subtler version of the same claim* — "the tree-hash proves
+  what was reviewed", then "what is being committed is what was reviewed", then "what a
+  commit would actually carry", then "everything a commit could carry". Every round
+  searched for the previous **phrase**, so a synonym survived. Search for the **claim**:
+  `grep -rniE '(everything|anything|all content|any change)[^.]{0,80}\b(commit|fingerprint|hash)\b|\b(commit|fingerprint|hash)\b[^.]{0,80}(everything|anything|all content|any change)' --include='*.md' --include='*.sh' . | grep -vE 'source-files/|docs/superpowers/'`
+  (The `\b` boundaries matter: without them `commit` matches `committed` and the
+  recipe reports its own false positives.) Two things this does NOT do, stated so
+  nobody mistakes it for a guard: nothing runs it
+  in CI — it is a recipe a human runs — and an overclaim phrased without those totality
+  words escapes it entirely. It raises the floor; it does not close the class. The
+  underlying rule is the check itself: for every sentence about a gate, name the exact
+  comparison the code performs, and delete any part of the sentence that outruns it.
 - **Never rename or delete a doc section without grepping for references first.**
   `ci.yml` once pointed at a deleted README section; `MANIFEST.md` listed a `CLAUDE.md`
   that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is

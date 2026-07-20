@@ -42,9 +42,11 @@ skipping locally only postpones the red.
 **7. Gate B on the diff.** Claude makes a `WIP:`-prefixed commit (gives Codex a
 range to read; the hook knows WIP doesn't end the cycle), then loops
 `mcp__codex__review` the same way: three passes, final clean. Verification is by
-**content** — any file change after the last review, even from a formatter, flips
-it back to unsatisfied (staging alone doesn't; `git add` changes no content). On
-`✓ Codex Gate B satisfied (3/3 cycle, 3 on current code)`, the real commit replaces
+**content** — any change to included content present when the hook runs, even from a
+formatter, flips it back to unsatisfied; `.context/` and untracked ignored paths are
+excluded, and staging counts, because the fingerprint covers the index and that is what
+a commit carries. On
+`✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)`, the real commit replaces
 the WIP via `git commit --amend`.
 
 **8. PR and bots.** Open the PR as usual; once the bots have commented, run
