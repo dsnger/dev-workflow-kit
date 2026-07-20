@@ -24,6 +24,38 @@ driven by recurrence rather than by enthusiasm.
 
 ### Parked (trigger-gated)
 
+- [ ] **A failed Codex call counts as a pass — false ✓ in the firing direction.**
+      Derived while writing the 0.5.1 file-first protocol (PR #9), from a Gate-B finding
+      that corrected the opposite belief. The chain, each link checked against source
+      rather than inferred: the pinned `mcp-codex-dev@1.0.1` **catches** its own
+      exceptions — executor timeouts and aborts included — and *returns*
+      `{success: false, …}` as an ordinary result, without throwing and without setting
+      `isError` (`dist/tools/codex-review.js`, `codex-exec.js`). Claude Code therefore
+      classifies it as a **successful** tool call, so `PostToolUse` fires rather than
+      `PostToolUseFailure`. The hook's `PostToolUse` branch inspects nothing about the
+      result: for `$review_tool` it computes `tree_hash`, **stores that fingerprint**,
+      and bumps both counters; for `$exec_tool` it bumps `countA` unconditionally.
+      Consequence: three timed-out Gate-A calls satisfy the Gate-A floor, and one
+      timed-out Gate-B call stores a current-content fingerprint for a review that read
+      nothing — the satisfied message then reports a fresh pass covering exactly the
+      content nobody reviewed. This is a false ✓, the direction invariant 2 calls
+      dangerous, and unlike the counter-overstatement the 0.5.1 prompts document, **no
+      instruction discounts it**: the reader never sees a finding list to judge, because
+      the call died.
+      *Candidate fix, explicitly unverified:* skip the bump and the fingerprint store
+      when the result reports failure. The `PostToolUse` payload is documented to carry
+      `tool_response`, but **what it actually contains for an MCP tool on this server is
+      not established** — the hook has no `tool_response` reader at all today
+      (`input_field` parses only `.tool_input`), and the one place the hook reasons about
+      `tool_response` records that Bash's shape carries no exit status, which is why the
+      commit-reset deliberately ignores success. Verify the real payload for
+      `mcp__codex__*` before writing any matcher; a matcher built on an assumed shape
+      fails silently and in the same dangerous direction. Note also that failing closed
+      here is the *safe* direction for once — not counting a real pass costs a re-run,
+      while counting a dead one is the false ✓.
+      *Trigger: this session's discovery — already fired.* Deliberately not fixed in
+      PR #9, whose scope guard is prompts and templates only; this needs hook code and
+      regression tests.
 - [ ] **jq-free parser stops at an escaped JSON quote.** A payload containing
       `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
       wrong direction under invariant 2, and only on machines without `jq`. Needs
