@@ -187,7 +187,24 @@ backlog.
       repo copy) to the scaffolded prompt-standards template as well — one
       sentence of drift between repo copy and template, recorded here instead of
       forcing a plugin release for it (same reasoning as the PR #10 scope
-      decision).
+      decision). **Resolution vehicle: the upcoming canvas-findings hardening
+      round**, which touches `commands/workflow-init.md` for template changes and
+      carries a version bump regardless — the one-sentence sync rides there at no
+      extra release cost. Re-raised by CodeRabbit on PR #12 (Major) and kept
+      deferred there on the same reasoning; the scaffolded copy carries no false
+      claim, only one paragraph less.
+- [ ] **Prompt-standards conformance checker — resolves two `pending` ledger rows
+      (2026-07-25).** Extend `scripts/check-invariants.sh` (+ its regression suite,
+      mutation-verified) with the mechanical rung both classes have never reached:
+      every file asserting it follows `docs/prompt-standards.md` must carry a
+      `Target model:` line, and a prose count of the checklist must match the
+      number of items actually in it. **Resolution vehicle: the same upcoming
+      canvas-findings hardening round** — it fires full Gate B anyway on its
+      `commands/` paths, so the ~8-line checker plus tests land at proportionate
+      cost instead of turning a docs PR into a code PR. Resolve the two `pending`
+      rows by **appending** rung-2 rows referencing them (2026-07-25 `docs-drift`
+      and 2026-07-25 `unverified-enforcement-claim`) — never by editing the
+      pending rows. *Trigger: that round starting.*
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same
