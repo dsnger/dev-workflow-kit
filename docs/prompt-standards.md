@@ -6,6 +6,14 @@ commands (`plugins/dev-workflow/commands/`), the agent definitions
 (`plugins/dev-workflow/hooks/codex-gate.sh`), and every template `/workflow-init`
 writes are all prompt artifacts — they are the product, not documentation of it.
 
+**Ad-hoc task briefs are prompts too.** A brief handed to the coding agent for a
+single task — whether written by the human or by an upstream sparring chat
+(`docs/sparring-briefing.md`) — steers the same model with the same failure modes,
+and two field incidents came from briefs carrying unverified premises. Briefs are
+held to this checklist in spirit (success criteria, stop conditions, verified
+claims); nobody reviews them against all 12 items per brief, which is exactly why
+the checklist's habits have to live in how they are written.
+
 So this checklist is **this repo's own standard**, not only something it hands to
 other projects: when authoring or changing any of the above, it must pass the
 checklist below. `/workflow-init` scaffolds a copy of this file into each project it
