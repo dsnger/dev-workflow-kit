@@ -177,7 +177,17 @@ backlog.
 ## Tooling revalidation
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
       prompting pages on every model-generation change (new Claude model in Claude
-      Code, new Codex model for the gates).
+      Code, new Codex model for the gates). Include `docs/sparring-briefing.md` in
+      that pass — it is a prompt artifact for the upstream advisor chat, and a
+      model change on either side of it (sparring model or coding agent) can shift
+      what its conventions should say. Concretely pending: the switch of the
+      coding agent to the new Opus generation fires this row.
+- [ ] When `commands/workflow-init.md` is next touched for other reasons, add the
+      "ad-hoc task briefs are prompts too" paragraph (docs/prompt-standards.md,
+      repo copy) to the scaffolded prompt-standards template as well — one
+      sentence of drift between repo copy and template, recorded here instead of
+      forcing a plugin release for it (same reasoning as the PR #10 scope
+      decision).
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same
