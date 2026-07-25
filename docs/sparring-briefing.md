@@ -7,9 +7,10 @@ reports. This document exists because that layer's working knowledge otherwise
 lives only in chat history — and chat history does not survive a new session,
 a model change, or a different tool. Read time: five minutes; that is the point.
 
-Target model: any capable chat model (the role was developed with Claude as the
-sparring partner and Claude Code as the coding agent). This is a prompt artifact
-and follows `docs/prompt-standards.md`.
+Target model: Claude in a chat interface, upstream of Claude Code as the coding
+agent. This is a prompt artifact and follows `docs/prompt-standards.md`. The role
+itself is not Claude-specific — another capable chat model can fill it — but the
+wording here is written for Claude, per checklist item 1.
 
 ## The role, in one paragraph
 

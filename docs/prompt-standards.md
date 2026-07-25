@@ -11,7 +11,7 @@ single task — whether written by the human or by an upstream sparring chat
 (`docs/sparring-briefing.md`) — steers the same model with the same failure modes,
 and two field incidents came from briefs carrying unverified premises. Briefs are
 held to this checklist in spirit (success criteria, stop conditions, verified
-claims); nobody reviews them against all ten items per brief, which is exactly why
+claims); nobody reviews them against all 12 items per brief, which is exactly why
 the checklist's habits have to live in how they are written.
 
 So this checklist is **this repo's own standard**, not only something it hands to
