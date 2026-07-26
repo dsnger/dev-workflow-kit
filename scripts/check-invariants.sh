@@ -445,7 +445,13 @@ else
         tok = $0; sub(/.*all /, "", tok); sub(/[^0-9a-zA-Z].*/, "", tok)
         if (tok ~ /^[0-9]+$/) {
           if (tok !~ /^[1-9][0-9]*$/) { print $0 "  <- non-canonical number"; next }
-          if (tok != n) print $0 "  <- checklist has " n
+          # Same forced-string idiom as prompt_checklist_count above. n arrives via -v,
+          # which makes it a strnum, so a bare tok != n leans on awk type inference to
+          # stay a string compare. It does today on every awk tested, but the header
+          # credits this idiom precisely so overflow on a long digit run cannot depend
+          # on that inference. (No apostrophes in here: this program is inside a
+          # single-quoted shell string, and one terminated it.)
+          if (tok "" != n "") print $0 "  <- checklist has " n
         } else if (tok in val) {
           if (val[tok] != n + 0) print $0 "  <- checklist has " n
         }
