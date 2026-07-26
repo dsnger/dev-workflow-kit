@@ -22,6 +22,27 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.6.0
+
+- **Optional companion files beside a gate findings file.** The §5 protocol knew only
+  about the findings file, so dispositions and interrupted-cycle state lived in chat
+  history and died with the session. The scaffolded template now describes two advisory
+  companions: `<slot>-dispositions.md` (one line per finding: verdict + reason) and a
+  cycle-stable resume note — `gate-a-spec-resume.md`, `gate-a-plan-resume.md`,
+  `gate-b-resume.md`. Cycle-stable rather than pass-named, because a note keyed to the
+  interrupted pass is exactly the file a resuming agent will not look for once the counter
+  moves. Both are optional and non-validating: the findings file plus its terminator remain
+  the only hard requirement, and nothing enforces the companions. Field practice from
+  infinite-portfolio-canvas, which had invented 7 dispositions files and a Gate-A resume
+  note per-session before the protocol knew about them.
+- **The scaffolded prompt-standards template now covers ad-hoc task briefs.** A brief
+  handed to the coding agent for one task is a prompt with the same failure modes, held to
+  the checklist in spirit — success criteria, stop conditions, verified claims — while
+  nobody reviews a brief against all 12 items, which is why those habits must live in how
+  briefs are written. Deferred since 0.5.0 and deliberately **not** a verbatim copy of this
+  repo's paragraph: that one links a file `/workflow-init` never scaffolds and asserts this
+  repo's own incident count, so the template carries a downstream-neutral variant.
+
 ## 0.5.1
 
 - **Gate findings go to a file, not the MCP response.** Long finding lists came back cut

@@ -10,21 +10,79 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
-| CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. |
+| CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. **Its status check can pass while the comment says "Review rate limited" — see the completion-signal note: a green check does not prove the final head was reviewed.** |
 | Greptile | yes | **summary always; inline usually** | Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
 **Routing — these lists are authoritative.**
 
-- **Wait for (block on it):** CodeRabbit. It has a status check, so `gh pr checks`
-  going non-pending is proof it finished.
+- **Wait for (block on it):** CodeRabbit. It has a status check, so `gh pr checks` going
+  non-pending is proof the *check* finished — which is what you block on. That is **not**
+  the same as proof the final head was reviewed; verify that separately before merging
+  (below).
 - **Process opportunistically (never block):** Greptile. Read whatever it has posted
   when the CodeRabbit-gated pass begins, in both channels. If it posts later, handle it
   as a follow-up.
 - **Ignore:** Cursor Bugbot — disabled for this account, and it says so itself.
 
-**Completion signal, per bot.** CodeRabbit posts a status, so `gh pr checks` shows it
-and you can block on it.
+**Completion signal, per bot.** CodeRabbit posts a status, so `gh pr checks` shows it and
+you can block on it. **Two different things, and conflating them merges unreviewed heads.**
+
+- *The check stopped pending* — the blocking signal. Block on this.
+- *The final head was reviewed* — a separate verification. Observed on #12 and #13: the
+  check passed while the issue comment read "Review rate limited", and on #13 the only
+  CodeRabbit **review record** carried `commit_id` `eed589c` while the merged head was
+  `92de0d2`. The head that merged was never reviewed, and the green check said nothing
+  about it.
+
+Verify the second before merging — a deterministic boolean, so it can gate rather than be
+eyeballed:
+
+```sh
+head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
+gh api --paginate repos/<owner>/<repo>/pulls/<n>/reviews | jq -s "
+  [ .[][]
+    | select(.user.login==\"coderabbitai[bot]\")
+    | select(.commit_id==\"$head\")
+    | select((.body // \"\") | test(\"rate limit\"; \"i\") | not)
+    | select(.state==\"COMMENTED\" or .state==\"APPROVED\" or .state==\"CHANGES_REQUESTED\")
+  ] | length" | grep -qv '^0$'
+```
+
+**`--slurp` cannot be used here, and an earlier draft of this file said it could.**
+`gh api --slurp` is rejected outright when combined with `--jq`
+("the `--slurp` option is not supported with `--jq` or `--template`"), so that command
+failed with a usage error rather than returning a boolean. Pipe the paginated raw pages
+to `jq -s` instead — `--paginate` emits one JSON array per page, `-s` wraps them, which is
+why the filter iterates `.[][]`. **Verified against #13, and the two stages report differently — say which you mean:** the
+`jq` stage prints the count, `0` for the merged head `92de0d2` and `1` for `eed589c`, the
+commit actually reviewed; the full pipeline prints nothing and communicates through its
+**exit status**, `1` for the merged head and `0` for the reviewed commit. That inversion
+is deliberate — exit 0 means "a qualifying review exists", so the pipeline can gate a
+merge directly. Documenting
+the unrun form broke this repo's own rule against documenting a command nobody ran.
+
+**Four observations now, and the fourth is the one that mattered.** #12 and #13 both
+*merged* heads that were never reviewed — the miss was only found afterwards. On **#14**
+the check said `pass` while the comment said "Review rate limited", and this query
+returned `0` for head `787dd9a` **before** the merge: the re-trigger produced nothing, and
+the PR merged on an explicit human decision with the exception recorded, the unreviewed
+delta being a one-word prose correction the reviewer had itself requested. That is the
+intended shape — the check is a signal you block on, this query is what tells you whether
+a review actually happened, and when they disagree a human decides.
+
+`--paginate` matters: without it only page one is read, so a qualifying review can sit on
+page two and be read as absent. `jq -s` is what slurps the pages — `gh api --slurp` cannot
+do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
+a review of that head. If no qualifying record exists, re-trigger once; if it is still
+absent, **merge only on an explicit human decision**, recording that the head went
+unreviewed.
+
+What was actually measured, stated exactly: the rate-limit warning appeared in the **issue
+comment**, while the review record was an earlier completed review of an earlier commit.
+So the demonstrated failure is a *missing* review for the final head — which the
+`commit_id` comparison catches. No rate-limited *review record* has been observed; the
+body filter is bounded defensive filtering, not a check against something seen.
 
 **Greptile has no signal you can block on**, across four PRs: `gh pr checks` displayed a
 "Greptile Review" entry for #4 and #5, while the check-runs and statuses APIs return no
