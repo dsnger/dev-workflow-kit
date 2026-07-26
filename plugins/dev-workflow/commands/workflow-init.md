@@ -299,6 +299,25 @@ the delete. Run one pass at a time: the slot name has no invocation-unique compo
 two concurrent calls on one slot race. Passes are sequential by construction, so that is
 a stated limitation, not a guarded one.
 
+**Optional companions, from field practice.** Two files may sit beside a findings file.
+Both are advisory human notes: neither is ever the findings file, neither participates in
+pass validation, and either may be deleted or rebuilt. The findings file plus its
+terminator remain the only hard requirement, and a zero-finding pass needs no companion.
+
+- `<slot>-dispositions.md` — one line per finding: verdict + reason. It makes a dismissal
+  durable, so "we looked at that and why" outlives the session rather than the chat.
+- a **cycle-stable** resume note when a cycle is interrupted — `gate-a-spec-resume.md`,
+  `gate-a-plan-resume.md`, `gate-b-resume.md`. Cycle-stable, not pass-named: a note keyed
+  to the interrupted pass number is exactly the file a resuming agent will not look for
+  once the counter moves or an incomplete pass is discounted. Gate A runs separate spec
+  and plan loops, so those are two cycles; Gate B is one cycle with one note even under
+  `reviewType: full`, because the per-branch findings files race only since Codex's two
+  reviewers write them — the resume note is written by the outer agent, sequentially, and
+  splitting it would create two records able to disagree about one shared recovery budget.
+  Whoever runs the cycle writes it when useful, replaces it as the cycle moves, and
+  deletes it once the cycle closes. Nothing depends on it existing.
+
+
 **Accept a pass only when** the file exists and is readable; its last line is exactly
 `END OF FINDINGS (<n> total)`; it contains exactly `<n>` finding lines *and nothing
 else* (or the single line `NO FINDINGS` when `<n>` is 0 — "n valid lines somewhere in
@@ -520,6 +539,12 @@ Skills, gate prompts (CLAUDE.md §5), hook messages, slash commands, agent defin
 (`.claude/agents/` or `plugins/*/agents/`, if this project has any), and spec/plan
 templates are prompts. When authoring or changing one, it must pass the checklist below —
 Gate A reviews prompt specs against these criteria via AGENTS.md.
+
+**Ad-hoc task briefs are prompts too.** A brief handed to the coding agent for a single
+task steers the same model with the same failure modes as anything above. Briefs are held
+to this checklist **in spirit** — success criteria, stop conditions, verified claims —
+but nobody reviews a brief against all 12 items, which is exactly why those habits have
+to live in how briefs are written rather than in a review step.
 
 Living references (consult, don't copy — copies go stale):
 

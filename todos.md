@@ -134,9 +134,11 @@ backlog.
 - [ ] **P2 + P6 — risk/security profiles, and security sections in the intake, spec and
       gate templates.** One story: the profile is what the sections key off, so shipping
       the sections without it just adds a heading nobody knows how to fill in.
-      *Trigger: the first real intake in a product project* — the first time a story
-      exists whose risk profile is a real answer rather than a guess about what product
-      projects might need.
+      *Trigger: the first real intake in a product project* — **FIRED.**
+      Calibration point (infinite-portfolio-canvas, 2026-07-26): 51 Gate-A pass files
+      across 2 stories — spec 14, plan 14, replan 4, amend 12, a3-spec 7 — in a product
+      project on a long-lived branch. That is a real risk profile to key sections off,
+      not a guess about what product projects might need.
 - [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** Identifiers
       that survive from story to plan to review, so an acceptance criterion can be cited
       instead of re-described. *Trigger: rides with P2* — the IDs exist to label what P2's
@@ -182,17 +184,12 @@ backlog.
       model change on either side of it (sparring model or coding agent) can shift
       what its conventions should say. Concretely pending: the switch of the
       coding agent to the new Opus generation fires this row.
-- [ ] When `commands/workflow-init.md` is next touched for other reasons, add the
-      "ad-hoc task briefs are prompts too" paragraph (docs/prompt-standards.md,
-      repo copy) to the scaffolded prompt-standards template as well — one
-      sentence of drift between repo copy and template, recorded here instead of
-      forcing a plugin release for it (same reasoning as the PR #10 scope
-      decision). **Resolution vehicle: the upcoming canvas-findings hardening
-      round**, which touches `commands/workflow-init.md` for template changes and
-      carries a version bump regardless — the one-sentence sync rides there at no
-      extra release cost. Re-raised by CodeRabbit on PR #12 (Major) and kept
-      deferred there on the same reasoning; the scaffolded copy carries no false
-      claim, only one paragraph less.
+- [x] **Ad-hoc-brief paragraph synced into the scaffolded template.** Done in the
+      canvas-findings round's PR 2, the vehicle this row named. Not the verbatim repo
+      paragraph, which turned out to be unportable: it links `docs/sparring-briefing.md`
+      (never scaffolded) and asserts this repo's own incident count. The template carries
+      a downstream-neutral variant preserving both halves of the principle — briefs carry
+      the checklist's habits, and nobody reviews a brief against all 12 items.
 - [x] **Prompt-standards conformance checker — resolved the two `pending` ledger rows
       (2026-07-25).** Landed as checks 4a and 4b in `scripts/check-invariants.sh`, with
       fixtures in its regression suite, in the canvas-findings round's **PR 1**. (No
@@ -210,6 +207,43 @@ backlog.
       editable prose should reword instead.) And the
       ledger itself had to be **excluded** from both checks, because a ledger that
       quotes defects self-rejects the checks that detect them.
+- [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
+      installed plugin.** Split out of the canvas-findings round after two Gate-A passes
+      showed it is a design, not a sentence. Spec questions: a semantic §5 locator
+      (`/workflow-init` may append the section renumbered, so "no §5 heading" can misread
+      a valid section and append a duplicate); per-state merge semantics (invariant 9
+      forbids a silent overwrite, and "re-run init to sync" promises what the command
+      cannot give); stamp cardinality (absent, duplicate, malformed); and a binding real
+      on **every** push path — the version-bump coupling first proposed was false, since
+      invariant 12's checker is `pull_request`-only. A stamp is a **wire format**:
+      shipping a provisional one writes legacy into every scaffolded file. *The one
+      known-stale instance (canvas) is being re-synced by hand, so this carries no
+      schedule pressure.* *Trigger: the next round that touches the §5 template.*
+- [ ] **`harden-finding`'s recurrence rule is scope-blind.** Rungs guard *scopes*; the
+      skill compares only *fingerprints*; a ledger-prose workaround is unenforceable
+      because agents follow the skill, not the row. Sketched fix — before proposing
+      escalation on a same-fingerprint recurrence, read the prior row's stated guard:
+      **outside** it the prior mechanism never claimed that shape, so its rung did not
+      fail — pick the fitting rung, do **not** escalate; **inside** it, the mechanism was
+      meant to catch this and did not, so that is a regression to repair or strengthen.
+      (An earlier draft had those branches inverted, which would have entrenched the bug
+      it was filed against; Gate A caught it.) *Trigger: the first human rejection of an
+      over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
+- [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
+      open PRs.** The only mandated ledger check lives in `process-pr-review` step 4, so a
+      no-PR project never reaches it: canvas has 51 Gate-A pass files and **0** ledger
+      rows. Cut from the canvas-findings round after drawing a Major on all five Gate-A
+      passes; those findings are the story's opening evidence rather than a blank page:
+      it cannot rest on same-session memory, because a compaction, interruption or handoff
+      loses the fixed-finding set and **nothing detects the loss**; its scope must match
+      `process-pr-review` step 5 *exactly* — check every accepted actionable fixed
+      finding, but invoke `harden-finding` only when a class matches or a new one is
+      clearly warranted, which every approximating draft got wrong; and a durable handoff
+      needs real design (identity, dedup, consumption semantics), which is why it was
+      refused as a mid-round addition. It mints
+      `mandatory-step-anchored-to-optional-path` when it lands — minting it earlier would
+      leave a class no row uses. *Trigger: the next round that touches §5, or a project
+      reporting an empty ledger across cycles that fixed findings.*
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same

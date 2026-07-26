@@ -72,6 +72,16 @@ the synonyms a future reader might search for instead.
   (Defined here retroactively: the 2026-07-20 ledger row used this class before any
   definition existed. Recorded now so the recurrence grep has something to land on.)
 
+- `session-bound-context-not-durable` — reasoning that has to outlive a session is left in
+  chat history, so it is gone at the next session, model change or tool switch. Aliases:
+  lost rationale, why-did-we-dismiss-that, undocumented decision, no resume state,
+  context died with the session, "it was in the chat".
+
+  **Not `docs-drift`.** Drift is two artifacts *disagreeing*; this is one artifact never
+  existing. The fix differs too: drift is repaired by updating whichever is stale, this by
+  writing the thing down at all. Also not `truncated-tool-output-read-as-complete` —
+  nothing here is truncated or misread as complete; the content was simply never durable.
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project
