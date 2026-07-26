@@ -50,8 +50,12 @@ knowing what each item risks.
 - [ ] Whatever the profile changes about CLAUDE.md §5, the 3-pass floor included,
       changes in both the `/workflow-init` template and this repo's own CLAUDE.md in the
       same commit.
-- [ ] `todos.md` reflects what shipped: P2+P6 closed, P5 light's trigger re-pointed at
-      "the first story that runs under profiles".
+- [ ] `todos.md` reflects what shipped: the P2+P6 row is **split** — the profile and lens
+      work closes, while P6's promised "security sections in the intake, spec and gate
+      templates" is recorded as deliberately rejected with its reason — and P5 light's
+      trigger is re-pointed at "the first story that runs under profiles".
+      *(Amended 2026-07-26 during Gate A, spec pass 6: the original criterion said "P2+P6
+      closed", which would claim scope that was deliberately not built.)*
 - [ ] Scope holds: nothing under `plugins/dev-workflow/hooks/` changes, and no new
       script is added.
 
