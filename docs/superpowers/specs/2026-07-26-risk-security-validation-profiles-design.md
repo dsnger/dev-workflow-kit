@@ -287,10 +287,19 @@ they need different answers:
    case, and stopping on them would halt in-flight work that D2 promises not to disturb.
 2. The cited story exists and has **no profile line** → same: a pre-profile story gets
    today's behaviour.
-3. A profile is **present but unresolvable** — unparseable line, a value outside the
-   enums, two profile blocks, a citation that resolves to nothing → stop and surface the
-   cause. Falling back to the lighter behaviour on a *malformed* profile would
-   under-review exactly the stories most likely to have one.
+3. A profile is **present but unresolvable** → stop and surface the cause. That covers
+   the syntactic failures — unparseable line, a value outside the enums, two profile
+   blocks, a citation that resolves to nothing — **and the semantic ones**: a
+   `**Validation:**` value that disagrees with `max(risk, security)`, or a
+   `+abuse-path` suffix present without security `high` or absent with it, unless the
+   profile log explains it — and only the **latest `mode override` recorded after the
+   latest `axis change`**, moving in a direction compatible with the current value, can:
+   an axis change voids every prior override (§4), so an older one resolves nothing.
+   A well-formed value
+   can still be the wrong value, and a stale mode steers weaker evidence while looking
+   entirely valid. Recomputing it is a profile change like any other: proposed, human
+   confirmed, logged. Falling back to the lighter behaviour on a *malformed* profile
+   would under-review exactly the stories most likely to have one.
 
 **"Today's behaviour" means today's**, including the judgement-based Gate-B trivial skip
 §5 already permits. Unprofiled stories get neither the lens sets nor the effective-level
