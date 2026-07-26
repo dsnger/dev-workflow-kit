@@ -230,7 +230,7 @@ backlog.
       it was filed against; Gate A caught it.) *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
-      open PRs.** The only mandated ledger check lives in `process-pr-review` step 4, so a
+      open PRs.** The only mandated ledger check lives in `process-pr-review` step 5, so a
       no-PR project never reaches it: canvas has 51 Gate-A pass files and **0** ledger
       rows. Cut from the canvas-findings round after drawing a Major on all five Gate-A
       passes; those findings are the story's opening evidence rather than a blank page:
