@@ -34,7 +34,7 @@ todos.md                          # backlog; `pending` ledger rows point here by
 .mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json
 .github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
-scripts/check-invariants.sh       # invariants 5 and 6, mechanically (rung 2)
+scripts/check-invariants.sh       # invariants 5, 6 + prompt conformance (rung 2)
 scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
 scripts/check-version-bump.sh     # invariant 12, mechanically — PR-only (rung 2)
 scripts/check-version-bump.test.sh # its regression suite — policy/operational/accept
@@ -167,8 +167,12 @@ reader can judge whether it still holds.
     `docs/hardening-taxonomy.md`, never into the `harden-finding` skill. Otherwise one
     project leaks into every other.
 11. **Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for
-    any skill, command, agent definition, hook message, or scaffolded template. The prompts are the
-    product and nothing mechanical checks them.
+    any skill, command, agent definition, hook message, or scaffolded template. The
+    prompts are the product, and **no comprehensive mechanical checker exists for them**:
+    review is the gate. Two narrow checks in `scripts/check-invariants.sh` cover one
+    spelling each — a `Target model:` line naming exactly one recognized model in files
+    claiming conformance, and a prose checklist-count claim matching the checklist — and
+    they are a floor, not coverage. Every other item is judged by a reader.
 
 ## Don'ts
 
@@ -231,7 +235,7 @@ Every command below was run in this session and observed to exit 0.
 | typecheck | n/a — no typed sources (shell + markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh` |
 | test | `sh plugins/dev-workflow/hooks/codex-gate.test.sh` |
-| invariant checks (5 pinning, 6 manifest) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
 

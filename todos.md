@@ -193,18 +193,23 @@ backlog.
       extra release cost. Re-raised by CodeRabbit on PR #12 (Major) and kept
       deferred there on the same reasoning; the scaffolded copy carries no false
       claim, only one paragraph less.
-- [ ] **Prompt-standards conformance checker — resolves two `pending` ledger rows
-      (2026-07-25).** Extend `scripts/check-invariants.sh` (+ its regression suite,
-      mutation-verified) with the mechanical rung both classes have never reached:
-      every file asserting it follows `docs/prompt-standards.md` must carry a
-      `Target model:` line, and a prose count of the checklist must match the
-      number of items actually in it. **Resolution vehicle: the same upcoming
-      canvas-findings hardening round** — it fires full Gate B anyway on its
-      `commands/` paths, so the ~8-line checker plus tests land at proportionate
-      cost instead of turning a docs PR into a code PR. Resolve the two `pending`
-      rows by **appending** rung-2 rows referencing them (2026-07-25 `docs-drift`
-      and 2026-07-25 `unverified-enforcement-claim`) — never by editing the
-      pending rows. *Trigger: that round starting.*
+- [x] **Prompt-standards conformance checker — resolved the two `pending` ledger rows
+      (2026-07-25).** Landed as checks 4a and 4b in `scripts/check-invariants.sh`, with
+      fixtures in its regression suite, in the canvas-findings round's **PR 1**. (No
+      fixture count is quoted here on purpose: an earlier draft said "42", the Gate-B
+      fixes took it past that, and a hard-coded total at a doc site describing this
+      checker is the very drift class the checker exists for.) Both `pending`
+      rows were resolved by appending rung-2 rows dated 2026-07-26, never edited. Each
+      new row states the exact spelling its check guards and what stays
+      instruction-backed. Two things turned out differently than this entry assumed:
+      word forms had to be in scope, because the motivating `docs-drift` occurrence
+      spelled its count as a **word** rather than a digit, and a digit-only check would
+      have missed it entirely. (The exact phrase is deliberately not quoted here: check
+      4b reads a live count claim in any scanned `*.md`, and it caught this very entry
+      when it was first written. The ledger may quote it because the ledger is excluded;
+      editable prose should reword instead.) And the
+      ledger itself had to be **excluded** from both checks, because a ledger that
+      quotes defects self-rejects the checks that detect them.
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same

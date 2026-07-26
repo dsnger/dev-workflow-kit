@@ -73,14 +73,15 @@ jobs:
       - name: Hook state-machine tests
         run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
 
-      # Invariants 5 and 6 mechanically, plus BOTH checkers' regression suites. The
+      # Invariants 5 and 6 plus two prompt-conformance checks, mechanically, and BOTH
+      # checkers' regression suites. The
       # invariant-12 checker itself is not here — it needs a PR base and runs in the
       # step below, so naming this step "version bump" would show a green version-bump
       # label on a push that was never version-bump checked.
       # Each rule was prose first and each was violated anyway — a floating action ref
       # shipped in this very workflow, a duplicate hooks manifest key stopped the plugin
       # loading in 0.2.1, and the plugin shipped changes without a bump twice.
-      - name: Invariant checks (pinning, manifest) + both checker suites
+      - name: Invariant checks (pinning, manifest, prompt conformance) + both checker suites
         run: |
           sh scripts/check-invariants.test.sh
           sh scripts/check-invariants.sh

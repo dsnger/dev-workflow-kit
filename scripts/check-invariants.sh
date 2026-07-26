@@ -1,7 +1,7 @@
 #!/bin/sh
 # Mechanical checks for the AGENTS.md invariants that a tool can decide.
 #
-# Both checks exist because prose alone did not hold. Invariant 5 was written down
+# These checks exist because prose alone did not hold. Invariant 5 was written down
 # and this repo's own CI still shipped `actions/checkout@v4` and `ubuntu-latest`;
 # invariant 6 was believed to say the opposite of what it says, and the resulting
 # duplicate-hooks manifest key stopped the plugin loading entirely (0.2.1). A rule a
@@ -20,6 +20,37 @@
 # checker — it raises the floor, it is not a proof.
 #
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
+#
+# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The two prompt-conformance
+# checks below are bracketed by `# --- BEGIN check 4a ---` / `# --- END check 4a ---`
+# markers so a scratch copy can be neutered cleanly:
+#
+#   TMP=$(mktemp -d) || exit 1
+#   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
+#   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
+#   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
+#   sed '/BEGIN check 4a/,/END check 4a/d' scripts/check-invariants.sh \
+#     > "$TMP/repo/scripts/check-invariants.sh"
+#   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
+#   ( cd "$TMP/repo" && sh scripts/check-invariants.test.sh ) > "$TMP/after" 2>&1; mut=$?
+#   [ "$base" -eq 0 ] || { echo "VOID: baseline not green" >&2; exit 1; }
+#   [ "$mut" -ne 0 ]  || { echo "VOID: check is not load-bearing" >&2; exit 1; }
+#   diff "$TMP/before" "$TMP/after" | grep '^> FAIL' | sed 's/^> FAIL - //; s/ (.*)$//' \
+#     > "$TMP/flipped"
+#   [ -s "$TMP/flipped" ] || { echo "VOID: nothing flipped" >&2; exit 1; }
+#   cat "$TMP/flipped"
+#
+# Each validity check EXITS rather than warning: a check that prints and continues lets
+# a red baseline, a passing mutant or an empty flip set be recorded as evidence, which
+# is the failure this procedure exists to prevent.
+#
+# The script's checks establish only that the baseline was green, the mutant failed, and
+# something flipped. They do NOT establish the mutant failed for the right reason — a
+# syntax error in the neutered copy would also flip cases. Comparing the flipped set
+# against the fixture list, and confirming no accept case moved, is a HUMAN step and is
+# mandatory. The recorded result lives in check-invariants.test.sh; re-run and update it
+# when changing either marked check, its markers, its fixtures or assertion names, or
+# the harness.
 set -u
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -226,6 +257,212 @@ for manifest in plugins/*/.claude-plugin/plugin.json; do
   [ -n "$bad_keys" ] &&
     fail "Invariant 6: $manifest re-declares a convention-loaded component." "$bad_keys"
 done
+
+# Scan domain for the two prompt-conformance checks below: Markdown only, because both
+# rules are about prompt text. The wider yml/json/toml domain used by invariant 5 is
+# deliberately NOT reused — a `Target model:` line in a JSON fixture is not a prompt
+# claim. `grep -r` does not follow symlinks (`-R` would), which is the intended form.
+#
+# Exclusions, each for its own reason. Anchored `($|:)` at the end, NOT `$`: the file
+# scan emits bare paths while the claim scan emits `path:line:match`, and a `$`-anchored
+# pattern silently matches nothing in the second form — an exclusion that looks applied
+# and is not.
+#   source-files/      frozen extraction archive, never edited (MANIFEST.md)
+#   docs/superpowers/  historical artifacts; its plans legitimately say "all 11 checklist
+#                      items", so excluding it is load-bearing, not tidy
+#   .context/          generated Gate A/B review artifacts; the quality command must not
+#                      depend on ephemeral review wording
+#   hardening-log.md   the ledger QUOTES defects, so a row describing either defect below
+#                      trips the very check that row records. It carries both a quoted
+#                      assertion phrase and the historical `all ten items`.
+# No .sh exclusion is needed: `--include='*.md'` already puts this script and its suite
+# out of scope.
+PROMPT_EXCL='(^|/)source-files/|(^|/)docs/superpowers/|(^|/)\.context/|(^|/)hardening-log\.md($|:)'
+
+# --- BEGIN check 4a ---
+# A file asserting it follows docs/prompt-standards.md must name exactly one executing
+# model. Prose alone did not hold: a doc shipped claiming conformance while giving its
+# target model as "any capable chat model", which names no model at all.
+#
+# WHAT THIS CATCHES, exactly — the rest of the class stays instruction-backed:
+# the missing/duplicated/unnamed/multi-model spellings of the `Target model:` line, in
+# files carrying the tested assertion spelling `prompt artifact and follows`. A bare
+# `Target model: Claude` naming no execution surface PASSES, as does any value whose
+# prose is wrong in a way no token test can see.
+#
+# Two independent rules, and neither subsumes the other: the value must BEGIN with a
+# recognized token (a token merely present accepts "any capable chat model (… developed
+# with Claude …)", which is the exact defect this exists for), and it must contain
+# exactly one DISTINCT recognized token (which rejects "Claude or Codex" without needing
+# a separator grammar).
+# The offenders are COLLECTED and reported once, matching this file's existing idiom
+# (`bad_npx`, `bad_keys`). Calling `fail` inside the loop would not work: a `while read`
+# fed by a pipeline runs in a subshell, so the `rc=1` it sets is discarded and the
+# checker would print every violation and still exit 0.
+# The scan's status is captured BEFORE filtering. `grep` exits 0 on a match and 1 on no
+# match, but >=2 on a real error (unreadable path, I/O failure, bad option). Piping
+# straight into the filter would report the FILTER's status and turn any traversal
+# failure into an empty offender set — the checker would print success without having
+# looked, which is the fail-open direction invariant 2 forbids.
+model_scan=$(grep -rl 'prompt artifact and follows' --include='*.md' . 2>/dev/null)
+model_scan_st=$?
+[ "$model_scan_st" -le 1 ] ||
+  fail "Prompt standards: the 4a scan failed; results are not trustworthy." \
+       "grep exited $model_scan_st"
+# The FILTER gets its own status check too. Capturing only the scan's status closed
+# traversal errors but left the next stage open: a `grep -vE` failure also yields an
+# empty offender set, which reads as clean.
+model_files=$(printf '%s\n' "$model_scan" | grep -vE "$PROMPT_EXCL"); model_filter_st=$?
+[ "$model_filter_st" -le 1 ] ||
+  fail "Prompt standards: the 4a exclusion filter failed; results are not trustworthy." \
+       "grep -v exited $model_filter_st"
+bad_model=$(printf '%s\n' "$model_files" |
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    # Per-file statuses are checked too, and an operational failure is emitted as an
+    # `ERROR:` sentinel line rather than swallowed. The loop runs inside `$( )`, so it
+    # cannot set rc directly; without the sentinel a `grep` that printed a partial
+    # count and exited >=2 would leave the offender set empty and the gate would pass.
+    decls=$(grep -c '^Target model:' "$f"); decls_st=$?
+    if [ "$decls_st" -gt 1 ]; then
+      printf 'ERROR: %s: counting declarations failed (grep exited %s)\n' "$f" "$decls_st"
+      continue
+    fi
+    if [ "$decls" -ne 1 ]; then
+      printf '%s: %s "Target model:" declarations, need exactly 1\n' "$f" "$decls"
+      continue
+    fi
+    # ONE status-bearing command, deliberately not a pipeline. `grep | head | sed` put
+    # only sed's status in $?, so a grep that printed a valid line and THEN failed
+    # (status 2) left the file looking conformant — a fail-open path that survived three
+    # rounds of status-checking because the pipeline's shape hid it. awk also replaces
+    # `head -1` (`-m` is not POSIX) via `exit` after the first match.
+    value=$(awk '/^Target model:/ {          # extract-target-model
+                   sub(/^Target model:[[:space:]]*/, ""); print; exit }' "$f")
+    value_st=$?
+    if [ "$value_st" -ne 0 ]; then
+      printf 'ERROR: %s: extracting the value failed (pipeline exited %s)\n' "$f" "$value_st"
+      continue
+    fi
+    if ! printf '%s\n' "$value" | grep -qE '^(Claude|Codex|GPT)([^[:alnum:]_]|$)'; then
+      printf '%s: names no executing model -> Target model: %s\n' "$f" "$value"
+      continue
+    fi
+    distinct=0; tok_err=
+    for tok in Claude Codex GPT; do
+      printf '%s\n' "$value" | grep -qE "(^|[^[:alnum:]_])$tok([^[:alnum:]_]|\$)"; tst=$?
+      if [ "$tst" -eq 0 ]; then distinct=$((distinct + 1))
+      elif [ "$tst" -gt 1 ]; then tok_err="grep exited $tst on $tok"; fi
+    done
+    if [ -n "$tok_err" ]; then
+      printf 'ERROR: %s: token matching failed (%s)\n' "$f" "$tok_err"
+      continue
+    fi
+    [ "$distinct" -eq 1 ] ||
+      printf '%s: names %s models, exactly one executes it -> Target model: %s\n' \
+        "$f" "$distinct" "$value"
+  done)
+# An operational failure and a real violation are different diagnoses and must not
+# share one message: the first means the check did not complete, the second means it did.
+if printf '%s\n' "$bad_model" | grep -q '^ERROR: '; then
+  fail "Prompt standards: the 4a per-file checks failed; results are not trustworthy." \
+       "$bad_model"
+elif [ -n "$bad_model" ]; then
+  fail "Prompt standards item 1: a file claiming conformance does not name one executing model." \
+       "$bad_model"
+fi
+# --- END check 4a ---
+
+# --- BEGIN check 4b ---
+# A prose count of the prompt-standards checklist must equal the number of items in it.
+# The motivating occurrence was the WORD form "all ten items" against a 12-item list, so
+# word forms one..twenty are in scope; above twenty, ordinals, hyphenated compounds and
+# split-line claims are not, and stay instruction-backed.
+#
+# Claims are recognized in TWO stages on purpose. A canonical-only pattern would make a
+# malformed claim invisible rather than rejected: `all 012 items` matches no canonical
+# claim and would be silently ignored. So stage 1 matches any digit run, and stage 2
+# requires it to be canonical decimal.
+# Prints the item count, or 'BAD' for a malformed definition. Returns 2 if the PARSER
+# itself failed, which is not the same thing: an awk that cannot run yields empty output,
+# and empty matches neither 'BAD' nor a number, so the caller's comparison merely errors
+# into a false condition and execution continues with rc still 0 — the checker reporting
+# success without having parsed either checklist.
+prompt_checklist_count() { # $1 = file
+  # `grep -c` exits 1 when the count is ZERO, which is a valid answer here (a file with
+  # no checklist heading is malformed, not unreadable). Only >=2 is a real error, so the
+  # status is captured and compared rather than used as a bare `||`.
+  heads=$(grep -cE '^## Checklist([[:space:]].*)?$' "$1"); heads_st=$?
+  [ "$heads_st" -le 1 ] || return 2
+  [ "$heads" -eq 1 ] || { printf 'BAD'; return 0; }
+  # Any numbered label inside the section is CONSIDERED, not only canonically-formatted
+  # ones. Matching `^[0-9]+\. \*\*` as the guard skipped a non-bold `13. item`
+  # entirely, so appending one to both definitions left N at 12 and let a now-stale
+  # `all 12 items` claim pass — failing open exactly when the checklist changes.
+  awk '
+    /^## Checklist([[:space:]].*)?$/ { inlist = 1; next }
+    inlist && /^## / { inlist = 0 }
+    inlist && /^[0-9]+\./ {
+      if ($0 !~ /^[1-9][0-9]*\. \*\*/) { bad = 1; next }   # 0., leading zero, or non-bold
+      sub(/\..*/, "", $0); n += 1
+      if ($0 "" != n "") bad = 1     # string compare: an oversized label must not overflow
+    }
+    END { if (bad || n == 0) print "BAD"; else print n }
+  ' "$1" || return 2
+}
+n_repo=$(prompt_checklist_count docs/prompt-standards.md); st_repo=$?
+n_tmpl=$(prompt_checklist_count plugins/dev-workflow/commands/workflow-init.md); st_tmpl=$?
+if [ "$st_repo" -ne 0 ] || [ "$st_tmpl" -ne 0 ]; then
+  fail "Prompt standards: the checklist parser failed; results are not trustworthy." \
+       "parser exited $st_repo (repo) / $st_tmpl (template)"
+elif [ "$n_repo" = BAD ] || [ "$n_tmpl" = BAD ]; then
+  fail "Prompt standards: a checklist definition is missing, empty, duplicated or misnumbered." \
+       "docs/prompt-standards.md=$n_repo workflow-init.md=$n_tmpl"
+elif [ "$n_repo" -ne "$n_tmpl" ]; then
+  fail "Prompt standards: the repo checklist and the scaffolded template disagree." \
+       "docs/prompt-standards.md=$n_repo workflow-init.md=$n_tmpl"
+else
+  # One scan for both spellings, one awk to judge them. Digit comparison is done as
+  # STRINGS after canonicalisation, never `+0`, so a 40-digit claim cannot overflow its
+  # way to a wrong verdict.
+  words='one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty'
+  # Same status capture as the 4a scan, and for the same reason.
+  claim_scan=$(grep -rnoE "(^|[^[:alnum:]_])all ([0-9]+|$words)( checklist)? items([^[:alnum:]_]|\$)" \
+                 --include='*.md' . 2>/dev/null)
+  claim_scan_st=$?
+  [ "$claim_scan_st" -le 1 ] ||
+    fail "Prompt standards: the 4b claim scan failed; results are not trustworthy." \
+         "grep exited $claim_scan_st"
+  # Filter and validator each get their own status, for the same reason as 4a's.
+  claim_filtered=$(printf '%s\n' "$claim_scan" | grep -vE "$PROMPT_EXCL"); claim_filter_st=$?
+  [ "$claim_filter_st" -le 1 ] ||
+    fail "Prompt standards: the 4b exclusion filter failed; results are not trustworthy." \
+         "grep -v exited $claim_filter_st"
+  bad_claims=$(printf '%s\n' "$claim_filtered" |
+    awk -v n="$n_repo" -v words="$words" '
+      BEGIN { c = split(words, w, "|"); for (i = 1; i <= c; i++) val[w[i]] = i }
+      {
+        tok = $0; sub(/.*all /, "", tok); sub(/[^0-9a-zA-Z].*/, "", tok)
+        if (tok ~ /^[0-9]+$/) {
+          if (tok !~ /^[1-9][0-9]*$/) { print $0 "  <- non-canonical number"; next }
+          # Same forced-string idiom as prompt_checklist_count above. n arrives via -v,
+          # which makes it a strnum, so a bare tok != n leans on awk type inference to
+          # stay a string compare. It does today on every awk tested, but the header
+          # credits this idiom precisely so overflow on a long digit run cannot depend
+          # on that inference. (No apostrophes in here: this program is inside a
+          # single-quoted shell string, and one terminated it.)
+          if (tok "" != n "") print $0 "  <- checklist has " n
+        } else if (tok in val) {
+          if (val[tok] != n + 0) print $0 "  <- checklist has " n
+        }
+      }'); claim_awk_st=$?
+  [ "$claim_awk_st" -eq 0 ] ||
+    fail "Prompt standards: the 4b claim validator failed; results are not trustworthy." \
+         "awk exited $claim_awk_st"
+  [ -n "$bad_claims" ] &&
+    fail "Prompt standards: a checklist count claim disagrees with the checklist." "$bad_claims"
+fi
+# --- END check 4b ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"
