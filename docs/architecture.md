@@ -15,7 +15,7 @@ README.md, MANIFEST.md, AGENTS.md, CLAUDE.md, todos.md
 .mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json
 .github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
-scripts/check-invariants.sh       # invariants 5 and 6, mechanically (+ .test.sh)
+scripts/check-invariants.sh       # invariants 5, 6 + prompt conformance (+ .test.sh)
 scripts/check-version-bump.sh     # invariant 12, PR-only, mechanically (+ .test.sh)
 plugins/dev-workflow/
   .claude-plugin/plugin.json
