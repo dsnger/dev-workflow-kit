@@ -62,6 +62,15 @@ is deliberate — exit 0 means "a qualifying review exists", so the pipeline can
 merge directly. Documenting
 the unrun form broke this repo's own rule against documenting a command nobody ran.
 
+**Four observations now, and the fourth is the one that mattered.** #12 and #13 both
+*merged* heads that were never reviewed — the miss was only found afterwards. On **#14**
+the check said `pass` while the comment said "Review rate limited", and this query
+returned `0` for head `787dd9a` **before** the merge: the re-trigger produced nothing, and
+the PR merged on an explicit human decision with the exception recorded, the unreviewed
+delta being a one-word prose correction the reviewer had itself requested. That is the
+intended shape — the check is a signal you block on, this query is what tells you whether
+a review actually happened, and when they disagree a human decides.
+
 `--paginate` matters: without it only page one is read, so a qualifying review can sit on
 page two and be read as absent. `jq -s` is what slurps the pages — `gh api --slurp` cannot
 do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
