@@ -39,11 +39,22 @@ you can block on it. **Two different things, and conflating them merges unreview
   - **#15** — green check, "Review rate limited", and the count returned `0` for the live
     head. Merging there would have shipped an unreviewed head; waiting until the count
     reached `1` cost about three minutes.
-  - **#16** — the same, observed while writing this row: green check, "Review rate
-    limited", count `0`.
+  - **#16** — twice in one PR, and the occurrence that settled the rule's final form: on
+    head `c6c1850` the check was green, the comment read "Review rate limited", and the
+    count was `0` — unreviewed. Two heads later the comment read "Review rate limited"
+    again while the count was `1` — reviewed.
 
-  The check and the review are independent facts, and the check is the one that lies.
-  What the green tick establishes is that CodeRabbit's *check* finished — nothing more.
+  **The message is noise. The count is signal. In both directions.** "Review rate
+  limited" appears on heads that were never reviewed and on heads that were, so it tells
+  you nothing either way; there is no interpretation left to do, and nothing to weigh —
+  one integer per head decides it. `0` means do not merge. Anything else means the head
+  was reviewed. What the green tick establishes is that CodeRabbit's *check* finished,
+  which is a different fact about a different thing.
+
+  **Verification is per head, not per PR.** Every push moves the head and the previous
+  answer expires with it; a PR that takes three pushes takes three verifications. #16
+  took exactly that, and its final push had to be dropped and re-landed separately
+  because the new head went unreviewed past the point of waiting.
 
 Verify the second before merging — a deterministic boolean, so it can gate rather than be
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous:
