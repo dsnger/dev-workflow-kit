@@ -72,6 +72,18 @@ the synonyms a future reader might search for instead.
   (Defined here retroactively: the 2026-07-20 ledger row used this class before any
   definition existed. Recorded now so the recurrence grep has something to land on.)
 
+- `rewrite-drops-prior-condition` — a rule with several conditions is rewritten, the new
+  condition survives, and one the old prose carried disappears with it. Aliases: lost
+  precondition, half a rule, the summary that kept the new half, condition dropped in
+  restatement, "we fixed it and it got weaker".
+
+  **Not `docs-drift`.** Drift is two artifacts disagreeing and is fixed by updating the
+  stale one; here a single rewritten rule is wrong on its own terms, and the fix is to
+  restore the condition. Detect it by diffing the old prose against the new for
+  conditions, not by comparing artifacts. Ten instances in the profiles cycle, one of
+  which briefly authorized a substantial fix to skip Gate B because its story's profile
+  was eligible — a gate-off path invented by a rewrite meant to narrow one.
+
 - `session-bound-context-not-durable` — reasoning that has to outlive a session is left in
   chat history, so it is gone at the next session, model change or tool switch. Aliases:
   lost rationale, why-did-we-dismiss-that, undocumented decision, no resume state,

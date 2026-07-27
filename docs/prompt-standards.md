@@ -89,6 +89,24 @@ Living references (consult, don't copy — copies go stale):
     When the mechanism turns out not to exist, say what actually happens instead —
     "this is a rule the agent keeps; nothing counts for it".
 
+    **Where the reader can reach the authoritative source, cite it instead of restating
+    it.** When user-facing text needs a rule that lives somewhere authoritative — a
+    classifier, a policy section, a config — point at that source. Every restatement is a
+    copy that can drift and a fresh chance to overclaim. **Exception, by invariant 8:**
+    text that must be self-contained for its reader — the inline templates
+    `/workflow-init` scaffolds, which cannot point at a file the downstream project does
+    not have — restates deliberately and keeps the copies in sync instead. **And when a claim about a mechanism needs a fourth
+    correction, delete the claim rather than refine it a fifth time.** Both halves come
+    from one incident: a methodology paragraph describing the gate hook's path matcher was
+    corrected in four consecutive review rounds — a false rationale, then a categorical
+    claim, then a partial-matcher claim, then an enforcement blur — each correction a
+    subtler version of the last, in a paragraph being rewritten to fix that very class. It
+    closed only when the enumeration was removed and replaced with a pointer to the policy
+    file. No *current* deterministic rung covers this paraphrase shape — the one candidate
+    evaluated, a grep for the matcher's terms, fires on the matcher and the policy file
+    themselves — and the ledger's recurrence count is a signal a human reads, not a check
+    that blocks anything.
+
     Worth knowing how that count was arrived at: it was first asserted as six without
     checking, then "corrected" to five from memory, and only settled at six by reading
     the commits. Both wrong numbers were themselves unverified claims — which is the
