@@ -601,7 +601,10 @@ Insert as the newest entry, matching the file's existing style (no dates):
 
 `check-version-bump.sh` compares **commits**, not the working tree. HEAD already carries
 Tasks 1–2's plugin edits, so running the battery with the bump still uncommitted fails the
-check for a bump that exists on disk. Snapshot first, then measure:
+check for a bump that exists on disk. Snapshot first, then measure — and note that
+whole-path `git add` carries whatever else is in those files: if any listed path was
+already dirty before this cycle, stage only this cycle's hunks or stop and ask, exactly as
+the fix loop in Step 6 requires. The two `--cached` lines verify the result either way:
 
 ```bash
 git status --short                      # confirm nothing unrelated is dirty
@@ -612,6 +615,8 @@ git add plugins/dev-workflow/skills/intake/SKILL.md \
         plugins/dev-workflow/CHANGELOG.md \
         plugins/dev-workflow/hooks/codex-gate.sh \
         CLAUDE.md todos.md docs/getting-started.md docs/coding-workflow.md
+git diff --cached --name-only         # the staged set is exactly those paths
+git diff --cached                     # and its content is only this cycle's work
 git commit -m "WIP: profiles — snapshot for Gate B (0.7.0)"
 git log --oneline -8
 ```
