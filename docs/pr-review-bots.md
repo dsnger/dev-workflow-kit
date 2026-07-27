@@ -10,29 +10,44 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
-| CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. **Its status check passes while the comment says "Review rate limited" — observed on four PRs (#12, #13, #15, #16), so treat it as this bot's normal behaviour rather than an edge case. A green check does not prove the final head was reviewed; the review count is the arbiter. See the completion-signal note.** |
+| CodeRabbit | yes | **inline** | Posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. Observed on #1 and #18 (profile CHILL). **Plan: Free** (per Daniel); the "Pro Plus" recorded here earlier was observed on PR #1 only and no longer describes the account — the review-limit behaviour below is what a Free plan produces. **Routed opportunistically since #18** — five consecutive unreviewed heads (#12, #13, #15, #16, #17), then a genuine review. Two quirks that look like signals and are not: **its status check goes green whether or not a review happened**, so a green check never proves the final head was reviewed (the per-head count is the arbiter); and **`@coderabbitai review` is a no-op while automatic reviews are active** — the bot says so itself ("This command is applicable only when automatic reviews are paused", #17), which is why #14's re-trigger produced nothing. |
 | Greptile | yes | **summary always; inline usually** | Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
 **Routing — these lists are authoritative.**
 
-- **Wait for (block on it):** CodeRabbit. It has a status check, so `gh pr checks` going
-  non-pending is proof the *check* finished — which is what you block on. That is **not**
-  the same as proof the final head was reviewed; verify that separately before merging
-  (below).
-- **Process opportunistically (never block):** Greptile. Read whatever it has posted
-  when the CodeRabbit-gated pass begins, in both channels. If it posts later, handle it
+- **Wait for (block on it):** *none.* CodeRabbit sat here until #18 and no longer does —
+  grounds below.
+- **Process opportunistically (never block):** CodeRabbit and Greptile. Read whatever
+  each has posted when the pass begins, in both channels. If one posts later, handle it
   as a follow-up.
 - **Ignore:** Cursor Bugbot — disabled for this account, and it says so itself.
 
-**Completion signal, per bot.** CodeRabbit posts a status, so `gh pr checks` shows it and
-you can block on it. **Two different things, and conflating them merges unreviewed heads.**
+**Why CodeRabbit moved.** It has a status check, so blocking on it always *terminated* —
+what it stopped doing was delivering. Five consecutive heads went unreviewed (#12, #13,
+#15, #16, #17), the last with **zero review records on the PR at all**; then #18 came
+back genuinely reviewed with three findings. That is the opportunistic category exactly
+as this file defines it: a real findings source whose delivery is unpredictable and whose
+completion signal proves nothing about whether a review happened. Greptile set the
+precedent for a different reason — no signal at all — and CodeRabbit arrives at the same
+place by a signal that exists and does not mean what it appears to mean.
 
-- *The check stopped pending* — the blocking signal. Block on this.
+**What the routing change does *not* touch: the per-head count.** The verification below
+is unchanged and stays exactly as #17 left it. Note only what its scope now is: it is a
+**merge-time** check, and the *blocking* half of the completion-signal distinction below
+now binds no bot, because nothing sits under **Wait for**. The count is still how you
+learn whether a given head was reviewed; it is no longer paired with a bot you wait on.
+
+**Completion signal, per bot.** CodeRabbit posts a status — visible in `gh pr checks`,
+and it finishes whether or not a review happened. **Two different things, and conflating
+them merges unreviewed heads.**
+
+- *The check stopped pending* — a blocking signal, and the reason CodeRabbit looked
+  waitable. Nothing is blocked on it now.
 - *The final head was reviewed* — a separate verification, and the one that decides
   whether you may merge. **This is settled behaviour, not a hazard that might occur:
-  never merge on the check alone — the review count is the arbiter.** Four occurrences,
-  the last two caught by running the count rather than by luck:
+  never merge on the check alone — the review count is the arbiter.** Five occurrences,
+  the last three caught by running the count rather than by luck:
   - **#12 and #13** — the check passed while the issue comment read "Review rate
     limited"; on #13 the only CodeRabbit **review record** carried `commit_id` `eed589c`
     while the merged head was `92de0d2`. The head that merged was never reviewed.
@@ -43,6 +58,16 @@ you can block on it. **Two different things, and conflating them merges unreview
     head `c6c1850` the check was green, the comment read "Review rate limited", and the
     count was `0` — unreviewed. Two heads later the comment read "Review rate limited"
     again while the count was `1` — reviewed.
+  - **#17** — the fifth, and the one that moved CodeRabbit out of **Wait for**: green
+    check, count `0` before and after a re-trigger, and **zero CodeRabbit review records
+    on the PR for any head**. Its first comment was not "Review rate limited" but *"Review
+    limit reached — you've reached your PR review limit, so we couldn't start this
+    review"*; the re-trigger then answered *"Review finished… does not re-review already
+    reviewed commits"* and produced nothing, so a review that never started was booked as
+    done. Merged as a recorded human exception (#14 precedent).
+  - **#18** — reviewed, with three findings on the live head and a count of `1`. Five
+    unreviewed heads then a genuine review is the whole argument for the move: the bot
+    delivers real findings, on no schedule you can predict or wait on.
 
   **The message is noise. The count is signal. In both directions.** "Review rate
   limited" appears on heads that were never reviewed and on heads that were, so it tells
@@ -89,15 +114,20 @@ the check said `pass` while the comment said "Review rate limited", and this que
 returned `0` for head `787dd9a` **before** the merge: the re-trigger produced nothing, and
 the PR merged on an explicit human decision with the exception recorded, the unreviewed
 delta being a one-word prose correction the reviewer had itself requested. That is the
-intended shape — the check is a signal you block on, this query is what tells you whether
-a review actually happened, and when they disagree a human decides.
+intended shape — this query is what tells you whether a review actually happened, and
+when it disagrees with the check a human decides. (Written while CodeRabbit was still
+under **Wait for**, so it read "the check is a signal you block on"; nothing is blocked
+on now, and the rest of the shape is unchanged.) **#17 explains the "re-trigger produced
+nothing" here:** `@coderabbitai review` is a no-op while automatic reviews are active.
 
 `--paginate` matters: without it only page one is read, so a qualifying review can sit on
 page two and be read as absent. `jq -s` is what slurps the pages — `gh api --slurp` cannot
 do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
-a review of that head. If no qualifying record exists, re-trigger once; if it is still
-absent, **merge only on an explicit human decision**, recording that the head went
-unreviewed.
+a review of that head. If no qualifying record exists, re-trigger once (expect nothing —
+`@coderabbitai review` is a no-op while automatic reviews are active, so the attempt
+costs a wait and is kept only because it is cheap and has not been observed to hurt); if
+it is still absent, **merge only on an explicit human decision**, recording that the head
+went unreviewed.
 
 What was actually measured, stated exactly: the rate-limit warning appeared in the **issue
 comment**, while the review record was an earlier completed review of an earlier commit.
@@ -109,8 +139,8 @@ body filter is bounded defensive filtering, not a check against something seen.
 "Greptile Review" entry for #4 and #5, while the check-runs and statuses APIs return no
 Greptile entry for any observed head. Two tools, two answers, so neither is proof.
 
-So: **process Greptile opportunistically, never block on it.** Do the CodeRabbit-gated
-pass, and read whatever Greptile has posted at that moment via
+So: **process Greptile opportunistically, never block on it.** Begin the pass — nothing
+gates it now — and read whatever Greptile has posted at that moment via
 `gh pr view --json comments,reviews` plus `gh api .../pulls/N/comments`. If it posts
 later, process it as a follow-up. Waiting on it risks hanging forever; ignoring it drops
 real findings, since every observed PR carried some.
@@ -127,6 +157,13 @@ The opportunistic category exists because Greptile forced it: a bot can be a rea
 findings source with no signal that says it has finished. Blocking on such a bot hangs
 the loop; dropping it loses findings. Reading what is there and revisiting later is the
 only option that does neither.
+
+CodeRabbit widened the category rather than fitting the original shape. Greptile has *no*
+completion signal; CodeRabbit has one that always fires and carries no information about
+whether a review happened. The category turns out to be about **whether a signal predicts
+delivery**, not about whether a signal exists — a distinction only visible once a bot
+supplied the second case. Both belong here for the same practical reason: what they post
+is worth reading, and when they post is not something you can wait on.
 
 
 A bot belongs under **Wait for** only once it has been *seen* producing findings
