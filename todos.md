@@ -131,19 +131,25 @@ That belongs in each product project's own `todos.md` once `/workflow-init` has 
 there, not here: this repo ships the workflow, it does not hold another project's
 backlog.
 
-- [ ] **P2 + P6 — risk/security profiles, and security sections in the intake, spec and
-      gate templates.** One story: the profile is what the sections key off, so shipping
-      the sections without it just adds a heading nobody knows how to fill in.
-      *Trigger: the first real intake in a product project* — **FIRED.**
-      Calibration point (infinite-portfolio-canvas, 2026-07-26): 51 Gate-A pass files
-      across 2 stories — spec 14, plan 14, replan 4, amend 12, a3-spec 7 — in a product
-      project on a long-lived branch. That is a real risk profile to key sections off,
-      not a guess about what product projects might need.
+- [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
+      human-confirmed axes in the story header, a mode derived as `max(risk, security)`,
+      lens sets appended to the §5 gate prompts, and the Gate-B triviality skip narrowed
+      to effective level 0. Spec:
+      `docs/superpowers/specs/2026-07-26-risk-security-validation-profiles-design.md`.
+- [ ] **P6 — standalone security sections in the intake, spec and gate templates:
+      DELIBERATELY REJECTED, not shipped.** The profile *is* the heading: a standalone
+      section would be a second surface to keep in sync with it (the docs-drift class),
+      and it invites boilerplate-filling on stories where nobody knows what to write.
+      Security content lives in the spec's decision record and risks discussion and in
+      `AGENTS.md` invariants; the security lens set is what asks about assets, trust
+      boundaries, roles, external systems and abuse paths. *Reopens when:* field use shows
+      high-security content scattering incoherently across specs — that recurrence is the
+      trigger, not a fresh opinion.
 - [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** Identifiers
       that survive from story to plan to review, so an acceptance criterion can be cited
-      instead of re-described. *Trigger: rides with P2* — the IDs exist to label what P2's
-      sections produce, so landing them first would ship a numbering scheme with nothing
-      to number.
+      instead of re-described. *Trigger: the first story that runs under profiles* — the
+      IDs exist to label what profiles produce, so the numbering scheme should meet a real
+      profiled story before it gets a template slot.
 
 - [ ] **Upstream-report candidate: `claude plugin update <bare-name>`.** The CLI docs
       document the bare plugin name as a valid argument for `install`/`uninstall`/`update`

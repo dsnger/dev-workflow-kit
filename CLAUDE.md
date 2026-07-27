@@ -251,6 +251,111 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   merely shares the name (`docs/commands/reference.md`) fires too, which is the
   redundant reminder invariant 2 accepts by name.
 
+### Profiles — how much review this story gets
+
+A story may carry a profile in its header: `**Risk:**` (`trivial|standard|high`),
+`**Security:**` (`none|standard|high`), and a `**Validation:**` mode derived from them
+(`battery` / `battery+check` / `battery+check+verification`, plus `+abuse-path` when and
+only when security is `high`). The **story header is the single writable copy** — specs,
+plans, commit bodies and this file's prompts carry the story **path** and read the values
+fresh at each pass, never a remembered or copied value.
+
+**The axes steer the questions; the mode steers the evidence.** Separate levers: one aims
+the reviewer, the other obliges the author.
+
+**Lens sets, appended to the gate prompt:**
+- **risk `high`** → threats, abuse, rollback, data loss, idempotency, compatibility,
+  observability.
+- **security `standard` or `high`** → assets, trust boundaries, roles, external systems,
+  abuse paths.
+- **both** → the union appended **once**, each lens labelled with the axis that motivated
+  it; risk's *abuse* and security's *abuse paths* are **one lens carrying both labels**,
+  not two questions.
+
+Lenses are **different questions, not more passes.** The 3-pass floor, the Blocker/Major
+filter, the file-first findings protocol and the clean-final-pass rule are unchanged.
+
+**Reading the profile — three cases, three answers:**
+1. The artifact **cites no story** → run unprofiled and **say so** in the pass. Artifacts
+   predating this rule are the common case; stopping on them would halt in-flight work.
+2. The cited story has **no profile line** → same: today's behaviour.
+3. A profile is **present but unresolvable** → **stop and surface the cause**. That covers
+   the syntactic failures — unparseable line, a value outside the enums, two profile
+   blocks, a citation resolving to nothing — **and the semantic ones**: a `**Validation:**`
+   value disagreeing with `max(risk, security)`, or `+abuse-path` present without security
+   `high` or absent with it. Only the **latest `mode override`** in the log, moving in a
+   direction compatible with the current value, can explain such a mismatch — and if the
+   log also contains an `axis change`, only when that override was recorded **after** the
+   latest one, since an axis change voids every prior override. A log with no `axis
+   change` at all is the ordinary intake-time override, and its entry resolves the
+   mismatch on its own. A well-formed value can still be the wrong value, and a stale mode steers
+   weaker evidence while looking entirely valid; recomputing it is a profile change like
+   any other — proposed, human-confirmed, logged. Falling back to the lighter behaviour on
+   a malformed profile would under-review exactly the stories most likely to have one.
+
+**The Gate-B triviality skip keys on the effective level, never on risk alone.** For a
+profiled story it is available only when `max(risk, security)` is 0 — risk `trivial` *and*
+security `none` — and **its reason is recorded in the commit body**, beside the evidence
+entry. Not in the profile log: that log records profile *changes*, and a skip changes no
+profile value. **A skip removes the review, never the evidence:** the battery still runs and its entry still lands in the
+commit body. An **unprofiled** story keeps exactly today's judgement-based skip and owes
+no mode-derived evidence.
+
+**A cycle citing several stories** aggregates along separate dimensions, never through one
+winning mode: the **battery runs once** for the cycle; **each cited _profiled_ story
+satisfies its own mode and suffix**, with its own named evidence entry, while a cited
+**unprofiled** story has no mode and owes no entry; the **lens sets are unioned** across
+all cited stories; and the cycle is skip-eligible only if **every** cited story is. A
+single "max" would either under-serve the strictest story or impose its obligations on
+unrelated ones.
+
+**What the author owes before Gate B**, by mode: `battery` = the quality battery green ·
+`battery+check` = battery + **a check that fails without the change** ·
+`battery+check+verification` = battery + that check + a **named** verification of the risk
+path · `+abuse-path` = one **named** abuse scenario plus evidence that the expected control
+rejects or contains it. Level 2's two obligations are distinct; one artifact serves both
+only if it demonstrates both.
+
+A check need not be an automated test — where none is possible, a **named verification**
+satisfies it and the entry says which route was taken and why. Either route owes the
+**counterfactual**: the observation against the prior state. An **unobservable
+counterfactual is a blocking evidence gap**, not a free pass — stop and surface; the human
+may then lower the mode as a logged override. A fabricated test satisfies nothing.
+
+**The evidence entry lives in the commit body** (see Mechanics), carries the **story path
+and the named evidence but not the mode value**, and is **revalidated before every Gate-B
+re-review and before the cycle-closing amend** — a fix changes the diff even when the
+profile sits still. If revalidation changes the entry, the clean pass no longer covers what
+is being committed: fix, re-review, close on the entry that pass validated.
+
+**Every Gate-B call and re-review carries the path of every cited story**, so the reviewer
+reads each profile itself, **plus the current evidence entry, quoted verbatim, for each
+cited *profiled* story** — an unprofiled one owes no mode-derived evidence, so it
+contributes a path and nothing else. One profiled story means one pair; a cycle citing
+several carries all of them, because the reviewer cannot union lenses it cannot see or
+judge evidence it was never given. A reviewer handed neither can only review the diff —
+the lenses and the evidence obligations would exist and never be consumed.
+
+**Two evidence gaps, two different answers.** Evidence that is *absent or inadequate* for
+the mode is a **work gap**: produce it, then call. A project whose `AGENTS.md` names **no
+verified quality command** cannot satisfy even `battery` — a **setup gap**: say what is
+missing (`/workflow-init`'s battery step) rather than reviewing around it. Neither is a
+reason to call Gate B against a weaker claim.
+
+**Changing a profile:** the pass **proposes the complete resulting header** — both axes,
+the recomputed mode, any renewed override — and the **human confirms it**, in both
+directions; an agent never moves it alone. On confirmation, correct the header and append
+one profile-log line. Any axis change **voids every prior override**, raised or lowered,
+and `+abuse-path` follows the current security value. Passes already run under the lower
+profile **keep counting** toward the floor; only the **final clean pass** must run under
+the current profile. Inside an active Gate-B cycle, fold the edit into the active `WIP:`
+snapshot by amend — a non-`WIP` commit reads to the hook as the cycle closing and would
+discard the accumulated passes.
+
+**What this does not do:** nothing checks which file a model actually read, whether the
+header changed mid-call, or whether the lens sets were appended. This is instruction-backed
+like the rest of §5; the detection is a reader comparing the pass against the story.
+
 ### Mechanics (reference)
 - **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
   rework) → both must resolve. Minor · Nit → collect, never iterate.
@@ -270,6 +375,11 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   follow-up commit for two reasons: a `WIP: …` commit left in history defeats the naming
   convention it exists for, and a follow-up commit has nothing to commit when the review
   produced no fixes.
+  **The closing message carries the validated evidence entry for every cited profiled
+  story** — one each, and none for a cited unprofiled story, which owes no entry. The
+  amend replaces the WIP message wholesale, so an entry written only into the WIP body is
+  destroyed exactly when the cycle closes. The final commit body is the durable record;
+  a PR shows commit messages, so there is no second home to keep in sync.
 - **Timeout / abort:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user, and that retry *is* the single shared recovery
   attempt above — not a second one. An abort is an incomplete pass, so treat it as one:

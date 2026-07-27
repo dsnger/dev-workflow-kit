@@ -74,8 +74,12 @@ the actual skills, commands, agent definitions, and hook messages of this plugin
 **1. Intake — from idea to story.** The front door turns a raw idea into a scoped
 story that captures *what* and defers *how*: the problem, the desired outcome, the
 acceptance criteria, which core invariants the change touches, the open questions,
-and a rough size. The design ("how") is deliberately left out — it belongs to the
-next stage. The value here is a shared, reviewable definition of done before
+a rough size, and a **profile** — risk and security relevance, confirmed by the human,
+with a validation mode derived from the two. The two axes **add** review lenses at the
+gates for a risky or security-relevant change (they never subtract any: Gate A's floor and
+the baseline questions are the same at every level), while the derived mode calibrates
+what evidence the author owes before Gate B. The design ("how") is deliberately left out —
+it belongs to the next stage. The value here is a shared, reviewable definition of done before
 anyone argues about approach.
 
 **2. Brainstorming to a spec.** Approaches are explored and decisions are settled
@@ -119,8 +123,19 @@ checks is not enforcement.
 **8. Gate B on the code.** Before the change is committed, the independent
 reviewer reads the actual *diff* and checks it against the invariants file. It is
 re-run after every fix, because each fix changes the diff and invalidates the
-prior review. Genuinely trivial changes may skip it; documentation-only changes
-are considered covered by Gate A instead, since there is no code diff to review.
+prior review. Trivial changes may skip it, on terms that depend on the story: an
+unprofiled one keeps the judgement call, while a profiled one qualifies only at
+effective level 0 — trivial risk *and* no security relevance — so a trivial-looking
+change on security-relevant surface is not eligible. A skip removes the review, never
+the evidence: the battery still runs and the reason is recorded. **Explanatory**
+documentation carries no gate at all — a wrong sentence there costs a confused reader
+rather than broken behaviour. Prompt artifacts are not explanatory prose: in a project
+whose product is prompts, the text *is* the behaviour, so the review policy requires Gate
+B for them even though they are Markdown. Which paths count is spelled out in the policy
+file, and a reminder hook classifies them independently; both err toward firing, and the
+hook only reminds — it never blocks, and it is not what makes the review happen. When it
+is unclear whether an artifact counts, review it: a redundant pass costs minutes, a
+missed one costs the defect this loop exists to catch.
 
 **9. Pull request and bot review.** Automated reviewers comment on the PR. Their
 findings are processed *systematically*: pre-existing issues are tracked rather

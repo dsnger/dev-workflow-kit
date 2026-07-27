@@ -138,10 +138,21 @@ be ambiguous, which is not an instruction.
    a decision already made, and to item 5 would let `harden-finding` change the
    repository for something just ruled out of this PR.
 
-3. Implement accepted **and** actionable findings. Severity gate per CLAUDE.md §5: a
-   trivial fix (one-liner, comment, naming) → commit with a documented Gate-B triviality
-   skip in the commit message; a substantial fix (logic, new/changed paths) → run Gate B
-   (`mcp__codex__review` on the new diff) before committing.
+3. Implement accepted **and** actionable findings. Severity gate per CLAUDE.md §5. **Every
+   substantial fix (logic, new or changed paths) runs Gate B** (`mcp__codex__review` on the
+   new diff) before committing — no profile makes a substantial fix skippable. A skip needs
+   **both** conditions, never either alone:
+   - the **fix is trivial** — a one-liner, a comment, naming — the pre-existing judgement,
+     unchanged by profiles; **and**
+   - **every cited story is eligible.** Resolve the cited story path(s) first: a profiled
+     story is eligible only at effective level 0 (risk `trivial` *and* security `none`); an
+     unprofiled story is eligible on the old judgement call; a PR citing **no** story — the
+     common shape for a review-fix PR — is §5's unprofiled case. With several cited
+     stories, each must be eligible on its own; one eligible story does not carry the rest.
+
+   A skip removes the review and never the evidence: run the battery, and record the skip
+   reason in the commit body — plus one evidence entry per cited **profiled** story, and
+   none for an unprofiled one.
 4. Stop and ask the user for: every `escalate-to-user` verdict, and every accepted
    finding that contradicts a settled decision. Do not implement these. A finding
    already recorded as out of scope by item 2 does **not** come here — it is terminal

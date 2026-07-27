@@ -42,6 +42,18 @@ this section.
   repo's own files, incident counts, or `docs/` paths that `/workflow-init` never
   scaffolds.
 
+**Scope-guard waiver, granted 2026-07-26 during Gate B pass 11.** The story's guard
+excluded `plugins/dev-workflow/hooks/**`. One string in `hooks/codex-gate.sh` is changed
+anyway: the below-floor reminder said "proceed only if this change is trivial", which the
+narrowed skip rule makes false, and it says so at exactly the moment an author decides
+whether to skip. The waiver holds because the edit runs *opposite* to what the guard
+protects — it **removes** a rule statement from the hook and defers to the policy file, so
+the hook reads no profile and gains no machinery; it ends up more profile-agnostic than
+before. The replacement points at the policy without paraphrasing the rule, so no new sync
+surface is created. Same-commit propagation applies: §5's skip rule changed, so its echo in
+the hook changes with it, not in a follow-up. No test asserts that clause (the two hook
+tests match only `below floor|floor NOT met`), and 0.7.0 already covers the plugin bump.
+
 **Commit discipline for this plan:** Tasks 1–4 end with a `WIP:` commit — the hook treats a
 `wip`-prefixed message as cycle-internal, so it neither fires a Gate-B STOP nor resets the
 pass counters. Task 5 runs the battery, Gate B, and closes the whole cycle with one real
@@ -103,9 +115,36 @@ Then extend the question-round step (now step 4) so it asks them. Its current te
 append to that step:
 
 ```markdown
-   The round also carries the **profile proposal** from step 3 — alongside any clarifying
-   questions, or as the whole round when nothing needs clarifying. Intake gains no second
-   pause. The human confirms or corrects; a correction may set any value, up or down.
+   The round also carries the **profile proposal** from step 3 — alongside any
+   clarifying questions, or as the whole round when nothing needs clarifying. Intake
+   gains no second pause. The human confirms or corrects, and what a correction means
+   depends on what it touches:
+   - **An axis correction sets that axis freely, up or down — and the mode is
+     recomputed** from the corrected axes. Never carry the proposed mode over beside a
+     changed axis: `**Security:** high` next to `**Validation:** battery` is a header
+     the gates classify as unresolvable and stop on.
+   - **A mode correction is an override**, and it is bounded: it may raise or lower the
+     derived mode, but it cannot drop `+abuse-path` while security is `high`. Record it
+     as the first `mode override` entry in the profile log, with its direction and the
+     human's reason. **Say in the proposal that an override needs a reason**, since the
+     log entry cannot be written without one.
+
+   **State the derivation in the proposal, so one answer settles the whole header.** The
+   mode is a function of the axes, not an independent choice: show `max(risk, security)`
+   and what each level yields, and the human's single answer then confirms the axes, any
+   override, *and* the mode that derivation produces from them — including after a
+   correction. That is why no second pause is needed and none is taken: nothing is left
+   for the human to choose once the axes are settled.
+
+   **An answer that cannot be recorded ends this intake attempt** — an override with no
+   reason, an override dropping `+abuse-path` while security is `high`, a mode outside the
+   enums. Say which rule the answer collides with and **stop without writing**; do not
+   hold a pause open waiting for a repair, and do not invent the missing piece. This is
+   the grounding floor's shape, and it is honest about what happens next: the human's
+   corrected answer arrives at a **new intake run**, which opens its own single round with
+   that answer already in hand. What is forbidden is a second round *inside* one run, not
+   the human coming back.
+
    "Proceed anyway" or "I don't know" **is** an answer: it accepts the proposal as it
    stands, and the values are recorded as proposed and **never lower** — a redundant lens
    costs a paragraph, a missing one costs a review. There is no "unconfirmed" profile, so
@@ -149,8 +188,14 @@ prose when none did) · what it changes downstream. The three kinds:
   opposite directions:
   `- 2026-07-26 · axis change · risk ↑, security ↓ · pass-3 finding: no auth surface after all · swaps the risk lens set for none`
 - `mode override` — names its own **direction**, because a human may raise or lower the
-  derived mode:
-  `- 2026-07-26 · mode override · ↓ · no automated check is possible for prompt text · verification replaces the counterfactual test`
+  derived mode. A lowering removes an obligation, so its reason says which one and why:
+  `- 2026-07-26 · mode override · ↓ · the risk-path verification duplicates the migration rehearsal already run in staging · drops the named verification, keeps the counterfactual check`
+
+  Choosing a **named verification** because no automated test is possible is **not** an
+  override: it is one of the two routes that satisfy `+check` at the same mode, and it
+  still owes the counterfactual. Logging it as a lowering would record a mode the header
+  never moved to. *(Corrected during Gate B pass 2 — the original example illustrated the
+  opposite of the rule.)*
 - `adoption` — has no previous value, so **no direction**:
   `- 2026-07-26 · adoption · in-flight story adopting a profile at its plan checkpoint · gates now read this header`
 
@@ -220,8 +265,8 @@ only when security is `high`). The **story header is the single writable copy** 
 plans, commit bodies and this file's prompts carry the story **path** and read the values
 fresh at each pass, never a remembered or copied value.
 
-**The axes steer the questions; the mode steers the evidence.** They are separate levers:
-one aims the reviewer, the other obliges the author.
+**The axes steer the questions; the mode steers the evidence.** Separate levers: one aims
+the reviewer, the other obliges the author.
 
 **Lens sets, appended to the gate prompt:**
 - **risk `high`** → threats, abuse, rollback, data loss, idempotency, compatibility,
@@ -243,30 +288,34 @@ filter, the file-first findings protocol and the clean-final-pass rule are uncha
    the syntactic failures — unparseable line, a value outside the enums, two profile
    blocks, a citation resolving to nothing — **and the semantic ones**: a `**Validation:**`
    value disagreeing with `max(risk, security)`, or `+abuse-path` present without security
-   `high` or absent with it. Only the **latest `mode override` recorded after the latest
-   `axis change`**, moving in a direction compatible with the current value, can explain
-   such a mismatch — an axis change voids every prior override, so an older one resolves
-   nothing. A well-formed value can still be the wrong value, and a stale mode steers weaker
-   evidence while looking entirely valid; recomputing it is a profile change like any
-   other — proposed, human-confirmed, logged. Falling back to the lighter behaviour on a
-   malformed profile would under-review exactly the stories most likely to have one.
+   `high` or absent with it. Only the **latest `mode override`** in the log, moving in a
+   direction compatible with the current value, can explain such a mismatch — and if the
+   log also contains an `axis change`, only when that override was recorded **after** the
+   latest one, since an axis change voids every prior override. A log with no `axis
+   change` at all is the ordinary intake-time override, and its entry resolves the
+   mismatch on its own. A well-formed value can still be the wrong value, and a stale mode steers
+   weaker evidence while looking entirely valid; recomputing it is a profile change like
+   any other — proposed, human-confirmed, logged. Falling back to the lighter behaviour on
+   a malformed profile would under-review exactly the stories most likely to have one.
 
 **The Gate-B triviality skip keys on the effective level, never on risk alone.** For a
 profiled story it is available only when `max(risk, security)` is 0 — risk `trivial` *and*
-security `none` — and the reason goes in the story's profile log. **A skip removes the
-review, never the evidence:** the battery still runs and its entry still lands in the
+security `none` — and **its reason is recorded in the commit body**, beside the evidence
+entry. Not in the profile log: that log records profile *changes*, and a skip changes no
+profile value. **A skip removes the review, never the evidence:** the battery still runs and its entry still lands in the
 commit body. An **unprofiled** story keeps exactly today's judgement-based skip and owes
 no mode-derived evidence.
 
 **A cycle citing several stories** aggregates along separate dimensions, never through one
-winning mode: the **battery runs once** for the cycle; **each cited story satisfies its own
-mode and suffix**, with its own named evidence entry; the **lens sets are unioned** across
+winning mode: the **battery runs once** for the cycle; **each cited _profiled_ story
+satisfies its own mode and suffix**, with its own named evidence entry, while a cited
+**unprofiled** story has no mode and owes no entry; the **lens sets are unioned** across
 all cited stories; and the cycle is skip-eligible only if **every** cited story is. A
 single "max" would either under-serve the strictest story or impose its obligations on
 unrelated ones.
 
 **What the author owes before Gate B**, by mode: `battery` = the quality battery green ·
-`battery+check` = battery + **a check that fails without the change** · 
+`battery+check` = battery + **a check that fails without the change** ·
 `battery+check+verification` = battery + that check + a **named** verification of the risk
 path · `+abuse-path` = one **named** abuse scenario plus evidence that the expected control
 rejects or contains it. Level 2's two obligations are distinct; one artifact serves both
@@ -283,6 +332,20 @@ and the named evidence but not the mode value**, and is **revalidated before eve
 re-review and before the cycle-closing amend** — a fix changes the diff even when the
 profile sits still. If revalidation changes the entry, the clean pass no longer covers what
 is being committed: fix, re-review, close on the entry that pass validated.
+
+**Every Gate-B call and re-review carries the path of every cited story**, so the reviewer
+reads each profile itself, **plus the current evidence entry, quoted verbatim, for each
+cited *profiled* story** — an unprofiled one owes no mode-derived evidence, so it
+contributes a path and nothing else. One profiled story means one pair; a cycle citing
+several carries all of them, because the reviewer cannot union lenses it cannot see or
+judge evidence it was never given. A reviewer handed neither can only review the diff —
+the lenses and the evidence obligations would exist and never be consumed.
+
+**Two evidence gaps, two different answers.** Evidence that is *absent or inadequate* for
+the mode is a **work gap**: produce it, then call. A project whose `AGENTS.md` names **no
+verified quality command** cannot satisfy even `battery` — a **setup gap**: say what is
+missing (`/workflow-init`'s battery step) rather than reviewing around it. Neither is a
+reason to call Gate B against a weaker claim.
 
 **Changing a profile:** the pass **proposes the complete resulting header** — both axes,
 the recomputed mode, any renewed override — and the **human confirms it**, in both
@@ -311,8 +374,9 @@ Find (line 266–267):
 Insert a sentence at the end of that bullet's paragraph, after "…produced no fixes.":
 
 ```markdown
-  **The closing message carries the evidence entry** for a profiled story — the amend
-  replaces the WIP message wholesale, so an entry written only into the WIP body is
+  **The closing message carries the validated evidence entry for every cited profiled
+  story** — one each, and none for a cited unprofiled story, which owes no entry. The
+  amend replaces the WIP message wholesale, so an entry written only into the WIP body is
   destroyed exactly when the cycle closes. The final commit body is the durable record;
   a PR shows commit messages, so there is no second home to keep in sync.
 ```
@@ -339,8 +403,8 @@ that diff clean, so an unguarded check passes while verifying nothing.
 ```bash
 P_REPO=$(sed -n '/^### Profiles — how much review this story gets$/,/^### Mechanics (reference)$/p' CLAUDE.md)
 P_TMPL=$(sed -n '/^### Profiles — how much review this story gets$/,/^### Mechanics (reference)$/p' plugins/dev-workflow/commands/workflow-init.md)
-M_REPO=$(sed -n '/\*\*The closing message carries the evidence entry\*\*/,/second home to keep in sync\./p' CLAUDE.md)
-M_TMPL=$(sed -n '/\*\*The closing message carries the evidence entry\*\*/,/second home to keep in sync\./p' plugins/dev-workflow/commands/workflow-init.md)
+M_REPO=$(sed -n '/\*\*The closing message carries the validated evidence entry/,/second home to keep in sync\./p' CLAUDE.md)
+M_TMPL=$(sed -n '/\*\*The closing message carries the validated evidence entry/,/second home to keep in sync\./p' plugins/dev-workflow/commands/workflow-init.md)
 
 for v in P_REPO P_TMPL M_REPO M_TMPL; do
   eval "[ -n \"\$$v\" ]" || { echo "EMPTY CAPTURE: $v — anchor missing"; exit 1; }
@@ -465,10 +529,24 @@ Expected: a short list to read; most will be accurate as-is because they describ
 workflow shape rather than the story's fields.
 
 **Record each verdict in the plan itself**, as a line under this step — updated, or the
-reason its text stays accurate. The WIP commit message is not the place: Task 5's soft
-reset discards every WIP message, and a verdict that vanishes cannot tell a later reader
-"read and accurate" from "never checked". These lines are carried into the final commit
-body in Task 5 Step 6.
+reason its text stays accurate.
+
+**Verdicts (recorded during execution):**
+- `docs/getting-started.md` — **updated**: step 1 now names the profile and both halves
+  (axes → lenses, mode → evidence).
+- `docs/coding-workflow.md` — **updated**: the intake paragraph names the profile, and
+  says axes *add* lenses while Gate A's floor is unchanged.
+- `README.md` — **unchanged, accurate**: its intake row is a one-line capability summary,
+  not a field list, and its flow line (`idea → intake → brainstorm → …`) is unaffected —
+  profiles change what each stage asks, not the stages.
+- `docs/architecture.md` — **unchanged, accurate**: it describes file layout and the two
+  non-obvious design decisions; no story-field claims appear in it.
+- `MANIFEST.md` — **unchanged, accurate**: an inventory of the frozen `source-files/`
+  extraction seed, which this change does not touch.
+
+The WIP commit message is not the place: Task 5's soft reset discards every WIP message,
+and a verdict that vanishes cannot tell a later reader "read and accurate" from "never
+checked". These lines are carried into the final commit body in Task 5 Step 6.
 
 - [ ] **Step 3: Commit**
 
@@ -507,7 +585,8 @@ Insert as the newest entry, matching the file's existing style (no dates):
   skip narrowed to effective level 0 for profiled stories, and the author's evidence
   obligations per mode. The 3-pass floor and the findings protocol are unchanged, and no
   new way to skip a gate is added.
-- §5's Mechanics: the cycle-closing amend carries the evidence entry, so the final commit
+- §5's Mechanics: the cycle-closing amend carries one validated evidence entry per cited
+  profiled story (and none for an unprofiled one), so the final commit
   body is its durable record.
 - Unprofiled stories behave exactly as before, including today's judgement-based skip.
 ```
@@ -542,9 +621,16 @@ this result and requires a re-run — Step 6 says when.
 
 - [ ] **Step 5: Write the evidence entry into the WIP body, before the first Gate-B call**
 
-The spec makes the evidence a **precondition** of the call, and requires the call to quote
-the prepared entry rather than compose its own. Amend the snapshot so its body carries it —
-story **path** and named evidence, and **no profile values**:
+**This step applies to cited *profiled* stories only.** For each of them the spec makes the
+evidence a **precondition** of the call and requires the call to quote the prepared entry
+rather than compose its own. A cited **unprofiled** story — including this cycle's own
+story, which predates the feature — owes no mode-derived entry: pass its path and stop
+there, unless it is first adopted through §6's confirmed profile-change procedure.
+Manufacturing an entry for it would impose exactly the obligation the compatibility
+guarantee removes.
+
+Where an entry is owed, amend the snapshot so its body carries it — story **path** and
+named evidence, and **no profile values**:
 
 ```bash
 git commit --amend -m "WIP: profiles — snapshot for Gate B (0.7.0)
@@ -566,9 +652,11 @@ a re-run before every re-review and before the close. Amending keeps the message
 For each pass `p`: delete `.context/codex-reviews/gate-b-spec-pass-<p>.md` **and**
 `gate-b-quality-pass-<p>.md`, confirm both are gone, then call `mcp__codex__review` with
 `reviewType: full`, `baseSha: <BASE>`, and an `additionalContext` that carries: the spec
-path, the story path, **the exact evidence entry from Step 5 quoted verbatim**, "report
-every finding with severity and confidence; say `NO FINDINGS` if clean", the one-line
-finding format, and the file-first output protocol with **one path per branch**. Validate
+path; **the path of every cited story**; **for each cited _profiled_ story, its exact
+evidence entry from Step 5 quoted verbatim** — an unprofiled story contributes its path
+only, and this cycle's story is unprofiled, so no entry is quoted for it; "report every
+finding with severity and confidence; say `NO FINDINGS` if clean"; the one-line finding
+format; and the file-first output protocol with **one path per branch**. Validate
 each file (terminator, exact count, no extra lines, both branches present) before acting
 on it. Fix Blocker/Major, re-review, repeat until a clean pass, writing
 `<slot>-dispositions.md` per pass.
@@ -596,9 +684,10 @@ sets, no mode-derived evidence. Running it profiled would mean adopting a profil
 
 - [ ] **Step 7: Close the cycle with one real commit**
 
-The closing message must carry the **same evidence entry** the final clean pass validated
-(§5 Mechanics), the docs-audit verdicts from Task 4, and **no profile values** — the story
-header is their single writable copy:
+The closing message must carry **the same evidence entry the final clean pass validated,
+one per cited profiled story** (§5 Mechanics) — none for an unprofiled story, which is
+this cycle's case — plus the docs-audit verdicts from Task 4, and **no profile values**,
+since the story header is their single writable copy:
 
 ```bash
 git reset --soft <BASE>
@@ -610,7 +699,7 @@ from them; §5 appends lens sets per axis and narrows the Gate-B triviality
 skip to effective level 0. Unprofiled stories are unaffected.
 
 Story: docs/superpowers/stories/2026-07-26-risk-security-validation-profiles-story.md
-Evidence: full battery green on the tree this commit records — shellcheck (6 files),
+Verification: full battery green on the tree this commit records — shellcheck (6 files),
 hook tests, check-invariants + suite, check-version-bump + suite,
 claude plugin validate --strict; exit 0.
 
@@ -618,9 +707,15 @@ Docs audit: <one line per file from Task 4 Step 2 — updated, or why it stays a
 EOF
 ```
 
-The evidence claim must be **re-verified immediately before this commit**, not inherited
-from the last time it was run: the soft reset changes nothing about the tree, but any fix
-since the last battery run would make the sentence false.
+**Why `Verification:` and not `Evidence:` here.** The cited story is unprofiled, so no
+mode-derived evidence entry is owed and labelling this one would claim an obligation that
+does not exist. Recording what was run stays worth doing — it is ordinary honest practice,
+not a profile requirement. A cycle citing profiled stories writes one `Evidence:` entry per
+profiled story instead, each validated by the final clean pass.
+
+The claim must be **re-verified immediately before this commit**, not inherited from the
+last time it was run: the soft reset changes nothing about the tree, but any fix since the
+last battery run would make the sentence false.
 
 - [ ] **Step 8: Open the PR**
 

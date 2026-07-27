@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.7.0
+
+- **`intake` proposes a risk and security-relevance profile per story** and derives a
+  **validation mode** from the two (`max(risk, security)` → `battery` / `battery+check` /
+  `battery+check+verification`, plus `+abuse-path` at security `high`). All three are
+  human-confirmed inside intake's existing single question round — there is no
+  "unconfirmed" state — and the story header is their single writable copy. A
+  `**Profile log:**` records later changes without restating values.
+- **§5 gains a Profiles subsection**: lens sets appended by level — risk `high` → threats,
+  abuse, rollback, data loss, idempotency, compatibility, observability; security
+  `standard` or `high` → assets, trust boundaries, roles, external systems, abuse paths
+  (risk `standard` and `trivial` append nothing) — three defined answers for
+  reading a profile, and the author's evidence obligations per mode. Lenses are different
+  questions, not more passes: the 3-pass floor, the Blocker/Major filter and the
+  file-first findings protocol are unchanged.
+- **The Gate-B triviality skip narrows** for a profiled story to effective level 0, and
+  removes the review but never the evidence. No new way to skip a gate is added.
+- **§5 Mechanics: the cycle-closing amend carries one validated evidence entry per cited
+  profiled story** (and none for an unprofiled one), so the final
+  commit body is its durable record — an entry written only into the `WIP:` body is
+  destroyed by the amend that closes the cycle.
+- **Unprofiled stories are unaffected**, including today's judgement-based skip: a story
+  with no profile line behaves exactly as it did before this release.
+- **`process-pr-review` decides the skip from the story profile**, not from the fix's
+  size alone, with explicit no-story, one-story and several-stories branches.
+- **The hook's below-floor reminder stops restating the skip rule** and defers to the
+  policy file instead — one string, no new hook behaviour. The hook still only counts
+  passes and reads no profile; the edit removes a rule statement that the narrowed skip
+  made false, rather than teaching the hook anything about profiles.
+
 ## 0.6.0
 
 - **Optional companion files beside a gate findings file.** The §5 protocol knew only

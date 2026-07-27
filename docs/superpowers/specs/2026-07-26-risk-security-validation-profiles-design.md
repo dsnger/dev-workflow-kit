@@ -217,9 +217,10 @@ reconfirmed — and an upgrade cannot leave yesterday's lowered mode standing, w
 have made the promised revalidation change nothing.
 
 **A cycle covering several stories** aggregates along separate dimensions rather than
-through one winning mode: the **battery runs once** for the cycle, **each cited story
-satisfies its own mode and suffix** with its own named evidence entry, and the **lens
-sets are unioned** across all cited stories. A single "max" would either under-serve the
+through one winning mode: the **battery runs once** for the cycle, **each cited *profiled*
+story satisfies its own mode and suffix** with its own named evidence entry — a cited
+unprofiled story has no mode and owes no entry, contributing only its path — and the
+**lens sets are unioned** across all cited stories. A single "max" would either under-serve the
 high-security story or impose its obligations on unrelated ones.
 
 **Level 2's two obligations are distinct.** `battery+check+verification` owes the
@@ -260,7 +261,11 @@ for.**
 
 **The skip keys on the effective level, never on risk alone.** §5's Gate-B triviality
 skip becomes available only when `max(risk, security)` is 0 — risk `trivial` *and*
-security `none`. A `trivial` risk call on security-relevant surface derives real evidence
+security `none` — and **its reason is recorded in the commit body**, beside the evidence
+entry. Not in the profile log: that log records *profile changes*, and a skip changes no
+profile value; it is a per-cycle decision belonging with the other per-cycle record.
+(Corrected during Gate B pass 2, which found the earlier "goes in the profile log" wording
+irreconcilable with the log's three event kinds.) A `trivial` risk call on security-relevant surface derives real evidence
 obligations, `+abuse-path` among them at security `high`, and a skip keyed on risk alone
 would let a single judgement call throw away the one obligation §4 says cannot be traded
 away.
@@ -292,9 +297,11 @@ they need different answers:
    blocks, a citation that resolves to nothing — **and the semantic ones**: a
    `**Validation:**` value that disagrees with `max(risk, security)`, or a
    `+abuse-path` suffix present without security `high` or absent with it, unless the
-   profile log explains it — and only the **latest `mode override` recorded after the
-   latest `axis change`**, moving in a direction compatible with the current value, can:
-   an axis change voids every prior override (§4), so an older one resolves nothing.
+   profile log explains it — and only the **latest `mode override`**, moving in a
+   direction compatible with the current value, can. If the log also holds an `axis
+   change`, that override must postdate the latest one, since an axis change voids every
+   prior override (§4); a log with no axis change at all is the ordinary intake-time
+   override, which resolves the mismatch by itself.
    A well-formed value
    can still be the wrong value, and a stale mode steers weaker evidence while looking
    entirely valid. Recomputing it is a profile change like any other: proposed, human
