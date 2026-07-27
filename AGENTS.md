@@ -215,6 +215,16 @@ reader can judge whether it still holds.
   words escapes it entirely. It raises the floor; it does not close the class. The
   underlying rule is the check itself: for every sentence about a gate, name the exact
   comparison the code performs, and delete any part of the sentence that outruns it.
+- **Never replace a decision procedure without accounting for its old conditions.** List
+  what the previous prose required, then mark each one kept, moved, or deliberately
+  dropped. A rewrite reliably preserves the condition that motivated it and silently loses
+  the others: in the profiles cycle this happened ten times across `process-pr-review`,
+  §5, the spec and a story criterion — once making an eligible profile *sufficient* for a
+  Gate-B skip, which is the gate-off path that change existed to close. Amending one
+  criterion also does not touch the prose that motivated it, so check the surrounding
+  paragraphs of any rule you amend. No tool decides this: a dropped condition looks
+  exactly like text that was never there.
+
 - **Never rename or delete a doc section without grepping for references first.**
   `ci.yml` once pointed at a deleted README section; `MANIFEST.md` listed a `CLAUDE.md`
   that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is

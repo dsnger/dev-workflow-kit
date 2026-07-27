@@ -234,6 +234,15 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   `NO FINDINGS` if clean" in `additionalContext`, with the same one-line format.
   You filter to Blocker/Major, Codex never does.
 
+  **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
+  A change makes sentences wrong in files it never touches. Checks scoped to the edited
+  paths — a parity diff, a resync, a grep of your own edits — do not look there, because
+  the file was correct until your change landed elsewhere. This lens is prompt text: it
+  asks, nothing enforces the ask or validates the answer, and no comprehensive check
+  covers arbitrary semantic drift. Ask anyway — in one cycle it surfaced a shipped command
+  that would have let a one-line fix skip Gate B entirely, plus two user-facing docs
+  teaching a rule the same change had just narrowed.
+
   **What counts as prose (the only Gate-B exemption).** Every staged path is
   explanatory documentation — `docs/**.md`, `README.md`, `MANIFEST.md` → N/A.
   These describe the product rather than being it, so a wrong sentence costs a

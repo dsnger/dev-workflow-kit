@@ -22,6 +22,17 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.7.1
+
+- **Gate B gains a standing lens: "which existing statements does this diff falsify?"**
+  A change makes sentences wrong in files it never touches. The checks that ran in the
+  motivating cycle — parity diffs, resyncs, greps of the edited paths — inspect only what
+  the change touched, so they never looked at these files; a narrow check could pin one
+  stale spelling, but no comprehensive check covers arbitrary semantic drift. The lens is
+  prompt text: it asks, and nothing enforces the ask or validates the answer. Asking found
+  a shipped command that would have let a one-line fix skip Gate B, plus two docs teaching
+  a rule the same change had narrowed. Hardening for a fourth `docs-drift` occurrence.
+
 ## 0.7.0
 
 - **`intake` proposes a risk and security-relevance profile per story** and derives a

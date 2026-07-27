@@ -411,6 +411,13 @@ Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not 
   Same coverage rule as Gate A: put "report every finding with severity and confidence; say
   `NO FINDINGS` if clean" in `additionalContext`, with the same one-line format.
 
+  **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
+  A change makes sentences wrong in files it never touches. Checks scoped to the edited
+  paths — a parity diff, a resync, a grep of your own edits — do not look there, because
+  the file was correct until your change landed elsewhere. This lens is prompt text: it
+  asks, nothing enforces the ask or validates the answer, and no comprehensive check
+  covers arbitrary semantic drift. Ask anyway; in practice it is what surfaces them.
+
   **What counts as prose (the only Gate-B exemption).** Every staged path is
   explanatory documentation — `docs/**.md`, `README.md` → N/A. Those describe the
   product rather than being it, so they carry no gate at all. **Prompts are not
@@ -715,6 +722,15 @@ Living references (consult, don't copy — copies go stale):
     than an admitted gap, because a reader stops looking. When the mechanism turns out
     not to exist, say what actually happens instead ("this is a rule the agent keeps;
     nothing counts for it").
+
+    **Where the reader can reach the authoritative source, cite it instead of restating
+    it** — a classifier, a policy section, a config. Every restatement is a copy that can
+    drift and a fresh chance to overclaim. This does not apply to text that must be
+    self-contained (a scaffolded template cannot point at a file the reader does not
+    have); there, restate and keep the copies in sync deliberately. **And when a claim
+    about a mechanism has needed a fourth correction, delete the claim rather than refine
+    it again** — successive corrections tend to be subtler versions of the same
+    overclaim.
 12. **Calibrated emphasis.** Reserve MUST/CRITICAL/ALL-CAPS for genuinely hard
     rules; default to plain wording ("Use X when …"). Why: current models follow
     instructions more literally and overtrigger on aggressive language
