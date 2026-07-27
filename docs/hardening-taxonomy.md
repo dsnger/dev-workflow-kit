@@ -73,7 +73,7 @@ the synonyms a future reader might search for instead.
   definition existed. Recorded now so the recurrence grep has something to land on.)
 
 - `rewrite-drops-prior-condition` — a rule with several conditions is rewritten, the new
-  condition survives, and one the old prose carried disappears with it. Aliases: lost
+  condition survives, and one of the conditions the old prose carried disappears with it. Aliases: lost
   precondition, half a rule, the summary that kept the new half, condition dropped in
   restatement, "we fixed it and it got weaker".
 
