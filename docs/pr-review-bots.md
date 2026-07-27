@@ -129,9 +129,7 @@ nothing" here:** `@coderabbitai review` is a no-op while automatic reviews are a
 `--paginate` matters: without it only page one is read, so a qualifying review can sit on
 page two and be read as absent. `jq -s` is what slurps the pages — `gh api --slurp` cannot
 do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
-a review of that head. If no qualifying record exists, re-trigger once (expect nothing —
-`@coderabbitai review` is a no-op while automatic reviews are active, so the attempt
-costs a wait and is kept only because it is cheap and has not been observed to hurt).
+a review of that head.
 
 **Then the two facts separate, and only one of them still binds.**
 
@@ -151,6 +149,16 @@ kept, not retired: promote a bot back and it reactivates unchanged, for that bot
 #12–#18 history above and the #14 precedent are the record of the period when it was
 live — they document a real requirement under the routing of their time, not a
 requirement suspended in the abstract.
+
+**Optional, not a step: the re-trigger.** Before invoking the human-exception clause —
+so, for a **Wait for** bot only — a re-trigger may be attempted. It is not part of the
+verification above, which is why the procedure no longer contains it: `@coderabbitai
+review` is a **no-op while automatic reviews are active** (the bot's own message on #17),
+so it cannot be expected to move the count, and on #14 and #17 it moved nothing. Nothing
+here says a re-trigger cannot work — only that this account has never seen one work.
+CodeRabbit documents other invocations; **do not claim `full review` works unless a run
+of it has actually been observed here**, which as of #19 it has not. Attempting one costs
+a wait and has not been observed to hurt; that is the whole case for it.
 
 What was actually measured, stated exactly: the rate-limit warning appeared in the **issue
 comment**, while the review record was an earlier completed review of an earlier commit.
