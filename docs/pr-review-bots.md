@@ -32,11 +32,12 @@ completion signal proves nothing about whether a review happened. Greptile set t
 precedent for a different reason — no signal at all — and CodeRabbit arrives at the same
 place by a signal that exists and does not mean what it appears to mean.
 
-**What the routing change does *not* touch: the per-head count.** The verification below
-is unchanged and stays exactly as #17 left it. Note only what its scope now is: it is a
-**merge-time** check, and the *blocking* half of the completion-signal distinction below
-now binds no bot, because nothing sits under **Wait for**. The count is still how you
-learn whether a given head was reviewed; it is no longer paired with a bot you wait on.
+**What the routing change does *not* touch: the count itself.** The query below and what
+it measures are exactly as #17 left them, and the count remains the arbiter of whether a
+head was reviewed — for **any** bot, opportunistic or not. What the change does scope is
+the *consequence* the file used to attach to a `0`: the merge-exception clause now binds
+only bots under **Wait for**, which is currently none. Both facts are stated where the
+query lives, below.
 
 **Completion signal, per bot.** CodeRabbit posts a status — visible in `gh pr checks`,
 and it finishes whether or not a review happened. **Two different things, and conflating
@@ -44,10 +45,12 @@ them merges unreviewed heads.**
 
 - *The check stopped pending* — a blocking signal, and the reason CodeRabbit looked
   waitable. Nothing is blocked on it now.
-- *The final head was reviewed* — a separate verification, and the one that decides
-  whether you may merge. **This is settled behaviour, not a hazard that might occur:
-  never merge on the check alone — the review count is the arbiter.** Five occurrences,
-  the last three caught by running the count rather than by luck:
+- *The final head was reviewed* — a separate verification, and the one that told you
+  whether you may merge while a bot was under **Wait for**. **This is settled behaviour,
+  not a hazard that might occur: a green check never establishes that a head was reviewed
+  — the review count is the arbiter.** (What follows from a `0` depends on routing; see
+  the two facts beside the query below.) Five occurrences, the last three caught by
+  running the count rather than by luck:
   - **#12 and #13** — the check passed while the issue comment read "Review rate
     limited"; on #13 the only CodeRabbit **review record** carried `commit_id` `eed589c`
     while the merged head was `92de0d2`. The head that merged was never reviewed.
@@ -72,9 +75,11 @@ them merges unreviewed heads.**
   **The message is noise. The count is signal. In both directions.** "Review rate
   limited" appears on heads that were never reviewed and on heads that were, so it tells
   you nothing either way; there is no interpretation left to do, and nothing to weigh —
-  one integer per head decides it. `0` means do not merge. Anything else means the head
-  was reviewed. What the green tick establishes is that CodeRabbit's *check* finished,
-  which is a different fact about a different thing.
+  one integer per head decides it. `0` means the head was not reviewed; anything else
+  means it was. Whether a `0` may be merged past is a routing question, answered below —
+  under **Wait for** it may not be, without a recorded human decision. What the green
+  tick establishes is that CodeRabbit's *check* finished, which is a different fact about
+  a different thing.
 
   **Verification is per head, not per PR.** Every push moves the head and the previous
   answer expires with it; a PR that takes three pushes takes three verifications. #16
@@ -82,7 +87,8 @@ them merges unreviewed heads.**
   because the new head went unreviewed past the point of waiting.
 
 Verify the second before merging — a deterministic boolean, so it can gate rather than be
-eyeballed. Run it on every merge, including the ones where the check looks unambiguous:
+eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
+gates directly only for a bot under **Wait for**, and is diagnostic for the rest:
 
 ```sh
 head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
@@ -116,8 +122,8 @@ the PR merged on an explicit human decision with the exception recorded, the unr
 delta being a one-word prose correction the reviewer had itself requested. That is the
 intended shape — this query is what tells you whether a review actually happened, and
 when it disagrees with the check a human decides. (Written while CodeRabbit was still
-under **Wait for**, so it read "the check is a signal you block on"; nothing is blocked
-on now, and the rest of the shape is unchanged.) **#17 explains the "re-trigger produced
+under **Wait for**, when that recorded decision was required; the query still answers the
+same question, but an absent review from an opportunistic bot no longer needs one.) **#17 explains the "re-trigger produced
 nothing" here:** `@coderabbitai review` is a no-op while automatic reviews are active.
 
 `--paginate` matters: without it only page one is read, so a qualifying review can sit on
@@ -125,9 +131,26 @@ page two and be read as absent. `jq -s` is what slurps the pages — `gh api --s
 do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
 a review of that head. If no qualifying record exists, re-trigger once (expect nothing —
 `@coderabbitai review` is a no-op while automatic reviews are active, so the attempt
-costs a wait and is kept only because it is cheap and has not been observed to hurt); if
-it is still absent, **merge only on an explicit human decision**, recording that the head
-went unreviewed.
+costs a wait and is kept only because it is cheap and has not been observed to hurt).
+
+**Then the two facts separate, and only one of them still binds.**
+
+1. **The count is the arbiter of whether a head was reviewed.** Unchanged, and it applies
+   to **any** bot — it is the diagnostic, and being routed opportunistically does not
+   make a bot's review record less readable or the answer less true.
+2. **"Merge only on an explicit recorded human decision" applies only to bots under
+   **Wait for**.** An absent review from an *opportunistic* bot blocks nothing and needs
+   no exception. Every head reaching a PR has already passed **Gate B**, the workflow's
+   actual cross-model review; the PR bots are a supplementary third instance, and
+   requiring a recorded exception whenever a supplementary reviewer stayed quiet would
+   reimpose as ceremony exactly the blocking that routing the bot opportunistically
+   removed.
+
+**The clause is dormant.** **Wait for** is empty, so nothing currently triggers it. It is
+kept, not retired: promote a bot back and it reactivates unchanged, for that bot. The
+#12–#18 history above and the #14 precedent are the record of the period when it was
+live — they document a real requirement under the routing of their time, not a
+requirement suspended in the abstract.
 
 What was actually measured, stated exactly: the rate-limit warning appeared in the **issue
 comment**, while the review record was an earlier completed review of an earlier commit.
