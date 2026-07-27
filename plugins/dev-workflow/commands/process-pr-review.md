@@ -138,10 +138,28 @@ be ambiguous, which is not an instruction.
    a decision already made, and to item 5 would let `harden-finding` change the
    repository for something just ruled out of this PR.
 
-3. Implement accepted **and** actionable findings. Severity gate per CLAUDE.md §5: a
-   trivial fix (one-liner, comment, naming) → commit with a documented Gate-B triviality
-   skip in the commit message; a substantial fix (logic, new/changed paths) → run Gate B
-   (`mcp__codex__review` on the new diff) before committing.
+3. Implement accepted **and** actionable findings. Severity gate per CLAUDE.md §5. **Every
+   substantial fix (logic, new or changed paths) runs Gate B** (`mcp__codex__review` on the
+   new diff) before committing — no profile makes a substantial fix skippable. A skip needs
+   **both** conditions, never either alone:
+   - the **fix is trivial** — judged by **behavioural effect, not line count**: a comment,
+     a doc typo, a rename nothing resolves against. A one-line change that alters
+     behaviour is not trivial, and in a prompt product the text *is* behaviour; **and**
+   - **every cited story is eligible.** Resolve the cited story path(s) first, looking in
+     **both** the PR body and the **commit bodies in the range** — the workflow puts the
+     story path in the closing commit message, so a PR that cites nothing in its
+     description may still be profiled. Only when neither carries a citation is this §5's
+     "no story cited" case, which takes the unprofiled judgement call. A profiled story is
+     eligible only at effective level 0 (risk `trivial` *and* security `none`); an
+     unprofiled story is eligible on the old judgement call. With several cited stories, each must be
+     eligible on its own; one eligible story does not carry the rest. A cited profile that
+     is **present but unresolvable** (§5's third case) stops the run — surface the cause;
+     it is never treated as unprofiled.
+
+   A skip removes the review and never the evidence. Every skipped cycle runs the battery
+   and records, in the commit body, **the skip reason and the battery result**. On top of
+   that: one mode-derived evidence entry per cited **profiled** story, and none for an
+   unprofiled one — which owes the reason and battery result and nothing further.
 4. Stop and ask the user for: every `escalate-to-user` verdict, and every accepted
    finding that contradicts a settled decision. Do not implement these. A finding
    already recorded as out of scope by item 2 does **not** come here — it is terminal
