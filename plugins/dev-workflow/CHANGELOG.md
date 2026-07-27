@@ -37,16 +37,19 @@ AGENTS.md invariant 12 carries the complete list.
   reading a profile, and the author's evidence obligations per mode. Lenses are different
   questions, not more passes: the 3-pass floor, the Blocker/Major filter and the
   file-first findings protocol are unchanged.
-- **The Gate-B triviality skip narrows** for a profiled story to effective level 0, and
-  removes the review but never the evidence. No new way to skip a gate is added.
+- **The Gate-B skip narrows** for a profiled story: it now needs **both** a behaviourally
+  trivial change **and** effective level 0, where the profile supplies only the second.
+  It removes the review but never the evidence. No new way to skip a gate is added.
 - **§5 Mechanics: the cycle-closing amend carries one validated evidence entry per cited
   profiled story** (and none for an unprofiled one), so the final
   commit body is its durable record — an entry written only into the `WIP:` body is
   destroyed by the amend that closes the cycle.
 - **Unprofiled stories are unaffected**, including today's judgement-based skip: a story
   with no profile line behaves exactly as it did before this release.
-- **`process-pr-review` decides the skip from the story profile**, not from the fix's
-  size alone, with explicit no-story, one-story and several-stories branches.
+- **`process-pr-review` requires both conditions for a Gate-B skip** — the change is
+  behaviourally trivial (judged by effect, never by line count) **and** every cited story
+  is eligible — where it previously turned on the fix's size alone. Explicit no-story,
+  one-story and several-stories branches.
 - **The hook's below-floor reminder stops restating the skip rule** and defers to the
   policy file instead — one string, no new hook behaviour. The hook still only counts
   passes and reads no profile; the edit removes a rule statement that the narrowed skip

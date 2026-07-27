@@ -127,7 +127,8 @@ prior review. Trivial changes may skip it, on terms that depend on the story: an
 unprofiled one keeps the judgement call, while a profiled one qualifies only at
 effective level 0 — trivial risk *and* no security relevance — so a trivial-looking
 change on security-relevant surface is not eligible. A skip removes the review, never
-the evidence: the battery still runs and the reason is recorded. **Explanatory**
+the evidence: the battery still runs, the reason is recorded in the commit body, and
+so is one evidence entry per cited profiled story. **Explanatory**
 documentation carries no gate at all — a wrong sentence there costs a confused reader
 rather than broken behaviour. Prompt artifacts are not explanatory prose: in a project
 whose product is prompts, the text *is* the behaviour, so the review policy requires Gate

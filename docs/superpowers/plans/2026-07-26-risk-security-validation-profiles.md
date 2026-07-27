@@ -12,8 +12,10 @@ story risks.
 **Architecture:** Prompt-and-template changes only. The `intake` skill gains a proposal
 step and two template lines; `CLAUDE.md` §5 gains a **Profiles** subsection plus one
 Mechanics clause; `commands/workflow-init.md` carries the same two additions in its inline
-§5 template (invariant 8 keeps them inline). No hook change, no new script, no new
-scaffolded file.
+§5 template (invariant 8 keeps them inline). `process-pr-review` requires **both** conditions for a
+Gate-B skip — the change is behaviourally trivial *and* every cited story is eligible —
+where before it turned on the fix's size alone. No new script, no new scaffolded file, and no hook change beyond the
+one advisory reminder string covered by the waiver below.
 
 **Tech Stack:** Markdown prompts. Verification is the repo battery (shellcheck, hook
 tests, `check-invariants.sh`, `check-version-bump.sh`, `claude plugin validate`) plus
@@ -298,13 +300,16 @@ filter, the file-first findings protocol and the clean-final-pass rule are uncha
    any other — proposed, human-confirmed, logged. Falling back to the lighter behaviour on
    a malformed profile would under-review exactly the stories most likely to have one.
 
-**The Gate-B triviality skip keys on the effective level, never on risk alone.** For a
-profiled story it is available only when `max(risk, security)` is 0 — risk `trivial` *and*
-security `none` — and **its reason is recorded in the commit body**, beside the evidence
-entry. Not in the profile log: that log records profile *changes*, and a skip changes no
-profile value. **A skip removes the review, never the evidence:** the battery still runs and its entry still lands in the
-commit body. An **unprofiled** story keeps exactly today's judgement-based skip and owes
-no mode-derived evidence.
+**The Gate-B triviality skip needs two independent conditions**, and an eligible profile
+never makes a behaviour-changing diff skippable: the change itself is **behaviourally
+trivial** (the pre-existing judgement, unchanged by profiles), **and** for a profiled story
+`max(risk, security)` is 0 — risk `trivial` *and* security `none`, never risk alone. The
+**skip reason is recorded in the commit body** — not in the profile log, which records
+profile *changes*, and a skip changes no profile value. **A skip removes the review, never
+the evidence**, and what is owed follows the profile: a skipped **profiled** story runs the
+battery and lands its evidence entry beside the reason; a skipped **unprofiled** story
+records the reason and the battery result and nothing more, because it owes no mode-derived
+entry and keeps exactly today's judgement-based skip.
 
 **A cycle citing several stories** aggregates along separate dimensions, never through one
 winning mode: the **battery runs once** for the cycle; **each cited _profiled_ story
@@ -441,8 +446,8 @@ Replace the whole `- [ ] **P2 + P6 — risk/security profiles…**` row (lines 1
 ```markdown
 - [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
       human-confirmed axes in the story header, a mode derived as `max(risk, security)`,
-      lens sets appended to the §5 gate prompts, and the Gate-B triviality skip narrowed
-      to effective level 0. Spec:
+      lens sets appended to the §5 gate prompts, and the Gate-B skip narrowed to need both a
+      behaviourally trivial change and effective level 0. Spec:
       `docs/superpowers/specs/2026-07-26-risk-security-validation-profiles-design.md`.
 - [ ] **P6 — standalone security sections in the intake, spec and gate templates:
       DELIBERATELY REJECTED, not shipped.** The profile *is* the heading: a standalone
@@ -582,7 +587,8 @@ Insert as the newest entry, matching the file's existing style (no dates):
   **validation mode** from the two; all three are human-confirmed and recorded in the story
   header, which is their single writable copy.
 - §5 gains a **Profiles** subsection: lens sets appended per axis, the Gate-B triviality
-  skip narrowed to effective level 0 for profiled stories, and the author's evidence
+  skip narrowed for profiled stories to need both a behaviourally trivial change and
+  effective level 0, and the author's evidence
   obligations per mode. The 3-pass floor and the findings protocol are unchanged, and no
   new way to skip a gate is added.
 - §5's Mechanics: the cycle-closing amend carries one validated evidence entry per cited
@@ -598,7 +604,15 @@ Tasks 1–2's plugin edits, so running the battery with the bump still uncommitt
 check for a bump that exists on disk. Snapshot first, then measure:
 
 ```bash
-git add -A && git commit -m "WIP: profiles — snapshot for Gate B (0.7.0)"
+git status --short                      # confirm nothing unrelated is dirty
+git add plugins/dev-workflow/skills/intake/SKILL.md \
+        plugins/dev-workflow/commands/workflow-init.md \
+        plugins/dev-workflow/commands/process-pr-review.md \
+        plugins/dev-workflow/.claude-plugin/plugin.json \
+        plugins/dev-workflow/CHANGELOG.md \
+        plugins/dev-workflow/hooks/codex-gate.sh \
+        CLAUDE.md todos.md docs/getting-started.md docs/coding-workflow.md
+git commit -m "WIP: profiles — snapshot for Gate B (0.7.0)"
 git log --oneline -8
 ```
 
@@ -666,7 +680,9 @@ uncommitted fix sits outside `baseSha..HEAD`, where Gate B would return clean on
 pre-fix diff while the closing commit carried unreviewed changes:
 
 ```bash
-git add <the intended paths>          # never -A blindly; check `git status` first
+git add <the paths you just edited, named one by one — never -A>
+git diff --cached --name-only         # confirm the staged set is exactly those paths
+git diff --cached                     # and that its CONTENT is only your fix
 git commit --amend --no-edit          # folds the fix into the active WIP snapshot, body intact
 <re-run Step 4's battery>             # the tree changed, so the previous result is void
 <re-review: next pass p+1>            # reviews the committed range, fixes included
@@ -674,6 +690,18 @@ git commit --amend --no-edit          # folds the fix into the active WIP snapsh
 
 `--amend --no-edit` preserves the evidence body; if a fix changes what the evidence claims,
 rewrite the body with `--amend` and a full message instead of `--no-edit`.
+
+**Name the paths from what you edited, not from a computed delta.** You made the fix, so
+you know its files; `git status` cannot tell your edit from pre-existing dirt on a path
+that was already modified, and a recipe that claims otherwise is wrong exactly when the
+worktree is dirty — the case it would exist for. The two `--cached` lines verify the staged
+set rather than deriving it.
+
+**If a path you are about to stage was already dirty before this cycle**, whole-path
+`git add` folds someone else's work into the reviewed range and the name-only check still
+passes, because the path is one you meant to stage. Then: stage the fix's hunks only and
+read `git diff --cached` before committing, or stop and ask. Whole-path staging is safe
+only for a path that was clean when the cycle began.
 
 **This story's own profile:** read it fresh from the story header at
 `docs/superpowers/stories/2026-07-26-risk-security-validation-profiles-story.md` — the plan
@@ -695,8 +723,8 @@ git commit -F - <<'EOF'
 feat(intake,§5): risk, security, and validation profiles
 
 Two human-confirmed axes in the story header and a validation mode derived
-from them; §5 appends lens sets per axis and narrows the Gate-B triviality
-skip to effective level 0. Unprofiled stories are unaffected.
+from them; §5 appends lens sets per axis and narrows the Gate-B skip, which now needs
+both a behaviourally trivial change and effective level 0. Unprofiled stories are unaffected.
 
 Story: docs/superpowers/stories/2026-07-26-risk-security-validation-profiles-story.md
 Verification: full battery green on the tree this commit records — shellcheck (6 files),

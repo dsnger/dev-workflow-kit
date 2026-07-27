@@ -468,13 +468,16 @@ filter, the file-first findings protocol and the clean-final-pass rule are uncha
    any other — proposed, human-confirmed, logged. Falling back to the lighter behaviour on
    a malformed profile would under-review exactly the stories most likely to have one.
 
-**The Gate-B triviality skip keys on the effective level, never on risk alone.** For a
-profiled story it is available only when `max(risk, security)` is 0 — risk `trivial` *and*
-security `none` — and **its reason is recorded in the commit body**, beside the evidence
-entry. Not in the profile log: that log records profile *changes*, and a skip changes no
-profile value. **A skip removes the review, never the evidence:** the battery still runs and its entry still lands in the
-commit body. An **unprofiled** story keeps exactly today's judgement-based skip and owes
-no mode-derived evidence.
+**The Gate-B triviality skip needs two independent conditions**, and an eligible profile
+never makes a behaviour-changing diff skippable: the change itself is **behaviourally
+trivial** (the pre-existing judgement, unchanged by profiles), **and** for a profiled story
+`max(risk, security)` is 0 — risk `trivial` *and* security `none`, never risk alone. The
+**skip reason is recorded in the commit body** — not in the profile log, which records
+profile *changes*, and a skip changes no profile value. **A skip removes the review, never
+the evidence**, and what is owed follows the profile: a skipped **profiled** story runs the
+battery and lands its evidence entry beside the reason; a skipped **unprofiled** story
+records the reason and the battery result and nothing more, because it owes no mode-derived
+entry and keeps exactly today's judgement-based skip.
 
 **A cycle citing several stories** aggregates along separate dimensions, never through one
 winning mode: the **battery runs once** for the cycle; **each cited _profiled_ story

@@ -21,8 +21,9 @@ generic questions as a trivial one. Nothing records what a story risks, so CLAUD
 Every story carries two human-confirmed profile axes — risk and security relevance —
 plus a validation mode derived from them, and the gates spend effort in proportion:
 high risk asks *different* review questions (threats, abuse, rollback, data loss,
-idempotency, compatibility, observability), trivial legitimizes the documented skip
-with a recorded reason. Different questions, not more identical passes. Why: profiles
+idempotency, compatibility, observability), while effective level 0 — risk `trivial`
+*and* security `none` — legitimizes the documented Gate-B skip with a recorded reason,
+for a change that is itself behaviourally trivial. Different questions, not more identical passes. Why: profiles
 are the economics lever on the workflow's dominant cost, and the precondition for the
 batch/orchestrator mode parked in todos — that mode cannot decide what to batch without
 knowing what each item risks.
@@ -32,9 +33,13 @@ knowing what each item risks.
 - [ ] Intake proposes both axes with their levels (risk: trivial | standard | high;
       security relevance: none | standard | high) and the human confirms or corrects
       them before the story is written.
-- [ ] Risk `high` is reachable by named domain triggers — auth, permissions, payments,
-      migrations, data deletion, public APIs, personal data, supply chain — not by
-      unaided judgement.
+- [ ] Risk `high` is reachable by named triggers, not by unaided judgement: named
+      **domains** — auth, permissions, payments, migrations, data deletion, public APIs,
+      personal data, supply chain — and named **effects** — irreversibility, data loss or
+      corruption, outage exposure.
+      *(Amended 2026-07-27 from PR-review finding: the effect triggers were added during
+      Gate A spec pass 3, because a severe change need not sit in a named domain, and the
+      criterion still named only the domains.)*
 - [ ] The validation mode is derived from the two axes and presented as a
       recommendation the human can override; it is never asked as a third question.
 - [ ] All three values are recorded in one fixed location that survives spec revisions,
@@ -43,7 +48,14 @@ knowing what each item risks.
       upgrade the profile, and the upgrade is recorded — silently continuing under a
       stale profile is not an available outcome.
 - [ ] The §5 gate prompts consume the profile: at risk `high` they carry the additional
-      lenses; at `trivial` the documented skip is available with its reason recorded.
+      lenses; the documented Gate-B skip needs **both** a behaviourally trivial change
+      *and* effective level 0 for every cited profiled story — risk `trivial` *and*
+      security `none` — with its reason and the battery result recorded. Each cited
+      profiled story also owes one evidence entry; an unprofiled story owes none and keeps
+      the prior judgement-based skip.
+      *(Amended 2026-07-27 from PR-review finding: the criterion keyed the skip on risk
+      alone, which Gate A spec pass 2 corrected to the effective level so a trivial-risk
+      change on security-relevant surface cannot skip away its obligations.)*
 - [ ] For security relevance standard | high, the story states *where* security content
       lives (the spec's existing sections and AGENTS.md invariants) — no new standalone
       security section is introduced anywhere.
@@ -56,8 +68,13 @@ knowing what each item risks.
       trigger is re-pointed at "the first story that runs under profiles".
       *(Amended 2026-07-26 during Gate A, spec pass 6: the original criterion said "P2+P6
       closed", which would claim scope that was deliberately not built.)*
-- [ ] Scope holds: nothing under `plugins/dev-workflow/hooks/` changes, and no new
-      script is added.
+- [ ] Scope holds: no new script is added, and nothing under
+      `plugins/dev-workflow/hooks/` changes except one advisory reminder string, waived
+      by the human during Gate B pass 11 — the hook still reads no profile and gains no
+      machinery.
+      *(Amended 2026-07-27 from PR-review finding: the waiver was recorded in the plan's
+      decision record and the CHANGELOG, but this criterion and the spec's non-goal still
+      asserted the unwaived scope.)*
 
 ## 4. Affected AGENTS.md invariants
 

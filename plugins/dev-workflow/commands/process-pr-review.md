@@ -142,17 +142,24 @@ be ambiguous, which is not an instruction.
    substantial fix (logic, new or changed paths) runs Gate B** (`mcp__codex__review` on the
    new diff) before committing — no profile makes a substantial fix skippable. A skip needs
    **both** conditions, never either alone:
-   - the **fix is trivial** — a one-liner, a comment, naming — the pre-existing judgement,
-     unchanged by profiles; **and**
-   - **every cited story is eligible.** Resolve the cited story path(s) first: a profiled
-     story is eligible only at effective level 0 (risk `trivial` *and* security `none`); an
-     unprofiled story is eligible on the old judgement call; a PR citing **no** story — the
-     common shape for a review-fix PR — is §5's unprofiled case. With several cited
-     stories, each must be eligible on its own; one eligible story does not carry the rest.
+   - the **fix is trivial** — judged by **behavioural effect, not line count**: a comment,
+     a doc typo, a rename nothing resolves against. A one-line change that alters
+     behaviour is not trivial, and in a prompt product the text *is* behaviour; **and**
+   - **every cited story is eligible.** Resolve the cited story path(s) first, looking in
+     **both** the PR body and the **commit bodies in the range** — the workflow puts the
+     story path in the closing commit message, so a PR that cites nothing in its
+     description may still be profiled. Only when neither carries a citation is this §5's
+     "no story cited" case, which takes the unprofiled judgement call. A profiled story is
+     eligible only at effective level 0 (risk `trivial` *and* security `none`); an
+     unprofiled story is eligible on the old judgement call. With several cited stories, each must be
+     eligible on its own; one eligible story does not carry the rest. A cited profile that
+     is **present but unresolvable** (§5's third case) stops the run — surface the cause;
+     it is never treated as unprofiled.
 
-   A skip removes the review and never the evidence: run the battery, and record the skip
-   reason in the commit body — plus one evidence entry per cited **profiled** story, and
-   none for an unprofiled one.
+   A skip removes the review and never the evidence. Every skipped cycle runs the battery
+   and records, in the commit body, **the skip reason and the battery result**. On top of
+   that: one mode-derived evidence entry per cited **profiled** story, and none for an
+   unprofiled one — which owes the reason and battery result and nothing further.
 4. Stop and ask the user for: every `escalate-to-user` verdict, and every accepted
    finding that contradicts a settled decision. Do not implement these. A finding
    already recorded as out of scope by item 2 does **not** come here — it is terminal

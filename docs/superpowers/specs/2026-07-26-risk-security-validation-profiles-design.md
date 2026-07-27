@@ -256,13 +256,15 @@ for.**
   to save. The one genuine overlap — risk's *abuse* and security's *abuse paths* — is a
   **single lens carrying both labels**, not two questions; leaving that undefined is how
   the two §5 copies would drift into asking it twice or dropping one axis's version.
-- **risk `trivial`** → nothing appended. It supplies the recorded reason for §5's
-  pre-existing Gate-B triviality skip; it creates no skip of its own.
+- **risk `trivial`** → nothing appended. It supplies *one part* of a profiled story's
+  eligibility for §5's pre-existing Gate-B skip — never the justification on its own, and
+  never a skip of its own.
 
-**The skip keys on the effective level, never on risk alone.** §5's Gate-B triviality
+**The skip needs two independent conditions**, and the profile supplies only one: the
+change is **behaviourally trivial**, *and* for a profiled story §5's pre-existing Gate-B
 skip becomes available only when `max(risk, security)` is 0 — risk `trivial` *and*
-security `none` — and **its reason is recorded in the commit body**, beside the evidence
-entry. Not in the profile log: that log records *profile changes*, and a skip changes no
+security `none`. The **skip reason is recorded in the commit body**, beside the evidence
+entry where one is owed. Not in the profile log: that log records *profile changes*, and a skip changes no
 profile value; it is a per-cycle decision belonging with the other per-cycle record.
 (Corrected during Gate B pass 2, which found the earlier "goes in the profile log" wording
 irreconcilable with the log's three event kinds.) A `trivial` risk call on security-relevant surface derives real evidence
@@ -270,9 +272,11 @@ obligations, `+abuse-path` among them at security `high`, and a skip keyed on ri
 would let a single judgement call throw away the one obligation §4 says cannot be traded
 away.
 
-**A skip removes the review, never the evidence.** A skipped story is still mode
-`battery` by derivation, so the battery still runs and its entry still lands in the commit
-body before the commit. Otherwise the profile would quietly become an evidence-off path
+**A skip removes the review, never the evidence.** A skipped **profiled** story is still
+mode `battery` by derivation, so the battery runs and its evidence entry lands in the
+commit body before the commit. A skipped **unprofiled** story owes no mode-derived entry
+(§7): it records its skip reason and the battery result, and nothing more — manufacturing
+an entry for it would impose the obligation the compatibility guarantee removes. Otherwise the profile would quietly become an evidence-off path
 while advertising that it is not a gate-off path — the same claim D6 refuses.
 
 **In a cycle citing several stories, every cited story must be skip-eligible** for the
@@ -371,9 +375,11 @@ written into the spec that is supposed to prevent it.
 A story with **no profile line behaves exactly as today** (§5): standard intensity, no
 lens sets appended, no effective-level eligibility rule — and today's judgement-based
 Gate-B triviality skip still available to it, because "exactly as today" has to include
-the parts that favour the author. It also owes **no mode-derived evidence and no
-commit-body entry**: the validation modes of §4 apply to profiled stories only, and
-imposing them on in-flight work would be the same tightening in a different place. That is what makes D2 free — nothing in flight breaks,
+the parts that favour the author. It also owes **no mode-derived evidence
+entry**: the validation modes of §4 apply to profiled stories only, and imposing them on
+in-flight work would be the same tightening in a different place. What a skipped
+unprofiled cycle *does* record in the commit body is what every skipped cycle records —
+its skip reason and the battery result — which is today's practice, not a new obligation. That is what makes D2 free — nothing in flight breaks,
 and adoption is a header line plus one log entry through §6 whenever a story wants it.
 
 **How spec and plan cite the story.** Both carry a `**Story:**` header line with the
@@ -391,7 +397,11 @@ assets, trust boundaries, roles, external systems and abuse paths; a spec that h
 covered them draws findings, which is a review outcome, not enforcement. No template
 grows a standalone security section (non-goal, below).
 
-**Surfaces touched:** `plugins/dev-workflow/skills/intake/SKILL.md` (proposal step,
+**Surfaces touched:** `plugins/dev-workflow/commands/process-pr-review.md` (its Gate-B
+skip needs **both** conditions — the change is behaviourally trivial, judged by effect
+rather than line count, **and** every cited story is eligible — where before it turned on
+the fix's size alone),
+`plugins/dev-workflow/skills/intake/SKILL.md` (proposal step,
 header line, profile log in the story template), `CLAUDE.md` §5 and the inline §5
 template in `plugins/dev-workflow/commands/workflow-init.md` (both in the same commit —
 docs-drift class, and including §5's Mechanics clause on the cycle-closing amend),
@@ -411,8 +421,10 @@ check that the two §5 copies say the same thing after the edit — both files c
 not evidence that they agree. The method is the plan's to choose; inventing one in prose
 here is the altitude mistake this spec opens by naming.
 
-**Non-goals:** no hook change (the hook counts passes and does not need to know
-profiles); no new script; no new scaffolded file; no standalone security section in any
+**Non-goals:** no hook change beyond one advisory reminder string (waived by the human
+during Gate B pass 11: the hook's below-floor reminder asserted a skip rule this design
+makes false, and the edit *removes* that statement in favour of citing the policy, so the
+hook still counts passes and reads no profile); no new script; no new scaffolded file; no standalone security section in any
 template. If field use later shows high-security content scattering incoherently across
 specs, that recurrence is the trigger for a dedicated section. Stable AC-/SEC-IDs (P5
 light) are deferred by the same reasoning that dated their trigger: profiles are what

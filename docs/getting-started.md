@@ -13,7 +13,9 @@ a voice transcript — German is fine). The `intake` skill turns it into a story
 problem, outcome, ≥3 checkable acceptance criteria, which `AGENTS.md` invariants it
 touches, and a **profile** — how risky this is (`trivial|standard|high`), how
 security-relevant (`none|standard|high`), and the validation mode derived from the two.
-It proposes all three with a reason; you confirm or correct them. The two axes decide
+It proposes both axes and the derived mode with a reason; you confirm or correct the
+axes, and any change to the mode is an override that carries its own reason and is
+logged. The two axes decide
 which extra questions the review gates ask; the derived mode decides what evidence you
 owe before Gate B, and the levels **accumulate**: a green battery, then a check that
 fails without the change, then a named verification of the risk path on top of both. At
@@ -75,10 +77,11 @@ workflow gets stricter exactly where your project actually fails.
 
 The rhythm: minutes of questions and approval (1–2), two review loops where you
 mostly arbitrate (3–4), hands-off implementation (5–6), one more loop (7), PR
-close-out (8–9). Trivial changes travel lighter, within limits: what a `trivial`
-profile unlocks is the **Gate-B** skip and only at effective level 0 (risk `trivial`
-*and* security `none`), with the battery still owed and Gate A's floor unchanged; a
-story with no profile keeps the prior judgement-based Gate-B skip. The caution bias is
+close-out (8–9). Trivial changes travel lighter, within limits: **Gate B** may be skipped
+only when the change is behaviourally trivial **and** the story is eligible — a profiled
+one at effective level 0 (risk `trivial` *and* security `none`), an unprofiled one by the
+prior judgement call. The profile supplies eligibility, never the skip itself; the battery
+is still owed and Gate A's floor is unchanged at every level. The caution bias is
 for non-trivial work, judgment is allowed. Two knobs: `.context/codex-gate.floor` (any
 positive integer) moves the 3-pass floor, and `touch .context/codex-gate.off`
 silences the reminders in a scratch workspace (delete to re-enable; state keeps
@@ -99,7 +102,8 @@ smallest that matches your intent:
 2. **One trivial change:** the hook warns, it never blocks. What §5 permits depends on
    the story: an **unprofiled** one keeps the old judgement call, while a **profiled**
    one may skip Gate B only at effective level 0 (risk `trivial` *and* security `none`),
-   still owes the battery, and records the skip reason in the commit body. Gate A is not
+   still owes the battery, and records both the skip reason and its evidence entry in the
+   commit body. Gate A is not
    skippable at any level.
 3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable;
    state keeps tracking, so nothing goes stale).
