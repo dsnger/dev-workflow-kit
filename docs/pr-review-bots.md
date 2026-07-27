@@ -10,7 +10,7 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
-| CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. **Its status check can pass while the comment says "Review rate limited" — see the completion-signal note: a green check does not prove the final head was reviewed.** |
+| CodeRabbit | yes | **inline** | Observed on PR #1 (plan: Pro Plus, profile CHILL): posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. **Its status check passes while the comment says "Review rate limited" — observed on four PRs (#12, #13, #15, #16), so treat it as this bot's normal behaviour rather than an edge case. A green check does not prove the final head was reviewed; the review count is the arbiter. See the completion-signal note.** |
 | Greptile | yes | **summary always; inline usually** | Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
@@ -29,14 +29,24 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 you can block on it. **Two different things, and conflating them merges unreviewed heads.**
 
 - *The check stopped pending* — the blocking signal. Block on this.
-- *The final head was reviewed* — a separate verification. Observed on #12 and #13: the
-  check passed while the issue comment read "Review rate limited", and on #13 the only
-  CodeRabbit **review record** carried `commit_id` `eed589c` while the merged head was
-  `92de0d2`. The head that merged was never reviewed, and the green check said nothing
-  about it.
+- *The final head was reviewed* — a separate verification, and the one that decides
+  whether you may merge. **This is settled behaviour, not a hazard that might occur:
+  never merge on the check alone — the review count is the arbiter.** Four occurrences,
+  the last two caught by running the count rather than by luck:
+  - **#12 and #13** — the check passed while the issue comment read "Review rate
+    limited"; on #13 the only CodeRabbit **review record** carried `commit_id` `eed589c`
+    while the merged head was `92de0d2`. The head that merged was never reviewed.
+  - **#15** — green check, "Review rate limited", and the count returned `0` for the live
+    head. Merging there would have shipped an unreviewed head; waiting until the count
+    reached `1` cost about three minutes.
+  - **#16** — the same, observed while writing this row: green check, "Review rate
+    limited", count `0`.
+
+  The check and the review are independent facts, and the check is the one that lies.
+  What the green tick establishes is that CodeRabbit's *check* finished — nothing more.
 
 Verify the second before merging — a deterministic boolean, so it can gate rather than be
-eyeballed:
+eyeballed. Run it on every merge, including the ones where the check looks unambiguous:
 
 ```sh
 head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
