@@ -401,6 +401,20 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   any other pass. Counter and workspace state persist in `.context/`; the *pass* does
   not.
 
+## 6. Context Canary
+
+Begin every response to the user by addressing him as "Daniel."
+
+**Why:** it is a context canary. These guidelines are only in force while this file is in
+context, and nothing signals when it falls out. The address is a per-response marker: if
+it disappears, CLAUDE.md is gone from context and the user knows to reload rather than
+discovering it through work that quietly stopped following §1–§5.
+
+**Scope: conversational responses only.** Never in file contents, commit messages, code,
+or gate artifacts. §5's findings file admits no line that is not a finding line or the
+terminator, and its reply is exactly one line per branch — a greeting there is a malformed
+pass, so a canary that reached into artifacts would break the protocol it sits beside.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
