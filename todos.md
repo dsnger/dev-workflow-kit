@@ -74,6 +74,21 @@ driven by recurrence rather than by enthusiasm.
       && git commit -am x` is one PreToolUse event: the hook hashes before the mutation
       runs, so the commit carries content the hash never saw. Consider treating any
       command segment preceding `git commit` as uncertain and firing.
+      **Occurrence 2 (2026-07-30): same event-timing class, second consumer —
+      `is_docs_only` rather than `tree_hash`.** Commit 1950739 staged exactly one
+      `docs/**.md` path, so Gate B was N/A per CLAUDE.md §5's prose exemption, yet the
+      hook emitted the Gate-B STOP. Cause, read from the source rather than inferred:
+      the docs-only branch derives its file list as
+      `files=$(git -C "$repo_root" diff --cached --name-only)` at PreToolUse, the commit
+      was issued as a single Bash call whose `git add` had not run yet, so that list was
+      empty — and `is_docs_only` opens with `[ -n "$1" ] || return 1`, which the branch's
+      own comment states as intent ("Only when the file list is POSITIVELY confirmed
+      docs-only; an empty list falls through to fire"). So the timing gap now has two
+      consumers, and this one is a **false positive** — it fires when it need not, the
+      safe direction under invariant 2 — where the `tree_hash` consumer above is the
+      dangerous direction. Counts toward this row's eventual trigger; not fixed now, and
+      note that any fix must keep the empty-list fallthrough firing rather than trade a
+      redundant warning for a missed one.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
