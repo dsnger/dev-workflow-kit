@@ -166,6 +166,14 @@ backlog.
       IDs exist to label what profiles produce, so the numbering scheme should meet a real
       profiled story before it gets a template slot.
 
+- [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
+      variable keeps a >120 s gate call in the foreground so its result reaches the hook;
+      without it a long call is counted at the auto-background threshold having reviewed
+      nothing. The result-classification story documents it in `README.md` § Setup only,
+      deliberately — a preflight check is a second surface and was kept out of that diff.
+      *Trigger: after that story lands* (spec:
+      `docs/superpowers/specs/2026-07-31-failed-codex-call-counts-as-a-pass-design.md`).
+
 - [ ] **Upstream-report candidate: `claude plugin update <bare-name>`.** The CLI docs
       document the bare plugin name as a valid argument for `install`/`uninstall`/`update`
       alike, but `claude plugin update dev-workflow` errors "Plugin 'dev-workflow' not
