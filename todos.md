@@ -65,7 +65,12 @@ driven by recurrence rather than by enthusiasm.
       *Trigger: this session's discovery — already fired.* Deliberately not fixed in
       PR #9, whose scope guard is prompts and templates only; this needs hook code and
       regression tests.
-- [ ] **jq-free parser stops at an escaped JSON quote.** A payload containing
+- [ ] **jq-free parser stops at an escaped JSON quote.** *(Candidate path, recorded
+      2026-08-01: the result-classification story builds a POSIX awk locator with proper
+      string-state and backslash-parity handling. Once that exists and is proven against the
+      captured fixtures, this row's fix can likely reuse it rather than inventing a second
+      escape-aware scanner. The scopes stay separate — that story does not touch
+      `input_field` — but whoever takes this row should look there first.)* A payload containing
       `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
       wrong direction under invariant 2, and only on machines without `jq`. Needs
       escape-aware decoding or a conservative raw-payload scan, plus tests for escaped
