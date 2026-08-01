@@ -256,6 +256,19 @@ backlog.
       editable prose should reword instead.) And the
       ledger itself had to be **excluded** from both checks, because a ledger that
       quotes defects self-rejects the checks that detect them.
+- [ ] **Each Gate cycle destroys the previous cycle's review record.** Slot names
+      (`gate-a-spec-pass-<p>`, `gate-b-<branch>-pass-<p>`) carry no cycle-unique component,
+      and §5 mandates deleting every target file before each call — correctly, since a
+      surviving prior file is indistinguishable from a fresh one. The consequence is that a
+      second cycle in the same repo silently erases the first cycle's findings artifacts.
+      **Observed, not theorised:** the result-classification cycle's pass-1 call deleted the
+      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` is git-ignored,
+      so it is unrecoverable. §5 anticipates *concurrent* calls racing on one slot and says
+      so; it does not cover *sequential cycles* reusing them. Note the dispositions and
+      resume-note companions have the same property. Any fix has to keep the pre-call delete
+      — that check is load-bearing — so it is about naming (a cycle component in the slot) or
+      archiving, not about relaxing the protocol. *Trigger: the next round touching the §5
+      file protocol.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
       showed it is a design, not a sentence. Spec questions: a semantic §5 locator
