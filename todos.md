@@ -132,6 +132,26 @@ driven by recurrence rather than by enthusiasm.
       confusing one-off red: it is a step a human must know about and repeat, on a
       command AGENTS.md presents as "what CI runs". Two occurrences of the same class
       now; counts toward whatever trigger this row is eventually escalated on.
+- [ ] **Gate-pass counters are read-modify-write, with no serialization.** `bump_count`
+      reads, increments and writes; two `PostToolUse` events arriving concurrently can lose
+      an increment, and the fresh-count, fingerprint and pass-count writes are independent,
+      so a reader can observe a mixed snapshot. This **predates** the result-classification
+      change and applies to every counter — that change adds files with the same property,
+      not new exposure, which is why it was documented as a stated contract there rather
+      than fixed asymmetrically. Raised as MAJOR at Gate-A pass 2 of that design under the
+      risk lens. *Trigger: the first observed lost increment, or when batch/orchestrator
+      work makes concurrent gate calls real* — the parked story for that is where
+      concurrency stops being hypothetical. Until then: known, stated, unexploited.
+- [ ] **The hook trusts `.context/` and does not reject non-regular state targets.** A
+      globally installed hook creates and truncates files inside a repository-controlled
+      directory, following symlinks; a hostile workspace could point a state file or marker
+      at another user-writable path. **Pre-existing** for every state file the hook already
+      writes — the result-classification change adds markers with identical properties, so
+      fixing only the new ones would be inconsistent, and fixing all of them was out of that
+      story's scope. Raised as MAJOR (medium confidence) at Gate-A pass 2 under the security
+      lens. Any fix must keep invariant 1 (always exit 0) on the rejection path.
+      *Trigger: the first security-`high` story touching the hook, or a real report of a
+      hostile-workspace scenario.*
 - [ ] **Temp-index writes land in the real object database.** `git add -A` against the
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary

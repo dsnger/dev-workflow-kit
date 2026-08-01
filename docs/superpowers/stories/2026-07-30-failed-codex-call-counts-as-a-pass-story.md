@@ -60,24 +60,54 @@ whoever reads it later.
 
 ## 2. Desired outcome
 
-A Codex call that did not deliver a review does not leave a pass behind. The hook's
-recorded state — counters and the Gate-B fingerprint — reflects only calls whose result is
-present and reports success. Where a call's outcome cannot reach the hook at all, the
+A Codex call whose result is recognizable as not having delivered a review does not leave a
+pass behind. The hook's
+recorded state — counters and the Gate-B fingerprint — excludes calls whose result reports
+failure, calls from which no result is readable, and calls carrying the **recognized**
+backgrounding notice. A result this hook cannot recognize is counted, and its disclosure is
+attempted — best-effort, not guaranteed: where both the message and its retry record fail to
+persist, such a pass is counted silently.
+
+*(This paragraph is a **summary**. The normative definitions live in the design — the five
+classes in its §3.3, the backgrounding residual in its §4, delivery guarantees in its §6. If
+they disagree, the design is right and this paragraph is the thing to amend; it is written
+in one place so there is one target.)*
+(Amended twice, recorded rather than silently rewritten since a reader may have acted on
+the earlier wording. **Pass 2:** the original sentence said the state reflects "only calls
+whose result is present and reports success", which the fail-open decision for unrecognized
+envelopes made false. **Pass 5:** the replacement said the state excludes "calls whose
+outcome never reached the hook" — but a backgrounding notice whose wording has changed is
+exactly such a call, and the design counts it as unrecognized, so the exclusion is now
+scoped to the *recognized* notice and the exception is stated outright.) Where a call's
+outcome cannot reach the hook at all, the
 operator learns that from the reminder, together with the setting that prevents it,
 instead of receiving a silent ✓. The workflow stays usable on machines that lack that
 setting: a discarded pass reads as an actionable setup gap, not as a failed review.
 
 ## 3. Acceptance criteria
 
-- [ ] Given a `PostToolUse` payload for a Codex gate tool whose result reports failure, no
-      pass counter advances and no Gate-B fingerprint is stored — checked against both
-      payloads captured on 2026-07-30 (`CODEX_EXECUTION_FAILED`, `CODEX_TIMEOUT`).
-- [ ] Given a payload carrying no readable Codex result at all — the auto-backgrounding
-      notice being the observed instance — no counter advances and no fingerprint is
-      stored.
+- [ ] Both payloads captured on 2026-07-30 (`CODEX_EXECUTION_FAILED`, `CODEX_TIMEOUT`)
+      classify as `failure`, so no pass counter advances and no Gate-B fingerprint is stored.
+      (Amended 2026-07-31 at the design's Gate-A pass 8. This originally read "whose result
+      reports failure", which is broader than what the design recognizes: an envelope that
+      reports failure but has been *reordered* is `unrecognized`, and counts by the fail-open
+      decision. The criterion now names the captured payloads and defers recognition to the
+      design's §3.3 table, which is the single normative definition.)
+- [ ] Given the recognized auto-backgrounding notice, no counter advances and no fingerprint
+      is stored.
 - [ ] In that case the reminder states that the pass was discarded because the call left
       the foreground, distinguishes this from a failed review, and names
       `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` as the fix.
+- [ ] Given a payload from which no result text can be obtained, no counter advances and no
+      fingerprint is stored, and the reminder names the causes that actually apply — a
+      hooks-API payload contract change, or a mapped tool returning empty or non-text
+      content — rather than diagnosing backgrounding.
+      (Amended 2026-07-31, during the design's Gate-A pass 4. The first two criteria
+      originally read as one: "a payload carrying no readable Codex result at all — the
+      auto-backgrounding notice being the observed instance". That was true while those were
+      one case; the design separated them into `backgrounded` and `no-result`, which have
+      different causes and need different diagnoses, and the original wording would have
+      required reporting a third-party tool's empty response as a backgrounded call.)
 - [ ] A Codex call whose result reports success still counts exactly as it does today: the
       counter advances and, for Gate B, the fingerprint is stored.
 - [ ] Behaviour on all of the above is identical whether or not `jq` is on `PATH`.
