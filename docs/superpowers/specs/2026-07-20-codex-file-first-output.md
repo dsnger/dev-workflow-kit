@@ -183,7 +183,24 @@ checks 1–4 failed.
 ### What this does NOT do (stated so nobody mistakes it for a guard)
 
 - **The hook still counts an incomplete pass — specifically the incomplete passes this
-  protocol is about.** Counters increment in the hook's `PostToolUse` branch
+  protocol is about.**
+
+  > **SUPERSEDED IN PART as of plugin 0.8.0.** The paragraph below describes the hook up
+  > to 0.7.1, and its *conclusion* still holds — discount every incomplete pass whatever
+  > the counter says — but its *mechanism* no longer does. As of 0.8.0 the hook reads the
+  > result of gate calls it can route and withholds the count for three recognized shapes:
+  > an envelope whose immediately-first property is `success: false`, the harness
+  > backgrounding notice in its current wording, and a result yielding no usable text.
+  > Everything else it routes still counts, including located text it cannot interpret.
+  > **The normative definition is the five-class table in
+  > `docs/superpowers/specs/2026-07-31-failed-codex-call-counts-as-a-pass-design.md` §3.3**
+  > — read that rather than this passage for current behaviour. What survives unchanged is
+  > the reason this bullet exists: classification cannot see whether the findings file was
+  > written, so a counted pass is still not evidence of a review. The analysis below is
+  > kept rather than rewritten because it records how the 0.5.1 belief was corrected, and
+  > that reasoning is the thing worth not losing.
+
+  Counters increment in the hook's `PostToolUse` branch
   (`codex-gate.sh:361`), keyed on tool name; the hook never sees the response, let alone
   the file. Claude Code fires `PostToolUse` after a tool call *succeeds* and routes a
   failed call to `PostToolUseFailure`, for which `hooks/hooks.json` registers no handler.

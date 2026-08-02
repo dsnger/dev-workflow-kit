@@ -100,8 +100,13 @@ setting: a discarded pass reads as an actionable setup gap, not as a failed revi
       `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` as the fix.
 - [ ] Given a payload from which no result text can be obtained, no counter advances and no
       fingerprint is stored, and the reminder names the causes that actually apply — a
-      hooks-API payload contract change, or a mapped tool returning empty or non-text
-      content — rather than diagnosing backgrounding.
+      hooks-API payload contract change, or a third-party tool returning empty or non-text
+      content — which reaches the gates either through a mapping in `.context/codex-gate.tools`
+      or as a server registered under the default name `codex`, so an absent mapping does not
+      rule it out — rather than diagnosing backgrounding.
+      (Amended 2026-08-02 at Gate-B pass 5: the shipped prompt was corrected for this at
+      P9-33 and the criterion was left naming only the *mapped* case, so the story and the
+      prompt disagreed about the trust boundary.)
       (Amended 2026-07-31, during the design's Gate-A pass 4. The first two criteria
       originally read as one: "a payload carrying no readable Codex result at all — the
       auto-backgrounding notice being the observed instance". That was true while those were
@@ -117,9 +122,26 @@ setting: a discarded pass reads as an actionable setup gap, not as a failed revi
       disables auto-backgrounding rather than forcing it.
 - [ ] Regression tests cover shapes 1–3 and the success path, and the shape-1 and shape-2
       tests fail against the pre-change hook.
-- [ ] The probe methodology is re-run against the changed hook and its counter readings
+- [ ] ~~The probe methodology is re-run against the changed hook and its counter readings
       recorded: shapes 1–2 from the captured payloads, shape 3 with the variable absent,
-      shape 3 with it set, and one genuine pass that still counts.
+      shape 3 with it set, and one genuine pass that still counts.~~
+      **Amended 2026-08-02, confirmed by Daniel.** Satisfied by a guarded replay of the
+      captured payloads through the changed hook instead of a live re-run: 9/9 rows, each
+      asserting fixture-read status, `sed` status *and* effect, the routed tool name and
+      the exact class against an explicit per-row expectation, with an exact row-count
+      check — and the guards themselves negative-checked in three directions (wrong
+      expected class, missing fixture, wrong row count) before the result was accepted.
+      **Why the live re-run was dropped rather than deferred:** it requires instrumenting
+      the *installed* hook, which serves every concurrent Claude Code session on this
+      machine, and Task 1 established that no isolated profile can be driven from this
+      session. The two variable states it would have distinguished are already settled
+      elsewhere and not by this criterion: shape 3 was confirmed live during Task 1 (a
+      backgrounded call delivered its result by task notification and fired **no** second
+      `PostToolUse`), and the variable-set path is the harness's, not the hook's — with it
+      set the notice never arrives, so there is no hook behaviour left to observe. What
+      the amendment gives up is stated rather than glossed: no live evidence that the
+      *changed* hook meets a real backgrounding notice in situ, only that it classifies
+      the captured one correctly.
 - [ ] The plugin manifest version is bumped.
 
 ## 4. Affected AGENTS.md invariants

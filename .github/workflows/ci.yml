@@ -70,8 +70,16 @@ jobs:
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh scripts/check-version-bump.test.sh
 
-      - name: Hook state-machine tests
-        run: sh plugins/dev-workflow/hooks/codex-gate.test.sh
+      # Two runs, because the hook has to be correct under both shells and the runner's
+      # /bin/sh is dash while a contributor's may be bash. HOOK_SH selects the shell the
+      # HOOK runs under; without it, running the file under dash would only exercise the
+      # harness under dash. Ubuntu also gives mawk here, where a developer machine gives
+      # BWK or GNU awk — this step is the only place the locator meets a second awk.
+      - name: Hook state-machine tests (sh)
+        run: HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh
+
+      - name: Hook state-machine tests (dash)
+        run: HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh
 
       # Invariants 5 and 6 plus two prompt-conformance checks, mechanically, and BOTH
       # checkers' regression suites. The

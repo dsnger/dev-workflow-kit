@@ -45,6 +45,7 @@ plugins/dev-workflow/
   agents/finding-triage.md        # read-only PR-comment checker (convention-loaded)
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
+  hooks/fixtures/                 # captured PostToolUse payloads the suite replays
   examples/                       # ships, but never scaffolded — one stack's answers
 docs/
   architecture.md                 # layout + the two non-obvious design decisions
@@ -241,10 +242,10 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && sh plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && claude plugin validate . --strict` |
+| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && claude plugin validate . --strict` |
 | typecheck | n/a — no typed sources (shell + markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh` |
-| test | `sh plugins/dev-workflow/hooks/codex-gate.test.sh` |
+| test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
 | invariant checks (5 pinning, 6 manifest, prompt conformance) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |

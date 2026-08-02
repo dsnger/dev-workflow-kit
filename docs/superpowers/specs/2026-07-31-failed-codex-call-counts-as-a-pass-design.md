@@ -25,7 +25,7 @@ them.
 1. **Classification keys on the result envelope, not the tool name.** A tool mapped via
    `.context/codex-gate.tools` is in scope — **within the reachable namespace**. The hook is
    invoked by a `hooks.json` matcher of `^(Bash|Skill|mcp__codex__.*)$`, so a mapping naming
-   a tool outside `mcp__codex__*` can never fire, and always could not. The matcher is left
+   a tool outside `mcp__codex__*` is either never delivered (except the reserved names `Bash` and `Skill`, which the matcher does deliver — so such a mapping hijacks a lifecycle event instead of doing nothing; the parser refuses both). **This paragraph is the single normative statement of the namespace boundary.** The **plan** points here in its own prose; where its Task 6 quotes the literal text to be written into a shipped surface, that quotation restates by construction and carries both halves like the surface it authors. **Everything that ships to another repo restates it deliberately and keeps the copies in sync** — `README.md`, `CHANGELOG.md`, the hook prompts, and `/workflow-init`'s inline `CLAUDE.md` template. That is not laxity: **a scaffolded template cannot point at this file at all**, because the project it is written into does not have it — which is exactly the self-contained exception invariant 8 already states. An earlier revision of this sentence listed the template among the pointers, which invariant 8 makes impossible. A restatement is correct only if it carries **both** halves — never delivered, *or* hijacking `Bash`/`Skill`. The matcher is left
    as it is: broadening it would start a hook process on every MCP tool call in every
    adopted workspace, which is a real cost for a case with a one-line remedy — register the
    third-party server under the server name `codex`, which places its tools in the reachable
@@ -42,7 +42,7 @@ them.
    hook can see but cannot interpret. A payload from which no result text can be obtained is
    a different thing — there is nothing to interpret — so fail-open's rationale does not
    reach it. Note the narrower premise this rests on: for the *pinned* server the shape is
-   unproducible, but a mapped third-party tool may legitimately return empty or non-text
+   unproducible, but a third-party tool may legitimately return empty or non-text
    content (§3.1). Fail-closed holds either way, because an unreadable result is not
    evidence of a review; only the diagnosis differs (§6).
 4. **A discarded pass reports the fact on every occurrence; the setup advice appears once
@@ -97,6 +97,18 @@ string is never a candidate.
 **The matcher consumes the payload's own bytes** — the located span, copied out with nothing
 decoding, normalizing or re-encoding it in between.
 
+**And so does the selection, which is a KNOWN GAP in this section's own contract.** "First
+`text` element" above is a *semantic* description, but the implementation compares the `type`
+value as raw bytes. A Unicode-escaped spelling of `text` is legal JSON that means `text`, and
+it is **not** selected: with no other element the locator reports nothing usable and the class
+is `no-result`. That is fail-closed — a real result is discarded rather than miscounted, which
+is the safe direction — but it is still a wrong verdict on a legal payload, and the same
+applies to any escaped spelling of the `type` and `text` keys. It is stated here rather than
+quietly narrowed because the sentence above would otherwise promise semantic matching the code
+does not do. Characterized by a regression row, carried in `todos.md` with a trigger; closing
+it means decoding the `type` value for equality while still returning the selected `text` in
+its original escaped bytes, since the matcher downstream depends on those.
+
 **Mislocation is safe by construction, and that is the locator's whole contract.** Every
 state the scan cannot resolve — a repeated depth-1 key, a structure it cannot walk, a value
 that is not the settled shape — returns *cannot determine* rather than a guess, and the
@@ -116,8 +128,14 @@ respectively.
 
 **Why fail-closed is right here, at the precision the evidence supports.** For the pinned
 server these shapes are unproducible, so each indicates a payload-contract change. That
-premise does **not** generalize: a mapped third-party tool may legitimately return empty
-content, an image block, or another non-text shape. Fail-closed holds either way — an
+premise does **not** generalize: a third-party tool may legitimately return empty
+content, an image block, or another non-text shape. **Such a tool reaches the gates by two
+routes, and naming only one is what this paragraph exists to prevent:** through a mapping in
+`.context/codex-gate.tools`, *or* as a server registered under the default name `codex` —
+which is decision 1's own remedy, so it is the expected configuration rather than an exotic
+one. An absent mapping therefore does not rule a third-party tool out, and no diagnosis may
+assume it does. **This paragraph is the single normative statement of that boundary; §6's
+messages and every other mention derive from it rather than restating it.** Fail-closed holds either way — an
 unreadable result is not evidence of a review — but the *diagnosis* must not assume the
 harness is at fault (§6).
 
@@ -171,6 +189,18 @@ that might have been a `Bash` PreToolUse. A payload the hook cannot **route** th
 touches no state and emits nothing, exiting 0 — the pre-existing behaviour for anything it
 cannot parse, and unchanged here.
 
+**"Cannot route" is narrower than "is malformed", and the gap belongs to `field()` rather
+than to classification.** Routability depends on whether `jq` is present, and that predates
+this change: **with** `jq`, `field()` on a malformed document returns empty and the hook
+exits silently, so the paragraph above holds as written. **Without** `jq`, the `grep`
+fallback can still read a `tool_name` out of a document that is malformed elsewhere, so the
+same payload *does* route — and then classifies normally, landing in `unrecognized` if the
+locator refuses it, which counts and discloses. So a malformed payload is not uniformly
+inert: it is inert when unroutable, and an ordinary counted-and-disclosed `unrecognized`
+when the fallback routes it. That divergence is `field()`'s and is deliberately left alone;
+it is stated because a reader comparing the two environments would otherwise read it as a
+classifier defect.
+
 **One outcome is settled here**, because it is a classification rather than scanner mechanics:
 a **repeated depth-1 `tool_response` key** is **`unrecognized`** (the locator is genuinely
 ambiguous). The plan defines only how the scanner *recognizes* that state, not what it means.
@@ -198,6 +228,18 @@ anchor, so the anchor covers both gate tools and any configured threshold. A bar
 such as `still running after` is *not* the anchor: it can legitimately occur inside a
 result's own summary — a review discussing this mechanism would contain it — and would let
 one payload satisfy two anchors.
+
+**The segment must also fall within the first 4096 units of the block**, and that bound
+NARROWS this class rather than merely implementing it. A notice whose quoted tool name is
+long enough to push the segment past the cutoff is `unrecognized`, so it **counts** instead
+of being discarded — the wrong direction, and stated here because §4 otherwise reads as
+covering *any* mapped name at *any* length. The bound exists because the unbounded form was
+quadratic: `${b%%\n*}` in bash 3.2 evaluates by trying successively longer suffixes, and an
+anchor-prefixed block that never completes the notice cost 5.9 s at 150 KB in one
+synchronous hook invocation. 4096 is roughly 200x the longest real tool name, and the
+boundary is tested immediately inside and outside it rather than assumed. Raising or
+removing it requires a non-quadratic way to find the first newline, not just a bigger
+number.
 
 **Precedence, stated defensively:** `backgrounded` is tested before the envelope polarity,
 and only at start-of-text. A genuine notice never begins with an encoded envelope opening
@@ -269,7 +311,7 @@ in the suite clears them, or one-shot tests become order-dependent.
 | absent | `unrecognized`, gate on, emit succeeds | `unverified` written |
 | absent | `unrecognized`, gate on, **emit fails** | `unverifiedPending` written (best-effort) |
 | absent | `unrecognized`, gate off (emit suppressed) | `unverifiedPending` written |
-| pending | any unsuppressed hook event | disclosure emitted, then `unverified` written and pending cleared |
+| pending | any unsuppressed **routed** hook event | disclosure emitted, then `unverified` written and pending cleared |
 | pending | emit fails, or `unverified` write fails | pending **retained** |
 | shown | `unrecognized` again | nothing emitted, nothing written |
 
@@ -297,7 +339,7 @@ is why it is accepted rather than engineered around.
 
 **Pending is not only about the off-switch.** A failed emit while the gate is *on* leaves the
 same debt: the call is counted and the disclosure was never delivered. Without a pending
-write there, an unrelated later event has nothing to flush, and the workspace can reach a
+write there, an unrelated later routed event has nothing to flush, and the workspace can reach a
 satisfied count made of uninspected calls with the once-per-workspace disclosure never shown
 — which is decision 2's guarantee broken through a path the gate-off reasoning never
 covered. So a failed emit takes the same best-effort pending write as suppression does.
@@ -334,7 +376,7 @@ cannot be two emits. When an invocation owes both a pending disclosure and a per
 message, they are **composed into one emit** — disclosure first, then the per-occurrence
 message — with both `additionalContext` bodies joined and both `systemMessage` bodies
 joined. Nothing is dropped and nothing is deferred; a deferred message would collide again
-on the next event.
+on the next routed event.
 
 **Field split.** `additionalContext` (model-facing) carries the consequence for the gate.
 `systemMessage` (user-visible) carries any operator action, because the operator is who can
@@ -357,8 +399,9 @@ perform it.
 - **`no-result`, every occurrence.** No tool result was obtainable, so the pass was not
   counted. It names **two** causes rather than assuming the harness is at fault: a hooks-API
   payload contract change (check the Claude Code version and report it — for the pinned
-  server this shape is unreachable), **or** a mapped third-party tool returning empty or
-  non-text content, which is legitimate for that tool and simply unreadable as a gate result.
+  server this shape is unreachable), **or** a third-party tool returning empty or
+  non-text content — reaching the gates either through a mapping or as a server registered
+  under the default name `codex`, so an absent mapping does not rule it out — which is legitimate for that tool and simply unreadable as a gate result.
   **The tool name alone cannot tell them apart**, and the message must not pretend
   otherwise: decision 1's own remedy is registering a third-party server *as* `codex`, which
   makes the names identical. The checks it gives instead are `.context/codex-gate.tools` for
@@ -372,7 +415,9 @@ perform it.
   - **a reworded harness backgrounding notice** (§4) — the call was backgrounded and the
     anchor no longer matches, so the remedy is the same
     `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` guidance the `backgrounded` message carries;
-  - a mapped third-party tool whose envelope this hook cannot read — **no user-side fix**;
+  - a third-party tool whose envelope this hook cannot read — mapped, or registered under
+    the default `codex` name, since decision 1's own remedy makes the names identical —
+    **no user-side fix**;
   - a payload the locator refuses as ambiguous (§3.1) — installing or removing `jq` does
     **not** change this, since classification never consults it;
   - a hook parser defect — **no operator fix**; the check is to run the hook against the

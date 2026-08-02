@@ -71,8 +71,13 @@ Check, in order:
       only a **local**-scope `codex` can shadow this project's entry; restarting will
       never change that. Fix: confirm which entry actually wins with
       `claude mcp get codex`, then remove that one by its real scope —
-      `claude mcp remove codex -s <scope>`. Alternatively rename the project entry and
-      mirror the new name in `.context/codex-gate.tools`.
+      `claude mcp remove codex -s <scope>`. **Renaming the project entry is not an
+      alternative:** the hook is invoked by a `hooks.json` matcher of
+      `^(Bash|Skill|mcp__codex__.*)$`, so a server registered under any other name puts
+      its tools outside that namespace, where the hook is never invoked for them —
+      `.context/codex-gate.tools` cannot map that back, because mapping is read by a hook
+      that never runs. Whatever server is meant to back the gates must end up registered
+      as `codex`.
 
       **A *user*-scope `codex` is NOT this cause.** User scope loses to project scope,
       so a user entry alongside a project entry that is merely unapproved is cause 1 —
@@ -121,13 +126,19 @@ Check, in order:
                                         switch to the pinned mcp-codex-dev (Step 2.8),
                                         or map the names in .context/codex-gate.tools:
                                           execTool=mcp__codex__codex
-                                          reviewTool=<the diff-reviewing tool>
+                                          reviewTool=mcp__codex__<the diff-reviewing tool>
    ```
 
    Prefer switching servers over mapping: a mapping can only be honest if the server
    really has two tools that split text-review from diff-review. Mapping both gates onto
    one general-purpose tool makes the counters move without either gate meaning what it
    claims — a false ✓, which is worse than the STOP it silences.
+
+   **A mapped name must also lie in the `mcp__codex__*` namespace.** The hook is invoked
+   by a `hooks.json` matcher of `^(Bash|Skill|mcp__codex__.*)$`, so a mapping naming a
+   tool outside it is either never delivered — the mapping looks applied and does nothing —
+   or, for the reserved names `Bash` and `Skill`, is delivered and hijacks a lifecycle
+   event. The hook refuses both. (Normative statement: the design's decision 1.) Register the server under the name `codex` to place its tools there.
 
    With no Codex reachable, **both review gates are inoperative** — the single most
    important thing this command can tell the user. If the user chooses not to set it
@@ -153,9 +164,10 @@ Prerequisites:
                                   claude plugin install superpowers@superpowers-marketplace
   codex MCP             NOT LOADED — `claude mcp get codex` shows a local-scope entry
                                      winning over this project's, so exec/review never
-                                     load. Restarting will not help: remove the winning
-                                     entry (claude mcp remove codex -s local), or rename
-                                     this one and mirror it in .context/codex-gate.tools
+                                     load. Restarting will not help, and renaming this
+                                     entry would move its tools out of mcp__codex__*
+                                     where the hook is never invoked: remove that entry
+                                     (claude mcp remove codex -s local)
   gh CLI                ok (optional — only /process-pr-review needs it)
   AGENTS.md             absent — Step 3 will write it
   stack                 pnpm · TypeScript · vitest · GitHub Actions
@@ -248,9 +260,14 @@ Independent second opinion at two gates. Easiest steps to skip, so the disciplin
 yours — a non-blocking hook (shipped by the `dev-workflow` plugin) reminds you at
 each. Opt out per-workspace with `.context/codex-gate.off` (delete to re-enable); the
 gates still apply. The hook counts passes by TOOL NAME (`mcp__codex__exec` /
-`mcp__codex__review`); if your Codex MCP server names them differently, map it in
-`.context/codex-gate.tools` (`execTool=<name>` / `reviewTool=<name>`) — otherwise your
-reviews are invisible to the counters and Gate B reports "not run" forever.
+`mcp__codex__review`) and by RESULT ENVELOPE — it withholds the count for a routed gate
+call whose result it reads as failed, backgrounded, or yielding no usable text. If your
+Codex MCP server names its tools differently, map it in `.context/codex-gate.tools`
+(`execTool=<name>` / `reviewTool=<name>`) — otherwise your reviews are invisible to the
+counters and Gate B reports "not run" forever. A mapped name must itself start with
+`mcp__codex__`, or it is refused — outside that namespace it is either never delivered
+to the hook or, for `Bash`/`Skill`, hijacks a lifecycle event. Register the server as
+`codex` to place its tools there.
 
 **Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
 only), counted by the hook.** The hook counts passes but can't read findings or
@@ -344,17 +361,27 @@ write or just returns its prior summary is not established; if it returns the su
 that was the attempt. Spent and still incomplete → STOP and surface, naming which check
 failed.
 
-**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name, and
-never sees the file. Claude Code fires `PostToolUse` after a *successful* call and routes
-a failed one to `PostToolUseFailure`, which the plugin registers no handler for — but do
-not infer from that which failures escape counting: the pinned `mcp-codex-dev` catches
-its own errors, executor timeouts and aborts included, and returns them as a normal
-result carrying `success: false` rather than throwing or setting `isError`. A failed
-review therefore looks like a successful tool call and increments the counter. So does a
-call that returns and then fails validation. The rule that follows is the simple one:
-**discount every incomplete pass regardless of what the counter says** — a "satisfied"
-count can overstate the passes you actually hold, and reasoning about which failure took
-which event path will get it wrong. Nothing checks the terminator mechanically; this is
+**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name **and on
+the result envelope**, and still never sees the file. Claude Code fires `PostToolUse`
+after a *successful* call and routes a failed one to `PostToolUseFailure`, which the
+plugin registers no handler for — but do not infer from that which failures escape
+counting: the pinned `mcp-codex-dev` catches its own errors, executor timeouts and aborts
+included, and returns them as a normal result carrying `success: false` rather than
+throwing or setting `isError`. A failed review therefore still looks like a successful
+*tool call* — but as of 0.8.0 the hook reads the result of gate calls it can route, and
+withholds the count for three **recognized** shapes: an envelope whose **first** property
+is `success: false`, the harness backgrounding notice **in the wording it currently
+uses**, and a result from which no usable text can be obtained. Every other routed gate
+call counts, including any located text the hook cannot interpret — a reordered envelope,
+a reworded notice, an unknown third-party shape — which counts **with** a disclosure that
+is attempted and normally shown once per workspace, but can be lost or repeated when its
+marker cannot be persisted. So does a call that returns and then fails validation. The
+counter is therefore closer to the truth than it was and is still not evidence: a
+"satisfied" count can still overstate the passes you actually hold, and reasoning about
+which failure took which event path will get it wrong. The rule that follows is the
+simple one: **discount every incomplete pass regardless of what the counter says**,
+because classification cannot see whether the findings file was written.
+Nothing checks the terminator mechanically; this is
 instruction-backed by design, and a recurring truncation incident is the trigger to build
 the checker, not a reason to build it now. Detection is conditional: it catches an absent
 or malformed terminator, a count mismatch and a missing branch file *in the artifact you
@@ -568,11 +595,14 @@ like the rest of §5; the detection is a reader comparing the pass against the s
 - **Timeout / abort:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user, and that retry *is* the single shared recovery
   attempt above — not a second one. An abort is an incomplete pass, so treat it as one:
-  it may already have moved the hook's counter (the pinned server returns its own
-  timeouts as ordinary results), and it may have left a partial or stale target file, so
-  delete the targets and confirm them gone before retrying, then validate the result like
-  any other pass. Counter and workspace state persist in `.context/`; the *pass* does
-  not.
+  it may have left a partial or stale target file, so delete the targets and confirm them
+  gone before retrying, then validate the result like any other pass. Whether it moved the
+  hook's counter depends on the shape it returned and on which hook version is installed:
+  as of 0.8.0 a recognized failure envelope, the recognized backgrounding notice and a
+  result yielding no usable text are all withheld from the count, while a reordered,
+  reworded or unrecognized shape still counts fail-open. Do not reason from the counter
+  either way — an incomplete pass is discounted whatever it says. Counter and workspace
+  state persist in `.context/`; the *pass* does not.
 
 ---
 
@@ -1034,8 +1064,9 @@ gate instructions that cannot run, plus a Gate-B STOP on every single commit for
 is noise that trains the user to ignore the hook, and a hook people ignore is worse
 than no hook. Instead, degrade explicitly:
 
-1. Write `.context/codex-gate.off` so the hook stays silent (it keeps tracking state,
-   so re-enabling later is accurate rather than stale).
+1. Write `.context/codex-gate.off` so the hook stays silent (it keeps classifying and
+   tracking state, so re-enabling later lands on counters carrying the same semantics
+   as gate-on — never evidence that a review happened).
 2. Add one line at the very top of §5 in the scaffolded `CLAUDE.md`:
 
    ```markdown

@@ -24,6 +24,7 @@ plugins/dev-workflow/
   agents/finding-triage.md
   commands/{workflow-init,process-pr-review}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
+  hooks/fixtures/                 # captured PostToolUse payloads the suite replays
   examples/                       # ships, but never scaffolded — one stack's answers
 docs/{getting-started,coding-workflow,prompt-standards,architecture}.md
 docs/{hardening-log,hardening-taxonomy,pr-review-bots}.md
