@@ -63,41 +63,44 @@ exactly one of five classes.
 tool may legitimately return an image or other block first, and indexing blindly would miss
 the result or feed a non-text block to the matcher.
 
-**Locating is where the two environments differ; matching is not.** Both paths produce the
-**same representation** — the block's text in its **escaped** JSON encoding — and hand it to
-one matcher (§3.2). There is no decoded-vs-escaped equivalence to maintain, no parity rule
-over matching, and no second implementation of the classification contract.
+**One locator, whether or not `jq` is installed.** An escape-aware scan walks the payload's
+own bytes, locates the block, and yields its text in its **escaped** JSON encoding — the
+single representation the matcher (§3.2) consumes. It must implement the structural contract
+rather than assume it: `tool_response` must be an **array**, non-object elements are skipped,
+the first element whose `type` is exactly `text` wins, and its `text` must be a **string**.
+`jq` plays no part in classification; it remains the emitter's JSON writer and nothing more.
+So there is no decoded-vs-escaped equivalence to maintain, no parity rule, no environment
+that classifies differently, and no second implementation of anything.
 
-- **With `jq`:** locate structurally, then **re-encode to the escaped form**. The selector
-  must implement the structural contract rather than assume it: gate on `tool_response`
-  being an **array**, skip elements that are not objects, take the first whose `type` is
-  exactly `text`, and require its `text` to be a **string** — a bare
-  `.tool_response[]? | select(.type=="text") | .text` does none of these (`[]?` iterates an
-  object's *values*, `select` errors on a non-object element, and `.text` goes untyped).
-- **Without `jq`:** an escape-aware scan locates the same block; what it yields is already
-  the escaped form.
+> **Amended at the plan's Gate A, pass 1 (2026-08-01).** This section previously specified
+> **two** locators — a structural `jq` selector and a `jq`-free scan — reconciled by
+> re-encoding the `jq` result to escaped form and requiring that byte sequence to occur
+> **exactly once** in the payload and **within the located `tool_response` span**. Both
+> conditions, the re-encoding step, and the parity apparatus in §7.3 are deleted with the
+> second path rather than fenced off, because text that reconciles two things when only one
+> exists can do nothing but drift. The in-span check was the trigger: `jq` reports no byte
+> offsets, so computing that span needed the scan anyway, which left the `jq` path as a
+> component whose only reachable effect was downgrading an agreed result to `unrecognized`.
+> Six of the plan's forty pass-1 findings lived in that machinery. Note this is the
+> **second** collapse of a dual-path design in this cycle — §3.2's two matchers went the
+> same way at the spec's own Gate A — and both times the artifact came out smaller and
+> safer. What the deleted checks defended against, a hijacked anchor or an encoding the two
+> paths would read differently, is now structurally unreachable rather than tested for.
 
 **Byte-position heuristics are unsafe in both directions**, so neither is used: a greedy
 strip anchors on the *last* `tool_response` match, which a result quoting the key can
 hijack; a first-match strip anchors on the *earliest*, which `tool_input` can hijack, and
-this repo's own gate prompts quote payload text.
+this repo's own gate prompts quote payload text. The scan is not a heuristic: it establishes
+depth by walking quote state and brace nesting, so a `tool_response` mentioned inside any
+string is never a candidate.
 
-**The matcher always consumes the payload's own bytes.** After locating, the `jq` path
-re-encodes the block and finds that byte sequence in the payload; **the matcher then reads the
-payload at that position**, never the string `jq` produced. Two conditions must hold or the
-payload is **`unrecognized`**: the re-encoded block must occur **exactly once** in the
-payload, and the occurrence must lie **within the located `tool_response` span**.
+**The matcher consumes the payload's own bytes** — the located span, copied out with nothing
+decoding, normalizing or re-encoding it in between.
 
-Both conditions are load-bearing. "Appears somewhere" is not enough: a canonical copy sitting
-in `tool_input` would satisfy it for a response that is *not* canonical, and a non-canonical
-escape appearing after an otherwise-canonical marker would leave the two environments
-disagreeing about the same bytes. Requiring a unique in-span occurrence, and feeding the
-matcher the original bytes, makes both environments read the same input or refuse together —
-so the divergence is *removed* rather than documented.
-
-**Mislocation is safe by construction.** If the block cannot be resolved unambiguously — the
-key appears more than once and depth cannot be established, or the canonical-form check above
-fails — the payload is **`unrecognized`**, which counts and discloses. Locator uncertainty
+**Mislocation is safe by construction, and that is the locator's whole contract.** Every
+state the scan cannot resolve — a repeated depth-1 key, a structure it cannot walk, a value
+that is not the settled shape — returns *cannot determine* rather than a guess, and the
+payload is **`unrecognized`**, which counts and discloses. Locator uncertainty
 never produces a *wrong verdict*; it produces a counted pass whose disclosure is **attempted
 and normally persisted**. Where both the emit and the pending write fail (§5.2) that count is
 silent, so "never silent" would be false: the verdict is never wrong, the disclosure is
@@ -132,9 +135,9 @@ reordering degrade to `unrecognized` rather than to a wrong verdict.
 **Whitespace tolerance** between key, colon and value. Only the current serializer's
 two-space form has been observed; a formatting change should not silently reclassify.
 
-**Neither path parses the result text as nested JSON.** `jq` decodes it as a string value
-and re-encodes it; the scan never decodes at all. What neither does is run a JSON parser
-*into* the result string, which is what the open escaped-quote defect makes unsafe.
+**The result text is never parsed as nested JSON.** The scan never decodes it at all — it
+copies out the escaped bytes and the matcher reads those. What it does not do is run a JSON
+parser *into* the result string, which is what the open escaped-quote defect makes unsafe.
 
 ### 3.3 The five classes
 
@@ -147,20 +150,18 @@ refers to it rather than restating it.
 | `failure` | located block's immediate-first property is `success: false` | no | no |
 | `backgrounded` | the notice anchor (§4), at start of the located block | no | no |
 | `no-result` | an **unambiguous** determination that no located block yields a non-blank string: `tool_response` absent, `null`, empty array, non-array container, non-object elements, no `text`-type element, `text` not a string, or blank text | no | no |
-| `unrecognized` | everything else — a located block matching no anchor, **and every case where locating itself is uncertain**: ambiguous boundary, repeated depth-1 `tool_response` key, or a failed uniqueness/in-span check (§3.1) | bump | store |
+| `unrecognized` | everything else — a located block matching no anchor, **and every case where locating itself is uncertain**: a structure the scan cannot walk, or a repeated depth-1 `tool_response` key (§3.1) | bump | store |
 
 Stating `no-result` by its complement is deliberate: a hooks-API shape nobody anticipated
 lands in the **fail-closed** class, which is the direction that matters, since `unrecognized`
 counts.
 
-**"Blank" is defined on the shared representation, not semantically**, or the two environments
-could disagree on a state-changing boundary. The located block is blank when its **escaped
-bytes** contain nothing but ASCII space and the two-byte escapes `\n`, `\t`, `\r`. A
-Unicode-escaped space (`\u0020`) is *not* blank by this rule, and does not need to be: such a
-block fails the canonical-form check first. **Order is fixed** — canonical-form validation
-(§3.1) runs *before* the blank test, so every encoding `jq` would normalize has already been
-routed to `unrecognized` and never reaches this comparison. §11 item 3 carries the full
-encoding table.
+**"Blank" is defined on the located bytes, not semantically.** The located block is blank
+when its **escaped bytes** contain nothing but ASCII space and the two-byte escapes `\n`,
+`\t`, `\r`. A Unicode-escaped space (the six bytes `\u0020`) is *not* blank by this rule, and needs no
+special handling to reach the right place: it matches no anchor, so the terminal default
+carries it to `unrecognized` — counted and disclosed, never silently read as empty. §11
+item 3 carries the full encoding table.
 
 **Malformed outer JSON is not a class at all, and pass 6 got this wrong.** The hook derives
 `hook_event_name` and `tool_name` from the same document; if it is malformed, the hook cannot
@@ -372,8 +373,8 @@ perform it.
     anchor no longer matches, so the remedy is the same
     `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` guidance the `backgrounded` message carries;
   - a mapped third-party tool whose envelope this hook cannot read — **no user-side fix**;
-  - an ambiguous or non-canonically-encoded payload (§3.1) — this resolves the same way in
-    both environments, so installing `jq` does **not** change it;
+  - a payload the locator refuses as ambiguous (§3.1) — installing or removing `jq` does
+    **not** change this, since classification never consults it;
   - a hook parser defect — **no operator fix**; the check is to run the hook against the
     captured payload and report the mismatch.
 
@@ -449,10 +450,10 @@ rather than inherited.
   each neither count nor store.
 - **`no-result` shape coverage**: absent field, `null`, empty array, non-array container,
   non-object elements, array without a `text`-type block, non-string `text`, and empty or
-  whitespace-only `text`, in both parser environments.
+  whitespace-only `text`.
 - **Block selection**: a response whose first element is a non-text block followed by a real
-  text block must classify from the text block, in both parser environments — the case that
-  distinguishes "first `text`-type element" from "element `[0]`".
+  text block must classify from the text block — the case that distinguishes "first
+  `text`-type element" from "element `[0]`".
 - **Writer-failure coverage**: with stdout closed or failing, in both parser modes, the hook
   exits 0, writes no shown-marker, retains any existing pending state, and **creates pending
   when none existed** (the gate-on failed-emit transition). Marker-write failure alone is not
@@ -475,15 +476,15 @@ rather than inherited.
   review quoting both marker literals (must classify `success`); a failed review quoting
   `\"success\": true` (must classify `failure`). The failure-direction cases matter most —
   that is where a mistake produces the false ✓.
-- **Extraction parity, asserted on the matcher's input.** Every fixture runs through both
-  locating paths, and the escaped block handed to the matcher must be **byte-identical**
-  between them. Asserting only the final class would let two locating bugs cancel out and
-  report a pass; asserting the input catches a locating divergence where it lives. The
-  single matcher then needs no parity assertions of its own — there is only one of it.
-- The former divergence cases (ambiguous boundary, Unicode-escaped marker,
-  non-canonical encoding) now assert **`unrecognized` in BOTH environments** — the
-  canonical-form check makes the `jq` path reach the raw scan's verdict. A test asserting a
-  precise class with `jq` would pin the very divergence §3.1 removes.
+- **Locator-refusal cases**: a repeated depth-1 `tool_response` key, a Unicode-escaped
+  marker, and an unwalkable structure each assert `unrecognized`. These were the divergence
+  cases under the two-locator design; with one locator they are ordinary contract cases and
+  need no cross-environment assertion.
+- **`jq`-free mode covers what still branches on `jq`.** Classification does not — there is
+  one locator — so it needs no parity suite. `field`, `input_field` and `emit` do, and the
+  suite runs the discarded-class state effects, the writer-failure path and one composed
+  emit under a `jq`-free `PATH`, because those reach the fallback escaper. Claiming a parity
+  matrix over classification would test an equivalence the design no longer has.
 - Golden assertions on both output fields for every message.
 - The hook exits 0 on every path, including an unreadable result and a marker-write failure.
 
@@ -576,15 +577,14 @@ here because the plan must carry them explicitly at its top — a deferred oblig
 lives only in a review artifact is one nobody inherits. The plan's own Gate A pins each
 against real code.
 
-1. **The `jq`-free scanner as a state machine.** Quote state, consecutive-backslash parity,
-   value boundaries, and what "depth 1" means operationally. §3.1 states the *contract*
-   (structural with `jq`; conservative and non-guessing without); the plan states the
-   machine.
+1. **The scanner as a state machine.** Quote state, consecutive-backslash parity, value
+   boundaries, and what "depth 1" means operationally. §3.1 states the *contract* —
+   structural, conservative, non-guessing; the plan states the machine.
 2. **Duplicate and malformed key cases.** Which candidate wins when a depth-1 key repeats,
    and what happens on malformed JSON. §3.1 sends ambiguity to `unrecognized`; the plan
    defines what counts as ambiguous. **Which block is selected is NOT deferred** — §3.1
    settles it as the first array element whose `type` is `text`, and the plan defines only
-   how the `jq`-free scanner locates that already-settled block.
+   how the scanner locates that already-settled block.
 3. **Accepted raw encodings for JSON whitespace.** Captured inner newlines are the two bytes
    `\n`, which POSIX `[[:space:]]` does not match. Every accepted encoding around each prefix
    token is enumerated in the plan, with compact, tab and CRLF fixtures.
