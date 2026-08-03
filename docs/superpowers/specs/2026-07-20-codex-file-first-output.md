@@ -201,7 +201,7 @@ checks 1–4 failed.
   > that reasoning is the thing worth not losing.
 
   Counters increment in the hook's `PostToolUse` branch
-  (`codex-gate.sh:361`), keyed on tool name; the hook never sees the response, let alone
+  (the gate-tool cases in `codex-gate.sh`), keyed on tool name; the hook never sees the response, let alone
   the file. Claude Code fires `PostToolUse` after a tool call *succeeds* and routes a
   failed call to `PostToolUseFailure`, for which `hooks/hooks.json` registers no handler.
   **That does not mean failed reviews escape counting.** Verified in the pinned server's

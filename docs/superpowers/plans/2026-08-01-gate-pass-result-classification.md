@@ -85,7 +85,7 @@ Nothing here may silently evaporate. Each item names the task that discharges or
 
 ### The battery, per commit
 
-- **Before committing** — the full `quality` row of `AGENTS.md` § Commands **minus** `check-version-bump.sh`. That is six `shellcheck` invocations, **four** script runs and `claude plugin validate . --strict` — not three, as an earlier draft said; miscounting is how `check-invariants.test.sh` or `check-version-bump.test.sh` gets dropped while the task still claims the full battery. **This block, verbatim:**
+- **Before committing** — the full `quality` row of `AGENTS.md` § Commands **minus** `check-version-bump.sh`. That is six `shellcheck` invocations, **five** script runs over four distinct scripts — `codex-gate.test.sh` runs twice, once per hook shell — and `claude plugin validate . --strict`; miscounting is how `check-invariants.test.sh` or `check-version-bump.test.sh` gets dropped while the task still claims the full battery. **This block, verbatim:**
 
 ```sh
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && \

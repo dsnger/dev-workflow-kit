@@ -115,7 +115,11 @@ setting: a discarded pass reads as an actionable setup gap, not as a failed revi
       required reporting a third-party tool's empty response as a backgrounded call.)
 - [ ] A Codex call whose result reports success still counts exactly as it does today: the
       counter advances and, for Gate B, the fingerprint is stored.
-- [ ] Behaviour on all of the above is identical whether or not `jq` is on `PATH`.
+- [ ] Behaviour on all of the above is identical whether or not `jq` is on `PATH`, scoped to
+      payloads the hook can **route**. Routability itself diverges: a malformed outer
+      document does not route with `jq` present and does route through the `grep` fallback,
+      landing in `unrecognized`. That belongs to `field()` and predates this change (design
+      §3.1); classification is identical either way.
 - [ ] The hook exits 0 on every path above, including when the result cannot be read.
 - [ ] `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` is documented where someone setting up the
       workflow will see it, stating that it requires Claude Code ≥ 2.1.212 and that `0`

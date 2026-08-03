@@ -251,8 +251,13 @@ Every command below was run in this session and observed to exit 0.
 | build | n/a — nothing is compiled or bundled |
 
 **Prerequisites and pinning.** The quality command needs `shellcheck` (0.11.0 locally;
-CI runs the pinned image `koalaman/shellcheck:v0.11.0`) and the `claude` CLI (CI pins
-`@anthropic-ai/claude-code@2.1.207`). Bump both deliberately, per invariant 5.
+CI runs the pinned image `koalaman/shellcheck:v0.11.0`), the `claude` CLI (CI pins
+`@anthropic-ai/claude-code@2.1.207`), and **`dash`** — the battery runs the hook suite
+twice, once with the hook under `sh` and once under `dash`, because the hook has to be
+correct under both and Ubuntu's `/bin/sh` IS dash. Bump the first two deliberately, per
+invariant 5; `dash` is addressed by name because it is the system shell, not a pinned
+tool. Without it the second run cannot start, and dropping that run is what let a
+`dash`-only defect ship once already.
 
 **The `--exclude=SC2015` on the test file** is a single-code exclusion, not a blanket
 disable: every other shellcheck rule still applies to that file. Its hits are all
