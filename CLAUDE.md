@@ -165,17 +165,27 @@ write or just returns its prior summary is not established; if it returns the su
 that was the attempt. Spent and still incomplete → STOP and surface, naming which check
 failed.
 
-**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name, and
-never sees the file. Claude Code fires `PostToolUse` after a *successful* call and routes
-a failed one to `PostToolUseFailure`, which the plugin registers no handler for — but do
-not infer from that which failures escape counting: the pinned `mcp-codex-dev` catches
-its own errors, executor timeouts and aborts included, and returns them as a normal
-result carrying `success: false` rather than throwing or setting `isError`
-(`dist/tools/codex-review.js`). A failed review therefore looks like a successful tool
-call and increments the counter. So does a call that returns and then fails validation.
-The rule that follows is the simple one: **discount every incomplete pass regardless of
-what the counter says** — a "satisfied" count can overstate the passes you actually hold,
-and reasoning about which failure took which event path will get it wrong. Nothing checks the terminator mechanically; this is
+**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name **and on
+the result envelope**, and still never sees the file. Claude Code fires `PostToolUse`
+after a *successful* call and routes a failed one to `PostToolUseFailure`, which the
+plugin registers no handler for — but do not infer from that which failures escape
+counting: the pinned `mcp-codex-dev` catches its own errors, executor timeouts and aborts
+included, and returns them as a normal result carrying `success: false` rather than
+throwing or setting `isError` (`dist/tools/codex-review.js`). A failed review therefore
+still looks like a successful *tool call* — but as of 0.8.0 the hook reads the result of
+gate calls it can route, and withholds the count for three **recognized** shapes: an
+envelope whose **first** property is `success: false`, the harness backgrounding notice
+**in the wording it currently uses**, and a result from which no usable text can be
+obtained. Every other routed gate call counts, including any located text the hook cannot
+interpret — a reordered envelope, a reworded notice, an unknown third-party shape — which
+counts **with** a disclosure that is attempted and normally shown once per workspace, but
+can be lost or repeated when its marker cannot be persisted. So does a call that returns
+and then fails validation. The counter is therefore closer to the truth than it was and
+is still not evidence: a "satisfied" count can still overstate the passes you actually
+hold, and reasoning about which failure took which event path will get it wrong. The rule
+that follows is the simple one: **discount every incomplete pass regardless of what the
+counter says**, because classification cannot see whether the findings file was written.
+Nothing checks the terminator mechanically; this is
 instruction-backed by design, and a recurring truncation incident is the trigger to build
 the checker, not a reason to build it now. Detection is conditional: it catches an absent
 or malformed terminator, a count mismatch and a missing branch file *in the artifact you
@@ -395,11 +405,14 @@ like the rest of §5; the detection is a reader comparing the pass against the s
 - **Timeout / abort:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user, and that retry *is* the single shared recovery
   attempt above — not a second one. An abort is an incomplete pass, so treat it as one:
-  it may already have moved the hook's counter (the pinned server returns its own
-  timeouts as ordinary results), and it may have left a partial or stale target file, so
-  delete the targets and confirm them gone before retrying, then validate the result like
-  any other pass. Counter and workspace state persist in `.context/`; the *pass* does
-  not.
+  it may have left a partial or stale target file, so delete the targets and confirm them
+  gone before retrying, then validate the result like any other pass. Whether it moved the
+  hook's counter depends on the shape it returned and on which hook version is installed:
+  as of 0.8.0 a recognized failure envelope, the recognized backgrounding notice and a
+  result yielding no usable text are all withheld from the count, while a reordered,
+  reworded or unrecognized shape still counts fail-open. Do not reason from the counter
+  either way — an incomplete pass is discounted whatever it says. Counter and workspace
+  state persist in `.context/`; the *pass* does not.
 
 ## 6. Context Canary
 

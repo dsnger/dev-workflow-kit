@@ -56,7 +56,10 @@ old version until you restart it or run `/reload-plugins`.
 - **Codex** — the reviewer behind both gates. Needs the **Codex CLI, authenticated with
   an OpenAI account** — a real external dependency, not just the `.mcp.json` entry
   `/workflow-init` writes for you. It also needs **a Codex MCP server that exposes
-  `exec` and `review`** — the gates and their pass counters key on those two tool names.
+  `exec` and `review`** — the gates key on those two tool names, and the pass counters
+  additionally skip routed calls whose result the hook reads as failed, backgrounded, or
+  yielding no usable text; a result it can read but not interpret still counts, and
+  normally says so once.
   Use the `mcp-codex-dev` server `/workflow-init` pins, which has both. The official
   `codex mcp-server` is a *different* server exposing a single `codex` tool, which can't
   be attributed to Gate A (reviews text) or Gate B (reviews a diff): with it connected,
@@ -72,6 +75,37 @@ old version until you restart it or run `/reload-plugins`.
   declares one is not established here. The file protocol is what actually keeps
   findings out of the response.
 - **`gh`** — optional; only `/dev-workflow:process-pr-review` uses it.
+
+**2b. Set `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`** — strongly recommended, and the primary
+defence against a gate call being auto-backgrounded. Claude Code moves a long MCP call to
+the background at a threshold (120 s by default) and fires `PostToolUse` *at that moment*,
+carrying the harness's own notice instead of any Codex result; the eventual real
+completion fires no second `PostToolUse`, so the hook never sees the review's outcome.
+
+Requires **Claude Code 2.1.212 or newer**. Set it in the environment Claude Code is
+**launched from** — it is read at process start, so exporting it inside a tool shell
+leaves the running session unchanged and you must restart Claude Code. Use `0` to disable
+auto-backgrounding, or a positive value that **exceeds** your longest expected gate call;
+a positive value shorter than the call still backgrounds it.
+
+```sh
+export CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0   # or e.g. 900000, exceeding your longest gate call
+```
+
+**Without it, both outcomes are possible, and only one is safe.** While the harness notice
+keeps the wording the hook recognizes, the backgrounded pass is *discarded* — correct, but
+**re-running it is not simply a retry**: the original call may still be running and can still
+write into the findings slot afterwards, leaving a correctly terminated file from the wrong
+run that no downstream check can detect. Stop that task by the id in the tool result — or
+await it if the result carries none — and delete the findings slot first. The hook's own
+backgrounding message carries that procedure; follow it there rather than from memory. If that harness prose ever changes, the hook can no longer recognize
+the notice and the call is *counted* instead, with a disclosure that says the count was
+made without inspection. That second outcome is why this setting is the defence rather
+than the hook: the hook fails safe against today's wording, not against every future one.
+
+(`CLAUDE_CODE_AUTO_BACKGROUND_TIMEOUT_MS` appears in the 2.1.220 string table but was
+never exercised here, so it is deliberately not documented — naming the wrong one of two
+similar variables is this project's own docs-drift class.)
 
 **3. Run `/dev-workflow:workflow-init` in each project.** It verifies the rest and tells
 you what's missing — git repo, superpowers, Codex (not configured / not loaded / ok),
@@ -94,8 +128,8 @@ plugin is installed once per machine; every other repo you open hears nothing fr
 Per-workspace knobs, all files under `.context/`:
 
 | `codex-gate.floor` | a positive integer; moves the 3-passes-per-gate floor. |
-| `codex-gate.off` | silences the reminders; state keeps tracking, so re-enabling is accurate. |
-| `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>` — counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Unparseable lines are ignored, so a typo can't quietly unhook a gate. |
+| `codex-gate.off` | silences the reminders; classification and state tracking keep running, so re-enabling lands on counters carrying the same semantics as gate-on — which is not the same as evidence that a review happened. |
+| `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>` — counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Each mapped name must itself lie in `mcp__codex__*`: the hook's `hooks.json` matcher is `^(Bash\|Skill\|mcp__codex__.*)$`, so an out-of-namespace name is either never delivered (the mapping looks applied and does nothing) or, for the reserved names `Bash`/`Skill`, hijacks a lifecycle event; the hook refuses both — register the server as `codex` to place its tools there. Unparseable, out-of-namespace and reserved (`Bash`/`Skill`) lines are ignored, and the gate keeps its default `exec`/`review` name. A typo **inside** the namespace — `mcp__codex__exce` — is still honoured: the hook does not check that a mapped tool exists, so the gate now counts that name and nothing else. Whether it ever counts depends on whether a tool by that name is actually invoked; for a typo, normally never. |
 
 **Without Codex**, `/workflow-init` degrades honestly instead of scaffolding gates that
 can't run: it silences the hook and marks CLAUDE.md §5 `INACTIVE` with the re-enable

@@ -24,48 +24,70 @@ driven by recurrence rather than by enthusiasm.
 
 ### Parked (trigger-gated)
 
-- [ ] **A failed Codex call counts as a pass — false ✓ in the firing direction.**
-      Derived while writing the 0.5.1 file-first protocol (PR #9), from a Gate-B finding
-      that corrected the opposite belief. The chain, each link checked against source
-      rather than inferred: the pinned `mcp-codex-dev@1.0.1` **catches** its own
-      exceptions — executor timeouts and aborts included — and *returns*
-      `{success: false, …}` as an ordinary result, without throwing and without setting
-      `isError` (`dist/tools/codex-review.js`, `codex-exec.js`). Claude Code therefore
-      classifies it as a **successful** tool call, so `PostToolUse` fires rather than
-      `PostToolUseFailure`. The hook's `PostToolUse` branch inspects nothing about the
-      result: for `$review_tool` it computes `tree_hash`, **stores that fingerprint**,
-      bumps the cycle counter unconditionally, and sets the fresh-streak counter to 0
-      (fingerprint unavailable), 1 (fingerprint changed) or its prior value plus one
-      (fingerprint unchanged) — the streak is not a second cumulative counter; for
-      `$exec_tool` it bumps `countA` unconditionally.
-      Consequence: three timed-out Gate-A calls satisfy the Gate-A floor, and one
-      timed-out Gate-B call stores a current-content fingerprint for a review that read
-      nothing — the satisfied message then reports a fresh pass covering exactly the
-      content nobody reviewed. That is a false ✓ in the hook's recorded state, the
-      direction invariant 2 calls dangerous.
-      *What the shipped 0.5.1 prompts already do about it, stated so nobody over-scopes
-      the fix:* they classify a timeout or abort as an incomplete pass, require every
-      incomplete pass to be discounted **regardless of what the counter says**, and allow
-      one recovery attempt. So the residual defect is not "no mitigation exists" — an
-      earlier draft of this row claimed that and contradicted text shipped in the same
-      PR — it is that the mitigation is instruction-backed and depends on the agent
-      noticing and obeying the failed result, while the hook's own state is wrong either
-      way and stays wrong for anyone reading it later.
-      *Candidate fix, explicitly unverified:* skip the bump and the fingerprint store
-      when the result reports failure. The `PostToolUse` payload is documented to carry
-      `tool_response`, but **what it actually contains for an MCP tool on this server is
-      not established** — the hook has no `tool_response` reader at all today
-      (`input_field` parses only `.tool_input`), and the one place the hook reasons about
-      `tool_response` records that Bash's shape carries no exit status, which is why the
-      commit-reset deliberately ignores success. Verify the real payload for
-      `mcp__codex__*` before writing any matcher; a matcher built on an assumed shape
-      fails silently and in the same dangerous direction. Note also that failing closed
-      here is the *safe* direction for once — not counting a real pass costs a re-run,
-      while counting a dead one is the false ✓.
-      *Trigger: this session's discovery — already fired.* Deliberately not fixed in
-      PR #9, whose scope guard is prompts and templates only; this needs hook code and
-      regression tests.
-- [ ] **jq-free parser stops at an escaped JSON quote.** A payload containing
+- [ ] **Locator: TWO quadratic paths — `skipval`'s container walk and the record accumulator.** `substr(s,i,1)` is
+      O(len) per call in BWK awk, so a large VALID sibling container before `tool_response`
+      is quadratic: 3.2 s at 200 KB, 11.5 s at 400 KB, in one synchronous hook invocation.
+      Only the 1 Mi-unit ceiling stops it, and a payload just under the ceiling still costs
+      tens of seconds — so the ceiling is load-bearing rather than a formality. Found at
+      Gate B pass 2 on 0.8.0, after two other quadratics in the same scan were fixed. The
+      candidate fixes are a jump-based walk (linear for realistic shapes, still quadratic
+      for many-sibling-container payloads), a work budget scaled by payload length, or
+      lowering the ceiling — all three are design calls, which is why this is a row and not
+      a patch. **Second path, found at pass 3:** `s = s $0 "\n"` rebuilds the accumulated
+      input once per input line, so a newline-rich (pretty-printed) payload is quadratic in
+      line count independently of the container walk — 0.35 s at 4k lines, 2.69 s at 16k.
+      Chunked accumulation reduces but does not remove it; the two paths share a fix only if
+      the scan stops indexing the payload with `substr`. *Trigger: a report of a slow hook,
+      or any change that raises the ceiling.*
+- [ ] **A5 marker matrix and A6 composition coverage are narrower than the approved plan.**
+      The marker-lifecycle rows run through one emitter pair rather than both, omit the
+      mixed pending-disclosure/background-advice write-failure combinations, and P9-9's
+      pending-delete-failure row is skipped by name because no operation-specific fault is
+      available (one permission governs both operations on `.context/`, and a directory at
+      the pending path is not seen as pending). A6 composition is exact-tested against a
+      failure message, a silent Bash event and the fallback emitter, not against every
+      emitting branch. Closing it needs a selective `rm` shim and per-branch composition
+      goldens. *Trigger: a disclosure or advice bug that the current rows do not catch.*
+- [ ] **The hardening ledger has no supersession convention.** `docs/hardening-log.md`'s
+      header says never edit a row, and one row per hardening — so when a row's "what this
+      does NOT do" narration is later falsified by a feature change, there is no sanctioned
+      move: editing breaks the first rule and appending breaks the second. The 2026-07-20
+      row now describes pre-0.8.0 counting behaviour as current. The 2026-07-20 *spec* took
+      a version-qualified supersession note and that worked; the ledger needs the same
+      convention written into its header, or an explicit "rows are historical, read the
+      newest row for current behaviour" statement. *Trigger: the next row falsified by a
+      later change — this is the second.*
+- [ ] **Locator selects the `text` element by RAW BYTE comparison of `type`.** A
+      Unicode-escaped spelling of `text` is legal JSON meaning `text` and is not selected;
+      with no other element the class is `no-result` (fail-closed, so discarded rather than
+      miscounted, but still a wrong verdict on a legal payload). Same for escaped spellings
+      of the `type`/`text` keys. Characterized by a regression row and stated in spec §3.1;
+      closing it means decoding the `type` value for equality while still returning the
+      selected `text` in its original escaped bytes, since the matcher depends on those.
+      *Trigger: a serializer observed emitting escaped key or type spellings.*
+
+- [x] **A failed Codex call counts as a pass — false ✓ in the firing direction.**
+      **DONE in 0.8.0.** The hook now reads the result before counting. Five classes
+      (spec §3.3): `success` and `unrecognized` count and store a fingerprint; `failure`
+      (the envelope's immediately-first property is `success: false`), `backgrounded`
+      (the harness notice anchor at the start of the located block) and `no-result` (an
+      unambiguous determination that no located block yields a non-blank string) do
+      neither. The candidate fix recorded here was right about the direction and wrong
+      about the unknown: `tool_response`'s real shape for `mcp__codex__*` was established
+      by capturing live payloads, which now ship as fixtures.
+      **What remains, and it is the accepted residual, not a leftover of this row:**
+      locating-uncertainty is fail-OPEN — an unwalkable structure, a repeated depth-1
+      `tool_response`, or a payload past the scan bounds counts, with a
+      once-per-workspace disclosure that the count was made without inspection. And the
+      counter is still not evidence: classification cannot see whether the findings file
+      was written, so an incomplete pass is discounted whatever the counter says.
+      C1–C4 in `plugins/dev-workflow/CHANGELOG.md` carry the full residual list.
+- [ ] **jq-free parser stops at an escaped JSON quote.** *(Candidate path, recorded
+      2026-08-01: the result-classification story builds a POSIX awk locator with proper
+      string-state and backslash-parity handling. Once that exists and is proven against the
+      captured fixtures, this row's fix can likely reuse it rather than inventing a second
+      escape-aware scanner. The scopes stay separate — that story does not touch
+      `input_field` — but whoever takes this row should look there first.)* A payload containing
       `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
       wrong direction under invariant 2, and only on machines without `jq`. Needs
       escape-aware decoding or a conservative raw-payload scan, plus tests for escaped
@@ -74,6 +96,21 @@ driven by recurrence rather than by enthusiasm.
       && git commit -am x` is one PreToolUse event: the hook hashes before the mutation
       runs, so the commit carries content the hash never saw. Consider treating any
       command segment preceding `git commit` as uncertain and firing.
+      **Occurrence 2 (2026-07-30): same event-timing class, second consumer —
+      `is_docs_only` rather than `tree_hash`.** Commit 1950739 staged exactly one
+      `docs/**.md` path, so Gate B was N/A per CLAUDE.md §5's prose exemption, yet the
+      hook emitted the Gate-B STOP. Cause, read from the source rather than inferred:
+      the docs-only branch derives its file list as
+      `files=$(git -C "$repo_root" diff --cached --name-only)` at PreToolUse, the commit
+      was issued as a single Bash call whose `git add` had not run yet, so that list was
+      empty — and `is_docs_only` opens with `[ -n "$1" ] || return 1`, which the branch's
+      own comment states as intent ("Only when the file list is POSITIVELY confirmed
+      docs-only; an empty list falls through to fire"). So the timing gap now has two
+      consumers, and this one is a **false positive** — it fires when it need not, the
+      safe direction under invariant 2 — where the `tree_hash` consumer above is the
+      dangerous direction. Counts toward this row's eventual trigger; not fixed now, and
+      note that any fix must keep the empty-list fallthrough firing rather than trade a
+      redundant warning for a missed one.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
@@ -117,6 +154,26 @@ driven by recurrence rather than by enthusiasm.
       confusing one-off red: it is a step a human must know about and repeat, on a
       command AGENTS.md presents as "what CI runs". Two occurrences of the same class
       now; counts toward whatever trigger this row is eventually escalated on.
+- [ ] **Gate-pass counters are read-modify-write, with no serialization.** `bump_count`
+      reads, increments and writes; two `PostToolUse` events arriving concurrently can lose
+      an increment, and the fresh-count, fingerprint and pass-count writes are independent,
+      so a reader can observe a mixed snapshot. This **predates** the result-classification
+      change and applies to every counter — that change adds files with the same property,
+      not new exposure, which is why it was documented as a stated contract there rather
+      than fixed asymmetrically. Raised as MAJOR at Gate-A pass 2 of that design under the
+      risk lens. *Trigger: the first observed lost increment, or when batch/orchestrator
+      work makes concurrent gate calls real* — the parked story for that is where
+      concurrency stops being hypothetical. Until then: known, stated, unexploited.
+- [ ] **The hook trusts `.context/` and does not reject non-regular state targets.** A
+      globally installed hook creates and truncates files inside a repository-controlled
+      directory, following symlinks; a hostile workspace could point a state file or marker
+      at another user-writable path. **Pre-existing** for every state file the hook already
+      writes — the result-classification change adds markers with identical properties, so
+      fixing only the new ones would be inconsistent, and fixing all of them was out of that
+      story's scope. Raised as MAJOR (medium confidence) at Gate-A pass 2 under the security
+      lens. Any fix must keep invariant 1 (always exit 0) on the rejection path.
+      *Trigger: the first security-`high` story touching the hook, or a real report of a
+      hostile-workspace scenario.*
 - [ ] **Temp-index writes land in the real object database.** `git add -A` against the
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary
@@ -150,6 +207,19 @@ backlog.
       instead of re-described. *Trigger: the first story that runs under profiles* — the
       IDs exist to label what profiles produce, so the numbering scheme should meet a real
       profiled story before it gets a template slot.
+
+- [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
+      variable keeps a >120 s gate call in the foreground so its result reaches the hook.
+      **The failure mode this row originally described was fixed in 0.8.0** — a
+      backgrounded call carrying the recognized harness notice is now discarded, not
+      counted. What the variable still buys is the residual the CHANGELOG names as C1:
+      the notice is recognized *in the wording it currently uses*, so if that harness
+      prose ever changes the call is counted fail-open instead, with a disclosure. The
+      variable prevents the situation; the hook only recognizes today's spelling of it.
+      The result-classification story documents it in `README.md` § Setup only,
+      deliberately — a preflight check is a second surface and was kept out of that diff.
+      *Trigger: after that story lands* (spec:
+      `docs/superpowers/specs/2026-07-31-failed-codex-call-counts-as-a-pass-design.md`).
 
 - [ ] **Upstream-report candidate: `claude plugin update <bare-name>`.** The CLI docs
       document the bare plugin name as a valid argument for `install`/`uninstall`/`update`
@@ -213,6 +283,19 @@ backlog.
       editable prose should reword instead.) And the
       ledger itself had to be **excluded** from both checks, because a ledger that
       quotes defects self-rejects the checks that detect them.
+- [ ] **Each Gate cycle destroys the previous cycle's review record.** Slot names
+      (`gate-a-spec-pass-<p>`, `gate-b-<branch>-pass-<p>`) carry no cycle-unique component,
+      and §5 mandates deleting every target file before each call — correctly, since a
+      surviving prior file is indistinguishable from a fresh one. The consequence is that a
+      second cycle in the same repo silently erases the first cycle's findings artifacts.
+      **Observed, not theorised:** the result-classification cycle's pass-1 call deleted the
+      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` is git-ignored,
+      so it is unrecoverable. §5 anticipates *concurrent* calls racing on one slot and says
+      so; it does not cover *sequential cycles* reusing them. Note the dispositions and
+      resume-note companions have the same property. Any fix has to keep the pre-call delete
+      — that check is load-bearing — so it is about naming (a cycle component in the slot) or
+      archiving, not about relaxing the protocol. *Trigger: the next round touching the §5
+      file protocol.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
       showed it is a design, not a sentence. Spec questions: a semantic §5 locator

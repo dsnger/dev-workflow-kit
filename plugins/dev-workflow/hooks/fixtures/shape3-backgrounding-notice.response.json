@@ -1,0 +1,1 @@
+[{"type":"text","text":"MCP tool \"codex/exec\" is still running after 120s. It was moved to the background as task fixture01 and keeps running; you'll receive a notification with the result when it completes. You can keep working in the meantime. To stop it, use TaskStop with task_id \"fixture01\". Note: it does not survive exiting this session."}]

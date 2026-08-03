@@ -22,6 +22,109 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.8.0
+
+- **The gate hook reads the result of a gate call before counting it.** Until now it
+  counted on tool name alone, so a Codex call that failed, timed out, or was auto-
+  backgrounded at 120 s advanced the counter — and for Gate B stored a fingerprint over
+  content nobody read, which is a false ✓ in the hook's own recorded state. Observed
+  directly: `passCountA` moved 3 → 4 on a call that ran 272 ms and never started a
+  review. The pinned `mcp-codex-dev` catches its own errors and returns them as ordinary
+  results carrying `success: false`, so Claude Code sees a successful tool call; nothing
+  in the hook looked further. Five classes now decide it — `success` and `unrecognized`
+  count and store, `failure`, `backgrounded` and `no-result` do neither. An escape-aware
+  scan (never `jq`, which would reserialize away the very escape variants the matcher
+  reads) locates the first `text` element of `tool_response`; the failure marker must be
+  the envelope's **immediately-first** property, so a reordered envelope degrades to
+  `unrecognized` rather than to a wrong verdict.
+- **Fail-open where locating is uncertain, fail-closed where it is certain.** An
+  unambiguous "there is nothing usable here" is `no-result` and does not count. Not being
+  able to determine anything — unwalkable structure, a repeated `tool_response` key, a
+  payload past the 1 Mi-unit scan bound or the 200-frame depth cap — is `unrecognized`,
+  which **counts**, with a once-per-workspace disclosure saying the count was made
+  without inspection. Counting an uninterpretable result silently was the alternative,
+  and it is the direction invariant 2 names as dangerous.
+- **The counter is closer to the truth and is still not evidence.** Classification cannot
+  see whether the findings file was written, so §5's rule is unchanged and now stated
+  with its reason: discount every incomplete pass regardless of what the counter says.
+  `CLAUDE.md`, `README.md` and the `/workflow-init` inline template were corrected where
+  they taught the old tool-name-only mechanism.
+- **Fixes an invariant-1 violation that shipped.** With a directory at a marker path, the
+  old `: > "$file"` form exits **2** under `dash` while exiting 0 under macOS `sh` — so
+  the hook could fail non-zero on Linux, which invariant 1 forbids. The existing
+  regression test never caught it because it only ever ran under macOS `sh`.
+- **The test suite now really runs the hook under both shells.** Every runner used to
+  invoke the hook as `sh`/`/bin/sh` regardless of what ran the suite file, so running it
+  with `dash` exercised the *harness* under dash and the hook under whatever `/bin/sh` is
+  — bash, on macOS. Only a handful of explicit `dash` rows ever reached dash, and this
+  release's first draft generalized from them to the whole suite. `HOOK_SH` now selects
+  the shell the hook itself runs under, CI runs the suite twice, and the claim is true
+  rather than corrected.
+- **The common result-scan paths are bounded, and timed regression rows keep them that
+  way.** Three quadratics made a large-but-legal result stall the synchronous hook: the
+  locator built each string byte-by-byte (and `substr(s,j,1)` is O(len) per call in BWK
+  `awk`, so any per-character walk is quadratic by itself); the `backgrounded` test ran
+  `${b%%\n*}` on every block, which bash 3.2 evaluates by trying successively longer
+  suffixes; and guarding that expansion on the notice's literal prefix still left it
+  running in full for a block that starts with the anchor and never completes it. A
+  150 KB text block — ordinary for a Gate-B review result, and a seventh of the 1 Mi-unit
+  ceiling — took **10.9 s** and now takes **0.46 s**; the anchor-prefixed near miss took
+  5.9 s and now takes under a second, at the cost of one stated limit (the notice segment
+  must fall within the first 4096 characters, so a ~4070+ character tool name counts
+  instead of being discarded).
+  **Not fixed, and named rather than left to be found — two paths.** `skipval` still walks
+  containers character by character, so a large *valid sibling container before*
+  `tool_response` costs 3.2 s at 200 KB and 11.5 s at 400 KB; and the record accumulator
+  rebuilds the whole input once per input line, so a newline-rich payload is quadratic in
+  line count independently of that (0.35 s at 4k lines, 2.69 s at 16k). Only the 1 Mi-unit
+  ceiling stops either, and a payload just under it still costs tens of seconds. The lesson is written into
+  the code: a size backstop bounds work only if the per-byte cost is constant, and in
+  POSIX shell and `awk` it often is not — and a timed regression row only covers the
+  branch its own fixture reaches.
+- **`.context/codex-gate.off` is not a rollback**, and the docs no longer imply the
+  counters are "accurate" while it is set. It silences messages; classification and state
+  tracking keep running, so re-enabling lands on counters with the same semantics as
+  gate-on — which is not the same as evidence that a review happened.
+- **Mapping a Codex tool now says the one thing that made it fail silently, and the
+  parser enforces it.** A mapped name must lie in `mcp__codex__*`, because the hook's
+  matcher is `^(Bash|Skill|mcp__codex__.*)$`, so an out-of-namespace name is either never
+  delivered at all or — for the two reserved names it does deliver — hijacks a lifecycle
+  event. Two remedies that told operators to rename the server *away* from `codex` are
+  removed — they produced exactly that unreachable configuration. **And the two reserved
+  names that DO fire were a false-✓ hazard:** the mapped cases are tested before the
+  native `Bash` and `Skill` cases, so `reviewTool=Bash` made a `git commit` **count** a
+  Gate-B pass instead of resetting the cycle, and `execTool=Skill` counted a skill
+  invocation as a Gate-A pass — both reachable from a plausible typo. Out-of-namespace
+  mappings are now ignored like any other unusable line.
+- **New setup step: `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`** (README), the primary defence
+  against auto-backgrounding. Requires Claude Code 2.1.212+, must be set in the
+  environment Claude Code is launched from, `0` disables backgrounding and a positive
+  value must exceed your longest gate call.
+
+**Four accepted residuals, named rather than left to be discovered.** Each is recorded
+because a reader who assumes otherwise will trust the counter further than it earns.
+
+- **C1** — the `backgrounded` class recognizes the harness notice **in the wording it
+  currently uses**. On any runtime where auto-backgrounding is still effective and that
+  prose has changed, the call is counted again — as `unrecognized`, with the disclosure.
+  This is why the environment variable is the defence and the hook is the backstop.
+- **C2** — an `unrecognized` call whose disclosure is neither delivered nor persisted is
+  counted **silently**, in both directions: emit suppressed (gate off) and emit failed,
+  each combined with a failed pending write. Two named oracles pin it rather than repair it.
+- **C3** — counter mutation is unserialized and `.context/` is trusted. Pre-existing,
+  filed in `todos.md`; no locking is added here.
+- **C4** — concurrent check-emit-write on the diagnostic markers can duplicate or lose a
+  disclosure, in both directions. Spec §6 accepts this under "delivery is best-effort".
+  The sequential tests describe sequential behaviour and must not be read as guaranteeing
+  more; a partial fix over one state family would be the inconsistent repair C3 refuses.
+
+**Rolling back to 0.7.1 restores the original defect**, and that is the whole trade: failed,
+timed-out and backgrounded calls count as gate passes again, and the `dash` special-builtin
+exit returns with them — on Linux an unwritable `.context/` makes 0.7.1's hook exit 2,
+violating invariant 1. So roll back if 0.8.0 discards passes it should count, and not for
+anything else. What it does **not** undo: the three diagnostic markers already written into
+`.context/` stay there, and 0.7.1 ignores them.
+
 ## 0.7.1
 
 - **Gate B gains a standing lens: "which existing statements does this diff falsify?"**
