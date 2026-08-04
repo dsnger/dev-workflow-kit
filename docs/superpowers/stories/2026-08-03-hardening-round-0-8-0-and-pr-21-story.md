@@ -4,6 +4,14 @@
 **Risk:** standard · **Security:** none · **Validation:** battery+check
 
 **Amendment log:**
+- 2026-08-04 · AC added (the P8 criterion) · the round's acceptance criteria covered the four
+  stories designed up front and said nothing about a parked row whose trigger the round's own
+  output crosses · both Gate-B pass 1 reviewers found that the four appended ledger rows take
+  the ledger from 18 to 22, past P8's stated 20-row threshold, and D3 makes a trigger this round
+  fires a round deliverable. Without the criterion the round could satisfy every stated
+  criterion while omitting a deliverable D3 required, so the criterion was added rather than the
+  omission argued away. Raised at Gate-B pass 1; the fifth story and the eighth `todos.md` row
+  change landed in the same commit.
 - 2026-08-03 · AC 1 amended · replaced "has exactly one recorded disposition" with the
   current wording · a finding whose halves fall in different fingerprint classes needs a
   disposition in each; F2's two halves are `unverified-enforcement-claim` and
@@ -160,6 +168,13 @@ squeezed in.
       design resumes.
 - [ ] Each of the three parked rows whose trigger names §5 is read literally against its own
       text, and the round records which fired and which did not, with the reason.
+- [ ] **Added at Gate-B pass 1.** Any parked row whose trigger this round's own output crosses is
+      read the same way, marked fired, and given its story as a round deliverable — which at
+      minimum covers P8, whose "10 stories or 20 ledger rows" threshold the four appended rows
+      cross (18 → 22). A fifth story exists on disk on the same terms as the other four —
+      written directly in the story template's shape, unprofiled, carrying its source row's
+      conditions marked kept, moved or dropped, and carrying the profile-confirmation criterion
+      first — and `todos.md` carries the eighth row change that marks P8 fired.
 - [ ] **Fired at Gate-A spec pass 3.** Making the precheck work turned out to require decisions
       about what a durable record holds, how a guard citation survives the ledger's format, and
       what happens when a row appears mid-run — more than the rule paragraph this criterion

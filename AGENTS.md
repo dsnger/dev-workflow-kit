@@ -215,7 +215,10 @@ reader can judge whether it still holds.
   in CI — it is a recipe a human runs — and an overclaim phrased without those totality
   words escapes it entirely. It raises the floor; it does not close the class. The
   underlying rule is the check itself: for every sentence about a gate, name the exact
-  comparison the code performs, and delete any part of the sentence that outruns it.
+  comparison the code performs, and delete any part of the sentence that outruns it — and
+  where the sentence says what the mechanism does *not* cover, name the axes it was checked
+  against and state whether that list is exhaustive, because an enumeration read as complete
+  guarantees the axes it omits.
 - **Never replace a decision procedure without accounting for its old conditions.** List
   what the previous prose required, then mark each one kept, moved, or deliberately
   dropped. A rewrite reliably preserves the condition that motivated it and silently loses

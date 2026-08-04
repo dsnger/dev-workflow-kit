@@ -41,7 +41,9 @@ the prior rung *claimed to guard* rather than by counting occurrences — **at a
 hardening exists, and in a parked backlog row where none does.** **Four
 hardenings** land as text — three sentences in `CLAUDE.md` §5 and one clause appended to an
 existing `AGENTS.md` Don't — **four ledger rows** record them, one taxonomy class is minted, and
-four follow-on stories are written.
+five follow-on stories are written. (Four were planned; the fifth was added at Gate-B pass 1,
+when the four appended ledger rows crossed a parked row's stated threshold and D3 made that
+trigger a round deliverable.)
 
 The round does not change `harden-finding` itself. Landing the guard-scope precheck in the
 skill was this round's centrepiece until it became clear the precheck cannot work without
@@ -142,8 +144,13 @@ re-run." Added:
 
 > Before each read pass, settle mechanically what the artifact asserts and a machine can decide
 > without side effects — cited paths, quoted passages, stated counts, the syntax of standalone
-> fenced blocks — inspecting quoted commands rather than running them, since a command quoted
-> in a spec may be destructive or an intentional failure.
+> fenced blocks — because a read pass spends expensive judgement on what a parser settles in
+> seconds and misses it anyway, inspecting quoted commands rather than running them, since a
+> command quoted in a spec may be destructive or an intentional failure.
+
+(The "because" clause was added at Gate-B pass 3: the sentence carried a reason for inspecting
+quoted commands rather than running them, and none for the sweep itself, which
+`docs/prompt-standards.md` item 6 requires of every constraint.)
 
 ### 5.4 The 2026-07-19 `AGENTS.md` Don't, amended — F2 (claim half), F8
 
@@ -301,16 +308,24 @@ amendment. An entry that replaces text names the text it replaced; one that exte
 names what was added. The story is the writable copy, and this section does not restate the
 entries.
 
-## 8. The four split stories
+## 8. The five split stories
 
-Four story files at `docs/superpowers/stories/YYYY-MM-DD-<topic>-story.md`. A note or a
+Five story files at `docs/superpowers/stories/YYYY-MM-DD-<topic>-story.md`. A note or a
 commit-body summary does not satisfy this: the point is an artifact that outlives the session.
+
+**The fifth was added during the Gate-B loop**, when both reviewers found that this round's four
+appended ledger rows take the ledger from 18 to 22 and cross P8's stated 20-row threshold. D3
+covers it — the trigger fires by this round's own action, not in the backlog — so P8's row is
+marked fired and its story is a round deliverable like the other four. It is recorded here
+rather than only in the plan because the count in this section was falsified by the fix, which
+is the drift this round hardens.
 
 **They are written directly rather than produced by `dev-workflow:intake`, and each file says
 so.** Intake excludes "items that already have an approved story/spec or have moved into
-solution design", and all four are that: three carry cut-short design analysis from earlier
-rounds, and the fourth (F7) is the ledger-format work this round declined to fold in and has
-already scoped. Making an intake-produced artifact acceptance-critical would deadlock the round
+solution design", and all five are that: three carry cut-short design analysis from earlier
+rounds, the fourth (F7) is the ledger-format work this round declined to fold in and has
+already scoped, and the fifth (P8) is a parked row whose analysis was settled when it was
+written and whose only open condition was a sample-size threshold. Making an intake-produced artifact acceptance-critical would deadlock the round
 against a skill that declines the input.
 
 **Each file uses the story template's six sections and its `**Date:**`/`**Size:**` header line,
@@ -332,7 +347,7 @@ Nothing else would pick the debt up — `intake` declines work already in soluti
 unprofiled — so a sentence merely saying the profile is owed would name no step at all, which is
 the unbacked-claim shape this round hardens.
 
-**Each story inherits its source row's conditions, accounted for.** Three of the four replace a
+**Each story inherits its source row's conditions, accounted for.** Four of the five replace a
 parked `todos.md` row that carries settled analysis, and the `AGENTS.md` Don't "Never replace a
 decision procedure without accounting for its old conditions" applies to that replacement as
 much as to any rule: each story lists every condition its source row states and marks it kept,
@@ -347,7 +362,7 @@ appeared meanwhile rather than one that truncates: a classification taken early 
 later is check-then-write, and another session can create or change the file in the gap. On any
 such failure, stop and surface — the same answer as a collision seen at classification time.
 
-**The round is incomplete until all four exist.** If one cannot be grounded — no statable
+**The round is incomplete until all five exist.** If one cannot be grounded — no statable
 problem, outcome, or three checkable criteria — that is a stop-and-surface: say which and why,
 rather than padding a story into existence.
 
@@ -385,6 +400,17 @@ rather than padding a story into existence.
    the one known-stale instance is being re-synced by hand, so this carries no schedule
    pressure. Open question: how a scaffolded `CLAUDE.md` can tell its reader that it lags the
    installed plugin.
+5. **Passive metrics, read-only over the ledger and git (P8)** →
+   `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md`. **Added at
+   Gate-B pass 1, not at design time** — the trigger is a sample-size threshold, "10 stories or
+   20 ledger rows", and this round's four appended rows cross it (18 → 22); its own fifth story
+   takes the story count to 10, crossing the other arm. Conditions to account for, from that
+   row: analysis only, with no new state file, no instrumentation and nothing written back; the
+   scope is questions the ledger already holds the data for — which fingerprints recur and how
+   often a rung holds; and the threshold itself, whose reason was that a smaller sample says
+   more about the last week than about the workflow. Open question: where the analysis lives — a
+   command, a script, or a documented reading recipe — given that "analysis only" rules out
+   state but not a surface.
 
 **Not fired:** the slot-collision row, whose trigger names the §5 **file protocol**. This round
 changes no part of it — not the slot names, not the pre-call delete, not the terminator or
@@ -414,6 +440,10 @@ acceptance rules.
   followed twice; no textual repair is available, because its operative instruction already
   requires what both cases omitted. *Trigger: a third compliance miss against that Don't, or a
   feasible mechanical rung emerging from the split skill story (§8 item 1).*
+- **`todos.md`, the P8 passive-metrics row** — marked **fired** and pointed at §8 item 5's story
+  path. Its trigger is a sample-size threshold, and this round's four appended rows cross it
+  (18 → 22). Found at Gate-B pass 1 by both reviewers, applying the standing lens this round
+  adds: the diff changed a count, and a statement keyed to that count sat elsewhere.
 - **`docs/hardening-taxonomy.md`** — the §6.5 class.
 - **`plugins/dev-workflow/.claude-plugin/plugin.json`** — `version` to `0.8.1`, required by
   invariant 12.
@@ -483,7 +513,7 @@ to a rule statement — 6, 7, 8, 9, 11 and 12 — with the result recorded. §5.
 phrased as a continuation of an existing prohibition; item 9's own text exempts rules whose
 subject is the prohibition, and that exemption is cited in the record rather than assumed.
 
-The four split stories are agent inputs, and `docs/prompt-standards.md` holds briefs to the
+The five split stories are agent inputs, and `docs/prompt-standards.md` holds briefs to the
 checklist in spirit. Each gets a recorded in-spirit review — success criteria, stop conditions,
 verified claims — without asserting the mandatory 12 apply.
 

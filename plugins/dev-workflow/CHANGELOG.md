@@ -22,6 +22,23 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.8.1
+
+- **Three sentences added to the §5 gate protocol, and to the template `/workflow-init`
+  scaffolds.** The Gate-B standing lens now asks what a diff changes the size, value or position
+  of, and to grep for where each is described elsewhere — asked as an open question alone it
+  missed three such statements in one cycle while being carried with unusual force. The Profiles
+  counterfactual now asks for both halves: name the observation that would exist if the claim
+  were false, and confirm the wiring could have produced it. The Gate-A pass procedure now asks
+  for a mechanical sweep before each read pass, inspecting quoted commands rather than running
+  them, since a command quoted in a spec may be destructive.
+- **None of the three is a check.** Nothing runs the grep, tests whether a check could have
+  failed, or records that a sweep happened. They sharpen questions a reader asks; the ledger
+  rows say so rather than implying otherwise.
+- **No skill changed.** The `harden-finding` guard-scope precheck — the change this round set out
+  to make — turned out to need decisions about durable records, ledger format and mid-run
+  collisions that a rule paragraph cannot carry. It is split to its own story.
+
 ## 0.8.0
 
 - **The gate hook reads the result of a gate call before counting it.** Until now it

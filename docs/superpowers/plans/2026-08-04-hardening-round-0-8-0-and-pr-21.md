@@ -2,9 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Land four hardenings from the 0.8.0 cycle and PR #21 as text, record them in four ledger rows, park what has no repair, and open four split stories — without changing any skill file.
+**Goal:** Land four hardenings from the 0.8.0 cycle and PR #21 as text, record them in four ledger rows, park what has no repair, and open five split stories — without changing any skill file.
 
-**Architecture:** Three one-sentence additions to `CLAUDE.md` §5, each mirrored into the inline template in `plugins/dev-workflow/commands/workflow-init.md`; one clause appended to an existing `AGENTS.md` Don't; one new taxonomy class; four appended ledger rows; seven `todos.md` row changes; four new story files. No executable code changes.
+**Amended at Gate-B pass 1.** The round opened four stories and made seven `todos.md` row changes as planned; a fifth story and an eighth row change were added during the Gate-B loop, when both reviewers found that the four appended ledger rows cross P8's 20-row threshold (18 → 22) and D3 makes a trigger this round fires a round deliverable. The counts below are the amended ones.
+
+**Architecture:** Three one-sentence additions to `CLAUDE.md` §5, each mirrored into the inline template in `plugins/dev-workflow/commands/workflow-init.md`; one clause appended to an existing `AGENTS.md` Don't; one new taxonomy class; four appended ledger rows; eight `todos.md` row changes; five new story files. No executable code changes.
 
 **Tech Stack:** Markdown prompts. The quality battery in `AGENTS.md § Commands` is the test cycle — there is no unit test for prose.
 
@@ -45,8 +47,8 @@ a procedure, and every restatement is a copy that can drift.
 - [ ] **Version 0.8.1** in the manifest, with the first plugin change (Task 1)
 - [ ] **One `AGENTS.md` Don't amendment** (Task 2)
 - [ ] **One taxonomy class** — `mechanical-check-skipped-before-review` (Task 3)
-- [ ] **Four split stories**, unprofiled, six `##` sections each (Tasks 4–5)
-- [ ] **Seven `todos.md` row changes** — one new, six updated (Task 6)
+- [ ] **Five split stories**, unprofiled, six `##` sections each (Tasks 4–5, plus the P8 story added at Gate-B pass 1)
+- [ ] **Eight `todos.md` row changes** — one new, seven updated (Task 6, plus the P8 row marked fired at Gate-B pass 1)
 - [ ] **Four ledger rows** — A, B, C, D (Task 7)
 - [ ] **A `## 0.8.1` CHANGELOG entry** (Task 8)
 - [ ] **Validation evidence** in `.context/evidence-0.8.1.md`, folded into the closing commit (Task 9)
@@ -60,7 +62,7 @@ a procedure, and every restatement is a copy that can drift.
 - **`grep -c` counts matching *lines* and exits 1 on zero.** Flattening a file with `tr '\n' ' '` and then counting makes every result 0 or 1, so it cannot detect duplicates. Count occurrences with `grep -o ... | grep -c .`.
 - **Version is `0.8.1`**, committed in Task 1 with the first `plugins/` change.
 - **The ledger is append-only.** Never edit an existing row. Escape a literal `|` as `\|`.
-- **The four stories are unprofiled**, six `##` sections, profile-confirmation criterion first.
+- **The five stories are unprofiled**, six `##` sections, profile-confirmation criterion first.
 - **No `Co-Authored-By: Claude` or `Generated with` trailers.**
 - **`git add` and `git commit` are always separate calls** — the gate hook derives its docs-only file list at `PreToolUse`, so a compound call presents an empty index and fires a spurious STOP.
 - **Before every `git add`, confirm the index holds nothing unrelated**, and after staging confirm the staged set is exactly the task's paths.
@@ -169,9 +171,14 @@ Immediately after `Each pass: validate, revise, re-run.` and before the parenthe
 ```
 Before each read pass, settle mechanically what the artifact asserts and a machine can decide
 without side effects — cited paths, quoted passages, stated counts, the syntax of standalone
-fenced blocks — inspecting quoted commands rather than running them, since a command quoted in
-a spec may be destructive or an intentional failure.
+fenced blocks — because a read pass spends expensive judgement on what a parser settles in
+seconds and misses it anyway, inspecting quoted commands rather than running them, since a
+command quoted in a spec may be destructive or an intentional failure.
 ```
+
+The "because" clause was added at Gate-B pass 3, where the quality branch found the sentence
+gave a reason for inspecting quoted commands rather than running them and none for the sweep
+itself — `docs/prompt-standards.md` item 6 requires one per constraint.
 
 - [ ] **Step 4: Mirror all three into `workflow-init.md`**
 
@@ -419,9 +426,10 @@ git commit -m "WIP: split story for the harden-finding guard-scope precheck"
 
 ---
 
-### Task 5: The three trigger stories
+### Task 5: The four trigger stories
 
-**Files:** Create the three paths below.
+**Files:** Create the four paths below. Three were planned; the fourth (Step 3b) was added at
+Gate-B pass 1, when this round's own ledger appends crossed the threshold its trigger names.
 
 Each replaces a parked `todos.md` row carrying settled analysis, so each holds an inheritance
 inventory marking every condition of its source row **kept, moved, or deliberately dropped** —
@@ -432,7 +440,8 @@ exactly six `##` sections.
 **Classify each path immediately before writing it**, by Task 4's rule: symlink or directory →
 stop; regular file with identical bytes → reuse and skip the commit; regular file with different
 bytes → stop; absent → create with the same fail-if-it-appeared operation Task 4 describes. A
-single classification of all three up front is stale by construction for the second and third.
+single classification of all four up front is stale by construction for every path after the
+first — and most of all for Step 3b, which is written a whole Gate-B pass later.
 
 - [ ] **Step 1: `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`**
 
@@ -639,7 +648,23 @@ without comparing the two by hand.
 shipped provisionally cannot be taken back.
 ```
 
-**Must be true, for all three:** each exists as a regular file at its exact path, carries no
+- [ ] **Step 3b: `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md`
+      (added at Gate-B pass 1)**
+
+Written after Task 7 appended the four ledger rows, because that is what fires its trigger: the
+ledger goes 18 → 22, crossing P8's stated "10 stories or 20 ledger rows". Same shape as Steps
+1–3 — classify the path immediately before writing it, create with the same fail-if-it-appeared
+operation, unprofiled, six `##` sections, one `### Conditions inherited from the source row`
+subsection carrying P8's conditions (analysis only, no new state file, no instrumentation,
+nothing written back, the scope of questions the ledger already answers, and the threshold
+itself) each marked kept, moved or dropped, and the profile-confirmation criterion first. Its
+open question is where the analysis lives, since "analysis only" rules out state but not a
+surface.
+
+Because it lands after Task 7 in execution order, it is committed with the Gate-B fix rather
+than in Step 4's commit; the closing squash folds whatever commits exist.
+
+**Must be true, for all four:** each exists as a regular file at its exact path, carries no
 profile line, has exactly six `##` sections, has one `### Conditions inherited from the source
 row` subsection, and has the profile-confirmation criterion first.
 
@@ -655,7 +680,7 @@ git commit -m "WIP: three split stories for the fired triggers"
 
 ---
 
-### Task 6: `todos.md` — one new row, six existing rows
+### Task 6: `todos.md` — one new row, seven existing rows
 
 **Files:** Modify `todos.md`.
 
@@ -668,7 +693,8 @@ alone cannot tell an identical completed edit from a partial or independently ed
 italic `*Trigger: …*` sentence. Steps 2–7 each insert their block **immediately before that
 row's `*Trigger:*` sentence**, so the trigger stays last and a reader finds the status note
 attached to the row's body rather than dangling after its trigger. Step 1 appends a whole new
-row at the end of `### Parked (trigger-gated)`.
+row at the end of `### Parked (trigger-gated)`. Step 7b was added at Gate-B pass 1 and follows
+the same placement rule.
 
 - [ ] **Step 1: Add the parked C4/C5 compliance row**
 
@@ -764,9 +790,24 @@ In `**`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.**`
       unbuilt, so the row is not discharged by this.
 ```
 
-**Must be true:** all seven changes are present, each exactly once; every
+- [ ] **Step 7b: Mark P8's row fired (added at Gate-B pass 1)**
+
+In `**P8 — passive metrics, read-only over the ledger and git.**`, whose trigger is a sample-size
+threshold this round's own ledger appends cross:
+
+```
+      **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round appended four ledger rows,
+      taking the ledger from 18 to 22 and crossing the 20-row arm; its fifth story takes the
+      story count to 10, crossing the other arm as well. Story:
+      `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md`, which
+      carries this row's conditions with each marked kept, moved or dropped.
+```
+
+Like Step 3b, this lands after Task 7 in execution order and is committed with the Gate-B fix.
+
+**Must be true:** all eight changes are present, each exactly once; every
 `docs/superpowers/stories/2026-08-04-*.md` path cited in `todos.md` exists as a regular file;
-and there are exactly four such distinct paths. A `todos.md` pointing at a story that does not
+and there are exactly five such distinct paths. A `todos.md` pointing at a story that does not
 exist is the docs-drift class this round hardens.
 
 - [ ] **Step 8: Run the battery.** Expected: exit 0.
@@ -839,7 +880,7 @@ story's subject (Task 4), and inventing the procedure here would re-import what 
 - [ ] **Step 5: Append row D**
 
 ```
-| 2026-08-04 | mechanical-check-skipped-before-review | NEW CLASS, minted this change: eight read-only Gate-A passes over one plan missed eight defects that thirteen machine checks then found in a single sweep, including a rollback that would have byte-verified against the wrong hook | manual | major | P std | CLAUDE.md §5 Gate-A pass procedure + the same block in the workflow-init inline template: before each read pass, settle mechanically what the artifact asserts and a machine can decide without side effects — cited paths, quoted passages, stated counts, the syntax of standalone fenced blocks — inspecting quoted commands rather than running them, since a command quoted in a spec may be destructive or an intentional failure. Class added to docs/hardening-taxonomy.md in this same change, with its boundary against verification-masks-failure stated: there a check ran and could not fail; here the cheap check never ran at all. NO PRIOR ROW — this is the first occurrence. STILL INSTRUCTION-BACKED: nothing runs the sweep, records that it ran, or checks what it settled |
+| 2026-08-04 | mechanical-check-skipped-before-review | NEW CLASS, minted this change: eight read-only Gate-A passes over one plan missed eight defects that thirteen machine checks then found in a single sweep, including a rollback that would have byte-verified against the wrong hook | manual | major | P std | CLAUDE.md §5 Gate-A pass procedure + the same block in the workflow-init inline template: before each read pass, settle mechanically what the artifact asserts and a machine can decide without side effects — cited paths, quoted passages, stated counts, the syntax of standalone fenced blocks — because a read pass spends expensive judgement on what a parser settles in seconds and misses it anyway, inspecting quoted commands rather than running them, since a command quoted in a spec may be destructive or an intentional failure. Class added to docs/hardening-taxonomy.md in this same change, with its boundary against verification-masks-failure stated: there a check ran and could not fail; here the cheap check never ran at all. NO PRIOR ROW — this is the first occurrence. STILL INSTRUCTION-BACKED: nothing runs the sweep, records that it ran, or checks what it settled |
 ```
 
 **Must be true:** each appended row is a single line with exactly seven fields and no unescaped
@@ -964,7 +1005,7 @@ this; one (the single-shell test) reached the released artifact.
 ## prompt conformance
 workflow-init.md (invariant 11 surface) — all 12 items: <fill>
 CLAUDE.md, AGENTS.md (not on invariant 11's list) — items 6,7,8,9,11,12: <fill>
-four split stories — in-spirit brief review: <fill>
+five split stories — in-spirit brief review: <fill>
 
 ## mirror parity
 each §5 sentence appears once in CLAUDE.md and once in workflow-init.md: <fill>
@@ -1132,7 +1173,8 @@ Then run `/dev-workflow:process-pr-review` once the bots report.
 ## Self-Review
 
 **Spec coverage.** §5.1–§5.4 → Tasks 1–2. §6 rows A–D → Task 7. §6.4's concurrency limit →
-Task 7, stated as the spec states it. §6.5 class → Task 3. §8 four stories → Tasks 4–5. §9
+Task 7, stated as the spec states it. §6.5 class → Task 3. §8 five stories → Tasks 4–5 plus the
+Gate-B pass 1 addition. §9
 deliverables → Task 6, Task 1 Step 5, Task 8, Task 3. §10 validation → Task 9. §10 conflict
 check → Task 0 Step 2, before any edit. D7 (no skill file) → Global Constraints, Task 3.
 
@@ -1140,7 +1182,7 @@ check → Task 0 Step 2, before any edit. D7 (no skill file) → Global Constrai
 and the evidence template is written out in full.
 
 **Type consistency.** `mechanical-check-skipped-before-review` matches across Tasks 3 and 7. The
-four story paths match across Tasks 4, 5, 6. `EVIDENCE` is defined in every block that reads it.
+five story paths match across Tasks 4, 5, 6. `EVIDENCE` is defined in every block that reads it.
 
 **Verification surface.** **Four** executable checks — branch preflight, battery, ledger
 precondition, `<fill` guard — each self-contained and each exiting nonzero on failure. Plus

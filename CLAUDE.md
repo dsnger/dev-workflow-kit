@@ -221,7 +221,12 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   NO FINDINGS
   ```
 
-  Each pass: validate, revise, re-run. (Large/high-risk artifact: optional focused
+  Each pass: validate, revise, re-run. Before each read pass, settle mechanically what
+  the artifact asserts and a machine can decide without side effects — cited paths,
+  quoted passages, stated counts, the syntax of standalone fenced blocks — because a read
+  pass spends expensive judgement on what a parser settles in seconds and misses it
+  anyway, inspecting quoted commands rather than running them, since a command quoted in
+  a spec may be destructive or an intentional failure. (Large/high-risk artifact: optional focused
   per-dimension passes on top.)
 - **Gate B — Code.** Tests green, before `git commit`. Tool: `mcp__codex__review`
   (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
@@ -251,7 +256,11 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   asks, nothing enforces the ask or validates the answer, and no comprehensive check
   covers arbitrary semantic drift. Ask anyway — in one cycle it surfaced a shipped command
   that would have let a one-line fix skip Gate B entirely, plus two user-facing docs
-  teaching a rule the same change had just narrowed.
+  teaching a rule the same change had just narrowed. **Name what this diff changes the
+  size, value or position of** — a list, a count, a version, an identifier, a cited
+  line — and grep for where each is described elsewhere, because asked as an open
+  question alone this lens missed three such statements in one cycle while being carried
+  with unusual force.
 
   **What counts as prose (the only Gate-B exemption).** Every staged path is
   explanatory documentation — `docs/**.md`, `README.md`, `MANIFEST.md` → N/A.
@@ -342,7 +351,11 @@ A check need not be an automated test — where none is possible, a **named veri
 satisfies it and the entry says which route was taken and why. Either route owes the
 **counterfactual**: the observation against the prior state. An **unobservable
 counterfactual is a blocking evidence gap**, not a free pass — stop and surface; the human
-may then lower the mode as a logged override. A fabricated test satisfies nothing.
+may then lower the mode as a logged override. A fabricated test satisfies nothing. **Name
+the observation that would exist if the claim were false, and confirm the wiring could
+have produced it** — a check that supplies its own input, runs where the defect cannot
+appear, or uses a fixture that never reaches the branch it covers reports success because
+of how it was wired, not because the thing it checks succeeded.
 
 **The evidence entry lives in the commit body** (see Mechanics), carries the **story path
 and the named evidence but not the mode value**, and is **revalidated before every Gate-B

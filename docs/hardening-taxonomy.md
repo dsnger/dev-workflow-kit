@@ -94,6 +94,15 @@ the synonyms a future reader might search for instead.
   writing the thing down at all. Also not `truncated-tool-output-read-as-complete` —
   nothing here is truncated or misread as complete; the content was simply never durable.
 
+- `mechanical-check-skipped-before-review` — an artifact carrying machine-checkable assertions
+  goes to an expensive read pass before anything parses it, so attention is spent on what a
+  tool decides in seconds. Aliases: `sh -n` after the fact, the parser would have caught it,
+  read pass before the sweep, manual review of machine-decidable claims.
+
+  **Not `verification-masks-failure`.** There a check ran and could not fail; here the cheap
+  check never ran at all. Grep this one when the sentence is "a parser would have found it
+  immediately"; grep the other when it is "the check passed and proved nothing".
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project
