@@ -92,8 +92,10 @@ if [ "$branch" = "$default" ]; then
   echo "on $default — creating $want"
   git checkout -b "$want" || exit 1
 elif [ "$branch" = "$want" ]; then
-  ahead=$(git rev-list --count "$default".."$want") || exit 1
-  echo "already on $want, $ahead commit(s) ahead of $default"
+  echo "already on $want — every commit ahead of $default:"
+  git log --oneline "$default".."$want" || exit 1
+  echo "STOP unless every subject above was created by this plan."
+  echo "Any unrelated commit here would be folded into the squash and the PR."
 else
   echo "on unexpected branch '$branch' — stop and surface"; exit 1
 fi
@@ -181,7 +183,9 @@ Apply Steps 1–3 at the three corresponding sites in the inline template.
 
 Change `"version": "0.8.0",` to `"version": "0.8.1",` in `plugins/dev-workflow/.claude-plugin/plugin.json`. It lands here because `check-version-bump.sh` fails a pull request that changes a `plugins/` path without a bump.
 
-**Must be true:** the manifest reads `0.8.1`. Note that running `check-version-bump.sh main` locally on this branch compares against `main` and is a real check; the same command on `main` itself compares HEAD to HEAD and proves nothing.
+**Must be true:** the manifest reads `0.8.1`.
+
+**What the battery's version-bump component does and does not observe here.** `check-version-bump.sh` compares *commits*. Run at Step 6 — before this task commits — it sees a range containing neither the plugin edit nor the bump, so its result is **vacuous**, not evidence. The first meaningful observation is the next battery run, at Task 2 Step 3, once Step 7's commit exists. On `main` it would be vacuous always, since the merge-base is HEAD; that is one reason Task 0 moves off `main` first.
 
 - [ ] **Step 6: Run the battery (KEPT CHECK)**
 
@@ -289,10 +293,17 @@ git commit -m "WIP: mint mechanical-check-skipped-before-review"
 **Before writing, classify the path.** A **symlink** at the target is an unconditional stop — never a reuse candidate, even if its target holds identical text, because `git add` would stage a link rather than the story bytes. A **directory** is a stop. An existing **regular file** with byte-identical content is a reuse; with different content it is a stop, per invariant 9. Only an absent path is written.
 
 **Create it with an operation that fails if the path appeared meanwhile**, which the spec
-requires: write the content to a temporary file in the same directory and `ln` it into place,
-since `ln` fails when the target exists. A plain redirect would truncate a file another session
-created between the classification and the write, and that clobber is invisible in the final
-diff — nothing distinguishes "we wrote this" from "we overwrote someone else's".
+requires: write the content to a temporary file in the same directory, `ln` it into place —
+`ln` fails when the target exists — then remove the temporary name. A plain redirect would
+truncate a file another session created between the classification and the write, and that
+clobber is invisible in the final diff: nothing distinguishes "we wrote this" from "we
+overwrote someone else's".
+
+**Remove the temporary file on every exit path**, success and failure alike. A successful `ln`
+leaves a second untracked copy of the story, and a collision stop leaves scratch content — both
+are picked up by `check-invariants.sh`, which scans the working tree rather than the tracked
+set, and both break the clean-tree preconditions later steps rely on. A `trap 'rm -f "$tmp"' EXIT`
+set immediately after the temporary name is allocated covers both.
 
 **Resume semantics.** If the file is already present and byte-identical, the deliverable is
 done: **skip the commit rather than creating an empty one.** The closing squash folds whatever
@@ -653,6 +664,12 @@ its full text is already present: absent → apply; present and identical → sk
 present but different, or present more than once → **stop and surface**. A marker substring
 alone cannot tell an identical completed edit from a partial or independently edited one.
 
+**Placement within each row is fixed, not left to judgement.** Every parked row ends with an
+italic `*Trigger: …*` sentence. Steps 2–7 each insert their block **immediately before that
+row's `*Trigger:*` sentence**, so the trigger stays last and a reader finds the status note
+attached to the row's body rather than dangling after its trigger. Step 1 appends a whole new
+row at the end of `### Parked (trigger-gated)`.
+
 - [ ] **Step 1: Add the parked C4/C5 compliance row**
 
 Under `### Parked (trigger-gated)`:
@@ -674,7 +691,18 @@ Under `### Parked (trigger-gated)`:
 
 - [ ] **Step 2: Record evidence case 3 on the scope-blind row**
 
-In `**`harden-finding`'s recurrence rule is scope-blind.**`, before its `*Trigger:*` sentence:
+**First correct the row's premise, then append the evidence — both in this one change.** The row
+currently says the scope-blind workaround "lives in ledger prose, which agents do not read — they
+read the skill." That is false, and this round established it: `harden-finding` step 3 does say
+to re-read the log. Appending evidence beneath a premise the same round disproved would leave the
+backlog internally contradictory and point a future reader at the wrong diagnosis — `docs-drift`,
+in the round that hardens it.
+
+Replace that clause so the row reads that the skill's recurrence step *does* re-read the ledger,
+and the defect is that its **decision branch** keys on the fingerprint and the latest row's rung
+without letting that row's stated guard control the verdict.
+
+Then, in the same row, before its `*Trigger:*` sentence:
 
 ```
       **Evidence case 3 (2026-08-04):** the 2026-08-03 hardening round ran the precheck as a
@@ -894,7 +922,13 @@ If `.context/evidence-0.8.1.md` already exists, **do not overwrite it** — but 
 either. Accept it only if it is a **regular file, not a symlink**, and its header names this
 story and the branch `harden-0-8-0-and-pr-21`; anything else is a stale or foreign file, and
 reusing it would feed the `<fill` guard content from another cycle. If it fails either test,
-**stop and surface** rather than replacing it. Otherwise create it with this structure:
+**stop and surface** rather than replacing it.
+
+**If it is absent, create it the same way the story files are created** — temporary file in the
+same directory, `ln` into place, `trap` to remove the temporary name — not with a redirect.
+Classify-then-redirect has the same race here as it does for the stories, and this file ends up
+quoted verbatim into the commit body and the PR, so foreign content reaching it is worse than a
+stray story copy, not better. Create it with this structure:
 
 ```markdown
 # Validation evidence — hardening round 0.8.1
@@ -1010,6 +1044,10 @@ state can change between a guard in one fresh shell and an amend in another:
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
+want=harden-0-8-0-and-pr-21
+story=docs/superpowers/stories/2026-08-03-hardening-round-0-8-0-and-pr-21-story.md
+b=$(git rev-parse --abbrev-ref HEAD) || exit 1
+[ "$b" = "$want" ] || { echo "on '$b', expected '$want' — stop"; exit 1; }
 EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
 [ -f "$EVIDENCE" ] && [ ! -L "$EVIDENCE" ] || { echo "evidence missing or not a regular file — stop"; exit 1; }
 [ -s "$EVIDENCE" ] || { echo "evidence empty — stop"; exit 1; }
@@ -1019,18 +1057,23 @@ case "$g" in
   1) : ;;
   *) echo "grep failed reading evidence (status $g) — stop"; exit 1 ;;
 esac
-grep -q 'Branch: harden-0-8-0-and-pr-21' "$EVIDENCE" || { echo "evidence is not this cycle's — stop"; exit 1; }
+grep -qxF "Branch: $want" "$EVIDENCE" || { echo "evidence Branch line is not this cycle's — stop"; exit 1; }
+grep -qxF "Story: $story" "$EVIDENCE" || { echo "evidence Story line is not this round's — stop"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { echo "tree not clean — stop"; exit 1; }
 body=$(cat "$EVIDENCE") || { echo "cannot read evidence — stop"; exit 1; }
 [ -n "$body" ] || { echo "evidence body empty — stop"; exit 1; }
 git commit --amend -m "Harden four classes from the 0.8.0 cycle and PR #21" -m "$body"
 ```
 
-The `case` distinguishes grep's three outcomes — a read error returns neither 0 nor 1 and must
-stop rather than fall through. The branch line binds the evidence to **this** cycle, so a stale
-file left by an earlier run cannot be reused. `EVIDENCE` is defined here because a fresh shell
-carries nothing from the previous block, `cat ""` fails, and `git commit --amend` would still
-succeed with an empty body — silently dropping the evidence from the durable record.
+Four things are deliberate. The `case` distinguishes grep's three outcomes — a read error
+returns neither 0 nor 1 and must stop rather than fall through to success. The `Branch` and
+`Story` checks use `grep -qxF`, matching the **whole line literally**: an unanchored substring
+search would accept `OldBranch: harden-0-8-0-and-pr-21` from another cycle's file. The
+**checked-out branch is verified here**, not only at push time, because this block mutates
+history and doing that on an unexpected branch is not recoverable by a later check. And
+`EVIDENCE` is defined in this block because a fresh shell carries nothing from the previous one,
+`cat ""` fails, and `git commit --amend` would still succeed with an empty body — silently
+dropping the evidence from the durable record.
 
 - [ ] **Step 7: Push and open the PR**
 
@@ -1048,9 +1091,22 @@ git push -u origin "$want"
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
 want=harden-0-8-0-and-pr-21
+story=docs/superpowers/stories/2026-08-03-hardening-round-0-8-0-and-pr-21-story.md
 b=$(git rev-parse --abbrev-ref HEAD) || exit 1
 [ "$b" = "$want" ] || { echo "on '$b', expected '$want' — stop"; exit 1; }
+local_head=$(git rev-parse HEAD) || exit 1
+remote_head=$(git rev-parse "origin/$want") || { echo "no pushed branch — stop"; exit 1; }
+[ "$local_head" = "$remote_head" ] || { echo "local HEAD and origin/$want diverge — push again, then retry"; exit 1; }
 EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
+[ -f "$EVIDENCE" ] && [ ! -L "$EVIDENCE" ] || { echo "evidence missing or not a regular file — stop"; exit 1; }
+grep -q '<fill' "$EVIDENCE"; g=$?
+case "$g" in
+  0) echo "evidence holds <fill placeholders — stop"; exit 1 ;;
+  1) : ;;
+  *) echo "grep failed reading evidence (status $g) — stop"; exit 1 ;;
+esac
+grep -qxF "Branch: $want" "$EVIDENCE" || { echo "evidence Branch line wrong — stop"; exit 1; }
+grep -qxF "Story: $story" "$EVIDENCE" || { echo "evidence Story line wrong — stop"; exit 1; }
 body=$(cat "$EVIDENCE") || { echo "cannot read evidence — stop"; exit 1; }
 [ -n "$body" ] || { echo "evidence body empty — stop"; exit 1; }
 gh pr create --base main --head "$want" \
@@ -1058,9 +1114,16 @@ gh pr create --base main --head "$want" \
   --body "$body"
 ```
 
-The body is read into a variable with an explicit stop, because `--body "$(cat …)"` swallows a
-`cat` failure and would open the PR with an empty body. Invariant 12's checker is
-`pull_request`-only, so work that reaches `main` without a PR never meets it.
+**The evidence checks are repeated here rather than inherited from Step 6.** That validation
+happened in a different shell at an earlier moment, and `.context/` is git-ignored and mutable —
+a replacement, a symlink, or a reintroduced `<fill` between the two blocks would otherwise reach
+the PR unvalidated even though the commit body was sound. The body is read into a variable with
+an explicit stop, because `--body "$(cat …)"` swallows a `cat` failure and would open the PR
+empty. And local `HEAD` is compared to `origin/$want`, so a commit made between push and PR
+cannot open a PR whose remote head omits the reviewed close.
+
+Invariant 12's checker is `pull_request`-only, so work that reaches `main` without a PR never
+meets it.
 
 Then run `/dev-workflow:process-pr-review` once the bots report.
 
