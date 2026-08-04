@@ -36,8 +36,9 @@ jq-parity criterion; **C5** the README's "a typo can't quietly unhook a gate".
 
 ## 2. What this round is
 
-Seven findings processed through `dev-workflow:harden-finding`, each disposed at a rung chosen
-by reading what the prior rung *claimed to guard* rather than by counting occurrences. **Four
+Seven findings processed through `dev-workflow:harden-finding`, each disposed by reading what
+the prior rung *claimed to guard* rather than by counting occurrences — **at a rung where a
+hardening exists, and in a parked backlog row where none does.** **Four
 hardenings** land as text — three sentences in `CLAUDE.md` §5 and one clause appended to an
 existing `AGENTS.md` Don't — **four ledger rows** record them, one taxonomy class is minted, and
 four follow-on stories are written.
@@ -56,7 +57,7 @@ what happens when a row appears mid-run — questions a rule paragraph cannot an
 | D3 | Every trigger **this round fires** is recorded as fired and its story written as a round deliverable | A fired trigger nobody records evaporates | Taking on every trigger already fired in the backlog, which would make any round that touches §5 responsible for unrelated due work |
 | D4 | F2's evidence half, F3, F4 and F6 all fingerprint **`verification-masks-failure`** and resolve at one site | Same failure: a check reports success because of how it was wired. The taxonomy prefers a reused near-miss over a precise class nobody greps | Minting two classes that then never recur |
 | D5 | Each §5 edit is **one sentence at the exact existing site** | §5 is the repo's most load-bearing prompt, and a finding needing a paragraph is a finding whose home is wrong | Paragraph-sized insertions, which is how §5 accretes and how conditions get dropped |
-| D6 | F2's claim half and F8 are repaired by **amending the existing 2026-07-19 `AGENTS.md` Don't**, not by adding a sibling | All three of their cases fall inside that Don't's operative instruction (§6.1), so the fitting response to a guard that did not hold is to strengthen it. A second Don't covering adjacent ground would leave two rules a reader must reconcile | A new Don't, which would record a fresh-scope hardening where a regression actually occurred |
+| D6 | **F8** is repaired by **amending the existing 2026-07-19 `AGENTS.md` Don't**, not by adding a sibling. **F2's claim half (C4, C5) is not repaired at all** — it is parked as an unrepaired compliance recurrence | All three cases fall inside that Don't (§6.1), but only F8's shape — an enumeration read as complete — is one the Don't did not spell out, so amending it closes a real gap. C4 and C5 omitted what the Don't already requires, so no amendment reaches them and a ledger row would have to name a repair that does not exist. A second Don't covering adjacent ground would also leave two rules a reader must reconcile | A new Don't; or logging C4/C5 against §5.4, which does not govern a positive claim |
 | D7 | The `harden-finding` change is **split into its own story** and this round edits no skill file | The precheck cannot be stated without deciding what a durable record holds, how a guard citation survives the ledger format, and what happens on a mid-run collision. Those are design questions, and answering them inside a hardening round is how a round becomes a redesign | Designing it here |
 | D8 | **One ledger row per landed hardening**, each carrying its motivating cases as worked examples | The ledger header says one row per hardening, and both aggregation precedents agree (2026-07-18 logged six claims as one row; 2026-07-27 logged ten instances as one row). A row per case would inflate the recurrence counts that drive escalation, in a round about escalation | One row per case |
 | D9 | Version **0.8.1** | With the skill change split out, the round is `#16`'s shape — rules added to a shipped prompt and its template mirror — and `#16` took 0.7.0 → 0.7.1. The `#15` minor precedent applied to a skill's *procedure* changing, which this round does not do | 0.9.0, which follows a precedent this round does not match |
@@ -223,7 +224,8 @@ carries F8 alone, and C4/C5 are parked (§6 above, §9).
 
 Row A is `bot`: C1–C3 all came from the PR bot on #21.
 
-Row B is `bot`: C4 and C5 from the PR bot, F8 from Gate A on the plan.
+Row B is `gate-a`: its single case is F8, which came from Gate A on the plan. C4 and C5 are not
+row B's cases — they are parked (§9) — so they contribute no provenance to it.
 
 Row C's four cases split evenly: `$EVIDENCE` from Gate A on the plan (pass 9) and the
 single-shell test from Gate A on the plan (recorded in
@@ -316,13 +318,19 @@ and deliberately omits the profile line** — that is the only departure, and ea
 A profile is proposed and human-confirmed at intake time; written now it would be a
 confirmed-looking value nobody confirmed, which §5 classifies as unresolvable and stops on.
 
-**The debt is carried as each story's first acceptance criterion**, not as a claim about a later
-process: *"the story's profile — both axes and the derived mode — is proposed and confirmed by
-Daniel before design begins."* Nothing else would pick it up: `intake` declines work already in
-solution design, `brainstorming` does not assess profiles, and CLAUDE.md §5 proceeds when a
-cited story is unprofiled. A sentence saying the profile is "owed at pickup" would name no owner
-and no step, which is the unbacked-claim shape this round hardens; a criterion inside the
-artifact is checkable by whoever picks it up.
+**The debt is carried as each story's first acceptance criterion**, and the criterion names the
+step rather than an owner-less obligation:
+
+> Before design resumes on this story, whoever picks it up proposes both axes and the mode
+> derived from them, pauses for Daniel's confirmation, and writes the confirmed profile into
+> this header. Design continues only after that.
+
+"Before design *resumes*", not "begins": these stories exist because design on them was cut
+short, so a criterion gated on design not having started would be unsatisfiable by construction.
+Nothing else would pick the debt up — `intake` declines work already in solution design,
+`brainstorming` does not assess profiles, and CLAUDE.md §5 proceeds when a cited story is
+unprofiled — so a sentence merely saying the profile is owed would name no step at all, which is
+the unbacked-claim shape this round hardens.
 
 **Each story inherits its source row's conditions, accounted for.** Three of the four replace a
 parked `todos.md` row that carries settled analysis, and the `AGENTS.md` Don't "Never replace a
@@ -333,7 +341,11 @@ the failure mode, and it is acceptance-critical, not advisory.
 
 **Paths are fixed, and collisions stop the round.** Each story's path is named below. Missing →
 write it; byte-identical → reuse it and say so; present and different → stop and surface rather
-than overwrite, per invariant 9's rule for scaffolded files.
+than overwrite, per invariant 9's rule for scaffolded files. **Classify each path immediately
+before writing it, not once up front**, and create with an operation that fails if the path
+appeared meanwhile rather than one that truncates: a classification taken early and acted on
+later is check-then-write, and another session can create or change the file in the gap. On any
+such failure, stop and surface — the same answer as a collision seen at classification time.
 
 **The round is incomplete until all four exist.** If one cannot be grounded — no statable
 problem, outcome, or three checkable criteria — that is a stop-and-surface: say which and why,
@@ -357,15 +369,22 @@ rather than padding a story into existence.
    `process-pr-review` step 5, and one project has 51 Gate-A pass files and zero ledger rows.
    Conditions to account for: the scope must match that step exactly — every accepted actionable
    fixed finding checked, `harden-finding` invoked only when a class matches or a new one is
-   clearly warranted — and it cannot rest on same-session memory. Open question: what has to be
-   true for a fixed finding to reach the ledger without a pull request.
+   clearly warranted; it cannot rest on same-session memory, because a compaction, interruption
+   or handoff loses the fixed-finding set and nothing detects the loss; a durable handoff needs
+   real design for identity, deduplication and consumption semantics, which is why it was
+   refused as a mid-round addition; and `mandatory-step-anchored-to-optional-path` is minted
+   only when the hardening lands, since minting it earlier leaves a class no row uses. Open
+   question: what has to be true for a fixed finding to reach the ledger without a pull request.
 4. **A §5 version stamp (Finding B)** →
    `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`. Trigger fired: "the
    next round that touches the §5 template". Conditions to account for: the semantic §5 locator
    problem, per-state merge semantics under invariant 9, stamp cardinality (absent, duplicate,
-   malformed), and that the binding must hold on every push path — the version-bump coupling is
-   false, since invariant 12's checker is `pull_request`-only. Open question: how a scaffolded
-   `CLAUDE.md` can tell its reader that it lags the installed plugin.
+   malformed), that the binding must hold on every push path — the version-bump coupling is
+   false, since invariant 12's checker is `pull_request`-only — that a stamp is a **wire
+   format**, so shipping a provisional one writes legacy into every scaffolded file, and that
+   the one known-stale instance is being re-synced by hand, so this carries no schedule
+   pressure. Open question: how a scaffolded `CLAUDE.md` can tell its reader that it lags the
+   installed plugin.
 
 **Not fired:** the slot-collision row, whose trigger names the §5 **file protocol**. This round
 changes no part of it — not the slot names, not the pre-call delete, not the terminator or

@@ -47,6 +47,12 @@
   occurrences" · each lineage calls its 2026-07-27 row the fourth, so four is the prior count
   and this round makes five. An unchecked count in the premise of a round about count-blind
   escalation. Raised at Gate-A spec pass 4.
+- 2026-08-04 · AC 7 amended · it required each story to say it "owes a profile at pickup" · it
+  now requires each story to carry, as its first acceptance criterion, that its profile — both
+  axes and the derived mode — is proposed and confirmed by Daniel before design resumes · the
+  old wording named no owner and no step, and nothing would have picked the debt up: `intake`
+  declines work already in solution design, `brainstorming` does not assess profiles, and
+  CLAUDE.md §5 proceeds when a cited story is unprofiled. Raised at Gate-A spec pass 8.
 - 2026-08-04 · §1 diagnosis corrected · it said the scope-blind workaround "lives in ledger
   prose, which agents do not read — they read the skill" · `harden-finding` step 3 does say to
   re-read the log, so the premise was false; the defect is that the decision branch keys on
@@ -137,8 +143,10 @@ squeezed in.
       a guard citation the ledger's escaping rule does not cover, a same-fingerprint row
       treated as a duplicate without reading what it guards, a branch condition that bypasses
       an unresolved prerequisite, and an escalation instruction recorded as moved while
-      nothing carried it — each with the question it leaves open, and none with a solution,
-      which `intake` forbids.
+      nothing carried it — each with the question it leaves open and none with a solution, since
+      the design is brainstorming's to do. Like the other three, it carries as its first
+      acceptance criterion that its profile is proposed and confirmed by Daniel before design
+      resumes.
 - [ ] The parked scope-blind row records this round as its third evidence case.
 - [ ] The check-supplies-its-own-input defect lands as exactly one of: an extension of the
       existing counterfactual prose, or a new class in `docs/hardening-taxonomy.md` — with
