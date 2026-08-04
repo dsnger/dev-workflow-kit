@@ -20,11 +20,22 @@ reviews the diff that actually resulted — a bespoke verification script per st
 implementation that needs its own review, and in this plan's own history that scaffolding
 produced more defects than it caught.
 
-Five checks are kept as executable blocks, because each is load-bearing and each is simple
-enough to read at a glance: the **branch preflight**, the **battery**, the **ledger
-precondition**, the **self-tests**, and the **`<fill` guard**. Every one is self-contained —
-it defines every variable and function it uses, because agentic workers run each fenced block
-in a fresh shell — and every one exits nonzero when it fails.
+**Four executable checks** are kept, because each is load-bearing and simple enough to read at
+a glance: the **branch preflight**, the **battery**, the **ledger precondition**, and the
+**`<fill` guard**. Each is self-contained — it defines every variable it uses, because agentic
+workers run each fenced block in a fresh shell — and each exits nonzero when it fails.
+
+**One recorded reading** sits beside them: the §5.2 and §5.4 **self-tests**. Applying a prompt
+sentence to a case is a judgement, not a computation, so there is no failing oracle to run —
+the executor reads, decides, and records the verdict. Calling it a fifth executable check would
+be an enforcement claim with no mechanism behind it, which is the class this round hardens.
+
+**The closing procedure is not restated here.** `CLAUDE.md` §5 governs the WIP commit, the
+squash, the Gate-B loop, the amend and the close — including its requirement that **every fix
+is amended into the WIP commit before the next review call**, since `mcp__codex__review` reads
+a git range and a staged-but-uncommitted fix is not in it. That step is named because a draft
+of this plan restated the protocol and dropped exactly it; naming a step is not re-specifying
+a procedure, and every restatement is a copy that can drift.
 
 ## Deliverables checklist
 
@@ -72,23 +83,33 @@ Nothing in this round may be committed on `main`. Invariant 12's checker runs on
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
-branch=$(git rev-parse --abbrev-ref HEAD) || exit 1
+want=harden-0-8-0-and-pr-21
 default=main
+dirty=$(git status --porcelain) || exit 1
+[ -z "$dirty" ] || { printf 'tree or index not clean — stop:\n%s\n' "$dirty"; exit 1; }
+branch=$(git rev-parse --abbrev-ref HEAD) || exit 1
 if [ "$branch" = "$default" ]; then
-  echo "on $default — creating the feature branch"
-  git checkout -b harden-0-8-0-and-pr-21 || exit 1
-elif [ "$branch" = "harden-0-8-0-and-pr-21" ]; then
-  echo "already on the feature branch"
+  echo "on $default — creating $want"
+  git checkout -b "$want" || exit 1
+elif [ "$branch" = "$want" ]; then
+  ahead=$(git rev-list --count "$default".."$want") || exit 1
+  echo "already on $want, $ahead commit(s) ahead of $default"
 else
   echo "on unexpected branch '$branch' — stop and surface"; exit 1
 fi
 now=$(git rev-parse --abbrev-ref HEAD) || exit 1
-[ "$now" != "$default" ] || { echo "still on $default — stop"; exit 1; }
+[ "$now" = "$want" ] || { echo "not on $want — stop"; exit 1; }
 echo "branch OK: $now"
 exit 0
 ```
 
 Expected: `branch OK: harden-0-8-0-and-pr-21`, exit 0. **Every later push targets this branch**; no step pushes to `main`.
+
+The clean-tree requirement comes first for a reason: a pre-existing edit in the working tree
+would be swept into whichever task commits the same path, and neither the battery nor a Gate-B
+reviewer reading the diff can tell that content apart from this round's. On a resumed run the
+branch already exists, and the ahead-count is printed so the executor can confirm the range is
+this plan's commits and nothing else before proceeding.
 
 - [ ] **Step 2: Cross-finding conflict check**
 
@@ -267,6 +288,16 @@ git commit -m "WIP: mint mechanical-check-skipped-before-review"
 
 **Before writing, classify the path.** A **symlink** at the target is an unconditional stop — never a reuse candidate, even if its target holds identical text, because `git add` would stage a link rather than the story bytes. A **directory** is a stop. An existing **regular file** with byte-identical content is a reuse; with different content it is a stop, per invariant 9. Only an absent path is written.
 
+**Create it with an operation that fails if the path appeared meanwhile**, which the spec
+requires: write the content to a temporary file in the same directory and `ln` it into place,
+since `ln` fails when the target exists. A plain redirect would truncate a file another session
+created between the classification and the write, and that clobber is invisible in the final
+diff — nothing distinguishes "we wrote this" from "we overwrote someone else's".
+
+**Resume semantics.** If the file is already present and byte-identical, the deliverable is
+done: **skip the commit rather than creating an empty one.** The closing squash folds whatever
+commits exist; it does not require a fixed count.
+
 - [ ] **Step 1: Write the story**
 
 ```markdown
@@ -388,8 +419,9 @@ applies to that replacement. The inventory is a `###` subsection of §1, so the 
 exactly six `##` sections.
 
 **Classify each path immediately before writing it**, by Task 4's rule: symlink or directory →
-stop; regular file with identical bytes → reuse; regular file with different bytes → stop;
-absent → write.
+stop; regular file with identical bytes → reuse and skip the commit; regular file with different
+bytes → stop; absent → create with the same fail-if-it-appeared operation Task 4 describes. A
+single classification of all three up front is stale by construction for the second and third.
 
 - [ ] **Step 1: `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`**
 
@@ -858,8 +890,11 @@ content is folded into the closing commit body.
 
 - [ ] **Step 1: Create the evidence file**
 
-If `.context/evidence-0.8.1.md` already exists from a resumed run, **do not overwrite it** —
-read it, keep what is filled, and continue. Otherwise create it with this structure:
+If `.context/evidence-0.8.1.md` already exists, **do not overwrite it** — but do not trust it
+either. Accept it only if it is a **regular file, not a symlink**, and its header names this
+story and the branch `harden-0-8-0-and-pr-21`; anything else is a stale or foreign file, and
+reusing it would feed the `<fill` guard content from another cycle. If it fails either test,
+**stop and surface** rather than replacing it. Otherwise create it with this structure:
 
 ```markdown
 # Validation evidence — hardening round 0.8.1
@@ -904,52 +939,43 @@ each §5 sentence appears once in CLAUDE.md and once in workflow-init.md: <fill>
 Task 0 Step 2 verdict: <fill>
 ```
 
-- [ ] **Step 2: Squash the WIP commits**
+- [ ] **Step 2: Run the battery (KEPT CHECK) and record it**
 
-**Must be true before resetting:** the working tree and index are clean, the commits from
-`HEAD` back to the first WIP are exactly the eight this plan created and nothing else, and the
-first-WIP subject matches exactly once. If any of those fails, **stop and surface** — a reset
-against an ambiguous or contaminated range rewrites the wrong history.
-
-Then, in one block that recomputes its own anchor:
+Run the quality command from Global Constraints. Record its exit status and each suite's
+terminal line verbatim in the evidence file. **Do not write a number you did not read from
+output.** The hook suite prints no total, so a count must be derived — and the derivation must
+capture the suite's own exit status separately, because a pipeline into `grep -c` returns
+grep's status and would record a partial count from a suite that died:
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
-[ -z "$(git status --porcelain)" ] || { echo "tree or index not clean — stop"; exit 1; }
-n=$(git log --format='%s' | grep -c '^WIP: three §5 sentences' || true)
-[ "$n" = "1" ] || { echo "anchor not unique (n=$n) — stop"; exit 1; }
-first=$(git log --format='%H %s' | awk '/ WIP: three §5 sentences/{print $1}')
-[ -n "$first" ] || { echo "anchor empty — stop"; exit 1; }
-parent=$(git rev-parse "$first"^) || { echo "cannot resolve parent — stop"; exit 1; }
-echo "will squash these onto $parent:"
-git log --oneline "$parent"..HEAD || exit 1
-git reset --soft "$parent" || exit 1
-echo "reset OK"
+out=$(mktemp) || exit 1
+HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh > "$out" 2>&1
+status=$?
+count=$(grep -c '^ok ' "$out" || true)
+rm -f "$out"
+echo "hook suite (sh): status=$status derived-ok-count=$count"
+[ "$status" = "0" ] || { echo "suite failed — the count is not evidence"; exit 1; }
 exit 0
 ```
 
-```bash
-git commit -m "WIP: hardening round — the 0.8.0 cycle and PR #21"
-```
+`mktemp` rather than a fixed path: a literal `out` in the repo root would collide with a user's
+file and leave an untracked artifact that the clean-tree precondition then trips over.
 
-- [ ] **Step 3: Run the battery (KEPT CHECK) and record it**
-
-Run the quality command. Record its exit status and each suite's terminal line verbatim in the
-evidence file. **Do not write a number you did not read from output.** The hook suite prints no
-total, so a count must be derived — and the derivation must capture the suite's own exit status
-separately, because a pipeline into `grep -c` returns grep's status and would record a partial
-count from a suite that died.
-
-- [ ] **Step 4: Run the self-tests (KEPT CHECK) and record them**
+- [ ] **Step 3: Run the self-tests and record them (RECORDED READING, not an executable check)**
 
 Apply §5.2's sentence, exactly as it now reads in `CLAUDE.md`, to the four cases in spec §10 —
 each must **fail** on the second half. Apply §5.4's appended clause to `It bounds the **scan**,
-not memory` — it must fail on exhaustiveness. Record all five verdicts.
+not memory` — it must fail on exhaustiveness. Record all five verdicts with one line of reason
+each.
+
+There is no shell block here on purpose. Deciding whether a prompt sentence rejects a case is a
+reading; a script asserting it would be asserting its own author's opinion.
 
 If any case passes the sentence written to reject it, that sentence is miswired: **stop and
 surface**, do not proceed to Gate B.
 
-- [ ] **Step 5: Record prompt conformance and mirror parity**
+- [ ] **Step 4: Record prompt conformance and mirror parity**
 
 `workflow-init.md` is the only changed file inside invariant 11's enumerated surface — all 12
 items must pass, with an exception only where the checklist item itself authorizes one (items 9
@@ -958,28 +984,34 @@ review their edits against items 6, 7, 8, 9, 11 and 12. §5.4's clause continues
 prohibition, so cite item 9's own exemption rather than assuming it. Give each split story an
 in-spirit brief review. Record all of it, plus the mirror-parity result.
 
-- [ ] **Step 6: Run Gate B**
+- [ ] **Step 5: Close the cycle — `CLAUDE.md` §5 governs**
 
-Per CLAUDE.md §5. Tool: `mcp__codex__review`, `reviewType: full`, `baseSha` = the parent of the
-WIP commit. Delete both branch target files first and confirm they are gone. Carry the story
-path and the evidence content verbatim in `additionalContext`, plus the standing lens.
+**The squash, the Gate-B loop, the amend and the close follow `CLAUDE.md` §5 and its Mechanics
+section. This plan does not restate that protocol.** A draft did, and the restatement dropped a
+step — which is why §5 is cited rather than paraphrased.
 
-Minimum three passes, final pass clean. Re-review after every fix — a fix changes the diff.
-Validate every pass before reading it: terminator exact, count matching, nothing but finding
-lines, both branch files present.
+Two things this plan adds, neither of them a re-specification:
 
-**After every fix: stage the fixed paths, re-run the battery, re-check mirror parity, update the
-evidence file.** A fix left unstaged is a fix the closing amend does not carry.
+1. **The step the restatement dropped, named so it is not dropped again:** §5 requires that
+   **every Gate-B fix is amended into the WIP commit before the next review call.**
+   `mcp__codex__review` reads a **git range**; a fix that is only staged is not in that range,
+   so the next pass would re-review the pre-fix commit and report clean on unreviewed content.
+2. **What Gate B carries from this round:** `reviewType: full`; the story path
+   `docs/superpowers/stories/2026-08-03-hardening-round-0-8-0-and-pr-21-story.md`; the evidence
+   file's content verbatim in `additionalContext`; and the standing lens.
 
-**Must be true before the amend:** the working tree is clean, so nothing reviewed remains
-unstaged.
+**Must be true at the close:** the working tree is clean, every reviewed fix is in the commit
+being amended, and the closing message carries the evidence body.
 
-- [ ] **Step 7: Close the cycle by amend (KEPT CHECK — the `<fill` guard)**
+- [ ] **Step 6: The `<fill` guard, immediately before the amend (KEPT CHECK)**
+
+Run this in the **same block** as the amend, not as a separate step — evidence and repository
+state can change between a guard in one fresh shell and an amend in another:
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
 EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
-[ -r "$EVIDENCE" ] || { echo "evidence unreadable at $EVIDENCE — stop"; exit 1; }
+[ -f "$EVIDENCE" ] && [ ! -L "$EVIDENCE" ] || { echo "evidence missing or not a regular file — stop"; exit 1; }
 [ -s "$EVIDENCE" ] || { echo "evidence empty — stop"; exit 1; }
 grep -q '<fill' "$EVIDENCE"; g=$?
 case "$g" in
@@ -987,50 +1019,48 @@ case "$g" in
   1) : ;;
   *) echo "grep failed reading evidence (status $g) — stop"; exit 1 ;;
 esac
+grep -q 'Branch: harden-0-8-0-and-pr-21' "$EVIDENCE" || { echo "evidence is not this cycle's — stop"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { echo "tree not clean — stop"; exit 1; }
-echo "evidence ready, tree clean"
-exit 0
-```
-
-The `case` distinguishes grep's three outcomes: a read error returns neither 0 nor 1 and must
-stop, not fall through to success.
-
-Then amend in a block that defines `EVIDENCE` itself:
-
-```bash
-cd "$(git rev-parse --show-toplevel)" || exit 1
-EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
-[ -s "$EVIDENCE" ] || { echo "evidence missing at amend time — stop"; exit 1; }
 body=$(cat "$EVIDENCE") || { echo "cannot read evidence — stop"; exit 1; }
 [ -n "$body" ] || { echo "evidence body empty — stop"; exit 1; }
 git commit --amend -m "Harden four classes from the 0.8.0 cycle and PR #21" -m "$body"
 ```
 
-Defining `EVIDENCE` inside this block is not decoration: a fresh shell has no value from Step 7,
-`cat ""` fails, and `git commit --amend` would still succeed with an empty body — silently
-dropping the evidence from the durable record.
+The `case` distinguishes grep's three outcomes — a read error returns neither 0 nor 1 and must
+stop rather than fall through. The branch line binds the evidence to **this** cycle, so a stale
+file left by an earlier run cannot be reused. `EVIDENCE` is defined here because a fresh shell
+carries nothing from the previous block, `cat ""` fails, and `git commit --amend` would still
+succeed with an empty body — silently dropping the evidence from the durable record.
 
-- [ ] **Step 8: Push the feature branch and open the PR**
+- [ ] **Step 7: Push and open the PR**
+
+Both blocks require the exact feature branch by name. A `!= main` test is not enough: a resumed
+run on some other branch would pass it and push the wrong thing.
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
+want=harden-0-8-0-and-pr-21
 b=$(git rev-parse --abbrev-ref HEAD) || exit 1
-[ "$b" != "main" ] || { echo "refusing to push main — stop"; exit 1; }
-git push -u origin "$b"
+[ "$b" = "$want" ] || { echo "on '$b', expected '$want' — stop"; exit 1; }
+git push -u origin "$want"
 ```
 
 ```bash
 cd "$(git rev-parse --show-toplevel)" || exit 1
+want=harden-0-8-0-and-pr-21
+b=$(git rev-parse --abbrev-ref HEAD) || exit 1
+[ "$b" = "$want" ] || { echo "on '$b', expected '$want' — stop"; exit 1; }
 EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
-[ -s "$EVIDENCE" ] || { echo "evidence missing — stop"; exit 1; }
-gh pr create --base main --head "$(git rev-parse --abbrev-ref HEAD)" \
+body=$(cat "$EVIDENCE") || { echo "cannot read evidence — stop"; exit 1; }
+[ -n "$body" ] || { echo "evidence body empty — stop"; exit 1; }
+gh pr create --base main --head "$want" \
   --title "Harden four classes from the 0.8.0 cycle and PR #21" \
-  --body "$(cat "$EVIDENCE")"
+  --body "$body"
 ```
 
-The base/head are explicit so the PR cannot be opened against the wrong pair, and the push
-refuses `main` — invariant 12's checker is `pull_request`-only, so work pushed to `main` never
-reaches it.
+The body is read into a variable with an explicit stop, because `--body "$(cat …)"` swallows a
+`cat` failure and would open the PR with an empty body. Invariant 12's checker is
+`pull_request`-only, so work that reaches `main` without a PR never meets it.
 
 Then run `/dev-workflow:process-pr-review` once the bots report.
 
@@ -1049,7 +1079,13 @@ and the evidence template is written out in full.
 **Type consistency.** `mechanical-check-skipped-before-review` matches across Tasks 3 and 7. The
 four story paths match across Tasks 4, 5, 6. `EVIDENCE` is defined in every block that reads it.
 
-**Verification surface.** Five executable checks remain — branch preflight, battery, ledger
-precondition, self-tests, `<fill` guard — each self-contained and each exiting nonzero on
-failure. Everything else is a must-be-true the executor satisfies however it likes, and Gate B
-reviews the diff that resulted.
+**Verification surface.** **Four** executable checks — branch preflight, battery, ledger
+precondition, `<fill` guard — each self-contained and each exiting nonzero on failure. Plus
+**one recorded reading**, the §5.2/§5.4 self-tests, which have no executable oracle because
+applying a prompt sentence to a case is a judgement. Everything else is a must-be-true the
+executor satisfies however it likes, and Gate B reviews the diff that resulted.
+
+**What this plan does not specify.** The squash, the Gate-B loop, the amend and the close are
+`CLAUDE.md` §5's, cited rather than restated. The one step named explicitly — amend every fix
+into the WIP commit before re-reviewing — is named because a draft's restatement dropped it,
+and `mcp__codex__review` reads a git range in which a staged-only fix does not appear.
