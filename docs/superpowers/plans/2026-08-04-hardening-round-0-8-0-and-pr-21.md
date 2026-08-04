@@ -4,7 +4,7 @@
 
 **Goal:** Land four hardenings from the 0.8.0 cycle and PR #21 as text, record them in four ledger rows, park what has no repair, and open four split stories — without changing any skill file.
 
-**Architecture:** Three one-sentence additions to `CLAUDE.md` §5, each mirrored into the inline template in `plugins/dev-workflow/commands/workflow-init.md`; one clause appended to an existing `AGENTS.md` Don't; one new taxonomy class; four appended ledger rows; six `todos.md` row updates; four new story files. No executable code changes.
+**Architecture:** Three one-sentence additions to `CLAUDE.md` §5, each mirrored into the inline template in `plugins/dev-workflow/commands/workflow-init.md`; one clause appended to an existing `AGENTS.md` Don't; one new taxonomy class; four appended ledger rows; seven `todos.md` row changes; four new story files. No executable code changes.
 
 **Tech Stack:** Markdown prompts and POSIX shell checks. The quality battery in `AGENTS.md § Commands` is the test cycle — there is no unit test for prose.
 
@@ -17,28 +17,32 @@
 Everything this round ships. A task is not done until its rows here are true.
 
 - [ ] **Three §5 sentences** — Gate-B lens, Profiles counterfactual, Gate-A pass procedure (Task 1)
-- [ ] **Three template mirrors** of those sentences in `workflow-init.md`, byte-identical, same headings (Task 1)
+- [ ] **Three template mirrors** of those sentences in `workflow-init.md` (Task 1)
+- [ ] **Version 0.8.1** in the manifest — committed with the first plugin change, not later (Task 1)
 - [ ] **One `AGENTS.md` Don't amendment** — the 2026-07-19 gate-claims Don't (Task 2)
 - [ ] **One taxonomy class** — `mechanical-check-skipped-before-review` (Task 3)
-- [ ] **Four split stories**, unprofiled, each with a profile-confirmation first criterion and an inheritance inventory (Tasks 4–5)
-- [ ] **Six `todos.md` updates** — one new parked row (C4/C5), evidence case 3 on the scope-blind row, Finding A and Finding B marked fired, the F7 row marked fired, the slot-collision row marked not-fired, and the env-var row's observation appended (Task 6)
+- [ ] **Four split stories**, unprofiled, six `##` sections each, with a profile-confirmation first criterion and (for the three that replace a backlog row) an inheritance inventory (Tasks 4–5)
+- [ ] **Seven `todos.md` row changes** — one new parked row plus six existing rows updated (Task 6)
 - [ ] **Four ledger rows** — A, B, C, D (Task 7)
-- [ ] **Version 0.8.1** in the manifest, and a `## 0.8.1` CHANGELOG entry (Task 8)
-- [ ] **Validation evidence** — battery green, the named verification with its counterfactual, prompt conformance, mirror parity, cross-finding conflict check (Task 9)
+- [ ] **A `## 0.8.1` CHANGELOG entry** (Task 8)
+- [ ] **Validation evidence** written to a named file, then folded into the closing commit body (Task 9)
 
 ## Global Constraints
 
 Copied verbatim from the spec and `AGENTS.md`. Every task's requirements implicitly include this section.
 
 - **Each §5 edit is one sentence at the exact existing site.** A finding needing a paragraph is a finding whose home is wrong (spec D5).
-- **`CLAUDE.md` and `workflow-init.md` change in the same commit.** A sentence landing in one copy only is shipped-template drift.
+- **`CLAUDE.md` and `workflow-init.md` change in the same commit**, and their inserted sentences must be **equivalent under whitespace normalization** — identical word sequences, with only line wrapping and leading indentation permitted to differ, because the two files wrap at different widths and nest at different depths. Byte identity is not the requirement and no check in this plan asserts it.
 - **No skill file is edited.** `plugins/dev-workflow/skills/**` is out of scope (spec D7). If a step seems to need a skill edit, stop and surface.
-- **Version is `0.8.1`.** Required by invariant 12, since the round changes a path under `plugins/dev-workflow/`.
-- **The ledger is append-only.** Never edit an existing row; resolve a `pending` row by appending a new one.
+- **POSIX `sh` only** (invariant 4). No `<(...)`, no `[[ ]]`, no arrays, no `${var:offset:length}`, no `local`. `sh -n` is a *parse* check and will not catch `${var:0:3}` — it fails at runtime under `dash` with `Bad substitution`. Test any new snippet with `dash -c`, not only `sh -n`.
+- **`grep -c` exits 1 when the count is zero.** Every expected-zero check in this plan captures the count and asserts the number; none relies on grep's exit status.
+- **Version is `0.8.1`**, committed in Task 1 alongside the first `plugins/` change. The battery includes `check-version-bump.sh main`, which fails on any committed `plugins/` change without a bump — so deferring the bump would make every intervening battery run fail by construction.
+- **The ledger is append-only.** Never edit an existing row.
 - **Escape a literal `|` inside a ledger field as `\|`.** This round avoids guard quotations containing pipes rather than relying on an unstated rule for the `ref` column.
-- **The four stories are unprofiled** — no `**Risk:**`/`**Security:**`/`**Validation:**` line — and each carries the profile-confirmation criterion as its first acceptance criterion.
+- **The four stories are unprofiled** — no `**Risk:**`/`**Security:**`/`**Validation:**` line — each has exactly six `##` sections, and each carries the profile-confirmation criterion first.
 - **No `Co-Authored-By: Claude` or `Generated with` trailers** on any commit.
-- **Quality command** (the battery, what CI runs), from `AGENTS.md § Commands`:
+- **`git add` and `git commit` are always separate calls.** The gate hook derives its docs-only file list at `PreToolUse`; a compound `git add && git commit` presents an empty index and fires a spurious Gate-B STOP.
+- **Quality battery** (what CI runs), from `AGENTS.md § Commands`:
 
 ```
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && claude plugin validate . --strict
@@ -48,48 +52,47 @@ shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --s
 
 ---
 
-## File Structure
+## Task 0: Cross-finding conflict check
 
-| File | Responsibility in this round |
+The spec requires this **before applying any edit**, so it runs first rather than at validation time.
+
+- [ ] **Step 1: Confirm no two hardenings contend for one site**
+
+List the four sites and confirm each hardening writes to a distinct one:
+
+| Hardening | Site |
 |---|---|
-| `CLAUDE.md` | three §5 sentences (Gate-B lens, Profiles counterfactual, Gate-A pass procedure) |
-| `plugins/dev-workflow/commands/workflow-init.md` | the inline-template mirror of those three sentences |
-| `AGENTS.md` | one clause appended to the 2026-07-19 Don't |
-| `docs/hardening-taxonomy.md` | one new class |
-| `docs/hardening-log.md` | four appended rows |
-| `todos.md` | one new parked row, five existing rows updated |
-| `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md` | split story: the precheck |
-| `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md` | split story: F7 |
-| `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md` | split story: Finding A |
-| `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md` | split story: Finding B |
-| `plugins/dev-workflow/.claude-plugin/plugin.json` | version 0.8.0 → 0.8.1 |
-| `plugins/dev-workflow/CHANGELOG.md` | `## 0.8.1` entry |
+| §5.1 lens sentence | `CLAUDE.md` §5 Gate-B paragraph opening `**Standing lens, every Gate-B call:` |
+| §5.2 counterfactual sentence | `CLAUDE.md` §5 Profiles paragraph containing `Either route owes the` |
+| §5.3 sweep sentence | `CLAUDE.md` §5 Gate-A bullet at `Each pass: validate, revise, re-run.` |
+| §5.4 Don't clause | `AGENTS.md` Don't closing sentence `delete any part of the sentence that outruns it` |
+
+Expected verdict: **no conflict** — four distinct sites, and none rewrites text another needs. If two findings pull one artifact in opposite directions, **stop and surface** rather than choosing. Repeat this check if a Gate-B fix changes any hardening's site or direction.
 
 ---
 
-### Task 1: The three §5 sentences and their template mirrors
+### Task 1: The three §5 sentences, their mirrors, and the version bump
 
 **Files:**
 - Modify: `CLAUDE.md` (three sites)
 - Modify: `plugins/dev-workflow/commands/workflow-init.md` (the same three sites in the inline template)
+- Modify: `plugins/dev-workflow/.claude-plugin/plugin.json` (version 0.8.0 → 0.8.1)
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the three sentences that ledger rows A, C and D cite as their `ref` (Task 7). Their exact wording is fixed here; Task 7 quotes it.
+- Produces: the three sentences that ledger rows A, C and D cite as their `ref` (Task 7). Their wording is fixed here; Task 7 quotes it.
 
-**Anchors, verified at `b9111a2`:**
+**Anchors, verified at `8fc145d`.** Line numbers locate the paragraph; **match on the quoted text**, since a citation by line is the C3 defect this round hardens.
 
 | Sentence | `CLAUDE.md` | `workflow-init.md` |
 |---|---|---|
-| Gate-B lens | line 247, paragraph opening `**Standing lens, every Gate-B call:` | line 441, same opening |
-| Profiles counterfactual | line 342, the sentence beginning `satisfies it and the entry says which route was taken and why. Either route owes the` | line 532, same |
-| Gate-A pass procedure | line 224, `Each pass: validate, revise, re-run.` | line 419, same |
-
-Line numbers locate the paragraph; match on the quoted text, since a citation by line is the C3 defect this round hardens.
+| Gate-B lens | ~247, paragraph opening `**Standing lens, every Gate-B call:` | ~441, same opening |
+| Profiles counterfactual | ~342, sentence `Either route owes the` | ~532, same |
+| Gate-A pass procedure | ~224, `Each pass: validate, revise, re-run.` | ~419, same |
 
 - [ ] **Step 1: Append the lens sentence in `CLAUDE.md`**
 
-Find the paragraph opening `**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**`. Append to the end of that paragraph, after the sentence ending `plus two user-facing docs teaching a rule the same change had just narrowed.`:
+Find the paragraph opening `**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**`. Append at the end of that paragraph, after the sentence ending `plus two user-facing docs teaching a rule the same change had just narrowed.`:
 
 ```
   **Name what this diff changes the size, value or position of** — a list, a count, a
@@ -98,7 +101,7 @@ Find the paragraph opening `**Standing lens, every Gate-B call: "which existing 
   cycle while being carried with unusual force.
 ```
 
-Match the surrounding indentation (this paragraph is indented two spaces as a sub-bullet of the Gate-B item).
+Match the surrounding indentation — this paragraph is a two-space-indented sub-bullet of the Gate-B item.
 
 - [ ] **Step 2: Append the counterfactual sentence in `CLAUDE.md`**
 
@@ -113,7 +116,7 @@ wired, not because the thing it checks succeeded.
 
 - [ ] **Step 3: Add the Gate-A sweep sentence in `CLAUDE.md`**
 
-Find `Each pass: validate, revise, re-run. (Large/high-risk artifact: optional focused` and insert immediately after the sentence `Each pass: validate, revise, re-run.`, before the parenthetical:
+Find `Each pass: validate, revise, re-run. (Large/high-risk artifact: optional focused` and insert immediately after `Each pass: validate, revise, re-run.`, before the parenthetical:
 
 ```
 Before each read pass, settle mechanically what the artifact asserts and a machine can decide
@@ -124,69 +127,68 @@ a spec may be destructive or an intentional failure.
 
 - [ ] **Step 4: Mirror all three into `workflow-init.md`**
 
-Apply Steps 1–3 verbatim at the three corresponding sites in the inline template (lines 441, 532, 419 area). The text must be byte-identical to what landed in `CLAUDE.md`; only surrounding indentation may differ if the template's own indentation differs.
+Apply Steps 1–3 at the three corresponding sites in the inline template. The word sequence must match what landed in `CLAUDE.md`; line wrapping and leading indentation may differ, per Global Constraints.
 
-- [ ] **Step 5: Verify mirror parity**
+- [ ] **Step 5: Bump the manifest**
 
-Run:
+In `plugins/dev-workflow/.claude-plugin/plugin.json`, change `"version": "0.8.0",` to `"version": "0.8.1",`. This lands here rather than at the end because `check-version-bump.sh main` — part of the battery — fails on any committed `plugins/` change without it.
 
-```bash
-cd "$(git rev-parse --show-toplevel)"
-for lit in \
-  "Name what this diff changes the size, value or position of" \
-  "Name the observation that would exist if the claim were false" \
-  "Before each read pass, settle mechanically what the artifact asserts" ; do
-  a=$(tr '\n' ' ' < CLAUDE.md | tr -s ' ' | grep -cF -- "$lit")
-  b=$(tr '\n' ' ' < plugins/dev-workflow/commands/workflow-init.md | tr -s ' ' | grep -cF -- "$lit")
-  printf '%-62s CLAUDE=%s TEMPLATE=%s\n' "${lit:0:60}" "$a" "$b"
-done
-```
-
-Expected: every row `CLAUDE=1 TEMPLATE=1`. Whitespace is normalized because both files are hard-wrapped and an accurate quotation can span a line break.
-
-- [ ] **Step 6: Verify the full sentences match, not just their openings**
-
-Run:
+- [ ] **Step 6: Verify mirror equivalence**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 norm() { tr '\n' ' ' < "$1" | tr -s ' '; }
+rc=0
 for pat in 'Name what this diff changes[^.]*\.' \
            'Name the observation that would exist[^.]*\.' \
            'Before each read pass[^.]*\.' ; do
-  a=$(norm CLAUDE.md | grep -o "$pat")
-  b=$(norm plugins/dev-workflow/commands/workflow-init.md | grep -o "$pat")
+  a=$(norm CLAUDE.md | grep -o "$pat" || true)
+  b=$(norm plugins/dev-workflow/commands/workflow-init.md | grep -o "$pat" || true)
   if [ -n "$a" ] && [ "$a" = "$b" ]; then
-    echo "IDENTICAL: ${a%% *}..."
+    printf 'EQUIVALENT: %.55s...\n' "$a"
   else
-    echo "DIFFERS or EMPTY:"; printf 'CLAUDE: %s\nTEMPLATE: %s\n' "$a" "$b"
+    rc=1
+    printf 'MISMATCH OR EMPTY\n  CLAUDE  : %s\n  TEMPLATE: %s\n' "$a" "$b"
   fi
 done
+echo "parity exit=$rc"
 ```
 
-Expected: three `IDENTICAL:` lines. The `-n "$a"` guard matters — without it two empty extractions compare equal and report a match that proves nothing, which is the `verification-masks-failure` shape this round hardens.
+Expected: three `EQUIVALENT:` lines and `parity exit=0`. The `-n "$a"` guard is load-bearing — without it two empty extractions compare equal and report a match that proves nothing, which is the `verification-masks-failure` shape this round hardens. `printf '%.55s'` is used rather than `${a:0:55}`, which is a bash-ism that fails under `dash`.
 
-No process substitution: `<(...)` is a bashism, and this repo's invariant 4 is POSIX `sh`. Every fenced block in this plan parses under `sh -n`.
-
-- [ ] **Step 7: Run the battery**
-
-Run the quality command from Global Constraints. Expected: exit 0.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Verify the manifest**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit -m "WIP: three §5 sentences and their template mirrors"
+cd "$(git rev-parse --show-toplevel)"
+v=$(grep -o '"version": *"[^"]*"' plugins/dev-workflow/.claude-plugin/plugin.json | head -1)
+echo "$v"
+[ "$v" = '"version": "0.8.1"' ] && echo "version OK" || echo "version WRONG"
 ```
 
-Named `WIP:` deliberately — the hook treats a `wip`-prefixed message as cycle-internal, so it neither fires a Gate-B STOP nor resets the pass counters. Task 9 replaces it by amend.
+Expected: `version OK`.
+
+- [ ] **Step 8: Run the battery**
+
+Run the quality command from Global Constraints. Expected: exit 0. It passes because the bump landed in Step 5 — `check-version-bump.sh main` compares committed state, and on `main` the merge-base is HEAD, so it passes trivially; CI runs it against the PR's base ref.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md plugins/dev-workflow/.claude-plugin/plugin.json
+```
+
+```bash
+git commit -m "WIP: three §5 sentences, their template mirrors, and the 0.8.1 bump"
+```
+
+Two separate calls, per Global Constraints. Named `WIP:` deliberately — the hook treats a `wip`-prefixed message as cycle-internal, so it neither fires a Gate-B STOP nor resets the pass counters. Task 9 replaces it by amend.
 
 ---
 
 ### Task 2: The `AGENTS.md` Don't amendment
 
 **Files:**
-- Modify: `AGENTS.md` (the 2026-07-19 Don't, closing sentence at line 218)
+- Modify: `AGENTS.md` (the 2026-07-19 Don't, closing sentence around line 218)
 
 **Interfaces:**
 - Consumes: nothing.
@@ -194,7 +196,7 @@ Named `WIP:` deliberately — the hook treats a `wip`-prefixed message as cycle-
 
 - [ ] **Step 1: Extend the Don't's closing sentence**
 
-Find in `AGENTS.md § Don'ts`, inside `**Never describe what a gate proves without checking what it actually compares.**`, the closing sentence:
+In `AGENTS.md § Don'ts`, inside `**Never describe what a gate proves without checking what it actually compares.**`, find:
 
 ```
   underlying rule is the check itself: for every sentence about a gate, name the exact
@@ -213,33 +215,36 @@ Replace the trailing `outruns it.` so the sentence continues:
 
 - [ ] **Step 2: Verify the amendment rejects its own motivating case**
 
-This is the operative check. Read the amended sentence and apply it to `It bounds the **scan**, not memory`:
+Read the amended sentence and apply it to `It bounds the **scan**, not memory`:
 
-- Does that sentence name the axes it was checked against? Yes — scan and memory.
+- Does it name the axes it was checked against? Yes — scan and memory.
 - Does it state whether that list is exhaustive? **No.**
-- Therefore it fails the amended rule.
+- Therefore it fails the amended rule. ✔
 
-Expected: fails on the exhaustiveness requirement. If it passes, the wording is wrong — a rule asking only for the axes checked would approve the very sentence this amendment exists to reject. Stop and surface rather than proceeding.
+Expected: **fails on the exhaustiveness requirement.** If it passes, the wording is wrong — a rule asking only for the axes checked would approve the very sentence this amendment exists to reject. **Stop and surface** rather than proceeding.
 
-- [ ] **Step 3: Confirm no other site restates this Don't**
-
-Run:
+- [ ] **Step 3: Confirm `AGENTS.md` holds exactly one operative copy**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-grep -rn "delete any part of the sentence that outruns it" --include='*.md' . | grep -v source-files/
+n=$(tr '\n' ' ' < AGENTS.md | tr -s ' ' | grep -c 'delete any part of the sentence that outruns it' || true)
+echo "AGENTS.md operative copies: $n"
+[ "$n" = "1" ] && echo "OK" || echo "UNEXPECTED — stop and surface"
 ```
 
-Expected: only `AGENTS.md`. The Don't is repo-local and is not mirrored into the scaffolded template; if another site appears, stop and surface — a second copy would need the same amendment and this plan does not budget one.
+Expected: `1` and `OK`. The rule is repo-local and is **not** mirrored into the scaffolded template, so no second operative copy needs the amendment. The spec and this plan both quote the phrase; those are quotations of the rule, not copies of it, and are deliberately not searched here — a repository-wide grep would report them and send the executor to a stop branch with nothing wrong.
 
 - [ ] **Step 4: Run the battery**
 
-Run the quality command. Expected: exit 0.
+Expected: exit 0.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add AGENTS.md
+```
+
+```bash
 git commit -m "WIP: extend the gate-claims Don't to coverage enumerations"
 ```
 
@@ -248,7 +253,7 @@ git commit -m "WIP: extend the gate-claims Don't to coverage enumerations"
 ### Task 3: The taxonomy class
 
 **Files:**
-- Modify: `docs/hardening-taxonomy.md` (append to `## Classes`, before the `**Promotion candidate.**` paragraph)
+- Modify: `docs/hardening-taxonomy.md` (append under `## Classes`, before the `**Promotion candidate.**` paragraph)
 
 **Interfaces:**
 - Consumes: nothing.
@@ -269,16 +274,18 @@ Insert as the last entry under `## Classes`, immediately before the `**Promotion
   immediately"; grep the other when it is "the check passed and proved nothing".
 ```
 
-- [ ] **Step 2: Confirm the class is not being added to the skill**
-
-Run:
+- [ ] **Step 2: Confirm the class did not land in the shipped skill**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-grep -c "mechanical-check-skipped-before-review" plugins/dev-workflow/skills/harden-finding/SKILL.md
+n=$(grep -c "mechanical-check-skipped-before-review" plugins/dev-workflow/skills/harden-finding/SKILL.md || true)
+echo "occurrences in SKILL.md: $n"
+[ "$n" = "0" ] && echo "OK — invariant 10 holds" || echo "VIOLATION — stop and surface"
 ```
 
-Expected: `0`. Invariant 10 keeps project classes out of the shipped skill. The class is stack-neutral, and it lands in the project file anyway because the skill instructs minting there — the file's own `**Promotion candidate.**` note records the same of several existing classes.
+Expected: `0` and `OK`. The count is captured and compared numerically because `grep -c` exits 1 on zero, which would otherwise abort the step on the correct result.
+
+Invariant 10 keeps project classes out of the shipped skill. This class is stack-neutral and lands in the project file anyway, because the skill instructs minting there — the file's own `**Promotion candidate.**` note records the same of several existing classes.
 
 - [ ] **Step 3: Run the battery**
 
@@ -288,6 +295,9 @@ Expected: exit 0.
 
 ```bash
 git add docs/hardening-taxonomy.md
+```
+
+```bash
 git commit -m "WIP: mint mechanical-check-skipped-before-review"
 ```
 
@@ -300,19 +310,25 @@ git commit -m "WIP: mint mechanical-check-skipped-before-review"
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the story path that `todos.md`'s scope-blind row points at (Task 6).
+- Produces: the story path `todos.md`'s scope-blind row points at (Task 6).
 
-- [ ] **Step 1: Check the target path immediately before writing**
-
-Run:
+- [ ] **Step 1: Classify and create the path atomically**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 p=docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md
-[ -e "$p" ] && echo "EXISTS — compare content, do not overwrite" || echo "ABSENT — safe to create"
+if [ -e "$p" ] || [ -L "$p" ]; then
+  echo "EXISTS (or is a symlink) — compare bytes against Step 2 before doing anything"
+elif (set -C; : > "$p") 2>/dev/null; then
+  echo "CREATED empty placeholder — safe to write"
+else
+  echo "APPEARED between the test and the create — stop and surface"
+fi
 ```
 
-If it exists and its content is byte-identical to Step 2's text, reuse it and say so. If it exists and differs, **stop and surface** — do not overwrite (invariant 9's rule for scaffolded files).
+`set -C` (noclobber) makes the creation fail if any directory entry now exists, so a file appearing between the test and the write is caught rather than overwritten. `[ -L ]` is tested separately because `[ -e ]` is false for a dangling symlink, which would otherwise be silently replaced.
+
+If it exists and its content is byte-identical to Step 2's text, reuse it and say so. If it exists and differs, **stop and surface** — do not overwrite (invariant 9).
 
 - [ ] **Step 2: Write the story**
 
@@ -323,9 +339,11 @@ If it exists and its content is byte-identical to Step 2's text, reuse it and sa
 
 **Unprofiled, deliberately.** This story is a split from a designed round, not a raw idea, so
 it did not pass through `dev-workflow:intake` — intake excludes items that have moved into
-solution design. A profile is proposed and human-confirmed at intake time; writing one here
-would be a confirmed-looking value nobody confirmed, which CLAUDE.md §5 classifies as an
-unresolvable profile and stops on. Acceptance criterion 1 carries that debt instead.
+solution design. A profile is proposed and human-confirmed at intake time. Writing one here
+would produce a header that **looks** confirmed and is not, and nothing would reveal that:
+`CLAUDE.md` §5 stops on a profile that is malformed or internally inconsistent, not on one
+whose values are well-formed but unconfirmed. That is exactly why the debt is carried as
+acceptance criterion 1 rather than by fabricating a header.
 
 ## 1. Problem statement
 
@@ -364,6 +382,10 @@ ledger. Escalation follows from a guard that failed, never from a count.
 
 ## 4. Affected AGENTS.md invariants
 
+- `## Key invariants` → `### Prompts and scaffolding` — "10. **The base taxonomy stays
+  stack-neutral.** Project vocabulary — tables, auth helpers, framework APIs — goes only in
+  that project's `docs/hardening-taxonomy.md`, never into the `harden-finding` skill. Otherwise
+  one project leaks into every other."
 - `## Key invariants` → `### Prompts and scaffolding` — "11. **Prompt changes pass
   `docs/prompt-standards.md`** — all 12 checklist items, for any skill, command, agent
   definition, hook message, or scaffolded template."
@@ -397,29 +419,32 @@ Six, each paired with the failure that raised it:
 
 ## 6. Suggested size
 
-`story` — one skill file, one decision procedure, one spec → plan → PR. It is above a chore
-because the six questions above are real design, and below an epic because they all concern one
-procedure in one file.
+`story` — one skill file, one decision procedure, one spec → plan → PR. Above a chore because
+the six questions above are real design; below an epic because they all concern one procedure
+in one file.
 ```
 
-- [ ] **Step 3: Confirm the story is unprofiled and carries the criterion**
-
-Run:
+- [ ] **Step 3: Verify shape**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 p=docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md
-grep -c '^\*\*Risk:\*\*\|^\*\*Security:\*\*\|^\*\*Validation:\*\*' "$p"
-tr '\n' ' ' < "$p" | tr -s ' ' | grep -c 'proposes both axes and the mode derived from them'
-grep -c '^## ' "$p"
+prof=$(grep -c '^\*\*Risk:\*\*\|^\*\*Security:\*\*\|^\*\*Validation:\*\*' "$p" || true)
+crit=$(tr '\n' ' ' < "$p" | tr -s ' ' | grep -c 'proposes both axes and the mode derived from them' || true)
+sect=$(grep -c '^## ' "$p" || true)
+printf 'profile lines=%s (want 0)  criterion=%s (want 1)  sections=%s (want 6)\n' "$prof" "$crit" "$sect"
+[ "$prof" = 0 ] && [ "$crit" = 1 ] && [ "$sect" = 6 ] && echo OK || echo "WRONG — stop and surface"
 ```
 
-Expected: `0` profile lines, `1` profile criterion, `6` sections.
+Expected: `OK`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md
+```
+
+```bash
 git commit -m "WIP: split story for the harden-finding guard-scope precheck"
 ```
 
@@ -434,26 +459,15 @@ git commit -m "WIP: split story for the harden-finding guard-scope precheck"
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: three story paths that `todos.md` rows point at (Task 6).
+- Produces: three story paths `todos.md` rows point at (Task 6).
 
-Each story replaces a parked `todos.md` row that carries settled analysis, so each carries an inheritance inventory marking every condition of its source row **kept, moved, or deliberately dropped**. A thinner brief that quietly discards a matured constraint is the failure mode, and `AGENTS.md`'s "Never replace a decision procedure without accounting for its old conditions" applies to that replacement.
+Each replaces a parked `todos.md` row carrying settled analysis, so each holds an inheritance inventory marking every condition of its source row **kept, moved, or deliberately dropped** — `AGENTS.md`'s "Never replace a decision procedure without accounting for its old conditions" applies to that replacement. The inventory is a `###` subsection of §1 so the story keeps exactly six `##` sections.
 
-- [ ] **Step 1: Check all three paths immediately before writing**
+**Classify each path immediately before its own write**, using the Task 4 Step 1 procedure verbatim with that story's path substituted. A single up-front classification of all three is stale by construction for the second and third.
 
-```bash
-cd "$(git rev-parse --show-toplevel)"
-for p in docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md \
-         docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md \
-         docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md ; do
-  [ -e "$p" ] && echo "EXISTS $p" || echo "ABSENT $p"
-done
-```
+- [ ] **Step 1: Classify, then write the ledger-supersession story**
 
-Absent → create. Byte-identical → reuse and say so. Present and different → **stop and surface**.
-
-- [ ] **Step 2: Write the ledger-supersession story**
-
-Path: `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`
+Run Task 4 Step 1's block with `p=docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`, then write:
 
 ```markdown
 # The hardening ledger has no supersession convention — Story
@@ -461,8 +475,9 @@ Path: `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.m
 **Date:** 2026-08-04 · **Size:** story
 
 **Unprofiled, deliberately** — a split from a designed round, so it bypassed
-`dev-workflow:intake`, which excludes work already in solution design. Acceptance criterion 1
-carries the profile debt.
+`dev-workflow:intake`, which excludes work already in solution design. A profile written now
+would look confirmed without being confirmed, and nothing would reveal that; acceptance
+criterion 1 carries the debt instead.
 
 ## 1. Problem statement
 
@@ -473,6 +488,19 @@ sanctioned: editing breaks the first rule, appending breaks the second.
 This is live. The 2026-07-20 row describes pre-0.8.0 counting behaviour as current, and a reader
 who trusts it is misled about how the gate hook counts today. That is the second falsified row,
 which is the condition the parked backlog row named as its trigger.
+
+### Conditions inherited from the source row
+
+From `todos.md`, "**The hardening ledger has no supersession convention.**":
+
+| Condition | Disposition |
+|---|---|
+| Never edit a row | **kept** — any solution must preserve it |
+| One row per hardening | **kept** — any solution must preserve it |
+| The 2026-07-20 row now describes pre-0.8.0 behaviour as current | **kept** as the motivating instance |
+| The 2026-07-20 *spec* took a version-qualified supersession note and it worked | **kept** as prior art the design should evaluate first |
+| Alternative: an explicit "rows are historical, read the newest row for current behaviour" header statement | **kept** as a candidate |
+| Trigger: the next row falsified by a later change — this is the second | **moved** — fired, and recorded here |
 
 ## 2. Desired outcome
 
@@ -490,39 +518,32 @@ row falsified by a later change can be marked as such without breaking either st
 
 ## 4. Affected AGENTS.md invariants
 
+- `## Key invariants` → `### Prompts and scaffolding` — "8. **`/workflow-init`'s templates stay
+  inline** in the command body."
 - `## Key invariants` → `### Prompts and scaffolding` — "9. **`/workflow-init` never overwrites
   silently.** Idempotent: missing → write; identical → report unchanged; present and different →
   show the diff and ask; additive files (`.gitattributes`, `.mcp.json`, …) → merge."
-- `## Key invariants` → `### Prompts and scaffolding` — "8. **`/workflow-init`'s templates stay
-  inline** in the command body."
+- **Conditional, if the design reaches the scaffolded template** — `## Key invariants` →
+  `### Prompts and scaffolding` — "11. **Prompt changes pass `docs/prompt-standards.md`** — all
+  12 checklist items, for any skill, command, agent definition, hook message, or scaffolded
+  template." — and `### Packaging` — "12. **A plugin change requires a version bump.**" Both
+  bind only if the convention must reach `/workflow-init`'s inline ledger header, which is §5's
+  open question.
 
-## 5. Inherited conditions
-
-From the parked `todos.md` row "**The hardening ledger has no supersession convention.**":
-
-| Condition | Disposition |
-|---|---|
-| Never edit a row | **kept** — any solution must preserve it |
-| One row per hardening | **kept** — any solution must preserve it |
-| The 2026-07-20 row now describes pre-0.8.0 behaviour as current | **kept** as the motivating instance |
-| The 2026-07-20 *spec* took a version-qualified supersession note and it worked | **kept** as prior art the design should evaluate first |
-| Alternative: an explicit "rows are historical, read the newest row for current behaviour" header statement | **kept** as a candidate |
-| Trigger: the next row falsified by a later change — this is the second | **moved** — the trigger has fired and is recorded here |
-
-## 6. Open questions
+## 5. Open questions
 
 - Which artifacts must the convention reach before a reader can trust any row — this repo's
   ledger alone, or every ledger `/workflow-init` scaffolds? A repo-only fix ships a rule this
   kit's ledger obeys and every scaffolded one does not.
 
-## 7. Suggested size
+## 6. Suggested size
 
 `story` — one file's header convention plus possibly one inline template, one spec → plan → PR.
 ```
 
-- [ ] **Step 3: Write the no-PR ledger route story**
+- [ ] **Step 2: Classify, then write the no-PR ledger route story**
 
-Path: `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md`
+Run Task 4 Step 1's block with `p=docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md`, then write:
 
 ```markdown
 # A route from a fixed finding to the ledger, for projects that never open PRs — Story
@@ -530,7 +551,8 @@ Path: `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-st
 **Date:** 2026-08-04 · **Size:** story
 
 **Unprofiled, deliberately** — a split from a designed round, so it bypassed
-`dev-workflow:intake`. Acceptance criterion 1 carries the profile debt.
+`dev-workflow:intake`. A profile written now would look confirmed without being confirmed;
+acceptance criterion 1 carries the debt instead.
 
 ## 1. Problem statement
 
@@ -538,6 +560,20 @@ The only mandated ledger check lives in `/dev-workflow:process-pr-review` step 5
 that never opens a pull request never reaches it. One project has 51 Gate-A pass files and
 **zero** ledger rows: findings were raised, validated and fixed, and none was ever considered
 for hardening.
+
+### Conditions inherited from the source row
+
+From `todos.md`, "**Finding A — a route from a fixed finding to the ledger for projects that
+never open PRs.**":
+
+| Condition | Disposition |
+|---|---|
+| Scope must match `process-pr-review` step 5 **exactly** — check every accepted actionable fixed finding, but invoke `harden-finding` only when a class matches or a new one is clearly warranted | **kept** — every approximating draft got this wrong |
+| Cannot rest on same-session memory: a compaction, interruption or handoff loses the fixed-finding set and nothing detects the loss | **kept** |
+| A durable handoff needs real design — identity, deduplication, consumption semantics | **kept**, and it is why this is a story rather than a mid-round addition |
+| It mints `mandatory-step-anchored-to-optional-path` when it lands; minting earlier leaves a class no row uses | **kept** — the class is minted by the change that uses it |
+| Evidence: canvas has 51 Gate-A pass files and 0 ledger rows | **kept** as the motivating instance |
+| Trigger: the next round that touches §5, or a project reporting an empty ledger across cycles | **moved** — fired by the 2026-08-03 round, recorded here |
 
 ## 2. Desired outcome
 
@@ -561,33 +597,19 @@ or a handoff.
   definition, hook message, or scaffolded template."
 - `## Key invariants` → `### Packaging` — "12. **A plugin change requires a version bump.**"
 
-## 5. Inherited conditions
-
-From the parked `todos.md` row "**Finding A — a route from a fixed finding to the ledger for
-projects that never open PRs.**":
-
-| Condition | Disposition |
-|---|---|
-| Scope must match `process-pr-review` step 5 **exactly** — check every accepted actionable fixed finding, but invoke `harden-finding` only when a class matches or a new one is clearly warranted | **kept** — every approximating draft got this wrong |
-| Cannot rest on same-session memory: a compaction, interruption or handoff loses the fixed-finding set and nothing detects the loss | **kept** |
-| A durable handoff needs real design — identity, deduplication, consumption semantics | **kept**, and it is why this is a story rather than a mid-round addition |
-| It mints `mandatory-step-anchored-to-optional-path` when it lands; minting earlier leaves a class no row uses | **kept** — the class is minted by the change that uses it, not before |
-| Evidence: canvas has 51 Gate-A pass files and 0 ledger rows | **kept** as the motivating instance |
-| Trigger: the next round that touches §5, or a project reporting an empty ledger across cycles | **moved** — fired by the 2026-08-03 round, recorded here |
-
-## 6. Open questions
+## 5. Open questions
 
 - What has to be true for a fixed finding to reach the ledger in a project that never opens a
   pull request?
 
-## 7. Suggested size
+## 6. Suggested size
 
 `story` — one route, one spec → plan → PR.
 ```
 
-- [ ] **Step 4: Write the §5 version stamp story**
+- [ ] **Step 3: Classify, then write the §5 version stamp story**
 
-Path: `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`
+Run Task 4 Step 1's block with `p=docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`, then write:
 
 ```markdown
 # A §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the plugin — Story
@@ -595,13 +617,29 @@ Path: `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`
 **Date:** 2026-08-04 · **Size:** story
 
 **Unprofiled, deliberately** — a split from a designed round, so it bypassed
-`dev-workflow:intake`. Acceptance criterion 1 carries the profile debt.
+`dev-workflow:intake`. A profile written now would look confirmed without being confirmed;
+acceptance criterion 1 carries the debt instead.
 
 ## 1. Problem statement
 
-`/workflow-init` scaffolds CLAUDE.md §5 from an inline template. When the plugin's §5 changes,
+`/workflow-init` scaffolds `CLAUDE.md` §5 from an inline template. When the plugin's §5 changes,
 every previously scaffolded copy silently lags, and nothing in the scaffolded file tells its
 reader so. One known-stale instance exists and is being re-synced by hand.
+
+### Conditions inherited from the source row
+
+From `todos.md`, "**Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags
+the installed plugin.**":
+
+| Condition | Disposition |
+|---|---|
+| A semantic §5 locator is needed — `/workflow-init` may append the section renumbered, so "no §5 heading" can misread a valid section and append a duplicate | **kept** |
+| Per-state merge semantics: invariant 9 forbids a silent overwrite, and "re-run init to sync" promises what the command cannot give | **kept** |
+| Stamp cardinality: absent, duplicate, malformed | **kept** |
+| The binding must be real on **every** push path; the version-bump coupling first proposed was false, since invariant 12's checker is `pull_request`-only | **kept** — the false coupling is recorded so it is not re-proposed |
+| A stamp is a **wire format**: shipping a provisional one writes legacy into every scaffolded file | **kept** — it is why a provisional stamp is unacceptable |
+| The one known-stale instance is being re-synced by hand, so this carries no schedule pressure | **kept** — the work is not urgent |
+| Trigger: the next round that touches the §5 template | **moved** — fired by the 2026-08-03 round, recorded here |
 
 ## 2. Desired outcome
 
@@ -625,72 +663,71 @@ without comparing the two by hand.
   command markdown (verified), and the cache path is not an API."
 - `## Key invariants` → `### Prompts and scaffolding` — "9. **`/workflow-init` never overwrites
   silently.**"
+- `## Key invariants` → `### Prompts and scaffolding` — "11. **Prompt changes pass
+  `docs/prompt-standards.md`** — all 12 checklist items."
 - `## Key invariants` → `### Packaging` — "12. **A plugin change requires a version bump.**"
 
-## 5. Inherited conditions
-
-From the parked `todos.md` row "**Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can
-tell it lags the installed plugin.**":
-
-| Condition | Disposition |
-|---|---|
-| A semantic §5 locator is needed — `/workflow-init` may append the section renumbered, so "no §5 heading" can misread a valid section and append a duplicate | **kept** |
-| Per-state merge semantics: invariant 9 forbids a silent overwrite, and "re-run init to sync" promises what the command cannot give | **kept** |
-| Stamp cardinality: absent, duplicate, malformed | **kept** |
-| The binding must be real on **every** push path; the version-bump coupling first proposed was false, since invariant 12's checker is `pull_request`-only | **kept** — the false coupling is recorded so it is not re-proposed |
-| A stamp is a **wire format**: shipping a provisional one writes legacy into every scaffolded file | **kept** — it is why a provisional stamp is not acceptable |
-| The one known-stale instance is being re-synced by hand, so this carries no schedule pressure | **kept** — the work is not urgent |
-| Trigger: the next round that touches the §5 template | **moved** — fired by the 2026-08-03 round, recorded here |
-
-## 6. Open questions
+## 5. Open questions
 
 - How can a scaffolded `CLAUDE.md` tell its reader that it lags the installed plugin?
 
-## 7. Suggested size
+## 6. Suggested size
 
-`story` — one stamp format and its detection, one spec → plan → PR. It is not a chore: a wire
-format shipped provisionally cannot be taken back.
+`story` — one stamp format and its detection, one spec → plan → PR. Not a chore: a wire format
+shipped provisionally cannot be taken back.
 ```
 
-- [ ] **Step 5: Verify all three are unprofiled and carry their criterion and inventory**
+- [ ] **Step 4: Verify all three**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
+rc=0
 for p in docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md \
          docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md \
          docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md ; do
-  prof=$(grep -c '^\*\*Risk:\*\*\|^\*\*Security:\*\*\|^\*\*Validation:\*\*' "$p")
-  crit=$(tr '\n' ' ' < "$p" | tr -s ' ' | grep -c 'proposes both axes and the mode derived from them')
-  inv=$(grep -c '^## 5. Inherited conditions' "$p")
-  printf '%-70s profile=%s criterion=%s inventory=%s\n' "$(basename "$p")" "$prof" "$crit" "$inv"
+  prof=$(grep -c '^\*\*Risk:\*\*\|^\*\*Security:\*\*\|^\*\*Validation:\*\*' "$p" || true)
+  crit=$(tr '\n' ' ' < "$p" | tr -s ' ' | grep -c 'proposes both axes and the mode derived from them' || true)
+  sect=$(grep -c '^## ' "$p" || true)
+  inv=$(grep -c '^### Conditions inherited from the source row' "$p" || true)
+  printf '%-58s profile=%s crit=%s sections=%s inventory=%s\n' "$(basename "$p")" "$prof" "$crit" "$sect" "$inv"
+  [ "$prof" = 0 ] && [ "$crit" = 1 ] && [ "$sect" = 6 ] && [ "$inv" = 1 ] || rc=1
 done
+echo "stories exit=$rc"
 ```
 
-Expected: every row `profile=0 criterion=1 inventory=1`.
+Expected: three rows reading `profile=0 crit=1 sections=6 inventory=1`, and `stories exit=0`.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md \
-        docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md \
-        docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md
+git add docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md
+```
+
+```bash
 git commit -m "WIP: three split stories for the fired triggers"
 ```
 
 ---
 
-### Task 6: `todos.md` updates
+### Task 6: `todos.md` — one new row, six existing rows
 
 **Files:**
-- Modify: `todos.md` (one new row, five existing rows)
+- Modify: `todos.md`
 
 **Interfaces:**
 - Consumes: the four story paths from Tasks 4–5.
-- Produces: the parked C4/C5 row that ledger row B's `ref` cross-references (Task 7).
+- Produces: the parked C4/C5 row ledger row B cross-references (Task 7).
+
+**Every mutation is idempotent.** Before each, check whether the marker text is already present: absent → apply; already present and identical → skip and say so; present and different → **stop and surface**. An interrupted task retried from the top must not duplicate a status block.
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+applied() { n=$(tr '\n' ' ' < todos.md | tr -s ' ' | grep -c "$1" || true); echo "$n"; }
+```
 
 - [ ] **Step 1: Add the parked C4/C5 compliance row**
 
-Add under `### Parked (trigger-gated)`:
+Guard: `applied 'The gate-claims Don.t is correct and was not followed, twice'` must be `0`. Add under `### Parked (trigger-gated)`:
 
 ```markdown
 - [ ] **The gate-claims Don't is correct and was not followed, twice.** PR #21's C4 (an
@@ -699,17 +736,17 @@ Add under `### Parked (trigger-gated)`:
       inside the 2026-07-19 `AGENTS.md` Don't, whose operative instruction already requires
       exactly what they omitted — name the exact comparison the code performs, and delete any
       part of the sentence that outruns it. **No textual repair exists**, which is why these are
-      parked rather than logged: a ledger row would have to name a hardening, and the rule
-      needing no change means the failure was compliance, not wording. The 2026-08-04 amendment
-      covers coverage enumerations (F8's shape) and reaches neither a positive parity claim nor
-      a positive prevention claim. *Trigger: a third compliance miss against that Don't, or a
+      parked rather than logged: a ledger row would have to name a hardening, and a rule needing
+      no change means the failure was compliance, not wording. The 2026-08-04 amendment covers
+      coverage enumerations (F8's shape) and reaches neither a positive parity claim nor a
+      positive prevention claim. *Trigger: a third compliance miss against that Don't, or a
       feasible mechanical rung emerging from
       `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md`.*
 ```
 
 - [ ] **Step 2: Record evidence case 3 on the scope-blind row**
 
-In the row `**`harden-finding`'s recurrence rule is scope-blind.**`, append before its `*Trigger:*` sentence:
+Guard: `applied 'Evidence case 3 \(2026-08-04\)'` must be `0`. In `**`harden-finding`'s recurrence rule is scope-blind.**`, insert before its `*Trigger:*` sentence:
 
 ```
       **Evidence case 3 (2026-08-04):** the 2026-08-03 hardening round ran the precheck as a
@@ -722,7 +759,7 @@ In the row `**`harden-finding`'s recurrence rule is scope-blind.**`, append befo
 
 - [ ] **Step 3: Mark Finding A's row fired**
 
-In the row `**Finding A — a route from a fixed finding to the ledger for projects that never open PRs.**`, append:
+Guard: `applied 'TRIGGER FIRED \(2026-08-04\): the 2026-08-03 hardening round edits §5\.'` must be `0`. In `**Finding A — a route from a fixed finding to the ledger for projects that never open PRs.**`, append:
 
 ```
       **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round edits §5. Story:
@@ -732,7 +769,7 @@ In the row `**Finding A — a route from a fixed finding to the ledger for proje
 
 - [ ] **Step 4: Mark Finding B's row fired**
 
-In the row `**Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the installed plugin.**`, append:
+Guard: `applied 'edits the §5 inline template'` must be `0`. In `**Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the installed plugin.**`, append:
 
 ```
       **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round edits the §5 inline
@@ -743,7 +780,7 @@ In the row `**Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can t
 
 - [ ] **Step 5: Mark the ledger-supersession row fired**
 
-In the row `**The hardening ledger has no supersession convention.**`, append:
+Guard: `applied 'the second falsified row this trigger names'` must be `0`. In `**The hardening ledger has no supersession convention.**`, append:
 
 ```
       **TRIGGER FIRED (2026-08-04):** the 2026-07-20 row now teaches pre-0.8.0 counting
@@ -753,7 +790,7 @@ In the row `**The hardening ledger has no supersession convention.**`, append:
 
 - [ ] **Step 6: Record that the slot-collision row did NOT fire**
 
-In the row `**Each Gate cycle destroys the previous cycle's review record.**`, append:
+Guard: `applied 'NOT FIRED \(2026-08-04\)'` must be `0`. In `**Each Gate cycle destroys the previous cycle's review record.**`, append:
 
 ```
       **NOT FIRED (2026-08-04):** the 2026-08-03 hardening round edits §5 prose and its template
@@ -764,7 +801,7 @@ In the row `**Each Gate cycle destroys the previous cycle's review record.**`, a
 
 - [ ] **Step 7: Append the env-var observation, leaving the row open**
 
-In the row `**`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.**`, append:
+Guard: `applied 'OBSERVATION \(2026-08-04\)'` must be `0`. In `**`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.**`, append:
 
 ```
       **OBSERVATION (2026-08-04), and the row stays open.** With the variable set to `0`, five
@@ -777,16 +814,28 @@ In the row `**`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND
       unbuilt, so the row is not discharged by this.
 ```
 
-- [ ] **Step 8: Verify every story path referenced exists**
+- [ ] **Step 8: Verify all seven changes landed exactly once, and every cited story exists**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
+n=$(tr '\n' ' ' < todos.md | tr -s ' ')
+rc=0
+check() { c=$(printf '%s' "$n" | grep -c "$1" || true); printf '%-46s %s (want 1)\n' "$2" "$c"; [ "$c" = 1 ] || rc=1; }
+check 'The gate-claims Don.t is correct and was not followed, twice' 'parked C4/C5 row'
+check 'Evidence case 3 \(2026-08-04\)'                               'scope-blind evidence case 3'
+check 'hardening round edits §5\. Story'                             'Finding A fired'
+check 'edits the §5 inline template'                                 'Finding B fired'
+check 'the second falsified row this trigger names'                  'ledger-supersession fired'
+check 'NOT FIRED \(2026-08-04\)'                                     'slot-collision not fired'
+check 'OBSERVATION \(2026-08-04\)'                                   'env-var observation'
+echo "--- every cited story path exists ---"
 grep -o 'docs/superpowers/stories/2026-08-04-[a-z0-9-]*\.md' todos.md | sort -u | while read -r p; do
-  [ -e "$p" ] && echo "OK   $p" || echo "MISS $p"
+  if [ -e "$p" ]; then echo "OK   $p"; else echo "MISS $p"; fi
 done
+echo "todos exit=$rc"
 ```
 
-Expected: four `OK` lines, no `MISS`. A `todos.md` pointing at a story that does not exist is the docs-drift class this round hardens.
+Expected: seven `1 (want 1)` lines, four `OK` story paths and no `MISS`, `todos exit=0`. A `todos.md` pointing at a story that does not exist is the docs-drift class this round hardens.
 
 - [ ] **Step 9: Run the battery**
 
@@ -796,6 +845,9 @@ Expected: exit 0.
 
 ```bash
 git add todos.md
+```
+
+```bash
 git commit -m "WIP: park the compliance recurrence and record the fired triggers"
 ```
 
@@ -810,19 +862,33 @@ git commit -m "WIP: park the compliance recurrence and record the fired triggers
 - Consumes: the three §5 sentences (Task 1), the `AGENTS.md` amendment (Task 2), the taxonomy class (Task 3), the parked row (Task 6).
 - Produces: nothing downstream.
 
-Append in order A, B, C, D at the end of the table. Each row is one line — the newlines below are for readability in this plan only; **write each as a single line.**
+Append in order A, B, C, D at the end of the table. Each row is **one line** — the blocks below are single lines that this document wraps for display; write each as one line with no internal newline.
 
-- [ ] **Step 1: Re-read the log and check for a same-fingerprint row appearing meanwhile**
+- [ ] **Step 1: Re-read the log and require exact fingerprint counts**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-for fp in docs-drift unverified-enforcement-claim verification-masks-failure mechanical-check-skipped-before-review; do
-  printf '%-42s ' "$fp"
-  grep -cE "^\| *[0-9-]{10} *\| *$fp *\|" docs/hardening-log.md
-done
+rc=0
+expect() {
+  fp=$1; want=$2
+  got=$(grep -cE "^\| *[0-9-]{10} *\| *$fp *\|" docs/hardening-log.md || true)
+  printf '%-42s got=%s want=%s\n' "$fp" "$got" "$want"
+  if [ "$got" != "$want" ]; then
+    rc=1
+    echo "  --- rows found, for the stop report ---"
+    grep -nE "^\| *[0-9-]{10} *\| *$fp *\|" docs/hardening-log.md | cut -c1-160
+  fi
+}
+expect docs-drift 5
+expect unverified-enforcement-claim 5
+expect verification-masks-failure 1
+expect mechanical-check-skipped-before-review 0
+echo "ledger precondition exit=$rc"
 ```
 
-Expected: `docs-drift 5`, `unverified-enforcement-claim 5`, `verification-masks-failure 1`, `mechanical-check-skipped-before-review 0`. If any count is higher, a row appeared since this plan was written: **stop and surface**, naming the row. Do not append. Resolving a mid-run collision is the split story's subject (Task 4), and inventing the procedure here would re-import what was split out.
+Expected: `ledger precondition exit=0`.
+
+**Any inequality — higher or lower — stops the task.** Higher means a row appeared since this plan was written; lower means a row this plan's premise depends on was removed or rewritten. Either invalidates the reviewed precondition. **Stop and surface, naming the rows the command printed.** Do not append. Resolving a mid-run collision is the split story's subject (Task 4), and inventing the procedure here would re-import what was split out.
 
 - [ ] **Step 2: Append row A**
 
@@ -848,50 +914,53 @@ Expected: `docs-drift 5`, `unverified-enforcement-claim 5`, `verification-masks-
 | 2026-08-04 | mechanical-check-skipped-before-review | NEW CLASS, minted this change: eight read-only Gate-A passes over one plan missed eight defects that thirteen machine checks then found in a single sweep, including a rollback that would have byte-verified against the wrong hook | manual | major | P std | CLAUDE.md §5 Gate-A pass procedure + the same block in the workflow-init inline template: before each read pass, settle mechanically what the artifact asserts and a machine can decide without side effects — cited paths, quoted passages, stated counts, the syntax of standalone fenced blocks — inspecting quoted commands rather than running them, since a command quoted in a spec may be destructive or an intentional failure. Class added to docs/hardening-taxonomy.md in this same change, with its boundary against verification-masks-failure stated: there a check ran and could not fail; here the cheap check never ran at all. NO PRIOR ROW — this is the first occurrence. STILL INSTRUCTION-BACKED: nothing runs the sweep, records that it ran, or checks what it settled |
 ```
 
-- [ ] **Step 6: Verify the rows are well-formed**
+- [ ] **Step 6: Verify the appended rows**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-echo "--- new rows are single lines with 7 fields ---"
-tail -4 docs/hardening-log.md | awk -F'|' '{print NR": fields="NF-2}'
+rc=0
+echo "--- the four new rows: 7 fields, 8 pipes, one line each ---"
+tail -4 docs/hardening-log.md | awk -F'|' '{
+  pipes = gsub(/\|/,"|")
+  printf "row %d: fields=%d pipes=%d\n", NR, NF-2, pipes
+  if (NF-2 != 7 || pipes != 8) exit_code=1
+} END { exit exit_code+0 }' || rc=1
 echo "--- fingerprint counts after append ---"
-for fp in docs-drift unverified-enforcement-claim verification-masks-failure mechanical-check-skipped-before-review; do
-  printf '%-42s ' "$fp"; grep -cE "^\| *[0-9-]{10} *\| *$fp *\|" docs/hardening-log.md
+for pair in "docs-drift 6" "unverified-enforcement-claim 6" "verification-masks-failure 2" "mechanical-check-skipped-before-review 1"; do
+  fp=${pair% *}; want=${pair#* }
+  got=$(grep -cE "^\| *[0-9-]{10} *\| *$fp *\|" docs/hardening-log.md || true)
+  printf '%-42s got=%s want=%s\n' "$fp" "$got" "$want"
+  [ "$got" = "$want" ] || rc=1
 done
-echo "--- no unescaped pipes inside fields (each row must have exactly 8 pipes) ---"
-tail -4 docs/hardening-log.md | awk '{n=gsub(/\|/,"|"); print NR": pipes="n}'
+echo "ledger exit=$rc"
 ```
 
-Expected: `fields=7` for each of the four; counts `6 / 6 / 2 / 1`; `pipes=8` for each row.
+Expected: four rows each `fields=7 pipes=8`; counts `6 / 6 / 2 / 1`; `ledger exit=0`.
 
 - [ ] **Step 7: Run the battery**
 
-Expected: exit 0. Note `check-invariants.sh` excludes `docs/hardening-log.md` from checks 4a/4b — a ledger that quotes defects would otherwise self-reject.
+Expected: exit 0. `check-invariants.sh` excludes `docs/hardening-log.md` from checks 4a/4b — a ledger that quotes defects would otherwise self-reject.
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add docs/hardening-log.md
+```
+
+```bash
 git commit -m "WIP: four ledger rows for the 0.8.0 and PR #21 hardenings"
 ```
 
 ---
 
-### Task 8: Version bump and CHANGELOG
+### Task 8: The CHANGELOG entry
 
 **Files:**
-- Modify: `plugins/dev-workflow/.claude-plugin/plugin.json:4`
-- Modify: `plugins/dev-workflow/CHANGELOG.md` (new `## 0.8.1` section, directly under the intro, above `## 0.8.0`)
+- Modify: `plugins/dev-workflow/CHANGELOG.md` (new `## 0.8.1` section directly above `## 0.8.0`)
 
-**Interfaces:**
-- Consumes: everything above (the CHANGELOG describes it).
-- Produces: nothing downstream.
+The manifest bump already landed in Task 1. This task adds the entry describing what shipped, which is only writable once the content exists.
 
-- [ ] **Step 1: Bump the manifest**
-
-In `plugins/dev-workflow/.claude-plugin/plugin.json`, change `"version": "0.8.0",` to `"version": "0.8.1",`.
-
-- [ ] **Step 2: Add the CHANGELOG entry**
+- [ ] **Step 1: Add the entry**
 
 Insert immediately above `## 0.8.0`:
 
@@ -914,25 +983,30 @@ Insert immediately above `## 0.8.0`:
   collisions that a rule paragraph cannot carry. It is split to its own story.
 ```
 
-- [ ] **Step 3: Verify the bump is detected**
+- [ ] **Step 2: Verify**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-grep -n '"version"' plugins/dev-workflow/.claude-plugin/plugin.json
-grep -n '^## 0\.8\.1' plugins/dev-workflow/CHANGELOG.md
+h=$(grep -c '^## 0\.8\.1' plugins/dev-workflow/CHANGELOG.md || true)
+v=$(grep -o '"version": *"0\.8\.1"' plugins/dev-workflow/.claude-plugin/plugin.json | head -1)
+printf 'changelog headings=%s (want 1)  manifest=%s\n' "$h" "$v"
+[ "$h" = 1 ] && [ -n "$v" ] && echo OK || echo "WRONG — stop and surface"
 ```
 
-Expected: version `0.8.1`, and one `## 0.8.1` heading.
+Expected: `OK`.
 
-- [ ] **Step 4: Run the battery**
+- [ ] **Step 3: Run the battery**
 
-Expected: exit 0. `check-version-bump.sh main` compares commits, so run it once this task is committed — on `main` the merge-base is HEAD and it passes trivially; CI runs it against the PR's base.
+Expected: exit 0.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add plugins/dev-workflow/.claude-plugin/plugin.json plugins/dev-workflow/CHANGELOG.md
-git commit -m "WIP: bump to 0.8.1 with its changelog entry"
+git add plugins/dev-workflow/CHANGELOG.md
+```
+
+```bash
+git commit -m "WIP: 0.8.1 changelog entry"
 ```
 
 ---
@@ -940,67 +1014,141 @@ git commit -m "WIP: bump to 0.8.1 with its changelog entry"
 ### Task 9: Validation evidence and the Gate-B cycle
 
 **Files:**
-- No new files. This task produces the evidence entry that the cycle-closing commit body carries.
+- Create: `.context/evidence-0.8.1.md` — the durable evidence record. `.context/` is git-ignored, so it never enters the diff; its content is folded into the closing commit body at Step 8.
 
 **Interfaces:**
 - Consumes: every prior task.
 - Produces: the final commit.
 
-- [ ] **Step 1: Squash the WIP commits into one snapshot**
+- [ ] **Step 1: Create the evidence file with its full structure**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-FIRST_WIP=$(git log --format='%H %s' | awk '/WIP: three §5 sentences/{print $1}')
-git reset --soft "$FIRST_WIP"^
-git commit -m "WIP: hardening round — the 0.8.0 cycle and PR #21"
-git log --oneline -3
+EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
+mkdir -p "$(dirname "$EVIDENCE")"
+cat > "$EVIDENCE" <<'EOF'
+# Validation evidence — hardening round 0.8.1
+
+Story: docs/superpowers/stories/2026-08-03-hardening-round-0-8-0-and-pr-21-story.md
+
+## battery
+command: (the quality command from AGENTS.md § Commands)
+result:  <fill: exit status and the counts the run actually printed>
+
+## check (named verification), with its counterfactual
+§5.2 applied to the four cases in spec §10 — each must FAIL on the wiring half:
+  1. $EVIDENCE dry run          -> <fill: FAIL/PASS + one line why>
+  2. single-shell regression     -> <fill>
+  3. timed regression row        -> <fill>
+  4. dash release evidence       -> <fill>
+§5.4 applied to "It bounds the scan, not memory" — must FAIL on exhaustiveness:
+                                   <fill>
+counterfactual: all four were reviewed during the 0.8.0 cycle under the §5 text as it
+read before this change and each was accepted by at least one review looking for exactly
+this; one (the single-shell test) reached the released artifact.
+
+## prompt conformance
+workflow-init.md (invariant 11 surface) — all 12 items: <fill: pass/exception per item>
+CLAUDE.md, AGENTS.md (not on invariant 11's list) — items 6,7,8,9,11,12: <fill>
+four split stories — in-spirit brief review: <fill>
+
+## mirror parity
+Task 1 Step 6 re-run result: <fill>
+
+## cross-finding conflict check
+Task 0 verdict: <fill>
+EOF
+echo "created: $EVIDENCE"
+[ -s "$EVIDENCE" ] && echo "non-empty OK" || echo "EMPTY — stop and surface"
 ```
 
-`git commit` and `git add` must be **separate** calls throughout: the hook derives its docs-only file list at `PreToolUse`, so a compound `git add && git commit` presents an empty index and fires a spurious Gate-B STOP.
+`$EVIDENCE` is defined here, in this step, before any later step reads it. A dry run that assigns the variable itself would prove the shell mechanics and never that this plan defines it — the `verification-masks-failure` case row C records.
 
-- [ ] **Step 2: Run the full battery and capture the real numbers**
+- [ ] **Step 2: Squash the WIP commits into one snapshot**
 
-Run the quality command from Global Constraints. Record the actual counts it prints — shellcheck files, hook suite assertions under both `sh` and `dash`, invariant assertions, version-bump assertions, `claude plugin validate` result. Do not write a number you did not read from output.
+```bash
+cd "$(git rev-parse --show-toplevel)"
+n=$(git log --format='%s' | grep -c '^WIP: three §5 sentences' || true)
+echo "matching WIP anchors: $n (want exactly 1)"
+if [ "$n" != "1" ]; then echo "AMBIGUOUS OR MISSING ANCHOR — stop and surface"; else
+  FIRST_WIP=$(git log --format='%H %s' | awk '/^[0-9a-f]+ WIP: three §5 sentences/{print $1}')
+  echo "first WIP: $FIRST_WIP"
+  git log --oneline "$FIRST_WIP"^..HEAD
+fi
+```
 
-- [ ] **Step 3: Run the named verification**
+Expected: `matching WIP anchors: 1`, then a log listing exactly the WIP commits from Tasks 1–8 and nothing else. If a resumed or repeated task produced two matching subjects, **stop and surface** — a reset against an ambiguous anchor rewrites history at the wrong point.
 
-Apply §5.2's sentence, exactly as it now reads in `CLAUDE.md`, to the four cases in spec §10. Each must **fail** on the second half. Then apply §5.4's appended clause to `It bounds the **scan**, not memory` — it must fail on the exhaustiveness requirement.
+Then:
 
-Record the result per case. If any case passes the sentence written to reject it, that sentence is miswired: **stop and surface**, do not proceed to Gate B.
+```bash
+git reset --soft "$FIRST_WIP"^
+```
 
-- [ ] **Step 4: Run the prompt-conformance reviews**
+```bash
+git commit -m "WIP: hardening round — the 0.8.0 cycle and PR #21"
+```
+
+Expected afterwards: `git log --oneline -2` shows the single WIP snapshot on top of the pre-round HEAD.
+
+- [ ] **Step 3: Run the full battery and record the real numbers**
+
+Run the quality command. Write the actual counts it prints into `$EVIDENCE` under `## battery` — shellcheck files, hook suite assertions under both `sh` and `dash`, invariant assertions, version-bump assertions, `claude plugin validate` result. **Do not write a number you did not read from output.**
+
+- [ ] **Step 4: Run the named verification and record it**
+
+Apply §5.2's sentence, exactly as it now reads in `CLAUDE.md`, to the four cases in spec §10. Each must **fail** on the second half. Then apply §5.4's appended clause to `It bounds the **scan**, not memory` — it must fail on exhaustiveness. Write all five verdicts into `$EVIDENCE`.
+
+If any case passes the sentence written to reject it, that sentence is miswired: **stop and surface**, do not proceed to Gate B.
+
+- [ ] **Step 5: Run the prompt-conformance reviews and record them**
 
 `plugins/dev-workflow/commands/workflow-init.md` is the only changed file inside invariant 11's enumerated surface. Review it against all 12 items of `docs/prompt-standards.md`; all 12 must pass, with an exception only where the checklist item itself authorizes one (items 9 and 12 do), recorded with that item's stated reason.
 
-`CLAUDE.md` and `AGENTS.md` are not on that list — neither carries a `Target model:` line, because neither is executed against a named model. Review their edits against items 6, 7, 8, 9, 11 and 12 and record the result. §5.4's clause is a continuation of an existing prohibition; item 9's own text exempts rules whose subject is the prohibition, so cite that exemption rather than assuming it.
+`CLAUDE.md` and `AGENTS.md` are not on that list — neither carries a `Target model:` line, because neither is executed against a named model. Review their edits against items 6, 7, 8, 9, 11 and 12. §5.4's clause continues an existing prohibition; item 9's own text exempts rules whose subject is the prohibition, so cite that exemption rather than assuming it.
 
 Give each of the four split stories a recorded in-spirit brief review — success criteria, stop conditions, verified claims — without asserting the mandatory 12 apply.
 
-- [ ] **Step 5: Run the cross-finding conflict check**
+Write all results into `$EVIDENCE`.
 
-Confirm no two findings pull one artifact in opposite directions. Expected verdict: none — the four hardenings touch four distinct sites (the Gate-B lens paragraph, the Profiles counterfactual paragraph, the Gate-A pass bullet, and the 2026-07-19 Don't), and none rewrites text another needs. If a conflict appears, **stop and surface** rather than choosing.
+- [ ] **Step 6: Re-run mirror parity and record it**
 
-- [ ] **Step 6: Run Gate B**
+Re-run Task 1 Step 6's block and write the result into `$EVIDENCE`. Parity is checked here, again after every Gate-B fix, and once more immediately before Step 8 — a review fix can touch only `CLAUDE.md` or only the template and otherwise reach the final commit unnoticed.
 
-Per CLAUDE.md §5. Tool: `mcp__codex__review`, `reviewType: full`, `baseSha` = the parent of the WIP commit. Delete both branch files first and confirm they are gone. Carry the story path and the evidence entry verbatim in `additionalContext`, plus the standing lens.
+- [ ] **Step 7: Run Gate B**
+
+Per CLAUDE.md §5. Tool: `mcp__codex__review`, `reviewType: full`, `baseSha` = the parent of the WIP commit. Delete both branch target files first and confirm they are gone. Carry the story path and `$EVIDENCE`'s content verbatim in `additionalContext`, plus the standing lens.
 
 Minimum three passes, final pass clean. Re-review after every fix — a fix changes the diff. Every pass writes to `.context/codex-reviews/gate-b-<spec|quality>-pass-<p>.md` and is validated before it is read: terminator exact, count matching, nothing but finding lines, both branch files present.
 
-- [ ] **Step 7: Close the cycle by amend**
+After each fix: re-run the battery, re-run mirror parity, and update `$EVIDENCE` before the next call.
+
+- [ ] **Step 8: Close the cycle by amend**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-git commit --amend -F /path/to/final-message.txt
-git log --oneline -1
+EVIDENCE="$(git rev-parse --show-toplevel)/.context/evidence-0.8.1.md"
+[ -r "$EVIDENCE" ] && [ -s "$EVIDENCE" ] || { echo "EVIDENCE missing or empty — stop"; exit 1; }
+grep -q '<fill' "$EVIDENCE" && { echo "EVIDENCE still has unfilled placeholders — stop"; exit 1; }
+echo "evidence ready"
 ```
 
-The closing message carries the validated evidence entry — battery result, the check and its counterfactual — and the story path. The amend replaces the WIP message wholesale, so an entry written only into the WIP body is destroyed exactly when the cycle closes.
+Then amend with the real message plus the evidence body:
 
-- [ ] **Step 8: Open the PR**
+```bash
+git commit --amend -m "Harden four classes from the 0.8.0 cycle and PR #21" -m "$(cat "$EVIDENCE")"
+```
+
+The amend replaces the WIP message wholesale, so an entry written only into the WIP body is destroyed exactly when the cycle closes. The `<fill` guard is what stops a template shipping as evidence.
+
+- [ ] **Step 9: Open the PR**
 
 ```bash
 git push -u origin HEAD
-gh pr create --title "Harden four classes from the 0.8.0 cycle and PR #21" --body-file /path/to/pr-body.md
+```
+
+```bash
+gh pr create --title "Harden four classes from the 0.8.0 cycle and PR #21" --body "$(cat "$EVIDENCE")"
 ```
 
 Then run `/dev-workflow:process-pr-review` once the bots report.
@@ -1009,10 +1157,12 @@ Then run `/dev-workflow:process-pr-review` once the bots report.
 
 ## Self-Review
 
-**Spec coverage.** §5.1 → Task 1 Step 1. §5.2 → Task 1 Step 2. §5.3 → Task 1 Step 3. §5.4 → Task 2. §6 rows A–D → Task 7. §6.4 collision behaviour → Task 7 Step 1. §6.5 class → Task 3. §8 four stories → Tasks 4–5, with paths and the pre-write check. §9 deliverables → Task 6 (todos), Task 8 (version, CHANGELOG), Task 3 (taxonomy). §10 validation → Task 9. Decision D7 (no skill file) → Global Constraints and Task 3 Step 2.
+**Spec coverage.** §5.1 → Task 1 Step 1. §5.2 → Task 1 Step 2. §5.3 → Task 1 Step 3. §5.4 → Task 2. §6 rows A–D → Task 7. §6.4 collision behaviour → Task 7 Step 1. §6.5 class → Task 3. §8 four stories → Tasks 4–5, each path classified immediately before its own write. §9 deliverables → Task 6 (todos), Task 1 Step 5 (version), Task 8 (CHANGELOG), Task 3 (taxonomy). §10 validation → Task 9, recorded in `.context/evidence-0.8.1.md`. §10 cross-finding conflict check → **Task 0**, before any edit, as the spec requires. Decision D7 (no skill file) → Global Constraints and Task 3 Step 2.
 
-**Placeholder scan.** No `TBD`, no "add appropriate handling", no "similar to Task N". Every ledger row, story and CHANGELOG entry is written out in full.
+**Placeholder scan.** No `TBD`, no "add appropriate handling", no "similar to Task N". Every ledger row, story, CHANGELOG entry and the evidence template is written out in full. The only `/path/to/` style references are gone: the evidence artifact has a real path, and the commit and PR bodies are generated from it.
 
-**Type consistency.** The fingerprint string `mechanical-check-skipped-before-review` is identical in Task 3 (minting), Task 7 Steps 1, 5 and 6 (rows and verification). The four story paths are identical in Tasks 4, 5, 6 and their verification steps. The three §5 sentence openings used in Task 1's parity checks match the sentences inserted in Steps 1–3 verbatim.
+**Type consistency.** `mechanical-check-skipped-before-review` is identical in Task 3 (minting) and Task 7 Steps 1, 5, 6. The four story paths are identical in Tasks 4, 5, 6 and their verification steps. The three §5 sentence openings used in Task 1 Step 6's parity patterns match the sentences inserted in Steps 1–3. `$EVIDENCE` is defined in Task 9 Step 1 and read in Steps 3–9.
 
-**One gap found and closed during review:** Task 7's collision check originally ran after appending. It now runs first — appending and then discovering a collision would mean editing the ledger, which the append-only rule forbids.
+**POSIX conformance.** Every fenced block parses under `sh -n` **and** avoids the constructs `sh -n` does not catch: no `${var:offset:length}`, no `<(...)`, no `[[ ]]`, no arrays. Truncation uses `printf '%.Ns'`. Every `grep -c` is captured with `|| true` and compared numerically, because it exits 1 on a zero count.
+
+**Battery orderability.** The manifest bump lands in Task 1 with the first `plugins/` change, so `check-version-bump.sh main` — part of the battery every task runs — passes from that point on. Deferring it would have made Tasks 2–7 fail by construction.

@@ -157,7 +157,7 @@ squeezed in.
       the §5 version stamp. Each states its problem and its open question, and each says it is
       a split from a designed round, and each carries as its first acceptance criterion that its
       profile — both axes and the derived mode — is proposed and confirmed by Daniel before
-      design begins.
+      design resumes.
 - [ ] Each of the three parked rows whose trigger names §5 is read literally against its own
       text, and the round records which fired and which did not, with the reason.
 - [ ] **Fired at Gate-A spec pass 3.** Making the precheck work turned out to require decisions
