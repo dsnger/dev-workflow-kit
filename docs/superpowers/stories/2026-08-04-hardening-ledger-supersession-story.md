@@ -1,11 +1,10 @@
 # The hardening ledger has no supersession convention — Story
 
 **Date:** 2026-08-04 · **Size:** story
+**Risk:** standard · **Security:** none · **Validation:** battery+check
 
-**Unprofiled, deliberately** — a split from a designed round, so it bypassed
-`dev-workflow:intake`, which excludes work already in solution design. A profile written now
-would look confirmed without being confirmed, and nothing would reveal that; acceptance
-criterion 1 carries the debt instead.
+**Profile log:**
+- 2026-08-05 · adoption · unprofiled split from a designed round, profiled at its design checkpoint under acceptance criterion 1 · gates now read this header
 
 ## 1. Problem statement
 
@@ -37,7 +36,7 @@ row falsified by a later change can be marked as such without breaking either st
 
 ## 3. Acceptance criteria
 
-- [ ] Before design resumes on this story, whoever picks it up proposes both axes and the mode
+- [x] Before design resumes on this story, whoever picks it up proposes both axes and the mode
       derived from them, pauses for Daniel's confirmation, and writes the confirmed profile into
       this header. Design continues only after that.
 - [ ] The 2026-07-20 row no longer reads as current behaviour, and it was not edited.

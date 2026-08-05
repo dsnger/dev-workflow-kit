@@ -61,7 +61,7 @@ ledger. Escalation follows from a guard that failed, never from a count.
 
 ## 5. Open questions
 
-Six, each paired with the failure that raised it:
+Seven — six paired with the failure that raised each, and one inherited from another story:
 
 - A verdict was reached by reading one prior row's guard and stopping, when an older row's guard
   covered the case. **Which prior rows must a recurrence be judged against before "outside" is
@@ -81,6 +81,13 @@ Six, each paired with the failure that raised it:
 - The old step-3 text required proposing one rung stronger on recurrence, and a replacement
   choosing "the rung that fits the repair" does not carry it. **Is automatic escalation kept,
   narrowed, or deliberately dropped?**
+- **Inherited** from `2026-08-04-hardening-ledger-supersession-story.md`: that story's convention
+  lets a superseded row record, in prose, that it was filed under the wrong fingerprint — and
+  deliberately leaves nothing mechanical reading it, so the row keeps its class, keeps matching
+  the column-2 grep, and keeps counting. The redesign here owns the reader, so it owns the
+  choice. **Should a recurrence read consult the supersession record, and if so, does a
+  prose-corrected class change the lineage it escalates from?** Arrives as a handoff, not as a
+  failure: no instance has occurred.
 
 ## 6. Suggested size
 
