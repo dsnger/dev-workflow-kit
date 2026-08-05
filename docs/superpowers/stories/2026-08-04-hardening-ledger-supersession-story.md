@@ -22,17 +22,26 @@ From `todos.md`, "**The hardening ledger has no supersession convention.**":
 
 | Condition | Disposition |
 |---|---|
-| Never edit a row | **kept** — any solution must preserve it |
+| Never edit a row | **kept in substance, narrowed in text** — see the amendment note below |
 | One row per hardening | **kept** — any solution must preserve it |
 | The 2026-07-20 row now describes pre-0.8.0 behaviour as current | **kept** as the motivating instance |
 | The 2026-07-20 *spec* took a version-qualified supersession note and it worked | **kept** as prior art the design should evaluate first |
 | Alternative: an explicit "rows are historical, read the newest row for current behaviour" header statement | **kept** as a candidate |
 | Trigger: the next row falsified by a later change — this is the second | **moved** — fired, and recorded here |
 
+**Amended 2026-08-05** from Gate-A spec pass 3, finding 1, and human-confirmed. Accounting per
+the AGENTS.md Don't — **kept:** the committed record's protection, which is what every consumer
+of the rule actually relied on. **Narrowed:** the textual rule, from "never edit a row" to
+"never edit a landed row", making textual what #22's Gate B already accepted in practice (row D,
+amend-during-authoring, reasoning recorded in its evidence). **Dropped:** nothing. The amendment
+records both facts — the text changed here, and the boundary it moved to was already the
+practiced one. §2 and acceptance criterion 3 carry the same change.
+
 ## 2. Desired outcome
 
 A reader who opens any ledger row can tell whether it still describes current behaviour, and a
-row falsified by a later change can be marked as such without breaking either standing rule.
+row falsified by a later change can be marked as such without breaking either standing rule —
+as amended: never edit a **landed** row, and one row per hardening.
 
 ## 3. Acceptance criteria
 
@@ -40,8 +49,17 @@ row falsified by a later change can be marked as such without breaking either st
       derived from them, pauses for Daniel's confirmation, and writes the confirmed profile into
       this header. Design continues only after that.
 - [ ] The 2026-07-20 row no longer reads as current behaviour, and it was not edited.
-- [ ] The append-only rule and the one-row-per-hardening rule both still hold after the change.
-- [ ] A reader can determine, from the ledger alone, which row to trust for current behaviour.
+- [ ] The append-only rule — as amended, protecting **landed** rows — and the
+      one-row-per-hardening rule both still hold after the change.
+      *(Amended 2026-08-05 from Gate-A spec pass 3, finding 1, and human-confirmed; the
+      kept/narrowed/dropped accounting is in §1.)*
+- [ ] A reader can determine, from the ledger alone, which of a row's claims no longer hold and
+      where the current answer lives.
+      *(Amended 2026-08-05 from Gate-A spec pass 1, finding 4, and human-confirmed. Accounting
+      per the AGENTS.md Don't — **kept:** determination from the ledger alone. **Moved:** current
+      behaviour lives at the cited artifact, deliberately, per cite-don't-restate. **Dropped:**
+      "a row to trust", because no ledger row ever provided current behaviour and the criterion
+      demanded what the genre cannot supply.)*
 
 ## 4. Affected AGENTS.md invariants
 
