@@ -55,7 +55,11 @@ driven by recurrence rather than by enthusiasm.
       row now describes pre-0.8.0 counting behaviour as current. The 2026-07-20 *spec* took
       a version-qualified supersession note and that worked; the ledger needs the same
       convention written into its header, or an explicit "rows are historical, read the
-      newest row for current behaviour" statement. *Trigger: the next row falsified by a
+      newest row for current behaviour" statement.
+      **TRIGGER FIRED (2026-08-04):** the 2026-07-20 row now teaches pre-0.8.0 counting
+      behaviour as current — the second falsified row this trigger names. Story:
+      `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`.
+      *Trigger: the next row falsified by a
       later change — this is the second.*
 - [ ] **Locator selects the `text` element by RAW BYTE comparison of `type`.** A
       Unicode-escaped spelling of `text` is legal JSON meaning `text` and is not selected;
@@ -178,6 +182,18 @@ driven by recurrence rather than by enthusiasm.
       throwaway index writes loose blobs/trees into the user's repo (verified: 3 → 5
       objects per review). Unreachable, so gc collects them, but a temporary
       `GIT_OBJECT_DIRECTORY` with the real store as an alternate would avoid the churn.
+- [ ] **The gate-claims Don't is correct and was not followed, twice.** PR #21's C4 (an
+      unqualified jq-parity criterion that outran what `field()` compares for a malformed outer
+      document) and C5 (a README claim that a typo cannot quietly unhook a gate) both fall
+      inside the 2026-07-19 `AGENTS.md` Don't, whose operative instruction already requires
+      exactly what they omitted — name the exact comparison the code performs, and delete any
+      part of the sentence that outruns it. **No textual repair exists**, which is why these are
+      parked rather than logged: a ledger row would have to name a hardening, and a rule needing
+      no change means the failure was compliance, not wording. The 2026-08-04 amendment covers
+      coverage enumerations (F8's shape) and reaches neither a positive parity claim nor a
+      positive prevention claim. *Trigger: a third compliance miss against that Don't, or a
+      feasible mechanical rung emerging from
+      `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md`.*
 
 ## Next
 
@@ -218,6 +234,14 @@ backlog.
       variable prevents the situation; the hook only recognizes today's spelling of it.
       The result-classification story documents it in `README.md` § Setup only,
       deliberately — a preflight check is a second surface and was kept out of that diff.
+      **OBSERVATION (2026-08-04), and the row stays open.** With the variable set to `0`, five
+      Gate-A passes of the 2026-08-03 round ran 458 s, 550 s, 757 s, 663 s and 780 s; all five
+      stayed in the foreground and returned ordinary `success: true` envelopes the hook could
+      read. **No control run was made** with the variable unset, so this is a correlation
+      observed under one setting, not a demonstration that the variable held those calls in the
+      foreground. What it does establish is that calls well past 120 s can return as ordinary
+      foreground results here. The row's deliverable — a `/workflow-init` preflight check — is
+      unbuilt, so the row is not discharged by this.
       *Trigger: after that story lands* (spec:
       `docs/superpowers/specs/2026-07-31-failed-codex-call-counts-as-a-pass-design.md`).
 
@@ -245,7 +269,13 @@ backlog.
 - [ ] **P8 — passive metrics, read-only over the ledger and git.** Analysis only: no new
       state file, no instrumentation, nothing written back. It answers questions the
       ledger already contains the data for (which fingerprints recur, how often a rung
-      holds). *Trigger: 10 stories or 20 ledger rows* — below that the sample says more
+      holds).
+      **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round appended four ledger rows,
+      taking the ledger from 18 to 22 and crossing the 20-row arm; its fifth story takes the
+      story count to 10, crossing the other arm as well. Story:
+      `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md`, which
+      carries this row's conditions with each marked kept, moved or dropped.
+      *Trigger: 10 stories or 20 ledger rows* — below that the sample says more
       about the last week than about the workflow.
 - [ ] **`/capture-finding` as an intake extension of `harden-finding`.** An extension,
       not a sibling command: a finding captured outside the ladder is how a ledger
@@ -294,7 +324,12 @@ backlog.
       so; it does not cover *sequential cycles* reusing them. Note the dispositions and
       resume-note companions have the same property. Any fix has to keep the pre-call delete
       — that check is load-bearing — so it is about naming (a cycle component in the slot) or
-      archiving, not about relaxing the protocol. *Trigger: the next round touching the §5
+      archiving, not about relaxing the protocol.
+      **NOT FIRED (2026-08-04):** the 2026-08-03 hardening round edits §5 prose and its template
+      mirror, and changes no part of the §5 **file protocol** this row's trigger names — not the
+      slot names, not the pre-call delete, not the terminator or acceptance rules. Recorded so a
+      later reader can check the reading rather than re-derive it.
+      *Trigger: the next round touching the §5
       file protocol.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
@@ -307,16 +342,29 @@ backlog.
       invariant 12's checker is `pull_request`-only. A stamp is a **wire format**:
       shipping a provisional one writes legacy into every scaffolded file. *The one
       known-stale instance (canvas) is being re-synced by hand, so this carries no
-      schedule pressure.* *Trigger: the next round that touches the §5 template.*
+      schedule pressure.*
+      **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round edits the §5 inline
+      template. Story:
+      `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`, which carries this
+      row's conditions with each marked kept, moved or dropped.
+      *Trigger: the next round that touches the §5 template.*
 - [ ] **`harden-finding`'s recurrence rule is scope-blind.** Rungs guard *scopes*; the
-      skill compares only *fingerprints*; a ledger-prose workaround is unenforceable
-      because agents follow the skill, not the row. Sketched fix — before proposing
+      skill's recurrence step *does* re-read the ledger, and the defect is that its
+      **decision branch** keys on the fingerprint and the latest matching row's rung
+      without letting that row's stated guard control the verdict. Sketched fix — before proposing
       escalation on a same-fingerprint recurrence, read the prior row's stated guard:
       **outside** it the prior mechanism never claimed that shape, so its rung did not
       fail — pick the fitting rung, do **not** escalate; **inside** it, the mechanism was
       meant to catch this and did not, so that is a regression to repair or strengthen.
       (An earlier draft had those branches inverted, which would have entrenched the bug
-      it was filed against; Gate A caught it.) *Trigger: the first human rejection of an
+      it was filed against; Gate A caught it.)
+      **Evidence case 3 (2026-08-04):** the 2026-08-03 hardening round ran the precheck as a
+      standing manual instruction from Daniel — which is this row's own diagnosis, since a rule
+      that exists only in chat is not one the skill carries — and still reached a wrong verdict
+      twice by reading a single prior row's guard and stopping. Split to
+      `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md`; this
+      row stays open because the fix it sketches has not landed.
+      *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
       open PRs.** The only mandated ledger check lives in `process-pr-review` step 5, so a
@@ -331,7 +379,11 @@ backlog.
       needs real design (identity, dedup, consumption semantics), which is why it was
       refused as a mid-round addition. It mints
       `mandatory-step-anchored-to-optional-path` when it lands — minting it earlier would
-      leave a class no row uses. *Trigger: the next round that touches §5, or a project
+      leave a class no row uses.
+      **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round edits §5. Story:
+      `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md`, which
+      carries this row's conditions with each marked kept, moved or dropped.
+      *Trigger: the next round that touches §5, or a project
       reporting an empty ledger across cycles that fixed findings.*
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
