@@ -1,5 +1,17 @@
 # Hardening round — the 0.8.0 cycle and PR #21 — Implementation Plan
 
+> **Historical snapshot — executed and merged.** This plan records the state of things as they
+> stood when it ran. It is **not** maintained against later changes and must not be read as
+> current guidance. Its `never edit an existing row` / `Never edit a row` statements are **still
+> accurate**: `2026-08-05-hardening-ledger-supersession-design.md` briefly narrowed that rule and
+> then restored it, so the absolute wording stands and nothing here contradicts it. What *is*
+> historical is narrower — the plan's desired-outcome wording predates that story's amended
+> acceptance criterion 4, and its treatment of the row-D amend-during-authoring precedent is
+> superseded: under the convention that row's correct move was an entry. Executed plans are
+> deliberately left as written — a plan is a record of what was done, and editing one to match
+> later rules would destroy that record — so this note is how the standing falsification sweep
+> resolves them, rather than by rewriting.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Land four hardenings from the 0.8.0 cycle and PR #21 as text, record them in four ledger rows, park what has no repair, and open five split stories — without changing any skill file.
