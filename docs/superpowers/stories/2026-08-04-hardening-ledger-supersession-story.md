@@ -62,7 +62,9 @@ is no definition to get wrong.
 A reader who opens any ledger row can tell which of its claims have been recorded as no longer
 holding and where the current answer lives, and a row falsified by a later change can be marked
 as such without breaking either standing rule, both of which hold in their original absolute
-form: never edit a row, and one row per hardening.
+form: never edit a row, and one row per hardening. Acceptance criterion 4 carries the two limits
+on that reading — completeness is not promised, and a row that cannot be told apart from a
+sibling is marked together with it.
 
 *(Amended 2026-08-10 from Gate-A spec pass 5, finding 11. Accounting per the AGENTS.md Don't —
 **kept:** determination from the ledger alone, and both standing rules. **Narrowed:** "can tell
@@ -71,6 +73,12 @@ recorded as no longer holding", matching AC 4. The absence of a supersession ent
 a row current — nothing validates completeness — so the outcome was promising what the design
 deliberately does not deliver. **Dropped:** nothing. AC 4 was amended this way at pass 1; this
 site was missed then and is brought into line now.)*
+
+*(Amended again 2026-08-11 from Gate-A spec passes 18 and 19, and human-confirmed. Accounting per
+the AGENTS.md Don't — **kept:** the outcome as pass 5 left it, unchanged in substance. **Moved:**
+the two limits on what a reader can determine are stated once, in AC 4, and pointed at from here —
+pass 5's lesson was that this site and AC 4 drift apart when each carries its own copy. **Dropped:**
+nothing.)*
 
 ## 3. Acceptance criteria
 
@@ -89,13 +97,32 @@ site was missed then and is brought into line now.)*
       *(Narrowed 2026-08-05 from Gate-A spec pass 3; **restored 2026-08-10** from pass 7, both
       human-confirmed. The criterion now reads as it originally did; the accounting for the
       narrowing and its reversal is in §1.)*
-- [ ] A reader can determine, from the ledger alone, which of a row's claims no longer hold and
-      where the current answer lives.
+- [ ] A reader can determine, from the ledger alone, which of a row's claims have been **recorded**
+      as no longer holding and where the current answer lives. Completeness is not promised:
+      nothing validates that a falsified claim was ever recorded, and a hardening that is later
+      *removed* has no sanctioned entry at all — the case the convention names as out of scope.
+      Nor is per-row resolution promised: where a row cannot be told apart from a sibling, an entry
+      marks every row it matches, accurate ones included, and the reader reads the correction
+      against all of them.
       *(Amended 2026-08-05 from Gate-A spec pass 1, finding 4, and human-confirmed. Accounting
       per the AGENTS.md Don't — **kept:** determination from the ledger alone. **Moved:** current
       behaviour lives at the cited artifact, deliberately, per cite-don't-restate. **Dropped:**
       "a row to trust", because no ledger row ever provided current behaviour and the criterion
       demanded what the genre cannot supply.)*
+      *(Amended again 2026-08-11 from Gate-A spec pass 18, finding 3, and human-confirmed.
+      Accounting per the AGENTS.md Don't — **kept:** determination from the ledger alone, and the
+      citation half. **Narrowed:** "which of a row's claims no longer hold" → "which have been
+      recorded as no longer holding", which is what the design supplies and what §2's desired
+      outcome has said since pass 5; this site was missed then. **Named:** the removed-hardening
+      exclusion, which the design leaves unmarkable, so the criterion no longer promises a marker
+      for it. **Dropped:** nothing.)*
+      *(Amended again 2026-08-11 from Gate-A spec pass 19, finding 3, and human-confirmed.
+      Accounting per the AGENTS.md Don't — **kept:** everything the pass-18 wording holds, all
+      three clauses. **Named:** the inseparable-sibling case, where the criterion could otherwise
+      be read as promising a *per-row* answer the locator cannot give — pass 18 closed a gap where
+      a correction might be missing; this closes one where a correction present against a sibling
+      is read as belonging to an accurate row, which is a wrong answer rather than an absent one.
+      **Dropped:** nothing.)*
 
 ## 4. Affected AGENTS.md invariants
 
