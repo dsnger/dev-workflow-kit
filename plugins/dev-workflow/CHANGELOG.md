@@ -22,6 +22,13 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.8.2
+
+- `workflow-init`: the scaffolded ledger header now carries a supersession convention —
+  a row whose narration is later found wrong or made stale is corrected by appending a
+  `Superseded rows` entry, never by editing the row. Both standing rules hold unchanged:
+  never edit a row, one row per hardening.
+
 ## 0.8.1
 
 - **Three sentences added to the §5 gate protocol, and to the template `/workflow-init`

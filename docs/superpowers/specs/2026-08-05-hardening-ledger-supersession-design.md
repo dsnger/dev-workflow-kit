@@ -20,13 +20,18 @@ those decisions were revised — that history lives in
 
 ## 1. The gap
 
-`docs/hardening-log.md`'s header carries two standing rules: never edit a row, and one row per
-hardening. When a row's text stops describing reality, neither move is sanctioned —
-editing breaks the first rule, and appending a row that records no hardening breaks the second.
+**This section describes the state *before* this design landed.** §2 onward is the current
+rule; past tense here records what motivated it, not anything still true. The story does the
+same, for the same reason.
 
-The gap is live. The 2026-07-20 `truncated-tool-output-read-as-complete` row narrates the gate
-hook counting every incomplete pass, which is pre-0.8.0 behaviour, and a reader who trusts it
-is misled about how the hook counts today.
+`docs/hardening-log.md`'s header carried two standing rules: never edit a row, and one row per
+hardening. When a row's text stopped describing reality, neither move was sanctioned —
+editing broke the first rule, and appending a row that records no hardening broke the second.
+Both rules still stand unchanged; what §2.2 adds is a third move.
+
+The gap was live. The 2026-07-20 `truncated-tool-output-read-as-complete` row narrated the gate
+hook counting every incomplete pass, which is pre-0.8.0 behaviour, and a reader who trusted it
+was misled about how the hook counts today. That row is the one §3.1's entry supersedes.
 
 ## 2. The convention
 
@@ -172,8 +177,8 @@ the row's `finding` as written in the file**, escapes and markup included — wh
 is in the table, not what a renderer shows you. **An entry applies only to matching rows dated on or before the entry's own date** — supersession
 marks the past, so a row dated later never comes under an entry written before it. **A row's date
 is the day it is appended**, and the table is chronological: backdating a row is forbidden, which
-is what makes the date bound mean what it says. Nothing can verify the append day itself; the
-rule is stated and a check enforces the weaker property that dates never decrease. An entry
+is what makes the date bound mean what it says. Nothing can verify the append day itself, and
+nothing checks that dates never decrease; the rule is stated and read. An entry
 whose locator matches no such row is **inert**: it governs nothing and is not an error to repair
 in place — append a new entry with a locator that matches, and leave the inert one standing as
 history, like every other entry. **An
@@ -284,8 +289,8 @@ convention meant all along rather than a guard bolted onto it.
 
 **What the bound does not close.** Row dates are days, not instants, so a row appended *the same
 day* as the entry, after it, still satisfies "on or before" and does come under that entry.
-Backdating is forbidden and mechanically checked, so that day is the whole exposure: activation is
-bounded to the entry's own date rather than made impossible. Closing it would need a finer
+Backdating is forbidden — by instruction only, since nothing checks it — so that day is the whole
+exposure: activation is bounded to the entry's own date rather than made impossible. Closing it would need a finer
 timestamp in the row format, which §2.2 rejects as wire format. The residual is one day wide,
 requires the same date *and* the same fingerprint, and is the only way an entry's match set can
 grow after it is written.
@@ -370,7 +375,7 @@ the entire price.
 | `plugins/dev-workflow/commands/workflow-init.md` | §2.1 and §2.2 prose, into the inline ledger-header template — no block, since a scaffolded ledger has no entries |
 | `plugins/dev-workflow/.claude-plugin/plugin.json` | `0.8.1` → `0.8.2` |
 | `plugins/dev-workflow/CHANGELOG.md` | one entry for `0.8.2` |
-| `todos.md` | the source row **The hardening ledger has no supersession convention** marked done and rewritten in the past tense, so it no longer reads as an open gap; **plus** a new parked row for the uncovered case — a hardening later *removed* — carrying its trigger, the first rung actually removed. **plus** a third row: wire §6's check-1d property into `AGENTS.md`'s quality battery, triggered by the first inert entry found after this change lands — **with the rider that any standing check must be diff-scoped *and* must pass on §2.2's sanctioned repair**, for the reason §6 gives: a whole-block scan is unsatisfiable once an immutable inert entry exists, and a check demanding that no appended entry be inert fails on the very move the convention prescribes for a mistyped locator. A named read confirms all three: no present-tense claim that the ledger lacks a convention, and both parked rows present with their triggers |
+| `todos.md` | the source row **The hardening ledger has no supersession convention** marked done and rewritten in the past tense, so it no longer reads as an open gap; **plus** a new parked row for the uncovered case — a hardening later *removed* — carrying its trigger, the first rung actually removed. **plus** a third row covering **both** unwired properties: §6's check-1d entry validation *and* the chronology check 1e, which §8 records as never implemented — wire both into `AGENTS.md`'s quality battery, triggered by the first inert entry found after this change lands — **with the rider that any standing check must be diff-scoped *and* must pass on §2.2's sanctioned repair**, for the reason §6 gives: a whole-block scan is unsatisfiable once an immutable inert entry exists, and a check demanding that no appended entry be inert fails on the very move the convention prescribes for a mistyped locator. A named read confirms all three: no present-tense claim that the ledger lacks a convention, and both parked rows present with their triggers |
 | `docs/coding-workflow.md` | line 204's append-only sentence rewritten to state the rule **absolutely** — "strictly append-only: a **row** is never edited" — with the supersession move appended. It previously said "history is never rewritten"; an intermediate draft of this spec qualified it to *merged* history, which would have reinstated a pre-merge amendable class. No merged/unmerged qualifier appears in the landed wording. Found by the standing falsification lens, outside every path this change otherwise touches |
 | `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md` | its inherited open question widened from wrong-fingerprint to include phantom-hardening rows (that story's §5 Open questions) |
 | `docs/superpowers/plans/2026-08-04-hardening-round-0-8-0-and-pr-21.md` | a header note marking it a historical snapshot — it carries the un-narrowed rule three times. Executed plans are records of what was done and are **not** rewritten to match later rules; the note is how the falsification sweep resolves them |
@@ -383,7 +388,10 @@ text**: a check greps for exactly those bytes, so neither code span may carry an
 ellipsis or any other stand-in. The region **includes** the four-space
 indented format example, now a single line, and **excludes** the `Superseded rows:` block, the
 `Columns:` paragraph and the table.
-Inside that region the two files are byte-identical modulo hard-wrap position. Both sentinels are
+Inside that region the two files are **byte-identical, hard wraps included** — the text is
+generated once and inserted into both, so the line breaks fall in the same places, and §6's check
+2b compares the two regions raw. "Identical modulo wrap position" would be the weaker claim, and
+weaker than what is checked: a rewrap of one surface alone fails 2b. Both sentinels are
 unique in both files once the change lands; before it, the end sentinel exists in neither, which
 §6's check 2 treats as a failure rather than as an empty region — and, since check 2 now asserts
 presence per surface before parity, one that its anchor greps fail on first.
@@ -399,8 +407,10 @@ confined to `workflow-init.md` — invariant 12 still binds, since that path is 
 ## 5. What this design hands to another story
 
 `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md` owns the
-redesign of how a recurrence decision reads the ledger. §2.2 leaves a prose-only correction
-that nothing consumes — including a note that a row's fingerprint is wrong, and, since the
+redesign of how a recurrence decision reads the ledger. §2.2 leaves a correction with **no
+standing machine consumer** — the syntax is a standing convention every future author must
+honour, and §6 adds only a validation-only parser making no ongoing compatibility promise —
+including a note that a row's fingerprint is wrong, and, since the
 scope covers a claim that was never true, a note that the row's **hardening itself** never
 existed or was misclassified. §2.1 keeps such a row counting on purpose, so a lineage can
 escalate from a rung that was never landed. Both are one family — a row whose mechanical
@@ -417,9 +427,19 @@ profile change moves it. The story is `docs/superpowers/stories/2026-08-04-harde
 
 **Battery:** the full command in `AGENTS.md` § Commands.
 
-**This section states properties, not commands.** Each check below gives what must be true, the
-observation that fails without the change, and the **oracle** — what a correct implementation must
-be able to distinguish. The executable form is written at execution time, carried in the plan with
+**This section states properties, not commands.** Each *implemented* check below gives what must be
+true, a falsifying observation, and the **oracle** — what a correct implementation must be able to
+distinguish.
+
+**The falsifying observations are of two kinds, and conflating them overstates what a green run
+means.** `1a`, `1d`, `2a`, `2b` and `3` **fail on the untouched base**, so their green is evidence
+this change did something. `1b` and `1c` are **protective**: they hold on the untouched base by
+construction and fail only under a mutation that damages what they guard, so their green is
+evidence nothing was broken, never evidence anything was done — a plan that read them as
+counterfactuals would call a broken check satisfied. `1e` is **not implemented** and passes before
+and after, contributing no observation at all; and `1f` is a named read rather than an executable
+label, with nothing to confirm before the entry exists. The plan carries the same split as a table,
+per label. The executable form is written at execution time, carried in the plan with
 one label per check, and **supplied to the Gate-B reviewer alongside the real diff**, where a check
 has something to be checked against. It is not committed, so it is not itself inside the reviewed
 range — §8 records what that leaves uncovered. Earlier drafts carried the shell here; over six Gate-A passes that shell
@@ -438,7 +458,12 @@ the mutation it exists to catch.
 
 ### Check 1 — the correction is reachable from the ledger alone
 
-**Six** properties, 1a through 1f. All must hold, the named read included.
+**Six** properties, 1a through 1f. **Five of them must hold for this change** — 1a–1d and 1f, the
+named read included. **1e is specified here but deliberately not implemented**, for the reason §8
+records: it validates the ledger's *pre-existing* chronology rather than anything this change does,
+so it passes before and after and would report a green that means nothing about the diff. It is
+written out because a standing successor will need it, not because this change runs it — and no
+chronology validation exists in the meantime.
 
 **1a — the entry exists and names the right row.** The `Superseded rows` block carries an entry
 dated `$D` superseding `2026-07-20` with fingerprint `truncated-tool-output-read-as-complete`, and
@@ -502,9 +527,15 @@ validates pre-existing entry immutability (§8).
 entry dated before the row it names. The typo-then-correct pair must **pass** — the mandated entry
 is the corrected one, and that is the convention working, not a defect.
 *Oracles* — **seven** things a correct implementation must distinguish, each of which a draft got wrong:
-- **Which entry is in scope.** The mandated entry, and only entries this change **adds**, computed
-  against the base ref — not every entry in the file. For this change the base carries no block at
-  all, so every entry present is one it added.
+- **Which entry is in scope.** **The** entry §3.1 mandates, and no other — identified in current
+  content by its own date, row date and fingerprint, and only *then* proven absent at the base ref.
+  **The two steps are ordered.** Selecting whatever is new and treating that as the mandated entry
+  inverts them, and lets an unrelated or mistyped earlier entry decide the verdict. Every other
+  added entry is ignored, a second inert one included: quantifying over all of them is the
+  unsatisfiable property the narrowing removed, since §2.2's sanctioned repair for a mistyped
+  locator leaves an inert entry standing forever. For this change the base carries no block at all,
+  so every entry present is one it added — which makes the two steps indistinguishable *here* and
+  is exactly why the order has to be stated rather than inferred from this case.
 - **An entry from a line that is not one.** Candidates are the **non-blank** lines of the interval
   from the `**Superseded rows:**` label to the `Columns:` paragraph, both exclusive. The single
   structural blank line separating the list from that paragraph is required by CommonMark — without
@@ -527,8 +558,11 @@ is the corrected one, and that is the convention working, not a defect.
   checker demanding *exactly one* implements the guarantee §2.2 withdrew and would still pass this
   change, which is why the many case needs a fixture even though this entry does not produce it.
   **The on-or-before bound, at the boundary:** rows dated before, **on**, and after the entry's
-  date. Fixtures: the fragmentless locator matching **both** `2026-07-18` `docs-drift` rows, and
-  the three date positions.
+  date. Fixtures: a ledger carrying **two** complete rows that the *mandated* locator matches —
+  both dated `2026-07-20` with `truncated-tool-output-read-as-complete` — plus the three date
+  positions. The real `2026-07-18` + `docs-drift` pair cannot serve here despite being the
+  ledger's one genuinely non-unique pair: the mandated entry's locator does not match it, so a
+  many-match fixture has to be constructed on the locator the entry actually carries.
 
   *Not validated by this change, deliberately.* Fragment-narrowed matching and the comparison
   domain §2.2 pins — literal, case-sensitive, against the raw `finding` as written, escapes and
@@ -553,11 +587,13 @@ is the corrected one, and that is the convention working, not a defect.
   having examined nothing.
 
 **1e — recorded dates never decrease down the table.** Backdating a row would let it fall under an
-entry written before it, which §2.2 forbids.
-*Falsifying observation:* a row dated earlier than the row above it must fail.
-*Oracle:* this checks **recorded order, not append-day truth**. A row appended today and labelled
-with a date after the current tail passes. Nothing can verify the append day; the prohibition is
-instruction-backed and this is a floor under it. Dates must be **calendar-valid**, not merely
+entry written before it, which §2.2 forbids. **Not implemented — the whole of 1e is a specification
+for a future standing check, and nothing below describes anything that runs today.**
+*Falsifying observation:* a row dated earlier than the row above it would have to fail.
+*Oracle, for whoever implements it:* it would check **recorded order, not append-day truth**. A row
+appended today and labelled with a date after the current tail would pass. Nothing can verify the
+append day; the prohibition is instruction-backed, and such a check would be a floor under it —
+a floor that does not exist today. Dates must be **calendar-valid**, not merely
 well-shaped — `2026-02-30` sorts correctly and is not a date — since a lexical-only comparison
 would let an impossible value satisfy both this property and 1d's on-or-before bound. The
 extraction must also distinguish "no dated rows found" from "ledger unreadable".
@@ -596,9 +632,13 @@ surface, under a heading claiming it reached both.
 neither file, so 2a fails first.
 
 *Oracles:*
-- **Wrap-insensitive presence, indentation-exact parity.** Both surfaces are hard-wrapped at
-  different columns and most anchors straddle a line break in at least one, so presence must be
-  tested against a paragraph-joined view. Parity must compare leading indentation and blank-line
+- **Wrap-insensitive presence, byte-exact parity.** Both surfaces are hard-wrapped, and most
+  anchors straddle a line break *within* a surface, so **presence** must be tested against a
+  paragraph-joined view or a multi-word anchor is missed on a technicality. **Parity is the
+  opposite**: the two regions are compared raw, byte for byte, line breaks included — they are
+  generated once and inserted into both, so they do not wrap differently, and joining them before
+  comparing would let a rewrap of one surface alone pass. The wrap-insensitivity belongs to 2a and
+  must not leak into 2b. Parity must compare leading indentation and blank-line
   structure **exactly**: the four-space prefix is the only thing distinguishing the format example
   from a live entry, and a normalisation that flattened it would let one surface turn the example
   into entry-shaped content and still report equal. The join must therefore leave indented blocks
@@ -658,9 +698,15 @@ Each is the distinguishing text of one decision §2 settles.
 35. `once a line exists as a complete entry it is protected`
 ### Check 3 — the block is where §2.2 says, and only there
 
-Checks 1 and 2 leave §2.2's layout decisions unvalidated: check 1 matches the entry anywhere in the
-file, and check 2's region deliberately *excludes* the block, the `Columns:` paragraph and the
-table.
+Checks 1 and 2 leave most of §2.2's layout decisions unvalidated — but not all, and the difference
+matters. Check 1 confines its candidates to the label-to-`Columns:` interval and treats an absent,
+duplicated or reversed interval as undecidable rather than empty, so the block's existence and its
+position relative to `Columns:` are already established there. What check 1 does **not** establish
+is the end sentinel as the block's lower bound, the absence of entry-shaped lines *outside* the
+interval, the blank-line structure around the list, or the template's freedom from a label. Check
+2's region deliberately *excludes* the block, the `Columns:` paragraph and the table, so it
+establishes none of those either. **Check 3 is exactly that remainder** — not a second pass over
+what check 1 already did.
 
 **Property.** In the ledger, in this order: the convention's end sentinel, then exactly one
 `**Superseded rows:**` label, then the change's entry, then the `Columns:` paragraph. Every
@@ -750,8 +796,8 @@ statement in it; do not report its incompleteness.
   anchor is not detected if it is deleted identically from both surfaces**. What is *not* exact is
   any enumeration of which decisions those are. Known unanchored today: the no-double-quote
   condition on a fragment — the narrowing it qualifies now carries anchor 34 — and §2.2's calibration
-  that append-day truth is unverifiable while the check enforces only non-decreasing recorded
-  dates. **Others almost certainly exist and are not listed here.** The layout rationale, the
+  that append-day truth is unverifiable and that nothing checks the weaker non-decreasing-dates
+  property either. **Others almost certainly exist and are not listed here.** The layout rationale, the
   prose-only decision and §2's reasoning generally sit outside the shared region and were never in
   scope. Nothing anchors the prose *between* anchors on either surface.
 
@@ -790,11 +836,15 @@ statement in it; do not report its incompleteness.
   the twenty-two current rows, the one repeating date-and-fingerprint pair (`2026-07-18` +
   `docs-drift`) leaves both its rows separable, and the case is hypothetical. A discriminator was
   considered and rejected — an ordinal or a second column fragment would add wire format to the one
-  thing §2.2 keeps deliberately prose-only, to serve a case that has never occurred.
+  thing §2.2 deliberately leaves with **no standing machine consumer**, to serve a case that has
+  never occurred.
   **Reopen trigger:** the first real case whose truth diverges — a row with no permitted
   distinguishing fragment against a sibling, where one narration is falsified and the other still
   holds. Until then this is a recorded limitation, not an open question.
-- **The checks themselves are never reviewed by a gate, and never fingerprinted.** They are written
+- **The checks themselves are reviewed only as pasted context, never as files in a gate's range,
+  and never fingerprinted.** Gate B does read them — this change's Gate-B cycle raised sixteen
+  findings against them, which is the paste working — but it reads a paste rather than comparing a
+  diff, so nothing ties what was reviewed to what was run. They are written
   at execution time and are not committed — nothing standing runs them, so committing them would
   add a file the repository carries and never executes. The consequence is that the only executable
   artifact in this change sits outside the Gate-B range: the reviewer sees the check source only
@@ -803,9 +853,12 @@ statement in it; do not report its incompleteness.
   `shellcheck`, and a counter-check per label. The evidence a `battery+check` mode rests on is
   therefore produced by unfingerprinted code, and a later reader cannot recover which version of a
   check produced a recorded result.
-- **An extra inert entry appended alongside the mandated one is detected by nothing.** Check 1d
-  asks about **the** entry §3.1 mandates, not about every entry the change adds, so a second entry
-  whose locator matches no row rides along unexamined. Two reasons, and only the first is about
+- **An extra inert entry appended alongside the mandated one is invisible to check 1d, and caught
+  once by check 3.** Check 1d asks about **the** entry §3.1 mandates, not about every entry the
+  change adds, so a second entry whose locator matches no row rides past *1d* unexamined. Check 3's
+  cardinality oracle is what does see it: it requires the entry to resolve to exactly one position,
+  so a second entry-shaped line fails that check — on this change, once, before any merge involving
+  it, and never again afterwards. Two reasons for 1d's silence, and only the first is about
   this change. Quantifying over every added entry is unsatisfiable by construction: §2.2's
   sanctioned repair for a mistyped locator is to append a corrected entry and leave the inert one
   standing, so the property would fail on the convention's own prescribed move. And the repair
@@ -813,7 +866,8 @@ statement in it; do not report its incompleteness.
   question about which row the author *meant*, which the ledger does not encode and which no
   mechanical test can recover; the identity that would encode it is the wire format §2.2 refuses.
   The state is **outside the prescribed change**, which appends exactly one entry — but a
-  nonconforming implementation can produce it and every stated check will accept it. Calling that
+  nonconforming implementation can produce it, and every stated check *other than* check 3's
+  cardinality oracle will accept it. Calling that
   unreachable would be circular: it is unreachable only if the implementation does what it was
   told, which is the thing a check exists to stop assuming. Three further things nothing here
   validates, named rather than left to inference: **fragment-narrowed matching** and the
@@ -856,17 +910,24 @@ statement in it; do not report its incompleteness.
   pre-existing property of the ledger's merge driver, not something this change introduces —
   named here because an earlier draft described the failure as one writer "overwriting" another,
   which union never does.
-- **The format example is not an entry, and nothing enforces that distinction beyond its
-  shape.** It is a four-space indented code block using `<date>` and `<row date>` placeholders,
-  so no line-anchored grep for a dated entry reaches it. That is the whole guard: POSIX grep has
+- **The format example is not an entry. For this change two checks guard the distinction;
+  beyond it, only shape does.** It is a four-space indented code block using `<date>` and
+  `<row date>` placeholders, so no line-anchored grep for a dated entry reaches it. On this
+  change, location guards it as well: check 1d confines its candidates to the
+  label-to-`Columns:` interval, and check 3 rejects entry-shaped lines anywhere outside that
+  interval. Both run once, on this change. **No standing check looks again**, so for every
+  later reader shape is the whole guard — and shape is a weak one: POSIX grep has
   no code-block awareness — the limitation recorded in `docs/hardening-log.md`'s 2026-07-26
   `unverified-enforcement-claim` row, not in `scripts/check-invariants.sh` itself, which carries
   no such comment — so an example later rewritten flush-left with a real date would become
   indistinguishable from an entry to any reader built over this block.
-- **Four things found at the closing review and deliberately held, not fixed.** Gate A closed on
-  pass 23 by a decision taken before it ran, so these are recorded here rather than repaired — the
-  alternative was another unreviewed revision, which is the state the closing pass existed to end.
-  Each is actionable by whoever writes the plan and the executable checks. Gate B compares the
+- **Four things found at the closing review and held rather than repaired — since acted on, as
+  recorded under each.** Gate A closed on pass 23 by a decision taken before it ran, so these were
+  recorded here rather than repaired — the alternative was another unreviewed revision, which is
+  the state the closing pass existed to end. Each was actionable by whoever wrote the plan and the
+  executable checks, and Gate B is where all four were: the first and third by the checks
+  themselves, the fourth by correcting the residual above, and the second by correcting both
+  sites it names. None is still held. Gate B compares the
   **implementation range only**. Neither the plan nor the scratch check source is inside it — the
   plan lands earlier, as prose, under §5's exemption, and the checks are never committed at all;
   both reach the reviewer as context, which is a reader given a document rather than a gate
@@ -876,21 +937,33 @@ statement in it; do not report its incompleteness.
     mandated entry, the two-row fixture and all three date positions — and would report an entry
     non-inert whose locator matches no row, which is the property 1d exists to decide. The
     executable check must validate **exact row-date and fingerprint equality before applying the
-    eligibility bound**, with a fixture whose only defect is a wrong locator row date.
-  - **Two sites still carry the pre-narrowing "prose-only" claim.** §5 says the correction is
-    prose-only and that nothing consumes it, and this section's discriminator-rejected bullet says
-    §2.2 keeps the entry deliberately prose-only. The accurate claim, after §2.2's Format paragraph
+    eligibility bound**, with a fixture whose only defect is a wrong locator row date. *Done:* the
+    check compares both fields before the bound; `entry-wrong-rowdate` and
+    `entry-wrong-fingerprint` are those fixtures, and each is run with its own mutated locator so
+    that identification succeeds and the comparison is what rejects it. Deleting the comparison
+    flips both to passing — checked, at Gate-B pass 4, because until then both fixtures were
+    rejected earlier, at identification, and would have passed this item while proving nothing.
+  - **Two sites carried the pre-narrowing "prose-only" claim — corrected at Gate-B pass 4, no
+    longer held.** §5 said the correction is prose-only and that nothing consumes it, and this
+    section's discriminator-rejected bullet said §2.2 keeps the entry deliberately prose-only.
+    Both now read as below. The accurate claim, after §2.2's Format paragraph
     was narrowed, is **no standing machine consumer** — the syntax *is* a standing convention that
     every future author must honour, and what §6 adds is a validation-only parser creating no
     ongoing compatibility promise. Where those two sites and §2.2 disagree, §2.2 governs.
-  - **1d's scope oracle reads as plural.** "The mandated entry, and only entries this change adds"
-    can be read as quantifying over every added entry, which is the unsatisfiable property the
-    narrowing removed. The intended selection: identify the §3.1-mandated entry in current content,
-    prove it was added relative to the base, and **ignore every other added entry**.
-  - **The format-example guard is understated as "shape alone".** For this change, 1d confines
-    candidates to the label-to-`Columns:` interval and check 3 rejects entry-shaped lines outside
-    it, so location guards it too — once. The claim is right about **standing** enforcement and
-    wrong about this change's validation; the future risk is a reader or check that scans dated
-    lines without respecting the interval.
+  - **1d's scope oracle read as plural — the check was corrected at Gate-B pass 3, the oracle's own
+    wording only at pass 6.** "The mandated entry, and only entries this change adds" can be read as
+    quantifying over every added entry, which is the unsatisfiable property the narrowing removed.
+    The intended selection: identify the §3.1-mandated entry in current content, prove it was added
+    relative to the base, and **ignore every other added entry**. *Done, twice over:* the check
+    selects by entry date, row date and fingerprint, requires exactly one such candidate, and only
+    then asserts it is absent at the base — the two steps in that order; and §6's oracle now states
+    that order rather than the plural. Recorded as two steps because the first fix left the second
+    undone for three passes, with this item marked done in between.
+  - **The format-example guard was understated as "shape alone" — corrected at Gate-B pass 3,
+    no longer held.** For this change, 1d confines candidates to the label-to-`Columns:` interval
+    and check 3 rejects entry-shaped lines outside it, so location guards it too — once. The
+    claim was right about **standing** enforcement and wrong about this change's validation; the
+    residual bullet above now says both. The future risk it names is unchanged: a reader or check
+    that scans dated lines without respecting the interval.
 - **It changes nothing about how the gate hook counts.** §3.1 records that 0.8.0 already
   changed it; this design only marks the row that still describes the old behaviour.
