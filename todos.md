@@ -75,6 +75,43 @@ driven by recurrence rather than by enthusiasm.
       whole-block scan is unsatisfiable once an immutable inert entry exists, and a check demanding
       that no appended entry be inert fails on the very move the convention prescribes for a
       mistyped locator. *Trigger: the first inert entry found after this change lands.*
+- [ ] **`reviewType: full` races two writers onto both findings slots, and per-branch files do
+      not stop it.** §5 prescribes one file per branch *because* `full` runs the spec and quality
+      reviewers in parallel from one `additionalContext` — but nothing binds a reviewer to its own
+      slot. On PR #23's Gate-B pass 1 both reviewers wrote **both** paths: the reply carried four
+      protocol lines instead of two, spec reported `7 / 5` and quality `9 / 9`, and the disk held
+      `9 / 9`. The face that makes it dangerous: **every acceptance condition still passed** —
+      terminator present, count matching, nothing-but-finding-lines, both branch files present —
+      because all four are *shape* checks and provenance is outside them. The spec branch's seven
+      findings were gone and no check could say so. Fix candidate: make **sequential
+      single-branch calls** (`reviewType: spec`, then `quality`) the documented default in §5 and
+      in `/workflow-init`'s template — eliminating the concurrency rather than detecting it.
+      Evidence: sixteen consecutive single-branch calls across passes 2–9 of that cycle, no
+      recurrence. Fingerprint `unverified-enforcement-claim`, rung `P std` — the fitting rung, not
+      an escalation: the guard-scope precheck against the 2026-08-04 row (whose guard is *"the
+      exhaustiveness statement"*, for a sentence naming what a mechanism does not cover) puts this
+      shape outside it, so the count alone does not escalate.
+      *Trigger: rides with the reviewer-availability fallback story — next in queue, amending the
+      same §5 region, so one Gate B covers all three edits.*
+- [ ] **§5 gives the finding-line severity by example only, never as a closed set.** The gate
+      prompt shows `MAJOR | high | …` and tells the reader to filter to Blocker/Major, but never
+      states the four permitted tokens, and the acceptance rule validates shape — terminator,
+      count, one-finding-per-line — not the severity's value space. On PR #23's Gate-B pass 3 the
+      quality branch returned all four findings at severity `IMPORTANT`; the file was otherwise
+      well-formed, so it passed every check and the Blocker/Major filter had to be applied by
+      interpretation. Fix candidate: pin the enum in §5's finding-line spec and in
+      `/workflow-init`'s template. Fingerprint `prompt-vague-criteria`, rung `P std`, no prior row.
+      *Trigger: rides with the reviewer-availability fallback story, with the row above.*
+- [ ] **The supersession story's AC 1 restates `CLAUDE.md` §5's profile-change procedure instead
+      of referencing it.** Raised by CodeRabbit on PR #23 and accepted as accurate: the criterion
+      spells out propose-axes → pause for confirmation → write the header, and does so *lossily* —
+      it omits §5's renewed override, the profile-log line, and the rule that an axis change voids
+      every prior override. Left unfixed there on the same ground as the plan divergences: the
+      criterion is **satisfied and checked off**, so rewriting it edits a closed record of what was
+      agreed at intake rather than changing any future behaviour. The story's own convention is to
+      amend with explicit old-condition accounting, which is a human call.
+      *Trigger: the next amendment to that story for any other reason — fold it in with accounting
+      rather than opening the file for this alone.*
 - [ ] **Locator selects the `text` element by RAW BYTE comparison of `type`.** A
       Unicode-escaped spelling of `text` is legal JSON meaning `text` and is not selected;
       with no other element the class is `no-result` (fail-closed, so discarded rather than
