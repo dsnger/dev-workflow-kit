@@ -201,8 +201,11 @@ reappears in a new location, that is the signal to stop fixing instances one at 
 time. Instead, audit the whole surface for that class in a single pass, fix every
 instance together, and — if the pattern is mechanically detectable — add a
 linter or static-analysis rule so it can never silently return. The ledger is
-strictly append-only: history is never rewritten, and a resolution is a *new*
-entry that references the one it closes.
+strictly append-only: a **row** is never edited, a resolution is a *new row*
+that references the row it closes, and a row whose text is later found wrong
+is corrected by appending a supersession **entry** rather than by editing it.
+(*Row* and *entry* are distinct: rows are the ledger's records, entries are
+the supersession markers that correct them.)
 
 ### Cross-cutting disciplines
 

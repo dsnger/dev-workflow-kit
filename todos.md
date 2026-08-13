@@ -48,19 +48,70 @@ driven by recurrence rather than by enthusiasm.
       failure message, a silent Bash event and the fallback emitter, not against every
       emitting branch. Closing it needs a selective `rm` shim and per-branch composition
       goldens. *Trigger: a disclosure or advice bug that the current rows do not catch.*
-- [ ] **The hardening ledger has no supersession convention.** `docs/hardening-log.md`'s
-      header says never edit a row, and one row per hardening — so when a row's "what this
-      does NOT do" narration is later falsified by a feature change, there is no sanctioned
-      move: editing breaks the first rule and appending breaks the second. The 2026-07-20
-      row now describes pre-0.8.0 counting behaviour as current. The 2026-07-20 *spec* took
-      a version-qualified supersession note and that worked; the ledger needs the same
-      convention written into its header, or an explicit "rows are historical, read the
-      newest row for current behaviour" statement.
-      **TRIGGER FIRED (2026-08-04):** the 2026-07-20 row now teaches pre-0.8.0 counting
-      behaviour as current — the second falsified row this trigger names. Story:
+- [x] **The hardening ledger had no supersession convention.** **DONE in 0.8.2.**
+      `docs/hardening-log.md`'s header said never edit a row, and one row per hardening — so
+      when a row's "what this does NOT do" narration was later falsified by a feature change,
+      there was no sanctioned move: editing broke the first rule and appending broke the
+      second. Both rules now stand unchanged, and the correction is a third move: a
+      `Superseded rows` entry appended above the `Columns:` paragraph, marking the row by
+      date + fingerprint and naming what is false and where the current answer lives. The
+      convention is in the ledger header and in `/workflow-init`'s inline template, and the
+      2026-07-20 row — which taught pre-0.8.0 counting behaviour as current — carries the
+      first entry. Design:
+      `docs/superpowers/specs/2026-08-05-hardening-ledger-supersession-design.md`.
+      **TRIGGER FIRED (2026-08-04):** the 2026-07-20 row taught pre-0.8.0 counting
+      behaviour as current — the second falsified row this trigger named. Story:
       `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`.
-      *Trigger: the next row falsified by a
-      later change — this is the second.*
+- [ ] **A hardening that is later *removed* has no sanctioned supersession move.** The convention
+      in `docs/hardening-log.md`'s header covers a row whose narration was falsified later or was
+      wrong when written, and names a removed hardening as explicitly out of scope. No instance
+      exists. *Trigger: the first rung actually removed.*
+- [ ] **Nothing standing validates a supersession entry, and no chronology check exists.** The
+      checks in `docs/superpowers/specs/2026-08-05-hardening-ledger-supersession-design.md` §6 ran
+      once, on the change that introduced the convention, and then stopped; §6's 1e was not
+      implemented at all, since it validates the ledger's pre-existing chronology rather than that
+      change. Wiring both into `AGENTS.md`'s quality battery is the follow-up — **with the rider
+      that any standing check must be diff-scoped *and* must pass on §2.2's sanctioned repair**: a
+      whole-block scan is unsatisfiable once an immutable inert entry exists, and a check demanding
+      that no appended entry be inert fails on the very move the convention prescribes for a
+      mistyped locator. *Trigger: the first inert entry found after this change lands.*
+- [ ] **`reviewType: full` races two writers onto both findings slots, and per-branch files do
+      not stop it.** §5 prescribes one file per branch *because* `full` runs the spec and quality
+      reviewers in parallel from one `additionalContext` — but nothing binds a reviewer to its own
+      slot. On PR #23's Gate-B pass 1 both reviewers wrote **both** paths: the reply carried four
+      protocol lines instead of two, spec reported `7 / 5` and quality `9 / 9`, and the disk held
+      `9 / 9`. The face that makes it dangerous: **every acceptance condition still passed** —
+      terminator present, count matching, nothing-but-finding-lines, both branch files present —
+      because all four are *shape* checks and provenance is outside them. The spec branch's seven
+      findings were gone and no check could say so. Fix candidate: make **sequential
+      single-branch calls** (`reviewType: spec`, then `quality`) the documented default in §5 and
+      in `/workflow-init`'s template — eliminating the concurrency rather than detecting it.
+      Evidence: sixteen consecutive single-branch calls across passes 2–9 of that cycle, no
+      recurrence. Fingerprint `unverified-enforcement-claim`, rung `P std` — the fitting rung, not
+      an escalation: the guard-scope precheck against the 2026-08-04 row (whose guard is *"the
+      exhaustiveness statement"*, for a sentence naming what a mechanism does not cover) puts this
+      shape outside it, so the count alone does not escalate.
+      *Trigger: rides with the reviewer-availability fallback story — next in queue, amending the
+      same §5 region, so one Gate B covers all three edits.*
+- [ ] **§5 gives the finding-line severity by example only, never as a closed set.** The gate
+      prompt shows `MAJOR | high | …` and tells the reader to filter to Blocker/Major, but never
+      states the four permitted tokens, and the acceptance rule validates shape — terminator,
+      count, one-finding-per-line — not the severity's value space. On PR #23's Gate-B pass 3 the
+      quality branch returned all four findings at severity `IMPORTANT`; the file was otherwise
+      well-formed, so it passed every check and the Blocker/Major filter had to be applied by
+      interpretation. Fix candidate: pin the enum in §5's finding-line spec and in
+      `/workflow-init`'s template. Fingerprint `prompt-vague-criteria`, rung `P std`, no prior row.
+      *Trigger: rides with the reviewer-availability fallback story, with the row above.*
+- [ ] **The supersession story's AC 1 restates `CLAUDE.md` §5's profile-change procedure instead
+      of referencing it.** Raised by CodeRabbit on PR #23 and accepted as accurate: the criterion
+      spells out propose-axes → pause for confirmation → write the header, and does so *lossily* —
+      it omits §5's renewed override, the profile-log line, and the rule that an axis change voids
+      every prior override. Left unfixed there on the same ground as the plan divergences: the
+      criterion is **satisfied and checked off**, so rewriting it edits a closed record of what was
+      agreed at intake rather than changing any future behaviour. The story's own convention is to
+      amend with explicit old-condition accounting, which is a human call.
+      *Trigger: the next amendment to that story for any other reason — fold it in with accounting
+      rather than opening the file for this alone.*
 - [ ] **Locator selects the `text` element by RAW BYTE comparison of `type`.** A
       Unicode-escaped spelling of `text` is legal JSON meaning `text` and is not selected;
       with no other element the class is `no-result` (fail-closed, so discarded rather than

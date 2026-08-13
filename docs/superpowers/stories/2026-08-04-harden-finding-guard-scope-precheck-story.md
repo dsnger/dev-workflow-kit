@@ -61,7 +61,7 @@ ledger. Escalation follows from a guard that failed, never from a count.
 
 ## 5. Open questions
 
-Six, each paired with the failure that raised it:
+Seven — six paired with the failure that raised each, and one inherited from another story:
 
 - A verdict was reached by reading one prior row's guard and stopping, when an older row's guard
   covered the case. **Which prior rows must a recurrence be judged against before "outside" is
@@ -81,9 +81,22 @@ Six, each paired with the failure that raised it:
 - The old step-3 text required proposing one rung stronger on recurrence, and a replacement
   choosing "the rung that fits the repair" does not carry it. **Is automatic escalation kept,
   narrowed, or deliberately dropped?**
+- **Inherited** from `2026-08-04-hardening-ledger-supersession-story.md`: that story's convention
+  lets a superseded row record, in prose, that it was filed under the wrong fingerprint — and
+  deliberately leaves nothing mechanical reading it, so the row keeps its class, keeps matching
+  the column-2 grep, and keeps counting. **Widened 2026-08-10** to the same family's harder
+  member: that convention covers a claim that was *never true*, so an entry may equally record
+  that the row's **hardening itself** never existed or was misclassified — a phantom-hardening
+  row — and such a row also keeps counting, so a lineage can escalate from a rung that was never
+  landed. Wrong-fingerprint and phantom-hardening are one question, not two: both are a row whose
+  *mechanical identity* is corrected only in prose, and both land here because the reader is what
+  would have to act on the correction. The redesign here owns the reader, so it owns the choice.
+  **Should a recurrence read consult the supersession record, and if so, does a prose-corrected
+  class or a prose-retracted hardening change the lineage it escalates from?** Arrives as a
+  handoff, not as a failure: no instance of either has occurred.
 
 ## 6. Suggested size
 
 `story` — one skill file, one decision procedure, one spec → plan → PR. Above a chore because
-the six questions above are real design; below an epic because they all concern one procedure
+the seven questions above are real design; below an epic because they all concern one procedure
 in one file.
