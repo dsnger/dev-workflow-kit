@@ -3,11 +3,25 @@
 **Date:** 2026-08-13 · **Size:** story
 **Risk:** high · **Security:** standard · **Validation:** battery+check+verification
 
+<!-- No profile log: the profile has never changed. A scoped "mode override" was briefly
+     recorded here on 2026-08-14 and WITHDRAWN the same day, before any pass ran under it.
+     Gate-A spec pass 3 (blocker 13) established it was not a valid §5 profile change —
+     §5's grammar permits a whole effective mode in the header and requires the header to
+     carry the override; there is no per-portion override, so recording one invented a
+     mechanism the profile system does not have. Pass 3 (finding 14) also established the
+     evidence gap it was taken for was not real: a prompt-harness scenario discriminates —
+     drive an unavailable reviewer and assert prior refusal versus new conditional closure.
+     `battery+check+verification` therefore stands in full and `+check` is owed. The log
+     block is absent rather than carrying a withdrawal entry because the log records
+     profile CHANGES, and on this story no profile value has ever moved. -->
+
 ## 1. Problem statement
 
 Both review gates depend on a single external reviewer, and there is no sanctioned
-degraded path when it is unavailable. §5 requires three clean passes per gate; when the
-vendor is out of quota, no pass can be taken, so no cycle can close and all work stops.
+degraded path when it is unavailable. §5 requires a **minimum of three passes** per gate
+with only the **final** pass clean, and permits an early exit below three only on a pass
+returning zero findings; when the vendor is out of quota, no pass can be taken at all, so
+no cycle can close and all work stops.
 Observed: a five-day full process stall, 2026-08-05 to 2026-08-10, from one vendor's
 quota.
 
@@ -100,6 +114,16 @@ so one Gate-B cycle covers all of it.
       wording untouched, and the narrowing principle ships only insofar as tier 3 needs
       it. **Kept** — the accounting obligation itself, which the tier-2 story inherits
       unchanged.)*
+      *(Amended again 2026-08-14, third amendment, Gate-A spec pass 3 finding 27 — the
+      amendment above was **partly false and is corrected here**.
+      `docs/sparring-briefing.md` does not only state a same-family premise. Lines 41–44
+      also say: "**Advisory, never exempt.** … Do not design around the gates, and do not
+      treat a satisfied human as a substitute for a clean pass." **Tier 3 is exactly a
+      satisfied human substituting for a clean pass**, so those clauses are this story's
+      to face, not the tier-2 story's. Corrected accounting: **moved by name** — only the
+      same-family premise, to the tier-2 story; **overturned here, explicitly** — the
+      never-exempt and human-substitution clauses, which this change contradicts and must
+      therefore amend in that file rather than leave standing.)*
 - [~] ~~Gate B's tier 2 states its own mechanism, named separately from Gate A's~~ —
       **MOVED 2026-08-14** to
       `docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`. Recorded
