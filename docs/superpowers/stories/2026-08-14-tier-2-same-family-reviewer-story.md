@@ -5,13 +5,23 @@
 
 ## 1. Problem statement
 
-When the cross-model reviewer is unavailable, the reviewer-availability ladder
-(`docs/superpowers/stories/2026-08-13-reviewer-availability-fallback-story.md`) offers only
-tier 1 (cross-model) and tier 3 (a human exception that closes a cycle with **no** passes).
-Between them sits the tier the ladder was originally designed around and could not ship: a
-**fresh-context same-family reviewer** whose passes actually review something.
+> **Amended 2026-08-14 — the parent story closed, and tier 3 does not ship.**
+> `docs/superpowers/stories/2026-08-13-reviewer-availability-fallback-story.md` was closed
+> with a negative answer after nine Gate-A passes: no safe sanctioned zero-pass closure was
+> found, and its design records why each class failed
+> (`docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md` §1).
+> **Old-condition accounting for this section:** **kept** — the problem, unchanged and now
+> sharper: when the cross-model reviewer is unavailable there is no reviewing fallback at
+> all. **Overturned** — the premise that tier 3 exists as the floor beneath tier 2, and with
+> it "tier 3 unblocks work", which nothing now does. **Kept** — that a same-family reviewer
+> would sit between tier 1 and nothing, which is the case for building it.
 
-Tier 3 unblocks work but reviews nothing. Tier 2 would review — worse than tier 1, better
+When the cross-model reviewer is unavailable, there is **no fallback that reviews anything**.
+Tier 1 (cross-model) is the only tier that ships, and below it the cycle simply does not
+close. Between them sits the tier the parent story was originally designed around and could
+not ship: a **fresh-context same-family reviewer** whose passes actually review something.
+
+Nothing unblocks work today. Tier 2 would review — worse than tier 1, better
 than nothing — and `docs/prompt-standards.md` line 136 records that fresh-context verifier
 subagents outperform self-critique. That note grounds *tier 2 beats nothing*; it has never
 grounded *tier 2 ≈ tier 1*.
@@ -44,12 +54,21 @@ story that is actually true:
 
 - The reviewer does not load instructions from the repository it is reviewing, so the
   artifact under review cannot steer it.
-- The reviewer cannot write to the reviewed repository, so it cannot alter what it certifies
-  or exfiltrate what it reads.
+- The reviewer cannot write to the reviewed repository, so it cannot alter what it certifies.
+  *(Amended 2026-08-14, Gate-A pass 2 finding 20. **Narrowed** — "or exfiltrate what it reads"
+  is withdrawn: a reviewer that reads content and emits findings already has an output
+  channel, and an externally executed one may add network and environment channels, so a
+  write barrier is an **integrity** control and not a confidentiality one. **Kept** — the
+  write barrier itself and its reason. **Open** — whether an exfiltration control is wanted
+  at all, and what would demonstrate it, now belongs in §5.)*
 - It can still read the reviewed content losslessly — including a complete git range for
   Gate B, and the files outside the diff that §5's standing falsification lens requires.
-- Its passes are **disclosed as same-family** wherever the ladder already discloses
-  degradation, and are never presentable as tier 1.
+- Its passes are **disclosed as same-family** in the cycle-closing commit body, and are never
+  presentable as tier 1. *(Amended 2026-08-14, Gate-A pass 2 finding 19. **Narrowed** — from
+  "wherever the ladder already discloses degradation": there is no ladder and no such site, so
+  this story owes its **own** disclosure form rather than inheriting one. **Kept** in full —
+  that a tier-2 pass is disclosed as same-family and never counted as tier 1, which is the
+  requirement, not the mechanism.)*
 - Where containment cannot be demonstrated, tier 2 reports itself **unavailable** rather
   than running with a boundary it does not have.
 
@@ -63,17 +82,30 @@ story that is actually true:
       demonstrated, not asserted.
 - [ ] The reviewer cannot write to the reviewed repository, demonstrated by an attempted
       write that fails.
-- [ ] A Gate-B tier-2 pass reviews a **complete** range: a check exists that would fail if
-      the reviewed input were truncated.
-- [ ] A tier-2 pass is identifiable as same-family from `main`'s history alone, per the
-      parent story's AC 2, and is never counted or presented as tier 1.
+- [ ] A Gate-B tier-2 pass reviews a **complete** range: the authoritative source set is
+      named, and an exact comparison — content hashes over the diff's paths plus the
+      out-of-diff files the falsification lens requires — establishes the reviewed input
+      matches it, with any residual case bounded rather than assumed.
+      *(Amended 2026-08-14, Gate-A pass 2 finding 21. **Narrowed** — "a check that would fail
+      if the input were truncated" detects one mutation and does not establish losslessness,
+      which is the gate-proof calibration Don't. **Kept** — that completeness must be
+      demonstrated rather than assumed.)*
+- [ ] A tier-2 pass is identifiable as same-family from `main`'s history alone, in a record
+      form **this story defines**, and is never counted or presented as tier 1.
+      *(Amended 2026-08-14, Gate-A pass 2 finding 19. **Overturned** — the delegation to the
+      parent story's AC 2, which now covers a human's decision about optional work and
+      supplies nothing a tier-2 pass could use. **Kept** in full — the requirement itself,
+      which was always this story's to satisfy.)*
 - [ ] When the containment preconditions cannot be met, tier 2 is unavailable and says so
       with a named cause — it never degrades silently into an uncontained reviewer.
 - [ ] The four prohibition sites — `/workflow-init` §2.13, `docs/coding-workflow.md` § *The
       two gates…*, `README.md`, `plugins/dev-workflow/agents/finding-triage.md` — plus
       `docs/sparring-briefing.md`'s family-granularity premise are accounted for explicitly,
       each condition marked kept, narrowed or deliberately overturned. **Inherited unchanged
-      from the parent story's AC 4**, which deferred it here because tier 3 does not need it.
+      from the parent story's AC 4**, which deferred it here because a human exception is not
+      a model reviewing its own work. *(Amended 2026-08-14: the parent's reason is unchanged
+      by its closure — the four sites forbid a same-model **reviewer**, which is this story's
+      subject and was never the parent's.)*
 
 ## 4. Affected AGENTS.md invariants
 
@@ -104,10 +136,19 @@ story that is actually true:
   read-only worktree plus a narrowly scoped diff helper sufficient?
 - Do tier-2 passes count toward the three-pass floor at all, given the parent cycle
   established the hook cannot see them?
-- Is tier 2 worth building once tier 3 exists? Tier 3 unblocks work; tier 2 adds review
-  quality at real complexity cost, and that trade is not self-evident.
-- Does a contained tier-2 reviewer change what the four prohibition sites should say, or
-  does the narrowing principle the parent shipped already cover it?
+- Is tier 2 worth building, given nothing else unblocks work? *(Amended 2026-08-14.
+  **Overturned** — the original framing, "once tier 3 exists", and its premise that tier 3
+  unblocks work. **Kept, and strengthened** — the question itself: tier 2 adds review quality
+  at real complexity cost. What changed is the alternative it is weighed against, which is no
+  longer a zero-pass closure but **stopping until the reviewer returns**, or an operational
+  bridge such as a second key or another vendor.)*
+- Does a contained tier-2 reviewer change what the four prohibition sites should say?
+  *(Amended 2026-08-14, Gate-A pass 2 finding 19. **Overturned** — "or does the narrowing
+  principle the parent shipped already cover it": the parent shipped no narrowing principle,
+  since tier 3 was withdrawn and the four sites were left untouched. **Kept** — the question,
+  which this story must now answer from scratch.)*
+- **New, from the parent's closure:** what is the disclosure record form for a same-family
+  pass, and what confidentiality boundary (if any) does containment owe (findings 19, 20)?
 
 ## 6. Suggested size
 

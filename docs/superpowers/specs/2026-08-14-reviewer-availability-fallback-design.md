@@ -1,488 +1,645 @@
-# Reviewer-availability fallback — a mid-flight human exception — Design
+# Reviewer-availability fallback — closure record, and what ships — Design
 
 **Story:** `docs/superpowers/stories/2026-08-13-reviewer-availability-fallback-story.md`
 — the story header is the single writable copy of the profile. Every gate call carries that
 path and reads the axes, the mode and the lens sets fresh from it; this document never
-restates them as values. The mode is owed **in full**: a scoped `mode override` recorded on
-2026-08-14 was **withdrawn** (§11).
+restates them as values.
 
-**History.** Three Gate-A passes on a three-tier design (37, 39, 40 findings) stopped under
-§5's stuck condition; tier 2 and rider (a) split out to
-`docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md` and
-`docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md`. Three further
-passes on a two-tier design (30, 34, 32 findings) stopped again — blockers rising 7 → 8 → 12,
-almost all of them in the re-review **debt machinery**, which this revision removes. **None
-of the 212 findings across six passes has been dismissed.**
+**Status: the design question is closed with a negative answer.** Three design cycles across
+nine Gate-A passes failed to produce a safe authorized zero-pass closure. §1 records the
+finding and its evidence, because the finding *is* the result. §2 specifies the small thing
+that survives — which, after Gate-A pass 1 of this cycle, is **narrower than the first draft
+of this section made it**: see §2.0.
 
-## 1. Problem
+## 1. The finding
 
-Both gates depend on one external reviewer. §5 requires a **minimum of three passes** per
-gate with only the **final** pass clean, and permits an early exit below three only on a pass
-returning zero findings. Out of quota, no pass can be taken at all, so no cycle closes and
-all work stops. Observed: a five-day full process stall, 2026-08-05 to 2026-08-10.
+**No safe design for a sanctioned zero-pass gate closure was found, and each of the three
+classes tried failed for a structural reason rather than an incidental one.**
 
-`/workflow-init` §2.13 does not reach this: it fires at **init time** and scaffolds a
-gateless project. A configured project that loses its reviewer mid-flight falls outside it.
+### 1.1 What "safe" was required to mean
 
-**The gap: there is no authorized way to close a gate cycle when no reviewer can run.**
+The claim is only as sharp as the properties it is measured against, so they are named. A
+sanctioned zero-pass closure would have had to be:
 
-## 2. Why this design has no stateful controls
+1. **Grounded** — the condition that justifies it (the reviewer cannot run) is *established*,
+   not asserted, and not producible on demand by whoever benefits.
+2. **Guarded** — its preconditions are decidable in the situation it fires in, not only in
+   situations where the gate was available anyway.
+3. **Bounded** — it closes the one cycle it was granted for, and does not become a general
+   route past review.
+4. **Attributable** — the record identifies who decided, durably, in a way a later reader can
+   weigh.
 
-Recorded verbatim because it is the finding that shaped the design, and a later reader will
-otherwise try to add the machinery back.
+Properties 1 and 2 are where every cycle died. Property 4 was never achieved beyond an
+unverified assertion, which §2.1 now says out loud rather than working around.
 
-> Every compensating control added to make the waiver safe landed in one of two states:
-> **unenforceable** — a prose assertion authored by the very party whose work is being
-> waived — or **recursive** — real state that itself needs gating, and gating it needs the
-> gate that is unavailable. That is not a run of fixable defects. It is what a gate waiver
-> *is* in a prompt-only system: the thing being waived is the only mechanism available to
-> protect the record of the waiver.
+### 1.2 The evidence
 
-Concretely, a debt-tracking file was designed, reviewed and removed. Putting it in
-`todos.md` left it Gate-B exempt, so a debt could be erased in a commit no reviewer saw.
-Moving it to a non-`.md` path made it product-classified — which meant the **Gate-A closing
-commit** now staged a product file and raised a **Gate-B** obligation, during an outage,
-inside the waiver meant to escape one. Every debt-state transition had the same property.
-A consecutive-waiver cap built on that state inherited it, and two permitted acceptances
-could disable the feature permanently.
+| Cycle | Shape | Blockers by pass | Findings | Outcome |
+|---|---|---|---|---|
+| Three-tier | tier 1 / tier 2 same-family reviewer / tier 3 human | 4 → 4 → 6 | 116 | stopped |
+| Two-tier + debt | tier 1 / tier 3, with a tracked re-review debt | 7 → 8 → 12 | 96 | stopped |
+| Stripped | tier 1 / tier 3, no state at all | 4 → 14 → 15 | 91 | stopped |
 
-**So the obligation survives as a sentence, not a system.** The marker states that a
-cross-model re-review is owed. Nothing tracks it, nothing enforces it, and §13 says so. A
-line on `main` that every reader sees is worth more than a state machine that cannot be
-protected by the mechanism it depends on.
+**303 findings across nine passes. None was ever dismissed.** The per-pass artifacts sit in the
+current worktree under `.context/codex-reviews/*.stopped-3tier.md`, `*.stopped-2tier-debt.md`
+and `*.stopped-tier3-core.md` — the last including the rejected 1016-line design in full.
+**Those are ephemeral**: `.context/` is git-ignored, so they do not survive a clone and slot
+collisions have already destroyed some. Everything a later reader must be able to rely on is
+therefore *in this section*, not behind those paths; the files are corroboration while they
+last, not the record.
 
-## 3. Tier 3 — the mid-flight human exception
+### 1.3 The three failure modes, mapped to the design class each defeated
 
-**A new exception, stated as one.** §2.13's init-time gateless path closes no active gate,
-and a profile override changes evidence mode rather than authorizing a zero-pass closure.
+**Unenforceable, or recursive — defeats compensating state that the repository itself
+authors.** Every
+control added to make the waiver safe landed as a prose assertion authored by the party being
+waived, or as real state that itself needed the gate that was unavailable. Cycle 2 died of
+this in its debt machinery; cycle 3 removed that machinery entirely and pass 3 landed the
+identical pair on the core. **Structural, because** among the **repository-controlled**
+mechanisms considered here, the gate is the only one available to protect the record of its
+own waiver. Authority held outside the repository is expressly outside this conclusion (§1.5).
 
-### 3.1 Preconditions
+**The outage is manufacturable — defeats property 1 for any client-observed trigger.** Cycle 3
+narrowed the evidence to canonical calls, removed `auth-failed` because withholding a
+credential fakes an outage, then removed `status-page` as unreachable. Pass 3 showed the same
+argument defeats what remained: deliberately exhaust the quota, point at a spent account,
+block DNS. A local transport failure does not establish that the vendor answered. **Structural,
+because** the approver may be the author, so the condition authorizing the waiver is
+producible by whoever benefits from it.
 
-**Common to both gates:**
+**Unprotected local history cannot establish the preconditions in the case they exist for —
+defeats property 2.** The
+central precondition (no unresolved adverse findings) needs to know which passes happened.
+Nothing durably records that: session memory is not evidence, `.context/` slot names collide,
+the hook counter is explicitly not evidence, and at Gate A no prior commit body exists. So
+`Passes completed: none` can never be *established* precisely when it is true, and accepting
+"none observed" reopens the path where a lost adverse pass is laundered into a clean closure.
+**Structural, because** proving a negative about review history requires *protected* history,
+and history the repository authors returns to the first failure mode. Externally protected
+history is a different class and was not tried (§1.5).
 
-1. **Tier 1 is unavailable** (§3.2).
-2. **No unresolved adverse findings.** Prohibited if any pass in this cycle returned a
-   Blocker or Major not remediated or individually human-dispositioned. Otherwise an outage
-   arriving after a bad pass becomes a way to erase review evidence and land the defects the
-   gate found.
-3. **Not a remedy for a stuck review.** §5's "clearly stuck → STOP and surface" is
-   unaffected; disputed or rising findings are not an availability problem.
-4. **The merge strategy is squash or ordinary merge** (§6), revalidated before merge.
+### 1.4 What the fixes did
 
-**Gate-specific evidence.** An earlier draft required the full profile-derived evidence set
-at both gates, which made a Gate-A waiver **impossible** — implementation-derived evidence
-cannot exist before implementation, and Gate A is the gate that blocks planning, which is
-where the outage actually bit.
+The stripped cycle's artifact went 489 → 750 → 1016 lines across two rounds of remediation. A
+prose amendment to §5 acquired a git algorithm — a dedicated index, `read-tree` from a fixed
+parent, changed-path classification, a ref compare-and-swap, a three-way commit read-back,
+squash-carry envelopes and an invalidation-record convention. Pass 3 found five defects
+**inside that algorithm**, and one above it: none of that logic was exercised by any
+validation, so the mode's evidence obligation was unmet for a risk path the fixes had created.
 
-| Gate | What must be true |
+Meanwhile that design's own "What this does not do" section conceded throughout that nothing
+verifies the human pause, that every record is a recorded assertion, and that an agent
+departing from the procedure produces a conforming-looking commit. **The machinery was *intended* to protect the record against
+accident — no comparison here establishes that it did, and pass 3 found five defects in it —
+while the finding was that the record cannot be protected against intent.**
+
+### 1.5 What this finding does and does not claim
+
+**Does claim:** three design classes — **repository-authored** compensating state,
+**client-observed** outage triggers, and **unprotected local** history as a source of
+preconditions — each failed for a reason inherent to a prompt-only product rather than to the
+particular draft. The qualifiers are load-bearing: externally protected state is still
+compensating state and can establish history, and nothing here was tested against it.
+
+**Does not claim:**
+
+- **Not a proof of impossibility.** Nine passes over three related designs establish repeated
+  structural failure, not exhaustion of the design space. A class not tried here — notably one
+  resting on authority *outside* the repository — is untouched by this evidence.
+- **Not that a human exception is wrong.** Humans make them, correctly. §2 ships the form.
+- **Not that no enforcement is possible anywhere.** Authority held outside the repository is
+  the untried class. It is a **candidate, not a proof**: a signature establishes property 4
+  only with a trusted signer identity *and* a role policy saying which identities may approve,
+  since an ordinary signer can be the author. A platform **protected-branch approval** can
+  establish property 4 more directly — an authenticated approver under an enforced,
+  named branch policy — but establishes **nothing about property 1**, because an approval
+  says nothing about whether the reviewer was available. Property 1 needs an availability
+  attestation from a party that is not the author, which neither mechanism supplies. Parked in §6 with its trigger, and with those requirements named so the next
+  attempt starts from them.
+- **Not that the three cycles found every defect.** They found enough.
+
+### 1.6 Two lessons about revising a spec, learned expensively here
+
+Recorded because they cost eight passes of the salvage cycle to see, and neither is specific
+to this feature.
+
+**Cutting a requirement is not like cutting an answer.** Removing the drift record removed an
+*obligation*, and the finding count fell (20 → 16). Removing the `Ref:` identifier removed an
+*answer to a question the document had already asked* — "which record is this?" — and the count
+rose (16 → 17), with six findings caused by the cut itself, because the question was still
+standing and every dependent rule now dangled. **Delete the question, not just the answer.**
+
+**A spec must not ask mechanical questions about artifacts only humans read.** Eleven of pass
+8's seventeen findings were in three sections specifying procedures no tool executes: how to
+anchor-extract and normalize Markdown before diffing two prompt copies, how to order evidence
+entries across a squash range, how to establish a commit-body record's identity. Every answer
+to such a question is prose about prose — unenforced, unexecuted, and reviewable forever. The
+honest form is an instruction plus the admission that nothing checks it. *(Candidate for
+`docs/prompt-standards.md` when the field-intake round runs.)*
+
+## 2. What ships — the record form of a human exception
+
+### 2.0 The scope correction, and why it is the load-bearing part of this section
+
+The first draft of §2 wrote the form as covering *"a pass short of the floor, an absent bot
+review, a check that could not be run"* while asserting that it authorized nothing. **Gate-A
+pass 1 of this cycle rejected that as a distinction without a difference** (blockers 1 and 11):
+a normative instruction shaped *"when a human decides to proceed past X, write this"*, plus a
+required commit form, plus §6 routing the stall through it, is operationally a route past the
+gate no matter what the surrounding sentence says. A compliant agent reads human assent plus
+three lines as sufficient to continue after §5 says STOP — which is exactly the waiver §1
+found unbuildable, re-entering through the prose.
+
+**And the precedent it named turned out not to be one.** Pass 1 corrected the first draft by
+pointing at PR #14 — a merge past an absent supplementary bot review on a change that had
+already passed Gate B. Pass 5 corrected that in turn, and pass 6 corrected the correction:
+#14 happened while CodeRabbit was under **Wait for**, where `docs/pr-review-bots.md` makes the
+review required **unless** an explicit recorded human decision permits proceeding without it.
+The two are alternatives, not a conjunction — #14 had no review and took the recorded-decision
+branch. So #14 was a mandatory rule being consciously answered by the mechanism that rule
+provides, which the boundary above puts out of reach: this form is not that decision. #14 is therefore history, not
+derivation: it shows that humans make exceptions and that recording them is worth doing, and
+nothing more. The form is justified on its own terms below.
+
+**So the form is scoped by the optional-work boundary itself, and no further:**
+
+> **It applies only to work that no applicable rule required.** Not a gate, a floor, a pass
+> count or a profile-derived evidence obligation — and equally not anything required by
+> `AGENTS.md`, a project doc, CI, a branch policy or the platform. The source of the
+> obligation is irrelevant; that it *was* an obligation is decisive.
+
+**Stated that way, not as "where the gates are satisfied"** — pass 2 found that phrasing
+temporally impossible: §2.4 places a record in a Gate-A spec commit, at which point the later
+Gate-A run and Gate B are not satisfied and cannot be. The boundary is not *when* the record
+is written but *what it is about*: something nothing required. A Gate-A spec
+commit may carry a record about an absent supplementary bot review; it may not carry one about
+its own gate, before or after.
+
+That is not a softening of the first draft — it is the difference between a record and a
+waiver. It also makes §4's claim true: with core-gate cases excluded, `docs/getting-started.md`
+("Gate A is not skippable at any level"), `docs/coding-workflow.md` ("mandatory… not optional") and
+`docs/sparring-briefing.md` ("do not treat a satisfied human as a substitute for a clean pass") are
+all still true as written, with nothing to amend.
+
+### 2.1 The paragraph added to CLAUDE.md §5
+
+One paragraph, in Mechanics, beside the evidence-entry rule:
+
+> **Recording a human exception.** Where a human decides that something **no applicable rule
+> required** was nonetheless worth skipping — an optional check this environment cannot run, a
+> review someone asked for and then stood down, a courtesy step — that decision goes in the
+> closing commit body:
+>
+> ```
+> Human exception: <handle> · <date>
+> Not done: <what was skipped, specifically>
+> Accepted because: <one line>
+> ```
+>
+> **Which commit:** an ungated change records it in that commit; a Gate-A cycle in the spec or
+> plan commit; a Gate-B cycle in the WIP commit, restated by the closing amend. Several records
+> accumulate; order means nothing.
+>
+> **A decision made after its commit closed** — during PR review, say — goes in whichever of
+> these exists: the next commit on the branch, the squash body, or a follow-up commit after the
+> merge. If none does — the branch is closed, unmerged, and heading for an ordinary or rebase
+> merge — **add a commit for it.** An empty commit carrying only the record is a legitimate
+> destination and does not reopen any gate: it changes no content, so it raises no review
+> obligation. A record with nowhere to go would otherwise be a record that does not exist.
+>
+> Copy every record into the squash body alongside the evidence entry (Mechanics,
+> squash-merge carry). **Nothing performs that carry and nothing checks afterwards that it
+> happened** — it is on whoever prepares the merge. If two copies of one record disagree, that
+> is a copying error: stop and fix it rather than picking one.
+>
+> **Scope, and it is narrow. This form supplies no permission.** It records a decision that
+> was already the human's to make about something genuinely optional. It is **never** the answer to a
+> below-floor pass, an unclean final pass, a `STOP and surface`, a Gate-A or Gate-B
+> obligation, or a profile-derived evidence requirement — and more generally **it authorizes
+> nothing that any mandatory rule in this file or in `AGENTS.md` requires.** Those have their
+> own terminal actions and this paragraph changes none of them: on a STOP you still stop, and
+> neither a human's assent nor this record lets an agent close or continue a cycle.
+>
+> **"Mandatory" is not limited to this file.** A rule in `AGENTS.md`, a project doc, CI, a
+> branch policy or the platform is equally out of reach — under **Wait for**,
+> `docs/pr-review-bots.md` requires a bot review unless an explicit recorded human decision
+> permits proceeding without it, and this form is not that decision. If you are reaching for it to get past something mandatory, the answer
+> is no — take the operational route or stop.
+>
+> **Nor is it for things that were simply never owed.** An absent review from a bot routed
+> **opportunistically** blocks nothing and needs no exception and no record;
+> `docs/pr-review-bots.md` says so deliberately, and writing one anyway would rebuild the
+> per-quiet-bot ceremony that routing removed. Record a decision, not a non-event.
+>
+> **What the record is worth.** It is an **unverified assertion**, and reads as one: nothing
+> checks that the handle belongs to whoever decided, that a human was asked, or that the
+> reason is honest. A reader of history learns that *the commit claims* a human chose, what
+> it says was skipped, and why — no more. It supports no claim of authorization or review,
+> and satisfies no evidence obligation. It exists because an exception nobody wrote down is
+> invisible, not because writing it down makes it sound.
+
+### 2.2 What that paragraph is not
+
+- **Not a gate waiver.** It does not clear the hook, satisfy a floor, or make an unreviewed
+  change reviewed. §5's gates are unchanged in every particular.
+- **Not a decision procedure.** It is retrospective bookkeeping about a decision already
+  legitimately available; it adds no branch to any of §5's stop conditions.
+- **Not a permission with preconditions.** It has a strict **applicability boundary** — §2.0,
+  and that boundary is absolutely a condition on using the form. What it does not have is a
+  set of conditions whose satisfaction would authorize bypassing an obligation, because
+  §1.3 is the finding that no such set exists. Calling the boundary a non-condition, as an
+  earlier draft did, weakened the one thing keeping this from being a waiver.
+- **Not evidence.** It appears in no evidence entry and satisfies no mode.
+- **Not attribution.** §2.1 says so in the shipped text, not only here.
+
+### 2.3 Old-condition accounting — CLAUDE.md §5
+
+The AGENTS.md Don't requires this, and pass-1 finding 4 established that four rows were not
+enough: the first draft's wording created new control-flow edges beside several of §5's
+terminal actions, and "everything untouched" concealed them. Every clause that draft could
+have touched is therefore listed individually, with the §2.0 scope applied.
+
+| §5 clause | Disposition under §2 as scoped |
 |---|---|
-| **A (spec / plan)** | The **mechanical sweep** is green — cited paths resolve, quoted passages match, stated counts agree, standalone fenced blocks parse — and the artifact's own self-checks pass. All available pre-implementation. |
-| **B (diff)** | The **battery** is green, and every check the profile's mode already owes at Gate B, with a current evidence entry. |
+| Hard floor: min 3 passes **per run** — Gate A's spec and plan are separate runs, each with its own loop | **Kept, untouched** — §2.1 excludes below-floor closure by name |
+| Final pass must be clean | **Kept, untouched** — same exclusion |
+| Only early exit is a zero-finding pass | **Kept, untouched** — no second exit is added |
+| "Clearly stuck → STOP and surface" | **Kept, untouched** — §2.1 states that a STOP still stops and that assent does not clear it |
+| Recovery: one attempt per pass; spent and still incomplete → STOP | **Kept, untouched** — the record is not a substitute for the attempt or for the STOP |
+| An INCOMPLETE pass is discounted, whatever the counter says | **Kept, untouched** |
+| Gate-B triviality skip needs two independent conditions | **Kept, untouched** — the skip has its own reason field; §2.1 is a different record for a different case |
+| The skip reason is recorded in the commit body | **Kept**, and now has a sibling form for the non-skip case |
+| What the author owes by mode | **Kept, untouched** — §2.1 satisfies no mode and §2.2 says so |
+| Unobservable counterfactual → blocking evidence gap, human may lower the mode by logged override | **Kept, untouched** — that path stays the override, not this record; §2.1 excludes evidence obligations by name |
+| Work gap vs setup gap | **Kept, untouched** — an unrunnable *required* check is still a gap to fix or surface; §2.1 covers optional checks only |
+| Profile changes are proposed, human-confirmed, logged | **Kept, untouched** |
+| Evidence entry in the commit body, revalidated before close | **Kept, untouched** for the evidence entry. The exception record travels the same carry chain and has **no revalidation step at all** — not a weaker one. §2.4 records that as a deliberate cut, not an omission |
+| "Dismissed finding → one-line why" | **Kept**, and §2.1 is the same instinct applied to a decision rather than a finding |
+| "Accept a pass only when" — readable file, exact terminator, exactly `<n>` finding lines and nothing else | **Kept, untouched** — the acceptance grammar is unchanged. Normalization applies *after* acceptance, to an already-valid line; a structural failure is still INCOMPLETE and never reaches it |
+| `.context/codex-gate.off` silences reminders; "the gates still apply" | **Kept, untouched** — the opt-out's meaning is unchanged, and §2.1 is not an opt-out |
+| Gate A is two runs — spec then plan — each with its own loop | **Kept, untouched** |
+| A profile present but unresolvable → stop and surface | **Kept, untouched.** §2.1's "on a STOP you still stop" is general and reaches this one; it is listed separately because a general assurance is what this repository's Don't rejects as accounting |
+| Mechanics' severity semantics — Blocker (wrong/unsafe/breaks invariant) · Major (design flaw → rework) → both must resolve; Minor · Nit → collect, never iterate | **Kept, untouched.** Rider (b) changes how an *unrecognized* token is read, never what a recognized severity means or does. Its Title-case spelling is also kept: the reader matches case-insensitively (§3) precisely so this sentence stays legitimate input rather than becoming drift |
+| "You filter to Blocker/Major, Codex never does" | **Kept, untouched** — normalization happens before the filter and feeds it a token; the filter itself is unchanged |
+| The writer-facing finding-line format, one per line, escaped pipes | **Kept**; rider (b) adds the closed severity vocabulary the format previously showed only by example, and changes nothing else about the line |
+| Companions are advisory; they never participate in pass validation | **Kept, untouched.** An earlier draft narrowed this for normalization-dependent passes; that narrowing is withdrawn with the drift record (§3), so no companion clause changes |
+| Every file-protocol clause — pre-call deletion, slot naming, one pass at a time, recovery and single-branch resume, both-branch acceptance under `full`, the one-line reply | **Kept, untouched.** These were in scope only while the drift record needed an attempt-suffixed slot model; with it cut, none of them moves |
+| Anything else is an INCOMPLETE pass, discounted | **Kept, untouched** |
+| Recovery: one attempt per pass, shared; prefer a single-branch resume with `reviewType` + `sessionId` | **Kept, untouched.** An earlier draft had rider (b) specify retry filenames and pairing; that model went with the drift record (§3), so §5's existing recovery text is unmodified |
+| `WIP:` naming; amend to close; `reset --soft` for several snapshots | **Kept, untouched**; §2.4 adds only what the exception record does inside that flow |
+| The closing message carries the validated evidence entry | **Kept**; §2.1's record sits beside it in the same body, under the same carry instruction and the same absence of any check |
 
-**Tier 3 waives reviewer passes only, never evidence.**
+**There is no `every other clause` row.** An earlier draft ended this table with one, which is
+the catch-all this repository's decision-procedure Don't rejects by name: it asserts
+completeness while naming nothing, so a dropped condition is indistinguishable from a
+deliberate one. The rows above are what was walked. Anything not here was not examined, and a
+reader relying on this table should re-walk §5 — five successive versions of this accounting
+across this story's cycles each claimed completeness and each was wrong.
 
-### 3.2 Outage confirmation
+### 2.4 What is not specified about the carry, and why
 
-Closed source enum, covering both branches:
+The placement and carry rules are **in §2.1's shipped paragraph and nowhere else**. Three
+drafts of this section built more: a per-gate placement table, a stable `Ref:` identifier, a
+supersession grammar, a four-state collision procedure, duplicate-detection and restoration
+matching rules, and a deterministic ordering. All of it specified how a **person** should
+handle a three-line note in a commit message, and none of it was executed by anything.
 
-| Source | Meaning |
-|---|---|
-| `attempt-failed` | A tier-1 call **and** its recovery attempt both failed this session |
-| `quota-observed` | Quota exhaustion already observed this session |
-| `auth-failed` | Authentication failure already observed this session |
-| `status-page` | The vendor's own status page reports the service down |
+**It is cut, and the cut is the design decision.** What replaces it is one sentence in the
+shipped text — *copy the records across; nothing checks that you did* — plus the admission
+that a disagreeing duplicate is a copying error to fix rather than a case to adjudicate. A
+reader who needs to tell two similar records apart does what they would do for anything else
+in history: look at the commits.
 
-`status-page` is never sufficient alone — a broad incident does not prove *this* account and
-*this* call cannot complete — so it requires a direct probe at revalidation.
+**What this gives up, stated rather than hidden:** there is no machine-followable procedure for
+deduplicating records, for naming which earlier record a correction corrects, or for resolving
+two records that collide in every visible field. Those situations are rare, and a person
+resolves them by reading. If they turn out not to be rare, §6's attribution row is where that
+evidence goes.
 
-**Revalidation repeats the source's own observation** immediately before the closing commit,
-per source: `attempt-failed` needs a fresh call **and** a fresh recovery attempt (one call is
-not what that source means); the observed-failure sources need one fresh call; `status-page`
-needs the probe. **If the fresh observation differs, the recorded `Cause` becomes the new
-observation** — and if any of them now succeeds, the waiver is refused, because the reviewer
-is available and a waiver would simply be a skipped review.
-
-Evidence is recorded **sanitized**: enum value and timestamp only.
-
-### 3.3 Roles, and what separation is available
-
-| Role | Who |
-|---|---|
-| **Author** | Whoever produced the change, human or agent |
-| **Implementer** | The agent session that ran the cycle |
-| **Waiver approver** | The human who authorizes tier 3 |
-
-The approver is a **human** and is never the implementer. **That is human-from-agent
-separation, and it is the only separation this design provides.** A human author approving
-the waiver on their own change is **accountable self-approval**, not independence, and the
-design calls it that rather than dressing it as separation of duties — an earlier draft used
-role names that implied an independence the solo case cannot deliver.
-
-### 3.4 Authorization — a real pause
-
-Before the closing commit the agent **stops, asks the human directly for an explicit
-decision, and waits**. This is the **decision-question pattern this workflow already runs**
-at every human checkpoint, not a new mechanism. The answer is recorded as §5.2's block.
-**Nothing verifies that it happened** — §13.
-
-### 3.5 The ordered close
-
-Because a valid answer or observation can otherwise be replayed after the world moves:
-
-1. Preconditions checked (§3.1).
-2. The **prospective tree is fixed** — the exact content the closing commit will carry.
-3. Outage revalidated (§3.2); evidence revalidated.
-4. The human pause (§3.4).
-5. The closing commit, **immediately**.
-
-**Authorization binds to the tree fixed at step 2.** If the tree, the artifact, the evidence
-entry or the merge strategy changes after that, or the commit fails or is materially delayed,
-**every step is repeated** — authorization is consumed by one commit attempt and does not
-survive it. Otherwise history could disclose a waiver for one target while landing different
-bytes.
-
-## 4. What the hook does — and what it does not
-
-The hook is unchanged and **waiver-unaware**.
-
-An earlier draft prescribed `.context/codex-gate.off`; it silences reminders for **unrelated**
-commits, which is the missed-commit direction invariant 2 names as dangerous. With a
-single-commit closure nothing needs silencing, so **invariant 2 is untouched and `.off` keeps
-its meaning.**
-
-A further earlier draft claimed the hook's Gate-B STOP was itself the compensating control.
-It is not: a Gate-A closing commit is docs-only and exempt; Gate B can report satisfied from
-previously counted calls; the output reaches the **agent**, not the human; and the hook
-**always exits 0**, so it blocks nothing in any case. **The hook supplies no waiver control in
-either direction.** Where this design says a reminder "fires", it means exactly that the
-classifier selects that branch and the text is emitted — never that a review is forced.
-
-**Precedence, narrowly.** For **one recorded cycle id, at one closing transition**, an
-authorized waiver takes precedence over the hook's Gate-B or below-floor STOP and the agent
-proceeds. This does **not** generalize: every other STOP, every later commit and every
-resumed session treat the hook as authoritative.
-
-## 5. Records
-
-### 5.1 The tier-3 cycle marker
-
-Mandatory in the cycle-closing commit body. **Both** this and §5.2 are required; §11
-validates each independently.
-
-```
-Reviewer-tier: 3 — human exception, gate waived
-Gate: A-spec | A-plan | B · cycle: <YYYY-MM-DD>-<topic-slug>-<n>
-Waived-target: <baseSha>..<headSha> | <path> @ <blob-sha>
-Passes completed: none | <cycle-id>/<gate>/pass-<p>[, …]
-Adverse findings: none | <pass-id>#<line> <remediated|disposed> — <handle>: <reason>
-Merge-strategy: squash | merge
-Authorized-by: <accountable handle> · <date>
-Cause: <source enum> · revalidated <timestamp>
-Cross-model re-review: OWED — untracked; this line is the only record
-```
-
-**`Waived-target`, never "reviewed"** — one word would otherwise overstate exactly what the
-gate proved, which is the AGENTS.md gate-proof Don't.
-
-**`<pass-id>` is `<cycle-id>/<gate>/pass-<p>`** — cycle-unique and durable in the commit body,
-because the underlying findings files live in git-ignored `.context/` under reusable slot
-names and cannot be cited durably.
-
-**`Cross-model re-review: OWED — untracked`** is deliberate and literal. §2 explains why the
-tracking system was removed; this line is what remains, and it is honest about being a
-sentence rather than a mechanism.
-
-### 5.2 The logged human decision
-
-```
-Human decision: <accountable handle> · <date> · cycle: <cycle-id> · authorizes: <what> · reason: <why>
-```
-
-The handle, date and cycle id **must match the marker** exactly (normalized), or the close
-stops. **Sanitization applies to `reason`** as it does to `Cause`: no raw error payloads,
-endpoints, customer details or security-finding text in a public commit body; sensitive
-rationale is referenced, not quoted.
-
-### 5.3 Idempotency
-
-A resumed or retried close must not append a second marker or decision block. Both are keyed
-by **cycle id + gate**: an identical repeat collapses to one; a **conflicting** repeat stops
-the close. The same rule governs the multi-WIP collapse (§6).
-
-## 6. Disclosure, and the carry chain
-
-- **Gate A** → the **spec or plan commit body**; carried forward into the implementation
-  cycle's closing body. If work stops before Gate B, that docs commit is already durable.
-- **Gate B** → the **WIP commit body**.
-- **The closing amend** replaces the WIP body wholesale **except** that disclosure content is
-  restated explicitly. Nothing is preserved automatically.
-- **The multi-WIP collapse**: every block collected, deduplicated by §5.3, validated before
-  the replacement commit.
-- **The squash body**: both blocks **and** every profiled story's evidence entry copied in.
-
-`Gate-A docs commit → WIP → amend → squash → main`.
-
-**Validated before the merge.** The prospective squash body is checked for both blocks and
-every evidence entry, and **the merge is refused if any is missing**. Story AC 2 names the
-*cycle-closing commit*; a later corrective commit cannot put blocks into a commit that already
-landed, so it satisfies the criterion for no cycle. A corrective commit is **incident
-recovery** — it reproduces the missing blocks verbatim so history is not silent, and the
-incident is recorded as a disclosure failure, not as compliance.
-
-**Rebase-merge and cherry-pick are refused before the waiver**, not discovered after it.
-
-**Never in the findings file.**
-
-## 7. Old-condition inventory — CLAUDE.md §5
-
-Fourth attempt. **The previous three claimed exhaustiveness and were thematic compressions**
-— each was a blocker. This one is derived clause by clause, and every disposition is judged
-**by effect, not by the noun used**: calling an operation a waiver rather than a skip does not
-preserve a condition about skipping. Rows a previous version got wrong are **[corrected]**.
-
-| # | §5 condition | Disposition |
-|---|---|---|
-| 1 | Two independent cross-model gates | **Narrowed** — tier 1 unchanged; tier 3 waives |
-| 2 | Gates are advisory but mandatory | **Overturned for tier 3** |
-| 3 | `.off` opt-out; "the gates still apply" | **[corrected] Narrowed** — the initial diagnostic meaning is kept and the file is untouched, but after an authorized waiver the gate does not apply to that one closure. A previous version marked this untouched |
-| 4 | Hard floor: min 3 passes per gate | **Kept** at tier 1; **N/A** at tier 3 |
-| 5 | Blocker/Major only drive the loop | **Kept** |
-| 6 | Hook counts passes; cannot read findings | **Kept**; §4 adds it bears on tier 3 not at all |
-| 7 | Hook cannot tell the spec run from the plan run; resets at `writing-plans` | **Kept, untouched** |
-| 8 | Gate A is instruction-backed; a satisfied count is not a clean review | **Kept** |
-| 9 | TodoWrite a task per pass | **Kept, untouched** |
-| 10 | Fix Blocker/Major after each pass | **Kept** |
-| 11 | Final pass must be clean | **Kept**; **N/A** at tier 3 |
-| 12 | Stuck → STOP and surface | **Kept**, explicitly not waivable (§3.1(3)) |
-| 13 | Only early exit is a zero-finding pass | **[corrected] Overturned for tier 3** |
-| 14 | Don't manufacture findings to pad | **Kept, untouched** |
-| 15 | Codex is advisory — validate before applying | **Kept, untouched** |
-| 16 | Dismissed finding → one-line why | **Kept**; §5.1 requires handle and reason for a waiver-time disposition |
-| 17 | Findings go to a FILE, not the response | **Kept, untouched** |
-| 18 | Pass the repo root as `workingDirectory` | **Kept, untouched** |
-| 19 | Slot naming; no invocation-unique component | **Kept**; the collision row stays open (§12) |
-| 20 | One finding per line; escape literal pipes | **Kept**; rider (b) pins the severity token |
-| 21 | No blank lines, headings, prose or continuations | **Kept**; rider (b) keeps structural failures INCOMPLETE |
-| 22 | Exact terminator | **Kept, untouched** |
-| 23 | `NO FINDINGS` for a clean pass | **Kept, untouched** |
-| 24 | Reply is one line per branch, or `INCOMPLETE` | **Kept, untouched** |
-| 25 | Gate B takes one file per branch under `full` | **Kept, untouched** — rider (a) moved out |
-| 26 | Delete every target before each call; confirm gone | **Kept, untouched** |
-| 27 | A surviving target → stop and name the cause | **Kept, untouched** |
-| 28 | One pass at a time | **Kept** as a stated limitation |
-| 29 | Companions are advisory; never validate a pass | **Narrowed in one named scope** — rider (b) (§10) |
-| 30 | Resume note is cycle-stable, not pass-named | **Kept, untouched** |
-| 31 | Acceptance: readable, exact terminator, exactly `<n>` lines, nothing else | **Kept, untouched** |
-| 32 | Anything else is INCOMPLETE and discounted | **Kept, untouched** |
-| 33 | Recovery: one attempt per pass, shared | **Kept**; a spent attempt is a tier-3 precondition |
-| 34 | Recovery is a fresh re-run deleting exactly what it rewrites | **Kept, untouched** |
-| 35 | Resume preferred only when the write failed; pass `sessionId` + `reviewType` | **Kept, untouched** |
-| 36 | Spent and still incomplete → STOP and surface | **[corrected] Narrowed** — the diagnostic steps are kept, but tier 3 permits continuation after a spent attempt instead of terminal escalation. A previous version marked this untouched |
-| 37 | Hook counting residuals are not evidence | **Kept, untouched**; §4 relies on it |
-| 38 | Discount every incomplete pass whatever the counter says | **Kept, untouched** |
-| 39 | Gate A is two runs, each its own loop | **Kept**; tier 3 available to each independently |
-| 40 | Prompt opens with the brainstorming directive | **Kept, untouched** |
-| 41 | One broad prompt, re-run each pass over the revised artifact | **Kept, untouched** |
-| 42 | Append intent, artifact text, and which invariants it touches | **Kept, untouched** |
-| 43 | Every finding with severity and confidence; you filter, Codex never does | **Kept, untouched** |
-| 44 | Mechanical sweep before each read pass | **Kept**, and promoted to a Gate-A waiver precondition (§3.1) |
-| 45 | Optional focused per-dimension passes on large artifacts | **Kept, untouched** |
-| 46 | Gate B: tests green, before commit | **Kept**; the battery is a Gate-B waiver precondition |
-| 47 | Gate B tool and args: `instruction`, `whatWasImplemented`, `baseSha`; `full` runs both | **Kept, untouched** |
-| 48 | `baseSha` from a WIP commit; `WIP:` naming; amend to close; `reset --soft` for several | **Kept**, and §6 adds what the collapse must carry |
-| 49 | Skip ONLY trivial changes | **[corrected] Narrowed** — by effect a non-trivial change can now close without review; the noun differs, the effect does not |
-| 50 | Re-review after every fix | **[corrected] Narrowed for tier 3** — §3.1(2) permits closing after a remediation that no independent reviewer ever sees. The marker records the remediation and the `OWED` line covers it; a previous version marked this untouched |
-| 51 | A fix changing specified behaviour updates the spec in the same commit | **Kept, untouched** |
-| 52 | The standing falsification lens | **Kept, untouched** |
-| 53 | Name what the diff changes the size, value or position of | **Kept, untouched** |
-| 54 | Prose-vs-product classification | **Kept, untouched** — no file changes classification in this design |
-| 55 | Risk lens set: threats, abuse, rollback, data loss, idempotency, compatibility, observability | **Kept, untouched** |
-| 56 | Security lens set: assets, trust boundaries, roles, external systems, abuse paths | **Kept, untouched** |
-| 57 | Both axes → union appended once, abuse carrying both labels | **Kept, untouched** |
-| 58 | Lenses are different questions, not more passes | **Kept, untouched** |
-| 59 | Profile: story header is the single writable copy | **Kept** — no value is copied anywhere |
-| 60 | Three profile-reading cases | **Narrowed for tier 3** — an artifact citing no story runs unprofiled today; tier 3 needs no citation now that the debt is gone, so the unprofiled path is **restored** to §5's behaviour |
-| 61 | Stop and surface on an unresolvable profile | **Kept, untouched** |
-| 62 | Gate-B triviality skip needs two independent conditions | **Kept, untouched**; a waiver is not a skip and is recorded separately |
-| 63 | The skip reason is recorded in the commit body | **Kept, untouched**; the waiver marker is a separate record |
-| 64 | A skip removes the review, never the evidence | **Kept**, and tier 3 follows the same principle (§3.1) |
-| 65 | A cycle citing several stories aggregates per story | **Kept, untouched** |
-| 66 | What the author owes by mode | **Kept**, gate-appropriately (§3.1) |
-| 67 | A named verification may substitute for an automated check | **Kept, untouched** |
-| 68 | The counterfactual, and the wiring that could produce it | **Kept**, and applied to this change (§11) |
-| 69 | An unobservable counterfactual is a blocking evidence gap | **Kept, untouched** — and **not** invoked here (§11) |
-| 70 | A fabricated test satisfies nothing | **Kept, untouched** |
-| 71 | Evidence entry in the commit body, revalidated before close | **Kept**; the marker joins it in every hop |
-| 72 | Every Gate-B call carries each cited story path + evidence entry verbatim | **Kept, untouched** |
-| 73 | Work gap vs setup gap | **Kept, untouched** |
-| 74 | Profile changes are proposed, human-confirmed, logged | **Kept, untouched** |
-| 75 | An axis change voids prior overrides | **Kept, untouched** |
-| 76 | Passes under a lower profile still count; only the final clean pass must be current | **Kept, untouched** |
-| 77 | Fold a mid-cycle profile edit into the WIP by amend | **Kept, untouched** |
-| 78 | The closing message carries the validated evidence entry | **Kept**, and now the marker too |
-| 79 | Timeout/abort handling; one retry is the shared attempt | **Kept**; feeds §3.1 |
-| 80 | §5's stated non-enforcement residuals — nothing checks which file was read, whether the header moved mid-call, whether lens sets were appended | **Kept, untouched**, and §13 adds this design's own |
-| 81 | **The gate itself is not optional** | **OVERTURNED for tier 3**, deliberately and by name |
-
-## 8. Sites
-
-Found by searching the **behaviour claim**, which is how the passages below were found after
-earlier drafts listed one section of one file.
-
-| Site | Change |
-|---|---|
-| `CLAUDE.md` §5 | Tier 3, the records, the carry chain, riders (b) and (c) |
-| `/workflow-init` inline §5 mirror | The same edits — story AC 9, verified by extracted parity |
-| `/workflow-init` §2.13 | Init-time scope stated; **gateless answer unchanged** |
-| `docs/getting-started.md` ~106 | **"Gate A is not skippable at any level."** Directly falsified — highest priority |
-| `docs/getting-started.md` ~84, ~34, ~53 | Floor and skippability stated unconditionally |
-| `docs/coding-workflow.md` § *The two gates…* | "advisory but mandatory… not optional"; **heading not renamed** |
-| `docs/coding-workflow.md` ~19, ~27–29, ~91–99, ~108–109, ~123–126 | Pipeline and stage-level independent-review claims |
-| `docs/sparring-briefing.md` ~41–44 | **"Advisory, never exempt… do not treat a satisfied human as a substitute for a clean pass."** Tier 3 is exactly that, so this is **overturned here**, not moved to the tier-2 story as the story's first amendment wrongly said |
-| `README.md` product summary and daily-use pipeline | The mandatory-gate claim gains the exception |
-| `plugins/dev-workflow/.claude-plugin/plugin.json` | Its description carries the same claim |
-| `.claude-plugin/marketplace.json` | Same claim in marketplace metadata |
-| `AGENTS.md` § *What this project is* | Gains a clause admitting the waiver |
-
-**`docs/coding-workflow.md` ~149 is NOT changed** — its "makes the gate mandatory" is the
-repo-enforced **quality** gate, not the review gate. An earlier draft listed it, which would
-have weakened an unrelated guarantee.
-
-**No new file is added**, so `AGENTS.md`'s architecture tree needs no new entry — a
-consequence of removing the debt store, and stated because an earlier draft did add one and
-omitted the tree.
-
-**Not changed:** the four same-model prohibition sites. They forbid a same-model *reviewer*;
-a human exception is not a model reviewing its own work.
-
-## 9. Riders
+## 3. Riders — these carried real discriminating checks all along
 
 **(b) Canonical syntax, and a tolerant reader.** **Canonical:** severity is
-`BLOCKER | MAJOR | MINOR | NIT`, uppercase. **Reader:** normalization applies **only** to an
-otherwise-valid six-field line whose severity field is non-empty and unrecognized; it maps to
-`MAJOR`. Every **structural** failure stays INCOMPLETE.
-
-The pass is valid only if that pass's dispositions file records the drift:
-
-- **Grammar**, a distinct ordered record type alongside the file's existing
-  one-verdict-per-finding contract: `Enum drift: <token> → MAJOR · lines <n>[, <n>…]`, citing
-  the finding lines normalized.
-- **Timing:** the record must exist **before the reader credits the pass** — not before the
-  hook counts it, since `PostToolUse` fires before the agent can read the returned file.
-- **Retention:** until the cycle closes. **If it disappears**, the pass it qualified is
-  **discounted** — §5's existing answer for an unverifiable pass.
+`BLOCKER | MAJOR | MINOR | NIT`, uppercase, stated in §5 and in `/workflow-init`'s template as
+a closed set of permitted tokens for what the prompt demands of the writer — not shown by
+example. **Reader:** the severity field is taken by splitting the line on **unescaped** pipes and
+trimming the ASCII whitespace the finding format puts either side of each separator; a field
+that is empty or all whitespace is a **structural** failure, so the line is INCOMPLETE and is
+never normalized. Otherwise the field is matched **case-insensitively** against the four tokens
+first — `Minor`, `minor` and `MINOR` are all `MINOR`, because `CLAUDE.md` Mechanics
+legitimately spells them in Title case and a model copying that spelling is doing as it was
+told, not drifting. A field that matches no token case-insensitively, and is non-empty, is
+read as `MAJOR`. Every **structural** failure stays INCOMPLETE — a malformed
+line, a wrong field count, an empty severity field, a bad terminator, a count mismatch. Only
+the severity token is tolerated, and only when everything else about the line is right.
 
 Motivating incident: PR #23's Gate-B pass 3 returned all four findings at `IMPORTANT`.
+Discarding that pass over a token would have thrown away four real findings.
 
-**(c) Squash-merge carry** — §6, covering both markers and evidence entries.
+**The drift record is cut, and this is the interesting part of the rider.** Three drafts
+required that pass's dispositions file to carry an `Enum drift:` line, with the pass invalid
+without it. Gate-A pass 4 falsified its premise: **the normalization was never silent.** The findings
+file carries the original token verbatim on the finding line, so the reader who validates and
+filters the pass sees the drift **at the moment the decision is made** — which is when it
+matters and who it matters to.
 
-## 10. Validation evidence
+**The stronger claim is not available, and pass 5 was right to reject it.** An earlier version
+of this paragraph said the findings file is a *permanent* record that "may not be deleted".
+False: §5 imposes no retention after validation, `.context/` is git-ignored, and §6's own row
+records that slot collisions have already destroyed a predecessor's findings in this
+repository. So the honest form is the narrower one — **visible to the reader at decision
+time, not durable afterwards** — and the decision to cut is taken on that basis: the companion
+bought durability the rest of the system does not provide anyway, at the cost below.
 
-**Battery** — the `AGENTS.md` quality command, green.
+What that clause cost before it was cut, all of it now moot: a token-identity rule with a
+whitespace case contradicting its own example; a six-field parse `CLAUDE.md` §5 never defines;
+a bijection check, because verifying that cited lines resolve does not verify that every
+drifted line was cited; a freshness rule; a two-artifact audit with a discount path; a
+logical-pass / attempt / credited-count identity model to survive single-branch recovery;
+edits to **four shipped hook reminder strings and their test assertions**, which instruct a
+retry to delete the very slot the rider wanted preserved; and an append-only supersession row
+in `docs/hardening-log.md` against a ledger row stating that dispositions never participate in
+pass validation.
 
-**Prompt conformance** — all 12 items of `docs/prompt-standards.md` for every changed prompt
-artifact: `CLAUDE.md` §5, the `/workflow-init` mirror, §2.13, and **`AGENTS.md`**, which §8
-changes and which `CLAUDE.md` classifies as product. The reviewer and result are named.
+**So §5's "companions are advisory; neither participates in pass validation" stays untouched.**
+Nothing in this change narrows it — §2.3 carries that clause as an explicit kept-untouched row
+rather than omitting it, since three drafts did narrow it and a reader needs to see it walked
+back. A recording
+mechanism is parked in §6 with its trigger.
 
-**Check that fails without the change — two of them, and no evidence gap.** An earlier draft
-claimed the counterfactual was unobservable and took a scoped mode override for it. **Both
-the claim and the override are withdrawn.**
+**(c) Squash-merge carry.** The shipped sentence, byte-for-byte:
 
-1. **Rider (b):** a findings file whose four findings carry severity `IMPORTANT`, with no
-   dispositions record. **Before**: accepted, filter applied by interpretation. **After**:
-   INCOMPLETE.
-2. **Tier 3, by prompt-harness scenario:** drive a cycle in which the reviewer is
-   unavailable. **Before**: a compliant agent refuses to close, because no authorized closure
-   exists. **After**: it closes **only** when every §3.1 precondition holds, and refuses when
-   any one is removed. The prior-state refusal is the observation that would exist if the
-   claim were false, and the wiring produces it because the old procedure has no closure path
-   at all.
+> **On squash-merge, copy every evidence entry and every human-exception record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
 
-**Named verification.** The matrix describes **observable behaviour of the procedure followed
-correctly**. It does **not** claim enforcement: §13 states an agent departing from the
-procedure can produce a conforming-looking commit, and no row should be read as a mechanism.
+**And nothing more.** Earlier drafts specified which entry wins when a story has several in
+range, defined an ancestor relation over the range to decide "latest", and made incomparable
+entries stop the squash. That was a selection algorithm for a human copying text between commit
+messages, and it generated findings in three consecutive passes. §5's existing rule already
+governs evidence entries — each is revalidated before its close, and the closing message
+carries the validated one — so this rider's only job is to say that squash does not exempt you
+from carrying them. It says that.
 
-| Case | Observed outcome when the procedure is followed |
+## 4. Sites
+
+Small, because **nothing that claims the gates are mandatory becomes false** once §2.0's scope
+holds.
+
+| Path | Change |
 |---|---|
-| Gate-A spec waiver | marker **and** decision block in the spec commit body; identifiable from history alone |
-| Gate-B waiver | both blocks survive WIP → amend → squash; readable from `main` alone |
-| Decision block absent | non-conforming; each block validated independently |
-| Handle/date/cycle mismatch across blocks | close stops |
-| Repeated or resumed close | identical blocks collapse; conflicting blocks stop the close |
-| Multi-WIP collapse | all blocks collected and validated |
-| Prospective squash body missing a block | **merge refused** before it lands |
-| Waiver after an unremediated Major | procedure refuses (§3.1(2)) |
-| Waiver during a stuck review | procedure refuses (§3.1(3)) |
-| Gate-A waiver, sweep red | procedure refuses (§3.1) |
-| Gate-B waiver, battery red | procedure refuses (§3.1) |
-| Tree changes after authorization | authorization void; all steps repeated (§3.5) |
-| `attempt-failed` revalidated with one call only | insufficient; the source needs call **and** recovery (§3.2) |
-| Revalidation succeeds | waiver refused — the reviewer is available |
-| Rebase-merge selected | refused **before** the waiver |
-| Hook at the closing commit | emits its reminder and **exits 0**; it forces nothing |
-| Enum drift with / without the companion record | valid / INCOMPLETE |
-| Companion deleted before close | the pass it qualified is discounted |
-| Structurally broken finding line | INCOMPLETE, never normalized |
+| `CLAUDE.md` §5 Mechanics | §2.1's paragraph in full — it carries its own placement and carry sentences; rider (b)'s closed enum and reader rule; rider (c)'s carry sentence |
+| `plugins/dev-workflow/commands/workflow-init.md` | The same edits to the inline §5 mirror — story AC 9, verified per §5.3 |
+| `scripts/check-invariants.sh` | §5.2's closed-enum assertion, **plus** the script's own stale inventory: its header says "the two prompt-conformance checks" and its marked mutation procedure covers only 4a/4b. Both go to three, with `BEGIN/END check 4c` markers matching the existing convention |
+| `scripts/check-invariants.test.sh` | **First**, `init_prompt_fixtures` — it creates no `CLAUDE.md` at all and gives `plugins/dev-workflow/commands/workflow-init.md` no template section, so adding 4c without extending it turns **every existing fixture repo** red on an unrelated baseline failure. It must build a valid bounded §5 region in both files. **Then** 4c's own reject/accept cases, and the recorded flipped-set mutation result the header's procedure requires |
+| `plugins/dev-workflow/.claude-plugin/plugin.json` | **`version` 0.8.2 → 0.9.0** — invariant 12. Its `description` is untouched; the *file* is not |
+| `plugins/dev-workflow/CHANGELOG.md` | The 0.9.0 entry |
+| `todos.md` | Compound-commands row, occurrence 3; the `unverified-enforcement-claim` re-point; `prompt-vague-criteria` closed (§6) |
+| `AGENTS.md` invariant 11 | Its count of the narrow checks in `scripts/check-invariants.sh` and their guarded-spelling inventory — currently "two narrow checks… a `Target model:` line… and a prose checklist-count claim". §5.2 makes it three. The invariant's calibration ("a floor, not coverage") is kept verbatim |
+| `docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md` | Its live text assumed tier 3 ships. Amended with old-condition dispositions |
+| `docs/superpowers/stories/2026-08-13-reviewer-availability-fallback-story.md` | Closure banner, reversed criteria, profile log |
 
-## 11. Withdrawn
+**No new file, and that is a deliberate reversal.** Draft two added a parity checker and its
+suite; §5.1 records why that was withdrawn. Adding one is what would have pulled
+`.github/workflows/ci.yml`, `AGENTS.md`'s Boundaries inventory and its exact checker-count
+claims, the architecture tree, and the battery and lint rows into scope — a chain draft two
+listed only half of. **That inventory churn is what withdrawing the checker avoids**, and
+`.github/workflows/ci.yml` needs no edit because `scripts/check-invariants.sh` is already in
+the invariant-check step.
 
-Recorded because both were confirmed decisions, and a reader of the history will otherwise
-find them and assume they hold.
+**`AGENTS.md` is not unchanged, though**, and an earlier draft said it was: invariant 11 states
+that the checker carries "two narrow checks" and enumerates them, and §5.2 makes it three. That
+one narrow count update is required; the tree, Boundaries and command rows are not.
 
-- **The scoped `mode override`** on the story's profile log. §5's grammar permits a whole
-  effective mode in the header and requires the header to carry an override; there is no
-  per-portion override, so recording one invented a mechanism the profile system does not
-  have. `battery+check+verification` is owed **in full**, and §10 supplies the `+check`.
-- **The debt record's move to a Gate-B-classified path.** Moot — the debt machinery is gone
-  (§2) — and it was also recursive.
+An earlier draft listed only the first two paths while requiring the rest in its backlog
+section, and called the plugin manifest "checked and unchanged" against a required version
+bump — an invariant-12 failure written into the design.
 
-## 12. Packaging and backlog
+**Checked for truth and unchanged, each verified rather than assumed:** `docs/getting-started.md`,
+`docs/coding-workflow.md`, `docs/sparring-briefing.md`, `README.md`,
+`.claude-plugin/marketplace.json`, `docs/pr-review-bots.md`. Every one was on the rejected
+design's site list **because tier 3 falsified it**; with tier 3 withdrawn and §2.0's scope
+excluding everything mandatory, each is true as written. *Unchanged in content* — distinct
+from the row above, where the manifest's content claim is fine and its version is not.
 
-- `todos.md`: **occurrence 3** added to the compound-commands row (story AC 8) — `git add`
-  and `git commit` in one Bash call, empty staged set at `PreToolUse`, loose STOP; observed on
-  PR #23's close. Same shape as occurrence 2 and, like it, a **false positive**. The existing
-  item is **edited in place**; append-only-never-edit is `docs/hardening-log.md`'s rule.
+## 5. Validation — what the profile's mode owes
+
+The story's mode is read fresh from its header (`battery+check` at the time of writing). Named
+here rather than left in a story comment because a plan can otherwise implement the prompt
+edits and skip the discriminating check (pass-1 finding 13).
+
+### 5.1 Two wrong answers first, because the second is more instructive than the first
+
+**Draft one** said the battery "already covers the two prompt copies' parity via
+`scripts/check-invariants.sh`". False, and the defect class `AGENTS.md` names first.
+
+**Draft two** replaced it with a proposed new checker (`scripts/check-prompt-parity.sh`, never
+written) extracting §5 from both copies and diffing them. Pass 3 killed it, correctly, on four counts: **the two §5 bodies
+already differ materially** in hook-tool mapping, incident prose, citations and prose
+exemptions, so a whole-section diff cannot pass without unrelated synchronization absent from
+§4; stripping "leading template indentation" is lossy in Markdown, where indentation changes
+list nesting and can make prose a code block; the fixture list required the source-extractor to
+also parse runtime `Enum drift:` records, which it is not; and the counterfactual "run it at
+`df850ab`" would have failed on those pre-existing differences rather than on the thing under
+test. A new checker also drags `.github/workflows/ci.yml`, `AGENTS.md`'s Boundaries inventory,
+its checker-count claims, the tree and two command rows behind it — churn pass 3 found
+half-missing from §4.
+
+**And draft two's justification was itself an overclaim.** "No parity or mirror comparison
+exists anywhere in this repository" is false: `scripts/check-invariants.sh` check 4b compares the
+checklist item count in `docs/prompt-standards.md` against the copy in
+`plugins/dev-workflow/commands/workflow-init.md`. Writing a categorical "anywhere" into the
+section repairing an enforcement overclaim is the recursion this repo keeps producing.
+
+**The true statement is narrow:** no *textual* check compares `CLAUDE.md` §5 with its inline
+mirror. Check 4b compares an item **count** between a different pair of files.
+
+### 5.2 The check that fails without the change
+
+**One assertion, added to `scripts/check-invariants.sh`** — no new file, no CI wiring, no tree
+or Boundaries or command-row churn:
+
+> **The canonical line**, byte-for-byte, is:
+>
+> `Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.`
+
+>
+> Matched **case-sensitively** — byte-for-byte means byte-for-byte. This line is the new
+> normative statement that the writer's vocabulary is uppercase, so accepting a Title-case copy
+> of it would let a shipped file omit the very rule the check exists to establish. There is no
+> conflict with `CLAUDE.md` Mechanics: that is a **different sentence**, it keeps its Title-case
+> severity names, and rider (b)'s **reader** matches case-insensitively precisely so that
+> spelling stays legitimate input. Writer syntax exact; reader tolerant.
+>
+> It must appear **exactly once** in each file's §5 region. Zero in-region occurrences, or more
+> than one, → exit 1 naming the file and the cause. **Occurrences outside the region are
+> ignored**, not fatal — a discussion of the rule elsewhere in a file is not a defect, and the
+> assertion is about what the shipped section says. Fail closed on everything else: an
+> unreadable file, a start boundary that does not resolve uniquely, an unresolvable end
+> boundary, or any parse failure is a failure, never a pass.
+>
+> **The region is bounded per file, because the two files are shaped differently:**
+>
+> | File | Region |
+> |---|---|
+> | `CLAUDE.md` | the `## 5.` heading to the next line beginning `## ` |
+> | `plugins/dev-workflow/commands/workflow-init.md` | the `## 5.` heading **inside the `CLAUDE.md` template block** to that block's closing ```` fence |
+>
+> A single "next `## ` heading" rule does **not** work: the template's §5 is the last section
+> inside its fence, so that rule runs past the fence into later scaffold templates and reaches
+> `## Classes`. The suite must include a fixture proving that content after each boundary can
+> neither satisfy nor duplicate the assertion.
+
+Pinning the exact line rather than "a line naming all four tokens" is what makes the check
+reproducible: an unbounded or grammar-based search could be satisfied by a line outside the
+scaffolded section, or by one naming the four tokens while negating the rule, and two
+implementers could pick different meanings while both claiming conformance.
+
+- **Counterfactual, isolated so the failure has one cause.** 4c ships inside the full checker,
+  so running it against a bare two-file tree would fail other invariants and prove nothing.
+  Instead: copy the **current, otherwise-green** worktree, confirm the whole checker exits 0,
+  then replace **only** `CLAUDE.md` and the command file with their `df850ab` versions and run
+  it again. Required result: **exit 1 carrying the 4c diagnostic and no other diagnostic.**
+  At `df850ab` neither file contains the canonical line — old §5 shows severity by example
+  only, inside the sample finding line — so 4c is the sole cause, and the run demonstrates that
+  rather than asserting it.
+- **After:** exits 0 on both.
+- Check 4b is the precedent for the shape: a small assertion over the same two-copy problem,
+  in the checker that already exists.
+
+**What this establishes, exactly:** that both shipped prose copies *contain* the closed-set
+rule. It does **not** establish that a reader applies it, that a drift record gets written, or
+how a pass carrying `IMPORTANT` is handled. Those are reader behaviour, and no assertion here
+observes them.
+
+**Fixtures** — in `scripts/check-invariants.test.sh`. The initializer comes first:
+`init_prompt_fixtures` builds no `CLAUDE.md` and gives the command file no template section, so
+adding this assertion without extending it turns **every existing fixture repo** red on an
+unrelated baseline failure.
+
+| Case | Expected |
+|---|---|
+| Both copies stating the line, in-region | accept |
+| Present in `CLAUDE.md` only | reject |
+| Present in the command file's template only | reject — without this, an implementation that checks only the template satisfies every other presence case and `CLAUDE.md`'s own copy stops being load-bearing |
+| Present only **before** each file's §5 region | reject as **missing in-region**, not as out-of-region — this discriminates the **start** boundary; without it a checker scanning from byte 0 passes every other case |
+| Present before the region **and** correctly in-region | accept — the outside copy is ignored |
+| Present only **after** each end boundary — for the command file, after the template's closing fence | reject as missing in-region |
+| Title-case or mixed-case spelling of the canonical line | **reject** — the line is matched case-sensitively |
+| Start boundary absent, or two `## 5.` headings | reject, fail-closed diagnostic |
+| End boundary absent — no following `## ` in `CLAUDE.md`, no closing fence in the template | reject, fail-closed diagnostic |
+| Input unreadable, or a parser stage failing | reject, fail-closed diagnostic — the class checks 4a and 4b already guard, and 4c must not be the one that fails open |
+| Two `## 5.` headings, or two candidate end boundaries, in one file | reject — the region must resolve uniquely, or a duplicated §5 lets one copy lack the rule while the assertion still appears once |
+
+**Rider (b)'s behavioural half is a named verification, not a test** — and its evidence is
+already in hand: PR #23's Gate-B pass 3 returned four findings at `IMPORTANT` and they were
+accepted and filtered by interpretation. That is an observation of the prior state, not a
+hypothesis about it. **The after-state is unobserved**, and §8 says so rather than the design
+implying a symmetric result.
+
+### 5.3 Parity — an instruction, and what it is worth
+
+§5's two copies are not byte-identical today and this change does not make them so. So AC 9's
+"agree after the change" means what a person actually does: **edit both copies, diff the
+regions you edited, and record in the commit body that you did and that they matched.**
+
+**Nothing checks this.** There is no mechanical parity check for `CLAUDE.md` §5 and its inline
+mirror, this design does not add one, and §4 does not claim one. §5.2's assertion covers
+exactly one line of the two copies — the severity enum — and nothing else.
+
+Three drafts specified more: an enumerated block table with sentence anchors, an occurrence
+count per block, and a paragraph-structured normalization to compare across differing line
+wrapping. It was a procedure for a human diffing two Markdown files, it was wrong twice about
+the repository (a claimed indentation that does not exist, anchors that did not resolve), and
+it produced findings in three consecutive passes. Anyone wanting a real parity checker must
+first decide what the two copies are *supposed* to share, since they legitimately differ today
+— §6 parks that.
+
+**Battery** — the `AGENTS.md` quality command, green, including check-invariants with the new
+assertion and its regression cases.
+
+**Prompt conformance** — all 12 items of `docs/prompt-standards.md` for both changed prompt
+copies.
+
+## 6. Backlog — the triggers stay parked
+
+- **Attribution for the shipped record form** — the handle in a human-exception record is
+  unverified, and §2.1 says so. *Trigger: the first record whose authorship is disputed or
+  unattributable.* This is hardening for what ships and needs no availability attestation.
+- **External-authority zero-pass research** — signed commit or protected-branch approval, as
+  the one untried class. *Trigger: a renewed need to close a gate cycle with no review —
+  a second multi-day reviewer outage, or the operational bridges of §7 proving unavailable.*
+  Kept separate from the row above because they are different problems: one hardens
+  attribution on an optional-work note, the other reopens a rejected design. §1.5 is why external authority is **one untried direction worth
+  reconsidering** rather than the only one that could work — the design space was never
+  exhausted. Whoever takes it inherits the named requirements: a trusted signer identity, a
+  role policy saying who may approve, and an availability attestation from someone other than
+  the author.
+- **Tracked re-review debt.** *Trigger: a human explicitly asks for follow-up review on a
+  recorded exception and that follow-up is later found not to have happened.* Stated as an
+  observable event because the shipped form creates no follow-up obligation, so "never
+  happened" would otherwise never become true (pass-1 finding 15).
+- **A recording mechanism for severity normalization.** Rider (b) normalizes an unrecognized
+  token to `MAJOR` and records nothing; §3 explains why the drift record was cut — the findings
+  file carries the original token verbatim, so the drift is **visible to the reader at the
+  moment the pass is validated**, and the companion duplicated that at the cost of an identity
+  model, an audit, four hook-message edits and a ledger supersession. No permanence is claimed
+  for either: `.context/` is git-ignored and slot collisions have destroyed findings here. *Trigger: a pass is normalized and the drift goes unnoticed in review.* Whoever
+  takes it starts from the cost §3 records — an identity model, an audit, four hook-message
+  edits and a ledger supersession — rather than rediscovering it. (Per-pass dispositions exist
+  under `.context/codex-reviews/` while this worktree lasts, but §3 is the durable statement;
+  see §1.2 on why those paths are not citable.)
+- **The hook's `is_docs_only` exempts any `.md` path outside a prompt directory**, broader than
+  §5's prose list. *Trigger: a root `.md` file acquiring gate-relevant state.*
+- **Gate-cycle slot collision — trigger fired, row stays open.** This story's cycles destroyed
+  a predecessor's findings file and dispositions before the surviving artifacts were archived
+  by hand. §1.3's third failure mode is downstream of the same weakness.
+- **Tier-2 counting and containment**, pointing at the tier-2 story (§4).
+- `todos.md`: **occurrence 3** on the compound-commands row (story AC 8) — `git add` and
+  `git commit` in one Bash call, empty staged set at `PreToolUse`, loose STOP; observed on PR
+  #23's close. Same shape as occurrence 2 and, like it, a **false positive**. The existing item
+  is **edited in place**; append-only-never-edit is `docs/hardening-log.md`'s rule.
 - `prompt-vague-criteria` closes. `unverified-enforcement-claim` **stays open**, re-pointed at
   the hook story.
-- **New parked row: tracked re-review debt.** The obligation currently lives only as the
-  marker's `OWED` line. *Trigger: a tier-3 waiver whose re-review is found never to have
-  happened, or the third waiver in one repository — whichever comes first.* §2 records why a
-  stateful design was removed, so whoever takes this row starts from that constraint rather
-  than rediscovering it.
-- **New parked row: enforced waiver authority** — signed commit or protected-branch approval.
-  *Trigger: the first tier-3 record whose authorization is disputed or unattributable.*
-- **New parked row:** the hook's `is_docs_only` exempts **any** `.md` path outside a prompt
-  directory, broader than §5's prose list (`docs/**.md`, `README.md`, `MANIFEST.md`). Found
-  while siting the removed debt store. *Trigger: a root `.md` file acquiring gate-relevant
-  state.*
-- **Gate-cycle slot collision — trigger fired, row stays open.** This cycle's first pass
-  deleted its predecessor's findings file and dispositions before the surviving 44 artifacts
-  were archived by hand.
-- **New parked row:** tier-2 counting and containment, pointing at the tier-2 story.
-- Version **0.8.2 → 0.9.0** with a `CHANGELOG.md` entry — invariant 12. **This will be
-  verified** by `scripts/check-version-bump.sh` against the PR's base *after* the WIP commit
-  contains both the plugin edits and the manifest bump; run before then it reports clean,
+- Version **0.8.2 → 0.9.0** with a `plugins/dev-workflow/CHANGELOG.md` entry — invariant 12.
+  **Verified** by `scripts/check-version-bump.sh` against the PR's base *after* the WIP commit
+  carries both the plugin edits and the manifest bump; run before then it reports clean,
   uselessly.
 
-## 13. What this does not do
+## 7. Where the stall problem goes
 
-Residuals known at design time. The list is **not** exhaustive.
+The five-day quota stall (2026-08-05 to 2026-08-10) is **not solved by this change**, and
+saying so is part of closing the story honestly. §2.0's scope means the exception form does
+not reach it either — that was the first draft's error. It routes two ways:
 
-- **Tier 3 waives the gate.** A change closed this way has had **no** independent review.
-- **The re-review obligation is a sentence.** Nothing tracks it, nothing schedules it, nothing
-  fails if it never happens. §2 explains why that is the honest form rather than a defect, and
-  §12 parks the tracked version with its trigger.
-- **The authorization pause is procedure, not enforcement.** Nothing verifies that it happened
-  or that the handle belongs to whoever answered. Every block in §5 is a **recorded
-  assertion**; an agent that skips the pause and writes the blocks produces a
-  conforming-looking commit.
-- **The only separation is human-from-agent.** A human author approving their own change is
-  accountable self-approval, and nothing checks even that.
-- **Every "procedure refuses" row in §10 is behaviour of a compliant agent**, never a
-  mechanism preventing a non-compliant one.
-- **The hook forces nothing.** It emits a reminder and exits 0.
-- **Nothing detects availability's return** outside the pre-close revalidation.
-- **`main`'s history can be rewritten.** A force-push can remove a marker.
-- **Rollback** leaves markers in place as records of what happened; reverting the prompts
-  removes the procedure but not the disclosure, and since no state file exists there is
-  nothing further to migrate.
+- **Operational bridges** — a second API key, or an alternate vendor. This is the answer that
+  restores review rather than removing it, and it needs no design permission.
+- **The tier-2 story**, if its same-family containment proves buildable — a weaker review is
+  still a review, which is categorically different from none.
+
+If neither is available, the honest answer is that work on gated changes stops until the
+reviewer returns. That is a real cost, and §1 is the record of three attempts to avoid paying
+it.
+
+## 8. What this does not do
+
+- **Nothing enforces the exception record.** No hook fires on it, nothing validates it,
+  nothing checks the handle. It is a convention read by a human, and §2.1 says so in the
+  shipped text.
+- **Nothing detects an unrecorded exception.** A human proceeding silently is exactly as
+  invisible after this change as before it.
+- **The gates remain waivable in practice by anyone willing to ignore them**, as they were
+  before — §5's mechanisms were always advisory. §1 establishes that no *sanctioned* path was
+  found; it does not establish that the unsanctioned one closed.
+- **The record could still be misread as permission** by a reader who takes the form and skips
+  the scope. §2.1 puts the scope in the shipped paragraph for that reason, but prose cannot
+  prevent selective reading.
+- **Rollback is forward, not a revert to a green tree.** The prompt edits and §5.2's
+  closed-enum assertion are coupled in one direction: reverting the prompt lines while the
+  assertion stands makes the invariant check fail. So a rollback removes **both** — the two
+  prompt copies' edits, the assertion, its regression cases, **`AGENTS.md` invariant 11's count
+  back to two, and the checker's own inventory comments and mutation procedure with it** —
+  plus a `plugins/dev-workflow/CHANGELOG.md` entry
+  and a **forward** version bump, never a decrease. `docs/hardening-log.md` is append-only, so
+  anything landed there is superseded rather than deleted. Installed copies live under
+  version-keyed cache paths and downstream `/workflow-init` copies are the user's own files,
+  so both follow the CHANGELOG rather than the revert — the standing cost of invariant 8's
+  inline templates, not something this change introduces.
