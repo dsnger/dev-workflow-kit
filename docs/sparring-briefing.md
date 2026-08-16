@@ -42,6 +42,16 @@ role's authors repeatedly — treat that as the system working, not as an affron
   workflow (intake → gates → PR). Do not design around the gates, and do not
   treat a satisfied human as a substitute for a clean pass. Why: cross-model
   independence is the core invariant, and you are not the other model.
+- **The reviewer is whatever is configured — never a model you name.** When the
+  primary reviewer is out of quota there is a configured fallback, and you read
+  its value rather than carrying one: from the config the Codex CLI reads, from
+  `~/.mcp/mcp-codex-dev/config.json`, from `<repo>/.mcp/mcp-codex-dev.config.json`,
+  or from `CODEX_DEV_MODEL` / `CODEX_DEV_REVIEW_MODEL` — the latter for Gate B
+  alone. Record which model actually took each pass, read at that moment.
+  Why: a model name written into a briefing is stale the week after, and a stale
+  name in a pass record makes the record say something untrue about who reviewed.
+  The one thing that does not change: **no model from the implementer's own
+  family satisfies a gate**, whatever the vendor or gateway.
 - **One decision at a time, with its price.** When the human must choose,
   present the options, name what each costs, recommend one, and mark the
   recommendation as yours. Why: unpriced recommendations get followed, not

@@ -183,6 +183,84 @@ real check is noise, and noise trains people to ignore the gate that will eventu
 matter. Being explicitly gateless is a known gap you can close; being implicitly
 self-reviewed is an unknown one you cannot.
 
+**Choosing which model reviews — and switching when one runs dry.** The invariant names a
+model **family**, not a vendor: a pass satisfies a gate when the reviewer is a different family
+from the implementer. That leaves the vendor free, which matters because the common failure is
+not a bad review, it is **no review** — a quota limit hit mid-cycle, with work blocked and the
+gate unsatisfiable. An alternative reviewer is the operational answer, and it is worth wiring
+up *before* you need it.
+
+**This section describes the mechanism, not a choice of model.** It names no models and no
+recommended default deliberately: model availability, pricing and quality move faster than a
+document does, and a list here would be stale before it was useful. A gateway such as
+OpenRouter publishes a live catalog — read that for what exists. What follows is how the
+plumbing works, so that picking a model is a one-string edit rather than a research project.
+
+**Adding a gateway** to the Codex CLI is one provider block naming the base URL and the
+environment variable holding the key:
+
+```toml
+[model_providers.<id>]
+name = "<display name>"
+base_url = "<gateway base URL>"
+env_key = "<ENV VAR HOLDING THE KEY>"
+wire_api = "responses"
+```
+
+Adding it changes nothing by itself; `model_provider` still decides who answers. Check
+`wire_api` against your CLI version — recent ones dropped `"chat"` and reject the config at
+load if it is still there, which is the good failure: it surfaces at the first call rather than
+silently.
+
+**Four switch surfaces, each a one-string edit**, in the order `mcp-codex-dev` resolves them
+(later overrides earlier):
+
+| Surface | Scope | Use it when |
+|---|---|---|
+| The config the CLI reads (`~/.codex/config.toml`) — its `model` and `model_provider` | every call, all repos | you are changing the standing default |
+| `~/.mcp/mcp-codex-dev/config.json` | every repo, this MCP server only | the gate calls need a different model from what the CLI uses by hand |
+| `<repo>/.mcp/mcp-codex-dev.config.json` | one repository | a project needs a different reviewer from your default |
+| `CODEX_DEV_MODEL` / `CODEX_DEV_REVIEW_MODEL` | current environment — all tools / **Gate B only** | switching per-shell; the `REVIEW` variant changes the code reviewer without touching Gate A |
+
+**One catch worth knowing before you reach for a profile:** `mcp-codex-dev` passes `--model`
+and **never `--profile`**, so a CLI profile does not reach the gate calls at all. Because only
+the model name is passed, `model_provider` has to be active in the config the CLI reads — a
+profile cannot carry the switch. Profiles remain useful for driving the CLI by hand.
+
+**One config, both providers.** Keep the native provider and the gateway entry in the same
+config the CLI reads: the top level names no `model_provider`, so the native default answers,
+and the appended gateway block is inert until a top-level `model_provider = "<id>"` line
+selects it. The switch is that one line — inserted in the top-level block, since a key placed
+after any `[table]` header belongs to that table — and the revert is deleting it; the default
+returns to the native provider at the next call. Do not point `CODEX_HOME` at a second config
+directory to get isolation: the CLI's login state lives beside the config it reads, and a
+redirected directory strands the existing login.
+
+Three timing facts decide where an edit lands and when it takes effect. The CLI is spawned
+per call and reads its config at start, so the provider switch needs no restart of anything.
+`mcp-codex-dev` resolves its *model* chain once per project root at server startup and caches
+it, so a model edit must be in place before the server starts — or be made under a project
+root the server has not seen yet. And the key named by `env_key` must be present in the
+environment the MCP server was launched with — the CLI inherits it from the server, the
+server from its parent at spawn — so an export made after launch reaches nothing until that
+parent restarts.
+
+Provider selection cannot travel per-repo: the `mcp-codex-dev` config schema has no
+provider key and strips unknown keys, so the per-repo file picks a *model* while
+the *provider* stays global to the config the CLI reads.
+
+**Record which model took each pass.** The gate's value comes from independence, so a pass is
+only interpretable if you know who gave it. Put the model in the pass record beside the finding
+count — read from the configured value at the time, never from memory or from a document. This
+is bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a
+right one.
+
+**The one permanent rule here is family-level.** No model from the **implementer's own family**
+satisfies a gate — whatever the vendor, whatever the gateway, whatever the transport. Routing
+an Anthropic model through a third-party gateway while Claude is implementing does not make it
+independent; it is the same family behind a different bill. Everything else in this section is
+configuration and will change. That sentence will not.
+
 ### The self-hardening ledger
 
 The system learns from its own findings through an **append-only ledger**. Every

@@ -293,7 +293,9 @@ because the response stops carrying the findings at all. Append to the gate prom
 > `gate-a-spec-pass-<p>`, `gate-a-plan-pass-<p>`, or `gate-b-<spec|quality>-pass-<p>`.
 >
 > One finding per line in the format above; escape a literal pipe inside a field as
-> `\|`. Every line before the terminator is exactly one finding line — no blank lines,
+> `\|`.
+> Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
+> Every line before the terminator is exactly one finding line — no blank lines,
 > headings, prose or wrapped continuations. End the file with a final line reading
 > exactly `END OF FINDINGS (<n> total)`, `<n>` being the number of finding lines. A
 > clean pass is the single body line `NO FINDINGS` with `END OF FINDINGS (0 total)`.
@@ -344,6 +346,19 @@ empty file, wrong path, malformed terminator, count mismatch, extra lines, one b
 file, an `INCOMPLETE` reply — is an **INCOMPLETE pass**, which is not a review: don't
 act on the partial list, don't count it toward the 3-pass floor, and don't read "no
 Blocker/Major visible" as clean.
+
+**Reader:** the severity field is taken by splitting the line on **unescaped** pipes and
+trimming the ASCII whitespace the finding format puts either side of each separator; a field
+that is empty or all whitespace is a **structural** failure, so the line is INCOMPLETE and is
+never normalized. Otherwise the field is matched **case-insensitively** against the four tokens
+first — `Minor`, `minor` and `MINOR` are all `MINOR`, because `CLAUDE.md` Mechanics
+legitimately spells them in Title case and a model copying that spelling is doing as it was
+told, not drifting. A field that matches no token case-insensitively, and is non-empty, is
+read as `MAJOR`. Every **structural** failure stays INCOMPLETE — a malformed
+line, a wrong field count, an empty severity field, a bad terminator, a count mismatch. Only
+the severity token is tolerated, and only when everything else about the line is right.
+(PR #23's Gate-B pass 3 returned all four findings at `IMPORTANT`; discarding that pass over a
+token would have thrown away four real findings.)
 
 **Recovery: one attempt per pass**, shared across timeout, an `INCOMPLETE` reply and
 failed validation — the Mechanics timeout-retry rule widened, not a second budget beside
@@ -605,6 +620,61 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   amend replaces the WIP message wholesale, so an entry written only into the WIP body is
   destroyed exactly when the cycle closes. The final commit body is the durable record;
   a PR shows commit messages, so there is no second home to keep in sync.
+
+  **On squash-merge, copy every evidence entry and every human-exception record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
+
+  **Recording a human exception.** Where a human decides that something **no applicable rule
+  required** was nonetheless worth skipping — an optional check this environment cannot run, a
+  review someone asked for and then stood down, a courtesy step — that decision goes in the
+  closing commit body:
+
+  ```
+  Human exception: <handle> · <date>
+  Not done: <what was skipped, specifically>
+  Accepted because: <one line>
+  ```
+
+  **Which commit:** an ungated change records it in that commit; a Gate-A cycle in the spec or
+  plan commit; a Gate-B cycle in the WIP commit, restated by the closing amend. Several records
+  accumulate; order means nothing.
+
+  **A decision made after its commit closed** — during PR review, say — goes in whichever of
+  these exists: the next commit on the branch, the squash body, or a follow-up commit after the
+  merge. If none does — the branch is closed, unmerged, and heading for an ordinary or rebase
+  merge — **add a commit for it.** An empty commit carrying only the record is a legitimate
+  destination and does not reopen any gate: it changes no content, so it raises no review
+  obligation. A record with nowhere to go would otherwise be a record that does not exist.
+
+  Copy every record into the squash body alongside the evidence entry (Mechanics,
+  squash-merge carry). **Nothing performs that carry and nothing checks afterwards that it
+  happened** — it is on whoever prepares the merge. If two copies of one record disagree, that
+  is a copying error: stop and fix it rather than picking one.
+
+  **Scope, and it is narrow. This form supplies no permission.** It records a decision that
+  was already the human's to make about something genuinely optional. It is **never** the answer to a
+  below-floor pass, an unclean final pass, a `STOP and surface`, a Gate-A or Gate-B
+  obligation, or a profile-derived evidence requirement — and more generally **it authorizes
+  nothing that any mandatory rule in this file or in `AGENTS.md` requires.** Those have their
+  own terminal actions and this paragraph changes none of them: on a STOP you still stop, and
+  neither a human's assent nor this record lets an agent close or continue a cycle.
+
+  **"Mandatory" is not limited to this file.** A rule in `AGENTS.md`, a project doc, CI, a
+  branch policy or the platform is equally out of reach — under **Wait for**,
+  `docs/pr-review-bots.md` requires a bot review unless an explicit recorded human decision
+  permits proceeding without it, and this form is not that decision. If you are reaching for it to get past something mandatory, the answer
+  is no — take the operational route or stop.
+
+  **Nor is it for things that were simply never owed.** An absent review from a bot routed
+  **opportunistically** blocks nothing and needs no exception and no record;
+  `docs/pr-review-bots.md` says so deliberately, and writing one anyway would rebuild the
+  per-quiet-bot ceremony that routing removed. Record a decision, not a non-event.
+
+  **What the record is worth.** It is an **unverified assertion**, and reads as one: nothing
+  checks that the handle belongs to whoever decided, that a human was asked, or that the
+  reason is honest. A reader of history learns that *the commit claims* a human chose, what
+  it says was skipped, and why — no more. It supports no claim of authorization or review,
+  and satisfies no evidence obligation. It exists because an exception nobody wrote down is
+  invisible, not because writing it down makes it sound.
 - **Timeout / abort:** a codex call that dies at the MCP tool-call timeout is retried
   once before surfacing to the user, and that retry *is* the single shared recovery
   attempt above — not a second one. An abort is an incomplete pass, so treat it as one:

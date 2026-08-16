@@ -157,7 +157,7 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
 PR and push to main: `shellcheck --shell=sh` over all three executables and their test
 files, the hook's test suite,
-[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus two prompt-conformance checks) plus
+[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus three prompt-conformance checks) plus
 both checkers' regression suites, and `claude plugin validate . --strict`.
 
 A fifth check runs **on pull requests only**:

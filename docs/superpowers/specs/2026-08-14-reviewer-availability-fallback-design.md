@@ -419,6 +419,10 @@ bump — an invariant-12 failure written into the design.
 design's site list **because tier 3 falsified it**; with tier 3 withdrawn and §2.0's scope
 excluding everything mandatory, each is true as written. *Unchanged in content* — distinct
 from the row above, where the manifest's content claim is fine and its version is not.
+(Verified as of the design's close, 2026-08-14. The salvage's shipping commit later edited
+three of these — reviewer-model-selection docs in `docs/coding-workflow.md` and
+`docs/sparring-briefing.md`, task scope outside this design's site list, and a stale
+check-count correction in `README.md` — without touching the claims verified here.)
 
 ## 5. Validation — what the profile's mode owes
 
@@ -460,74 +464,75 @@ or Boundaries or command-row churn:
 > **The canonical line**, byte-for-byte, is:
 >
 > `Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.`
-
 >
-> Matched **case-sensitively** — byte-for-byte means byte-for-byte. This line is the new
-> normative statement that the writer's vocabulary is uppercase, so accepting a Title-case copy
-> of it would let a shipped file omit the very rule the check exists to establish. There is no
-> conflict with `CLAUDE.md` Mechanics: that is a **different sentence**, it keeps its Title-case
-> severity names, and rider (b)'s **reader** matches case-insensitively precisely so that
-> spelling stays legitimate input. Writer syntax exact; reader tolerant.
+> **Duplicates, both files:** it must appear **exactly once per file** — as a whole line,
+> after stripping a leading blockquote marker and indentation, compared for **equality** and
+> **case-sensitively**. Zero, two or more, a line that merely *contains* it, a title-case
+> copy, a trailing space, an unreadable or missing file: all fail.
 >
-> It must appear **exactly once** in each file's §5 region. Zero in-region occurrences, or more
-> than one, → exit 1 naming the file and the cause. **Occurrences outside the region are
-> ignored**, not fatal — a discussion of the rule elsewhere in a file is not a defect, and the
-> assertion is about what the shipped section says. Fail closed on everything else: an
-> unreadable file, a start boundary that does not resolve uniquely, an unresolvable end
-> boundary, or any parse failure is a failure, never a pass.
->
-> **The region is bounded per file, because the two files are shaped differently:**
->
-> | File | Region |
-> |---|---|
-> | `CLAUDE.md` | the `## 5.` heading to the next line beginning `## ` |
-> | `plugins/dev-workflow/commands/workflow-init.md` | the `## 5.` heading **inside the `CLAUDE.md` template block** to that block's closing ```` fence |
->
-> A single "next `## ` heading" rule does **not** work: the template's §5 is the last section
-> inside its fence, so that rule runs past the fence into later scaffold templates and reaches
-> `## Classes`. The suite must include a fixture proving that content after each boundary can
-> neither satisfy nor duplicate the assertion.
+> **Placement, the command file only:** that one occurrence must sit inside the
+> **`### 2.1` scaffold section**, terminated by the next **numbered** `### ` heading. Only
+> that region is written into an initialized project, so a copy in the command file's own
+> prose ships nothing. A missing or renamed anchor, or a duplicated one, **fails loudly**
+> rather than skipping the rule — the safe direction. The repo's own `CLAUDE.md` gets no
+> placement rule: the whole file is the artifact.
 
-Pinning the exact line rather than "a line naming all four tokens" is what makes the check
-reproducible: an unbounded or grammar-based search could be satisfied by a line outside the
-scaffolded section, or by one naming the four tokens while negating the rule, and two
-implementers could pick different meanings while both claiming conformance.
+**Amended twice, and the second amendment repairs the first.**
 
-- **Counterfactual, isolated so the failure has one cause.** 4c ships inside the full checker,
-  so running it against a bare two-file tree would fail other invariants and prove nothing.
-  Instead: copy the **current, otherwise-green** worktree, confirm the whole checker exits 0,
-  then replace **only** `CLAUDE.md` and the command file with their `df850ab` versions and run
-  it again. Required result: **exit 1 carrying the 4c diagnostic and no other diagnostic.**
-  At `df850ab` neither file contains the canonical line — old §5 shows severity by example
-  only, inside the sample finding line — so 4c is the sole cause, and the run demonstrates that
-  rather than asserting it.
-- **After:** exits 0 on both.
-- Check 4b is the precedent for the shape: a small assertion over the same two-copy problem,
-  in the checker that already exists.
+**First (Gate-A pass 4 of the plan cycle):** this was a **bounded section-5 region** in both
+files. That bounding needed fence nesting and template anchoring, and the parser was wrong in
+three of the plan's four review passes — the last returning a multiple-end-boundary error on
+the real command file, so the check could never have passed. It was replaced by a whole-file
+count, described then as *"the same guarantee, stricter"*.
 
-**What this establishes, exactly:** that both shipped prose copies *contain* the closed-set
-rule. It does **not** establish that a reader applies it, that a drift record gets written, or
-how a pass carrying `IMPORTANT` is handled. Those are reader behaviour, and no assertion here
-observes them.
+**Second (Gate-A pass 5):** that description was **wrong, and the error is the gate-proof class
+this repository names first.** Whole-file counting is stronger on duplicates and **weaker on
+placement**: the canonical line can sit in the command file's own prose, outside the template
+`/workflow-init` scaffolds, and the count is still 1. **Verified by running it** — appending
+the line to the command prose left the checker green while an initialized project would have
+received nothing.
 
-**Fixtures** — in `scripts/check-invariants.test.sh`. The initializer comes first:
-`init_prompt_fixtures` builds no `CLAUDE.md` and gives the command file no template section, so
-adding this assertion without extending it turns **every existing fixture repo** red on an
-unrelated baseline failure.
+**So the contract is now priced exactly, one clause per guarantee.** Duplicates are fatal
+file-wide in **both** files. Placement is enforced in the **command file** through the heading
+range, because only the template region reaches users. The heading anchor is not the fence
+parser returning: it terminates on the next **numbered** heading — the template carries its own
+unnumbered `### Profiles` and `### Mechanics` subsections, which a next-`###` rule would
+truncate on — and its state is one flag: set at the anchor, cleared at the first
+numbered heading after it. **That terminator is itself checked** — it must be `2.2`. Without
+that, renaming `### 2.2` to something unnumbered widens the range to `### 2.3` and a line
+planted in the gap counts as inside the template. Verified: the battery stayed green. An
+anchor rule that survives its own boundary drifting is worth nothing.
 
-| Case | Expected |
+**Its own failure mode is stated rather than assumed:** a missing, renamed or duplicated
+`### 2.1` heading fails the check loudly. An anchor-based rule that skipped when its anchor
+moved would be worth nothing, and that is the direction this had to get right.
+
+**Fixtures** — in `scripts/check-invariants.test.sh`, and **written, run and green**: 148
+assertions under both `sh` and `dash`, 123 before this change. The initializer came first:
+`init_prompt_fixtures` built no `CLAUDE.md` and gave the command file no scaffold section, so
+adding the assertion without extending it would have turned **every existing fixture repo** red
+on a baseline unrelated to its own assertion.
+
+The 25 cases, by what each discriminates:
+
+| Group | Cases |
 |---|---|
-| Both copies stating the line, in-region | accept |
-| Present in `CLAUDE.md` only | reject |
-| Present in the command file's template only | reject — without this, an implementation that checks only the template satisfies every other presence case and `CLAUDE.md`'s own copy stops being load-bearing |
-| Present only **before** each file's §5 region | reject as **missing in-region**, not as out-of-region — this discriminates the **start** boundary; without it a checker scanning from byte 0 passes every other case |
-| Present before the region **and** correctly in-region | accept — the outside copy is ignored |
-| Present only **after** each end boundary — for the command file, after the template's closing fence | reject as missing in-region |
-| Title-case or mixed-case spelling of the canonical line | **reject** — the line is matched case-sensitively |
-| Start boundary absent, or two `## 5.` headings | reject, fail-closed diagnostic |
-| End boundary absent — no following `## ` in `CLAUDE.md`, no closing fence in the template | reject, fail-closed diagnostic |
-| Input unreadable, or a parser stage failing | reject, fail-closed diagnostic — the class checks 4a and 4b already guard, and 4c must not be the one that fails open |
-| Two `## 5.` headings, or two candidate end boundaries, in one file | reject — the region must resolve uniquely, or a duplicated §5 lets one copy lack the rule while the assertion still appears once |
+| **Presence** | both copies stating it (accept) · absent from `CLAUDE.md` · absent from the command file · absent from both |
+| **Duplicates** | twice in one file · two copies on one physical line |
+| **Equality** | blockquoted (accept) · indented (accept) · leading text · trailing text · trailing space · title-case copy · paraphrase |
+| **Placement** | outside the scaffolded template (**the exploit whole-file counting alone permitted**) · inside it (accept) · after an unnumbered subsection (accept — a next-`###` terminator would wrongly reject this) · missing `### 2.1` anchor · duplicate anchor · `CLAUDE.md` needing no anchor (accept) |
+| **Terminator** | unnumbered terminator · **a line planted in the widened gap** (the second verified exploit) · absent terminator |
+| **Fail-closed** | missing file · unreadable file (skipped as root, which satisfies `-r` on mode 000) · parser failure, through the suite's `inject_case` PATH seam keyed on the `sev-canon-count` marker |
+
+**Mutation evidence, re-measured after every fixture change** (`4a` 20 · `4b` 22 · `4c` **19**
+— 18 reject fixtures plus the parser case; no accept case moved in any of the three). 4c
+measured 13 before the placement cases and 16 before the terminator ones; both were superseded
+by re-running, never by extrapolation. The re-run found a real regression this work
+introduced: `checklist parser failure fires` greps the checker output for the bare
+`parser failed`, which 4c's diagnostic also ends in, so that fixture had stopped testing 4b —
+deleting the 4b block left it green, and the count came back 21 against a recorded 22. Pattern
+tightened to `checklist parser failed`; count restored. **Four review passes read that shell
+without finding it; one mutation run did.**
 
 **Rider (b)'s behavioural half is a named verification, not a test** — and its evidence is
 already in hand: PR #23's Gate-B pass 3 returned four findings at `IMPORTANT` and they were

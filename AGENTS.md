@@ -170,10 +170,12 @@ reader can judge whether it still holds.
 11. **Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for
     any skill, command, agent definition, hook message, or scaffolded template. The
     prompts are the product, and **no comprehensive mechanical checker exists for them**:
-    review is the gate. Two narrow checks in `scripts/check-invariants.sh` cover one
+    review is the gate. Three narrow checks in `scripts/check-invariants.sh` cover one
     spelling each — a `Target model:` line naming exactly one recognized model in files
-    claiming conformance, and a prose checklist-count claim matching the checklist — and
-    they are a floor, not coverage. Every other item is judged by a reader.
+    claiming conformance, a prose checklist-count claim matching the checklist, and the
+    finding-severity vocabulary stated as a closed set in both prompt copies (in the
+    scaffolded template's own section, in the command file) — and they are a floor, not
+    coverage. Every other item is judged by a reader.
 
 ## Don'ts
 
