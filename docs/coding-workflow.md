@@ -250,10 +250,14 @@ provider key and strips unknown keys, so the per-repo file picks a *model* while
 the *provider* stays global to the config the CLI reads.
 
 **Record which model took each pass.** The gate's value comes from independence, so a pass is
-only interpretable if you know who gave it. Put the model in the pass record beside the finding
-count — read from the configured value at the time, never from memory or from a document. This
-is bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a
-right one.
+only interpretable if you know who gave it. Put the model the pass *ran under* in the pass record
+beside the finding count, never one recalled from memory or copied from a document. That is not
+always what the config says now: per the timing facts above the server resolved its model chain
+at startup, so a model edit landed since then leaves the configured value and the running one
+disagreeing until the server restarts — and the configured value is the wrong one. Where they
+can disagree, confirm by probing the reviewer rather than by reading the config. This is
+bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a right
+one.
 
 **The one permanent rule here is family-level.** No model from the **implementer's own family**
 satisfies a gate — whatever the vendor, whatever the gateway, whatever the transport. Routing

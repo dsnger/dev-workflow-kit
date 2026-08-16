@@ -104,8 +104,8 @@ printed. **Your job is to verify it, not to write it.**
 ```bash
 shellcheck --shell=sh scripts/check-invariants.sh
 shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh
-sh   scripts/check-invariants.test.sh | tail -3
-dash scripts/check-invariants.test.sh | tail -3
+sh   scripts/check-invariants.test.sh
+dash scripts/check-invariants.test.sh
 ```
 
 **Observed when written:** shellcheck clean on both; `all passed (148 assertions)` under `sh`
@@ -228,7 +228,7 @@ harness changed. **It has been re-run and the block rewritten.** Measured:
 |---|---|
 | 4a | **20** — unchanged from the previous record |
 | 4b | **22** — see below |
-| 4c | **13** — its 12 reject fixtures plus `4c canonical-line parser failure fires` |
+| 4c | **19** — its 18 reject fixtures plus `4c canonical-line parser failure fires` |
 
 **No accept case moved in any of the three** — the second half of the check, and the one a
 non-empty flip set alone does not establish.
