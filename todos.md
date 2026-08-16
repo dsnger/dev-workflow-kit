@@ -175,8 +175,14 @@ driven by recurrence rather than by enthusiasm.
       **Occurrence 3 (2026-08-14): same shape as occurrence 2, same consumer.** `git add`
       and `git commit` issued in one Bash call on PR #23's close; the staged set was empty
       at `PreToolUse`, `is_docs_only` fell through, and the Gate-B STOP fired on a
-      docs-only commit. Like occurrence 2 a **false positive** — the safe direction. Three
-      occurrences of the timing gap now, two of them benign; the dangerous `tree_hash`
+      docs-only commit. Like occurrence 2 a **false positive** — the safe direction.
+      **Occurrence 4 (2026-08-16): same shape again, on PR #24's review pass.** `git add` and
+      `git commit` in one Bash call; the staged set was empty at `PreToolUse`, `is_docs_only`
+      fell through, and the Gate-B STOP fired on a docs-only commit. A **false positive** like
+      2 and 3. Counted here even though it was observed rather than suffered, because the
+      trigger is recurrence of the shape and an occurrence noticed by the person who caused it
+      is still the shape recurring; excluding it would tune the count to who was watching.
+      Four occurrences of the timing gap now, three of them benign; the dangerous `tree_hash`
       consumer above is still the one that decides this row's priority.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —

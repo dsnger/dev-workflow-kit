@@ -238,9 +238,10 @@ redirected directory strands the existing login.
 
 Three timing facts decide where an edit lands and when it takes effect. The CLI is spawned
 per call and reads its config at start, so the provider switch needs no restart of anything.
-`mcp-codex-dev` resolves its *model* chain once per project root at server startup and caches
-it, so a model edit must be in place before the server starts — or be made under a project
-root the server has not seen yet. And the key named by `env_key` must be present in the
+`mcp-codex-dev` resolves its *model* chain once per resolved project root and caches it until
+the server restarts — the launch root at startup, any other root on its first call — so a model
+edit must be in place before the root is first loaded, or be made under a project root the
+server has not seen yet. And the key named by `env_key` must be present in the
 environment the MCP server was launched with — the CLI inherits it from the server, the
 server from its parent at spawn — so an export made after launch reaches nothing until that
 parent restarts.
@@ -252,10 +253,23 @@ the *provider* stays global to the config the CLI reads.
 **Record which model took each pass.** The gate's value comes from independence, so a pass is
 only interpretable if you know who gave it. Put the model the pass *ran under* in the pass record
 beside the finding count, never one recalled from memory or copied from a document. That is not
-always what the config says now: per the timing facts above the server resolved its model chain
-at startup, so a model edit landed since then leaves the configured value and the running one
-disagreeing until the server restarts — and the configured value is the wrong one. Where they
-can disagree, confirm by probing the reviewer rather than by reading the config. This is
+always what the config says now: per the timing facts above the model chain is resolved once per
+project root and cached until the server restarts — the launch root at startup, any other root on
+its first call — so a model edit landed after a root was loaded leaves the configured value and
+the running one disagreeing until restart, and the configured value is the wrong one. A root the
+server has not loaded yet is the exception: there the edit does take effect. Where they
+can disagree, confirm by probing: call `mcp__codex__health` with the same `workingDirectory` you pass to the
+gate call. It reports the server's cached per-root resolution, which is what the gate call for
+that root uses — the point being that reading the config file yourself is exactly the thing that
+can disagree. **Read the per-tool field, not the top-level one:** the server resolves a gate's
+model as `tools.<tool>.model ?? model`, so Gate B is `checks.config.effective.tools.review.model`
+falling back to `checks.config.effective.model`, and Gate A the same with `tools.exec.model`. The
+top-level field alone is the wrong answer precisely where the override documented above is in
+use, since `CODEX_DEV_REVIEW_MODEL` is stored at `tools.review.model`. If neither level names a
+model the probe establishes nothing — the CLI then picks its own default, and the only honest
+record is to set an explicit model or record the model as undetermined. Record the result beside
+the finding count in the pass record: the commit body's evidence entry, or the slot's
+dispositions file. This is
 bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a right
 one.
 

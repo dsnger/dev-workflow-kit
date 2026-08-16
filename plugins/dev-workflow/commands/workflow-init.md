@@ -642,8 +642,13 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   these exists: the next commit on the branch, the squash body, or a follow-up commit after the
   merge. If none does — the branch is closed, unmerged, and heading for an ordinary or rebase
   merge — **add a commit for it.** An empty commit carrying only the record is a legitimate
-  destination and does not reopen any gate: it changes no content, so it raises no review
-  obligation. A record with nowhere to go would otherwise be a record that does not exist.
+  destination: it changes no content, so it raises no review obligation. A record with nowhere
+  to go would otherwise be a record that does not exist.
+
+  **Do not expect silence from the gate hook, and do not read a reminder as a gate
+  reopening.** It is advisory, so it never blocks the commit attempt. What is exempt is the
+  **empty diff**, which `git show --stat` confirms — never a reminder that merely looks the
+  same on a commit carrying content.
 
   Copy every record into the squash body alongside the evidence entry (Mechanics,
   squash-merge carry). **Nothing performs that carry and nothing checks afterwards that it

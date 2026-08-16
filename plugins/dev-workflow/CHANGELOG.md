@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.9.1
+
+- §5's human-exception form and its `workflow-init` template no longer claim the empty
+  record-only commit "does not reopen any gate". The normative half was right — an empty diff
+  raises no review obligation — but the sentence also promised silence from the gate hook,
+  which it does not deliver: such a commit can still draw a Gate-B reminder. Both copies now
+  say so **without restating the hook's decision logic** — and without pointing at it either,
+  since the scaffolded copy must stand on its own in a project that does not have the hook's
+  source. Both pin the exemption to the **empty diff**, confirmable with `git show --stat`,
+  rather than to the reminder looking inconvenient. The edited human-exception regions of the
+  two copies are byte-identical (the files as wholes are not, and never were).
+- **Four Gate-B rounds went into narrowing that replacement sentence** — each correction a
+  subtler version of the same overclaim — before `docs/prompt-standards.md`'s own rule
+  applied: at the fourth correction, delete the mechanism claim rather than refine it a fifth
+  time. That deletion is what shipped, and it is why this entry describes no state machine
+  either. The same supersession is noted in the design spec (§2.1, §8) and the implementation
+  plan, whose approved quoted blocks are left unedited. Ledger row appended under
+  `unverified-enforcement-claim`.
+- **Corrects one rule 0.9.0 shipped below**, also from PR #24 (CodeRabbit): that entry says the
+  model taking each pass is "read from the configured value at that moment", and it shipped
+  that rule into both `docs/coding-workflow.md` and `docs/sparring-briefing.md`. It is wrong —
+  `mcp-codex-dev` resolves its model chain once per project root and caches it until the
+  server restarts, so an edit landed after a root was loaded leaves the configured value naming
+  a model the running server is not using. Both documents now say to record the model the pass
+  *ran under* and to probe with `mcp__codex__health` where the two can differ — reading the
+  per-tool field (`tools.review.model` for Gate B, `tools.exec.model` for Gate A) with the
+  top-level `model` as fallback, since the server resolves a gate's model as
+  `tools.<tool>.model ?? model` and `CODEX_DEV_REVIEW_MODEL` lands at `tools.review.model`.
+  Both documents are corrected across this 0.9.1 range. The 0.9.0 entry is left as the record of what shipped.
+
 ## 0.9.0
 
 - §5 and its `workflow-init` template now state the finding-line **severity vocabulary as a

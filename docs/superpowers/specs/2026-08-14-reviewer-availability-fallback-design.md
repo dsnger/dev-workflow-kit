@@ -186,6 +186,14 @@ all still true as written, with nothing to amend.
 
 One paragraph, in Mechanics, beside the evidence-entry rule:
 
+**Superseded in one clause, as of plugin 0.9.1 — the block below is left unedited as the
+record of what was approved.** The sentence *"An empty commit carrying only the record is a
+legitimate destination and does not reopen any gate"* is false about the shipped hook, and
+Greptile found it on PR #24: such a commit can still draw a Gate-B reminder. Only the *no gate
+reopening* half survives, and only in the sense that mattered — an empty diff raises no review
+**obligation**, and the hook is advisory, so it does not block the commit attempt. `CLAUDE.md`
+§5 and the `/workflow-init` template carry the corrected wording; prefer them over this block.
+
 > **Recording a human exception.** Where a human decides that something **no applicable rule
 > required** was nonetheless worth skipping — an optional check this environment cannot run, a
 > review someone asked for and then stood down, a courtesy step — that decision goes in the
@@ -626,9 +634,12 @@ it.
 
 ## 8. What this does not do
 
-- **Nothing enforces the exception record.** No hook fires on it, nothing validates it,
-  nothing checks the handle. It is a convention read by a human, and §2.1 says so in the
-  shipped text.
+- **Nothing enforces the exception record.** No hook recognizes, parses or validates
+  `Human exception:` as an exception record, and nothing checks the handle. It is a convention
+  read by a human, and §2.1 says so in the shipped text. (Corrected as of plugin 0.9.1: an
+  earlier draft said "no hook fires on it", which is false — a record-only empty commit can
+  still draw a Gate-B reminder. The hook does receive the commit command; what it never does
+  is interpret the record.)
 - **Nothing detects an unrecorded exception.** A human proceeding silently is exactly as
   invisible after this change as before it.
 - **The gates remain waivable in practice by anyone willing to ignore them**, as they were

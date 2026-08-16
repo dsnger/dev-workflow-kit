@@ -42,12 +42,22 @@ role's authors repeatedly — treat that as the system working, not as an affron
   workflow (intake → gates → PR). Do not design around the gates, and do not
   treat a satisfied human as a substitute for a clean pass. Why: cross-model
   independence is the core invariant, and you are not the other model.
-- **The reviewer is whatever is configured — never a model you name.** When the
-  primary reviewer is out of quota there is a configured fallback, and you read
-  its value rather than carrying one: from the config the Codex CLI reads, from
+- **The reviewer is whatever actually ran — never a model you name, and not
+  always what is configured.** When the primary reviewer is out of quota there is
+  a configured fallback, and you read its value rather than carrying one: from
+  the config the Codex CLI reads, from
   `~/.mcp/mcp-codex-dev/config.json`, from `<repo>/.mcp/mcp-codex-dev.config.json`,
   or from `CODEX_DEV_MODEL` / `CODEX_DEV_REVIEW_MODEL` — the latter for Gate B
-  alone. Record which model actually took each pass, read at that moment.
+  alone. Configuration is the expected input, not the authority: the model chain is
+  resolved once per project root and cached until the server restarts, so an edit
+  landed after that root was loaded leaves the two disagreeing until restart. Record
+  the model the pass actually *ran under*, and where the two can differ, probe:
+  `mcp__codex__health` with the same `workingDirectory` as the gate call reports the
+  server's cached resolution for that root. Read the per-tool field — a gate's model
+  is `tools.<tool>.model ?? model`, so Gate B is `checks.config.effective.tools.review.model`
+  with `checks.config.effective.model` as fallback, Gate A the same with `tools.exec.model`.
+  The top-level field alone is wrong exactly where an override is in use. If neither
+  level names a model, the probe settles nothing and the record says undetermined.
   Why: a model name written into a briefing is stale the week after, and a stale
   name in a pass record makes the record say something untrue about who reviewed.
   The one thing that does not change: **no model from the implementer's own

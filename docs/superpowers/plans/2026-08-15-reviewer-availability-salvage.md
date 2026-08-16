@@ -287,6 +287,15 @@ does-not-reopen-any-gate sentence, and part of the mandatory-scope wording — w
 claiming to be verbatim. Those are the limiting clauses; do not re-edit them here.
 Verify by extracting the block from the spec and diffing against what you paste.
 
+**One clause of the block below was superseded after this plan ran, as of plugin 0.9.1.** The
+sentence *"An empty commit carrying only the record is a legitimate destination and does not
+reopen any gate"* is false about the shipped hook: such a commit can still draw a Gate-B
+reminder. The block is deliberately **left unedited** — it is the record of what was
+approved, and the byte-for-byte relationship to spec §2.1 is the thing this step verifies, so
+correcting it in place would break the check while hiding that a correction happened. Do not
+paste this block into `CLAUDE.md` as-is; §5 and the `/workflow-init` template carry the
+corrected wording, and spec §2.1 carries the same supersession note.
+
 ```markdown
 > **Recording a human exception.** Where a human decides that something **no applicable rule
 > required** was nonetheless worth skipping — an optional check this environment cannot run, a
