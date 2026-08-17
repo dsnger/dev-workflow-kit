@@ -200,17 +200,25 @@ plumbing works, so that picking a model is a one-string edit rather than a resea
 environment variable holding the key:
 
 ```toml
-[model_providers.<id>]
+[model_providers."<id>"]
 name = "<display name>"
 base_url = "<gateway base URL>"
 env_key = "<ENV VAR HOLDING THE KEY>"
 wire_api = "responses"
 ```
 
+(The table key is quoted because `<id>` is a placeholder: TOML bare keys allow only
+`A-Za-z0-9_-`, so the block would not parse with the angle brackets unquoted. Substitute a bare
+id and the quotes become optional.)
+
 Adding it changes nothing by itself; `model_provider` still decides who answers. Check
-`wire_api` against your CLI version — recent ones dropped `"chat"` and reject the config at
-load if it is still there, which is the good failure: it surfaces at the first call rather than
-silently.
+`wire_api` against your CLI version, and check it with `codex doctor` rather than at the first
+call. Measured on **codex-cli 0.147.0**: `wire_api = "chat"` makes the whole config fail to
+load — `codex doctor` reports `config could not be loaded` — while `"responses"` loads clean.
+An arbitrary value fails identically, so `"chat"` is not specially diagnosed, it is simply no
+longer accepted. That is the good failure, surfacing at load rather than silently; the version
+is named because it is the one this was run against, not because earlier or later ones are
+known to differ.
 
 **Four switch surfaces, each a one-string edit**, in the order `mcp-codex-dev` resolves them
 (later overrides earlier):
