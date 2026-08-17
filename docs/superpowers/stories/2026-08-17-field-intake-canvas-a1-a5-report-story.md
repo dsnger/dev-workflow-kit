@@ -50,8 +50,21 @@ but not answered.
 - [ ] The parked `/capture-finding` row carries a disposition — built, or re-parked with
       the fired trigger and the evidence recorded against it — and that decision was put
       to Daniel before it was written.
-- [ ] Every ledger row this round appends states the guard-scope precheck's outcome
-      against the prior same-fingerprint row, quoting the guard it examined.
+- [ ] The guard-scope precheck's outcome — including the quoted guard of each nearest prior row
+      examined — is recorded for every ledger row this round appends.
+      **Amended 2026-08-18, with accounting, after Gate-B pass 6 found the criterion unmet as
+      originally written.** It read: "Every ledger row this round appends *states* the guard-scope
+      precheck's outcome against the prior same-fingerprint row, quoting the guard it examined."
+      What each old condition became: *the precheck must run* — **kept**, unchanged; *its outcome
+      must be recorded* — **kept**; *the examined guard must be quoted* — **kept**; *the record must
+      live in the ledger row itself* — **moved**, to the closure record. Why moved rather than
+      satisfied: for both rows the precheck returned **no prior same-fingerprint row**, so there was
+      no prior guard to quote in the row, and the nearest-guard readings that were actually
+      performed are comparisons against *other* fingerprints — which a row's `ref` has no field for
+      and which the recurrence grep would never read. Rows are immutable once written, so this is an
+      amendment rather than a repair. What is lost by the move is stated rather than glossed: a
+      future recurrence reader working from the ledger alone will not see the precheck, and must
+      follow the round's closure record for it.
 - [ ] The consumer repo `infinite-portfolio-canvas` has no file created, modified or
       deleted by this round.
 

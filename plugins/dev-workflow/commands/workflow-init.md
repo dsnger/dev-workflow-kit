@@ -279,6 +279,80 @@ clean or clearly stuck → then STOP and surface to the user. The only early exi
 below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
 advisory — validate before applying; dismissed finding → one-line why.
 
+**What a loop absorbs, and what stops it — a question of scope, not of action.** A finding
+that corrects the correction you just made **and stays inside the assigned fix set** is
+**inside this loop's scope**: keep it here rather than handing it back, then act on it by its
+severity exactly as the severity rule already says — Blocker/Major resolve, Minor/Nit collect
+and never iterate. Ancestry decides where a finding belongs; it never decides what you do
+with it, and it grants no Minor or Nit a repair round it would not otherwise get. **The assigned fix set is fixed before the pass you are answering: it is the
+scope the approved story or plan assigns to this cycle, plus repair obligations you already
+accepted in earlier passes.** A finding is in-set when repairing it stays inside that scope —
+never merely because it arrived in the current pass, which would put every new finding in the
+set by definition and leave the boundary deciding nothing. Where membership is genuinely
+unclear treat the finding as **outside**, which costs a question and never a silent expansion. **A correction that leaves that set stops the
+loop like any other out-of-scope finding**, even when it opens no new question at all —
+absorbing it would grow the assigned work without anyone agreeing to that — and it resumes
+the moment the user says whether the set now includes it. A finding
+that opens a **new structural or contract question** stops the loop and goes to the user —
+**size is not the test, novelty of the question is**, so a structural finding that is
+genuinely small still stops it, while a long correction still aimed at the last correction
+does not — provided that correction, too, stays inside the set, which its ancestry never
+supplies on its own. **When a finding is both** — it corrects the last correction *and* opens a new
+structural or contract question — **the new question wins and the loop stops**: novelty
+overrides correction ancestry, because absorbing on ancestry is how a contract decision
+gets made without anyone choosing it. Stopping this way is **not an exit from the gate**: the floor, the
+Blocker/Major filter and the clean-final-pass rule all stand, and the loop resumes on the
+revised artifact once the question is answered. What it prevents is a loop committing you
+to a design nobody chose — a different failure from an unfinished review.
+
+**Recognizing "clearly stuck", so that exit is a reading and not a mood.** Read the
+**Blocker curve across passes**, not any single pass's total — it is the better of the two
+signals, the total says less than it looks like, and one low count is a snapshot rather
+than a plateau. **Neither curve measures coverage:** a low Blocker count can sit beside an
+entirely unreviewed subsystem. So this exit needs three things **together**, and a missing
+one means keep going: a plateau visible across passes (six or more is where the field saw
+one); an **affirmative judgement that coverage is sufficient**, stated — a known materially
+unreviewed area forbids this exit outright, and disclosing it does not license it; and
+**Blocker or Major findings that keep regenerating across genuine repair attempts**, each
+round's fix producing the next. That third condition is what makes a plateau rather than a
+finish, and it is why **a clean completion takes precedence over this exit**: a
+Blocker/Major-free pass **at or above the floor** has satisfied the clean-final-pass rule —
+collect the Minors and Nits and close — and reporting "will not converge" on a converged
+loop is a false report. **Below the floor nothing closes**, and a zero-finding pass remains
+the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps
+looping.
+**Surfacing does not close the cycle, and that is what makes this reachable.** You surface
+*with the finding still open* — the resolve rule is not waived, no pass is credited as
+clean, and the loop resumes on whatever the user decides. Reading it as "stop instead of
+fixing" would put the exit in competition with the rule that every Blocker and Major
+resolves, and then nothing could satisfy both.
+
+**From pass 4 onward every pass report carries three lines.** The carrier is **your own
+status report to the user** — never the Codex reply, which stays exactly one line per branch,
+and never the findings file, which admits no line that is not a finding or the terminator.
+They are cheap because the numbers already exist: (1) the **trend** — findings and Blocker counts across the passes so
+far; (2) where this pass's findings **cluster** — product behaviour, the test instrument, or
+prose about either; (3) any **require↔withdraw pair** against earlier passes, meaning a pass
+demanding what an earlier pass had removed.
+
+Those three lines expose **five tells**: the finding count rising rather than falling; the
+Blocker count failing to fall; findings clustering on the **instrument** rather than on
+product behaviour; findings clustering on **prose about** either; and a require↔withdraw
+pair. **Any two present makes stop-and-surface mandatory, not discretionary** — report the
+tells and hand the decision to the user, and the "clearly stuck" reading above is not a
+precondition for it. A loop can be worth stopping long before it plateaus.
+**The two rules above do not compete**, and neither overrides the other: the absorb rule
+decides whether *a finding* is inside this loop's scope, this reading decides whether *the
+loop* can still converge. A small correction-of-a-correction that stays inside the assigned fix
+set is absorbed and is not by itself evidence of a plateau. Measured once, at the precision the record keeps: nineteen Gate-A
+passes over successive revisions of one design spec past 2800 lines (the exact size is not
+part of that evidence), findings from 43 into a 2–19 range after pass 6 and never zero,
+Blockers from 11 to 0–1 from pass 7 on, and the late Blockers were semantic contradictions
+rather than wording — which is why a low count is a signal to read and not a clearance.
+Hence the sizing guidance: prefer **smaller specs with named interfaces** and let the plan
+carry the detail — guidance, not a threshold, because where the plateau starts is
+unmeasured.
+
 **Findings go to a FILE, not the response — both gates.** Long finding lists come back
 cut off, and a cut that lands between findings is indistinguishable from a short list:
 silently dropped findings, the dangerous direction. Claude Code both limits MCP tool
