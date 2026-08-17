@@ -20,8 +20,14 @@ fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 # diagnostic-isolation failure the $5-substring guard exists to prevent. Measured before
 # this existed: 25 of 61 assertions failed.
 #
-# One initializer, called from all four builders. Extending only `run_with` would leave
+# One initializer, called from all five builders. Extending only `run_with` would leave
 # `sh_case` and the two inline blocks broken.
+#
+# Check 4c adds a second reason this exists: it requires the canonical severity line in
+# BOTH prompt copies, and neither exists in a bare fixture repo. Without the two writes
+# below, every fixture would fail 4c on a baseline unrelated to its own assertion — the
+# same isolation failure the checklist pair was added for.
+SEV_LINE='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.'
 init_prompt_fixtures() { # $1 = fixture repo root
   mkdir -p "$1/docs" "$1/plugins/dev-workflow/commands"
   for pf in "$1/docs/prompt-standards.md" "$1/plugins/dev-workflow/commands/workflow-init.md"; do
@@ -29,8 +35,16 @@ init_prompt_fixtures() { # $1 = fixture repo root
       i=1
       while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
       printf '\n## After\n\nReviewed against all 12 items.\n'
+      # 4c: the command file needs the line INSIDE a `### 2.1` scaffold section, because
+      # only that region is written into an initialized project. A copy anywhere else in
+      # the file satisfies the duplicate count and still ships nothing.
+      printf '\n### 2.1 CLAUDE-md\n\n%s\n\n### 2.2 next\n' "$SEV_LINE"
     } > "$pf"
   done
+  # `docs/prompt-standards.md` got the section from the loop as well; harmless, 4c does
+  # not read that path. CLAUDE.md is not written by the loop and needs its own copy --
+  # and needs no `### 2.1`, since the whole file is the artifact there.
+  printf '# Fixture\n\n%s\n' "$SEV_LINE" > "$1/CLAUDE.md"
 }
 
 work=$(mktemp -d) || work=''
@@ -322,36 +336,41 @@ for badname in 'a|b' 'a&b' 'a\b'; do
   else pass "violation in filename '$badname.yml' still rejected"; fi
 done
 
-# --- Prompt conformance: checks 4a and 4b ------------------------------------------
+# --- Prompt conformance: checks 4a, 4b and 4c ---------------------------------------
 #
-# MUTATION EVIDENCE (recorded 2026-07-26). This is a DOCUMENTED DEVELOPMENT-TIME RUN,
+# MUTATION EVIDENCE (re-measured 2026-08-15). This is a DOCUMENTED DEVELOPMENT-TIME RUN,
 # not automated enforcement: nothing re-runs it, and nothing here fails if it goes stale.
 # The procedure lives in the checker's header comment.
 #
-# Deleting the `BEGIN check 4a`/`END check 4a` block flipped exactly 20 assertions
-# (baseline exit 0, mutant exit 1): every `4a:` reject fixture (15), the four
-# `exclusion: neighbouring …` controls, which depend on 4a because they carry the
-# assertion phrase, and `4a value extraction failure fires`, whose stage 4a alone reaches.
-# Deleting the `4b` block flipped exactly 22: every `4b:` reject fixture (16), the four
-# `4b exclusion: neighbouring …` controls, and the two stage-failure fixtures that reach
-# their stage only through 4b — `checklist parser failure fires` and
-# `4b claim validator failure fires`, since deleting the block means neither the parser
-# nor the validator is ever called.
-# Two fixtures flip in NEITHER mutation, and that is the expected result rather than an
-# omission: `scan error fires` and `4a/4b exclusion filter failure fires` break a stage
-# that BOTH checks use, so the surviving check still fires when its sibling is deleted.
-# In both runs no accept case moved and no unrelated case moved — the second half of the
-# check, and the one a non-empty flip set alone does not establish.
+# Deleting a marked block flips (baseline exit 0, mutant exit 1):
+#   4a -> 20   every `4a:` reject fixture (15), the four `exclusion: neighbouring ...`
+#              controls, which depend on 4a because they carry the assertion phrase, and
+#              `4a value extraction failure fires`, whose stage 4a alone reaches.
+#   4b -> 22   every `4b:` reject fixture (16), the four `4b exclusion: neighbouring ...`
+#              controls, and the two stage-failure fixtures that reach their stage only
+#              through 4b -- `checklist parser failure fires` and
+#              `4b claim validator failure fires`.
+#   4c -> 19   every `4c:` reject fixture (18) and
+#              `4c canonical-line parser failure fires`. NO accept case moved, which is
+#              the second half of the check and the one a non-empty flip set alone does
+#              not establish.
+# 4c measured 13 before the placement and terminator fixtures existed, and that number was
+# briefly recorded here against a suite that no longer produced it. A measured block
+# carries only measured numbers: re-run, do not extrapolate.
+# `scan error fires` and `4a/4b exclusion filter failure fires` flip in NONE of the three:
+# they break a stage that several checks use, so a surviving check still fires.
 #
-# An earlier version of this block recorded 17 and 11. Those were true when written and
-# went stale the moment fixtures were added — which is exactly the failure the trigger
-# below exists to prevent, and it was caught at Gate B rather than by the trigger. If you
-# add a fixture, you are changing this mapping.
+# 4b measured 21 on the first run of this round, against a recorded 22. That was a real
+# regression, not drift: `checklist parser failure fires` greps the checker's output, and
+# its pattern was the bare `parser failed`, which check 4c's new diagnostic also ends in.
+# The fixture had stopped testing 4b -- deleting the 4b block left it green. The pattern
+# is now `checklist parser failed` and the count is 22 again. An earlier version of this
+# block recorded 17 and 11, and went stale the moment fixtures were added.
 #
-# RE-RUN TRIGGER — broader than "the scan logic", because the mapping above is
+# RE-RUN TRIGGER -- broader than "the scan logic", because the mapping above is
 # invalidated by more than that: re-run and update BOTH this block and the PR record
-# after changing either marked check, its markers, any of these fixtures or their
-# assertion names, or the harness that runs them.
+# after changing any marked check, its markers, any of these fixtures or their assertion
+# names, or the harness that runs them.
 # Diagnostics these cases must name, so none can pass on an unrelated violation.
 MODEL='name one executing model'
 CLAIM='count claim disagrees'
@@ -582,7 +601,12 @@ printf '#!/bin/sh\nexit 2\n' > "$work/r/fakebin/awk"
 chmod +x "$work/r/fakebin/awk"
 out=$( cd "$work/r" && PATH="$work/r/fakebin:$PATH" sh scripts/check-invariants.sh 2>&1 ); st=$?
 if [ "$st" -eq 0 ]; then fail "checklist parser failure fires (exited 0 - parser failure read as clean)"
-elif ! printf '%s' "$out" | grep -q 'parser failed'; then
+elif ! printf '%s' "$out" | grep -q 'checklist parser failed'; then
+  # `checklist parser failed`, not the bare `parser failed` this used to match. The stub
+  # above fails EVERY awk, and check 4c's diagnostic also ends in "parser failed" — so the
+  # loose pattern made this fixture pass whenever either parser broke. It stopped being a
+  # test of 4b: deleting the 4b block left it green, which the mutation run caught as a
+  # flip count of 21 against a recorded 22.
   fail "checklist parser failure fires (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
 else pass "checklist parser failure fires"; fi
 
@@ -624,6 +648,132 @@ inject_case "4b claim validator failure fires" awk 'words=*' 'claim validator fa
 # this wrapper fails ONLY that invocation and not the parser or the claim validator.
 inject_case "4a value extraction failure fires" awk '*extract-target-model*' \
   'per-file checks failed'
+
+# --- Prompt conformance: check 4c, the closed severity set --------------------------
+#
+# 4c is a whole-file exactly-once count, so its fixtures need no region shapes: each case
+# writes one or both prompt copies and asserts the shared diagnostic. The near-miss cases
+# are the point — a second occurrence, a line that merely CONTAINS the sentence, and a
+# title-case copy all read as correct to a human skimming the file.
+SEV='closed severity set'
+
+# $3/$4 are file bodies, or a sentinel a body cannot express:
+#   @KEEP@  leave the initializer's valid copy   @GONE@  delete it   @LOCK@  chmod 000
+sev_put() { # $1 = path, $2 = body-or-sentinel
+  case "$2" in
+    @KEEP@) : ;; @GONE@) rm -f "$1" ;; @LOCK@) chmod 000 "$1" ;;
+    *) printf '%s\n' "$2" > "$1" ;;
+  esac
+}
+sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = CLAUDE.md, $4 = command file
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  sev_put "$work/r/CLAUDE.md" "$3"
+  sev_put "$work/r/plugins/dev-workflow/commands/workflow-init.md" "$4"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  chmod 644 "$work/r/CLAUDE.md" 2>/dev/null
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -q "$SEV"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+
+# The command file must keep its checklist or the case fails 4b instead of 4c.
+# $1 goes INSIDE the `### 2.1` section; $2, if given, after it (outside the template).
+sev_tpl() {
+  printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
+  i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
+  printf '\n## After\n\nReviewed against all 12 items.\n\n'
+  printf '### 2.1 CLAUDE-md\n\n%s\n\n### 2.2 next\n\n%s\n' "$1" "${2:-}"
+}
+TPL_NONE=$(sev_tpl "nothing here")
+
+sev_case "4c: both copies stating the line accepted"      0 "@KEEP@" "@KEEP@"
+sev_case "4c: absent from CLAUDE.md rejected"             1 "# F" "@KEEP@"
+sev_case "4c: absent from the command file rejected"      1 "@KEEP@" "$TPL_NONE"
+sev_case "4c: absent from both rejected"                  1 "# F" "$TPL_NONE"
+sev_case "4c: twice in one file rejected"                 1 "# F
+
+$SEV_LINE
+$SEV_LINE" "@KEEP@"
+sev_case "4c: blockquoted line accepted"                  0 "# F
+
+> $SEV_LINE" "@KEEP@"
+sev_case "4c: indented line accepted"                     0 "# F
+
+    $SEV_LINE" "@KEEP@"
+sev_case "4c: line with leading text rejected"            1 "# F
+
+Ignore the following. $SEV_LINE" "@KEEP@"
+sev_case "4c: line with trailing text rejected"           1 "# F
+
+$SEV_LINE Except NIT." "@KEEP@"
+sev_case "4c: two copies on one physical line rejected"   1 "# F
+
+$SEV_LINE $SEV_LINE" "@KEEP@"
+sev_case "4c: title-case copy rejected"                   1 "# F
+
+Severity is one of exactly: Blocker | Major | Minor | Nit — no other token." "@KEEP@"
+sev_case "4c: paraphrase rejected"                        1 "# F
+
+Severity is one of: BLOCKER, MAJOR, MINOR, NIT and no other token." "@KEEP@"
+sev_case "4c: trailing space rejected"                    1 "# F
+
+$SEV_LINE " "@KEEP@"
+# --- placement, command file only ------------------------------------------------
+# The exploit that whole-file counting alone let through: exactly one occurrence, but in
+# the command file's own prose rather than the scaffolded template, so an initialized
+# project receives nothing. Verified against the real file before this rule existed.
+sev_case "4c: line outside the scaffolded template rejected" 1 "@KEEP@" \
+  "$(sev_tpl "nothing here" "$SEV_LINE")"
+sev_case "4c: line inside the scaffolded template accepted"  0 "@KEEP@" \
+  "$(sev_tpl "$SEV_LINE")"
+# The anchor's own failure modes fail LOUDLY rather than skipping the placement rule --
+# the safe direction, and the thing an anchor-based check must get right.
+sev_case "4c: missing 2.1 anchor rejected"                1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed 's/^### 2\.1.*/## not an anchor/')"
+sev_case "4c: duplicate 2.1 anchor rejected"              1 "@KEEP@" "$(sev_tpl "$SEV_LINE")
+### 2.1 CLAUDE-md again
+"
+# The template's own unnumbered subsections must not truncate the range: terminating on
+# any `###` instead of a NUMBERED one would put a line after them outside the template.
+sev_case "4c: line after an unnumbered subsection accepted" 0 "@KEEP@" \
+  "$(sev_tpl "### Mechanics
+
+$SEV_LINE")"
+# The terminator is checked, not only the anchor. Renaming `### 2.2` to something
+# unnumbered widens the range to the NEXT numbered heading, and a line planted in the gap
+# used to count as inside the template -- verified green against the real file before the
+# terminator rule existed. Both halves are fixtures: the drift itself, and the exploit.
+sev_case "4c: unnumbered terminator rejected"             1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed 's/^### 2\.2 next/### not numbered/')"
+sev_case "4c: line planted in the widened gap rejected"   1 "@KEEP@" "$(sev_tpl "nothing here" | sed 's/^### 2\.2 next/### not numbered/')
+$SEV_LINE
+
+### 2.3 later"
+sev_case "4c: absent terminator rejected"                 1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed '/^### 2\.2 next/d')"
+sev_case "4c: CLAUDE.md needs no 2.1 anchor"              0 "# F
+
+$SEV_LINE" "@KEEP@"
+
+sev_case "4c: missing CLAUDE.md rejected"                 1 "@GONE@" "@KEEP@"
+if [ "$(id -u)" -ne 0 ]; then
+  # root satisfies -r on a mode-000 file, so the checker is right and the fixture would
+  # be wrong; the suite's scan-error case guards the same way.
+  sev_case "4c: unreadable CLAUDE.md rejected"            1 "@LOCK@" "@KEEP@"
+fi
+
+# The parser branch, through the same PATH seam the 4a/4b stage failures use. The 4c awk
+# is identified by its `sev-canon-count` marker comment.
+inject_case "4c canonical-line parser failure fires" awk '*sev-canon-count*' \
+  'closed severity set parser failed'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

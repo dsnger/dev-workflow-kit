@@ -21,15 +21,17 @@
 #
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
-# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The two prompt-conformance
+# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The three prompt-conformance
 # checks below are bracketed by `# --- BEGIN check 4a ---` / `# --- END check 4a ---`
-# markers so a scratch copy can be neutered cleanly:
+# markers -- and likewise for 4b and 4c -- so a scratch copy can be neutered cleanly.
+# Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
 #   TMP=$(mktemp -d) || exit 1
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   sed '/BEGIN check 4a/,/END check 4a/d' scripts/check-invariants.sh \
+#   chk=4a   # then 4b, then 4c
+#   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
 #   ( cd "$TMP/repo" && sh scripts/check-invariants.test.sh ) > "$TMP/after" 2>&1; mut=$?
@@ -258,8 +260,11 @@ for manifest in plugins/*/.claude-plugin/plugin.json; do
     fail "Invariant 6: $manifest re-declares a convention-loaded component." "$bad_keys"
 done
 
-# Scan domain for the two prompt-conformance checks below: Markdown only, because both
-# rules are about prompt text. The wider yml/json/toml domain used by invariant 5 is
+# Scan domain for checks 4a and 4b: Markdown only, because both rules are about prompt
+# text. NOT 4c -- that one reads two fixed paths directly and is not part of this scan,
+# so this domain stays a two-check domain even though the file now carries three
+# prompt-conformance checks. Incrementing the number here would claim a scope 4c does not
+# use. The wider yml/json/toml domain used by invariant 5 is
 # deliberately NOT reused — a `Target model:` line in a JSON fixture is not a prompt
 # claim. `grep -r` does not follow symlinks (`-R` would), which is the intended form.
 #
@@ -463,6 +468,103 @@ else
     fail "Prompt standards: a checklist count claim disagrees with the checklist." "$bad_claims"
 fi
 # --- END check 4b ---
+
+# --- BEGIN check 4c ---
+# The finding-line severity vocabulary must be stated as a CLOSED SET in both prompt
+# copies, exactly once each. This is the normative statement that the writer's tokens are
+# uppercase, so the comparison is CASE-SENSITIVE: a title-case copy does not carry the
+# rule. Mechanics' own "Blocker (wrong/unsafe...)" sentence is a DIFFERENT sentence and
+# keeps its title case -- the READER normalizes case, the writer syntax does not.
+#
+# EQUALITY, not containment. A line that merely contains the sentence can negate it
+# ("Ignore the following: Severity is one of exactly: ..."), so the whole line must BE the
+# sentence, after stripping a leading blockquote marker and indentation. Nothing is
+# stripped from the right: "byte-for-byte" means what it says, and a trailing space is a
+# Markdown hard break, not whitespace noise.
+#
+# WHOLE-FILE count for duplicates, PLUS a placement rule in the command file. An earlier
+# design bounded a section-5 region in both files; on the command file that needed fence
+# nesting, and the parser returned a multiple-end-boundary error on the real file, so it
+# could never have passed. Whole-file counting replaced it -- and silently traded away a
+# guarantee: the line can sit in the command file's own prose, outside the template that
+# `/workflow-init` actually scaffolds, and the count is still 1. Verified, not theorised.
+# Only the template region reaches a user's project, so the command file gets a placement
+# rule anchored on its `### 2.1` scaffold heading and terminated by the NEXT NUMBERED
+# heading -- not the next `###`, because the template contains its own unnumbered
+# `### Profiles` and `### Mechanics` subsections and would truncate the range.
+#
+# The repo's own CLAUDE.md needs no placement rule: the whole file is the artifact.
+SEV_CANON='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.'
+
+# Prints "<whole-file count> <in-template count> <anchor count> <terminator>", where the
+# terminator is the number of the first numbered `### ` heading after the anchor, or
+# `none`. Returns 2 if awk itself failed, which is not the same as zeroes: an awk that
+# cannot run prints nothing, and empty is not a number, so the caller checks the status.
+#
+# The TERMINATOR is checked, not just the anchor. Without it the range fails OPEN when the
+# boundary moves: rename `### 2.2` to something unnumbered and the section runs on to 2.3,
+# so a line planted in the old 2.2 region counts as inside the template. Verified before
+# this was added -- the battery stayed green. An anchor-based rule that survives its own
+# anchor drifting is worth nothing.
+severity_rule_scan() { # $1 = file
+  awk -v canon="$SEV_CANON" '                       # sev-canon-count
+    /^### 2\.1[[:space:]]/ { intpl = 1; heads += 1; next }
+    intpl && /^### [0-9]/  { intpl = 0; term = $2; next }
+    { line = $0
+      sub(/^[ \t]*/, "", line); sub(/^> ?/, "", line); sub(/^[ \t]*/, "", line)
+      if (line == canon) { n += 1; if (intpl) t += 1 } }
+    END { printf "%d %d %d %s\n", n + 0, t + 0, heads + 0, (term == "" ? "none" : term) }
+  ' "$1" || return 2
+}
+
+# Both paths are REQUIRED. A missing one is a named failure, never a skip: the rule is
+# defined over both copies, so continuing quietly would turn half the check off exactly
+# when a file is deleted or moved -- the fail-open direction.
+for sev_file in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  if [ ! -f "$sev_file" ]; then
+    fail "Prompt standards: $sev_file is missing, so the closed severity set cannot be checked." \
+         "both prompt copies are required"
+    continue
+  fi
+  if [ ! -r "$sev_file" ]; then
+    fail "Prompt standards: $sev_file is unreadable, so the closed severity set cannot be checked." \
+         "check permissions"
+    continue
+  fi
+  sev_out=$(severity_rule_scan "$sev_file"); sev_st=$?
+  if [ "$sev_st" -ne 0 ]; then
+    fail "Prompt standards: the closed severity set parser failed; results are not trustworthy." \
+         "awk exited $sev_st on $sev_file"
+    continue
+  fi
+  # Word splitting is the point: the scan prints three space-separated integers.
+  # shellcheck disable=SC2086
+  set -- $sev_out
+  sev_n=$1; sev_t=$2; sev_heads=$3; sev_term=$4
+  if [ "$sev_n" -ne 1 ]; then
+    fail "Prompt standards: $sev_file must state the closed severity set exactly once; found $sev_n." \
+         "$SEV_CANON"
+  elif [ "$sev_file" != CLAUDE.md ]; then
+    # Placement, command file only. A missing or renamed anchor fails loudly rather than
+    # skipping the rule -- the safe direction, and the one an anchor-based check has to
+    # get right to be worth having.
+    if [ "$sev_heads" -ne 1 ]; then
+      fail "Prompt standards: $sev_file has $sev_heads '### 2.1' scaffold headings, so the closed severity set's placement cannot be checked." \
+           "expected exactly one"
+    elif [ "$sev_term" != 2.2 ]; then
+      # Loud, not lenient. A renumbered or renamed boundary is precisely when the range
+      # silently widens, so the check refuses rather than measuring a range it cannot
+      # trust. Fixing it is renaming a heading back, or updating this expectation
+      # deliberately.
+      fail "Prompt standards: $sev_file's '### 2.1' section is terminated by '$sev_term', not '2.2', so the closed severity set's placement cannot be checked." \
+           "the range would silently widen past the scaffolded template"
+    elif [ "$sev_t" -ne 1 ]; then
+      fail "Prompt standards: $sev_file states the closed severity set outside the scaffolded CLAUDE.md template, so an initialized project would not receive it." \
+           "expected it inside the '### 2.1' section"
+    fi
+  fi
+done
+# --- END check 4c ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

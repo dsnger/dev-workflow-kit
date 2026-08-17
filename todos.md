@@ -91,8 +91,10 @@ driven by recurrence rather than by enthusiasm.
       an escalation: the guard-scope precheck against the 2026-08-04 row (whose guard is *"the
       exhaustiveness statement"*, for a sentence naming what a mechanism does not cover) puts this
       shape outside it, so the count alone does not escalate.
-      *Trigger: rides with the reviewer-availability fallback story — next in queue, amending the
-      same §5 region, so one Gate B covers all three edits.*
+      *Trigger: **re-pointed 2026-08-16** at
+      `docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md`. The
+      reviewer-availability story closed without shipping the sequential-calls rider — it is a
+      hook change, not a §5 prose edit, and the unchanged hook counts each call as a pass.*
 - [ ] **§5 gives the finding-line severity by example only, never as a closed set.** The gate
       prompt shows `MAJOR | high | …` and tells the reader to filter to Blocker/Major, but never
       states the four permitted tokens, and the acceptance rule validates shape — terminator,
@@ -101,7 +103,11 @@ driven by recurrence rather than by enthusiasm.
       well-formed, so it passed every check and the Blocker/Major filter had to be applied by
       interpretation. Fix candidate: pin the enum in §5's finding-line spec and in
       `/workflow-init`'s template. Fingerprint `prompt-vague-criteria`, rung `P std`, no prior row.
-      *Trigger: rides with the reviewer-availability fallback story, with the row above.*
+      **CLOSED 2026-08-16** — §5 and the template now state the enum as a closed set, and
+      `scripts/check-invariants.sh` check 4c asserts it is present exactly once in each copy
+      (and, in the command file, inside the scaffolded template's own section). The reader
+      normalizes an out-of-enum token to `MAJOR` rather than discarding the pass, which is
+      what PR #23's four `IMPORTANT` findings needed.
 - [ ] **The supersession story's AC 1 restates `CLAUDE.md` §5's profile-change procedure instead
       of referencing it.** Raised by CodeRabbit on PR #23 and accepted as accurate: the criterion
       spells out propose-axes → pause for confirmation → write the header, and does so *lossily* —
@@ -166,6 +172,18 @@ driven by recurrence rather than by enthusiasm.
       dangerous direction. Counts toward this row's eventual trigger; not fixed now, and
       note that any fix must keep the empty-list fallthrough firing rather than trade a
       redundant warning for a missed one.
+      **Occurrence 3 (2026-08-14): same shape as occurrence 2, same consumer.** `git add`
+      and `git commit` issued in one Bash call on PR #23's close; the staged set was empty
+      at `PreToolUse`, `is_docs_only` fell through, and the Gate-B STOP fired on a
+      docs-only commit. Like occurrence 2 a **false positive** — the safe direction.
+      **Occurrence 4 (2026-08-16): same shape again, on PR #24's review pass.** `git add` and
+      `git commit` in one Bash call; the staged set was empty at `PreToolUse`, `is_docs_only`
+      fell through, and the Gate-B STOP fired on a docs-only commit. A **false positive** like
+      2 and 3. Counted here even though it was observed rather than suffered, because the
+      trigger is recurrence of the shape and an occurrence noticed by the person who caused it
+      is still the shape recurring; excluding it would tune the count to who was watching.
+      Four occurrences of the timing gap now, three of them benign; the dangerous `tree_hash`
+      consumer above is still the one that decides this row's priority.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
@@ -380,8 +398,52 @@ backlog.
       mirror, and changes no part of the §5 **file protocol** this row's trigger names — not the
       slot names, not the pre-call delete, not the terminator or acceptance rules. Recorded so a
       later reader can check the reading rather than re-derive it.
-      *Trigger: the next round touching the §5
-      file protocol.*
+      **SECOND OCCURRENCE, TRIGGER FIRED (2026-08-16).** The reviewer-availability story's
+      cycles destroyed a predecessor's findings file **and** its dispositions before the
+      surviving 44 artifacts were archived by hand. That is the second observed destruction,
+      after the 2026-07-26 profiles cycle. **The row stays open** — the fix is still naming (a
+      cycle component in the slot) or archiving, never relaxing the pre-call delete, which is
+      load-bearing.
+      *Trigger: FIRED. Was: the next round touching the §5 file protocol.*
+
+- [ ] **Attribution for the human-exception record form.** The `<handle>` in a
+      `Human exception:` record is unverified, and §5 says so in the shipped text: nothing
+      checks that it belongs to whoever decided, that a human was asked, or that the reason is
+      honest. Hardening for what ships; needs no availability attestation.
+      *Trigger: the first record whose authorship is disputed or unattributable.*
+- [ ] **External-authority zero-pass research.** A signed commit or a protected-branch
+      approval is the one design class the reviewer-availability cycles never tried, and its
+      requirements are already named: a **trusted signer identity** *and* a **role policy**
+      saying which identities may approve — an ordinary signer can be the author — plus an
+      **availability attestation from a party that is not the author**, which neither mechanism
+      supplies on its own. It is one untried direction worth reconsidering, **not** the only one
+      that could work; the design space was never exhausted
+      (`docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md` §1.5).
+      *Trigger: a renewed need to close a gate cycle with no review — a second multi-day
+      reviewer outage, or the operational bridges of that design's §7 proving unavailable.*
+- [ ] **Tracked re-review debt.** The human-exception form records a decision and creates no
+      follow-up obligation, so "the re-review never happened" is not an observable event today.
+      Stated as one deliberately.
+      *Trigger: a human explicitly asks for follow-up review on a recorded exception and that
+      follow-up is later found not to have happened.*
+- [ ] **A recording mechanism for severity normalization.** Rider (b) normalizes an
+      unrecognized severity token to `MAJOR` and records nothing. The drift is visible to the
+      reader at the moment the pass is validated — the findings file carries the original token
+      on the finding line — but nothing is durable: `.context/` is git-ignored and slot
+      collisions have destroyed findings here (row above). A companion record was designed and
+      **cut**, at a measured cost: it needed a token-identity rule, a bijection audit, a
+      logical-pass/attempt/credited-count identity model, edits to four shipped hook reminder
+      strings, and a `docs/hardening-log.md` supersession row.
+      *Trigger: a pass is normalized and the drift goes unnoticed in review.*
+- [ ] **The hook's `is_docs_only` exempts any `.md` path outside a prompt directory**, which is
+      broader than §5's prose list (`docs/**.md`, `README.md`, `MANIFEST.md`). Found while
+      siting a removed debt store.
+      *Trigger: a root `.md` file acquiring gate-relevant state.*
+- [ ] **Tier-2 counting and containment.** A same-family reviewer whose passes are worth
+      counting, per `docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`.
+      The unchanged hook counts each call as a pass, so counting is part of the problem, not a
+      detail of it.
+      *Trigger: the tier-2 story being picked up, or a second multi-day reviewer outage.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
       showed it is a design, not a sentence. Spec questions: a semantic §5 locator

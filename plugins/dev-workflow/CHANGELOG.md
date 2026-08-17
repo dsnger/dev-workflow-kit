@@ -22,6 +22,81 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.9.1
+
+- §5's human-exception form and its `workflow-init` template no longer claim the empty
+  record-only commit "does not reopen any gate". The normative half was right — an empty diff
+  raises no review obligation — but the sentence also promised silence from the gate hook,
+  which it does not deliver: such a commit can still draw a Gate-B reminder. Both copies now
+  say so **without restating the hook's decision logic** — and without pointing at it either,
+  since the scaffolded copy must stand on its own in a project that does not have the hook's
+  source. Both pin the exemption to the **empty diff**, confirmable with `git show --stat`,
+  rather than to the reminder looking inconvenient. The edited human-exception regions of the
+  two copies are byte-identical (the files as wholes are not, and never were).
+- **Four Gate-B rounds went into narrowing that replacement sentence** — each correction a
+  subtler version of the same overclaim — before `docs/prompt-standards.md`'s own rule
+  applied: at the fourth correction, delete the mechanism claim rather than refine it a fifth
+  time. That deletion is what shipped, and it is why this entry describes no state machine
+  either. The same supersession is noted in the design spec (§2.1, §8) and the implementation
+  plan, whose approved quoted blocks are left unedited. Ledger row appended under
+  `unverified-enforcement-claim`.
+- **Corrects one rule 0.9.0 shipped below**, also from PR #24 (CodeRabbit): that entry says the
+  model taking each pass is "read from the configured value at that moment", and it shipped
+  that rule into both `docs/coding-workflow.md` and `docs/sparring-briefing.md`. It is wrong —
+  `mcp-codex-dev` resolves its model chain once per project root and caches it until the
+  server restarts, so an edit landed after a root was loaded leaves the configured value naming
+  a model the running server is not using. Both documents now say to record the model the pass
+  *ran under* and to probe with `mcp__codex__health` where the two can differ — reading the
+  per-tool field (`tools.review.model` for Gate B, `tools.exec.model` for Gate A) with the
+  top-level `model` as fallback, since the server resolves a gate's model as
+  `tools.<tool>.model ?? model` and `CODEX_DEV_REVIEW_MODEL` lands at `tools.review.model`.
+  Both documents are corrected across this 0.9.1 range. The 0.9.0 entry is left as the record of what shipped.
+
+## 0.9.0
+
+- §5 and its `workflow-init` template now state the finding-line **severity vocabulary as a
+  closed set** — `BLOCKER | MAJOR | MINOR | NIT` — rather than showing it by example, and
+  define what the **reader** does with anything else: split on unescaped pipes, trim the
+  format's whitespace, match case-insensitively, and read an unrecognized non-empty token as
+  `MAJOR`. An empty or malformed field stays a structural failure and the pass stays
+  INCOMPLETE. Motivating incident: a Gate-B pass returned all four findings at `IMPORTANT`,
+  and discarding it over the token would have thrown away four real findings.
+- `scripts/check-invariants.sh` gains **check 4c**, which asserts that canonical line is
+  present exactly once in each of `CLAUDE.md` and the command file — compared for equality,
+  case-sensitively — and, in the command file, that it sits inside the `### 2.1` section that
+  is actually scaffolded into a user's project. A copy anywhere else in that file ships
+  nothing. The `### 2.1` anchor and its `### 2.2` terminator are both validated: a renamed,
+  missing or duplicated boundary fails loudly rather than widening the range.
+- §5 gains a **human-exception record form** — `Human exception:` / `Not done:` /
+  `Accepted because:` — for a decision about work **no applicable rule required**: an optional
+  check an environment cannot run, a requested review stood down, a courtesy step. It records
+  a decision and authorizes nothing: never a gate, a floor, a pass count, an evidence
+  obligation, or any mandatory rule from this file, `AGENTS.md`, a project doc, CI, a branch
+  policy or the platform. The record is an unverified assertion and the shipped text says so.
+- §5 Mechanics now states the **squash-merge carry** explicitly: every evidence entry and
+  every human-exception record in the squash range is copied into the squash body, because
+  that commit is the only body the merge carries into `main`'s history.
+- `docs/coding-workflow.md` gains a **reviewer model selection** section, and
+  `docs/sparring-briefing.md` the matching rule for the upstream advisor. Both describe the
+  **mechanism only and name no models**: how to add a gateway provider to the Codex CLI, the
+  switch surfaces `mcp-codex-dev` resolves in order (the config the CLI reads, the user-level
+  `~/.mcp/mcp-codex-dev/config.json`, the per-repo `.mcp/mcp-codex-dev.config.json`, and the
+  `CODEX_DEV_MODEL` / `CODEX_DEV_REVIEW_MODEL` environment overrides — the latter Gate B
+  alone), each a one-string edit; why a CLI *profile* does not reach the gate calls (`--model` is
+  passed, `--profile` never is); and that the model taking each pass is read from the
+  configured value at that moment rather than carried in a document. Availability and pricing
+  move faster than documentation, so the gateway's own catalog is the reference. The one
+  permanent rule is family-level: no model from the implementer's own family satisfies a gate,
+  whatever the vendor, gateway or transport. No §5 change — the invariant names families, not
+  vendors.
+- **What this release deliberately does not ship:** the mid-flight *gate waiver* this work
+  began as. Three design cycles over nine review passes found no safe way to authorize a
+  zero-pass gate closure in a prompt-only system — every compensating control landed
+  unenforceable or recursive, the outage that would justify a waiver is producible by whoever
+  benefits, and the preconditions cannot be established in the case they exist for. That
+  finding, and what it does *not* claim, are recorded in
+  `docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md` §1.
+
 ## 0.8.2
 
 - `workflow-init`: the scaffolded ledger header now carries a supersession convention —

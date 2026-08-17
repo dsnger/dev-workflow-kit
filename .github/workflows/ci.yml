@@ -81,7 +81,7 @@ jobs:
       - name: Hook state-machine tests (dash)
         run: HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh
 
-      # Invariants 5 and 6 plus two prompt-conformance checks, mechanically, and BOTH
+      # Invariants 5 and 6 plus three prompt-conformance checks, mechanically, and BOTH
       # checkers' regression suites. The
       # invariant-12 checker itself is not here — it needs a PR base and runs in the
       # step below, so naming this step "version bump" would show a green version-bump
