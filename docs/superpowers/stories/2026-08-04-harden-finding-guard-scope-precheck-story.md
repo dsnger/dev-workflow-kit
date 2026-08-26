@@ -61,7 +61,7 @@ ledger. Escalation follows from a guard that failed, never from a count.
 
 ## 5. Open questions
 
-Seven — six paired with the failure that raised each, and one inherited from another story:
+Eight — six paired with the failure that raised each, and two inherited from other stories:
 
 - A verdict was reached by reading one prior row's guard and stopping, when an older row's guard
   covered the case. **Which prior rows must a recurrence be judged against before "outside" is
@@ -94,9 +94,19 @@ Seven — six paired with the failure that raised each, and one inherited from a
   **Should a recurrence read consult the supersession record, and if so, does a prose-corrected
   class or a prose-retracted hardening change the lineage it escalates from?** Arrives as a
   handoff, not as a failure: no instance of either has occurred.
+- **Inherited** from `2026-08-17-arms-race-remedy-as-procedure-story.md`, and inherited back
+  (added 2026-08-17 by the canvas field-intake round): that story adds a case to the branch this
+  one redesigns — a recurrence whose right answer is **not a rung at all**, because the
+  instrument is checking at the wrong level and one more arm of the same rung is the same rung
+  again. This repo already states that locally, in `todos.md`'s invariant-checker escalation row,
+  and nowhere generally. **Does the branch designed here decide "escalate / fit the rung /
+  change the instrument", or does it hand the third answer off — and to what?** Both stories
+  edit one decision path, so **whichever is picked up first must read the other and carry its
+  conditions**: two rules landing separately on one branch is the shape that produced the bug
+  this story was filed against. Arrives as a handoff, not as a failure.
 
 ## 6. Suggested size
 
 `story` — one skill file, one decision procedure, one spec → plan → PR. Above a chore because
-the seven questions above are real design; below an epic because they all concern one procedure
+the eight questions above are real design; below an epic because they all concern one procedure
 in one file.

@@ -22,6 +22,63 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.10.0
+
+- §5's gate loop gained two rules it was missing, both mirrored into `workflow-init`'s scaffolded
+  template. Their provenance differs and the difference is worth stating: the **absorb-vs-stop**
+  rule was minted in field use by the kit's heaviest consumer and is carried over largely as that
+  consumer wrote it, while the **stuck criterion** was constructed during this intake from a small
+  number of field observations — after the consumer's own stricter record retracted the first
+  reading of them — so it is derived from field measurement rather than field-proven as a rule. **What a loop
+  absorbs** is a question of **scope, not of action**: a finding correcting the correction just
+  made **and staying inside the assigned fix set** is inside the loop's scope — one that leaves that
+  set stops the loop like any other out-of-scope finding, even when it opens no new question, since
+  absorbing it would grow the assigned work unagreed — and an in-scope finding is then acted on by
+  its severity exactly as before —
+  Blocker/Major resolve, Minor/Nit collect and never iterate — so ancestry grants no finding a
+  repair round it would not otherwise get; a finding opening a new structural or contract question
+  stops the loop whatever its set membership, and where a finding is both, novelty overrides
+  ancestry. Size is not the test. **What "clearly stuck" means:** §5 has always sent a non-converging loop to
+  the user and never said how to recognize one. It now requires **three conditions together**, any
+  one missing meaning keep going — a plateau visible **across passes** rather than one pass's count;
+  an **affirmative** stated judgement that coverage is sufficient, with a known materially
+  unreviewed area forbidding the exit outright; and Blocker/Major findings that **keep regenerating
+  across genuine repair attempts**, each round's fix producing the next. That third condition is
+  what separates a plateau from a finish, and **a clean completion takes precedence over the exit**:
+  a Blocker/Major-free pass **at or above the floor** has satisfied the clean-final-pass rule, so
+  collect the Minors and close rather than report non-convergence on a converged loop. What the
+  exit produces is a report that the loop will not converge, never a clearance. Below the floor
+  nothing closes, and a zero-finding pass remains the sole exception.
+- **A reporting duty ships with the stuck criterion.** From pass 4 onward every pass report carries
+  three lines — the trend in findings and Blocker counts across passes, where this pass's findings
+  cluster (product behaviour, the test instrument, or prose about either), and any require↔withdraw
+  pair against earlier passes. Those lines expose five tells, and **any two present makes
+  stop-and-surface mandatory rather than discretionary**, with the stuck reading explicitly not a
+  precondition — a loop can be worth stopping long before it plateaus. The rationale is recorded in
+  §5 as the maintainer's, not as a measurement of this repo: in another consumer all five signals
+  were measurable by day two of a week-long loop, and the cost was never detection but the absence
+  of a duty to say so.
+- **Surfacing does not close the cycle**, and both copies say so, because the exit would otherwise
+  compete with the rule that every Blocker and Major resolves: you surface with the finding still
+  open, no pass is credited clean, and the loop resumes on what the user decides. The clean-completion
+  precedence is likewise bounded by the floor — a Blocker/Major-free pass closes only at or above it,
+  and a zero-finding pass remains the sole below-floor exit.
+- **Neither curve measures coverage**, and that is why the coverage condition is affirmative rather
+  than merely stated: a low Blocker count can sit beside an entirely unreviewed subsystem, and an
+  earlier draft of this rule let a reader disclose insufficient coverage and stop anyway. Six passes
+  is where the field observed a plateau — it is that one observation, not a timer that authorizes
+  stopping.
+- Neither rule loosens the gate, and the shipped text says so where a reader would otherwise
+  assume it: a scope stop is **not** an exit — the floor, the Blocker/Major filter and the
+  clean-final-pass rule all still stand, and the loop resumes on the revised artifact. Without
+  that sentence "stops the loop" reads as a sanctioned below-floor close, which is the gate-off
+  path the rule is not for.
+- The template copy is downstream-neutral rather than verbatim: it carries both rules and the
+  measurement that motivates the second, and drops the consumer's name and this repo's own
+  provenance, which do not travel into a scaffolded project. The measurement is quoted as one
+  observation on one artifact, and the guidance is stated as guidance — where a long artifact's
+  plateau starts is unmeasured, so no threshold is claimed.
+
 ## 0.9.1
 
 - §5's human-exception form and its `workflow-init` template no longer claim the empty

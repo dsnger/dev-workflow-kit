@@ -62,6 +62,20 @@ driven by recurrence rather than by enthusiasm.
       **TRIGGER FIRED (2026-08-04):** the 2026-07-20 row taught pre-0.8.0 counting
       behaviour as current — the second falsified row this trigger named. Story:
       `docs/superpowers/stories/2026-08-04-hardening-ledger-supersession-story.md`.
+- [ ] **The supersession convention names a repair for a mistyped locator and for nothing else an
+      entry can get wrong.** `docs/hardening-log.md`'s header forbids entries from referencing one
+      another, requires the governing entry to describe its row as it now stands, and forbids
+      restating the current answer — but the only repair it spells out is for a mistyped locator
+      ("corrected the same way everything else is, by appending"). An entry that is malformed in any
+      other way has no named move, and entries are protected "committed or not", so editing is out.
+      **Found in use, not theorised:** this round appended three entries that referred to other
+      entries, and Gate-B pass 6 caught them. The repair applied — append a later, self-contained
+      governing entry and leave the malformed lines standing as history — is a *reading* of the
+      locator rule generalized, and it leaves a reader who stops at the first matching entry looking
+      at a forbidden cross-reference. Any fix must keep entries immutable, which is the constraint
+      that makes this awkward in the first place.
+      *Trigger: a third round appending a malformed entry, or the first reader observed acting on a
+      superseded entry instead of the governing one.*
 - [ ] **A hardening that is later *removed* has no sanctioned supersession move.** The convention
       in `docs/hardening-log.md`'s header covers a row whose narration was falsified later or was
       wrong when written, and names a removed hardening as explicitly out of scope. No instance
@@ -126,6 +140,149 @@ driven by recurrence rather than by enthusiasm.
       closing it means decoding the `type` value for equality while still returning the
       selected `text` in its original escaped bytes, since the matcher depends on those.
       *Trigger: a serializer observed emitting escaped key or type spellings.*
+- [ ] **Two consumer Gate-B cycles closed with no usable fingerprint persisted, while counting
+      and cycle-recognition worked.** Field-reported from `infinite-portfolio-canvas` (~60+ Gate-B
+      cycles, kit 0.8.0 since mid-run); evidence is that repo's `todos.md` § Tooling
+      revalidation, which carries four dated measurements, and
+      `docs/field-reports/2026-08-16-canvas-a1-a5-field-report.md` item 1. Two shapes, both
+      measured with `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS="0"` **already set** — so this is not
+      the backgrounding cause that entry started with, and it does **not** collapse into the
+      preflight-check row in § Next.
+      **(a) 2026-08-11, cycle `5a4bf38`, 24 counted passes.** `.context/codex-gate.gateB` held
+      the literal `unavailable` and `codex-gate.freshCount` a `0` at session start. **Read the
+      hook before repeating the consumer's inference here:** a stale `unavailable` is **not**
+      sticky — every counted pass recomputes `tree_hash()` and overwrites the state file
+      unconditionally (`codex-gate.sh`, the counted-pass branch), setting the fresh streak to 1
+      on a computable hash and to 0 only when the hash is uncomputable *at that moment*. So the
+      observation does not show a cycle poisoned by its starting state. **What it does show is
+      narrower than "the hash was uncomputable at every pass":** the persisted value was
+      `unavailable` at the observed endpoints, and the write itself is best-effort — the state
+      file is written under `2>/dev/null || true`, so a later computable hash that failed to
+      persist is indistinguishable from one never computed. Uncomputable hashes and a failing
+      write are both live candidates, and the row picks neither.
+      Conditions were the cleanest
+      available — pass 13 Blocker/Major-free on both branches, both branches on byte-identical
+      content, nothing edited between the last pass and the `--amend`, the closing tree equal
+      to the reviewed WIP tree (`b2757ff`), and the hook's own diagnostic checklist green
+      point by point (`.context/` and `TMPDIR` writable, `shasum` present, `git status` runs,
+      49 GiB free). Both state files were gone after the amend, so the hook read the amend
+      correctly as cycle-closing. Recognition and counting work; what the reported states do not
+      separate is computation from persistence.
+      **(b) 2026-08-16, cycle `f09286b`, counter at 21.** The count alone says nothing about the
+      fingerprint — the hook increments it independently of whether a hash was computed or
+      persisted — so read this as an observation and not as proof that storage worked. That STOP
+      was correct (a comment correction sat
+      between pass 13 and the reset — real drift). Unexplained is the close: after a fresh pass
+      14, clean on both branches, the `--amend` reported "no fingerprint is recorded for this
+      cycle", which is the `reviewed`-empty branch — the state file absent, not stale. The
+      consumer's own narrowing is the ordering "WIP commit → pass → `--amend`", where the
+      closing amend no longer sees the fingerprint of the pass immediately before it.
+      **What this round did not establish, which is most of the mechanism:** whether the hash was
+      computable at any given pass of (a), whether a computed hash failed to persist, and why (b)'s
+      close found no fingerprint. The observations are the persisted values at the endpoints, the
+      counts, and the messages — nothing between them. Per-pass computation, per-pass persistence
+      and the stored `reviewed` value at each STOP are all unknown.
+      Reading the hook at the site that computes the hash and returns `unavailable` is the
+      consumer's own named next step and was not done here. One lead worth carrying: (b)'s STOP arrived at
+      a `git reset --soft` call, which reaches the reset path only if `is_commit` matched that
+      command string — so the loose-grep row below is a candidate contributor to (b), and the
+      two should be read together rather than separately.
+      *Trigger: a second consumer reporting an unhealable fingerprint, or the next change to
+      the fingerprint code path.* A hook change either way, which is why this is a row.
+- [ ] **A mere mention of "commit" beside a `git` command closes the cycle and resets the pass
+      counter.** `is_commit()` greps the raw command string for
+      `(^|[^[:alnum:]])git[[:space:]].*commit` (`plugins/dev-workflow/hooks/codex-gate.sh:756`),
+      and on a non-WIP match the counters are reset. So a diagnostic `echo` is not merely the
+      "redundant warning" invariant 2 accepts as the price of firing loose — it destroys the
+      floor silently. **Measured in the field** (canvas, 2026-08-04):
+      `git status --porcelain; echo "--- last commit body ---"; git log …` in one Bash call
+      dropped the counter from **5 to 0**, and the real closing commit then reported "1
+      recorded pass". The consumer's memory note `gate-b-echo-resets-pass-counter` names why
+      this is the dangerous direction: "the loss looks exactly like passes that never ran".
+      **Second shape, same call-string looseness, already tracked above:** `git add … && git
+      commit …` chained in one Bash call defeats the docs-only exemption, with two controlled
+      data points isolating the variable — `29da026` (separate `git add`) → "N/A (docs-only)",
+      `c2fa18e` (chained) → STOP. That is the timing class the compound-commands row tracks,
+      and these are cross-consumer instances of it from a second repo, predating that row's
+      occurrences 3 and 4. That row's occurrence count is deliberately left unedited here, so
+      this field item carries exactly one disposition; whoever escalates it should count these.
+      **Third shape rejected as unverified:** the report's heredoc-fires-a-false-STOP claim
+      resolves, at its cited evidence, to §5's own *warning* about heredocs restated in the
+      consumer's `CLAUDE.md` and `todos.md`. No measured instance exists.
+      *Trigger: a second reported counter loss, or any change to `is_commit`.* The fix is a
+      parse rather than another pattern, so it is a hook change.
+- [ ] **The arms-race remedy exists as an observation and not as a procedure.** When a series
+      of passes stops converging because each correction enables the next finding of the same
+      shape, the remedy the field found is to change what is being checked rather than to patch
+      once more: scope the reviewer to changed regions, change the instrument's layer, or
+      relocate the residual to the layer that already catches it — and **STOP with a named
+      state** rather than run the next round. Verified at three sites in
+      `infinite-portfolio-canvas`: its `docs/hardening-taxonomy.md` corollary ("when a tool
+      enters an arms race with its reviewer, it is checking at the wrong level"),
+      `.context/a5-t2a-resume.md` (four consecutive passes each finding one more spelling the
+      claim text seemed to cover; changing the instrument's FORM — printing the patterns,
+      stating the cause as line- and grammar-local — took findings from **nine to zero**, and
+      the residual became a named ticket with its own budget whose trigger is a *relapse*), and
+      `.context/gate-b-a5-t2a-dispositionen.md` (six of six findings on the checker's grammar,
+      none on product behaviour). Before this round the kit stated the same idea in one place only,
+      and locally — the invariant-checker escalation row below ("adding one more regex arm per
+      newly-discovered spelling is *not* the ladder working"); as of this round the story named
+      below and the amended guard-scope story also state it, so the count is a before-picture and
+      not a current inventory.
+      **Parked as a story, not written as prose, because it lands on a decision branch that is
+      already under design:** as a procedure it changes which rung `harden-finding` picks when
+      passes stop converging, and that branch is the subject of the guard-scope-precheck story.
+      Story: `docs/superpowers/stories/2026-08-17-arms-race-remedy-as-procedure-story.md`,
+      which **inherits from and is inherited by**
+      `docs/superpowers/stories/2026-08-04-harden-finding-guard-scope-precheck-story.md` —
+      recorded in both directions on purpose: one decision branch, one design, and whichever is
+      picked up first must read the other rather than re-deriving it.
+      *Trigger: either story being picked up, or a third arms-race series observed.*
+- [ ] **A handback says nothing about how much context produced it.** When a gate loop stops and
+      surfaces — §5's `clearly stuck → STOP and surface`, or the new scope stop beside it — the
+      human decides whether to continue in the same session or start fresh, and one input that
+      could inform it is absent: how much context the surfacing agent had left. How much that
+      input actually decides is unestablished, and the evidence below shows only that operators
+      asked for it repeatedly, not that it changed an outcome. The field adopted
+      it as a standing field, carried as a documented instruction and nothing stronger — nothing
+      verifies that an agent supplies the figure, that a reader demands it, or that a self-reported
+      percentage is accurate: the consumer's
+      `docs/handoff-cowork.md` carries `Kontext-% (einfordern, falls fehlend)` at line 10 and
+      `Kontext-% in Übergaben einfordern` at line 72 — demand it, and demand it again when a
+      handback arrives without it. **This row exists because the round first rejected the item on
+      a search that missed that file** (it searched the consumer's `.context/`, `todos.md` and
+      `CLAUDE.md`, where the only percentages are pixel-coverage measurements), and Gate-B pass 1
+      caught the rejection. Two things are unsettled, which is why this is a row and not a
+      sentence in §5: whether a self-reported context figure is reliable enough to steer a
+      decision, and whether it belongs in §5's stop text, in the handoff-shaped artifacts, or
+      both. Adding it to §5 mid-cycle would also have put a third rule into a paragraph already
+      under review.
+      *Trigger: the next §5 edit touching the stop-and-surface text, or a session continued past
+      a handback and lost to compaction where the figure would have said to start fresh.*
+- [ ] **EXPERIMENTAL — proportionality for findings whose subject is a test instrument.**
+      Proposed rule: a finding about the instrument rather than about product behaviour gets one
+      repair round, then is collected — unless it demonstrates a false-green on product
+      behaviour, which keeps it iterating. Explicitly **not field-proven**; the report marks it
+      as a proposal, and its motivation is that late cycles spent a growing share of passes on
+      meta-instruments. Cross-project corroboration for the *motivation only*, from this repo's
+      own history: PR #23's closing commit records that "of 27 Blocker/Major findings, 16 were
+      in the never-committed scratch harness, 10 in the design spec's narration, 1 in the plan"
+      (`7bbdb14`) — 16 of 27 on the instrument. What is unproven is the *remedy*: capping repair
+      rounds by the finding's subject weakens the Blocker/Major rule that makes the loop
+      trustworthy, and the false-green carve-out is the whole difficulty rather than a footnote.
+      *Trigger: a cycle where instrument findings measurably starve product findings of passes,
+      with both counted.*
+- [ ] **EXPERIMENTAL — pre-split heuristic for oversized tranches.** Proposed rule: a tranche
+      exceeding a size signal (the report suggests >N new runners or steps) is split by subject
+      at PLAN time. **Its factual premise is rejected as unverified, not merely caveated:** the
+      report states that every large tranche in the field split anyway and always through an
+      expensive stop-decide-re-record round-trip, and it cites no tranche records, sizes or
+      measurements — none were found, and the round did not adopt the frequency or the cost claim.
+      What is parked is the *proposal only*. The threshold is then the entire remaining question:
+      a number chosen without measurement would split tranches that did not need it, and this
+      repo has no measurement of its own to set one.
+      *Trigger: three tranches in one project splitting mid-execution, with their sizes
+      recorded* — that is the sample a threshold could be read from.
 
 - [x] **A failed Codex call counts as a pass — false ✓ in the firing direction.**
       **DONE in 0.8.0.** The hook now reads the result before counting. Five classes
@@ -311,6 +468,26 @@ backlog.
       foreground. What it does establish is that calls well past 120 s can return as ordinary
       foreground results here. The row's deliverable — a `/workflow-init` preflight check — is
       unbuilt, so the row is not discharged by this.
+      **SECOND INDEPENDENT FIELD EVIDENCE (2026-08-17) — the row is ripe.** A second consumer,
+      `infinite-portfolio-canvas`, discovered the variable by measurement rather than from
+      `README.md`: six real `mcp__codex__review` passes (57 findings, pass 6 clean on the
+      quality branch) were each auto-backgrounded past 120 s, none reached the hook, and the
+      closing commit drew a STOP against a structurally zero counter. Setting the variable to
+      `0` in `~/.claude/settings.json`'s `env` block fixed counting on the following cycles (5
+      counted passes, then 24). **What the variable buys, separated, because this row previously
+      blurred them:** it keeps a long *successful* call in the foreground so its result reaches
+      the hook and is counted at all — the 0 → 5 → 24 progression is that effect — **and**
+      separately it removes dependence on C1's residual, the hook recognizing today's wording of
+      the harness notice. Both are real; neither is the other.
+      **What this evidence does not show:** a documentation gap. `README.md` § Setup step 2b
+      already documents the variable, its version requirement, that it is read at process start,
+      the launch-environment caveat, both usable values and both outcomes — so the honest reading
+      is that the shipped documentation did not reach an operator who then spent four dated
+      measurement rounds rediscovering it, which is an argument for the **preflight check** this
+      row's deliverable already is, not for more prose. No control run with the variable unset was
+      made in that repo either.
+      Evidence: `docs/field-reports/2026-08-16-canvas-a1-a5-field-report.md` item 4 and that
+      repo's `todos.md` § Tooling revalidation.
       *Trigger: after that story lands* (spec:
       `docs/superpowers/specs/2026-07-31-failed-codex-call-counts-as-a-pass-design.md`).
 
@@ -320,6 +497,37 @@ backlog.
       found" on CLI 2.1.x while `dev-workflow@dev-workflow-kit` works. README documents
       the qualified form as a workaround; file via `/feedback` so the behaviour and the
       docs stop disagreeing.
+
+- [ ] **Upstream-report candidate: `mcp-codex-dev` error envelopes swallow the reason.** A
+      failed gate call returns `success: false` with no `error.code`, so neither the operator
+      nor the hook can tell an exhausted quota from a server defect; the cause is findable only
+      in `~/.codex/sessions/<Y>/<M>/<D>/rollout-*.jsonl` under `rate_limits`. Three confirmed
+      instances, all from `infinite-portfolio-canvas`'s memory note
+      `codex-empty-envelope-means-credits` (2026-08-15/16), verified there this round:
+      (1) an empty `success: false` envelope with no code while `mcp__codex__health` still
+      reported `ok: true` — the rollout log carried `credits.balance: "0"`,
+      `has_credits: false`, `codex_error_info: "usage_limit_exceeded"`; it read as a server
+      defect, and an A5/T2b Gate-B cycle was abandoned after nine passes with the cause open;
+      (2) the OpenRouter route, the same wall in another shape — `success: false` carrying
+      progress prose in the `review` field, `unexpected status 402 Payment Required:
+      Insufficient credits`, `codex_error_info: "other"`;
+      (3) a `success: true` envelope carrying only progress prose and no answer line, i.e. an
+      incomplete pass wearing a success envelope.
+      **The upstream ask is the report's own and is not widened here:** carry the credit or quota
+      reason in the envelope — `NO_CREDITS` and friends — which covers instances (1) and (2).
+      **Instance (3) is recorded as a limitation of that ask, not as a second proposal**, because
+      the report asked for a failure reason on a `success: false` envelope and a `success: true`
+      one is a different shape that a credit code cannot reach; the report also says to add
+      nothing beyond its list. What the evidence supports about (3) is only what was seen: one
+      degeneration emitted `task_complete` with no error and produced no file, and one silent
+      death emitted no `task_complete` at all — so `task_complete` alone did not separate a
+      finished pass from an abandoned one in those cases. Whether any combination of artifact,
+      answer line and log growth is necessary or sufficient was not established, and this row
+      does not claim it.
+      Kit-side relevance: the hook's `failure` class can see *that* a gate call failed and never
+      *why*, which is the same "no error code surfaced (unclassified)" shape this repo met in
+      0.8.x use. **Deliberately not fixed here** — both are fields in the server's envelope; file
+      them against `mcp-codex-dev`, which is Daniel's own server, not this repo's scope.
 
 ## Someday
 
@@ -346,10 +554,19 @@ backlog.
       carries this row's conditions with each marked kept, moved or dropped.
       *Trigger: 10 stories or 20 ledger rows* — below that the sample says more
       about the last week than about the workflow.
-- [ ] **`/capture-finding` as an intake extension of `harden-finding`.** An extension,
-      not a sibling command: a finding captured outside the ladder is how a ledger
-      quietly acquires two formats. *Trigger: the first production finding* — one that
-      arrives from real use rather than from a gate or a bot.
+- [x] **`/capture-finding` as an intake extension of `harden-finding`.** **CLOSED 2026-08-17 —
+      folded into the Finding A story, which is now the single owner of the finding-to-ledger
+      route.** The trigger fired exactly as written: the canvas A1–A5 field report
+      (`docs/field-reports/2026-08-16-canvas-a1-a5-field-report.md`) is a production finding set
+      arriving from real use rather than from a gate or a bot. It fired **and answered itself
+      negatively**: eleven items were routed by hand through `dev-workflow:intake`, `todos.md`
+      rows, one upstream note and one reasoned rejection, and capture was never the part that
+      hurt. What did hurt is durability and reach — a fixed finding surviving a compaction or a
+      handoff, and a project that never opens PRs never reaching `process-pr-review` step 5 —
+      and both of those already belong to Finding A. A second command on that route is how the
+      ledger acquires two formats, which is this row's own stated reason for existing as an
+      extension; the honest conclusion is that the extension point is Finding A's design, not a
+      command of its own.
 
 ## Tooling revalidation
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
@@ -496,6 +713,13 @@ backlog.
       **TRIGGER FIRED (2026-08-04):** the 2026-08-03 hardening round edits §5. Story:
       `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md`, which
       carries this row's conditions with each marked kept, moved or dropped.
+      **INHERITED 2026-08-17: this story is now the single owner of the finding-to-ledger
+      route.** The `/capture-finding` row in § Someday closed into it after its own trigger
+      fired and answered negatively — manual capture of eleven field findings worked, so the gap
+      is durability across a compaction or handoff and reach into no-PR projects, both of which
+      are already this story's scope. What it inherits is one constraint, not new scope: whatever
+      route it designs is the **only** one, because a second capture entry point is how the
+      ledger acquires two formats.
       *Trigger: the next round that touches §5, or a project
       reporting an empty ledger across cycles that fixed findings.*
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
