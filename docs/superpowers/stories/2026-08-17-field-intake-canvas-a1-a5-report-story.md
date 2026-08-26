@@ -32,9 +32,12 @@ but not answered.
 ## 3. Acceptance criteria
 
 - [ ] The report is committed at `docs/field-reports/2026-08-16-canvas-a1-a5-field-report.md`
-      with every machine-local absolute path replaced by the repo's name — `grep -c '/Users/'`
-      on the committed file returns 0 — and the surrounding local-drafts exclusion still
-      holds for any other file in that directory.
+      with every machine-local absolute path replaced by the repo's name —
+      `grep -cE '/Users/|/home/|/var/folders/|/private/|[A-Za-z]:\\'` on the committed file
+      returns 0 — and the surrounding local-drafts exclusion still holds for any other file
+      in that directory. Those five forms are the ones this environment produces, not every
+      absolute path a machine could emit; the check is a floor, and the requirement above it
+      is the criterion.
 - [ ] Each of the eleven numbered items carries **exactly one** disposition recorded in
       the repo: a `todos.md` row with a named trigger, a `docs/hardening-log.md` row
       appended via `dev-workflow:harden-finding`, a parked story, an upstream-candidate
