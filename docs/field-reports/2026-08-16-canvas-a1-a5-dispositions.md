@@ -348,3 +348,20 @@ error, no timeout, nothing in flight: the announcement simply replaced the act. 
 the remainder of that cycle: during an active gate cycle a turn ends with the tool call actually
 issued, a message sent, or an explicit statement that something is blocking — and noticing the
 turn ending with the call not in flight *is* that statement.
+
+**Prediction recorded 2026-08-28, before the pass that tests it.** Gate-A pass 7 of the
+review-loop-economics cycle found that the spec's own nineteen-row condition-inventory table (§6.2)
+had become the loop's largest finding source: **7 of 29 Blocker/Major, including 4 of 9 Blockers**,
+every one a row contradicting the design it existed to account for. The table was split out —
+method and passage list stay in the spec, the row-by-row dispositions move to an artifact produced
+once against frozen text and gated before implementation.
+
+Verbatim prediction, so it can be scored rather than remembered: **pass 8 should lose roughly 7 of
+29 Blocker/Major and 4 of 9 Blockers to the §6.2 removal. If pass 8 does not fall materially, the
+generator is elsewhere and the whole-artifact split becomes the live candidate.**
+
+Worth keeping either way: this is the third site of one defect class in a single cycle — a
+restatement that must track a moving original. It appeared in the story's acceptance criteria
+(five Blocker occurrences), then inside the spec's own accounting table (four more). The lesson is
+not "write the table more carefully"; it is that a second copy of a moving thing drifts, and the
+remedy is to produce it once against something that has stopped moving.
