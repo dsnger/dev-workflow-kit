@@ -310,3 +310,33 @@ established neither whether the hash was computable at any given pass nor whethe
 failed to persist, and it did not read the hook at the site that computes it. Its one new lead — that the second
 shape's STOP arrived at a `git reset --soft`, which reaches the reset path only via `is_commit` —
 ties it to the item-2 row and is a lead, not a finding.
+
+---
+
+## Field note added 2026-08-28 — criteria that restate the design are a Blocker generator
+
+Observed across Gate-A passes 1–4 of the review-loop-economics cycle
+(`docs/superpowers/specs/2026-08-28-review-loop-economics-design.md`): **five Blocker-severity
+occurrences of one defect**, where the spec was revised and the story's acceptance criteria
+still described the superseded mechanism — criterion 8 demanding a floor a risk-`high` story
+cannot license; criterion 5 describing artifact-kind severity after a consequence-keyed test was
+settled; desired outcome 2 keeping a false-green-only carve-out; criterion 3 reversing the
+settled meanings of derived floor and hook knob; and criterion 4 requiring both shipped copies to
+describe a mechanism the design had deleted — where implementing the criterion would have
+recreated the rejected design in order to satisfy a criterion about it.
+
+The cause is structural rather than carelessness: those criteria embedded **mechanism detail**,
+so each had to track a design still in motion. A criterion that restates the design is a second
+copy of it, and this repo's ledger already records what a second copy does — "a restatement is a
+second copy that can drift".
+
+Remedy applied in that cycle: the criteria were rewritten to state **what must be observably
+true** rather than **how**, with the bound that a criterion which cannot be made observable
+without naming mechanism is one where the mechanism *is* the contract, and there it stays named.
+
+**Captured, not acted on beyond that cycle.** This is field evidence for whoever next touches
+`dev-workflow:intake`, whose story template says acceptance criteria "describe observable
+outcomes or constraints, never implementation steps" — the rule exists; what this record adds is
+five measured occurrences of the failure it is meant to prevent, and the observation that the
+drift shows up as *Blockers in a later gate* rather than as a bad-looking criterion at intake
+time.

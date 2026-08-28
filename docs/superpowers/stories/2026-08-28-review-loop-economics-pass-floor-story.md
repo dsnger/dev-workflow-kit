@@ -143,54 +143,34 @@ deliverable rather than a convenience.
       pass total and no distribution — because the findings files behind those numbers live
       under gitignored `.context/`. It is also the durable half of Q6: a curve in a commit body
       survives a fresh checkout, a cleared `.context/` and a different machine.
-- [ ] **Every cycle's floor leaves a trace in history, default or not.** Both copies require a
-      cycle to record `floor N per <cited story path>` in its closing commit body — one entry
-      per cited story, N being the **profile-derived** floor, which is the floor §5 obliges —
-      and, where a user's workspace knob is set, to record it **separately and labelled as what
-      it is**: `floor N per <cited story path>; hook reminder threshold M per workspace knob`.
-      Checkable: the requirement is stated in both copies, and this story's own closing commits
-      carry it.
-      **Every cycle, not only a non-default one** (revised 2026-08-28 after Gate-A pass 2).
-      An earlier wording required the line only for a non-default floor, which contradicted
-      criterion 9 — this story is risk `high` and runs at the default 3, yet must demonstrate
-      the provenance path. It also made an absent line ambiguous between "default floor" and
-      "someone forgot", and left the user-knob divergence with nowhere to be disclosed.
-- [ ] **The gate-off residual is named in the shipped text, not merely avoided.** Both copies
-      state that the §5-obliged floor is **derived and stated by the agent**, that nothing
-      mechanical checks the derivation against the cited profiles, and that the residual is
-      therefore a **statement** an agent can get wrong or misreport — by stating a floor the
-      cited set does not license, by omitting a higher-risk cited story, by minting or editing a
-      profile to level 0, or by presenting an incomplete cited set. Checkable by reading. This
-      is a disclosure, not a guard: no mechanism is claimed for it.
-      **The residual is a statement, not a file** (revised 2026-08-28 after Gate-A passes 3-4).
-      An earlier wording required both copies to say the floor is *agent-written into per-clone
-      gitignored state* and that *writing 1* is the cheapest lever — describing a mechanism the
-      design has since deleted, because its protection made an agent-written floor
-      indistinguishable from a user's. Implementing that wording would have recreated the
-      rejected mechanism in order to satisfy a criterion about it.
-- [ ] **Severity is pinned as a closed decision in both copies, keyed on consequence, with the
-      carve-out stated at the same place.** Both state that Blocker and Major claim product
-      behaviour, an invariant, or a contract, and both state the deciding test: **name the
-      in-system reader of this text — a gate, skill, rule, escalation procedure or scaffolded
-      template — and the decision it takes differently if the text is wrong; if you can name
-      neither, the finding is Minor, collect and never iterate.** A human reader never
-      satisfies the test. Findings about narration, prose describing a mechanism, and test
-      instrument internals appear as **worked examples of that test, not as a second rule
-      beside it** — a copy stating a categorical demotion by subject *and* the test fails this
-      criterion, because two procedures can disagree on one finding.
-      **The instrument carve-out runs in both directions:** an instrument finding keeps its
-      severity when it shows the instrument changes what the gate concludes about product
-      behaviour — a false green, and equally a false red or a check that blocks a valid change.
-      Naming only false green would demote a check that fails for wiring reasons and costs a
-      correct change.
-      Both copies also still state that the reviewer reports every finding with severity and
-      confidence and that the filter is applied downstream by us; a copy that drops
-      coverage-first fails this criterion even if the severity rule is correct.
-      *(Revised 2026-08-28 after Gate-A pass 2 found this criterion still describing the
-      pre-decision form — artifact-kind demotion with a false-green-only carve-out — which no
-      implementation could satisfy alongside the settled contract. Encodes the settled
-      consequence-keyed decision and the bidirectional carve-out; sparring session, under
-      Daniel's 2026-08-28 delegation.)*
+- [ ] **Every cycle's floor is reconstructible from history alone, default or not.** From a
+      cycle's closing commit body, without consulting the spec or any per-clone state, a reader
+      can determine: **which floor §5 obliged**, **which stories derived it**, and — where a
+      user's workspace knob was set — **that its number is the hook's reminder threshold and not
+      the obligation**. Every cycle, so an absent record is never ambiguous between "the default
+      applied" and "someone forgot". The record is **machine-extractable**, because the deferred
+      P8 measurement reads it; both copies pin one form, and the spec states which.
+- [ ] **The gate-off residual is disclosed in the shipped text, not merely avoided.** A reader of
+      either copy learns, without inferring it: **that the floor a cycle owes is produced by the
+      agent rather than established by any mechanism**; **that nothing checks it against the
+      cited profiles**; and **by what specific routes it can therefore be wrong** — the routes
+      enumerated, and the enumeration stated as a floor rather than as a complete list. The text
+      claims **no guard**: a reader must not be able to come away believing the residual is
+      mitigated by anything the design ships. Checkable by reading either copy.
+- [ ] **Severity is decided by one stated test in both copies, and the test is keyed on
+      consequence.** Four properties, each checkable by reading either copy:
+      **(a)** Exactly **one** procedure decides severity. A copy that states a categorical
+      demotion by subject *alongside* the test fails, because two procedures can disagree on one
+      finding; subject-based cases may appear only as worked examples of the test.
+      **(b)** The test turns on whether **something in the system takes a different decision**
+      if the text is wrong — not on what kind of file the text lives in, and not on a human
+      reader, whose cost §5's prose exemption already prices as non-gating.
+      **(c)** The instrument carve-out is **symmetric**: an instrument finding keeps its severity
+      whenever it shows the instrument changes what a gate concludes about product behaviour,
+      in **either** direction. A copy naming only a false green fails, because it would demote a
+      check that fails for wiring reasons and costs a correct change.
+      **(d)** Coverage-first survives: the reviewer still reports every finding with severity and
+      confidence, and the filter is ours. A copy that drops this fails even if (a)–(c) hold.
 - [ ] **Each of Q1–Q6 is answered or rejected in the shipped text, with a reason, and the
       answers do not contradict each other.** Q1 (clean-completion precedence), Q2 (a declined
       expansion's exit), Q3 (scope stop vs. clean completion), Q4 (whether a decline binds
@@ -265,15 +245,18 @@ deliverable rather than a convenience.
 
 ## 5. Open questions
 
-- **Which floor governs a cycle citing several stories with different profiles?** §5 already
-  aggregates the other dimensions explicitly — the battery runs once, each profiled story
-  satisfies its own mode, lens sets are unioned, skip-eligibility requires unanimity — and a
-  scaled floor adds a dimension with no aggregation rule. Lowest, highest, and per-story are
-  all defensible and they disagree.
-- **Does a profile change mid-cycle move the floor for passes already run?** §5 makes the
-  story header the single writable copy, read fresh at each pass, and says passes run under a
-  lower profile keep counting toward the floor. If the floor itself is now profile-derived, a
-  mid-cycle raise changes the target after some passes are already banked.
+- ~~**Which floor governs a cycle citing several stories with different profiles?**~~
+  **Answered 2026-08-28: unanimity.** Floor 1 only if every cited story is profiled and every
+  one is at level 0; any other set yields 3. It follows §5's own precedent for the analogous
+  relaxation — "skip-eligible only if **every** cited story is" — and it is the only reading
+  consistent with invariant 2's firing direction, since a lowest-cited-floor rule would
+  under-review a cycle that also touches a high-risk story.
+- ~~**Does a profile change mid-cycle move the floor for passes already run?**~~
+  **Answered 2026-08-28**, and it needed no new rule — three existing ones compose. The floor
+  derives from the current profile at each pass; passes already run keep counting; closing
+  requires the floor as currently derived. The consequence worth stating is that a **raise costs
+  at least one further pass regardless of the arithmetic**, because §5 already requires the
+  final clean pass to run under the current profile.
 - ~~**What floor does an unprofiled cycle get?**~~ **Answered 2026-08-28** by the
   single-predicate decision in criterion 1: no profile means `max(risk, security)` is not 0,
   so the default of 3 stands. Kept rather than deleted, because the answer is only obvious
