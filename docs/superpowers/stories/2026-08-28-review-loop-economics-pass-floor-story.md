@@ -129,9 +129,12 @@ deliverable rather than a convenience.
       plan loop** (in the plan's commit body) and the **Gate-B cycle** (in the closing amend) to
       record that loop's per-pass finding and Blocker counts, in one pinned greppable form,
       following the `3cdd075` precedent
-      (`Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0.`). Checkable: the
-      requirement is stated in both copies, and this story's own commits carry it for each loop
-      that ran.
+      (`Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0.`). The form is complete
+      enough that a reader can tell **which pass each number belongs to** — incomplete passes are
+      excluded and they consume pass numbers — and **which model each pass ran under**, which an
+      existing convention already requires beside a finding count. A **legitimately skipped** loop
+      records the skip rather than leaving a silent gap. Checkable: the requirement is stated in
+      both copies, and this story's own commits carry it for each loop that ran.
       **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
       requirement would leave the *dominant* cost unmeasured: the loops this story cites as
       evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
@@ -157,6 +160,10 @@ deliverable rather than a convenience.
       enumerated, and the enumeration stated as a floor rather than as a complete list. The text
       claims **no guard**: a reader must not be able to come away believing the residual is
       mitigated by anything the design ships. Checkable by reading either copy.
+      **And both copies oblige the agent to leave the user's floor knob alone** — never written,
+      never removed by any rule this change ships; where one exists a cycle discloses it rather
+      than acting on it. Observable on this branch: a knob present before a cycle is byte-identical
+      after it.
 - [ ] **Severity is decided by one stated test in both copies, and the test is keyed on
       consequence.** Four properties, each checkable by reading either copy:
       **(a)** Exactly **one** procedure decides severity. A copy that states a categorical
@@ -171,6 +178,11 @@ deliverable rather than a convenience.
       check that fails for wiring reasons and costs a correct change.
       **(d)** Coverage-first survives: the reviewer still reports every finding with severity and
       confidence, and the filter is ours. A copy that drops this fails even if (a)–(c) hold.
+      **(e)** **The pass raising a finding is not an in-system reader of the text it is
+      reviewing.** Without this the test demotes nothing — any review finding could name the
+      review itself as the reader — so a copy stating (a)–(d) and omitting (e) fails. Gates must
+      remain legitimate readers of rule text they will later apply; what is excluded is the
+      reviewing pass, not gates.
 - [ ] **Each of Q1–Q6 is answered or rejected in the shipped text, with a reason, and the
       answers do not contradict each other.** Q1 (clean-completion precedence), Q2 (a declined
       expansion's exit), Q3 (scope stop vs. clean completion), Q4 (whether a decline binds
@@ -182,6 +194,13 @@ deliverable rather than a convenience.
       no pass carrying it counts as clean — the qualification appears **at each of those three
       rules** in both copies, not only at the new clause. Q2 was reverted last cycle precisely
       because that did not happen.
+- [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
+      fully arrive.** Both copies state: that a loop already running finishes under the rules it
+      started with; what a loop does when its starting rules cannot be established, covering
+      **every part this change touches and not the floor alone**; and that a downstream project
+      adopts by re-running the scaffolder, which may write nothing, be declined, or be merged in
+      part — with the consequence of a partial adoption stated rather than assumed away.
+      Checkable by reading either copy.
 - [ ] **Every condition of the replaced prose is accounted for.** The change lists what each
       replaced §5 passage required and marks each requirement kept, moved, or deliberately
       dropped, per the AGENTS.md Don't quoted in §4. Checkable: the accounting exists and
