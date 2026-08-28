@@ -99,15 +99,34 @@ deliverable rather than a convenience.
 
 ## 3. Acceptance criteria
 
-- [ ] **The floor scales by profile, and both copies say which gates it moves.** `CLAUDE.md`
-      §5 and the `/workflow-init` inline template mirror each state a mandatory pass floor of
-      **1** for a trivial or docs-only cycle and **3** otherwise, and each states that this one
-      value governs **Gate A and Gate B alike**. Two levels, not three: `high` gets no extra
-      mandatory passes, taking its added rigor from lens sets and evidence mode instead.
-      Checkable by reading both copies. The two-gates clause is not decoration —
-      `codex-gate.sh:119` sets a single `floor`, consumed at `:946` for Gate B and at `:966`
-      for Gate A — which is why the docs-only arm is phrased as a **Gate-A** claim in both
-      copies: a docs-only cycle already has no Gate B to floor.
+- [ ] **The floor scales by profile, on one predicate, and both copies say which gates it
+      moves.** `CLAUDE.md` §5 and the `/workflow-init` inline template mirror each state a
+      mandatory pass floor of **1** where `max(risk, security)` is 0 and **3** otherwise —
+      unprofiled cycles included, which keep today's 3. Two levels, not three: `high` gets no
+      extra mandatory passes, taking its added rigor from lens sets and evidence mode instead.
+      Each copy also states that this one value governs **Gate A and Gate B alike**, which is
+      not decoration: `codex-gate.sh:119` sets a single `floor`, consumed at `:946` for Gate B
+      and at `:966` for Gate A.
+      **One predicate, not two** (Daniel, 2026-08-28). An earlier draft added a `docs-only`
+      arm; it is dropped because it does no work and, read path-wise, does the wrong work.
+      A diff-derived reading cannot serve Gate A at all — Gate A runs on a spec, before any
+      diff exists. A story-declared reading is already subsumed: intake defines `trivial` as
+      "no behavioural effect in the artifact's own execution context", which a documentation
+      change has none of. And a path-derived arm would be **wrong in this repo specifically** —
+      `docs/hardening-log.md` is a `docs/**.md` path that drives rung escalation, so "docs"
+      does not imply "changes nothing". That is Section A's reachability test deciding a floor
+      question, which is why the two parts belong in one change.
+- [ ] **A cycle's closing commit body carries its per-pass shape.** Both copies require the
+      closing commit of a Gate-B cycle to record the per-pass finding and Blocker counts, in
+      one pinned greppable form, following the `3cdd075` precedent
+      (`Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0.`). Checkable: the
+      requirement is stated in both copies, and this story's own closing commit carries it.
+      **Why it is in scope** (approved as a scope addition, Daniel, 2026-08-28): the deferred
+      economics measurement routed to P8 is otherwise answerable only for cycles whose author
+      happened to write the curve down — `3cdd075` and `baa75c1` did, `7bbdb14` recorded the
+      pass total and no distribution — because the findings files behind those numbers live
+      under gitignored `.context/`. It is also the durable half of Q6: a curve in a commit body
+      survives a fresh checkout, a cleared `.context/` and a different machine.
 - [ ] **A non-default floor leaves a trace in history.** Both copies require a cycle that ran
       a floor other than the default to record `floor N per <story path>` in its closing
       commit body. Checkable: the requirement is stated in both copies, and any cycle in this
@@ -194,8 +213,10 @@ deliverable rather than a convenience.
   story header the single writable copy, read fresh at each pass, and says passes run under a
   lower profile keep counting toward the floor. If the floor itself is now profile-derived, a
   mid-cycle raise changes the target after some passes are already banked.
-- **What floor does an unprofiled cycle get?** §5 has three defined cases for an unresolvable
-  or absent profile; the default of 3 is the obvious answer, but it is currently unstated.
+- ~~**What floor does an unprofiled cycle get?**~~ **Answered 2026-08-28** by the
+  single-predicate decision in criterion 1: no profile means `max(risk, security)` is not 0,
+  so the default of 3 stands. Kept rather than deleted, because the answer is only obvious
+  once the predicate is one thing.
 
 ## 6. Suggested size
 
