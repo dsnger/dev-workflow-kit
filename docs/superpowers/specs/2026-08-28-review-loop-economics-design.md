@@ -261,7 +261,9 @@ self-selected subset with nothing marking that it did.
 ## 6. Old-conditions accounting
 
 Required by the AGENTS.md Don't and by story criterion 6. Making the floor variable falsifies
-prose that assumes it is 3. **Ten sites, eight changing**, identical in both copies.
+prose that assumes it is 3. **Twelve sites, ten changing**, identical in both copies: the five
+paired rows below (ten sites, of which row 5's pair stays) plus the paired sentence that follows
+the table (two sites, both changing).
 
 | # | `CLAUDE.md` | template | Text | Disposition |
 |---|---|---|---|---|
