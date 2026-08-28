@@ -145,20 +145,29 @@ deliverable rather than a convenience.
       survives a fresh checkout, a cleared `.context/` and a different machine.
 - [ ] **Every cycle's floor leaves a trace in history, default or not.** Both copies require a
       cycle to record `floor N per <cited story path>` in its closing commit body — one entry
-      per cited story — and, where a workspace knob set by the user diverges from the profile
-      derivation, to record both: `floor N per workspace knob; profile derivation M per <cited
-      set>`. Checkable: the requirement is stated in both copies, and this story's own closing
-      commits carry it.
+      per cited story, N being the **profile-derived** floor, which is the floor §5 obliges —
+      and, where a user's workspace knob is set, to record it **separately and labelled as what
+      it is**: `floor N per <cited story path>; hook reminder threshold M per workspace knob`.
+      Checkable: the requirement is stated in both copies, and this story's own closing commits
+      carry it.
       **Every cycle, not only a non-default one** (revised 2026-08-28 after Gate-A pass 2).
       An earlier wording required the line only for a non-default floor, which contradicted
       criterion 9 — this story is risk `high` and runs at the default 3, yet must demonstrate
       the provenance path. It also made an absent line ambiguous between "default floor" and
       "someone forgot", and left the user-knob divergence with nowhere to be disclosed.
 - [ ] **The gate-off residual is named in the shipped text, not merely avoided.** Both copies
-      state that the floor value is agent-written, lives in per-clone gitignored state that no
-      reviewer sees in a diff, and that nothing verifies the written value against the story
-      profile — and that a floor of 1 is therefore the cheapest available gate-off lever.
-      Checkable by reading. This is a disclosure, not a guard: no mechanism is claimed for it.
+      state that the §5-obliged floor is **derived and stated by the agent**, that nothing
+      mechanical checks the derivation against the cited profiles, and that the residual is
+      therefore a **statement** an agent can get wrong or misreport — by stating a floor the
+      cited set does not license, by omitting a higher-risk cited story, by minting or editing a
+      profile to level 0, or by presenting an incomplete cited set. Checkable by reading. This
+      is a disclosure, not a guard: no mechanism is claimed for it.
+      **The residual is a statement, not a file** (revised 2026-08-28 after Gate-A passes 3-4).
+      An earlier wording required both copies to say the floor is *agent-written into per-clone
+      gitignored state* and that *writing 1* is the cheapest lever — describing a mechanism the
+      design has since deleted, because its protection made an agent-written floor
+      indistinguishable from a user's. Implementing that wording would have recreated the
+      rejected mechanism in order to satisfy a criterion about it.
 - [ ] **Severity is pinned as a closed decision in both copies, keyed on consequence, with the
       carve-out stated at the same place.** Both state that Blocker and Major claim product
       behaviour, an invariant, or a contract, and both state the deciding test: **name the
@@ -227,11 +236,14 @@ deliverable rather than a convenience.
 
 - `## Hook` — "**The hook always exits 0.** It is advisory; a reminder that can fail closed
   would make the workflow unusable whenever Codex is down or the environment is odd." The
-  prompt-only decision for part 1 rests on this: today's floor of 3 is already advisory, so an
-  agent-written floor adds no new enforcement class.
+  prompt-only decision for part 1 rests on this: the hook's floor was only ever a reminder
+  threshold, and §5's text is what obliges an agent — so deriving the floor in the text adds no
+  new enforcement class and removes none.
 - `## Hook` — "**Loose in the firing direction.** On uncertainty, fire. A missed commit
-  (false ✓) is the dangerous direction; a redundant warning is the accepted price." Lowering a
-  floor moves against this direction, which is what the residual-risk criterion discloses.
+  (false ✓) is the dangerous direction; a redundant warning is the accepted price." This is what
+  licenses the accepted cost: a level-0 cycle draws a hook reminder its derived floor does not
+  owe, and a redundant warning is the price named here. Teaching the hook to fall silent would
+  be the false ✓ the same sentence calls dangerous.
 - `## Prompts and scaffolding` — "**`/workflow-init`'s templates stay inline** in the command
   body." The mirror edit lands in the command body, never in a file read from disk.
 - `## Prompts and scaffolding` — "**Prompt changes pass `docs/prompt-standards.md`** — all 12
