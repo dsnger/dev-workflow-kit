@@ -31,7 +31,8 @@ Four measurements, each citable:
   under one setting, not a demonstration of what caused those durations.
 
 A three-pass floor is charged to every cycle regardless of what the change is worth
-reviewing, and a docs-only or trivial story pays the same toll as one that rewrites a gate.
+reviewing, so a story with no behavioural surface pays the same toll as one that rewrites a
+gate.
 
 **A worked example of the same class, found while writing this story.** The brief that
 commissioned it cited "34 Gate-A passes on one 2848-line spec" against the 2026-08-17 ledger
@@ -49,8 +50,9 @@ this story repairs.
 Three outcomes, each observable in the shipped prompt text.
 
 1. **A cycle's mandatory pass count reflects what the story is worth reviewing**, instead of
-   charging every cycle the same three passes per gate. A trivial or docs-only story stops
-   paying a toll that buys nothing; a standard or high story keeps the floor it has today.
+   charging every cycle the same three passes per gate. A story the profile puts at level 0
+   stops paying a toll that buys nothing; a standard or high story keeps the floor it has
+   today.
 2. **Severity means product behaviour.** A reader of either §5 copy can decide, without
    judgement calls, whether a finding about narration, about prose describing a mechanism, or
    about a test instrument's internals is allowed to hold the loop open — and knows the one
@@ -164,15 +166,26 @@ deliverable rather than a convenience.
 - [ ] **The two copies stay in parity.** Every rule this story changes reads the same in
       `CLAUDE.md` §5 and in the `/workflow-init` template, except where a wording difference is
       deliberate and stated as such. Checkable by diffing the two regions.
-- [ ] **A reduced floor is demonstrated once, end to end, on this branch.** A docs-only or
-      trivial cycle here runs its gate at floor 1 and its closing commit body carries
-      `floor 1 per <story path>` — against the 3 that same cycle owed before this change.
-      **What this shows is bounded, and the criterion is worded so it cannot be read wider:
-      the knob and the provenance path work.** It is not evidence that review loops became
-      cheaper. One cycle at a reduced floor measures the mechanism, not the economics, and
-      reading a working mechanism as an improved outcome is the overclaim class AGENTS.md
-      names as this repo's most persistent defect. The economics are measured afterwards, by
-      the follow-up named in §2 — this criterion deliberately does not stand in for it.
+- [ ] **The provenance path is demonstrated end to end on this branch, at the floor this
+      branch actually licenses.** This story is risk `high`, so every cycle citing it owes
+      floor **3** — and its closing commit body carries `floor 3 per <story path>`, showing the
+      derivation and the provenance line working at a real value.
+      **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
+      draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
+      story's own profile, and the only way to satisfy it as written would have been to mint a
+      level-0 micro-story for the purpose — a fixture built to make a criterion pass, which is
+      the fabricated-evidence class §5 names. Instead the floor-1 case becomes the **first
+      checkpoint of the P8 measurement**: the first post-merge cycle whose cited-story set
+      licenses floor 1 must carry the floor-1 provenance line, and P8 reads it.
+      **What is demonstrated here stays bounded, and the wording forecloses reading it wider:**
+      the derivation, the knob and the provenance path work. It is not evidence that review
+      loops became cheaper. Reading a working mechanism as an improved outcome is the overclaim
+      class AGENTS.md names as this repo's most persistent defect, and the economics are
+      measured afterwards by the follow-up named in §2.
+      *(Revised 2026-08-28 after Gate-A pass 1 found the original unsatisfiable — sparring
+      session, under Daniel's 2026-08-28 delegation; flagged to Daniel for final-version review
+      because criterion 8 was his explicit choice. The falsifiability he chose is preserved by
+      the §8 differential verification, the provenance line now, and the P8 checkpoint later.)*
 
 ## 4. Affected AGENTS.md invariants
 
