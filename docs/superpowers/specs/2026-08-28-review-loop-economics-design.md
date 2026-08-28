@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor, severity semantics, and the §5 loop-rule consolidation — Design
 
-**Date:** 2026-08-28 · **Revision:** 8, after Gate-A passes 1-7 (27, 30, 54, 40, 33, 34, 32)
+**Date:** 2026-08-28 · **Revision:** 9, after Gate-A passes 1-8 (27, 30, 54, 40, 33, 34, 32, 33)
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile (read from that header, not copied):** risk `high` · security `none` ·
 validation `battery+check+verification`, no `+abuse-path`.
@@ -60,8 +60,15 @@ carries both reasons. Three pairs, one sentence, no ordering.
   Blocker or Major is not evidence that a previously surfaced one was resolved; the resolution
   is a separate fact, and the closing report names each in-set Blocker/Major and how it was
   resolved — **read from the per-pass findings files, which are the durable inventory**, not from
-  recall. Where those files are unavailable (§5's shapes), the report says which passes it could
-  not read rather than presenting a partial inventory as complete. (An earlier revision called this "definitional", which is the
+  recall.
+  **Where those files are unavailable (§5's shapes), naming the unreadable passes is a disclosure,
+  not a discharge.** §5's degraded-sensitivity answer governs the *tell computation*, which is a
+  reporting duty; it does not reach this duty, which is a **precondition on closure**. A cycle that
+  cannot establish that every in-set Blocker and Major was resolved **does not close** — it stops
+  and surfaces, exactly as it would for any unresolved Blocker, because "we cannot tell" and "it
+  was resolved" are different states and only one of them permits closing. That is the loose
+  firing direction applied where it belongs: the expensive outcome is a cycle closing over an
+  unresolved Blocker nobody could see. (An earlier revision called this "definitional", which is the
   describe-what-a-gate-proves failure: the clean-pass condition proves what the reviewer found
   *this* pass, not what happened to earlier findings.) **The decline does not qualify this
   duty and needs no exception in it** — a declined finding is out-of-set, so the duty never
@@ -169,8 +176,14 @@ timing claim above is therefore about Gate A only.
 a WIP commit from the command's message argument, so an amend that omits it **reads as the cycle
 closing**: counters reset and the accumulated passes are discarded, while the agent believed it
 was only recording a decline. The shipped text therefore pins the form —
-`git commit --amend -m "WIP: <same subject>"` — requires every existing body record to be carried
-forward rather than replaced, and reserves the **non-`WIP:` amend for final closure alone**. This
+the amend must **retain the `WIP:` prefix in the message the command supplies** and **preserve the
+existing body**. Those two together rule out the obvious `-m "WIP: <subject>"`, which replaces the
+*whole* message and would erase the nonce and every prior decline — destroying the durability the
+record exists for. The shipped text pins the property, not one command line: the resulting commit
+message must begin `WIP:` and must contain every record the previous message contained, plus the
+new one. (`--amend` with an edited full message, or `-F` with the previous body plus the addition,
+both satisfy it; `-m` with a bare subject does not.) The **non-`WIP:` amend is reserved for final
+closure alone**. This
 is a hazard §5's Mechanics already names, reached by a new route. During the loop the decision lives in the working record — the dispositions companion, which
 §5 already calls the advisory working copy — and **becomes the record when the commit is written**.
 Nothing about the decline's effect waits for the commit; what the commit provides is durability
@@ -393,23 +406,21 @@ Levels are the numeral `max(risk, security)` yields — `0`, `1`, `2` — never 
 **Every cycle records this, default or not** — an absent line must not be ambiguous between "the
 default applied" and "someone forgot".
 
-**The floor is a property of the cited *set*, not of any one story**, because unanimity makes it
-so: one `high` story among four level-0 ones yields 3 for the cycle, and `floor 3 per <each path>`
-would misattribute that to stories that did not cause it. The line therefore states **one floor,
-then the set that produced it**, with each story's level — `floor 3 per {A (level 0), B (high)}`.
-A single-story cycle is the degenerate case of the same form.
+**Why the set and not the story.** Unanimity makes the floor a property of the cited *set*: one
+level-2 story among four level-0 ones yields 3 for the cycle, so an entry per story would
+misattribute that 3 to stories that did not cause it. `<STORY-SET>` therefore carries the whole
+set with each member's level, and a single-story cycle is its one-element case.
 
-The knob clause is present **whenever the file exists**, not only when its value differs: a
-present-but-equal knob is still a fact about the workspace, and tying disclosure to divergence
-would make an absent clause ambiguous between "no knob" and "a knob that agreed". **Where the file
-exists but carries no usable value** — empty, non-numeric, zero, negative, or unreadable — the
-clause records that rather than a number: `hook reminder threshold: file present, value unusable
-(hook default 3 applies)`. The hook already ignores such a value (`codex-gate.sh:124-127`), so the
-disclosure describes what the hook will actually do, which is the whole point of recording it. **Two cases need
-their own forms**, because the common one has
-nowhere to put them: an artifact citing **no story** records `floor 3 (no story cited)`, and a
-cited **unprofiled** story records `floor 3 per <path> (unprofiled)`. Both keep the derivation
-legible to a reader who otherwise cannot tell an unprofiled cycle from a missing line.
+**Why the knob clause is always present.** A present-but-equal knob is still a fact about the
+workspace, and tying disclosure to divergence would make an absent clause ambiguous between "no
+knob" and "a knob that agreed". `<KNOB>` has a production for each state, including `unusable` —
+empty, non-numeric, or below 1 — which the hook already ignores (`codex-gate.sh:124-127`), so the
+line describes what the hook will actually do.
+
+**The grammar above is the whole specification of this line.** Earlier revisions left prose forms
+beside it — `floor 3 (no story cited)`, a colon-separated unusable clause, a bare axis word like
+`(high)` where the grammar requires a level numeral — and those are **superseded, not alternatives**:
+every case is a production above, and any form that does not parse under it is wrong.
 
 **Both copies state the precedence explicitly, because a reminder is not an instruction and the
 difference has to be actionable.** The order, shipped as text:
@@ -689,9 +700,19 @@ once in both §5 copies:
 | 17 | "Changing a profile" | §4.2 — the floor under a moving profile |
 | 18 | The findings-slot naming paragraph (`<slot>` is `gate-a-spec-pass-<p>`, …) | §5 — the slot grammar gains an optional per-cycle infix |
 | 19 | "On squash-merge, copy every evidence entry…" | §5.1 — three record types added to the carry |
+| 20 | "Before each call, delete every target file and confirm it is gone" (`:199/:386`) | §5 — the slot grammar gains an infix, and the rule gains a **refuse-on-collision** case where the target belongs to another cycle |
+| 21 | The `baseSha` / WIP / closing-amend block (`:500-517`, template `:679-696`) | §2.1 — the mid-cycle amend must retain the `WIP:` prefix and carry forward existing body records; §4.1 and §5.1 add records the closing body must contain |
 
-**Nineteen passages.** The plan's conditions artifact carries one dispositioned entry per row
-and is incomplete without all nineteen.
+**Twenty-one passages.** The conditions artifact carries one dispositioned entry per row and is
+incomplete without all twenty-one.
+
+**Rows 20 and 21 were missing until Gate-A pass 8**, which is worth recording rather than quietly
+repairing: revision 8 added the rules that rewrite them — the refuse-on-collision case and the
+WIP-amend rule — and did not extend the list. **That is the price of this split, stated plainly:
+once the dispositions are deferred, the passage list is the sole guard against a dropped
+condition, and the conditions artifact cannot catch what the list never named.** The list must
+therefore be re-checked whenever the design adds a rule, and the plan's gate reads it against the
+final text rather than trusting it.
 
 ## 7. Prerequisite, rollout, and what this change falsifies
 
@@ -777,7 +798,7 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   warns about. The design's stronger claim covers the gap: **no floor file is written on any
   path**, which §8's risk-path verification checks unconditionally.
 - **Parity verification across every changed rule**, per story criterion 7, covering **§6.1's
-  fourteen sites, §6.2's nineteen passages, and every rule §§2–5 newly insert — including the §10
+  fourteen sites, §6.2's twenty-one passages, and every rule §§2–5 newly insert — including the §10
   residual disclosure and the §4.1 provenance forms, which story criteria require in **both**
   shipped copies and which a §5-scoped parity walk would otherwise miss.** The copies already
   differ on 192 lines, so parity cannot be asserted from a whole-section diff; the verification
