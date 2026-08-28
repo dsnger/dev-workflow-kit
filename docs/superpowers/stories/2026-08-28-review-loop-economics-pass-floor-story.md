@@ -118,34 +118,64 @@ deliverable rather than a convenience.
       `docs/hardening-log.md` is a `docs/**.md` path that drives rung escalation, so "docs"
       does not imply "changes nothing". That is Section A's reachability test deciding a floor
       question, which is why the two parts belong in one change.
-- [ ] **A cycle's closing commit body carries its per-pass shape.** Both copies require the
-      closing commit of a Gate-B cycle to record the per-pass finding and Blocker counts, in
-      one pinned greppable form, following the `3cdd075` precedent
+- [ ] **Every cycle's closing commit body carries its per-pass shape — all three cycle types.**
+      Both copies require the **Gate-A spec loop** (in the spec's commit body), the **Gate-A
+      plan loop** (in the plan's commit body) and the **Gate-B cycle** (in the closing amend) to
+      record that loop's per-pass finding and Blocker counts, in one pinned greppable form,
+      following the `3cdd075` precedent
       (`Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0.`). Checkable: the
-      requirement is stated in both copies, and this story's own closing commit carries it.
+      requirement is stated in both copies, and this story's own commits carry it for each loop
+      that ran.
+      **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
+      requirement would leave the *dominant* cost unmeasured: the loops this story cites as
+      evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
+      own Gate-A run — so P8 without Gate-A curves cannot measure the thing the problem
+      statement is about.
       **Why it is in scope** (approved as a scope addition, Daniel, 2026-08-28): the deferred
       economics measurement routed to P8 is otherwise answerable only for cycles whose author
       happened to write the curve down — `3cdd075` and `baa75c1` did, `7bbdb14` recorded the
       pass total and no distribution — because the findings files behind those numbers live
       under gitignored `.context/`. It is also the durable half of Q6: a curve in a commit body
       survives a fresh checkout, a cleared `.context/` and a different machine.
-- [ ] **A non-default floor leaves a trace in history.** Both copies require a cycle that ran
-      a floor other than the default to record `floor N per <story path>` in its closing
-      commit body. Checkable: the requirement is stated in both copies, and any cycle in this
-      story's own branch that runs a reduced floor carries the line.
+- [ ] **Every cycle's floor leaves a trace in history, default or not.** Both copies require a
+      cycle to record `floor N per <cited story path>` in its closing commit body — one entry
+      per cited story — and, where a workspace knob set by the user diverges from the profile
+      derivation, to record both: `floor N per workspace knob; profile derivation M per <cited
+      set>`. Checkable: the requirement is stated in both copies, and this story's own closing
+      commits carry it.
+      **Every cycle, not only a non-default one** (revised 2026-08-28 after Gate-A pass 2).
+      An earlier wording required the line only for a non-default floor, which contradicted
+      criterion 9 — this story is risk `high` and runs at the default 3, yet must demonstrate
+      the provenance path. It also made an absent line ambiguous between "default floor" and
+      "someone forgot", and left the user-knob divergence with nowhere to be disclosed.
 - [ ] **The gate-off residual is named in the shipped text, not merely avoided.** Both copies
       state that the floor value is agent-written, lives in per-clone gitignored state that no
       reviewer sees in a diff, and that nothing verifies the written value against the story
       profile — and that a floor of 1 is therefore the cheapest available gate-off lever.
       Checkable by reading. This is a disclosure, not a guard: no mechanism is claimed for it.
-- [ ] **Severity is pinned as a closed decision in both copies, with the carve-out stated at
-      the same place.** Both state that Blocker and Major claim product behaviour, an
-      invariant, or a contract, and that a finding whose subject is narration, prose about a
-      mechanism, or a test instrument's internals is **Minor** — collect, never iterate —
-      **except** an instrument finding that demonstrates a false green on product behaviour,
-      which keeps its severity. Both also still state that the reviewer reports every finding
-      with severity and confidence and that the filter is applied downstream by us; a copy that
-      drops coverage-first fails this criterion even if the severity rule is correct.
+- [ ] **Severity is pinned as a closed decision in both copies, keyed on consequence, with the
+      carve-out stated at the same place.** Both state that Blocker and Major claim product
+      behaviour, an invariant, or a contract, and both state the deciding test: **name the
+      in-system reader of this text — a gate, skill, rule, escalation procedure or scaffolded
+      template — and the decision it takes differently if the text is wrong; if you can name
+      neither, the finding is Minor, collect and never iterate.** A human reader never
+      satisfies the test. Findings about narration, prose describing a mechanism, and test
+      instrument internals appear as **worked examples of that test, not as a second rule
+      beside it** — a copy stating a categorical demotion by subject *and* the test fails this
+      criterion, because two procedures can disagree on one finding.
+      **The instrument carve-out runs in both directions:** an instrument finding keeps its
+      severity when it shows the instrument changes what the gate concludes about product
+      behaviour — a false green, and equally a false red or a check that blocks a valid change.
+      Naming only false green would demote a check that fails for wiring reasons and costs a
+      correct change.
+      Both copies also still state that the reviewer reports every finding with severity and
+      confidence and that the filter is applied downstream by us; a copy that drops
+      coverage-first fails this criterion even if the severity rule is correct.
+      *(Revised 2026-08-28 after Gate-A pass 2 found this criterion still describing the
+      pre-decision form — artifact-kind demotion with a false-green-only carve-out — which no
+      implementation could satisfy alongside the settled contract. Encodes the settled
+      consequence-keyed decision and the bidirectional carve-out; sparring session, under
+      Daniel's 2026-08-28 delegation.)*
 - [ ] **Each of Q1–Q6 is answered or rejected in the shipped text, with a reason, and the
       answers do not contradict each other.** Q1 (clean-completion precedence), Q2 (a declined
       expansion's exit), Q3 (scope stop vs. clean completion), Q4 (whether a decline binds
