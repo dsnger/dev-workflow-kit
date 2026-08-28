@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor, severity semantics, and the §5 loop-rule consolidation — Design
 
-**Date:** 2026-08-28 · **Revision:** 6, after Gate-A passes 1 (27), 2 (30), 3 (54), 4 (40), 5 (33)
+**Date:** 2026-08-28 · **Revision:** 7, after Gate-A passes 1-6 (27, 30, 54, 40, 33, 34 findings)
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile (read from that header, not copied):** risk `high` · security `none` ·
 validation `battery+check+verification`, no `+abuse-path`.
@@ -105,18 +105,31 @@ three universal rules at once. The lattice was correct.
 
 ### 2.1 The qualification, and how a decision on a finding is recorded
 
-**The duty is qualified for, and only for, a finding the user has explicitly declined.** The
-qualification is stated **at each of the three rules that would otherwise contradict it**, in both
-copies — not only at the new clause, which is what made the earlier attempt unshippable. Naming
-them exactly, because an earlier revision named a set that no longer cohered once §1.2 put the
-resolve duty out of reach:
-1. **"a surfaced finding stays open"** — a declined finding does not stay open.
-2. **"no pass carrying a surfaced finding counts as clean"** — the duty this qualifies.
-3. **"the loop resumes on whatever the user decides"** — resumption is the hold *ending*, which
-   this makes explicit rather than leaving to inference.
-The **Blocker/Major-resolve duty is deliberately not in that set**: §1.2 scopes it to in-set
-findings, so a decline never reaches it and a qualification there would be inert text implying an
-exception that does not exist.
+**The qualification is the hold rule itself, stated fully rather than as a decline-only
+carve-out.** An earlier revision wrote it as "qualified for, and only for, a declined finding",
+which is a **partial copy** of what was settled: it left an *accepted* Minor ending the hold while
+the no-clean rule stayed unqualified, so closure was governed by two rules that disagreed. The
+full rule, which is what Daniel decided:
+
+> **A surfaced finding holds closure while it awaits the user's answer. Any answer ends the hold,
+> in either direction. After the answer the ordinary rules govern, and the hold plays no further
+> part.**
+
+Ordinary rules after the answer: an **accepted Blocker or Major** must resolve, and until it does
+the cycle does not close — by the resolve duty, not by the hold. An **accepted Minor or Nit** is
+collected and never iterated, and blocks nothing. A **declined** finding is out-of-set, so neither
+duty attaches to it.
+
+**Stated at every rule it modifies, in both copies, and at no rule it does not** — the criterion's
+two halves:
+1. **"a surfaced finding stays open"** — modified: the finding stops being open when answered.
+2. **"no pass carrying a surfaced finding counts as clean"** — modified: it means *unanswered*
+   findings; an answered one is governed by its severity.
+3. **"the loop resumes on whatever the user decides"** — modified: resumption is the hold
+   *ending*, made explicit rather than left to inference.
+The **Blocker/Major-resolve duty is not modified and carries no qualification**. §1.2 scopes it to
+in-set findings; a declined finding never enters that set, and an accepted one is subject to it in
+full. Writing a qualification there would imply an exception that does not exist.
 
 **What can be declined, and what cannot.** A decline answers **one question only: whether a
 surfaced finding enters the assigned fix set.** It is available only for a finding surfaced by a
@@ -131,17 +144,21 @@ whether the set now includes it" — resumption *is* the hold ending, whichever 
 - **Declined** → released as recorded-declined; stops holding the cycle for the remainder of it,
   and does not re-stop later passes.
 - **Accepted** → enters the assigned set, where **severity governs exactly as Mechanics already
-  says**: an accepted Blocker or Major must resolve, **and the pass that surfaced it is still not
-  clean until it does** — acceptance ends the *hold*, not the resolve duty. An accepted Minor or
-  Nit is collected, never iterated, and in-set Minors have never blocked a clean pass at or above
-  the floor. There is no deadlock; the apparent one assumed the hold outlives the answer.
+  says**. An accepted Blocker or Major must resolve; until it does, **no pass closes the cycle** —
+  and note this is a statement about *closure*, not about re-scoring a pass that already happened.
+  A pass's cleanliness is a fact about what that pass found and never changes afterwards; what a
+  later answer changes is whether the cycle may close. An accepted Minor or Nit is collected,
+  never iterated, and blocks nothing. There is no deadlock; the apparent one assumed the hold
+  outlives the answer.
 - **Undecided** → the hold stands. Nothing closes unanswered.
 
 **Where the decision is recorded — the commit body, on rails §5 already ships.** With one timing
 fact stated rather than assumed: **the commit that will carry the record does not exist while the
 loop is running.** A Gate-A spec loop's record lands in the spec commit, which is written when the
-loop closes; a Gate-B cycle's lands in the `WIP:` body by amend and is restated by the closing
-amend. During the loop the decision lives in the working record — the dispositions companion, which
+loop closes. **A Gate-B cycle is the exception, and it is an exception because §5 already made
+it one**: the `WIP:` commit exists precisely so a cycle has a commit while it is still running, so
+a Gate-B decline lands there by amend immediately and is restated by the closing amend. The
+timing claim above is therefore about Gate A only. During the loop the decision lives in the working record — the dispositions companion, which
 §5 already calls the advisory working copy — and **becomes the record when the commit is written**.
 Nothing about the decline's effect waits for the commit; what the commit provides is durability
 past the session. The human-exception machinery already solves this transport the same way: "an ungated change records it in that
@@ -205,12 +222,16 @@ body is the record.
 
 **The decision procedure is the rule. The subject list is illustration.**
 
-> Name **what in the system reads this text** — any artifact, procedure or automation whose
-> behaviour depends on it — and the decision it takes differently if the text is wrong. In this
+> Name **what in the system consumes this text** — a gate call, a skill run, an agent following a
+> rule, an escalation procedure being applied, a template being scaffolded; whatever *acts* on it
+> — and the decision that act takes differently if the text is wrong. (An artifact does not read;
+> something reads it and then does something. Naming the act, not the file, is what makes the
+> answer checkable.) In this
 > repo that is typically a gate, a skill, a rule, an escalation procedure or a scaffolded
 > template; **that list is illustrative, not the set of allowed readers**, because this rule ships
 > into projects whose readers we have never seen (invariant 10). If you cannot name an in-system
-> reader and a changed decision, the finding is **Minor** — collect, never iterate.
+> reader and a changed decision, the finding is **Minor or below** — collect, never iterate. A
+> finding that is trivial on its own terms stays a Nit; the test sets a ceiling, not a floor.
 >
 > **The reader must consume the text in the system's operation, not in reviewing it.** The
 > **review pass raising this finding** is not an in-system reader of the text it is reviewing.
@@ -319,8 +340,12 @@ wrong and is corrected here. Where the user's knob and
 the derived floor diverge, the provenance line **discloses both** rather than resolving them:
 
 ```
-floor N per <cited story path>; hook reminder threshold M per workspace knob
+floor N per {<story path> (level L), …}; hook reminder threshold M per workspace knob
 ```
+
+That is the **only** form. An earlier revision showed a single-story shorthand beside a
+set-derived form and left two pinned-looking patterns for one line; a single-story cycle is the
+one-element case of the form above, written the same way, so nothing has to choose between them.
 
 **Every cycle records this, default or not** — an absent line must not be ambiguous between "the
 default applied" and "someone forgot".
@@ -333,7 +358,11 @@ A single-story cycle is the degenerate case of the same form.
 
 The knob clause is present **whenever the file exists**, not only when its value differs: a
 present-but-equal knob is still a fact about the workspace, and tying disclosure to divergence
-would make an absent clause ambiguous between "no knob" and "a knob that agreed". **Two cases need
+would make an absent clause ambiguous between "no knob" and "a knob that agreed". **Where the file
+exists but carries no usable value** — empty, non-numeric, zero, negative, or unreadable — the
+clause records that rather than a number: `hook reminder threshold: file present, value unusable
+(hook default 3 applies)`. The hook already ignores such a value (`codex-gate.sh:124-127`), so the
+disclosure describes what the hook will actually do, which is the whole point of recording it. **Two cases need
 their own forms**, because the common one has
 nowhere to put them: an artifact citing **no story** records `floor 3 (no story cited)`, and a
 cited **unprofiled** story records `floor 3 per <path> (unprofiled)`. Both keep the derivation
@@ -402,10 +431,10 @@ item 10's failure:
 
 | Shape | Check | Treatment |
 |---|---|---|
-| **absent** | the slot file does not exist | uncomputable; report which pass numbers are missing |
+| **absent** | the slot file does not exist | uncomputable; report which pass numbers are missing. **No recovery**: a pass that left no file cannot be reconstructed, and re-running it would produce a different pass, not that one |
 | **partial** | some pass slots present, others not | compute historical tells over the passes present and **name the missing pass numbers** — a trend over an unstated subset reads as a trend over the cycle |
-| **malformed** | fails any pass-acceptance check — terminator exactly `END OF FINDINGS (<n> total)`, count matching the finding lines, nothing but finding lines, and **each line structurally well formed**: right field count, no empty or whitespace-only severity field. §5's reader tolerates the severity *token*'s casing and nothing else; every structural failure is INCOMPLETE | treat as absent for that pass, **never** as zero findings. Distinct from *unreadable*: a malformed file is a review that ran and wrote badly, so **if its `sessionId` is still to hand** the pass may be re-runnable — and where it is not, say so rather than implying a recovery route that no longer exists |
-| **unreadable** | exists but cannot be opened or decoded | treat as absent; report the OS-level cause, since permissions and a full disk need different fixes |
+| **malformed** | fails any pass-acceptance check — terminator exactly `END OF FINDINGS (<n> total)`, count matching the finding lines, nothing but finding lines, and **each line structurally well formed**: right field count, no empty or whitespace-only severity field. §5's reader tolerates two things about the severity field and nothing else — its casing, and a non-empty unrecognized token, which reads as `MAJOR`; every *structural* failure is INCOMPLETE | treat as absent for that pass, **never** as zero findings. Distinct from *unreadable*: a malformed file is a review that ran and wrote badly, so **if its `sessionId` is still to hand** the pass may be re-runnable — and where it is not, say so rather than implying a recovery route that no longer exists |
+| **unreadable** | exists but cannot be opened or decoded | treat as absent; report the OS-level cause, since permissions and a full disk need different fixes. **Recovery is environmental** — fix the cause and re-read; the file may be intact |
 | **stale** | the slot's cycle discriminator is absent or is another cycle's | treat as absent **and report its presence** — a foreign curve is worse than no curve |
 
 **Stale is only partly detectable, and the text says which part.** Bare numbered slots carry no
@@ -417,12 +446,22 @@ file you are about to write is not a previous cycle's.
 
 **The discriminator is a change to the slot grammar, not an addition beside it**, and §5 must say
 so: today the grammar is exactly `gate-a-spec-pass-<p>`, `gate-a-plan-pass-<p>` and
-`gate-b-<spec|quality>-pass-<p>`, and an infixed name satisfies none of them. The shipped text
-widens each to admit an optional per-cycle infix — `gate-a-spec-<cycle>-pass-<p>` — and says the
-infix is **recommended whenever a bare slot is already occupied**, which is the situation that
-destroyed a previous cycle's findings file in this very cycle. Calling it a convention on top of
-an unchanged grammar, as an earlier revision did, would leave every reader with two rules and no
-way to tell which governs. Neither makes a bare-slot file's origin
+`gate-b-<spec|quality>-pass-<p>`, and an infixed name satisfies none of them. **The shipped text replaces each grammar with one that
+admits an optional per-cycle infix** — `gate-a-spec[-<cycle>]-pass-<p>` and its two siblings — so
+there is exactly one rule and bare slots stay valid. Three properties come with it:
+- **The infix is required, not recommended, when the bare slot is occupied.** That is the case
+  that destroyed a previous cycle's findings file in this very cycle: the delete-before-write rule
+  removed a bare slot belonging to a closed cycle.
+- **Refuse rather than overwrite.** Where the target the cycle would write is occupied by a file
+  the cycle did not write, the pass stops and names the collision. §5 already says a target
+  surviving deletion is a stop; this extends it to a target that should not be deleted at all.
+- **The infix identifies a cycle, not a story or a branch**, and two cycles must not share one.
+  A repeated infix reproduces exactly the collision it exists to prevent, so it is derived from
+  the cycle identifier §2.1 already defines.
+
+**Absent infix does not mean stale.** Bare slots remain valid, so a bare file is *unattributable*
+rather than foreign — the stale row above treats it as absent because its origin cannot be
+established, not because it is known to belong elsewhere. Neither makes a bare-slot file's origin
 recoverable after the fact, and the report says so rather than implying detection. (The
 discriminator convention also prevents the destruction this cycle caused once: deleting a bare
 slot destroyed a previous cycle's findings record, which the dispositions companion happened to
@@ -543,7 +582,7 @@ the conditions this change **touches or could drop**; the plan carries the repla
 
 | # | Passage | What it currently requires | Disposition |
 |---|---|---|---|
-| 1 | "**Both gates are a LOOP with a HARD FLOOR**" | min 3 per run; Blocker/Major only; counted by the hook; hook cannot read findings nor tell the spec run from the plan run; a satisfied count is not a clean review; a TodoWrite per pass; fix Blocker/Major after each; final pass clean; keep going until clean or clearly stuck; only early exit below floor is a zero-finding pass; don't manufacture findings; Codex advisory, validate before applying; dismissed finding gets a one-line why | floor **value moved** to the profile predicate; **every other requirement kept verbatim**, including the counter-is-not-evidence caveats, which this design leans on harder than before |
+| 1 | "**Both gates are a LOOP with a HARD FLOOR**" | min 3 per run; Blocker/Major only; counted by the hook — a rule §5.1 does not contradict but does sharpen, since the hook counts *calls* while the floor counts *logical passes*, and §5 already says the counter is not evidence; hook cannot read findings nor tell the spec run from the plan run; a satisfied count is not a clean review; a TodoWrite per pass; fix Blocker/Major after each; final pass clean; keep going until clean or clearly stuck; only early exit below floor is a zero-finding pass; don't manufacture findings; Codex advisory, validate before applying; dismissed finding gets a one-line why | floor **value moved** to the profile predicate; **every other requirement kept verbatim**, including the counter-is-not-evidence caveats, which this design leans on harder than before |
 | 2 | The early-exit sentence at `:79/:279` | the only exit below the floor is a zero-finding pass | **kept**, with "below 3" **changed** to "below the floor" |
 | 3 | The incomplete-pass rule at `:236/:421` | don't act on a partial list; don't count it toward the floor; don't read "no Blocker/Major visible" as clean | **kept**, "3-pass floor" **changed** to "the floor" |
 | 4 | "What a loop absorbs, and what stops it" | in-set findings absorbed, acted on by severity; ancestry decides *where*, never *what you do*; ancestry grants no Minor a repair round; assigned fix set fixed **before** the pass; unclear membership resolves **outside**; an out-of-set correction stops the loop even opening no new question; a new structural/contract question stops it; **novelty not size**; **when a finding is both, novelty wins**; stopping is **not an exit** — floor, filter and clean-final-pass all stand | all **kept**; the scope stop is **moved** into §2's ordering as one of three suspensions and gains the decline qualification |
@@ -555,7 +594,7 @@ the conditions this change **touches or could drop**; the plan carries the repla
 | 10 | "The Gate-B triviality skip needs two independent conditions" | behaviourally trivial **and** `max(risk, security)` is 0; an eligible profile never makes a behaviour-changing diff skippable; skip reason in the commit body, not the profile log; a skip removes the review **never the evidence**; profiled story runs the battery and lands its evidence entry; unprofiled records reason and battery result and nothing more | all **kept**; checked against the floor predicate, which uses the same level-0 test for a different purpose — **deliberately not merged**, since one relaxes review count and the other removes review entirely |
 | 11 | "A cycle citing several stories" | battery once per cycle; each cited profiled story satisfies its own mode with its own named evidence entry; an unprofiled cited story owes no entry; lens sets **unioned**; skip-eligible only if **every** cited story is | all **kept**; the floor **added** as a new dimension under the same unanimity shape |
 | 12 | "Gate A — Spec, then plan (TWO runs, each its own 3-pass loop)" (`:300/:485`) | two separate runs, each its own loop; run on the spec before `writing-plans` and the plan before executing; one broad prompt re-run each pass; the brainstorming directive opens it; coverage floor not a cage; every finding with severity and confidence; `NO FINDINGS` when clean; mechanical settle before each read pass | all **kept**; "3-pass loop" **changed** to reference the derived floor, and each of the two runs derives it independently |
-| 13 | "Gate B — Code" (`:335/:519`) | tests green before commit; skip only trivial changes; check against AGENTS.md; re-review after every fix; a fix changes the diff and the hook invalidates the prior pass, **which is where the 3 come from**; the standing falsification lens; same coverage rule as Gate A | all **kept**; the "where the 3 come from" clause **changed** to derive from the floor — the *reasoning* (re-review after every fix) is what generates the number, and it survives a variable floor unchanged |
+| 13 | "Gate B — Code" (`:335/:519`) | tests green before commit; skip only trivial changes; check against AGENTS.md; re-review after every fix; a fix changes the diff and the hook invalidates the prior pass, **which is where the 3 come from**; the standing falsification lens; same coverage rule as Gate A | all **kept**; the "where the 3 come from" clause **changed**. Precisely: re-review-after-every-fix generates however many passes repairs require, which is a *lower bound of one per fix* and not the number 3; the floor is a separate minimum. Both survive a variable floor, and the passage stops implying that one produces the other |
 | 14 | "**Severity:** Blocker … Major … Minor · Nit" | Blocker = wrong/unsafe/breaks invariant; Major = design flaw → rework; both must resolve; Minor and Nit collect, never iterate | **kept**, and **narrowed**: the reachability test is added as the classifier, so a finding that would once have been Major on subject alone can now be Minor. That narrowing is deliberate and is the change; it is recorded here as a **changed** condition, not a kept one |
 | 15 | "Scope, and it is narrow" | the form supplies no permission; never the answer to a below-floor pass, an unclean final pass, a STOP, a Gate-A/B obligation or a profile-derived evidence requirement; authorizes nothing any mandatory rule requires; mandatory is not limited to this file; not for things never owed | all **kept without exception**; §2.1 **adds** the decline as a distinct record type on the same transport and states the distinction, precisely so this passage is not weakened |
 | 16 | "Recording a human exception" | the three-line form; which commit carries it; decisions made after a commit closed; an empty commit is a legitimate destination; several records accumulate; the record is an **unverified assertion** | all **kept**; the decline record **reuses the transport** and adopts the same unverified-assertion honesty |
@@ -584,6 +623,7 @@ statements does this diff falsify?" — a change makes sentences wrong in files 
 | `:84` | "Gate A's floor is unchanged at every level" | **directly contradicted** — a sentence specifically about profile levels |
 | `:86` | "moves the 3-pass floor" | same as README |
 | `docs/getting-started.md:44-45` | "If the Gate-A floor wasn't met, the hook says so right when execution starts" | the hook reports against **its own** threshold, so at level 0 it can say the floor was not met when nothing further is owed — the reminder is right to fire and the sentence is wrong about what it means |
+| `docs/getting-started.md:58-59` | the real commit replaces the WIP on `✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)` | the trigger is a **clean final pass at the derived floor**, which at level 0 is `1/1`; a reader waiting for `3/3` waits for a message that will not come |
 | `docs/coding-workflow.md:79-80` | the axes "never subtract any: **Gate A's floor** and the baseline questions are the same at every level" | **directly contradicted**, and missed until Gate-A pass 3 — the same claim as `:84` in a second file |
 
 **The rewording is honest rather than cosmetic.** README and getting-started describe the knob as
@@ -672,7 +712,11 @@ branch's closing commits**, which do not exist until the cycle closes — so the
 against the `WIP:` snapshot during the cycle, and **re-read against the content the close will
 carry — the staged tree plus the message about to be written — rather than against a commit that
 does not exist yet.** The amend *is* the closing act, so "re-read the final commit before closing"
-is circular; what is checkable beforehand is exactly what the amend will commit. If the amend changes what they observed, the clean pass no longer covers what is
+is circular. **What that check establishes is bounded and the text says so:** the index can change
+between the read and the commit, and `git commit -a` or a path argument commits content the index
+did not hold, so the observation is of *the intended content at the moment it was read*, not a
+guarantee about the resulting commit. Narrowing the gap is what the hook's own content fingerprint
+already does; this check does not duplicate it and does not claim to. If the amend changes what they observed, the clean pass no longer covers what is
 being committed: fix, re-review, close on the entry that pass validated.
 
 **Instrument discipline, from this story's own evidence.** Two defects in the `fic2` decision
@@ -710,8 +754,12 @@ general reconciliation of the two copies' 192-line divergence beyond the one sea
   started. The conservative value is the point; "re-derive" was the wrong instruction and did not
   do what the sentence beside it claimed. An earlier revision proposed git timestamps plus file mtime as a start
   marker; that does not survive checkout, copy or clock skew, so no marker is claimed and the
-  fallback carries the case. This also disposes of this design's own Gate A, which runs under the
-  old rules.
+  fallback carries the case. This also disposes of this design's own Gate A, which runs under the old rules — **with one
+  consequence worth stating, since two story criteria require this branch to demonstrate the
+  provenance line and the curve.** Those are obligations on *what this branch commits*, not claims
+  about which rules its Gate-A loop was reviewed under. A loop reviewed under the old rules can
+  still record its curve and its floor, because recording is an act of the commit rather than a
+  rule the passes were judged by. Nothing here is retroactive and nothing here is exempt.
 - **Downstream adoption has no shipping commit.** The template travels into other repositories
   whose history does not contain this change, so "from the commit that ships them" is a statement
   about *this* repo. Downstream, the rules bind from the `/workflow-init` run that **actually writes them**, which is
@@ -728,8 +776,9 @@ general reconciliation of the two copies' 192-line divergence beyond the one sea
   wherever the text does not settle the question.
 - **The gate-off surface — the routes known today, not a complete list.** An enumeration read as
   complete guarantees the routes it omits, which is the AGENTS.md Don't in its own words; this
-  one is a floor. Beyond the four below, the pre-existing routes are unchanged and not created
-  here: falsifying evidence entries, misreporting a battery, silencing reminders with
+  one is a floor. **One route below is created by this design and is named as such**: a stated
+  floor the cited set does not license did not exist before, because before this change there was
+  no derived floor to state. The others are pre-existing and unchanged: falsifying evidence entries, misreporting a battery, silencing reminders with
   `codex-gate.off`, or simply not running a pass and reporting that it ran. Deleting the marker mechanism removed the
   camouflage path and every crash-recovery path. What remains: **writing a provenance line the
   cited set does not license; omitting a higher-risk cited story from the set; minting or editing a
