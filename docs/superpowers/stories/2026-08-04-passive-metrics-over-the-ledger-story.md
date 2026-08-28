@@ -31,6 +31,32 @@ From `todos.md`, "**P8 — passive metrics, read-only over the ledger and git.**
 | It answers questions the ledger already contains the data for — which fingerprints recur, how often a rung holds | **kept** as the scope statement |
 | Trigger: 10 stories or 20 ledger rows, below which the sample says more about the last week than about the workflow | **moved** — the 20-row arm fired at 22 rows in the 2026-08-04 round, and the story arm reaches 10 with this story; recorded here |
 
+### Second question routed here, added 2026-08-28
+
+`docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md` defers its
+economic measurement to this story rather than to a fresh backlog row. The question it hands
+over: **after roughly three profiled cycles run under the new floor and severity rules, do their
+pass counts and finding distributions differ from the `fic2` baseline curve of
+14 · 24 · 12 · 3 · 6 · 6 · 2** (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`)? That
+story cannot answer it inside its own cycle, and a single cycle would not answer it in any case.
+
+Two things this hand-off does not silently assume, because the row's "the data already exists"
+condition is doing real work:
+
+- **The per-pass curve is only sometimes in git.** Closing commit bodies carry it by habit, not
+  by rule: `3cdd075` records "Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0" and
+  `baa75c1` records per-pass counts, while `7bbdb14` gives the pass total and no distribution.
+  The findings files those numbers come from live under `.context/`, which is gitignored and
+  per-clone. So this question is answerable from git only for cycles whose author wrote the
+  curve down.
+- **Whether closing bodies should be *required* to carry the curve is not decided here**, and
+  it is not this story's to decide — it is a §5 rule, and it belongs to whoever owns that text.
+  Recorded so the gap is visible rather than discovered later by an analysis that quietly
+  reports on the subset of cycles that happened to be legible.
+
+Neither point changes this story's scope: still read-only, still no instrumentation, still
+nothing written back.
+
 ## 2. Desired outcome
 
 A reader can ask the ledger which fingerprints recur and how a rung has held, and get the answer

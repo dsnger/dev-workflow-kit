@@ -84,6 +84,18 @@ deliverable rather than a convenience.
   worth. The evidence doc carries it as an open question, not a commitment.
 - **Any remedy to the supersession convention** the worked example above illustrates. Parked
   as a `todos.md` candidate.
+- **The economic measurement itself** — whether loops actually got cheaper. It cannot be
+  observed inside this cycle: the severity rule's effect appears only across several cycles
+  run under it, and claiming otherwise from a single cycle would be the fabricated-evidence
+  failure §5 names. It is **deferred to a named vehicle rather than to a new backlog row** —
+  `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md` (the P8
+  passive-metrics story, `todos.md:546`), annotated with this trigger: after roughly three
+  profiled cycles under the new rules, read their pass counts and finding distributions
+  against the `fic2` baseline curve of 14 · 24 · 12 · 3 · 6 · 6 · 2
+  (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`). A named vehicle rather than a
+  fresh row because loose deferred items rot here — the pass-counter anomaly, the
+  fixture-per-predicate question and the durations row's missing control run are all still
+  open, and all three are named above or in §1.
 
 ## 3. Acceptance criteria
 
@@ -133,6 +145,15 @@ deliverable rather than a convenience.
 - [ ] **The two copies stay in parity.** Every rule this story changes reads the same in
       `CLAUDE.md` §5 and in the `/workflow-init` template, except where a wording difference is
       deliberate and stated as such. Checkable by diffing the two regions.
+- [ ] **A reduced floor is demonstrated once, end to end, on this branch.** A docs-only or
+      trivial cycle here runs its gate at floor 1 and its closing commit body carries
+      `floor 1 per <story path>` — against the 3 that same cycle owed before this change.
+      **What this shows is bounded, and the criterion is worded so it cannot be read wider:
+      the knob and the provenance path work.** It is not evidence that review loops became
+      cheaper. One cycle at a reduced floor measures the mechanism, not the economics, and
+      reading a working mechanism as an improved outcome is the overclaim class AGENTS.md
+      names as this repo's most persistent defect. The economics are measured afterwards, by
+      the follow-up named in §2 — this criterion deliberately does not stand in for it.
 
 ## 4. Affected AGENTS.md invariants
 
