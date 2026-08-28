@@ -12,3 +12,10 @@ _unrelated-seo-work/
 # passCount hands every fresh clone a pre-counted Gate-B pass.
 .context/*
 !.context/codex-gate.on
+
+# Local drafts and reading notes — working material, not repo content. `docs/field-reports/`
+# is deliberately NOT here: field reports are tracked, because a field-intake round cites
+# them as its evidence. These two replace a per-clone `.git/info/exclude`, so the policy
+# travels with the repo instead of living in one checkout.
+docs/ideas/
+docs/research/
