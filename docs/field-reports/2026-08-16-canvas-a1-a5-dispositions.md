@@ -340,3 +340,11 @@ outcomes or constraints, never implementation steps" — the rule exists; what t
 five measured occurrences of the failure it is meant to prevent, and the observation that the
 drift shows up as *Blockers in a later gate* rather than as a bad-looking criterion at intake
 time.
+
+**Also observed, 2026-08-28, same cycle:** three occurrences of an agent ending a turn on an
+announcement — "writing the spec now", "running pass 6" — with the named tool call never issued.
+Each cost a round-trip and one cost ~90 minutes of wall clock before a peer session noticed. No
+error, no timeout, nothing in flight: the announcement simply replaced the act. Remedy adopted for
+the remainder of that cycle: during an active gate cycle a turn ends with the tool call actually
+issued, a message sent, or an explicit statement that something is blocking — and noticing the
+turn ending with the call not in flight *is* that statement.

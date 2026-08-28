@@ -112,9 +112,14 @@ deliverable rather than a convenience.
       mandatory pass floor of **1** where `max(risk, security)` is 0 and **3** otherwise —
       unprofiled cycles included, which keep today's 3. Two levels, not three: `high` gets no
       extra mandatory passes, taking its added rigor from lens sets and evidence mode instead.
-      Each copy also states that this one value governs **Gate A and Gate B alike**, which is
-      not decoration: `codex-gate.sh:119` sets a single `floor`, consumed at `:946` for Gate B
-      and at `:966` for Gate A.
+      **A cycle citing several stories reaches the reduced floor only unanimously** — every
+      cited story profiled, every one at level 0 — so a single higher-profile or unprofiled
+      member returns the cycle to 3. Stated in both copies, and falsifiable: a copy silent on
+      the multi-story case leaves the cheapest wrong reading available.
+      Each copy also states that **one derived value governs every loop of the cycle** — the
+      Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle alike — and says *why*: those
+      loops cite the same stories, so the value they derive is the same. A copy that states the
+      floor for one gate and leaves the others to inference fails this criterion.
       **One predicate, not two** (Daniel, 2026-08-28). An earlier draft added a `docs-only`
       arm; it is dropped because it does no work and, read path-wise, does the wrong work.
       A diff-derived reading cannot serve Gate A at all — Gate A runs on a spec, before any
@@ -183,17 +188,24 @@ deliverable rather than a convenience.
       review itself as the reader — so a copy stating (a)–(d) and omitting (e) fails. Gates must
       remain legitimate readers of rule text they will later apply; what is excluded is the
       reviewing pass, not gates.
+      **(f)** *(record, not severity)* A user's decision on a surfaced finding is **durably
+      recorded where history keeps it** — carrying enough of the finding to identify it again,
+      naming who decided and when, surviving into a squash, and **bounded to the cycle it was
+      taken in**. A copy that lets the decision live only in per-clone working state, or that
+      lets one decision release the same finding in later cycles, fails.
 - [ ] **Each of Q1–Q6 is answered or rejected in the shipped text, with a reason, and the
       answers do not contradict each other.** Q1 (clean-completion precedence), Q2 (a declined
       expansion's exit), Q3 (scope stop vs. clean completion), Q4 (whether a decline binds
       later passes in the same cycle), Q5 (whether the three universal rules may carry an
       in-set qualification), Q6 (what the pass-4 report does when prior-pass history is
-      unavailable) — as stated in `docs/field-reports/2026-08-26-fic2-cycle-evidence.md`. Where
-      an answer qualifies one of the three universal rules — the Blocker/Major-resolve duty,
-      the rule that a surfaced finding stays open with resolution unwaived, and the rule that
-      no pass carrying it counts as clean — the qualification appears **at each of those three
-      rules** in both copies, not only at the new clause. Q2 was reverted last cycle precisely
-      because that did not happen.
+      unavailable) — as stated in `docs/field-reports/2026-08-26-fic2-cycle-evidence.md`.
+      **Where an answer qualifies a standing rule, the qualification is stated at every rule it
+      modifies, in both copies — and at no rule it does not modify.** Both halves are
+      falsifiable by reading: a rule the answer changes but does not mention leaves two
+      instructions disagreeing, which is why Q2 was reverted last cycle; a rule the answer does
+      *not* change but mentions anyway implies an exception that does not exist, which is its
+      own defect. Which rules those are is the design's to determine and the reviewer's to
+      check against it.
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering
