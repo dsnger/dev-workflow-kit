@@ -53,12 +53,18 @@ Three outcomes, each observable in the shipped prompt text.
    charging every cycle the same three passes per gate. A story the profile puts at level 0
    stops paying a toll that buys nothing; a standard or high story keeps the floor it has
    today.
-2. **Severity means product behaviour.** A reader of either §5 copy can decide, without
-   judgement calls, whether a finding about narration, about prose describing a mechanism, or
-   about a test instrument's internals is allowed to hold the loop open — and knows the one
-   case where an instrument finding still must (it demonstrates a false green on product
-   behaviour). Coverage-first is unchanged: the reviewer still reports everything, and the
-   filter stays ours.
+2. **Severity means product behaviour.** A reader of either §5 copy can decide, **by a stated
+   test rather than by taste**, whether a finding about narration, about prose describing a
+   mechanism, or about a test instrument's internals is allowed to hold the loop open — the
+   test being whether an in-system reader takes a different decision if the text is wrong — and
+   knows that an instrument finding still holds the loop open whenever it shows the instrument
+   changes what the gate concludes about product behaviour, **in either direction**: a false
+   green, and equally a false red or a check that blocks a valid change. Coverage-first is
+   unchanged: the reviewer still reports everything, and the filter stays ours.
+   *(Revised 2026-08-28 after Gate-A pass 3. Two corrections: this outcome still described the
+   false-green-only carve-out that criterion 5 had already moved past; and "without judgement
+   calls" promised more than any prose rule can deliver — a stated test removes arbitrariness,
+   not judgement, and the spec says so plainly, so the story must not promise otherwise.)*
 3. **The §5 loop rules stop being amended one clause at a time.** The six open contract
    questions the `fic2` cycle raised and declined to answer get one coherent answer, taken
    together, with Daniel's five recorded decisions as settled inputs. The alternative —
