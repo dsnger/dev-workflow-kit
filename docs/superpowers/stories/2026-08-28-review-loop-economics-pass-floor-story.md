@@ -161,7 +161,9 @@ would separate a rule from the argument that settles it.
       pass, rather than merging two revisions into a single entry. Checkable: the requirement is
       stated in both copies, and this story's own commits carry it for each cycle that ran —
       **every field of the pinned form except the identifier, which no cycle on this branch can
-      supply** (see the identifier criterion).
+      supply.** Those records carry the reserved pre-rule value, which by construction **does not
+      name a cycle**; what the branch demonstrates is the field's presence and grammar, not
+      attribution (see the identifier criterion).
       **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
       requirement would leave the *dominant* cost unmeasured: the loops this story cites as
       evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
@@ -226,8 +228,10 @@ would separate a rule from the argument that settles it.
       **What this branch can and cannot demonstrate, stated rather than assumed:** its three cycles
       all began before these rules ship, so each closing body carries the reserved pre-rule cycle
       field and **none of them demonstrates a real identifier**. The branch demonstrates the field's
-      presence and grammar; **a named later checkpoint — the first cycle started after the
-      implementation commit — demonstrates a real one and the attribution it buys.**
+      presence and grammar; **a named later checkpoint demonstrates a real one and the attribution it
+      buys: the Gate-A spec cycle of the next story whose spec is written after the implementation
+      commit lands.** Naming a cycle type and an artifact matters because siblings can start
+      concurrently and "first" does not order them.
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering

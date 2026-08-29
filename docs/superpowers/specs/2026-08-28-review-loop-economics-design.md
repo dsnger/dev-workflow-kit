@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 21 (rules only) · **Gate-A passes 1-19**
+**Date:** 2026-08-29 · **Revision:** 22 (rules only) · **Gate-A passes 1-20**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -234,12 +234,19 @@ that began before the nonce rule shipped (§8) — it is a production of the gra
 magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
-- **Records Majors as well as Findings and Blockers.** The question this curve is kept for is
-  whether consequence-keyed severity demotes findings — which moves the Blocker/Major line, not the
-  total. A curve of totals and Blockers alone cannot answer it, so the instrument would not measure
-  the thing it exists to measure. **Subject categories are deliberately not recorded**: they are a
-  judgement per finding rather than a count, and the findings files carry the material for anyone
-  who wants them.
+- **Records Majors as well as Findings and Blockers**, because the question this curve is kept for
+  is whether consequence-keyed severity demotes findings — which moves the Blocker/Major line, not
+  the total. **Subject categories are deliberately not recorded**: they are a judgement per finding
+  rather than a count, and the findings files carry the material for anyone who wants it.
+
+**What the curve makes answerable, and what it does not — because the pre-rule baseline is thinner
+than the forward record.** Going forward, post-rule cycles carry Findings, Blockers and Majors per
+pass, so **demotion is comparable across them**. **The `fic2` baseline does not support that
+comparison**: its closing commit records only totals and Blockers, the committed field report
+supplies Majors for some passes and not others, and the per-finding subject material lives only in
+gitignored findings files. So the baseline supports a **total-volume** comparison and nothing
+finer, and any demotion claim rests on **post-rule cycles compared with each other**. Saying this
+here keeps a later reader from computing a demotion figure the baseline cannot bear.
 - Carries that cycle's **cycle field**, so a curve can be attributed to the cycle that produced
   it — **the nonce for a post-rule cycle, `none (pre-rule)` for one that began before the rules
   shipped.** A pre-rule record is **not attributable to a cycle**, and the text says so rather than
@@ -277,8 +284,9 @@ adds the decline record to the same passage; extending is required, replacing wo
 Both shipped records carry a **cycle field**, because a record that cannot be attributed to a cycle
 is unusable by the measurement that reads it. **§5 defines three cycles — the Gate-A spec loop, the
 Gate-A plan loop and the Gate-B cycle — so a run of all three produces three cycle fields, and for
-post-rule cycles three distinct nonces.** A **pre-rule** cycle has no nonce (§8); its field is the
-reserved `none (pre-rule)` and its records are not cycle-attributable. Everything below describes
+post-rule cycles three distinct nonces.** A **pre-rule** cycle has no nonce — §10's activation rule is what makes a cycle pre-rule; its field is the
+reserved `none (pre-rule)` and its records are not cycle-attributable; the activation rule that
+creates that case is §10's. Everything below describes
 **post-rule cycles**, which is every cycle started after the implementation commit.
 
 - Generated once at cycle start, immutable, and **collision-resistant operationally: at least 8
@@ -398,8 +406,10 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
 - **Parity across every changed rule**, in both copies, since they already diverge and parity
   cannot be asserted from a whole-section diff.
 - **A fresh twelve-item `docs/prompt-standards.md` pass.** Invariant 11 binds **each changed
-  prompt artifact as a complete prompt**, not the diff — so the items are read against the
-  resulting `CLAUDE.md` and the resulting scaffolded template, with the changed regions as the
+  prompt artifact as a complete prompt**, not the diff — so the items are read against **each changed prompt artifact**: the resulting root `CLAUDE.md`,
+  the resulting scaffolded template, **and `plugins/dev-workflow/commands/workflow-init.md` as the
+  outer command prompt** — which this change edits and which carries its own target-model
+  declaration separate from the template it writes, with the changed regions as the
   reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
   case, not the only one.
   **One known failure, fixed rather than routed.** Neither resulting prompt carries a
@@ -482,5 +492,8 @@ reconciliation of the two copies' divergence beyond §7's one seam.
   *stated* floor the profiles do not license.
 - **The reachability test needs judgement** where §5 is trying to remove it; §3 says so.
 - **The curve is self-reported**; P8 inherits that limit.
-- **The expected demotion is a prediction**; P8 measures it. If it demotes far less than hoped, the
-  rule is still correct and the economics claim was what was wrong.
+- **The expected demotion is a prediction**, and P8 is where it is checked. **What P8 can produce
+  is bounded by what it reads**: a self-reported curve nothing validates against the findings files.
+  So P8 reports a **comparison of recorded values** with that limit stated, not a measurement in any
+  stronger sense. If the recorded values show far less demotion than hoped, the rule is still
+  correct and the economics claim was what was wrong.
