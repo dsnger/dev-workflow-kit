@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 34 (rules only) · **Gate-A passes 1-31**
+**Date:** 2026-08-29 · **Revision:** 35 (rules only) · **Gate-A passes 1-32**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -233,7 +233,7 @@ reason as the provenance line:**
 <RANGE>    := <p> | <p> "-" <p>
 <p>        := [1-9][0-9]*
 <COUNTS>   := <n> ("," <n>)*              exactly as many entries as <SPEC> enumerates
-<n>        := 0 | [1-9][0-9]*
+<n>        := 0 | [1-9][0-9]* | "?"      "?" = the count is unrecoverable for that pass
 <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
 <model>    := <bare-model> | <quoted-model> | "undetermined"
@@ -292,6 +292,12 @@ here keeps a later reader from computing a demotion figure the baseline cannot b
 - **One entry per valid pass**, and because incomplete passes are excluded and consume pass
   numbers, the record **states which pass numbers it covers**. A valid zero-finding pass is
   recorded as zero, never omitted.
+- **A count that cannot be recovered is written `?`, never guessed and never written as `0`.** A
+  cycle can keep its identity while its pass files are gone — §5's recovery turns on the nonce, not
+  on the findings files — so a resumed cycle may know a pass happened and not what it found.
+  **P8 excludes a `?` pass from any comparison** rather than reading it as zero, and says how many
+  it excluded. Zero and unknown are different facts, and a record that cannot tell them apart
+  understates every curve containing one.
 - A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry. **The curve counts logical
   passes; the hook counts calls**, and where they differ the body says so.

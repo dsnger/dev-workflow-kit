@@ -139,9 +139,10 @@ would separate a rule from the argument that settles it.
       cycles** — and says *why*: they derive from **the same cited-story set**, not from being one
       cycle. A copy that states the floor for one gate and leaves the others to inference fails
       this criterion, and so does one that gives the shared-cycle reason, which is false.
-      Both copies also state that **a change to the cited set *or to any cited profile* requires
-      the final clean pass to run against the current set and under the current profile, even when
-      the floor number does not move** — a new member brings its
+      Both copies also state that — **for a cycle §5 says is still running a gate**, the scope the
+      spec sets and which §5 alone decides — **a change to the cited set *or to any cited profile*
+      requires the final clean pass to run against the current set and under the current profile,
+      even when the floor number does not move** — a new member brings its
       lenses and evidence duties with it — and that **removing a citation never discharges an
       already accepted in-set Blocker or Major**, since acceptance and not the citation put it in
       the fix set.
