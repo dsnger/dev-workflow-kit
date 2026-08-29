@@ -75,9 +75,14 @@ from the file rather than from recall — without the analysis writing anything 
 - [ ] What the analysis cannot answer from the ledger alone is stated, rather than left for a
       reader to infer from what it does answer.
 - [ ] **The review-loop question routed here is answerable, or its gap is named.** The
-      review-loop-economics story defers its economic measurement to this one: after roughly three
-      profiled cycles under the new rules, read their pass counts and finding distributions against
-      the `fic2` baseline. That analysis reads **two pinned commit-body forms** — the provenance
+      review-loop-economics story defers to this one a **comparison, not a measurement of its
+      rule's effect**: after roughly three profiled cycles under the new rules, compare their
+      recorded severity mixes with the `fic2` baseline — which carries complete per-pass totals and
+      Blockers and **Majors for only some passes**. **Two confounds must be named wherever a figure
+      is reported**: the curves are self-reported and unvalidated, and the cycles being compared
+      reviewed **different artifacts**, so a difference is evidence about the population as much as
+      about the rule. **No demotion figure is derivable** — that would need one finding classified
+      under both rules, which nothing records. That analysis reads **two pinned commit-body forms** — the provenance
       line and the per-pass curve, both specified in
       `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` — and its **first
       checkpoint** is the first post-merge cycle whose cited set licenses floor 1, which must carry

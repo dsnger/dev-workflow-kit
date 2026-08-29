@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 23 (rules only) · **Gate-A passes 1-21**
+**Date:** 2026-08-29 · **Revision:** 24 (rules only) · **Gate-A passes 1-22**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -195,8 +195,10 @@ that *is* the product.
 **Expected effect, with its limit, disclosed rather than claimed.** Distributions like PR #23's
 should demote substantially, but **how much is not predictable** — that commit's own body describes
 harness defects the symmetric carve-out keeps. Ledger rows and story criteria keep their severity
-because escalation and the assigned-fix-set rule read them. **The amount is a prediction, not a
-measurement**, which is why the story routes it to P8.
+because escalation and the assigned-fix-set rule read them. **The amount is a prediction, and it stays one**: §4 explains why the durable record cannot
+measure demotion — no finding is classified both ways — so what the story routes to P8 is a
+comparison of recorded severity mixes across cycles, with its confound named, not a measurement of
+this rule's effect.
 
 ---
 
@@ -471,8 +473,8 @@ index can change between the read and the commit.
 Hook code, including the reminder's own wording; gate-call observability; the pass-counter anomaly;
 the CodeRabbit plan-metadata contradiction; the fixture-per-predicate question; any remedy to the
 supersession convention; deprecating or repurposing the user-facing floor knob; teaching the hook
-about profiles; the §5 loop-rule consolidation and everything its successor story owns; and general
-reconciliation of the two copies' divergence beyond §7's one seam.
+about profiles; the §5 loop-rule consolidation and everything its successor story owns; and general reconciliation of the two copies' divergence,
+which this change does not touch at all (§7 withdrew the seam an earlier revision claimed to need).
 
 ---
 
@@ -506,8 +508,11 @@ reconciliation of the two copies' divergence beyond §7's one seam.
   *stated* floor the profiles do not license.
 - **The reachability test needs judgement** where §5 is trying to remove it; §3 says so.
 - **The curve is self-reported**; P8 inherits that limit.
-- **The expected demotion is a prediction**, and P8 is where it is checked. **What P8 can produce
-  is bounded by what it reads**: a self-reported curve nothing validates against the findings files.
-  So P8 reports a **comparison of recorded values** with that limit stated, not a measurement in any
-  stronger sense. If the recorded values show far less demotion than hoped, the rule is still
-  correct and the economics claim was what was wrong.
+- **The expected demotion is a prediction, and it is not one this design makes checkable.** P8
+  reads a **self-reported curve** nothing validates against the findings files, and those curves
+  come from **cycles reviewing different artifacts**, so a difference between them is evidence
+  about the population as much as about the rule. **What P8 can report is a change in recorded
+  severity mixes, with both limits named.** A demotion figure would need one finding classified
+  under both rules, which nothing here produces. If the recorded mixes shift far less than hoped,
+  the rule may still be correct and the economics claim was what was wrong — and that inference is
+  the reader's to make with the confound in view, not P8's to assert.

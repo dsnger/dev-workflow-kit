@@ -95,7 +95,8 @@ would separate a rule from the argument that settles it.
   worth. The evidence doc carries it as an open question, not a commitment.
 - **Any remedy to the supersession convention** the worked example above illustrates. Parked
   as a `todos.md` candidate.
-- **The economic measurement itself** — whether loops actually got cheaper. It cannot be
+- **Whether loops actually got cheaper** — and the honest form of that question, which is narrower
+  than "measure the rule's effect". It cannot be
   observed inside this cycle: the severity rule's effect appears only across several cycles
   run under it, and claiming otherwise from a single cycle would be the fabricated-evidence
   failure §5 names. It is **deferred to a named vehicle rather than to a new backlog row** —
@@ -170,7 +171,7 @@ would separate a rule from the argument that settles it.
       own Gate-A run — so P8 without Gate-A curves cannot measure the thing the problem
       statement is about.
       **Why it is in scope** (approved as a scope addition, Daniel, 2026-08-28): the deferred
-      economics measurement routed to P8 is otherwise answerable only for cycles whose author
+      economics comparison routed to P8 is otherwise answerable only for cycles whose author
       happened to write the curve down — `3cdd075` and `baa75c1` did, `7bbdb14` recorded the
       pass total and no distribution — because the findings files behind those numbers live
       under gitignored `.context/`. It is also the durable half of Q6: a curve in a commit body
@@ -258,9 +259,11 @@ would separate a rule from the argument that settles it.
       branch actually licenses.** This story is risk `high`, so every cycle citing it owes
       floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
       naming the cycle, that floor, and this story at its level, showing the derivation and the
-      provenance line working at a real value. **What that line does not do is name its cycle** —
-      every cycle on this branch predates the identifier rule, so its cycle field carries the
-      reserved pre-rule value, which by construction attributes nothing.
+      provenance line working at a real value. **The one field it cannot demonstrate is the cycle
+      identifier**: every cycle on this branch predates the identifier rule, so each carries the
+      reserved pre-rule value, which by construction attributes nothing. What this branch shows is
+      the line's derivation, its grammar and every other field; attribution is demonstrated at the
+      checkpoint named in the identifier criterion.
       **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
       draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
       story's own profile, and the only way to satisfy it as written would have been to mint a

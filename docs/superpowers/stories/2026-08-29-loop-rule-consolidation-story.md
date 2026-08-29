@@ -115,7 +115,8 @@ Both changes rewrite these, and **this story must extend rather than replace wha
   loop's skip record to what a squash must carry. **This story adds the decline record**, and a
   rewrite that drops the parent's three would silently unship them.
 - **The unknown-start fallback** (what a loop does when its starting rules cannot be established).
-  The parent covers the floor, severity, the curve and the nonce duties at their strictest. **This story extends
+  The parent covers five parts at their strictest — floor, severity, the provenance line, the curve,
+  and the nonce duties. **This story extends
   the same list to the loop rules it ships** — suspensions binding, decline records
   treated as absent so no hold is released. Extending is safe; replacing is not.
 
