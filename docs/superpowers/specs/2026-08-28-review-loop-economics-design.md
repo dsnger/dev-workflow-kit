@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 26 (rules only) · **Gate-A passes 1-24**
+**Date:** 2026-08-29 · **Revision:** 27 (rules only) · **Gate-A passes 1-25**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -102,7 +102,7 @@ whether anything but a person parses it.)
 <ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
 <PATH>      := <bare> | <quoted>
 <bare>      := [A-Za-z0-9._/-]+           contains no delimiter, quote or whitespace
-<quoted>    := a double-quoted string whose only escapes are \" and \\ ;
+<quoted>    := a double-quoted string, non-empty, whose only escapes are \" and \\ ;
                                           a path containing a newline or other control
                                           character is NOT representable — the cycle stops
                                           and surfaces rather than emitting one
@@ -226,7 +226,7 @@ reason as the provenance line:**
 <bare-model> := [!-~]{1,} minus ; : , ( ) + " and space
                                           printable ASCII only; a control character makes the
                                           identifier unrepresentable, handled below
-<quoted-model> := a double-quoted string, same two escapes as <quoted>;
+<quoted-model> := a non-empty double-quoted string, same two escapes as <quoted>;
                                           a reported identifier containing a control character is
                                           written `undetermined` — and the raw value is NOT
                                           reproduced anywhere in the body, since a commit message
@@ -262,8 +262,9 @@ artifacts is evidence about the population, not about the rule. **A demotion fig
 paired classification the durable record does not carry**, so what P8 can report is a change in
 recorded mixes with the confound named. **The `fic2` baseline is thinner, and precisely how matters.** Its closing commit `3cdd075`
 carries the complete per-pass **totals and Blockers and no Major series at all**; the committed
-field report adds **Majors for passes 1–5 only**, and neither carries per-finding subject material
-outside gitignored files. So the baseline supports **total-volume and Blocker comparison across all
+field report adds **Majors for passes 1–5 only**, and the field report carries **some** per-finding
+subject material — it classifies the four pass-5 findings by subject, quotes one verbatim, and
+gives aggregate pass-2 clusters — but not a per-finding classification across all seven passes. So the baseline supports **total-volume and Blocker comparison across all
 seven passes**, a **Major comparison over five of them**, and nothing finer — which the report must
 state whenever it uses the Major series. Saying this
 here keeps a later reader from computing a demotion figure the baseline cannot bear.
@@ -439,13 +440,22 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   declaration separate from the template it writes, with the changed regions as the
   reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
   case, not the only one.
-  **One known failure, fixed rather than routed.** Neither resulting prompt carries a
-  `Target model:` line, which item 1 requires — `workflow-init.md` names one for the outer command
-  and those bytes are not scaffolded. **Both resulting prompts get one.** An earlier revision
-  proposed routing it as out of scope, which cannot stand beside the sentence above: a change
-  cannot require each resulting prompt to pass all twelve items and knowingly leave one false. It
-  is one line per copy, in a file this change already edits, and the invariant that makes the pass
-  binding is the same invariant that makes the line required.
+  **One known failure, and it collides with a shipped check — this is the change's one open
+  question.** The **scaffolded template** is a "scaffolded template" in invariant 11's own list, so
+  item 1 binds it and it carries no `Target model:` line. But the template lives inside
+  `workflow-init.md`, whose own declaration sits at column 1 (`:9`), and
+  `scripts/check-invariants.sh` counts `^Target model:` in each claiming file and **fails on
+  anything but exactly one**. Adding the template's line makes two and breaks CI; indenting it
+  inside the fence would indent it in every scaffolded file.
+  **Three ways out, none of them this spec's to choose:** widen the checker to count declarations
+  per *scaffolded artifact* rather than per file; give the template a differently-spelled
+  declaration the checker does not match, which weakens the check's purpose; or record that the
+  scaffolded `CLAUDE.md` is exempt from item 1 with the reason. **The plan does not proceed on this
+  until it is decided**, and the decision touches `scripts/check-invariants.sh`, which no earlier
+  revision put in scope.
+  *(Root `CLAUDE.md` is a separate question and probably not one: invariant 11's list is skills,
+  commands, agent definitions, hook messages and scaffolded templates, and the root file is none of
+  those.)*
 
 - **This branch's own three closing bodies carry the final forms**, since two story criteria
   require it. **No reconstruction is needed and none is claimed:** the Gate-A spec cycle has not
@@ -465,8 +475,10 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   `cycle none (pre-rule)`, which the grammar admits as a production. **The first cycle started after these rules ship carries a real
   one**, and the verification confirms that rather than pretending this branch demonstrates it.
   **The verification confirms all three bodies before closure**, and states exactly what they
-  prove: **every field of both pinned forms except the nonce**, which no cycle on this branch can
-  supply. **The nonce is verified at a named later checkpoint**: the **Gate-A spec cycle of the next story
+  prove: **every field of both pinned forms except two** — the **cycle identifier**, which no cycle
+  on this branch can supply, and the **knob clause's non-absent form**, which cannot be shown where
+  no user knob exists (the conditional verification above records that as not-applicable rather
+  than as satisfied). **The nonce is verified at a named later checkpoint**: the **Gate-A spec cycle of the next story
   whose spec is written after the implementation commit lands**. Naming a cycle type and an
   artifact rather than "the first cycle" matters because siblings can start concurrently and "first"
   has no total ordering across them. That cycle's provenance line and curve must carry a real nonce,

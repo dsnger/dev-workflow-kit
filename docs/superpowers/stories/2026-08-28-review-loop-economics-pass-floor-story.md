@@ -14,7 +14,11 @@ Four measurements, each citable:
 - **Loops do not converge on count.** In the kit's heaviest consumer, one design spec past
   2800 lines ran nineteen measured Gate-A passes; findings fell from 43 into a 2–19 range
   after pass 6 and never reached zero, while Blockers fell from 11 to 0–1 from pass 7 on
-  (`CLAUDE.md:157-159`). The substance converged and the number did not.
+  (`CLAUDE.md:157-159`). **What that shows is that the count did not converge — and not that the
+  substance did.** Reading a falling Blocker curve as convergence is an inference
+  `docs/hardening-log.md` retracted at entries 78, 84, 85 and 87, and `CLAUDE.md` says in the same
+  paragraph that neither curve measures coverage, so a low count can sit beside an unreviewed
+  subsystem. The measurement is the numbers; the convergence reading is not part of it.
 - **Severity lands on the instrument, not the product.** PR #23's closing commit records
   that "of 27 Blocker/Major findings, 16 were in the never-committed scratch harness, 10 in
   the design spec's narration, 1 in the plan" (`7bbdb14`, quoted at `todos.md:268-270`) —
@@ -260,14 +264,15 @@ would separate a rule from the argument that settles it.
 - [ ] **The provenance path is demonstrated on this branch as far as this branch can demonstrate
       it, at the floor it actually licenses.** Not "end to end": two fields are out of reach here
       and the criterion names both rather than claiming coverage it lacks — the **cycle identifier**
-      (every cycle here predates the rule) and the **user-knob clause** (which is
-      not-applicable where no knob exists, per the design's conditional verification). This story is risk `high`, so every cycle citing it owes
+      (every cycle here predates the rule) and the **user-knob clause's non-absent form** (this
+      workspace has no knob, so the design's conditional verification records not-applicable rather
+      than satisfied). Every other field is shown. This story is risk `high`, so every cycle citing it owes
       floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
       recording that floor and this story at its level, so the derivation and the line are shown
       working at a real value. **The cycle field is the one it cannot demonstrate**: every cycle on
       this branch predates the identifier rule, so each carries the reserved pre-rule value, which
-      by construction attributes nothing. This branch shows the line's derivation, its grammar and
-      every other field; **attribution is demonstrated at the checkpoint named in the identifier
+      by construction attributes nothing. This branch shows the line's derivation, its grammar and its
+      remaining fields; **attribution is demonstrated at the checkpoint named in the identifier
       criterion**, not here.
       **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
       draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
