@@ -152,7 +152,7 @@ would separate a rule from the argument that settles it.
 - [ ] **Every cycle's closing commit body carries its per-pass shape — all three cycle types.**
       Both copies require the **Gate-A spec loop** (in the spec's commit body), the **Gate-A
       plan loop** (in the plan's commit body) and the **Gate-B cycle** (in the closing amend) to
-      record that loop's per-pass finding and Blocker counts, in one pinned greppable form,
+      record that loop's per-pass **Findings, Blockers and Majors**, in one pinned greppable form,
       following the `3cdd075` precedent
       (`Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0.`). The form is complete
       enough that a reader can tell **which pass each number belongs to** — incomplete passes are
@@ -257,8 +257,11 @@ would separate a rule from the argument that settles it.
 - [ ] **The two copies stay in parity.** Every rule this story changes reads the same in
       `CLAUDE.md` §5 and in the `/workflow-init` template, except where a wording difference is
       deliberate and stated as such. Checkable by diffing the two regions.
-- [ ] **The provenance path is demonstrated end to end on this branch, at the floor this
-      branch actually licenses.** This story is risk `high`, so every cycle citing it owes
+- [ ] **The provenance path is demonstrated on this branch as far as this branch can demonstrate
+      it, at the floor it actually licenses.** Not "end to end": two fields are out of reach here
+      and the criterion names both rather than claiming coverage it lacks — the **cycle identifier**
+      (every cycle here predates the rule) and the **user-knob clause** (which is
+      not-applicable where no knob exists, per the design's conditional verification). This story is risk `high`, so every cycle citing it owes
       floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
       recording that floor and this story at its level, so the derivation and the line are shown
       working at a real value. **The cycle field is the one it cannot demonstrate**: every cycle on
@@ -274,7 +277,7 @@ would separate a rule from the argument that settles it.
       checkpoint of the P8 comparison**: the first post-merge cycle whose cited-story set licenses
       floor 1 must carry the floor-1 provenance line, and P8 reads it.
       **What is demonstrated here stays bounded, and the wording forecloses reading it wider:**
-      the derivation, the knob and the provenance path work. It is not evidence that review
+      the derivation and the provenance path work. It is not evidence that review
       loops became cheaper. Reading a working mechanism as an improved outcome is the overclaim
       class AGENTS.md names as this repo's most persistent defect, and the economics are
       compared afterwards by the follow-up named in §2 — compared, because §2 explains why no

@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 25 (rules only) · **Gate-A passes 1-23**
+**Date:** 2026-08-29 · **Revision:** 26 (rules only) · **Gate-A passes 1-24**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -197,16 +197,18 @@ should demote substantially, but **how much is not predictable** — that commit
 harness defects the symmetric carve-out keeps. Ledger rows and story criteria keep their severity
 because escalation and the assigned-fix-set rule read them. **The amount is a prediction, and it stays one**: §4 explains why the durable record cannot
 measure demotion — no finding is classified both ways — so what the story routes to P8 is a
-comparison of recorded severity mixes across cycles, with its confound named, not a measurement of
-this rule's effect.
+comparison of recorded severity mixes across cycles, with **both** confounds named (the curves are
+self-reported and unvalidated; the cycles compared reviewed different artifacts), not a measurement
+of this rule's effect.
 
 ---
 
 ## 4. The per-pass curve — required properties
 
 Each of the three cycles records its own per-pass finding and Blocker counts in its own commit
-body, labelled with the cycle it describes. **Gate B alone would leave the dominant cost
-unmeasured** — the loops this story cites as evidence are Gate-A loops. **Pinned here for the same
+body, labelled with the cycle it describes — **Findings, Blockers and Majors per pass**, since the
+severity rule moves the Blocker/Major line. **Gate B alone would leave the dominant cost
+unrecorded** — the loops this story cites as evidence are Gate-A loops. **Pinned here for the same
 reason as the provenance line:**
 
 ```
@@ -225,8 +227,13 @@ reason as the provenance line:**
                                           printable ASCII only; a control character makes the
                                           identifier unrepresentable, handled below
 <quoted-model> := a double-quoted string, same two escapes as <quoted>;
-                                          a reported identifier containing a control character
-                                          is written `undetermined`, with the raw value in prose
+                                          a reported identifier containing a control character is
+                                          written `undetermined` — and the raw value is NOT
+                                          reproduced anywhere in the body, since a commit message
+                                          cannot safely carry one (NUL cannot appear at all).
+                                          What the body records instead is where the value came
+                                          from and which bytes were rejected, described rather
+                                          than embedded
 ```
 
 **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
@@ -253,11 +260,12 @@ matters: demotion is what happens to *one finding* under two classifications, an
 records a finding classified both ways. Comparing mixes across cycles that reviewed different
 artifacts is evidence about the population, not about the rule. **A demotion figure would need a
 paired classification the durable record does not carry**, so what P8 can report is a change in
-recorded mixes with the confound named. **The `fic2` baseline is thinner in one specific respect**: its closing commit and the committed
-field report both carry the complete per-pass **totals and Blocker series**, but **Majors only for
-some passes**, and no per-finding subject material outside gitignored files. So the baseline
-supports **total-volume and Blocker comparison across all its passes** and a **Major comparison
-only over the passes that recorded them** — which the report must say when it uses them. Saying this
+recorded mixes with the confound named. **The `fic2` baseline is thinner, and precisely how matters.** Its closing commit `3cdd075`
+carries the complete per-pass **totals and Blockers and no Major series at all**; the committed
+field report adds **Majors for passes 1–5 only**, and neither carries per-finding subject material
+outside gitignored files. So the baseline supports **total-volume and Blocker comparison across all
+seven passes**, a **Major comparison over five of them**, and nothing finer — which the report must
+state whenever it uses the Major series. Saying this
 here keeps a later reader from computing a demotion figure the baseline cannot bear.
 - Carries that cycle's **cycle field**, so a curve can be attributed to the cycle that produced
   it — **the nonce for a post-rule cycle, `none (pre-rule)` for one that began before the rules
@@ -294,7 +302,10 @@ adds the decline record to the same passage; extending is required, replacing wo
 ## 5. The cycle nonce
 
 Both shipped records carry a **cycle field**, because a record that cannot be attributed to a cycle
-is unusable by the measurement that reads it. **§5 defines three cycles — the Gate-A spec loop, the
+cannot be told apart from another cycle's when several are read together. **That is a limitation,
+not a disqualification** — the `fic2` baseline is entirely pre-rule and is used precisely because a
+human knows which cycle it came from. What attribution buys is that a *later* reader does not have
+to. **§5 defines three cycles — the Gate-A spec loop, the
 Gate-A plan loop and the Gate-B cycle — so a run of all three produces three cycle fields, and for
 post-rule cycles three distinct nonces.** A **pre-rule** cycle has no nonce — §10's activation rule is what makes a cycle pre-rule; its field is the
 reserved `none (pre-rule)` and its records are not cycle-attributable; the activation rule that
@@ -459,7 +470,8 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   whose spec is written after the implementation commit lands**. Naming a cycle type and an
   artifact rather than "the first cycle" matters because siblings can start concurrently and "first"
   has no total ordering across them. That cycle's provenance line and curve must carry a real nonce,
-  the two must carry the **same** one, and it must differ from any other cycle's. Recording that as a checkpoint rather than as a satisfied criterion
+  the two must carry the **same** one, and it must differ from that of **any cycle open at the time
+  it was generated** — which is the uniqueness the rule actually requires, and all it can check. Recording that as a checkpoint rather than as a satisfied criterion
   is the difference between a demonstration and a claim.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications
