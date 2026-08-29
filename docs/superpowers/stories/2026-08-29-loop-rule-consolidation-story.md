@@ -79,8 +79,12 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
 
 ## 4. Settled inputs — decided, paid for, and not to be reopened
 
-Each was confirmed by Daniel during the parent cycle and is recorded in that cycle's commit bodies
-and in `docs/field-reports/2026-08-26-fic2-cycle-evidence.md`. **The design begins from these.**
+Each was confirmed by Daniel during the parent cycle. **The durable record is that cycle's commit
+bodies**, which carry every one of them. `docs/field-reports/2026-08-26-fic2-cycle-evidence.md` is
+where the *questions* were parked, not where they were answered — it states Q3–Q5 as unanswered and
+gives Q6 only as candidate answers, because it was written before the answers existed. Citing it as
+the source of the decisions would send a reader to a document that predates them. **The design
+begins from the table below.**
 
 | # | Decision |
 |---|---|
@@ -111,8 +115,8 @@ Both changes rewrite these, and **this story must extend rather than replace wha
   loop's skip record to what a squash must carry. **This story adds the decline record**, and a
   rewrite that drops the parent's three would silently unship them.
 - **The unknown-start fallback** (what a loop does when its starting rules cannot be established).
-  The parent covers the floor, severity, the curve and the nonce duties at their strictest. **This
-  story extends the same list to the loop rules it ships** — suspensions binding, decline records
+  The parent covers the floor, severity, the curve and the nonce duties at their strictest. **This story extends
+  the same list to the loop rules it ships** — suspensions binding, decline records
   treated as absent so no hold is released. Extending is safe; replacing is not.
 
 A third, for the same reason: the **clearly-stuck paragraph** is rewritten by both — by the parent

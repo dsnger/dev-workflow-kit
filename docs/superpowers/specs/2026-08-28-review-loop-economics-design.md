@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 22 (rules only) · **Gate-A passes 1-20**
+**Date:** 2026-08-29 · **Revision:** 23 (rules only) · **Gate-A passes 1-21**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -97,6 +97,8 @@ whether anything but a person parses it.)
 <NONCE>     := [a-z0-9]{8,16}
 <N>         := [1-9][0-9]*
 <STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
+                                          each <PATH> appears at most once; a repeated path,
+                                          with or without conflicting levels, is malformed
 <ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
 <PATH>      := <bare> | <quoted>
 <bare>      := [A-Za-z0-9._/-]+           contains no delimiter, quote or whitespace
@@ -217,7 +219,9 @@ reason as the provenance line:**
 <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
 <model>    := <bare-model> | <quoted-model> | "undetermined"
-<bare-model> := [^ ;:,()+"]+              excludes the grammar's own delimiters, "+" included
+<bare-model> := [!-~]{1,} minus ; : , ( ) + " and space
+                                          printable ASCII only; a control character makes the
+                                          identifier unrepresentable, handled below
 <quoted-model> := a double-quoted string, same two escapes as <quoted>;
                                           a reported identifier containing a control character
                                           is written `undetermined`, with the raw value in prose
@@ -230,7 +234,7 @@ of two contributing models is the same loss as recording none.
 
 A skipped cycle writes `<CYCLE-FIELD>; <CYCLE>: skipped (see skip reason)` and no counts.
 `cycle none (pre-rule)` is the **only** admissible alternative to a nonce, reserved for a cycle
-that began before the nonce rule shipped (§8) — it is a production of the grammar rather than a
+that began before the nonce rule shipped (§10 decides which cycles those are) — it is a production of the grammar rather than a
 magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
@@ -240,12 +244,17 @@ properties the form exists to satisfy:
   rather than a count, and the findings files carry the material for anyone who wants it.
 
 **What the curve makes answerable, and what it does not — because the pre-rule baseline is thinner
-than the forward record.** Going forward, post-rule cycles carry Findings, Blockers and Majors per
-pass, so **demotion is comparable across them**. **The `fic2` baseline does not support that
-comparison**: its closing commit records only totals and Blockers, the committed field report
-supplies Majors for some passes and not others, and the per-finding subject material lives only in
-gitignored findings files. So the baseline supports a **total-volume** comparison and nothing
-finer, and any demotion claim rests on **post-rule cycles compared with each other**. Saying this
+than the forward record.** Going forward, post-rule cycles carry Findings, Blockers and Majors per pass, so **their recorded
+severity mixes are comparable**. **That is not the same as measuring demotion**, and the difference
+matters: demotion is what happens to *one finding* under two classifications, and nothing here
+records a finding classified both ways. Comparing mixes across cycles that reviewed different
+artifacts is evidence about the population, not about the rule. **A demotion figure would need a
+paired classification the durable record does not carry**, so what P8 can report is a change in
+recorded mixes with the confound named. **The `fic2` baseline is thinner in one specific respect**: its closing commit and the committed
+field report both carry the complete per-pass **totals and Blocker series**, but **Majors only for
+some passes**, and no per-finding subject material outside gitignored files. So the baseline
+supports **total-volume and Blocker comparison across all its passes** and a **Major comparison
+only over the passes that recorded them** — which the report must say when it uses them. Saying this
 here keeps a later reader from computing a demotion figure the baseline cannot bear.
 - Carries that cycle's **cycle field**, so a curve can be attributed to the cycle that produced
   it — **the nonce for a post-rule cycle, `none (pre-rule)` for one that began before the rules
@@ -353,9 +362,13 @@ diverge substantially and one accounting cannot cover both.
 
 ## 7. Rollout, and what this change falsifies
 
-**The template lacks the sentence §3's kinship points at** — the prose-exemption rationale is in
-`CLAUDE.md` and absent from the template. **The template gets it**: a one-seam reduction of the
-divergence, because the new rule depends on it, not a general reconciliation.
+**No prerequisite is owed here, contrary to earlier revisions.** They claimed the template lacked
+the rationale §3's kinship points at and required adding it. **The template already carries the
+principle** — "Those describe the product rather than being it, so they carry no gate at all" —
+and the kinship claim rests on that describe-versus-be distinction, not on `CLAUDE.md`'s longer
+cost clause. What the copies differ in is the *phrasing of the cost*, which the kinship does not
+depend on. **So no seam is opened**, and the divergence between the copies is untouched by this
+change beyond the rules it actually edits.
 
 **Statements this change falsifies must be corrected in the same change** — in `README.md`,
 `docs/getting-started.md` and `docs/coding-workflow.md`, wherever they assert a fixed three-pass
@@ -468,7 +481,8 @@ reconciliation of the two copies' divergence beyond §7's one seam.
 - **When these rules bind.** From the commit that ships them, and **a cycle already running
   finishes under the rules it started with**. **Where a cycle's starting rules cannot be
   established it takes the stricter reading of every part this change touches** — floor 3, severity
-  classified without the demotion, the curve duty owed, and the nonce duties at their strictest. Not
+  classified without the demotion, **the provenance-line duty owed**, the curve duty owed, and the
+  nonce duties at their strictest — five parts, matching the five this change touches. Not
   a re-derivation, which could hand a level-0 cycle a floor of 1 and *skip* passes on the strength
   of not knowing when it started. A user knob set above 3 is not lowered by this fallback. *(The
   successor extends this list to the rules it ships; extending is safe, replacing is not.)*

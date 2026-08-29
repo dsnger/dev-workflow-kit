@@ -257,8 +257,10 @@ would separate a rule from the argument that settles it.
 - [ ] **The provenance path is demonstrated end to end on this branch, at the floor this
       branch actually licenses.** This story is risk `high`, so every cycle citing it owes
       floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
-      naming the cycle, that floor, and this story at its level, showing the
-      derivation and the provenance line working at a real value.
+      naming the cycle, that floor, and this story at its level, showing the derivation and the
+      provenance line working at a real value. **What that line does not do is name its cycle** —
+      every cycle on this branch predates the identifier rule, so its cycle field carries the
+      reserved pre-rule value, which by construction attributes nothing.
       **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
       draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
       story's own profile, and the only way to satisfy it as written would have been to mint a
