@@ -122,10 +122,11 @@ would separate a rule from the argument that settles it.
       **Every pass report states the floor it derived, the risk and security axes it read, and
       which cited stories it read them from**, so the value is
       visible while passes are still being spent rather than only in the closing commit.
-      Each copy also states that **one derived value governs every loop of the cycle** — the
-      Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle alike — and says *why*: those
-      loops cite the same stories, so the value they derive is the same. A copy that states the
-      floor for one gate and leaves the others to inference fails this criterion.
+      Each copy also states that **one derived value governs all three cycles** — the Gate-A spec
+      cycle, the Gate-A plan cycle and the Gate-B cycle, which §5 defines as **three separate
+      cycles** — and says *why*: they derive from **the same cited-story set**, not from being one
+      cycle. A copy that states the floor for one gate and leaves the others to inference fails
+      this criterion, and so does one that gives the shared-cycle reason, which is false.
       **One predicate, not two** (Daniel, 2026-08-28). An earlier draft added a `docs-only`
       arm; it is dropped because it does no work and, read path-wise, does the wrong work.
       A diff-derived reading cannot serve Gate A at all — Gate A runs on a spec, before any
@@ -197,6 +198,13 @@ would separate a rule from the argument that settles it.
       remain legitimate readers of rule text they will later apply; what is excluded is the
       reviewing pass, not gates.
 
+- [ ] **A cycle's records can be told apart from another cycle's.** Both copies require each
+      cycle to hold an identifier created at its start, unique among open cycles, and present in
+      every record that cycle writes — **one per cycle, so a run of all three holds three**. They
+      state how it is recovered by a cycle resumed after an interruption, what happens when it
+      cannot be recovered unambiguously, that a cycle does not start without one, and that a slot
+      another cycle owns is refused rather than overwritten. Checkable by reading either copy, and
+      observable on this branch: each of its three closing bodies carries its own.
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering

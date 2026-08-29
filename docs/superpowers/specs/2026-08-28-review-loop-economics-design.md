@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 15 (rules only) · **Gate-A passes 1-13**
+**Date:** 2026-08-29 · **Revision:** 16 (rules only) · **Gate-A passes 1-14**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -44,8 +44,11 @@ and surface the cause**, and that rule stands unchanged — the predicate applie
 that resolve, and to artifacts citing no story. Reading an unresolvable profile as 3 would convert
 an existing stop condition into a silent default.
 
-**Unanimity across a cited set.** Floor 1 **if and only if every cited story is profiled and every
-one is at level 0**. Any other set yields 3. This follows §5's own precedent — "skip-eligible only
+**Unanimity across a cited set.** Floor 1 **if and only if the cited set is non-empty and every
+member is profiled, resolvable, and at level 0** — all four conditions, because "every cited story"
+is vacuously true of an empty set. **No story cited, or any cited story unprofiled, yields 3. Any
+cited story whose profile is present but unresolvable stops and surfaces**, which is the §5 rule
+above and not a floor of 3. This follows §5's own precedent — "skip-eligible only
 if **every** cited story is" — and is the only reading consistent with invariant 2's firing
 direction.
 
@@ -82,8 +85,26 @@ passes are still being spent, which is the only time checking it is cheap.
 
 ### 2.3 The provenance line — required properties
 
-One line per cycle, in its closing commit body. The plan fixes the grammar; these properties are
-the contract:
+One line per cycle, in its closing commit body. **The grammar is pinned here, not in the plan** —
+the parent story requires one form and says this spec states it, and P8 parses it. (Revision 15
+moved it out and was wrong to; pass 9 had already settled this, and the test it settled on is
+whether anything but a person parses it.)
+
+```
+cycle <NONCE>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
+
+<NONCE>     := [a-z0-9]{8,16}
+<N>         := [1-9][0-9]*
+<STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
+<ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
+<PATH>      := <bare> | <quoted>          bare excludes , { } ; " and whitespace;
+                                          quoted is double-quoted with \ and " escaped
+<KNOB>      := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
+<CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
+```
+
+Everything that quotes this line elsewhere quotes an instance of it; there is no informal variant.
+The properties the grammar exists to satisfy:
 
 - **Every cycle records it**, default floor or not, so an absent line is never ambiguous between
   "the default applied" and "someone forgot". **Three cycles means three lines**, one per cycle.
@@ -108,9 +129,16 @@ unchanged costs a pass. **A lowering** drops the floor, the lens sets and the ev
 together, so it closes on **one further pass after the lowering**. That is the pre-existing
 profile-change path; the variable floor rides it.
 
-**A cited-set change moves the floor only if it changes the unanimity verdict** — adding a level-0
-story to an all-level-0 set moves nothing. Where the verdict moves, upward is a raise with the
-same one-further-pass consequence; downward lowers the floor and **releases nothing else**.
+**The cited set is re-read at each pass, and the final clean pass runs against the current set** —
+**whenever its membership changes, not only when the floor number moves.** Adding a high-risk story
+to a set already at floor 3 leaves the number alone while adding that story's lens set, its
+evidence obligations and its review scope; a pass run before it joined did not cover them.
+
+Where the change moves the **number**: upward is a raise with the same one-further-pass
+consequence; downward lowers the floor. **What a removal discharges, precisely:** obligations are
+recomputed from the current set, so removing a story does remove *that story's* lenses and evidence
+duty. It **never discharges an accepted in-set Blocker or Major** — the user's acceptance put that
+finding in the fix set, not the citation, so removing the citation does not take it out.
 
 ---
 
@@ -160,8 +188,25 @@ measurement**, which is why the story routes it to P8.
 
 Each of the three cycles records its own per-pass finding and Blocker counts in its own commit
 body, labelled with the cycle it describes. **Gate B alone would leave the dominant cost
-unmeasured** — the loops this story cites as evidence are Gate-A loops. The plan fixes the format;
-these are the contract:
+unmeasured** — the loops this story cites as evidence are Gate-A loops. **Pinned here for the same
+reason as the provenance line:**
+
+```
+cycle <NONCE>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>.
+
+<CYCLE>    := "Gate-A spec" | "Gate-A plan" | "Gate B"
+<SPEC>     := <RANGE> ("," <RANGE>)*      strictly ascending, non-overlapping
+<RANGE>    := <p> | <p> "-" <p>
+<p>        := [1-9][0-9]*
+<COUNTS>   := <n> ("," <n>)*              exactly as many entries as <SPEC> enumerates
+<n>        := 0 | [1-9][0-9]*
+<MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
+<PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
+<model>    := [^ ;:,()]+ | "undetermined"   verbatim as the call reported it
+```
+
+A skipped cycle writes `cycle <NONCE>; <CYCLE>: skipped (see skip reason)` and no counts. The
+properties the form exists to satisfy:
 
 - Carries that cycle's **nonce**, so a curve can be attributed to the cycle that produced it.
 - **One entry per valid pass**, and because incomplete passes are excluded and consume pass
@@ -170,8 +215,12 @@ these are the contract:
 - A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry. **The curve counts logical
   passes; the hook counts calls**, and where they differ the body says so.
-- **Both branches of one logical pass must have reviewed the same artifact revision.** If it
-  changed between them they are not one pass.
+- **Both branches of one logical pass must have reviewed the same artifact revision**, identified
+  by the **tracked reviewed commit** — the plan fixes how it is encoded, but which thing is
+  compared is a decision, not a format. **If it changed between them they are not one pass**: the
+  completed branch is recorded as an incomplete pass and excluded, and the later branch begins a
+  new one. Ending the pass is the conservative direction; merging two revisions would produce one
+  entry describing two different artifacts.
 - **The model each pass ran under is recorded**, per the existing convention in
   `docs/coding-workflow.md`, written `undetermined` where it cannot be determined rather than
   guessed, and admitting provider-qualified identifiers.
@@ -199,13 +248,33 @@ and the Gate-B cycle — so a run of all three produces three nonces, not one.**
   name, a timestamp or a commit, each of which collides exactly where sibling cycles do.
 - Constrained so it is **safe as a slot infix and a path component**.
 - **It appears in every record the cycle writes.**
+- **A nonce is a *candidate* for recovery only if it is keyed to this cycle's type (Gate-A spec,
+  Gate-A plan, or Gate B) and this cycle's artifact, and that cycle is still open.** History
+  normally holds many closed cycles' nonces and they are not candidates; a working record left by a
+  closed cycle is not one either, and **the working record is retired at closure** so it cannot
+  become one later.
 - **Recovery has two sources**, because a Gate-A cycle's commit does not exist while it runs: the
-  advisory working record during the cycle, and history at its commit. Recovering from **either**
-  keeps identity. **Neither, or sources that disagree, or more than one candidate → no identity,
-  start a new cycle** — which costs passes rather than letting one cycle's records read as
-  another's.
-- **The advisory working record is a cycle record too**: it carries the nonce, and §5's per-cycle
-  infix and refuse-on-collision rules apply to it. §5's optional-companion status is unchanged.
+  advisory working record during the cycle, and history at its commit. Recovering a single
+  candidate from **either** keeps identity. **No candidate, disagreeing sources, or more than one
+  candidate → no identity, start a new cycle** — which costs passes rather than letting one cycle's
+  records read as another's.
+- **A cycle does not start without a valid, unique nonce.** Where generation fails — randomness
+  unavailable, an invalid value, or a collision with an open cycle — retry within a bounded policy
+  the plan fixes, then **stop and surface**. **No deterministic fallback**, since a derived value
+  collides exactly where sibling cycles do, which is the property the nonce exists to avoid.
+- **The advisory working record is a cycle record too**: it carries the nonce, and the slot rules
+  below apply to it as they do to findings slots. §5's optional-companion *status* is unchanged.
+
+**Slot rules this change adds** — the plan fixes the spelling, these are the properties. §5's
+current slot grammar admits three exact names and no per-cycle component, which is why this is an
+addition rather than a reference:
+- **A cycle that has a nonce uses it in every slot more than one cycle could write.** The bare name
+  is reserved for the legacy single-cycle case it already serves.
+- **A target owned by another nonce is refused, not overwritten**, and the refusal names the
+  collision. §5 already stops on a target that survives deletion; this extends that to a target
+  that must not be deleted at all.
+- These rules exist because a bare slot was in fact overwritten during this cycle, destroying a
+  previous cycle's findings file.
 
 ---
 
@@ -219,9 +288,11 @@ explicitly dropped is a dropped condition. **No passage is rewritten without its
 covering its own change — two changes to one passage owe two answers.
 
 **Where it is produced and gated.** In one artifact, written **once against the frozen final text**
-and **reviewed before any replacement text is written**, as a Gate-A review under this story's
-profile with a clean pass as its acceptance condition and no replacement text on failure. A finding
-there **feeds back** rather than being absorbed. **The plan carries the passage list and executes
+and **reviewed before any replacement text is written**. **That review is part of the Gate-A plan
+cycle, not a fourth cycle** — the topology stays at three, and the artifact is an input the plan
+cycle reviews alongside the plan. Its acceptance is that plan cycle's clean pass; **no replacement
+text is written while it is outstanding**, and a finding against it **feeds back** — the artifact
+is regenerated against corrected text — rather than being absorbed. **The plan carries the passage list and executes
 this method against it** — and because the dispositions are deferred, **that list is the sole guard
 against a dropped condition**, so it is re-checked whenever the design adds a rule.
 
@@ -281,6 +352,12 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
 - **A fresh twelve-item `docs/prompt-standards.md` pass** over every changed prompt region, with
   **item 7 read against the whole resulting prompt** — a contradiction is a relation between an
   edited passage and an unedited one.
+
+- **This branch's own three closing bodies carry the final forms**, since two story criteria
+  require them to demonstrate the provenance line and the curve, and the spec and plan cycles here
+  closed before those forms existed. **The plan carries the obligation to reconstruct those bodies
+  into the pinned forms**, and the verification confirms **all three** before closure — a
+  demonstration the branch does not actually contain is not a demonstration.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications
 reading closing commits are produced against the `WIP:` snapshot and **re-read against the content
