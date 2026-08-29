@@ -9,31 +9,32 @@ pass floor becomes a function of the cited story's profile, and finding severity
 whether something in the system takes a different decision.
 
 **Architecture:** Two mirrored prose edits, site by site: `CLAUDE.md` §5 and the inline template in
-`/workflow-init`. **No code. Nothing under `plugins/dev-workflow/hooks/` is touched and no hook
-state file is written.**
+`/workflow-init`. **No code.** No file under `plugins/dev-workflow/hooks/` changes.
 
 **Tech Stack:** Markdown prompts; POSIX shell for every check; `git` for the records.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` (revision 36, Gate A
 closed clean at pass 34). **Read it alongside this plan.** Plan A implements §2, §2.1, §2.2, §2.4,
-§3 and the part of §10 that covers the rules it ships.
+§3, and §10 in part.
 
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 
-> **Read the profile from that header and from nowhere else.** This plan deliberately does not
-> copy the risk value, the security value or the validation mode into itself. §5 makes the story
-> header the single writable copy: a copy here would go stale the moment the profile moved, and a
-> stale floor is this change's own central failure mode.
+> **Read the profile from that header at execution time. This plan states no risk value, no
+> security value, no validation mode and no pass count derived from any of them.** §5 makes the
+> story header the single writable copy; a value copied here goes stale the moment the profile
+> moves, and a stale floor is this change's own central failure mode. Revision 1 of this plan
+> promised exactly that and then wrote the story's risk value, its validation mode, and a pass
+> count derived from them into its own prose — finding B1. They are not repeated here, not even
+> to name the mistake: quoting a stale-able value to explain why values go stale reintroduces it.
 
 ---
 
 ## Why this is one of three plans
 
-The single 748-line plan this replaces opened **31 Blocker/Major at Gate-A pass 1** (`5c00f8c`;
-findings at `.context/codex-reviews/gate-a-plan-rle-pass-1.md`). Twelve of those findings were one
-shape — the plan gestured at settled spec content instead of shipping it — and the artifact was
-already too long while still needing to grow. The split is A → B → C, sequenced, each its own
-Gate-A cycle:
+The single 748-line plan this replaces opened **31 Blocker/Major at Gate-A pass 1** (`5c00f8c`).
+Twelve of those findings were one shape — the plan gestured at settled spec content instead of
+shipping it — and the artifact was already too long while still needing to grow. Plan A revision 1
+then opened **17** (`3b94dbf`), with Blockers falling 21 → 7.
 
 | Plan | Ships | Spec sections |
 |---|---|---|
@@ -41,45 +42,40 @@ Gate-A cycle:
 | **B** | the provenance line, the per-pass curve, the cycle nonce, slot naming | §2.3, §4, §5, §6 |
 | **C** | rollout: the falsified user-facing sentences, packaging, the evidence pack | §7, §8 |
 
-**B may not open before A's loop closes.** Only two interventions ever moved a finding curve in
-this cycle — splitting an artifact and slimming one — so this is the move with evidence behind it,
-not a preference. It costs three separate 3-pass floors under the story's `high` profile. That is
-the story's own floor rule applying to the work that writes it, and it is recorded as such rather
-than worked around.
+**Three Gate-A cycles, ONE Gate-B cycle.** Each plan is reviewed as its own artifact — that is
+where the finding curve actually moved — but the three ship **one diff**, so the diff is reviewed
+once, after Plan C. §5's own architecture already works this way: Gate A is per-artifact and Gate B
+is per-diff.
 
-### Where pass 1's findings went — every one, to exactly one plan
+Revision 1 tried to give Plan A its own Gate-B cycle and two Blockers fell straight out of it: the
+battery could not go green because the manifest bump is Plan C's (B4), and the findings slots
+needed a discriminator whose grammar is Plan B's (B5). **Each plan's own cycle needed
+infrastructure a later plan ships.** Splitting the review of one diff was never coherent.
 
-Stated so nothing falls between three documents the way the passage list fell between two.
+**Execution order A → B → C. Plan B may not open before Plan A's Gate-A loop closes.**
 
-| Finding | Owner | Note |
-|---|---|---|
-| B1 conditions artifact circular | **A** | dissolved: the accounting is a *section of this plan*, reviewed by this plan's Gate-A passes |
-| B2 passage set unsound | **A** | dissolved the way B2 asked: the set is **derived from the planned edits**, not imported from revision 15 |
-| B3 pass-report paragraph unedited | **A** | Task 4 |
-| B4 floor replacement range undelimited | **A** | Task 2 gives exact old and new text and dispositions `counted by the hook` |
-| B5 gate-off list read as complete | **A** | Task 2 Step 4 ships §10's "routes known today, not a complete list" framing |
-| B6 §2.4 mid-cycle missing | **A** | Task 5 |
-| B7 §10 activation missing | **A** | Task 6, for the two parts A ships; **B extends it** to the three record duties |
-| B8 `7/7` false in sequence | **A** | every check below states its value *for its point in the sequence* |
-| B9-B13 records/nonce/slots under-shipped | **B** | |
-| B14-B16 commit topology | **A**, restated in B and C | resolved once, below; each plan repeats the resolution |
-| B17 `N/N cycle` in getting-started | **C** | |
-| B18 re-review without amending | **A**, restated in B and C | Task 8 |
-| B19 evidence produced after close | **C** | |
-| B20 literal `<body: ...>` placeholder | **A**, restated in B and C | Task 8 builds the body before amending |
-| B21 rewriting closed commit bodies | **C** | |
-| M1 one row for two copies | **A** | the accounting has a row **per copy** |
-| M2 plan copies the profile values | **A** | header above carries the path only |
-| M3 ellipses in replacement text | **A** | every replacement is complete text |
-| M4 false `where the 3 come from` rationale | **A** | Task 3 |
-| M5 "the floor is unchanged" | **A** | Task 3 |
-| M6 nonce diagnostics | **B** | |
-| M7 parity result schema | **A** | Task 7 pins the tables |
-| M8 future-nonce checkpoint | **C** | |
-| M9 interruption / rerun safety | **A**, restated in B and C | every edit task has a preflight |
-| M10 `main` currency | **C** | |
-| MINOR 11 CHANGELOG content | **C** | |
-| NIT 12 `(identical)` in a pasted block | **A** | no editorial token appears inside any pasted block below |
+### Where pass 1's findings went
+
+Every finding from `.context/codex-reviews/gate-a-plan-rle-pass-1.md` (the 748-line plan) and
+`.context/codex-reviews/gate-a-plan-plana-pass-1.md` (this plan, revision 1) is assigned to exactly
+one plan, so nothing falls between three documents.
+
+| From | Finding | Owner | Resolution |
+|---|---|---|---|
+| rle | B1 conditions artifact circular · B2 passage set unsound | **A** | the accounting is a *section of this plan*, derived from the edits this plan makes, reviewed by this plan's Gate-A cycle. No second artifact — see finding M2 below |
+| rle | B3 pass-report unedited · B4 replacement range · B5 gate-off list · B6 §2.4 · B7 §10 · B8 sequence values | **A** | Tasks 1-5 |
+| rle | B9-B13 records/nonce/slots · M6 nonce diagnostics | **B** | |
+| rle | B17 · B19 · B21 · M8 · M10 · MINOR 11 | **C** | |
+| rle | B14-B16, B18, B20 commit topology | **A**, restated in B and C | resolved below; one WIP, one loop after C |
+| rle | M1 rows per copy · M2 profile values · M3 ellipses · M4 false rationale · M5 "unchanged" · M7 parity schema · M9 rerun safety | **A** | |
+| plana | B1 profile values copied | **A** | header above; no derived pass count anywhere |
+| plana | B2 eleventh passage missing | **A** | the accounting has **eleven** passages |
+| plana | B3 line numbers shift under earlier tasks | **A** | **every executable step addresses by content, never by line number** |
+| plana | B4 battery cannot go green · B5 illegal slot names | **A** | dissolved by the one-Gate-B-cycle topology |
+| plana | B6 evidence not revalidated | **C** | the evidence pack belongs to the combined close |
+| plana | B7 cycle runs under old rules | **A**, restated in B and C | Global Constraints below |
+| plana | M1 pass-report passage differs · M3 preflight states · M4 baseline · M5 "profile alone" · M6 causal claim · M7 parity script · M8 recovery · M9 knob bytes · M10 `git add -u` | **A** | |
+| plana | 4 MINOR | **A** | Task 6 Step 3 proof, `mktemp`, hook-state qualification, self-review claim |
 
 ---
 
@@ -87,46 +83,54 @@ Stated so nothing falls between three documents the way the passage list fell be
 
 Verbatim from the spec. Every task's requirements implicitly include these.
 
-- **Prompt-only.** No file under `plugins/dev-workflow/hooks/` changes; no hook state file is
-  written, in particular not `.context/codex-gate.floor`.
+- **This Gate-B cycle runs under the rules in force at its start — the OLD ones.** The new
+  severity semantics, the new floor rule and the new record forms bind only **after** the closing
+  commit ships them. This is spec §10's activation rule applied to the change's own review: a
+  reviewer applying the new Minor-or-below ceiling to the change that introduces it would
+  under-iterate on exactly the diff that needs the most iteration. **Carry this sentence in the
+  `additionalContext` of every Gate-B call** (finding plana-B7).
+- **Prompt-only.** No file under `plugins/dev-workflow/hooks/` changes, and
+  **`.context/codex-gate.floor` is never written, never removed and never read for the
+  derivation.** Note what this does *not* claim: the Gate-B calls and commit events in this work
+  will write pass counters, fingerprints and disclosure markers under `.context/` as they always
+  do. Only the floor knob is untouched (finding plana-MINOR 13, which read revision 1's blanket
+  "no hook state file is written" as false — it was).
 - **The §5 heading must keep matching `^#{1,6}[[:space:]]+([0-9]+\.)?[[:space:]]*Cross-Model Review`.**
   `codex-gate.sh:94` greps `CLAUDE.md` for it to build every reminder's citation.
 - **Every rule lands in BOTH copies**, except where a difference is deliberate and stated.
 - **§5's other closure rules are never restated, only referred to.** Three spec revisions were
   spent on this: each summary of the triviality skip dropped a different condition.
-- **Anchors are pasted `grep -n` output.** No editorial token ever appears inside a pasted block —
-  writing `(identical)` in place of a second grep line cost the predecessor its blanket claim.
+- **Address by content, never by line number.** Line numbers appear below only as *provenance* —
+  pasted `grep -n` output showing where a passage stood in the untouched tree. Every **executable**
+  step locates its target by matching text, because Task 1 inserts two large blocks and shifts
+  every line number after them. Revision 1 fixed the expected *values* for their point in the
+  sequence and left the *addresses* at their untouched-tree positions (finding plana-B3).
+- **Anchors are pasted `grep -n` output.** No editorial token ever appears inside a pasted block.
 
-### The commit protocol — read this before Task 1
+### The commit protocol
 
-**All ordinary commits happen BEFORE the WIP opens. Then one WIP commit, then the review loop,
-then the close.** Nothing commits ordinarily while the cycle is open.
+**One WIP commit, opened here, amended by Plans B and C, reviewed once after C, closed once.**
 
-> **The `--no-edit` trap — this is why the protocol looks verbose.**
+> **The `--no-edit` trap — this is why every amend below looks verbose.**
 > `plugins/dev-workflow/hooks/codex-gate.sh:763` is
 > `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
 > It matches **the Bash command string**, not git state and not the commit message. So
 > `git commit --amend --no-edit` carries no `-m`, is **not** recognized as a WIP commit, and at
-> `:886` `is_commit "$cmd" && ! is_wip_commit "$cmd"` is true — **the cycle resets and your passes
-> are discarded.** Every cycle-internal amend below therefore restates `-m "WIP: ..."` in full.
-> Never `--no-edit` inside the cycle.
+> `:886` the hook resets — **discarding the cycle's accumulated passes.** Every amend below
+> therefore restates `-m "WIP: ..."` in full. **Never `--no-edit` inside the cycle.**
 >
-> That the shipped rules do not warn about this is a real defect, routed to the backlog. **Do not
-> fix the hook here** — this plan is prompt-only by its own constraint above.
+> That the shipped rules do not warn about this is a real defect; it is on the backlog. **Do not
+> fix the hook here.**
 
-The topology, in order:
+1. **No ordinary commit happens from Task 1 onward** until the combined cycle closes in Plan C.
+   Plan A needs none: the accounting lives in this document, which is already committed.
+2. **Task 1 opens the cycle**: `git commit -m "WIP: review-loop economics"`.
+3. **Tasks 2-6 amend it**, each restating that exact message.
+4. **Plans B and C amend the same commit.** Plan C adds the manifest bump, runs the single Gate-B
+   loop, and closes with `git commit --amend -m "<real message>"`.
 
-1. **Task 1** commits the conditions accounting — ordinary commit, Gate B N/A, **cycle not yet
-   open**.
-2. **Task 2 opens the cycle**: `git commit -m "WIP: <subject>"`.
-3. **Tasks 3-7 amend it**, each restating `-m "WIP: <subject>"`. Same subject every time.
-4. **Task 8** runs the review loop against that commit (`baseSha` = its parent), re-amending after
-   every fix, and closes with `git commit --amend -m "<real message>"` — the first message without
-   `WIP:`, which the hook correctly reads as the cycle closing.
-
-**Task 7's parity and conformance results are folded into the WIP commit, not committed
-separately.** A separate docs commit after the WIP opens would reset the cycle regardless of which
-paths it staged.
+**The subject is `WIP: review-loop economics` — not plan-specific**, because all three plans amend
+one commit.
 
 ---
 
@@ -134,30 +138,34 @@ paths it staged.
 
 | File | Responsibility | Gate B |
 |---|---|---|
-| this plan, § "Old-conditions accounting" | what the existing prose required, per copy, dispositioned | N/A — reviewed by this plan's Gate-A cycle |
-| `CLAUDE.md` §5 | the live rules | full (in the cycle) |
-| `plugins/dev-workflow/commands/workflow-init.md` §5 | the scaffolded mirror | full (in the cycle) |
-| `docs/superpowers/specs/…-plan-a-conditions.md` | the accounting, extracted for the record | N/A — ordinary commit, Task 1, before the cycle opens |
+| this plan, § "Old-conditions accounting" | what the existing prose requires, per copy, dispositioned | N/A — reviewed by this plan's Gate-A cycle |
+| `CLAUDE.md` §5 | the live rules | in the combined cycle, closed by Plan C |
+| `plugins/dev-workflow/commands/workflow-init.md` §5 | the scaffolded mirror | in the combined cycle, closed by Plan C |
+
+**There is no separate conditions artifact.** Revision 1 wrote the accounting here *and* copied it
+to a second file *and* later mutated that copy with result tables — three records able to disagree,
+where spec §6 asks for one (finding plana-M2). Task 6's results append to **this document**.
 
 ---
 
 ## Old-conditions accounting
 
-**Derived from the edits this plan actually makes**, against §5 as it stands at HEAD — not
-imported from an earlier spec revision. That was finding B2: an imported list can be stale,
-overinclusive and incomplete at once, and the exact-once grep that guarded it proved only that the
-lead-ins existed.
+**Derived from the edits this plan actually makes**, against §5 as it stands at HEAD — not imported
+from an earlier spec revision. **Eleven passages.** Revision 1 listed ten and then edited an
+eleventh in Task 3, which Task 7's out-of-inventory check would have rejected as a defect
+(finding plana-B2).
 
-**One row per passage per copy.** Where the two copies' text is byte-identical for a passage the
-rows are identical and say so; a condition unique to one mirror cannot hide behind a shared row
-(finding M1).
+**Rows are per copy where the copies differ.** Ten passages are byte-identical across both copies
+over their whole block, so they carry one shared row each. **The pass-report passage is not** —
+verified by `diff`, not by comparing its first line — so it carries two (finding plana-M1).
 
-Anchors, pasted from `grep -n` — `CLAUDE.md` then `plugins/dev-workflow/commands/workflow-init.md`:
+Provenance, pasted from `grep -n` — these are *addresses in the untouched tree*, not instructions:
 
 ```
 CLAUDE.md:72:**Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
 CLAUDE.md:77:final pass must be clean — if pass 3 still finds Blocker/Major, keep going until
 CLAUDE.md:79:below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
+CLAUDE.md:126:the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps
 CLAUDE.md:133:**From pass 4 onward every pass report carries three lines.** The carrier is **your own
 CLAUDE.md:236:act on the partial list, don't count it toward the 3-pass floor, and don't read "no
 CLAUDE.md:300:- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
@@ -171,6 +179,7 @@ CLAUDE.md:495:- **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (
 plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
 plugins/dev-workflow/commands/workflow-init.md:277:final pass must be clean — if pass 3 still finds Blocker/Major, keep going until
 plugins/dev-workflow/commands/workflow-init.md:279:below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
+plugins/dev-workflow/commands/workflow-init.md:322:the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps
 plugins/dev-workflow/commands/workflow-init.md:330:**From pass 4 onward every pass report carries three lines.** The carrier is **your own
 plugins/dev-workflow/commands/workflow-init.md:421:act on the partial list, don't count it toward the 3-pass floor, and don't read "no
 plugins/dev-workflow/commands/workflow-init.md:485:- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
@@ -180,112 +189,64 @@ plugins/dev-workflow/commands/workflow-init.md:659:**Changing a profile:** the p
 plugins/dev-workflow/commands/workflow-init.md:674:- **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
 ```
 
-**Ten passages, each in two copies — twenty rows.** Both copies are byte-identical at every one of
-these ten passages; Task 1 Step 2 proves that mechanically rather than asserting it, and the rows
-below are written once with that proof standing in for the second copy. **If that proof fails for
-any passage, that passage gets two separate rows and the difference is dispositioned.**
+| # | Passage | Copy | What the existing prose requires | Disposition |
+|---|---|---|---|---|
+| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. a satisfied count is not a clean review · e. Gate A is instruction-backed · f. the hook resets at `writing-plans` · g. a TodoWrite per pass · h. fix Blocker/Major after each · i. Codex is advisory · j. validate before applying · k. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1) · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · b, d-k **kept verbatim** |
+| 2 | `if pass 3 still` | both | the final pass must be clean; if the pass at 3 still finds Blocker/Major, keep going until clean or clearly stuck, then STOP and surface | **kept**, `pass 3` → `the pass at the floor` (Task 2) |
+| 3 | `below 3` | both | the only early exit below the floor is a zero-finding pass; don't pad | **kept**, `below 3` → `below the floor` (Task 2) |
+| 4 | pass-1 Minor sentence | both | inside the "clearly stuck" rule: below the floor nothing closes; a zero-finding pass is the only exception; a Blocker/Major-free pass 1 carrying a Minor keeps looping | **kept**, `pass 1` → `pass **below the floor**` (Task 2 Step 4). **This is the sentence that inverts at floor 1**, where pass 1 *is* the floor |
+| 5a | pass-report paragraph | `CLAUDE.md` | a. from pass 4 onward, three lines · b. the carrier is your own status report · c. never the Codex reply · d. never the findings file · e. trend · f. cluster · g. require↔withdraw · **h. "you report the tells"** — second person, addressee named | a. **kept and extended** — the three lines still start at pass 4; §2.2's three fields are owed by **every** pass (Task 3) · b-h **kept verbatim, including the second person** |
+| 5b | pass-report paragraph | template | a-g as above · **h′. "report the tells"** — imperative, no addressee · plus different line wrapping | same disposition; **the divergence is pre-existing and is left alone.** Task 3 inserts a new paragraph *before* this one and modifies neither copy, so neither the wording nor the wrapping difference is touched |
+| 6 | incomplete-pass | both | an incomplete pass is not a review: don't act on the partial list, don't count it toward the floor, don't read "no Blocker/Major visible" as clean | **kept**, `the 3-pass floor` → `the floor` (Task 2) |
+| 7 | Gate A loop | both | Gate A is two runs, each its own 3-pass loop; one broad prompt; re-run each pass over the revised artifact | **kept**, `3-pass loop` → `loop at the derived floor` (Task 2) |
+| 8 | `where the 3 come from` | both | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept**, and its **rationale corrected** — see Task 2, finding rle-M4 and plana-M6 |
+| 9 | Lenses | both | lenses are different questions, not more passes; the floor, the Blocker/Major filter, the file-first protocol and the clean-final-pass rule are unchanged | **kept**, reworded so "unchanged" no longer claims the floor is fixed (Task 2, finding rle-M5) |
+| 10 | `Changing a profile:` | both | a. proposes the complete resulting header · b. the human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's rules are **appended after them**, never merged in (Task 4) |
+| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test is **appended** as the procedure that sets a ceiling on them (Task 5) |
 
-| # | Passage | What the existing prose requires | Disposition |
-|---|---|---|---|
-| 1 | floor paragraph (72 / 272) | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. a satisfied count is not a clean review · e. Gate A is instruction-backed · f. the hook resets at `writing-plans` · g. a TodoWrite per pass · h. fix Blocker/Major after each · i. Codex is advisory · j. validate before applying · k. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 2) · c. **moved** — the hook still counts, but as its reminder threshold, not the obligation (Task 2 Step 3) · b, d-k **kept verbatim** |
-| 2 | `if pass 3 still` (77 / 277) | the final pass must be clean; if the pass at 3 still finds Blocker/Major, keep going until clean or clearly stuck, then STOP and surface | **kept**, with `pass 3` → `the pass at the floor` (Task 3) |
-| 3 | `below 3` (79 / 279) | the only early exit below the floor is a zero-finding pass; don't pad | **kept**, with `below 3` → `below the floor` (Task 3) |
-| 4 | pass-report paragraph (133 / 330) | a. from pass 4 onward, three lines · b. the carrier is your own status report · c. never the Codex reply · d. never the findings file · e. the trend line · f. the cluster line · g. the require↔withdraw line | a. **kept and extended** — the three lines still start at pass 4; §2.2's three fields are owed by **every** pass (Task 4) · b-g **kept verbatim** |
-| 5 | incomplete-pass (236 / 421) | an incomplete pass is not a review: don't act on the partial list, don't count it toward the floor, don't read "no Blocker/Major visible" as clean | **kept**, with `the 3-pass floor` → `the floor` (Task 3) |
-| 6 | Gate A loop (300 / 485) | Gate A is two runs, each its own 3-pass loop; one broad prompt; re-run each pass over the revised artifact | **kept**, with `3-pass loop` → `loop at the derived floor` (Task 3) |
-| 7 | `where the 3 come from` (335 / 519) | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept**, but its **rationale is corrected** — the number no longer comes from invalidation (Task 3, finding M4) |
-| 8 | Lenses (403 / 582) | lenses are different questions, not more passes; the floor, the Blocker/Major filter, the file-first protocol and the clean-final-pass rule are unchanged | **kept**, reworded so "unchanged" no longer claims the floor is fixed (Task 3, finding M5) |
-| 9 | `Changing a profile:` (480 / 659) | a. the pass proposes the complete resulting header · b. the human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's mid-cycle rules are **appended** after them, not merged into them (Task 5) |
-| 10 | Severity (495 / 674) | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test is **appended** as the procedure that sets a ceiling on them (Task 6) |
-
-**Nothing in §5 outside these ten passages is edited by Plan A.** Task 7 Step 3 proves that by diff.
+**Nothing in §5 outside these eleven passages is edited by Plan A.** Task 6 Step 3 proves it by
+reading the diff, for both files.
 
 ---
 
-## Task 1: The accounting, committed before the cycle opens
+## Task 1: Open the cycle, and replace the floor
 
-**Files:** Create `docs/superpowers/specs/2026-08-29-review-loop-economics-plan-a-conditions.md`
-
-- [ ] **Step 1: Preflight — is this already done?**
-
-```bash
-test -e docs/superpowers/specs/2026-08-29-review-loop-economics-plan-a-conditions.md \
-  && echo "EXISTS — read it and skip to Step 4" || echo "ABSENT — proceed"
-```
-
-Every edit task below opens with a preflight, because a plan abandoned halfway must be resumable
-without duplicating an append (finding M9).
-
-- [ ] **Step 2: Prove the two copies are byte-identical at all ten passages**
-
-The accounting above writes one row per passage on the strength of this. Run it before trusting it:
-
-```bash
-C=CLAUDE.md; T=plugins/dev-workflow/commands/workflow-init.md
-for pair in 72:272 77:277 79:279 133:330 236:421 300:485 335:519 403:582 480:659 495:674; do
-  a=${pair%:*}; b=${pair#*:}
-  if [ "$(sed -n "${a}p" "$C")" = "$(sed -n "${b}p" "$T")" ]; then
-    printf 'IDENTICAL %s/%s\n' "$a" "$b"
-  else
-    printf 'DIFFERS   %s/%s <<<%s>>> <<<%s>>>\n' "$a" "$b" \
-      "$(sed -n "${a}p" "$C")" "$(sed -n "${b}p" "$T")"
-  fi
-done
-```
-
-**Expected at this point in the sequence: ten `IDENTICAL` lines, no `DIFFERS`.** Any `DIFFERS` line
-means that passage needs two rows in the accounting and a stated disposition for the difference —
-fix the accounting before proceeding, do not proceed with a shared row.
-
-- [ ] **Step 3: Extract the accounting to the conditions file**
-
-Copy this plan's § "Old-conditions accounting" verbatim into that file, with a one-paragraph header
-naming this plan as its source and Plan A's Gate-A cycle as its review.
-
-- [ ] **Step 4: Commit — ordinary commit, Gate B N/A, cycle not yet open**
-
-```bash
-git add docs/superpowers/specs/2026-08-29-review-loop-economics-plan-a-conditions.md
-git diff --cached --name-only   # MUST list exactly that one path
-git commit -m "docs(spec): old-conditions accounting for the Plan A rules edits"
-```
-
-**This is the last ordinary commit until the cycle closes.** Everything after Task 2 amends.
-
----
-
-## Task 2: Open the cycle, and replace the floor
-
-**Files:** `CLAUDE.md:72`, `plugins/dev-workflow/commands/workflow-init.md:272`
+**Files:** `CLAUDE.md`, `plugins/dev-workflow/commands/workflow-init.md` — floor paragraph.
 
 **Interfaces:**
-- Produces: the phrase `max(risk, security)` inside the floor paragraph, which Task 3's sites and
-  Task 6's severity text both refer back to.
+- Produces: `max(risk, security)` inside the floor paragraph, which Tasks 2 and 5 refer back to.
 
-- [ ] **Step 1: Preflight**
+- [ ] **Step 1: Preflight — four states, four answers**
 
 ```bash
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"
-  sed -n '/Both gates are a LOOP with a HARD FLOOR/,/^$/p' "$f" | grep -c 'max(risk, security)'
+  old=$(grep -cF 'HARD FLOOR: min 3 passes per run' "$f")
+  new=$(grep -cF 'derived from the cited story' "$f")
+  printf '%s old=%s new=%s\n' "$f" "$old" "$new"
 done
 ```
 
-**Expected at this point in the sequence: `0` and `0`** — this is the failing check. `1` and `1`
-means Task 2 already ran; verify against Step 3's text and skip to Step 5.
+| old / new | state | what to do |
+|---|---|---|
+| `1 / 0` | **not started** | proceed to Step 2 |
+| `0 / 1` | **complete** | verify against Step 3's text, skip to Step 6 |
+| `1 / 1` | **duplicate insert** | a rerun appended without removing; delete the inserted block and restart |
+| `0 / 0` | **damaged** | neither text present — STOP, restore from `git show HEAD:<file>` |
 
-**The `sed` scoping is load-bearing.** An unscoped `grep -c 'max(risk, security)'` returns **1** for
-both files even before any edit, because the Profiles section already contains the phrase. The
-check would pass before the edit and prove nothing.
+**Asymmetry between the copies is its own state:** if the two files report different pairs,
+execution was abandoned between them. Bring the lagging copy to the leading copy's state before
+proceeding — never proceed with the mirrors disagreeing (finding plana-M3).
 
-- [ ] **Step 2: Read the exact text being replaced**
+- [ ] **Step 2: Read the exact text being replaced, by content**
 
 ```bash
-sed -n '72,80p' CLAUDE.md
-sed -n '272,280p' plugins/dev-workflow/commands/workflow-init.md
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  echo "--- $f ---"
+  awk '/HARD FLOOR: min 3 passes per run/,/dismissed finding → one-line why/' "$f"
+done
 ```
 
-The old text, in both copies (finding B4 — the replaced range is delimited, not left to judgement):
+The old text, in both copies:
 
 ```
 **Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
@@ -299,13 +260,12 @@ below 3 is a pass with **zero** findings; don't manufacture findings to pad. Cod
 advisory — validate before applying; dismissed finding → one-line why.
 ```
 
-**Lines 77 and 79 of that block are Task 3's sites 2 and 3.** Task 2 replaces only the first two
-sentences — through `counted by the hook.` and the sentence that explains it — and leaves the rest
-of the paragraph on disk untouched. Task 3 then edits lines 77 and 79 in place.
+**Task 1 replaces only the first two sentences** — through `a satisfied count is not a clean
+review.` The rest of the paragraph stays on disk; Task 2 edits two of its lines in place.
 
 - [ ] **Step 3: The replacement — complete text, no ellipsis**
 
-Replace exactly these two sentences:
+Replace exactly:
 
 ```
 **Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
@@ -344,8 +304,8 @@ never written, never removed, never read for this derivation.
 
 - [ ] **Step 4: Add the residual and the gate-off disclosure**
 
-Immediately after the block above, in both copies. Finding B5: the list is explicitly **not**
-exhaustive, and it carries every route §10 names.
+Immediately after the block above, in both copies. The list is explicitly **not** exhaustive
+(finding rle-B5).
 
 ```markdown
 **Named residual:** the hook's messages state its own threshold as an obligation, so at a floor of
@@ -355,44 +315,50 @@ reminder being harmless.
 
 **The gate-off surface — routes known today, not a complete list**, since an enumeration read as
 complete guarantees the routes it omits. **One route is created here**: a stated floor the cited
-set does not license, which could not exist before there was a derived floor to state. **Pre-existing
-and unchanged**: omitting a higher-risk cited story; minting or editing a profile to level 0;
-presenting an incomplete cited set; falsifying evidence entries; silencing reminders; or not
-running a pass and reporting that it ran. **A user-set floor is not the lever** — it moves what the
-hook says, not what the cycle owes. **None of this is a guard**: the floor is produced by the agent
-and nothing checks it against the cited profiles.
+set does not license, which could not exist before there was a derived floor to state.
+**Pre-existing and unchanged**: omitting a higher-risk cited story; minting or editing a profile to
+level 0; presenting an incomplete cited set; falsifying evidence entries; silencing reminders; or
+not running a pass and reporting that it ran. **A user-set floor is not the lever** — it moves what
+the hook says, not what the cycle owes. **None of this is a guard**: the floor is produced by the
+agent and nothing checks it against the cited profiles.
 ```
 
-- [ ] **Step 5: Re-run Step 1's check**
-
-**Expected now: `1` and `1`.**
-
-- [ ] **Step 6: Verify the paragraph's tail survived**
+- [ ] **Step 5: Verify by content**
 
 ```bash
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"
-  tr '\n' ' ' < "$f" | tr -s ' ' | grep -c "don't manufacture findings to pad"
+  printf '%s ' "$f"
+  printf 'predicate=%s ' "$(awk '/HARD FLOOR/,/^$/' "$f" | grep -c 'max(risk, security)')"
+  printf 'residual=%s ' "$(grep -cF 'Named residual' "$f")"
+  printf 'gateoff=%s ' "$(grep -cF 'routes known today, not a complete list' "$f")"
+  printf 'tail=%s\n' "$(grep -cF "don't manufacture findings to pad" "$f")"
 done
 ```
 
-**Expected: `1` and `1`** — same as before the edit. This catches a replacement that swallowed its
-neighbours.
+**Expected at this point in the sequence: `predicate=1 residual=1 gateoff=1 tail=1` for both.**
 
-- [ ] **Step 7: OPEN THE CYCLE**
+The `awk` scoping on `predicate` is load-bearing: an unscoped `grep -c 'max(risk, security)'`
+returns 1 for both files **even before any edit**, because the Profiles section already contains
+the phrase. Unscoped, the check would pass before the edit and prove nothing.
+
+`tail=1` must hold **before and after** — it catches a replacement that swallowed its neighbours.
+
+- [ ] **Step 6: OPEN THE CYCLE**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git diff --cached --name-only   # exactly these two paths
+git commit -m "WIP: review-loop economics"
 ```
 
-**That subject is reused verbatim by every amend in Tasks 3-7.**
+**Plans B and C amend this same commit with this same message.** No ordinary commit occurs from
+here until Plan C closes the cycle.
 
 ---
 
-## Task 3: The seven floor-wording sites, per copy
+## Task 2: The floor-wording sites
 
-**Interfaces:** consumes Task 2's predicate; produces nothing.
+**Interfaces:** consumes Task 1's predicate; produces nothing.
 
 - [ ] **Step 1: Preflight — the sequence-correct count**
 
@@ -401,176 +367,125 @@ grep -cE "min 3 passes|below 3|3-pass|where the 3 come from|if pass 3 still" \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected at this point in the sequence: `6` and `6` — not 7.** Seven is the count in an
-untouched tree; Task 2 has already removed the `min 3 passes` match at line 72/272. Recording 7
-here was finding B8: a true measurement of today's tree is not the check's value mid-plan.
+**Expected at this point in the sequence: `6` and `6` — not 7.** Seven is the count in an untouched
+tree; **Task 1 has already removed the `min 3 passes` match.** Recording 7 here was finding rle-B8.
 
-After this task both must be **0**.
+`0` and `0` means this task already ran — verify Steps 3-4 by content and skip to Step 6.
 
-- [ ] **Step 2: The `pass 1` site the regex does not match**
+- [ ] **Step 2: This regex does not cover every site**
 
 ```bash
-grep -n 'carrying a Minor keeps' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -c 'carrying a Minor keeps' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected: `CLAUDE.md:126` and `workflow-init.md:322`.** This site contains no digit `3` and the
-Step 1 regex never matched it — so Step 1 reaching 0 does **not** cover it. It is asserted
-separately at Step 5.
+**Expected: `1` and `1`.** This is accounting passage 4. It contains no digit `3`, so Step 1's
+regex never matched it and **Step 1 reaching 0 does not cover it.** Step 4 asserts it separately.
 
-- [ ] **Step 3: Apply six replacements per copy**
+- [ ] **Step 3: Six replacements per copy — complete text, no ellipses**
 
-Complete text, no ellipses (finding M3). **CLAUDE.md line : template line.**
+Located by content. Old text, then new text.
 
-**77 : 277** — old:
-```
-final pass must be clean — if pass 3 still finds Blocker/Major, keep going until
-```
+**a.** old: `final pass must be clean — if pass 3 still finds Blocker/Major, keep going until`
+new: `final pass must be clean — if the pass at the floor still finds Blocker/Major, keep going until`
+
+**b.** old: `below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is`
+new: `below the floor is a pass with **zero** findings; don't manufacture findings to pad. Codex is`
+
+**c.** old: `act on the partial list, don't count it toward the 3-pass floor, and don't read "no`
+new: `act on the partial list, don't count it toward the floor, and don't read "no`
+
+**d.** old: `- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the`
+new: `- **Gate A — Spec, then plan (TWO runs, each its own loop at the derived floor).** Run on the`
+
+**e.** old: `  invalidates the prior pass, which is where the 3 come from.`
 new:
 ```
-final pass must be clean — if the pass at the floor still finds Blocker/Major, keep going until
+  no longer covers the artifact — which is why a fix costs another pass. The floor itself
+  comes from the profile, and the hook's fingerprint only decides when it reminds you.
 ```
 
-**79 : 279** — old:
-```
-below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
-```
-new:
-```
-below the floor is a pass with **zero** findings; don't manufacture findings to pad. Codex is
-```
+> Two findings, one sentence. rle-M4: `which is where the 3 come from` is a **causal claim the new
+> design makes false** — the lower bound now comes from the profile. plana-M6: revision 1's
+> replacement, `the hook invalidates the prior pass — which is why a fix costs another pass`,
+> **made the advisory hook the cause of the review obligation**, which is a subtler version of the
+> same error. The obligation exists because **the prior review no longer covers the changed
+> artifact**; the hook merely compares a fingerprint at commit and review events. This is the
+> "each correction introduced a subtler version of the same claim" pattern `AGENTS.md` records —
+> caught here at round one instead of round four.
+>
+> **The preceding text must be read before applying this**, because the replacement changes where
+> the sentence's subject comes from:
+> ```bash
+> grep -B2 -F 'which is where the 3 come from' CLAUDE.md
+> ```
+> Apply the new text so the sentence reads grammatically from whatever precedes it.
 
-**236 : 421** — old:
-```
-act on the partial list, don't count it toward the 3-pass floor, and don't read "no
-```
-new:
-```
-act on the partial list, don't count it toward the floor, and don't read "no
-```
-
-**300 : 485** — old:
-```
-- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
-```
-new:
-```
-- **Gate A — Spec, then plan (TWO runs, each its own loop at the derived floor).** Run on the
-```
-
-**335 : 519** — old:
-```
-  invalidates the prior pass, which is where the 3 come from.
-```
-new:
-```
-  invalidates the prior pass — which is why a fix costs another pass, though the floor itself
-  comes from the profile.
-```
-
-> Finding M4: `which is where the 3 come from` was a **causal claim that the new design makes
-> false**. The lower bound now comes from the story profile; invalidation only explains why a fix
-> requires another review. Rewording it to "where the floor's lower bound comes from" would have
-> preserved the false claim in new words — the exact failure `AGENTS.md` records as this repo's
-> most persistent defect.
-
-**403 : 582** — old:
-```
-Lenses are **different questions, not more passes.** The 3-pass floor, the Blocker/Major
-```
+**f.** old: `Lenses are **different questions, not more passes.** The 3-pass floor, the Blocker/Major`
 new:
 ```
 Lenses are **different questions, not more passes** — they change what a pass asks, never how many
-passes a cycle owes, which the profile alone decides. The floor, the Blocker/Major
+passes a cycle owes, which the profile and the cited set decide together. The floor, the Blocker/Major
 ```
 
-> Finding M5: the old sentence continues "… is unchanged." Leaving `The floor … is unchanged` in
-> the very change that makes the floor profile-dependent tells readers the opposite of what
-> shipped. The rewrite says what is actually unchanged — that lenses add no passes — and lets the
-> tail's list of unchanged rules stand.
+> rle-M5: the old sentence continues "… is unchanged", which in the change that makes the floor
+> profile-dependent tells readers the opposite of what shipped. plana-M5: revision 1 wrote "which
+> the profile alone decides" — **also wrong**, because cited-set emptiness, membership, unprofiled
+> members and unresolvable members all bear on the result. "The profile and the cited set decide
+> together" is what Task 1's predicate actually says.
 
-- [ ] **Step 4: Re-run Step 1's check**
+- [ ] **Step 4: The pass-1 Minor sentence, asserted separately**
 
-**Expected now: `0` and `0`.**
+old: `the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps`
+new: `the only exception, exactly as above; a Blocker/Major-free pass **below the floor** carrying a Minor keeps`
 
-- [ ] **Step 5: The `pass 1` site, asserted separately**
-
-Old, in both copies (it continues onto the next line — match the fragment, not a reconstructed
-sentence):
-```
-the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps
-```
-new:
-```
-the only exception, exactly as above; a Blocker/Major-free pass **below the floor** carrying a Minor keeps
-```
+- [ ] **Step 5: Verify**
 
 ```bash
-grep -c 'a Blocker/Major-free pass \*\*below the floor\*\* carrying a Minor keeps' \
+grep -cE "min 3 passes|below 3|3-pass|where the 3 come from|if pass 3 still" \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-grep -c 'Blocker/Major-free pass 1 carrying a Minor' \
+grep -cF 'a Blocker/Major-free pass **below the floor** carrying a Minor keeps' \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-```
-
-**Expected: `1` and `1` for the first; `0` and `0` for the second.**
-
-> This is the sentence that inverts at a floor of 1. Before the edit it tells a floor-1 cycle that
-> a clean pass 1 keeps looping, which is wrong — pass 1 *is* the floor there.
-
-- [ ] **Step 6: Confirm the historical citation was NOT touched**
-
-```bash
-grep -c "PR #23's Gate-B pass 3 returned all four findings" \
+grep -cF 'Blocker/Major-free pass 1 carrying a Minor' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF "PR #23's Gate-B pass 3 returned all four findings" \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected: `1` and `1`.** It cites an actual pass, not a rule; changing it would falsify a record.
+**Expected: `0`/`0`, then `1`/`1`, then `0`/`0`, then `1`/`1`.**
 
-- [ ] **Step 7: Amend the WIP commit**
+The last one must stay `1`: it cites an actual pass, not a rule, and changing it would falsify a
+record.
+
+- [ ] **Step 6: Amend the WIP commit**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git commit --amend -m "WIP: review-loop economics"
 ```
 
-**Never `--no-edit`.** See the commit protocol above: the hook greps this command string for
-`-m ... wip`, and an amend without `-m` resets the cycle.
+**Never `--no-edit`.** See the commit protocol.
 
 ---
 
-## Task 4: The pass report (§2.2)
+## Task 3: The pass report (§2.2)
 
-**Files:** `CLAUDE.md:133`, `plugins/dev-workflow/commands/workflow-init.md:330`
-
-Finding B3: the old plan added every-pass fields to the floor paragraph while leaving the
-pass-report paragraph prescribing only the pass-4 three lines, so the shipped prompt would have
-described the report shape in two places that disagreed.
+Finding rle-B3: revision 1 of the *748-line* plan added every-pass fields to the floor paragraph
+while leaving the pass-report paragraph prescribing only the pass-4 three lines, so the shipped
+prompt would have described the report shape in two places that disagreed.
 
 - [ ] **Step 1: Preflight**
 
 ```bash
-for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'the cited stories they were read from'
-done
+grep -cF 'the cited stories they were read from' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected at this point in the sequence: `0` and `0`.**
+**Expected at this point in the sequence: `0` and `0`.** `1`/`1` means done.
 
-- [ ] **Step 2: Read the paragraph being extended**
+- [ ] **Step 2: Insert BEFORE the pass-report paragraph, in both copies**
 
-```bash
-sed -n '133,140p' CLAUDE.md
-sed -n '330,337p' plugins/dev-workflow/commands/workflow-init.md
-```
-
-- [ ] **Step 3: Insert §2.2's fields immediately BEFORE that paragraph**
-
-Anchor, pasted from `grep -n`:
-```
-CLAUDE.md:133:**From pass 4 onward every pass report carries three lines.** The carrier is **your own
-plugins/dev-workflow/commands/workflow-init.md:330:**From pass 4 onward every pass report carries three lines.** The carrier is **your own
-```
-
-Insert before it, in both copies:
+Locate by content — the paragraph beginning `**From pass 4 onward every pass report carries three
+lines.**`. **Insert before it; modify nothing in it.**
 
 ```markdown
 **Every pass report states three things about the floor**, from pass 1 onward: the **derived
@@ -580,60 +495,69 @@ still being spent — which is the only time checking it is cheap. This is owed 
 three lines below are owed from pass 4 and are a different obligation.
 ```
 
-**The existing paragraph is not modified** — its seven requirements (a-g in accounting row 4) all
-stand verbatim, and the inserted text says explicitly that the two obligations are distinct so no
-reader merges them.
+> **The two copies of the following paragraph differ** — wrapping, and `you report the tells` in
+> `CLAUDE.md` against `report the tells` in the template (accounting rows 5a/5b). **That divergence
+> is pre-existing and stays.** This step inserts a new paragraph and touches neither copy of the
+> old one, so it neither fixes nor worsens the difference. Do not "harmonize" them here: that would
+> be an edit outside the accounted dispositions.
 
-- [ ] **Step 4: Re-run Step 1's check, and confirm the old paragraph is intact**
+- [ ] **Step 3: Verify, including that the old paragraph is untouched**
 
 ```bash
-for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'the cited stories they were read from'
-done
-grep -c 'From pass 4 onward every pass report carries three lines' \
+grep -cF 'the cited stories they were read from' \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-grep -c 'require↔withdraw pair' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'From pass 4 onward every pass report carries three lines' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'require↔withdraw pair' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'you report the tells' CLAUDE.md
+grep -cF 'report the tells' plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected: `1`/`1`, then `1`/`1`, then `1`/`1`.**
+**Expected: `1`/`1`, `1`/`1`, `1`/`1`, then `1`, then `1`.** The last two assert the pre-existing
+divergence is still exactly as it was.
 
-- [ ] **Step 5: Amend the WIP commit**
+- [ ] **Step 4: Amend the WIP commit**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git commit --amend -m "WIP: review-loop economics"
 ```
 
 ---
 
-## Task 5: A profile or cited set that moves mid-cycle (§2.4)
+## Task 4: A profile or cited set that moves mid-cycle (§2.4)
 
-**Files:** `CLAUDE.md:480`, `plugins/dev-workflow/commands/workflow-init.md:659`
+Finding rle-B6. §2.4 composes three existing rules and adds no new one, but none of the composition
+is currently written down, so a mid-cycle profile or set edit can silently reuse an old clean pass.
 
-Finding B6. §2.4 composes three existing rules and adds no new one, but none of the composition is
-currently written down, so a mid-cycle profile or set edit can silently reuse an old clean pass.
-
-- [ ] **Step 1: Preflight**
+- [ ] **Step 1: Preflight, and capture the baseline the verification needs**
 
 ```bash
+grep -cF 'Any profile change costs at least one further pass' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'Any profile change costs at least one further pass'
+  printf 'BASELINE %s: ' "$f"
+  awk '/\*\*Changing a profile:\*\*/,/^$/' "$f" | grep -o \
+    'proposes the complete resulting header\|human confirms it\|never moves it alone\|append one profile-log line\|voids every prior override\|follows the current security value\|keep counting\|final clean pass\|fold the edit into the active' \
+  | sort | uniq -c | tr '\n' ' '; echo
 done
 ```
 
-**Expected at this point in the sequence: `0` and `0`.**
+**Expected: `0` and `0` for the first.** **Record the BASELINE lines verbatim** — Step 3 compares
+against them.
 
-- [ ] **Step 2: Read the nine conditions being preserved**
+> Finding plana-M4: revision 1 told the executor to compare against a baseline it never captured,
+> and its post-edit check counted tokens across the **whole file**, where the appended text itself
+> adds `keep counting` and `final clean pass` — so the count could rise while an old condition was
+> dropped. This baseline is **scoped to the `Changing a profile:` paragraph** and captured **before**
+> the append, and Step 3 re-scopes the same way.
 
-```bash
-sed -n '480,493p' CLAUDE.md
-```
+- [ ] **Step 2: Append after the `Changing a profile:` paragraph, both copies**
 
-All nine are accounting row 9 (a-i). **They are kept verbatim.** §2.4's rules are **appended after
-them**, never merged into them — merging is how a rewrite drops a condition, which `AGENTS.md`
-names as this repo's tenth-recorded instance.
-
-- [ ] **Step 3: Append after the `Changing a profile:` paragraph, both copies**
+Its nine conditions are accounting row 10 (a-i). **They are kept verbatim.** §2.4's rules are
+**appended after them**, never merged into them — merging is how a rewrite drops a condition, which
+`AGENTS.md` names as this repo's tenth recorded instance.
 
 ```markdown
 **While a gate is running, the floor derives from the *current* profile at each pass.** Passes
@@ -659,53 +583,51 @@ lenses and evidence duty — but it **never discharges an accepted in-set Blocke
 acceptance put that finding in the fix set, not the citation.
 ```
 
-- [ ] **Step 4: Re-run Step 1's check, and confirm all nine survived**
+- [ ] **Step 3: Verify against the captured baseline**
 
 ```bash
+grep -cF 'Any profile change costs at least one further pass' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'Any profile change costs at least one further pass'
-done
-for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"
-  tr '\n' ' ' < "$f" | tr -s ' ' | grep -o 'proposes the complete resulting header\|human confirms it\|never moves it alone\|append one profile-log line\|voids every prior override\|follows the current security value\|keep counting\|final clean pass\|fold the edit into the active' | wc -l
+  printf 'AFTER %s: ' "$f"
+  awk '/\*\*Changing a profile:\*\*/,/^\*\*While a gate is running/' "$f" | grep -o \
+    'proposes the complete resulting header\|human confirms it\|never moves it alone\|append one profile-log line\|voids every prior override\|follows the current security value\|keep counting\|final clean pass\|fold the edit into the active' \
+  | sort | uniq -c | tr '\n' ' '; echo
 done
 ```
 
-**Expected: `1`/`1` for the first; the second must report the same number for both copies and that
-number must not fall below its pre-edit value — capture that value in Step 1 before editing.**
+**Expected: `1`/`1`, then AFTER lines identical to Step 1's BASELINE lines.** The `awk` range now
+stops at the inserted text, so it measures the original paragraph only — a token the append
+introduced cannot mask a condition the edit dropped. **Any difference is a dropped condition, not
+a formatting artefact.**
 
-- [ ] **Step 5: Amend the WIP commit**
+- [ ] **Step 4: Amend the WIP commit**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git commit --amend -m "WIP: review-loop economics"
 ```
 
 ---
 
-## Task 6: Severity semantics (§3), and activation (§10, partial)
-
-**Files:** `CLAUDE.md:495`, `plugins/dev-workflow/commands/workflow-init.md:674`
+## Task 5: Severity semantics (§3), and activation (§10, partial)
 
 - [ ] **Step 1: Preflight**
 
 ```bash
-for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'what in the system consumes this text'
-done
+grep -cF 'what in the system consumes this text' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'a cycle already running finishes' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected at this point in the sequence: `0` and `0`.**
+**Expected at this point in the sequence: `0`/`0` and `0`/`0`.**
 
-- [ ] **Step 2: Append the test after the four definitions, both copies**
+- [ ] **Step 2: Append the test after the four Severity definitions, both copies**
 
-Anchor, pasted from `grep -n`:
-```
-CLAUDE.md:495:- **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
-plugins/dev-workflow/commands/workflow-init.md:674:- **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
-```
-
-The four definitions stay verbatim. Append:
+Locate by content — the `- **Severity:** Blocker (wrong/unsafe/breaks invariant)` bullet. The four
+definitions stay verbatim. Append:
 
 ```markdown
   **Deciding severity — one procedure. The subject list is illustration, not a second rule.**
@@ -732,20 +654,21 @@ The four definitions stay verbatim. Append:
   granularities — text that *describes* the product versus text that *is* the product.
 ```
 
-- [ ] **Step 3: Append the activation block after Task 2's gate-off disclosure, both copies**
+- [ ] **Step 3: Append the activation block after Task 1's gate-off disclosure, both copies**
 
-Finding B7. **Plan A ships the two parts Plan A ships. Plan B extends this list** to the
-provenance-line, curve and nonce duties — §10 says extending is safe and replacing is not, so Plan
-B appends to this list rather than rewriting it.
+Finding rle-B7. **Plan A ships the two parts Plan A ships. Plan B extends this list** — §10 says
+extending is safe and replacing is not, so the wording below is a list Plan B appends to rather
+than a closed enumeration Plan B would have to rewrite.
 
 ```markdown
 **When these rules bind.** From the commit that ships them, and **a cycle already running finishes
 under the rules it started with**. **Where a cycle's starting rules cannot be established it takes
-the stricter reading of every part this change touches** — floor 3, and severity classified without
-the demotion. Not a re-derivation, which could hand a level-0 cycle a floor of 1 and *skip* passes
-on the strength of not knowing when it started. A user knob set above 3 is not lowered by this
-fallback. **A revert is itself a shipping commit for the old rules**, and the activation rule wins
-wherever the start is determinable; the fallback covers only where it is not.
+the stricter reading of every part this change touches** — at minimum floor 3, and severity
+classified without the demotion; **each further rule this change ships adds its own strict reading
+to this list.** Not a re-derivation, which could hand a level-0 cycle a floor of 1 and *skip*
+passes on the strength of not knowing when it started. A user knob set above 3 is not lowered by
+this fallback. **A revert is itself a shipping commit for the old rules**, and the activation rule
+wins wherever the start is determinable; the fallback covers only where it is not.
 
 **Downstream has no shipping commit.** Adoption binds from the `/workflow-init` run that *actually
 writes* the text — which may write nothing, be declined, or be merged in part — so **these rules
@@ -755,81 +678,134 @@ persist undetected. A project taking the floor rule without the severity test ge
 cannot is said.
 ```
 
-- [ ] **Step 4: Re-run the checks**
+> `at minimum` and `each further rule this change ships adds its own strict reading to this list`
+> are what make this extensible: Plan B appends the provenance-line, curve and nonce duties without
+> rewriting the sentence. Without them, a two-item list reads as closed and Plan B would have to
+> replace it — which §10 says is the unsafe move.
+
+- [ ] **Step 4: Verify**
 
 ```bash
-for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s: ' "$f"; tr '\n' ' ' < "$f" | tr -s ' ' | grep -c 'what in the system consumes this text'
-done
-grep -c 'a cycle already running finishes' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-grep -cF '**Severity:** Blocker (wrong/unsafe/breaks invariant)' \
+grep -cF 'what in the system consumes this text' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'a cycle already running finishes' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF 'adds its own strict reading to this list' \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+grep -cF '- **Severity:** Blocker (wrong/unsafe/breaks invariant)' \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
-**Expected: `1`/`1`, `1`/`1`, `1`/`1`.**
+**Expected: `1`/`1` four times.**
 
 - [ ] **Step 5: Amend the WIP commit**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git commit --amend -m "WIP: review-loop economics"
 ```
 
 ---
 
-## Task 7: Parity and the twelve-item conformance pass
+## Task 6: Parity, conformance, and the diff proof
 
-No new rules. This is the verification invariant 11 requires. Finding M7: the results have a
-defined schema, so an executor cannot discharge them with an unauditable paragraph.
+No new rules. This is the verification invariant 11 requires. Finding rle-M7 / plana-M7: the results
+have a defined schema and an asserted row count, and the parity check compares **text**, not
+occurrence counts.
 
-- [ ] **Step 1: The parity table — one row per changed rule**
+- [ ] **Step 1: Preflight**
 
-Columns: *rule* · *`CLAUDE.md` text* · *template text* · **status** from the closed set
-`IDENTICAL` | `DELIBERATE-DIFFERENCE` | `DEFECT` · *reason, required for the latter two*.
-One row for each rule added or changed by Tasks 2-6.
+This task appends result tables to **this plan document**. If the tables already exist, this task
+ran — verify their row counts against Steps 2-3 rather than appending again.
+
+- [ ] **Step 2: Parity — compare the shipped text, not counts**
 
 ```bash
 C=CLAUDE.md; T=plugins/dev-workflow/commands/workflow-init.md
-for p in 'derived from the cited story'"'"'s profile' 'reminder threshold' 'Named residual' \
-         'routes known today' 'states three things about the floor' \
-         'Any profile change costs at least one further pass' \
-         'what in the system consumes this text' 'a cycle already running finishes'; do
-  a=$(grep -cF "$p" "$C"); b=$(grep -cF "$p" "$T")
-  [ "$a" = "$b" ] && printf 'PARITY %s : %s\n' "$a" "$p" || printf 'MISMATCH %s/%s : %s\n' "$a" "$b" "$p"
-done
+tmp=$(mktemp -d) || exit 1
+i=0; ok=0
+while IFS='|' read -r start end; do
+  i=$((i+1))
+  awk "/$start/,/$end/" "$C" > "$tmp/c.$i"
+  awk "/$start/,/$end/" "$T" > "$tmp/t.$i"
+  if [ ! -s "$tmp/c.$i" ] || [ ! -s "$tmp/t.$i" ]; then
+    printf 'EMPTY %s: %s — range matched nothing; the edit is missing or the anchor is wrong\n' "$i" "$start"
+  elif diff -q "$tmp/c.$i" "$tmp/t.$i" >/dev/null; then
+    printf 'PARITY %s: %s\n' "$i" "$start"; ok=$((ok+1))
+  else
+    printf 'DIFFERS %s: %s\n' "$i" "$start"
+    diff "$tmp/c.$i" "$tmp/t.$i"
+  fi
+done <<'RANGES'
+HARD FLOOR: a minimum number|derive from the same cited-story set
+The derived floor is the pass count|never read for this derivation
+Named residual|not the reminder being harmless
+The gate-off surface|against the cited profiles
+Every pass report states three things|a different obligation
+While a gate is running|as currently derived
+Any profile change costs at least|recomputed from the current profile
+The cited set is re-read|not the citation
+Deciding severity|collect, never iterate
+The exclusions are contract|the filter is ours
+finding-level analog|that is the product
+When these rules bind|only where it is not
+Downstream has no shipping commit|what it cannot is said
+RANGES
 ```
 
-**Expected: eight `PARITY 1` lines, no `MISMATCH`.**
+**Expected: thirteen `PARITY` lines, numbered 1 to 13, no `DIFFERS`, and no `EMPTY`.** The loop
+asserts it itself — append this immediately after the `RANGES` terminator:
 
-A whole-section diff proves nothing here — the two copies already diverge on roughly 192 lines
-overall for reasons predating this change. Walk the named rules.
+```bash
+rm -rf "$tmp"
+[ "$i" = 13 ] && [ "$ok" = 13 ] && echo "PARITY-COMPLETE 13/13" \
+  || { echo "PARITY-INCOMPLETE ranges=$i parity=$ok"; exit 1; }
+```
 
-- [ ] **Step 2: The twelve-item table — one status row per item per artifact**
+**An `EMPTY` line is not a pass.** Revision 1's check could print `PARITY` for a range that matched
+nothing in either copy — two absences comparing equal. `-s` catches that, and `ok` counts only
+ranges that actually compared non-empty text.
+
+> Revision 1's parity script compared **occurrence counts** of a marker phrase and printed `PARITY`
+> whenever both were 1 — so two copies with the same marker and different surrounding text passed
+> (finding plana-M7). This compares the extracted block text with `diff` and prints the difference
+> when it finds one.
+
+Record each row in a table in this document: *rule* · *status* from the closed set `IDENTICAL` |
+`DELIBERATE-DIFFERENCE` | `DEFECT` · *reason, required for the latter two*. **Thirteen rows,
+asserted.**
+
+- [ ] **Step 3: The diff proof — both files, every hunk**
+
+```bash
+git diff HEAD~1 -- CLAUDE.md
+git diff HEAD~1 -- plugins/dev-workflow/commands/workflow-init.md
+git diff HEAD~1 --stat -- CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+```
+
+Read **both** diffs in full and confirm every hunk falls inside one of the eleven accounted
+passages. **A hunk outside them is a finding.**
+
+> Revision 1 printed a stat for both files but the changed-line count for only one, and never
+> displayed the template's hunks it claimed the executor must verify (finding plana-MINOR 11). No
+> expected line count is stated here on purpose: the correct check is a human reading two diffs
+> against an eleven-row inventory, and a number would invite substituting the number for the read.
+
+- [ ] **Step 4: The twelve-item conformance pass**
 
 Artifacts: the **resulting scaffolded template**, and
-`plugins/dev-workflow/commands/workflow-init.md` as the outer command prompt. Columns: *item* ·
-*artifact* · **status** from `PASS` | `N/A` | `FAIL` · *reason, required for `N/A` and `FAIL`*.
-**Item 7 is read against the whole resulting artifact**, not the diff.
+`plugins/dev-workflow/commands/workflow-init.md` as the outer command prompt. One row per item per
+artifact: *item* · *artifact* · **status** from `PASS` | `N/A` | `FAIL` · *reason, required for
+`N/A` and `FAIL`*. **Twenty-four rows, asserted.** **Item 7 is read against the whole resulting
+artifact**, not the diff.
 
 **Root `CLAUDE.md` is outside invariant 11's list and is not part of this pass.**
 
-> **Item 1 for the scaffolded template is `N/A`, and Plan C ships the note that says why** — the
-> file the template writes is model-agnostic by design, so a `Target model:` line inside it would
-> be false in every repo it lands in. Plan A records the `N/A` here; Plan C writes the reader-facing
-> note outside the fence, where it cannot scaffold and cannot become a second `Target model:`
-> declaration.
+> **Item 1 for the scaffolded template is `N/A`; Plan C ships the note that says why** — the file
+> the template writes is model-agnostic by design, so a `Target model:` line inside it would be
+> false in every repo it lands in.
 
-- [ ] **Step 3: Prove no passage outside the ten was touched**
-
-```bash
-git diff --stat HEAD~1 -- CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-git diff HEAD~1 -- CLAUDE.md | grep -c '^[+-][^+-]'
-```
-
-Read the diff and confirm every hunk falls inside one of the ten accounted passages. **A hunk
-outside them is a finding**, not something to wave through.
-
-- [ ] **Step 4: Invariant checks still pass**
+- [ ] **Step 5: Invariant checks**
 
 ```bash
 grep -c '^Target model:' plugins/dev-workflow/commands/workflow-init.md
@@ -839,26 +815,24 @@ sh scripts/check-invariants.sh && echo INVARIANTS-OK
 **Expected: `1`, then `INVARIANTS-OK`.** The count must be 1 — `scripts/check-invariants.sh` fails
 on any other, and a naive item-1 fix that adds a second declaration is exactly how that breaks.
 
-- [ ] **Step 5: Fold the results into the WIP commit**
-
-Write both tables into the conditions file from Task 1, then:
+- [ ] **Step 6: Fold the results into the WIP commit**
 
 ```bash
-git add docs/superpowers/specs/2026-08-29-review-loop-economics-plan-a-conditions.md
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
+git add docs/superpowers/plans/2026-08-29-review-loop-economics-plan-a-rules.md
+git commit --amend -m "WIP: review-loop economics"
 ```
 
-**Not a separate commit.** An ordinary commit here — even one staging only a `docs/**.md` path —
-resets the cycle and strands the WIP, because the hook's reset is keyed on the commit, not on the
-staged paths.
+**Not a separate commit.** An ordinary commit here — even staging only a `docs/**.md` path — resets
+the cycle and strands the WIP, because the reset is keyed on the commit, not on the staged paths.
 
 ---
 
-## Task 8: Gate B, and closing the cycle
+## Task 7: The battery, and the hand-off to Plan B
 
-- [ ] **Step 1: The battery**
+Plan A runs no Gate-B cycle. The single cycle covering all three plans opens here and is reviewed
+and closed by Plan C.
 
-The whole `AGENTS.md` § Commands chain, exit 0, assertion counts recorded.
+- [ ] **Step 1: The battery, minus one step, for a stated reason**
 
 ```bash
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && \
@@ -870,124 +844,67 @@ shellcheck --shell=sh scripts/check-version-bump.test.sh && \
 HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && \
 HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && \
 sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && \
-sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && \
-claude plugin validate . --strict && echo BATTERY-GREEN
+sh scripts/check-version-bump.test.sh && \
+claude plugin validate . --strict && echo "BATTERY-GREEN (version-bump deferred)"
 ```
 
-- [ ] **Step 2: The differential check — both revisions read**
+> **`sh scripts/check-version-bump.sh main` is deliberately absent, and only that one step.**
+> Plan A changes a path under `plugins/dev-workflow/` while the manifest bump is Plan C's, so the
+> checker **would correctly fail here**. It is deferred to the combined close, where the bump
+> exists. `AGENTS.md` already states this checker's precondition — it compares *commits*, and run
+> mid-work it reports clean and uselessly.
+>
+> **This is a deferral of one step with a named reason, not licence to skip the rest.** Every other
+> command above must pass before Plan B opens. `scripts/check-version-bump.test.sh` — the suite —
+> still runs, because it does not depend on the working tree's bump state.
 
-The mode is `battery+check+verification`; **read it from the story header, not from here.** This
-step is the check that fails without the change, and it is differential by construction: a check
-consulting only the post-change text cannot fail.
-
-One question, answered against **both** revisions:
-
-> *At a derived floor of 1, does a Blocker/Major-free pass 1 carrying a Minor close, or keep
-> looping?*
+- [ ] **Step 2: Confirm the cycle is intact before handing off**
 
 ```bash
-git show HEAD~1:CLAUDE.md | grep -n 'carrying a Minor keeps'   # pre-change
-grep -n 'carrying a Minor keeps' CLAUDE.md                     # post-change
+git log --oneline -1
+git log -1 --pretty=%s | grep -q '^WIP: review-loop economics' && echo "CYCLE OPEN" || echo "CYCLE LOST — investigate"
+git status --porcelain
 ```
 
-- **Pre-change** says `pass 1 ... keeps looping` — **wrong at floor 1**, where pass 1 is the floor.
-- **Post-change** says `pass **below the floor** ... keeps looping` — correct.
+**Expected: the WIP subject, `CYCLE OPEN`, and a clean worktree.** A lost cycle here means an
+ordinary commit slipped in; find it before Plan B adds to the damage.
 
-Ask the same of `below 3` versus `below the floor`. **Record which revision produced which
-answer.** The observation that would exist if the claim were false is a pre-change revision that
-already answers correctly — and it does not.
+- [ ] **Step 3: Hand off**
 
-- [ ] **Step 3: The named risk-path verification**
-
-Recompute the floor this cycle owes from the cited story's profile header, and confirm the pass
-reports state it with the axes and the source story. **The observation that would exist if the
-claim were false is a pass report whose floor the cited profile does not license.**
-
-Then confirm no floor file appeared:
-
-```bash
-test -e .context/codex-gate.floor && echo "PRESENT — was it present at start?" || echo "ABSENT"
-```
-
-**This detects a persisting write and cannot detect a transient one** — stated, not glossed.
-
-- [ ] **Step 4: The review loop**
-
-`mcp__codex__review` against the WIP commit, `baseSha` = its parent. Findings to
-`.context/codex-reviews/gate-b-<spec|quality>-plana-pass-<p>.md`; **delete both branch targets and
-confirm them gone before each call.**
-
-Floor: derived from the story profile — read the header. Carry into every call: the story path,
-and the current evidence entry quoted verbatim.
-
-**After every accepted fix:**
-
-```bash
-git add -u
-git commit --amend -m "WIP: review-loop economics Plan A — floor predicate and severity test"
-```
-
-**then** re-review that new commit against the same base. Finding B18: `mcp__codex__review` reads
-the committed range, so a re-review run over uncommitted fixes inspects the old snapshot and can
-return a clean pass on content that is not what closes.
-
-- [ ] **Step 5: Build the closing body, then close**
-
-Finding B20: no placeholder reaches the amend. Build the body as a file first, read it back, and
-only then amend.
-
-```bash
-cat > /tmp/plan-a-close.txt <<'EOF'
-feat(gates): derive the pass floor from the story profile; decide severity by consequence
-
-<one paragraph: what parts 1 and 2 change, in both copies>
-
-Evidence (docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md):
-  battery: <the recorded result>
-  check: the floor-1 Minor sentence, read against both revisions — pre-change says pass 1
-    keeps looping, which is wrong at floor 1; post-change says below the floor.
-  verification: <the named risk-path verification and its observation>
-EOF
-cat /tmp/plan-a-close.txt   # read it back — no angle-bracket placeholder may survive
-grep -c '<' /tmp/plan-a-close.txt
-```
-
-**Expected: `0`.** A non-zero count means a placeholder is still in the body — fix it before
-amending.
-
-```bash
-git commit --amend -F /tmp/plan-a-close.txt
-```
-
-**This is the first message without `WIP:`**, and the hook reads it as the cycle closing.
-
-> Plan A's closing body carries the evidence entry. **The provenance line and the per-pass curve
-> are Plan B's forms and are not owed by this commit** — they do not exist yet. Plan C's closing
-> body carries them for the branch.
+Plan B opens against this WIP commit and amends it with the same message. Plan A's Gate-A loop must
+have closed clean before Plan B's Gate-A loop opens.
 
 ---
 
 ## Self-Review
 
-**Spec coverage.** §2 predicate, unanimity, unresolvable-stop, one-value-three-cycles → Task 2
-Step 3. §2.1 precedence, knob, residual → Task 2 Steps 3-4. §2.2 pass report → Task 4. §2.4
-mid-cycle → Task 5. §3 severity → Task 6 Step 2. §10 activation, revert, downstream adoption,
-gate-off surface → Task 2 Step 4 and Task 6 Step 3, **partial by design**: the three record duties
-in §10's strict-fallback list are Plan B's to append. §2.3, §4, §5, §6 → Plan B. §7, §8 → Plan C.
+**Spec coverage.** §2 predicate, unanimity, unresolvable-stop, one-value-three-cycles → Task 1
+Step 3. §2.1 precedence, knob, residual → Task 1 Steps 3-4. §2.2 pass report → Task 3. §2.4
+mid-cycle → Task 4. §3 severity → Task 5 Step 2. §10 activation, revert, downstream adoption,
+gate-off surface → Task 1 Step 4 and Task 5 Step 3, **partial by design and written to be
+extended**: the record duties in §10's strict-fallback list are Plan B's to append. §2.3, §4, §5,
+§6 → Plan B. §7, §8 → Plan C.
 
-**Placeholders.** None. Every anchor is pasted `grep -n` output with no editorial token inside any
-pasted block; every replacement is complete text with no ellipsis; every check states its expected
-value **for its point in the sequence**; the one templated artifact — the closing commit body — is
-built as a file and asserted placeholder-free before it is used.
+**Placeholders.** None.
+
+**Sequence-correct expected values — the claim, and its two known limits.** Every check states an
+expected value for its point in the sequence, and every executable step addresses by content rather
+than by a line number an earlier task can shift. Two places state no numeric expectation on
+purpose, rather than by omission: Task 6 Step 3 asks for a human read of two diffs against an
+eleven-row inventory, where a number would invite substituting the number for the read; and Task 6
+Step 1's preflight is a judgement about already-appended tables. Revision 1 made this claim
+blanket and it was false in two places (finding plana-MINOR 14) — these are the two, named.
 
 **Type consistency.** `max(risk, security)`, "derived floor", "reminder threshold", "cited set" and
-"level 0" are used identically in Tasks 2, 3, 4, 5 and 8, and match the spec's spellings.
+"level 0" are used identically in Tasks 1, 2, 3, 4 and 5, and match the spec's spellings.
 
-**Gate-B classification, per path.** Task 1 stages one `docs/superpowers/**.md` path → **N/A**,
-ordinary commit, cycle not yet open. Tasks 2-7 stage prompts → **one full Gate-B cycle**, opened at
-Task 2 Step 7 and closed at Task 8 Step 5, with every intermediate commit an amend restating
-`-m "WIP: ..."`. No ordinary commit occurs between those two points.
+**Gate-B classification.** Plan A opens the single cycle at Task 1 Step 6 and runs no review. Every
+commit from that point is an amend restating `-m "WIP: review-loop economics"`. Plan C closes.
+
+**Rerun and interruption.** Every task opens with a preflight distinguishing not-started, complete,
+duplicate and damaged, and **asymmetry between the two copies is its own state** with its own
+answer — an execution abandoned between the two files leaves the mirrors disagreeing, and Task 1
+Step 1 says to reconcile before proceeding rather than continuing (finding plana-M3).
 
 **Known limit.** The replacement wordings are proposals, not transcriptions — the spec pins the
-rules, not the sentences — and this plan's Gate A is what reviews them. Where a wording restates a
-spec rule the spec pinned as *required properties*, it is quoted rather than paraphrased.
+rules, not the sentences — and this plan's Gate A is what reviews them.
