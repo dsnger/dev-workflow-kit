@@ -31,7 +31,7 @@ From `todos.md`, "**P8 — passive metrics, read-only over the ledger and git.**
 | It answers questions the ledger already contains the data for — which fingerprints recur, how often a rung holds | **kept** as the scope statement |
 | Trigger: 10 stories or 20 ledger rows, below which the sample says more about the last week than about the workflow | **moved** — the 20-row arm fired at 22 rows in the 2026-08-04 round, and the story arm reaches 10 with this story; recorded here |
 
-### Second question routed here, added 2026-08-28
+### Second question routed here, added 2026-08-28 (updated 2026-08-29: the forms it reads are now pinned)
 
 `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md` defers its
 economic measurement to this story rather than to a fresh backlog row. The question it hands
@@ -49,10 +49,11 @@ condition is doing real work:
   The findings files those numbers come from live under `.context/`, which is gitignored and
   per-clone. So this question is answerable from git only for cycles whose author wrote the
   curve down.
-- **Whether closing bodies should be *required* to carry the curve is not decided here**, and
-  it is not this story's to decide — it is a §5 rule, and it belongs to whoever owns that text.
-  Recorded so the gap is visible rather than discovered later by an analysis that quietly
-  reports on the subset of cycles that happened to be legible.
+- ~~**Whether closing bodies should be *required* to carry the curve is not decided here.**~~
+  **Decided 2026-08-29 by the parent story**, which makes the curve and the provenance line
+  required and pins both forms. The subset problem this bullet raised is therefore closed for
+  cycles run under those rules and remains for every cycle before them — an analysis spanning both
+  says which side of that line each cycle falls on.
 
 Neither point changes this story's scope: still read-only, still no instrumentation, still
 nothing written back.
@@ -73,6 +74,16 @@ from the file rather than from recall — without the analysis writing anything 
       trust it.
 - [ ] What the analysis cannot answer from the ledger alone is stated, rather than left for a
       reader to infer from what it does answer.
+- [ ] **The review-loop question routed here is answerable, or its gap is named.** The
+      review-loop-economics story defers its economic measurement to this one: after roughly three
+      profiled cycles under the new rules, read their pass counts and finding distributions against
+      the `fic2` baseline. That analysis reads **two pinned commit-body forms** — the provenance
+      line and the per-pass curve, both specified in
+      `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` — and its **first
+      checkpoint** is the first post-merge cycle whose cited set licenses floor 1, which must carry
+      the floor-1 provenance line. Whatever this analysis reports from those forms says plainly that
+      **the curves are author-written and unchecked**: nothing compares them against the validated
+      pass files, so they are self-reported and not measurement.
 
 ## 4. Affected AGENTS.md invariants
 

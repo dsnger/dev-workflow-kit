@@ -1,7 +1,7 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 13 (reduced to parts 1+2), after Gate-A passes 1-11
-(27, 30, 54, 40, 33, 34, 32, 33, 28, 27, 38 findings)
+**Date:** 2026-08-29 · **Revision:** 14, after Gate-A passes 1-12
+(27, 30, 54, 40, 33, 34, 32, 33, 28, 27, 38, 24 findings)
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile (read from that header, not copied):** risk `high` · security `none` ·
 validation `battery+check+verification`, no `+abuse-path`.
@@ -139,6 +139,12 @@ that drives rung escalation.
 **Nothing here writes `.context/codex-gate.floor`.** The floor is derived and **stated** — in every
 pass report and in the commit-body provenance line — and §5's text is what binds an agent.
 
+**What a pass report states**, since the story requires it and the floor is otherwise invisible
+until the cycle closes: the **derived floor**, the **risk and security values it read**, and the
+**cited stories it read them from**. A report giving the number alone leaves a reader unable to
+check the derivation while passes are still being spent, which is the only time checking it is
+cheap.
+
 **The knob stays the user's, and is the hook's reminder threshold.** Never written, never removed,
 never read for the derivation. It never bound an agent: `$floor` does appear in control flow
 (`:946`, `:966`), but that flow only selects **which advisory message fires**, and the hook exits 0
@@ -187,7 +193,8 @@ cycle <NONCE>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
 <ENTRY>     := <PATH> " (level " <0|1|2> ")"   a profiled story
              | <PATH> " (unprofiled)"          a cited story with no profile
 <PATH>      := <bare-path> | <quoted-path>
-<KNOB>      := "absent" | <positive integer> | "unusable"
+<KNOB>      := "absent" | <positive integer> | "unusable(" <CAUSE> ")"
+<CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
 ```
 
 A `<bare-path>` is repo-relative and contains none of `,` `{` `}` `;` `"` or whitespace; any other
@@ -201,7 +208,7 @@ One instance per variant, all parsing under the grammar above:
 cycle k7m2q9xa; floor 1 per {docs/superpowers/stories/A-story.md (level 0)}; hook reminder threshold absent
 cycle k7m2q9xa; floor 3 per {A-story.md (level 0), B-story.md (level 2)}; hook reminder threshold 3
 cycle k7m2q9xa; floor 3 per {A-story.md (level 0), C-story.md (unprofiled)}; hook reminder threshold 1
-cycle k7m2q9xa; floor 3 per none; hook reminder threshold unusable
+cycle k7m2q9xa; floor 3 per none; hook reminder threshold unusable(non-numeric)
 cycle k7m2q9xa; floor 3 per {"docs/stories/odd, name.md" (level 2)}; hook reminder threshold absent
 ```
 
@@ -222,7 +229,11 @@ without the disclosure would present a parseable number as a verified one.
   numeral** — not an entry per story, since unanimity makes the floor a property of the set.
 - It distinguishes a **cited story with no profile** from **no story cited**.
 - The **knob is recorded whenever the file exists**, including when present but unusable, since
-  the hook ignores such a value and the line describes what the hook will do.
+  the hook ignores such a value and the line describes what the hook will do. **The unusable cases
+  are distinguished rather than merged**: unreadable, empty, non-numeric and out-of-range need
+  different fixes — a permission problem is not a typo — and a single `unusable` token would tell a
+  reader only that something is wrong, which prompt-standards item 10 treats as naming a symptom
+  instead of a cause.
 - It is **machine-extractable**, because the deferred P8 measurement reads it, and **one form
   covers every case** — a second pinned form for a special case is what made earlier revisions
   unparseable.
@@ -235,8 +246,11 @@ pass; **passes already run keep counting**; **closing requires the floor as curr
 **The cited *set* can move too, not only a profile's values** — a story added, removed or
 corrected mid-cycle — and the same three rules cover it: the set is re-read at each pass, the
 floor is re-derived from it under unanimity, and closure requires the floor the current set
-yields. **Adding a story is a raise for this purpose** and carries the same one-further-pass
-consequence. **Removing one lowers the floor and releases nothing else**: an accepted in-set
+yields. **Adding or removing a story changes the derived floor only if it changes the
+unanimity verdict** — adding a level-0 story to an all-level-0 set moves nothing, and removing one
+non-zero story from a set with two leaves the floor at 3. Where the verdict does move, **upward is
+a raise** and carries the one-further-pass consequence; **downward lowers the floor and releases
+nothing else**: an accepted in-set
 Blocker or Major stays in the set and must still resolve, because it entered by the user's answer
 and not by the story that first raised it. A set change moves the floor; it is not a route to
 discharge findings.
@@ -260,13 +274,24 @@ unmeasured** — the loops this story cites as evidence are Gate-A loops.
 it to the plan would leave a durable interface undecided.
 
 ```
-<Loop> (passes <SPEC>, <MODELS>): Findings <n>, <n>, …. Blockers <n>, <n>, ….
-<Loop>    := "Gate-A spec loop" | "Gate-A plan loop" | "Gate B"
-<SPEC>    := a comma-and-range list of the pass numbers covered, e.g. "1-3" or "1,2,4"
+cycle <NONCE>; <Loop> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>.
+
+<NONCE>    := [a-z0-9]{8,16}                 the cycle nonce (§1.1)
+<Loop>     := "Gate-A spec loop" | "Gate-A plan loop" | "Gate B"
+<SPEC>     := <RANGE> ("," <RANGE>)*         strictly ascending, non-overlapping
+<RANGE>    := <p> | <p> "-" <p>              the second greater than the first
+<p>        := [1-9][0-9]*                    a pass number
+<COUNTS>   := <n> ("," <n>)*                 one per pass in <SPEC>, same order
+<n>        := 0 | [1-9][0-9]*                a finding or Blocker count
 <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
-<model>    := [A-Za-z0-9._-]+          as reported by the call, never recalled
+<model>    := [^ ;:,()]+ | "undetermined"    verbatim as the call reported it
 ```
+
+`<COUNTS>` has exactly as many entries as `<SPEC>` enumerates, so a reader can map each number to
+its pass without inference. `<model>` is deliberately permissive about punctuation because
+provider-qualified identifiers like `moonshotai/kimi-k3` are already in this repo's records; what
+it excludes is the grammar's own delimiters.
 
 One bare `<model>` means every covered pass ran under it. `<PER-PASS>` entries are
 semicolon-separated and must cover **every** pass the `<SPEC>` names; a pass assembled from calls
@@ -274,7 +299,9 @@ under different models joins them with `+`. **A model that cannot be determined 
 `undetermined`**, never omitted and never guessed — `docs/coding-workflow.md` already requires
 recording it that way where neither config level names one.
 
-A skipped loop writes `<Loop>: skipped (see skip reason)` and no counts.
+A skipped loop writes `cycle <NONCE>; <Loop>: skipped (see skip reason)` and no counts — the
+nonce leads **every** form, skipped included, or a skip cannot be attributed to the cycle that
+took it.
 
 **Required properties the form exists to satisfy:**
 - One entry per **valid** pass, in pass order; **incomplete passes are excluded**, and because
@@ -360,10 +387,16 @@ stating a rule.
 
 ### 5.2 The passages this change rewrites
 
-Each present exactly once in both copies. **Twelve; the conditions artifact is incomplete without
-all of them.** Eleven further passages went to the successor story with part 3 — the loop's exits
-and duties, the human-exception and squash blocks it rewrites, and the WIP/amend block — and its
-accounting owes them.
+Each present exactly once in both copies. **Eighteen; the conditions artifact is incomplete without
+all of them.**
+
+**A passage both changes rewrite appears in both accountings**, each covering its own change. That
+is not duplication: the AGENTS.md Don't asks what *this* change does to a passage's conditions, and
+two changes to one passage owe two answers. Getting this wrong is how a condition is dropped —
+Gate-A pass 12 found six passages assigned wholly to the successor that **this** change also
+rewrites, including the clearly-stuck paragraph, whose "pass 1 carrying a Minor" sentence §5.1
+identifies as false under floor 1. Assigning it away would have dropped the floor change's own
+condition into a story whose scope excludes the floor.
 
 | # | Passage | Rewritten by |
 |---|---|---|
@@ -379,6 +412,12 @@ accounting owes them.
 | 10 | "Changing a profile" | §4.2 |
 | 11 | The findings-slot naming paragraph | §5 — the grammar gains an optional per-cycle infix |
 | 12 | "Before each call, delete every target file…" (`:199/:386`) | §5 — the infix, and a **refuse-on-collision** case where the target belongs to another cycle |
+| 13 | "Recognizing \"clearly stuck\"" | **part 1** — its "pass 1 carrying a Minor" sentence is false under floor 1 (§5.1). *The successor also rewrites this passage for the ordering; both accountings owe it.* |
+| 14 | "Recording a human exception" | §1.1 — the nonce appears in every cycle record, this one included |
+| 15 | "The evidence entry lives in the commit body" | §1.1 — same |
+| 16 | "Optional companions, from field practice" | §1.1 — the nonce, plus the working record's role and the collision rule; §5's optional-companion *status* is unchanged |
+| 17 | "On squash-merge, copy every evidence entry…" | §4 — the provenance line, curves and skip records added to the carry. *The successor adds the decline record; both accountings owe it.* |
+| 18 | The `baseSha`/WIP/closing-amend block (`:500-517`, template `:679-696`) | §4 — the closing body must carry the provenance line and curve. *The successor adds the WIP-amend properties; both accountings owe it.* |
 
 **Row 18's change is a replacement, not an addition beside it.** Today's grammar admits three exact
 names; an infixed name satisfies none. The shipped text replaces each with one admitting an
@@ -451,8 +490,9 @@ Mode `battery+check+verification` (no `+abuse-path`).
 - **A conditional verification that a user's knob survives untouched** — byte-identical across a
   cycle where one exists; **recorded not-applicable with its reason where none does.** An agent must
   not create one to make a check runnable, which would be a fixture supplying its own input.
-- **Parity across every changed rule**, per story criterion 7 — §5.1's fourteen sites, §5.2's twelve
-  passages, and every rule §§2–4 insert, including §9's residual disclosure and §3.1's
+- **Parity across every changed rule**, per story criterion 7 — §5.1's fourteen sites, §5.2's eighteen
+  passages, and every rule §§1.1–4 insert — the nonce's generation, recovery, record and
+  collision duties included — plus §9's residual disclosure and §3.1's
   provenance properties, which the story requires in **both** copies. The copies already differ on
   192 lines, so parity cannot be asserted from a whole-section diff.
 - **A fresh twelve-item `docs/prompt-standards.md` pass** over every changed prompt region. **Item
@@ -493,9 +533,11 @@ design* rather than instructions to a future agent stay here.
   when passes were banked would invalidate a count nobody could reconstruct. **Where a loop's starting rules cannot be established it takes the stricter reading of every part
   this change touches**, named rather than left to interpretation: **floor 3**; **severity
   classified without the demotion**, so nothing is collected that would otherwise iterate; **every
-  and **the curve duty treated as owed**. **That list is the whole of it** — the parts this change
-  touches are the floor, severity and the curve, and each has an entry above; a part not named here
-  is a part this change did not touch. (The successor story extends this fallback to the loop rules
+  and **the curve duty treated as owed**. **That list covers this change's rules; it is not a list of everything a
+  cycle owes.** The parts this change touches are the floor, severity, the curve, and the cycle
+  nonce with the record and collision duties that follow from it — and each is treated at its
+  strictest: the nonce is required, recovery ambiguity resolves to a new cycle, and the
+  collision-refusal rule applies. A part not named here is a part this change did not touch. (The successor story extends this fallback to the loop rules
   it ships; extending a list is safe where replacing it would not be.) **A user knob set above 3
   is not lowered by the fallback**: the knob moves the hook's reminder threshold while the fallback
   sets the *obliged* floor, so a workspace asking for louder reminders keeps them. Not a
@@ -506,7 +548,8 @@ design* rather than instructions to a future agent stay here.
   the text — which invariant 9 permits to write nothing, be declined, or be merged in part. **The
   rules bind only over the text a project's `CLAUDE.md` contains**, and a partial adoption can
   persist undetected. **This is in tension with §1's coupling argument and the tension is real**: a
-  project taking the severity rule without the ordering gets a loop this design never evaluated.
+  project taking the floor rule without the severity test gets a floor whose `docs-only` question
+  §1 says the severity test settles.
   What prompt text can do is done; what it cannot is said.
 - **The gate-off surface — routes known today, not a complete list**, since an enumeration read as
   complete guarantees what it omits. **One route is created here and is named as such**: a stated
@@ -516,10 +559,13 @@ design* rather than instructions to a future agent stay here.
   pass and reporting that it ran. **None of this is a guard**, and the
   profile-minting path is bounded only by §5's existing human-confirmation rule.
 - **Rollback, once a rule has been adopted.** In this repo a bad rule is reverted like any other
-  commit — **and the revert is itself a shipping commit for the *old* rules**, so a loop in flight
-  across it lands in the unknown-start case rather than cleanly under either version. That is
-  intended: the fallback's stricter reading is the right answer for a loop whose rules changed
-  underneath it, in either direction. **Downstream there is no
+  commit — **and the revert is itself a shipping commit for the *old* rules.** A loop in flight across it
+  therefore has two answers available and they disagree: the activation rule says a loop finishes
+  under the rules it started with, while the fallback says an indeterminate start takes the
+  stricter reading. **The activation rule wins where the start is determinable** — a loop whose
+  own first pass artifact predates the revert finishes under the rules it began with, which is
+  what that rule is for. The fallback applies only where the start cannot be established. Stating
+  the precedence is the point; without it a revert makes every in-flight loop ambiguous. **Downstream there is no
   revert**: a project's `CLAUDE.md` is its own file, so withdrawing a rule means shipping a
   corrected template and waiting for each project to re-run the scaffolder and accept the diff —
   the same partial-adoption path, with the same absence of detection. **A rule that turns out
@@ -562,7 +608,7 @@ exclusions, the accounting method and passage list, the falsified-statement inve
 plan, scope and the risks all stay.
 
 **Earlier revisions moved detail to the plan** — exact replacement wordings, the scaffolder's edit
-procedures, the per-site texts for §5.1's fourteen sites and §5.2's twelve passages, and the
+procedures, the per-site texts for §5.1's fourteen sites and §5.2's eighteen passages, and the
 conditions artifact's production procedure. **Two of those moves were wrong and were reversed**:
 the provenance grammar and the curve form, which pass 9 caught. **A restructuring guard that asks
 only "did a decision move?" misses the case where a rule survives in outline and loses its force** —

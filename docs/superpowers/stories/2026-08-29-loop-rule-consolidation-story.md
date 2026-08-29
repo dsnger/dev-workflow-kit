@@ -93,12 +93,31 @@ and in `docs/field-reports/2026-08-26-fic2-cycle-evidence.md`. **The design begi
 | 7 | **A decline binds for the remainder of its cycle and has no effect in any later one** (Q4). |
 | 8 | **"Explicitly declined" is a recorded user decision on that specific finding**, attributable and unambiguous — never silence, never a general remark about scope, never inferred. |
 | 9 | **The decline is recorded in the commit body**, reusing the human-exception transport as a **distinct record type** — the two differ in force, since the human-exception form authorizes nothing. |
+| 9b | **The record stores exactly what the sameness test reads: location, defect, severity, consequence and suggested fix.** A test reading fields the record lacks is a wiring failure. Sameness requires all five to match; **any difference — including severity, since a Minor re-raised as a Blocker is not the thing that was declined — makes it a new finding and the hold applies**, as does any genuine uncertainty. |
+| 9c | **The record reads as an unverified assertion**, like the human-exception record beside it: nothing checks that the handle belongs to whoever decided. **Narrowness bounds what a false record can do — one fully-identified finding, one cycle — and that is not the same as making it safe**; a fabricated decline still releases a real hold and nothing detects it. |
 | 10 | **Q6:** when prior-pass history is unavailable, the pass report states what is computable, names what is not and why, and discloses the reduced sensitivity. Not a new stop condition, not a mandatory resume note. |
 
 **Two implementation facts the parent cycle established, carried so they are not rediscovered:** a
 pass's cleanliness is a fact about what that pass found and is **never rewritten** — what a later
 answer changes is whether the *cycle* may close; and the findings files establish the **inventory**
 of in-set findings, not their resolutions, which they do not contain.
+
+### Two passages this story shares with the parent
+
+Both changes rewrite these, and **this story must extend rather than replace what the parent added**
+— the parent's accounting already covers its own half:
+
+- **The squash-carry rule.** The parent adds the provenance line, the per-pass curves and a skipped
+  loop's skip record to what a squash must carry. **This story adds the decline record**, and a
+  rewrite that drops the parent's three would silently unship them.
+- **The unknown-start fallback** (what a loop does when its starting rules cannot be established).
+  The parent covers the floor, severity, the curve and the nonce duties at their strictest. **This
+  story extends the same list to the loop rules it ships** — suspensions binding, decline records
+  treated as absent so no hold is released. Extending is safe; replacing is not.
+
+A third, for the same reason: the **clearly-stuck paragraph** is rewritten by both — by the parent
+because its "pass 1 carrying a Minor" sentence is false under a floor of 1, and by this story
+because the exit becomes a suspension in the ordering. **Both accountings owe it.**
 
 ## 5. Open questions
 
@@ -110,9 +129,9 @@ of in-set findings, not their resolutions, which they do not contain.
 - **How much of the ordering is new text versus reference.** §5 already contains the two sentences
   from which "only clean completion closes" follows; whether the ordering is stated fresh or
   assembled from what is there changes the old-conditions accounting and the parity surface.
-- **Whether the cycle nonce belongs here.** The parent introduced it to bind a decline to one
-  cycle, and it now also serves slot naming and record attribution. If the parent ships it, this
-  story consumes it; if not, this story needs it.
+*(Resolved 2026-08-29: the cycle nonce stays with the parent, which ships it because both of the
+records parts 1+2 produce carry it. **This story consumes it and does not define it** — it uses the
+nonce to bind a decline to one cycle, per settled decision 7.)*
 
 ## 6. Suggested size
 
