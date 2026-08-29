@@ -95,15 +95,17 @@ would separate a rule from the argument that settles it.
   worth. The evidence doc carries it as an open question, not a commitment.
 - **Any remedy to the supersession convention** the worked example above illustrates. Parked
   as a `todos.md` candidate.
-- **Whether loops actually got cheaper** — and the honest form of that question, which is narrower
-  than "measure the rule's effect". It cannot be
-  observed inside this cycle: the severity rule's effect appears only across several cycles
-  run under it, and claiming otherwise from a single cycle would be the fabricated-evidence
-  failure §5 names. It is **deferred to a named vehicle rather than to a new backlog row** —
+- **Whether loops actually got cheaper.** The honest form of that question is narrower than
+  "measure the rule's effect", and the design says why: no finding is ever classified under both
+  the old and new rules, so **no demotion figure is derivable** and what a later reader can compare
+  is *recorded severity mixes across cycles that reviewed different artifacts* — evidence about the
+  population as much as about the rule. It certainly cannot be observed inside this cycle, and
+  claiming otherwise from one cycle would be the fabricated-evidence failure §5 names. It is
+  **deferred to a named vehicle rather than to a new backlog row** —
   `docs/superpowers/stories/2026-08-04-passive-metrics-over-the-ledger-story.md` (the P8
   passive-metrics story, `todos.md:546`), annotated with this trigger: after roughly three
-  profiled cycles under the new rules, read their pass counts and finding distributions
-  against the `fic2` baseline curve of 14 · 24 · 12 · 3 · 6 · 6 · 2
+  profiled cycles under the new rules, compare their recorded severity mixes against the `fic2`
+  baseline curve of 14 · 24 · 12 · 3 · 6 · 6 · 2, with both confounds named
   (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`). A named vehicle rather than a
   fresh row because loose deferred items rot here — the pass-counter anomaly, the
   fixture-per-predicate question and the durations row's missing control run are all still
@@ -166,10 +168,10 @@ would separate a rule from the argument that settles it.
       name a cycle**; what the branch demonstrates is the field's presence and grammar, not
       attribution (see the identifier criterion).
       **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
-      requirement would leave the *dominant* cost unmeasured: the loops this story cites as
+      requirement would leave the *dominant* cost unrecorded: the loops this story cites as
       evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
-      own Gate-A run — so P8 without Gate-A curves cannot measure the thing the problem
-      statement is about.
+      own Gate-A run — so P8 without Gate-A curves would be comparing the smaller half of what the
+      problem statement is about.
       **Why it is in scope** (approved as a scope addition, Daniel, 2026-08-28): the deferred
       economics comparison routed to P8 is otherwise answerable only for cycles whose author
       happened to write the curve down — `3cdd075` and `baa75c1` did, `7bbdb14` recorded the
@@ -258,24 +260,25 @@ would separate a rule from the argument that settles it.
 - [ ] **The provenance path is demonstrated end to end on this branch, at the floor this
       branch actually licenses.** This story is risk `high`, so every cycle citing it owes
       floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
-      naming the cycle, that floor, and this story at its level, showing the derivation and the
-      provenance line working at a real value. **The one field it cannot demonstrate is the cycle
-      identifier**: every cycle on this branch predates the identifier rule, so each carries the
-      reserved pre-rule value, which by construction attributes nothing. What this branch shows is
-      the line's derivation, its grammar and every other field; attribution is demonstrated at the
-      checkpoint named in the identifier criterion.
+      recording that floor and this story at its level, so the derivation and the line are shown
+      working at a real value. **The cycle field is the one it cannot demonstrate**: every cycle on
+      this branch predates the identifier rule, so each carries the reserved pre-rule value, which
+      by construction attributes nothing. This branch shows the line's derivation, its grammar and
+      every other field; **attribution is demonstrated at the checkpoint named in the identifier
+      criterion**, not here.
       **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
       draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
       story's own profile, and the only way to satisfy it as written would have been to mint a
       level-0 micro-story for the purpose — a fixture built to make a criterion pass, which is
       the fabricated-evidence class §5 names. Instead the floor-1 case becomes the **first
-      checkpoint of the P8 measurement**: the first post-merge cycle whose cited-story set
-      licenses floor 1 must carry the floor-1 provenance line, and P8 reads it.
+      checkpoint of the P8 comparison**: the first post-merge cycle whose cited-story set licenses
+      floor 1 must carry the floor-1 provenance line, and P8 reads it.
       **What is demonstrated here stays bounded, and the wording forecloses reading it wider:**
       the derivation, the knob and the provenance path work. It is not evidence that review
       loops became cheaper. Reading a working mechanism as an improved outcome is the overclaim
       class AGENTS.md names as this repo's most persistent defect, and the economics are
-      measured afterwards by the follow-up named in §2.
+      compared afterwards by the follow-up named in §2 — compared, because §2 explains why no
+      measurement of the rule's effect is derivable from what the record carries.
       *(Revised 2026-08-28 after Gate-A pass 1 found the original unsatisfiable — sparring
       session, under Daniel's 2026-08-28 delegation; flagged to Daniel for final-version review
       because the provenance-demonstration criterion was his explicit choice. The falsifiability he chose is preserved by

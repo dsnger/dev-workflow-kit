@@ -33,12 +33,15 @@ From `todos.md`, "**P8 — passive metrics, read-only over the ledger and git.**
 
 ### Second question routed here, added 2026-08-28 (updated 2026-08-29: the forms it reads are now pinned)
 
-`docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md` defers its
-economic measurement to this story rather than to a fresh backlog row. The question it hands
-over: **after roughly three profiled cycles run under the new floor and severity rules, do their
-pass counts and finding distributions differ from the `fic2` baseline curve of
-14 · 24 · 12 · 3 · 6 · 6 · 2** (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`)? That
-story cannot answer it inside its own cycle, and a single cycle would not answer it in any case.
+`docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md` defers to this story,
+rather than to a fresh backlog row, a **comparison** — not a measurement of its rule's effect. The
+question it hands over: **after roughly three profiled cycles run under the new floor and severity
+rules, do their recorded severity mixes differ from the `fic2` baseline curve of
+14 · 24 · 12 · 3 · 6 · 6 · 2** (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`)? That story
+cannot answer it inside its own cycle, and a single cycle would not answer it in any case. **Nor
+can any number of cycles yield a demotion figure**: that needs one finding classified under both
+rules, which nothing records — see acceptance criterion 5 for the two confounds any reported figure
+must carry.
 
 Two things this hand-off does not silently assume, because the row's "the data already exists"
 condition is doing real work:

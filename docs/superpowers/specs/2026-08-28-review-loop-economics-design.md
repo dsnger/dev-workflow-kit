@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 24 (rules only) · **Gate-A passes 1-22**
+**Date:** 2026-08-29 · **Revision:** 25 (rules only) · **Gate-A passes 1-23**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -240,9 +240,10 @@ that began before the nonce rule shipped (§10 decides which cycles those are) �
 magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
-- **Records Majors as well as Findings and Blockers**, because the question this curve is kept for
-  is whether consequence-keyed severity demotes findings — which moves the Blocker/Major line, not
-  the total. **Subject categories are deliberately not recorded**: they are a judgement per finding
+- **Records Majors as well as Findings and Blockers**, because the severity rule moves the
+  Blocker/Major line rather than the total, so a record of totals and Blockers alone could not show
+  even a change in the mix. (What that record supports, and what it cannot, is stated below — it is
+  a comparison, not a measurement of the rule's effect.) **Subject categories are deliberately not recorded**: they are a judgement per finding
   rather than a count, and the findings files carry the material for anyone who wants it.
 
 **What the curve makes answerable, and what it does not — because the pre-rule baseline is thinner
