@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 32 (rules only) · **Gate-A passes 1-29**
+**Date:** 2026-08-29 · **Revision:** 33 (rules only) · **Gate-A passes 1-30**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -140,14 +140,18 @@ pass; **passes already run keep counting**; **closing requires the floor as curr
 governs, which §2.1 notes is not every close: a zero-finding pass and a legitimate skip are
 unaffected by a moving profile because neither turns on the count.
 
-**Every rule in this section presupposes a cycle that still owes a gate.** A change that makes a
-Gate-B cycle **legitimately skippable** — the diff behaviourally trivial *and* the cited set
-unanimously level 0 — removes the review rather than adjusting its count, and the further-pass
-duties below do not apply to a cycle that is no longer running one. That is §5's existing skip,
-which this change leaves untouched; the skip's own obligations (its reason in the commit body, its
-skip record in place of a curve) are what govern instead.
+**The further-pass duties below are about pass counts, so they reach only a cycle that is still
+running a gate.** Where §5's triviality skip applies, there is no pass count to adjust and these
+duties are silent — **§5's own skip rules govern, unchanged and not restated here**, because
+summarising an existing decision procedure is how its conditions get dropped. This change adds
+exactly one obligation to a skipped cycle, stated in §4: a skip record in place of a curve.
 
-Otherwise: **any profile change costs at least one further pass**, in either direction and whether
+**Two things are outside that scope and are not suspended by a skip.** The **provenance line** is
+owed by every cycle, skipped or not (§2.3). And an **accepted in-set Blocker or Major stays in the
+fix set**: acceptance put it there, not the citation, so neither removing a story nor becoming
+skip-eligible discharges it.
+
+**Any profile change costs at least one further pass**, in either direction and whether
 or not the floor number moves, because §5 already requires the **final clean pass** to run under the current
 profile — so no already-banked pass can be it. **That further pass must be clean and every other
 closure duty must be satisfied**; it is one more pass, not a licence to close on the next one. **What a lowering drops is whatever the changed values drop, not a fixed pair**: a mode-only
