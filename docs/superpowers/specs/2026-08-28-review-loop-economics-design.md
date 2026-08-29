@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 28 (rules only) · **Gate-A passes 1-26**
+**Date:** 2026-08-29 · **Revision:** 29 (rules only) · **Gate-A passes 1-26**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -223,7 +223,10 @@ reason as the provenance line:**
 <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
 <model>    := <bare-model> | <quoted-model> | "undetermined"
-<bare-model> := [!-~]{1,} minus ; : , ( ) + " and space
+                                          "undetermined" means the model could not be determined;
+                                          a real model so named is written as <quoted-model>
+<bare-model> := [!-~]{1,} minus ; : , ( ) + " and space, and not the
+                                          literal "undetermined", which is reserved
                                           printable ASCII only; a control character makes the
                                           identifier unrepresentable, handled below
 <quoted-model> := a non-empty double-quoted string, same two escapes as <quoted>;
@@ -313,8 +316,10 @@ reserved `none (pre-rule)` and its records are not cycle-attributable; the activ
 creates that case is §10's. Everything below describes
 **post-rule cycles**, which is every cycle started after the implementation commit.
 
-- Generated once at cycle start, immutable, and **collision-resistant operationally: at least 8
-  characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — never derived from a
+- Generated once at cycle start, immutable, and **collision-resistant operationally: 8 to 16
+  characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — the same bound the
+  grammar pins, 8 being where collision resistance starts and 16 where the field stops being a
+  usable infix — — never derived from a
   name, a timestamp or a commit, each of which collides exactly where sibling cycles do.
 - Constrained so it is **safe as a slot infix and a path component**.
 - **It appears in every record the cycle writes** — for every cycle started after these rules
@@ -446,9 +451,11 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   the template is written, so a `Target model:` line written into it would be **false in every
   repo it lands in**. A standard cannot require writing a falsehood, and **an n/a recorded with its
   reason answers the item rather than skipping it** — the pattern `AGENTS.md`'s own commands table
-  already uses ("typecheck: n/a — no typed sources"). The scaffolded artifact's class is *project
-  `CLAUDE.md`*, the same class as this repo's root file, which carries no declaration and correctly
-  so.
+  already uses ("typecheck: n/a — no typed sources"). **This n/a is scoped to the scaffolded `CLAUDE.md` and to item 1**, and reaches nothing else:
+  every other item still binds it, and every item still binds the other two changed prompt
+  artifacts. The root `CLAUDE.md` is outside this reasoning entirely — invariant 11's list does not
+  name project `CLAUDE.md` files, so item 1 never bound it and this decision neither excuses nor
+  endorses anything about it.
   **Nothing else moves for this:** `scripts/check-invariants.sh` is untouched and stays out of
   scope, `workflow-init.md` keeps its single declaration for the outer command, and the template
   adds none. **The implementation records the status where a future template editor meets it** — one
@@ -462,7 +469,9 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   §10 fixes that at the implementation commit — not at this spec's close.** So the Gate-A plan
   cycle and the Gate-B cycle also begin before the rules ship, and all three are pre-rule cycles by
   §10's own rule. **All three therefore write `cycle none (pre-rule)`**, and the branch demonstrates
-  every field of both forms except the nonce, which the first post-ship cycle demonstrates. Claiming
+  every field of both forms except the two it cannot — the cycle identifier, which the first
+  post-ship cycle demonstrates, and the knob clause's non-absent form, which needs a workspace that
+  has a knob. Claiming
   otherwise would be claiming a demonstration the branch cannot contain.
   **The nonce is the one field this branch cannot supply natively, and the activation rule governs
   it.** That cycle began before the nonce rule existed; its slot discriminator
