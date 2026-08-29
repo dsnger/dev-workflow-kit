@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 27 (rules only) · **Gate-A passes 1-25**
+**Date:** 2026-08-29 · **Revision:** 28 (rules only) · **Gate-A passes 1-26**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -440,22 +440,19 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   declaration separate from the template it writes, with the changed regions as the
   reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
   case, not the only one.
-  **One known failure, and it collides with a shipped check — this is the change's one open
-  question.** The **scaffolded template** is a "scaffolded template" in invariant 11's own list, so
-  item 1 binds it and it carries no `Target model:` line. But the template lives inside
-  `workflow-init.md`, whose own declaration sits at column 1 (`:9`), and
-  `scripts/check-invariants.sh` counts `^Target model:` in each claiming file and **fails on
-  anything but exactly one**. Adding the template's line makes two and breaks CI; indenting it
-  inside the fence would indent it in every scaffolded file.
-  **Three ways out, none of them this spec's to choose:** widen the checker to count declarations
-  per *scaffolded artifact* rather than per file; give the template a differently-spelled
-  declaration the checker does not match, which weakens the check's purpose; or record that the
-  scaffolded `CLAUDE.md` is exempt from item 1 with the reason. **The plan does not proceed on this
-  until it is decided**, and the decision touches `scripts/check-invariants.sh`, which no earlier
-  revision put in scope.
-  *(Root `CLAUDE.md` is a separate question and probably not one: invariant 11's list is skills,
-  commands, agent definitions, hook messages and scaffolded templates, and the root file is none of
-  those.)*
+  **Item 1 is inapplicable to the scaffolded `CLAUDE.md`, recorded as a reasoned n/a** (decided
+  2026-08-29). The item asks a prompt to name its executing model. **The scaffolded file is
+  model-agnostic by design**: its executing model is whatever the end user runs, unknowable when
+  the template is written, so a `Target model:` line written into it would be **false in every
+  repo it lands in**. A standard cannot require writing a falsehood, and **an n/a recorded with its
+  reason answers the item rather than skipping it** — the pattern `AGENTS.md`'s own commands table
+  already uses ("typecheck: n/a — no typed sources"). The scaffolded artifact's class is *project
+  `CLAUDE.md`*, the same class as this repo's root file, which carries no declaration and correctly
+  so.
+  **Nothing else moves for this:** `scripts/check-invariants.sh` is untouched and stays out of
+  scope, `workflow-init.md` keeps its single declaration for the outer command, and the template
+  adds none. **The implementation records the status where a future template editor meets it** — one
+  sentence in `workflow-init.md` beside the template and outside the fence, so it never scaffolds.
 
 - **This branch's own three closing bodies carry the final forms**, since two story criteria
   require it. **No reconstruction is needed and none is claimed:** the Gate-A spec cycle has not
@@ -474,8 +471,10 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   started with** (§10), so this one records its provenance line and curve with the cycle field written
   `cycle none (pre-rule)`, which the grammar admits as a production. **The first cycle started after these rules ship carries a real
   one**, and the verification confirms that rather than pretending this branch demonstrates it.
-  **The verification confirms all three bodies before closure**, and states exactly what they
-  prove: **every field of both pinned forms except two** — the **cycle identifier**, which no cycle
+  **The verification confirms all three bodies before closure**, and **records the two fields it
+  cannot demonstrate as undemonstrable-here with their reasons** rather than as gaps or as
+  satisfied — the same honesty as the item-1 n/a above. It states exactly what they prove: **every
+  field of both pinned forms except two** — the **cycle identifier**, which no cycle
   on this branch can supply, and the **knob clause's non-absent form**, which cannot be shown where
   no user knob exists (the conditional verification above records that as not-applicable rather
   than as satisfied). **The nonce is verified at a named later checkpoint**: the **Gate-A spec cycle of the next story

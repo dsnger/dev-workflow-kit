@@ -252,6 +252,10 @@ would separate a rule from the argument that settles it.
       manifest's version and `CHANGELOG.md` are updated, which CI enforces on pull requests. Both
       are checkable after the fact: no corrected sentence still asserts a fixed three-pass floor,
       and the manifest version differs from its value on the base ref.
+      **Prompt conformance is judged item by item, and an item may be satisfied *or recorded n/a
+      with its reason*** — the answer `AGENTS.md`'s own commands table already gives where an item
+      does not apply. What fails this criterion is an item left unanswered, or answered falsely;
+      not one answered "not applicable, because…".
 - [ ] **Every condition of the replaced prose is accounted for.** The change lists what each
       replaced §5 passage required and marks each requirement kept, moved, or deliberately
       dropped, per the AGENTS.md Don't quoted in §4. Checkable: the accounting exists and
