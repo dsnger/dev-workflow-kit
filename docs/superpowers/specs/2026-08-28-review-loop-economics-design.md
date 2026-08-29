@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 20 (rules only) · **Gate-A passes 1-18**
+**Date:** 2026-08-29 · **Revision:** 21 (rules only) · **Gate-A passes 1-19**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -98,8 +98,12 @@ whether anything but a person parses it.)
 <N>         := [1-9][0-9]*
 <STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
 <ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
-<PATH>      := <bare> | <quoted>          bare excludes , { } ; " and whitespace;
-                                          quoted is double-quoted with \ and " escaped
+<PATH>      := <bare> | <quoted>
+<bare>      := [A-Za-z0-9._/-]+           contains no delimiter, quote or whitespace
+<quoted>    := a double-quoted string whose only escapes are \" and \\ ;
+                                          a path containing a newline or other control
+                                          character is NOT representable — the cycle stops
+                                          and surfaces rather than emitting one
 <KNOB>      := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
 <CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
 ```
@@ -202,7 +206,7 @@ unmeasured** — the loops this story cites as evidence are Gate-A loops. **Pinn
 reason as the provenance line:**
 
 ```
-<CYCLE-FIELD>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>.
+<CYCLE-FIELD>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>. Majors <COUNTS>.
 
 <CYCLE>    := "Gate-A spec" | "Gate-A plan" | "Gate B"
 <SPEC>     := <RANGE> ("," <RANGE>)*      strictly ascending, non-overlapping
@@ -214,8 +218,9 @@ reason as the provenance line:**
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
 <model>    := <bare-model> | <quoted-model> | "undetermined"
 <bare-model> := [^ ;:,()+"]+              excludes the grammar's own delimiters, "+" included
-<quoted-model> := '"' ... '"'             for a reported identifier containing any of them,
-                                          with \ and " escaped
+<quoted-model> := a double-quoted string, same two escapes as <quoted>;
+                                          a reported identifier containing a control character
+                                          is written `undetermined`, with the raw value in prose
 ```
 
 **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
@@ -229,6 +234,12 @@ that began before the nonce rule shipped (§8) — it is a production of the gra
 magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
+- **Records Majors as well as Findings and Blockers.** The question this curve is kept for is
+  whether consequence-keyed severity demotes findings — which moves the Blocker/Major line, not the
+  total. A curve of totals and Blockers alone cannot answer it, so the instrument would not measure
+  the thing it exists to measure. **Subject categories are deliberately not recorded**: they are a
+  judgement per finding rather than a count, and the findings files carry the material for anyone
+  who wants them.
 - Carries that cycle's **cycle field**, so a curve can be attributed to the cycle that produced
   it — **the nonce for a post-rule cycle, `none (pre-rule)` for one that began before the rules
   shipped.** A pre-rule record is **not attributable to a cycle**, and the text says so rather than
@@ -263,9 +274,12 @@ adds the decline record to the same passage; extending is required, replacing wo
 
 ## 5. The cycle nonce
 
-Both shipped records carry it, and a record that cannot be attributed to a cycle is unusable by the
-measurement that reads it. **§5 defines three cycles — the Gate-A spec loop, the Gate-A plan loop
-and the Gate-B cycle — so a run of all three produces three nonces, not one.**
+Both shipped records carry a **cycle field**, because a record that cannot be attributed to a cycle
+is unusable by the measurement that reads it. **§5 defines three cycles — the Gate-A spec loop, the
+Gate-A plan loop and the Gate-B cycle — so a run of all three produces three cycle fields, and for
+post-rule cycles three distinct nonces.** A **pre-rule** cycle has no nonce (§8); its field is the
+reserved `none (pre-rule)` and its records are not cycle-attributable. Everything below describes
+**post-rule cycles**, which is every cycle started after the implementation commit.
 
 - Generated once at cycle start, immutable, and **collision-resistant operationally: at least 8
   characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — never derived from a
@@ -415,9 +429,11 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   one**, and the verification confirms that rather than pretending this branch demonstrates it.
   **The verification confirms all three bodies before closure**, and states exactly what they
   prove: **every field of both pinned forms except the nonce**, which no cycle on this branch can
-  supply. **The nonce is verified at a named later checkpoint** — the first cycle started after the
-  implementation commit, whose provenance line and curve must carry a real one and whose records
-  must be attributable to it. Recording that as a checkpoint rather than as a satisfied criterion
+  supply. **The nonce is verified at a named later checkpoint**: the **Gate-A spec cycle of the next story
+  whose spec is written after the implementation commit lands**. Naming a cycle type and an
+  artifact rather than "the first cycle" matters because siblings can start concurrently and "first"
+  has no total ordering across them. That cycle's provenance line and curve must carry a real nonce,
+  the two must carry the **same** one, and it must differ from any other cycle's. Recording that as a checkpoint rather than as a satisfied criterion
   is the difference between a demonstration and a claim.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications

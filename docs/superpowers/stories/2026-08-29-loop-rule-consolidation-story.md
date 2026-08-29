@@ -102,7 +102,7 @@ pass's cleanliness is a fact about what that pass found and is **never rewritten
 answer changes is whether the *cycle* may close; and the findings files establish the **inventory**
 of in-set findings, not their resolutions, which they do not contain.
 
-### Two passages this story shares with the parent
+### Three passages this story shares with the parent
 
 Both changes rewrite these, and **this story must extend rather than replace what the parent added**
 — the parent's accounting already covers its own half:

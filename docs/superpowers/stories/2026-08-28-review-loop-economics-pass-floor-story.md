@@ -214,9 +214,12 @@ would separate a rule from the argument that settles it.
       remain legitimate readers of rule text they will later apply; what is excluded is the
       reviewing pass, not gates.
 
-- [ ] **A cycle's records can be told apart from another cycle's.** Both copies require each
-      cycle to hold an identifier created at its start, unique among open cycles, and present in
-      every record that cycle writes — **one per cycle, so a run of all three holds three**. They
+- [ ] **A cycle's records can be told apart from another cycle's.** Both copies require **each
+      cycle started after these rules ship** to hold an identifier created at its start, unique
+      among open cycles, and present in every record that cycle writes — **one per cycle, so a run
+      of all three holds three**. Both copies also state the **bounded, self-terminating exception**:
+      a cycle already running when the rules land has no identifier, cannot acquire one, and writes
+      a reserved value that says so — and no later cycle can enter that state. They
       state how it is recovered by a cycle resumed after an interruption, what happens when it
       cannot be recovered unambiguously, that a cycle does not start without one, and that a slot
       another cycle owns is refused rather than overwritten. Checkable by reading either copy, and
@@ -234,7 +237,7 @@ would separate a rule from the argument that settles it.
       Checkable by reading either copy.
 - [ ] **The change leaves no shipped sentence contradicting it, and the package it ships in is
       valid.** Every user-facing statement this change falsifies is corrected in the same change —
-      the inventory is in the spec and a reviewer can check each cited line — and the plugin
+      a reviewer can check each corrected line against the site list the plan carries — and the plugin
       manifest's version and `CHANGELOG.md` are updated, which CI enforces on pull requests. Both
       are checkable after the fact: no corrected sentence still asserts a fixed three-pass floor,
       and the manifest version differs from its value on the base ref.
@@ -266,7 +269,7 @@ would separate a rule from the argument that settles it.
       measured afterwards by the follow-up named in §2.
       *(Revised 2026-08-28 after Gate-A pass 1 found the original unsatisfiable — sparring
       session, under Daniel's 2026-08-28 delegation; flagged to Daniel for final-version review
-      because criterion 8 was his explicit choice. The falsifiability he chose is preserved by
+      because the provenance-demonstration criterion was his explicit choice. The falsifiability he chose is preserved by
       the design's §8 differential verification, the provenance line now, and the P8 checkpoint later.)*
 
 ## 4. Affected AGENTS.md invariants
@@ -301,7 +304,7 @@ would separate a rule from the argument that settles it.
   `plugins/dev-workflow/`, so this fires.
 - `## Don'ts` — "**Never replace a decision procedure without accounting for its old
   conditions.** List what the previous prose required, then mark each one kept, moved, or
-  deliberately dropped." This is the governing constraint on part 3 and the basis of its
+  deliberately dropped." This is the governing constraint on the accounting and the basis of its
   criterion.
 - `## Don'ts` — "**Never describe what a gate proves without checking what it actually
   compares.**… for every sentence about a gate, name the exact comparison the code performs,
