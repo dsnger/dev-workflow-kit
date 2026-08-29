@@ -430,6 +430,32 @@ That belongs in each product project's own `todos.md` once `/workflow-init` has 
 there, not here: this repo ships the workflow, it does not hold another project's
 backlog.
 
+- [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
+      `plugins/dev-workflow/hooks/codex-gate.sh:763` is
+      `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
+      — it matches the **Bash command string**, not git state and not the commit message.
+      So an amend written the natural way carries no `-m`, is not recognized as a WIP
+      commit, and at `:886` `is_commit "$cmd" && ! is_wip_commit "$cmd"` is true: the hook
+      resets and the accumulated Gate-B passes are discarded. §5 tells everyone to snapshot
+      with `WIP: …` and close with `--amend -m "<real message>"` but never says the
+      recognition is a grep over what you type, so following §5 as written and amending
+      with `--no-edit` mid-cycle destroys the cycle with no signal.
+      **Loose in both directions**, which is the same root cause: a `cat` heredoc merely
+      *containing* the text `WIP:` fires the WIP notice, and one containing `git commit`
+      fires a Gate-B STOP. Both observed in the 2026-08-29 session. That direction is
+      harmless per invariant 2; the reset direction is not.
+      Found while writing the review-loop-economics plans, whose whole commit protocol had
+      to be built around it — see
+      `docs/superpowers/plans/2026-08-29-review-loop-economics-plan-a-rules.md`
+      § "The `--no-edit` trap" and `.context/codex-reviews/gate-a-plan-rle-pass-1.md` B15.
+      **Not fixed there**: those plans are prompt-only by their own constraint, and the fix
+      touches hook code. Two candidate rungs, and the choice is the point — prose (§5 warns
+      about `--no-edit` explicitly, cheap, does not stop the next person who forgets) or a
+      real fix in the hook (recognize an amend that preserves a `WIP:` subject, which means
+      reading git state rather than the command string). Prefer the latter if the class
+      recurs; log it through `harden-finding` when it does.
+      *Trigger: the next change that touches the hook, or a second observed cycle reset.*
+
 - [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
       human-confirmed axes in the story header, a mode derived as `max(risk, security)`,
       lens sets appended to the §5 gate prompts, and the Gate-B triviality skip narrowed
