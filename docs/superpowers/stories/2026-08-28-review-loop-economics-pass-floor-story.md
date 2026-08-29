@@ -144,7 +144,7 @@ would separate a rule from the argument that settles it.
       "no behavioural effect in the artifact's own execution context", which a documentation
       change has none of. And a path-derived arm would be **wrong in this repo specifically** —
       `docs/hardening-log.md` is a `docs/**.md` path that drives rung escalation, so "docs"
-      does not imply "changes nothing". That is Section A's reachability test deciding a floor
+      does not imply "changes nothing". That is the design's severity test (part 2) deciding a floor
       question, which is why the two parts belong in one change.
 - [ ] **Every cycle's closing commit body carries its per-pass shape — all three cycle types.**
       Both copies require the **Gate-A spec loop** (in the spec's commit body), the **Gate-A
@@ -159,7 +159,9 @@ would separate a rule from the argument that settles it.
       are **one logical pass**: only when they reviewed the **same tracked revision** — and that a
       revision mismatch **ends the first as an incomplete pass** before the later one starts a new
       pass, rather than merging two revisions into a single entry. Checkable: the requirement is
-      stated in both copies, and this story's own commits carry it for each cycle that ran.
+      stated in both copies, and this story's own commits carry it for each cycle that ran —
+      **every field of the pinned form except the identifier, which no cycle on this branch can
+      supply** (see the identifier criterion).
       **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
       requirement would leave the *dominant* cost unmeasured: the loops this story cites as
       evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
@@ -218,7 +220,11 @@ would separate a rule from the argument that settles it.
       state how it is recovered by a cycle resumed after an interruption, what happens when it
       cannot be recovered unambiguously, that a cycle does not start without one, and that a slot
       another cycle owns is refused rather than overwritten. Checkable by reading either copy, and
-      observable on this branch: each of its three closing bodies carries its own.
+      **What this branch can and cannot demonstrate, stated rather than assumed:** its three cycles
+      all began before these rules ship, so each closing body carries the reserved pre-rule cycle
+      field and **none of them demonstrates a real identifier**. The branch demonstrates the field's
+      presence and grammar; **a named later checkpoint — the first cycle started after the
+      implementation commit — demonstrates a real one and the attribution it buys.**
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering
@@ -261,7 +267,7 @@ would separate a rule from the argument that settles it.
       *(Revised 2026-08-28 after Gate-A pass 1 found the original unsatisfiable — sparring
       session, under Daniel's 2026-08-28 delegation; flagged to Daniel for final-version review
       because criterion 8 was his explicit choice. The falsifiability he chose is preserved by
-      the §8 differential verification, the provenance line now, and the P8 checkpoint later.)*
+      the design's §8 differential verification, the provenance line now, and the P8 checkpoint later.)*
 
 ## 4. Affected AGENTS.md invariants
 

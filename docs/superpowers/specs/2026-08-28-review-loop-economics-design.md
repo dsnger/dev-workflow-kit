@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 19 (rules only) · **Gate-A passes 1-17**
+**Date:** 2026-08-29 · **Revision:** 20 (rules only) · **Gate-A passes 1-18**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -109,7 +109,9 @@ The properties the grammar exists to satisfy:
 
 - **Every cycle records it**, default floor or not, so an absent line is never ambiguous between
   "the default applied" and "someone forgot". **Three cycles means three lines**, one per cycle.
-- It carries that cycle's **nonce** (§5), the **derived floor**, and **the cited set that produced
+- It carries that cycle's **cycle field** — **the nonce (§5) for any cycle started after these
+  rules ship, and `none (pre-rule)` only for a cycle that began before them** — the **derived
+  floor**, and **the cited set that produced
   it with each member's level as a numeral** — one floor and one set, not an entry per story,
   since unanimity makes the floor a property of the set.
 - It distinguishes **a cited story with no profile** from **no story cited**.
@@ -227,7 +229,10 @@ that began before the nonce rule shipped (§8) — it is a production of the gra
 magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
-- Carries that cycle's **nonce**, so a curve can be attributed to the cycle that produced it.
+- Carries that cycle's **cycle field**, so a curve can be attributed to the cycle that produced
+  it — **the nonce for a post-rule cycle, `none (pre-rule)` for one that began before the rules
+  shipped.** A pre-rule record is **not attributable to a cycle**, and the text says so rather than
+  implying the field always identifies one.
 - **One entry per valid pass**, and because incomplete passes are excluded and consume pass
   numbers, the record **states which pass numbers it covers**. A valid zero-finding pass is
   recorded as zero, never omitted.
@@ -266,7 +271,11 @@ and the Gate-B cycle — so a run of all three produces three nonces, not one.**
   characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — never derived from a
   name, a timestamp or a commit, each of which collides exactly where sibling cycles do.
 - Constrained so it is **safe as a slot infix and a path component**.
-- **It appears in every record the cycle writes.**
+- **It appears in every record the cycle writes** — for every cycle started after these rules
+  ship. **A pre-rule cycle has no nonce and cannot acquire one**, so its records carry
+  `none (pre-rule)` in the cycle field and are, by construction, not cycle-attributable. That is a
+  bounded, self-terminating exception: it applies only to cycles already running when the rules
+  land, and no later cycle can enter the state.
 - **A nonce is a *candidate* for recovery only if it is keyed to this cycle's type (Gate-A spec,
   Gate-A plan, or Gate B) and this cycle's artifact, and that cycle is still open.** History
   normally holds many closed cycles' nonces and they are not candidates; a working record left by a
@@ -404,8 +413,12 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   started with** (§10), so this one records its provenance line and curve with the cycle field written
   `cycle none (pre-rule)`, which the grammar admits as a production. **The first cycle started after these rules ship carries a real
   one**, and the verification confirms that rather than pretending this branch demonstrates it.
-  **The verification confirms all three bodies before closure**, because a demonstration the branch
-  does not contain is not a demonstration.
+  **The verification confirms all three bodies before closure**, and states exactly what they
+  prove: **every field of both pinned forms except the nonce**, which no cycle on this branch can
+  supply. **The nonce is verified at a named later checkpoint** — the first cycle started after the
+  implementation commit, whose provenance line and curve must carry a real one and whose records
+  must be attributable to it. Recording that as a checkpoint rather than as a satisfied criterion
+  is the difference between a demonstration and a claim.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications
 reading closing commits are produced against the `WIP:` snapshot and **re-read against the content
