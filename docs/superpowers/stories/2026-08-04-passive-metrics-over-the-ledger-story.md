@@ -85,7 +85,10 @@ from the file rather than from recall — without the analysis writing anything 
       is reported**: the curves are self-reported and unvalidated, and the cycles being compared
       reviewed **different artifacts**, so a difference is evidence about the population as much as
       about the rule. **No demotion figure is derivable** — that would need one finding classified
-      under both rules, which nothing records. That analysis reads **two pinned commit-body forms** — the provenance
+      under both rules, which nothing records. **An unknown count is excluded per series, not per
+      pass**: a curve may record one series as unknown while the others are intact, and whatever is
+      reported states how many values were excluded from each series rather than how many passes
+      were dropped. That analysis reads **two pinned commit-body forms** — the provenance
       line and the per-pass curve, both specified in
       `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` — and its **first
       checkpoint** is the first post-merge cycle whose cited set licenses floor 1, which must carry

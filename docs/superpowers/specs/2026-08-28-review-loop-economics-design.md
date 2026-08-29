@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 35 (rules only) · **Gate-A passes 1-32**
+**Date:** 2026-08-29 · **Revision:** 36 (rules only) · **Gate-A passes 1-33**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -294,10 +294,15 @@ here keeps a later reader from computing a demotion figure the baseline cannot b
   recorded as zero, never omitted.
 - **A count that cannot be recovered is written `?`, never guessed and never written as `0`.** A
   cycle can keep its identity while its pass files are gone — §5's recovery turns on the nonce, not
-  on the findings files — so a resumed cycle may know a pass happened and not what it found.
-  **P8 excludes a `?` pass from any comparison** rather than reading it as zero, and says how many
-  it excluded. Zero and unknown are different facts, and a record that cannot tell them apart
-  understates every curve containing one.
+  on the findings files — so a resumed cycle may know a pass happened and not what it found. Zero
+  and unknown are different facts, and a record that cannot tell them apart understates every curve
+  containing one.
+  **`?` is per series, and so is its exclusion.** A pass whose Findings are unknown may still have
+  a known Blocker and Major count, and those remain usable. **P8 excludes a `?` value from the
+  comparisons that read that series and keeps the pass's other series**, reporting exclusions
+  **per series** rather than per pass. Discarding a whole pass because one of its three numbers is
+  unknown would throw away good data — and would do so unevenly, since the series most often lost
+  is not the same across cycles.
 - A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry. **The curve counts logical
   passes; the hook counts calls**, and where they differ the body says so.
