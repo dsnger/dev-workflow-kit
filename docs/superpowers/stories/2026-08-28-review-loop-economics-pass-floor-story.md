@@ -47,7 +47,7 @@ this story repairs.
 
 ## 2. Desired outcome
 
-Three outcomes, each observable in the shipped prompt text.
+Two outcomes, each observable in the shipped prompt text.
 
 1. **A cycle's mandatory pass count reflects what the story is worth reviewing**, instead of
    charging every cycle the same three passes per gate. A story the profile puts at level 0
@@ -131,8 +131,9 @@ would separate a rule from the argument that settles it.
       cycles** — and says *why*: they derive from **the same cited-story set**, not from being one
       cycle. A copy that states the floor for one gate and leaves the others to inference fails
       this criterion, and so does one that gives the shared-cycle reason, which is false.
-      Both copies also state that **a change to the cited set requires the final clean pass to run
-      against the current set even when the floor number does not move** — a new member brings its
+      Both copies also state that **a change to the cited set *or to any cited profile* requires
+      the final clean pass to run against the current set and under the current profile, even when
+      the floor number does not move** — a new member brings its
       lenses and evidence duties with it — and that **removing a citation never discharges an
       already accepted in-set Blocker or Major**, since acceptance and not the citation put it in
       the fix set.
@@ -189,7 +190,8 @@ would separate a rule from the argument that settles it.
       than acting on it. Observable on this branch: a knob present before a cycle is byte-identical
       after it.
 - [ ] **Severity is decided by one stated test in both copies, and the test is keyed on
-      consequence.** Four properties, each checkable by reading either copy:
+      consequence.**
+      Five properties, each checkable by reading either copy.
       **(a)** Exactly **one** procedure decides severity. A copy that states a categorical
       demotion by subject *alongside* the test fails, because two procedures can disagree on one
       finding; subject-based cases may appear only as worked examples of the test.
@@ -311,9 +313,10 @@ would separate a rule from the argument that settles it.
 - ~~**Does a profile change mid-cycle move the floor for passes already run?**~~
   **Answered 2026-08-28**, and it needed no new rule — three existing ones compose. The floor
   derives from the current profile at each pass; passes already run keep counting; closing
-  requires the floor as currently derived. The consequence worth stating is that a **raise costs
-  at least one further pass regardless of the arithmetic**, because §5 already requires the
-  final clean pass to run under the current profile.
+  requires the floor as currently derived. The consequence worth stating is that **any profile
+  change costs at least one further clean pass, in either direction and whether or not the floor
+  number moves**, because §5 already requires the final clean pass to run under the current
+  profile — so no already-banked pass can be it.
 - ~~**What floor does an unprofiled cycle get?**~~ **Answered 2026-08-28** by the
   single-predicate decision in criterion 1: no profile means `max(risk, security)` is not 0,
   so the default of 3 stands. Kept rather than deleted, because the answer is only obvious

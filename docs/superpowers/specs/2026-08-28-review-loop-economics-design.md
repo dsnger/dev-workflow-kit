@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 18 (rules only) · **Gate-A passes 1-16**
+**Date:** 2026-08-29 · **Revision:** 19 (rules only) · **Gate-A passes 1-17**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -91,8 +91,9 @@ moved it out and was wrong to; pass 9 had already settled this, and the test it 
 whether anything but a person parses it.)
 
 ```
-cycle <NONCE>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
+<CYCLE-FIELD>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
 
+<CYCLE-FIELD> := "cycle " <NONCE> | "cycle none (pre-rule)"
 <NONCE>     := [a-z0-9]{8,16}
 <N>         := [1-9][0-9]*
 <STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
@@ -126,8 +127,11 @@ pass; **passes already run keep counting**; **closing requires the floor as curr
 **Any profile change costs at least one further pass**, in either direction and whether or not the
 floor number moves, because §5 already requires the **final clean pass** to run under the current
 profile — so no already-banked pass can be it. **That further pass must be clean and every other
-closure duty must be satisfied**; it is one more pass, not a licence to close on the next one. A
-lowering additionally drops the lens sets and the evidence mode along with any change in the floor.
+closure duty must be satisfied**; it is one more pass, not a licence to close on the next one. **What a lowering drops is whatever the changed values drop, not a fixed pair**: a mode-only
+override changes the evidence obligations while leaving the axis-derived lens sets alone, and
+security `high` → `standard` keeps the security lens set while changing what evidence is owed. The
+rule is that **every derived obligation is recomputed from the current profile**; naming lenses and
+mode as a package was wrong in both directions.
 That is the pre-existing profile-change path; the variable floor rides it.
 
 **The cited set is re-read at each pass, and the final clean pass runs against the current set** —
@@ -196,7 +200,7 @@ unmeasured** — the loops this story cites as evidence are Gate-A loops. **Pinn
 reason as the provenance line:**
 
 ```
-cycle <NONCE>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>.
+<CYCLE-FIELD>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>.
 
 <CYCLE>    := "Gate-A spec" | "Gate-A plan" | "Gate B"
 <SPEC>     := <RANGE> ("," <RANGE>)*      strictly ascending, non-overlapping
@@ -217,7 +221,10 @@ per-pass model list that omits or repeats a pass is malformed, not partially inf
 model contributing to a split logical pass is listed** for that pass, joined by `+`; recording one
 of two contributing models is the same loss as recording none.
 
-A skipped cycle writes `cycle <NONCE>; <CYCLE>: skipped (see skip reason)` and no counts. The
+A skipped cycle writes `<CYCLE-FIELD>; <CYCLE>: skipped (see skip reason)` and no counts.
+`cycle none (pre-rule)` is the **only** admissible alternative to a nonce, reserved for a cycle
+that began before the nonce rule shipped (§8) — it is a production of the grammar rather than a
+magic string beside it, so the one-form claim holds and a parser needs no special case. The
 properties the form exists to satisfy:
 
 - Carries that cycle's **nonce**, so a curve can be attributed to the cycle that produced it.
@@ -384,12 +391,18 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   require it. **No reconstruction is needed and none is claimed:** the Gate-A spec cycle has not
   closed — it is still in Gate A as this is written — and the Gate-A plan cycle has not started, so
   both write their closing bodies natively in the pinned forms.
-  **The nonce is the one field this branch's spec cycle cannot supply natively, and the activation
-  rule already governs it.** That cycle began before the nonce rule existed; its slot discriminator
+  **Which of this branch's cycles can supply a nonce natively follows from when the rules bind, and
+  §10 fixes that at the implementation commit — not at this spec's close.** So the Gate-A plan
+  cycle and the Gate-B cycle also begin before the rules ship, and all three are pre-rule cycles by
+  §10's own rule. **All three therefore write `cycle none (pre-rule)`**, and the branch demonstrates
+  every field of both forms except the nonce, which the first post-ship cycle demonstrates. Claiming
+  otherwise would be claiming a demonstration the branch cannot contain.
+  **The nonce is the one field this branch cannot supply natively, and the activation rule governs
+  it.** That cycle began before the nonce rule existed; its slot discriminator
   is short and deterministic, so it is not a nonce, and minting one now would be late-created
   provenance dressed as a cycle record. **A cycle already running finishes under the rules it
-  started with** (§10), so this one records its provenance line and curve with the nonce field
-  marked `pre-rule` and says so. **The first cycle started after these rules ship carries a real
+  started with** (§10), so this one records its provenance line and curve with the cycle field written
+  `cycle none (pre-rule)`, which the grammar admits as a production. **The first cycle started after these rules ship carries a real
   one**, and the verification confirms that rather than pretending this branch demonstrates it.
   **The verification confirms all three bodies before closure**, because a demonstration the branch
   does not contain is not a demonstration.
