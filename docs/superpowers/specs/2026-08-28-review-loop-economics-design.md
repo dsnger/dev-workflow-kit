@@ -1,7 +1,7 @@
 # Review-loop economics: pass floor, severity semantics, and the §5 loop-rule consolidation — Design
 
-**Date:** 2026-08-28 · **Revision:** 10 (restructured), after Gate-A passes 1-8
-(27, 30, 54, 40, 33, 34, 32, 33 findings)
+**Date:** 2026-08-28 · **Revision:** 11, after Gate-A passes 1-9
+(27, 30, 54, 40, 33, 34, 32, 33, 28 findings)
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile (read from that header, not copied):** risk `high` · security `none` ·
 validation `battery+check+verification`, no `+abuse-path`.
@@ -107,7 +107,11 @@ and unambiguous. Never silence, never a general remark about scope, never the ag
 
 **Required properties of the record** — the plan fixes the format:
 - Lives in the **commit body**, reusing the human-exception transport (Gate-A loops: the spec or
-  plan commit, written at close; Gate B: the `WIP:` body by amend, restated by the closing amend).
+  plan commit, written at close; Gate B: the `WIP:` body by amend, restated by the closing amend)
+  — **as a distinct record type carrying its own label**, never merged into or mistaken for a
+  human-exception record. The two differ in force and the shipped text says so: the
+  human-exception form **authorizes nothing**, while a decline has §5-defined effect on one named
+  finding. A reader who cannot tell them apart has the wrong rule for both.
   During a loop the decision lives in the advisory working record and *becomes* the record at
   commit; the decline's effect never waits for the commit.
 - Carries enough of the finding to **re-identify it**: location, defect, severity, consequence and
@@ -118,15 +122,23 @@ and unambiguous. Never silence, never a general remark about scope, never the ag
 - Names **who decided and when**, and survives the squash carry.
 - **Bound to one cycle** by the cycle nonce below. A decline has no effect in any later cycle.
 - **Reads as an unverified assertion**, exactly like the human-exception record beside it: nothing
-  checks that the handle belongs to whoever decided. What makes it safe is **narrowness** — one
-  fully-identified finding, one cycle — not verification. The shipped text says so.
+  checks that the handle belongs to whoever decided. **Narrowness bounds what a false record can do — one fully-identified finding, one cycle — and
+  that is not the same as making it safe.** A fabricated decline still releases a real hold on a
+  real finding, and nothing detects it. The shipped text says exactly that, because "narrow" read
+  as "safe" is the overclaim this repo logs most often.
 
-**The cycle nonce.** Generated once at cycle start, immutable, recorded in history, and restricted
-so it is safe as a slot infix. **Deriving it from a gate plus a commit does not work**: sibling
+**The cycle nonce.** Generated once at cycle start, immutable, **collision-resistant**, and
+matching `[a-z0-9]{4,16}` so it is safe as a slot infix and as a path component. **It appears in
+every record the cycle writes**, not merely somewhere in history — a record without it cannot be
+attributed to a cycle, which is the whole function. **Deriving it from a gate plus a commit does not work**: sibling
 worktrees and restarted loops share loop names and base commits, and a `WIP:` parent identifies
 the base rather than the artifact reviewed. **The reviewed commit or tree id is tracked
 separately**, because "which cycle is this" and "did both branches see the same thing" are
-different questions. A cycle that cannot recover its nonce has no identity and starts a new cycle.
+different questions. **Recovery has two sources, because a Gate-A loop's commit does not exist while it runs:** during
+the loop the nonce lives in the advisory working record beside the findings files, and it becomes
+history at the loop's commit. A cycle that can recover it from **either** keeps its identity; a
+cycle that can recover it from **neither** has no identity and starts a new cycle — which costs
+passes rather than silently inheriting a decline.
 
 **The mid-cycle amend must preserve what it amends.** Required properties: the resulting message
 **begins `WIP:`** — the hook recognizes a WIP commit from the message the command supplies, and an
@@ -141,8 +153,9 @@ one. The **non-`WIP:` amend is reserved for final closure alone.**
 **One procedure decides severity, and the subject list is illustration, not a second rule.**
 
 > Name **what in the system consumes this text** — whatever *acts* on it — and the decision that
-> act takes differently if the text is wrong. If you can name neither, the finding is **Minor or
-> below**; collect, never iterate.
+> act takes differently if the text is wrong. **Both are required.** If you cannot name **both**
+> — the act, and the decision it takes differently — the finding is **Minor or below**; collect,
+> never iterate.
 
 - **The reader must consume the text in the system's *operation*, not in reviewing it. The review
   pass raising the finding is not an in-system reader of the text it reviews.** Without this the
@@ -215,6 +228,12 @@ on every branch (invariant 1).
 > threshold and controls nothing.** Where the derived floor and the ordinary closure rules are
 > satisfied, a below-threshold reminder is **noted in the pass report and disregarded.**
 
+**The first eligible floor-1 cycle is P8's first checkpoint.** The story cannot demonstrate floor 1
+on this branch — it is risk `high` — so the demonstration is deferred: **the first post-merge cycle
+whose cited set licenses floor 1 must carry the floor-1 provenance line, and the P8 measurement
+reads it.** That is what makes the reduced floor observable at all, and it is why the provenance
+grammar is pinned here rather than downstream.
+
 **Named residual:** the hook's own message says a cycle "MUST reach a minimum" at its threshold
 (`codex-gate.sh:933`), which at level 0 contradicts a legitimate one-pass close. **Hook text is out
 of scope by decision**, so this is disclosed, not fixed; what makes it tolerable is the precedence
@@ -228,7 +247,32 @@ remove:** anyone can still write the gitignored knob and quiet the hook. What it
 design's reliance on writing it, and with that the ambiguity — a floor file is now **always** a
 user artifact.
 
-**Required properties of the provenance line** — the plan fixes the grammar:
+**The provenance line's grammar is pinned here, not in the plan.** It is a **durable interface a
+later reader consumes** — story criterion 3 requires one form and says the spec states which — so
+unlike a replacement wording it cannot be settled downstream without leaving P8's input to the
+plan. Revision 10 moved it and was wrong to; that is the one place the slimming crossed from
+detail into contract, and it is the reason the restructuring guard exists.
+
+```
+floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
+
+<STORY-SET> := "none"                          the artifact cites no story
+             | "{" <ENTRY> ("," <ENTRY>)* "}"
+<ENTRY>     := <path> " (level " <0|1|2> ")"   a profiled story
+             | <path> " (unprofiled)"          a cited story with no profile
+<KNOB>      := "absent" | <positive integer> | "unusable"
+```
+
+Paths are repo-relative and contain no `,`, `{`, `}` or `;`; a path that would is written in
+double quotes with `\"` escaping. **The same reasoning fixes the curve's form in §5.1**: both are
+read by something other than a human.
+
+**The residual disclosure this implies ships in both copies**, in the words the story requires:
+that the floor a cycle owes is **produced by the agent**, that **nothing checks it** against the
+cited profiles, and by what routes it can therefore be wrong (§10). A copy carrying the grammar
+without the disclosure would present a parseable number as a verified one.
+
+**Required properties the grammar exists to satisfy:**
 - **Every cycle records it**, default or not, so an absent line is never ambiguous between "the
   default applied" and "someone forgot".
 - It states **one floor and the cited set that produced it, with each member's level as a
@@ -245,6 +289,12 @@ user artifact.
 Three existing rules compose; no new rule. The floor derives from the **current** profile at each
 pass; **passes already run keep counting**; **closing requires the floor as currently derived.**
 
+**The cited *set* can move too, not only a profile's values** — a story added, removed or
+corrected mid-cycle — and the same three rules cover it: the set is re-read at each pass, the
+floor is re-derived from it under unanimity, and closure requires the floor the current set
+yields. **Adding a story is a raise for this purpose** and carries the same one-further-pass
+consequence.
+
 **The consequence that must be stated:** a **raise costs at least one further pass regardless of
 the arithmetic**, because §5 already requires the final clean pass to run under the current
 profile — so even a raise leaving the floor unchanged costs a pass. **A lowering** drops the floor,
@@ -259,12 +309,16 @@ human-confirmed and logged; the variable floor rides it and does not create it.
 **Report what is computable, name what is not and why, and disclose the reduced sensitivity.** Not
 a new stop condition, not a mandatory resume note.
 
-Three of the five tells need history; **two are computable from the current pass alone**, so the
-two-tell threshold **remains reachable**. The duty loses sensitivity; it does not become
+Three of the five tells need history — the finding count rising, the Blocker count failing to
+fall, and a require↔withdraw pair. **Two are computable from the current pass alone: findings
+clustering on the instrument, and findings clustering on prose about either.** So the two-tell
+threshold **remains reachable** on that pair. The duty loses sensitivity; it does not become
 inoperative.
 
 **Five shapes, each with its own check and remedy** — the plan carries the check specifics:
-**absent** (no file; unrecoverable, since re-running produces a different pass); **partial** (some
+**absent** (no file — and *for the trend* it is unrecoverable, since a fresh run produces a
+different pass rather than that one; this does not touch §5's single shared recovery attempt,
+which applies to the pass being run now, not to reconstructing an earlier one); **partial** (some
 slots present — compute over what exists and **name the missing pass numbers**, since a trend over
 an unstated subset reads as a trend over the cycle); **malformed** (fails any pass-acceptance
 check — treated as absent, **never** as zero findings, and re-runnable only while its `sessionId`
@@ -291,7 +345,19 @@ mandatory disclosure is what makes it acceptable.
 body**, labelled with the loop it describes. **Gate B alone would leave the dominant cost
 unmeasured** — the loops this story cites as evidence are Gate-A loops.
 
-**Required properties** — the plan fixes the format:
+**The form is pinned here**, for the same reason as the provenance line: P8 reads it, so leaving
+it to the plan would leave a durable interface undecided.
+
+```
+<Loop> (passes <SPEC>, <MODELS>): Findings <n>, <n>, …. Blockers <n>, <n>, ….
+<Loop>    := "Gate-A spec loop" | "Gate-A plan loop" | "Gate B"
+<SPEC>    := a comma-and-range list of the pass numbers covered, e.g. "1-3" or "1,2,4"
+<MODELS>  := one model name, or "pass <p> <model>" entries where they differ
+```
+
+A skipped loop writes `<Loop>: skipped (see skip reason)` and no counts.
+
+**Required properties the form exists to satisfy:**
 - One entry per **valid** pass, in pass order; **incomplete passes are excluded**, and because
   they consume pass numbers the record **states which pass numbers it covers**. A valid
   zero-finding pass is recorded as zero, never omitted.
@@ -313,7 +379,9 @@ nothing compares it against the validated pass files, so **P8 reads a self-repor
 text says so rather than letting it be treated as measurement.
 
 **Squash carry.** §5's rule names only evidence entries and human-exception records; the **decline
-records, the provenance line and these curves** are added, in both copies.
+records, the provenance line, these curves and a skipped loop's skip record** are added, in both
+copies. A skip record that does not survive the squash leaves an unexplained gap in exactly the
+history P8 reads.
 
 ---
 
@@ -328,8 +396,11 @@ without its accounting.**
 
 **Where the dispositions are produced and gated.** In one artifact,
 `docs/superpowers/specs/2026-08-28-review-loop-economics-conditions.md`, written **once against
-the frozen final text** and **reviewed before any replacement text is written**. The plan names
-that gate explicitly.
+the frozen final text** and **reviewed before any replacement text is written**. The gate is a
+gate, so it has the parts a gate has: it is **a Gate-A review of that artifact** under this
+story's profile, its **acceptance condition is a clean pass at the derived floor** like any other,
+and **failure means no replacement text is written** rather than a note and a continuation. The
+plan names where in its sequence that falls.
 
 **The pass-2 tension, recorded rather than resolved by hindsight.** Gate-A pass 2 raised a Blocker
 demanding the inventory live *in this spec* rather than being deferred to the plan — correct, since
@@ -393,8 +464,12 @@ without all of them.**
 **Row 18's change is a replacement, not an addition beside it.** Today's grammar admits three exact
 names; an infixed name satisfies none. The shipped text replaces each with one admitting an
 optional per-cycle infix, so there is **one rule** and bare slots stay valid — with the infix
-**required** where the bare slot is occupied, a **refuse-rather-than-overwrite** rule when the
-target belongs to another cycle, and **uniqueness** from the §2.1 nonce.
+**required whenever more than one cycle could write that slot** — which includes a bare slot
+already occupied *and* the case two new cycles start concurrently, where neither finds an occupied
+slot and both would take the bare name. In practice: **a cycle that has a nonce uses it**, so the
+bare form is reserved for the single-cycle case it already serves. Plus a
+**refuse-rather-than-overwrite** rule when the target belongs to another cycle, and **uniqueness**
+from the §2.1 nonce.
 
 ---
 
@@ -489,12 +564,19 @@ general reconciliation of the 192-line divergence beyond §7's one seam.
 
 ## 10. Risks and activation
 
+**Everything in this section that is a rule rather than a note appears in both shipped copies**,
+per the story's activation criterion: when the rules bind, the unknown-start fallback with its
+named parts, and the partial-adoption consequence. The risks that are *observations about this
+design* rather than instructions to a future agent stay here.
+
 - **When these rules bind.** From the commit that ships them, and **a loop already running finishes
   under the rules it started with** — re-deriving a floor mid-loop from a rule that did not exist
-  when passes were banked would invalidate a count nobody could reconstruct. **Where a loop's
-  starting rules cannot be established it takes the stricter reading of every part this change
-  touches**, floor 3 included — not a re-derivation, which could hand a level-0 loop a floor of 1
-  and *skip* passes on the strength of not knowing when it started.
+  when passes were banked would invalidate a count nobody could reconstruct. **Where a loop's starting rules cannot be established it takes the stricter reading of every part
+  this change touches**, named rather than left to interpretation: **floor 3**; **severity
+  classified without the demotion**, so nothing is collected that would otherwise iterate; **every
+  suspension treated as binding**; **decline records treated as absent**, so no hold is released;
+  and **the curve duty treated as owed**. Not a re-derivation, which could hand a level-0 loop a
+  floor of 1 and *skip* passes on the strength of not knowing when it started.
 - **Downstream has no shipping commit.** The template travels into repositories whose history does
   not contain this change, so adoption binds from the `/workflow-init` run that **actually writes**
   the text — which invariant 9 permits to write nothing, be declined, or be merged in part. **The
@@ -509,6 +591,13 @@ general reconciliation of the 192-line divergence beyond §7's one seam.
   profile to level 0, presenting an incomplete set, falsifying evidence entries, silencing
   reminders, or not running a pass and reporting that it ran. **None of this is a guard**, and the
   profile-minting path is bounded only by §5's existing human-confirmation rule.
+- **Rollback, once a rule has been adopted.** In this repo a bad rule is reverted like any other
+  commit, and the §10 activation rule then applies to loops in flight. **Downstream there is no
+  revert**: a project's `CLAUDE.md` is its own file, so withdrawing a rule means shipping a
+  corrected template and waiting for each project to re-run the scaffolder and accept the diff —
+  the same partial-adoption path, with the same absence of detection. **A rule that turns out
+  wrong is therefore cheap to stop shipping and slow to un-ship**, which is an argument for the
+  gates rather than a gap this design can close.
 - **A user-set floor is not the gate-off lever**, and the text keeps them distinct: it moves what
   the hook says; the lever is a *stated* floor the profiles do not license.
 - **The reachability test needs judgement** where §5 is trying to remove it; the phrasing removes
@@ -522,16 +611,29 @@ general reconciliation of the 192-line divergence beyond §7's one seam.
 
 ## 11. What revision 10 moved, and what it did not
 
-**Level-of-detail change. Contract unchanged.** No decision moved to the plan; where slimming a
-section would have required deciding something, the rule stayed here.
+**Mostly a level-of-detail change — and revision 11 records where that claim was wrong.** Gate-A
+pass 9 reviewed the restructuring against exactly this claim and found **two Blockers and six
+Majors where compression had weakened or dropped a normative detail**, not merely relocated it.
+The clearest: the severity test had become "if you can name neither", which demotes only when
+*both* a reader and a changed decision are absent — inverting a rule that requires both. The
+provenance grammar and the curve format had gone to the plan although both are **durable
+interfaces a later reader consumes** and the story requires the spec to state them.
 
-**Moved to the plan** — each reviewed in the plan's own Gate A against this spec: the provenance
-line's concrete grammar, productions and examples (§4.1 keeps its required properties); the curve's
-concrete format and worked example (§5.1 keeps its properties); command lines for the mid-cycle
-amend (§2.1 keeps the required properties, which is what made the earlier pinned `-m` form's defect
-visible); the per-shape diagnostic checks in §5; per-site replacement wordings for §6.1's fourteen
-sites and §6.2's twenty-one passages; and the conditions artifact's production procedure (§6 keeps
-the method and the gate).
+All eight are repaired above, and the lesson is recorded rather than smoothed over: **a
+restructuring guard that only asks "did a decision move?" misses the case where a rule survives in
+outline and loses its force.** The check that caught it was asking the reviewer to judge the claim
+directly.
+
+**Moved to the plan** — each reviewed in the plan's own Gate A against this spec: command lines
+for the mid-cycle amend (§2.1 keeps the required properties, which is what made the earlier pinned
+`-m` form's defect visible); the per-shape diagnostic check specifics in §5; per-site replacement
+wordings for §6.1's fourteen sites and §6.2's twenty-one passages; and the conditions artifact's
+production procedure (§6 keeps the method and the gate's acceptance condition).
+
+**Returned to the spec after pass 9:** the provenance grammar and the curve form. Both are read by
+something other than a human, so leaving them downstream would leave P8's input undecided — the
+test that separates detail from contract here is **"does anything but a person parse it"**, not
+length.
 
 **Kept here, deliberately:** every settled decision with its reason; every rule stated as a
 required property; the precedence table; the hold rule; the reachability test and its exclusions;

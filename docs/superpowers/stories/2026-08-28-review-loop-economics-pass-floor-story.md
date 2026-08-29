@@ -116,6 +116,8 @@ deliverable rather than a convenience.
       cited story profiled, every one at level 0 — so a single higher-profile or unprofiled
       member returns the cycle to 3. Stated in both copies, and falsifiable: a copy silent on
       the multi-story case leaves the cheapest wrong reading available.
+      **Every pass report states the floor it derived and the axes it read**, so the value is
+      visible while passes are still being spent rather than only in the closing commit.
       Each copy also states that **one derived value governs every loop of the cycle** — the
       Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle alike — and says *why*: those
       loops cite the same stories, so the value they derive is the same. A copy that states the
@@ -213,6 +215,12 @@ deliverable rather than a convenience.
       adopts by re-running the scaffolder, which may write nothing, be declined, or be merged in
       part — with the consequence of a partial adoption stated rather than assumed away.
       Checkable by reading either copy.
+- [ ] **The change leaves no shipped sentence contradicting it, and the package it ships in is
+      valid.** Every user-facing statement this change falsifies is corrected in the same change —
+      the inventory is in the spec and a reviewer can check each cited line — and the plugin
+      manifest's version and `CHANGELOG.md` are updated, which CI enforces on pull requests. Both
+      are checkable after the fact: no corrected sentence still asserts a fixed three-pass floor,
+      and the manifest version differs from its value on the base ref.
 - [ ] **Every condition of the replaced prose is accounted for.** The change lists what each
       replaced §5 passage required and marks each requirement kept, moved, or deliberately
       dropped, per the AGENTS.md Don't quoted in §4. Checkable: the accounting exists and
