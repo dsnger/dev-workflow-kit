@@ -116,7 +116,8 @@ deliverable rather than a convenience.
       cited story profiled, every one at level 0 — so a single higher-profile or unprofiled
       member returns the cycle to 3. Stated in both copies, and falsifiable: a copy silent on
       the multi-story case leaves the cheapest wrong reading available.
-      **Every pass report states the floor it derived and the axes it read**, so the value is
+      **Every pass report states the floor it derived, the risk and security axes it read, and
+      which cited stories it read them from**, so the value is
       visible while passes are still being spent rather than only in the closing commit.
       Each copy also states that **one derived value governs every loop of the cycle** — the
       Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle alike — and says *why*: those
@@ -176,9 +177,11 @@ deliverable rather than a convenience.
       **(a)** Exactly **one** procedure decides severity. A copy that states a categorical
       demotion by subject *alongside* the test fails, because two procedures can disagree on one
       finding; subject-based cases may appear only as worked examples of the test.
-      **(b)** The test turns on whether **something in the system takes a different decision**
-      if the text is wrong — not on what kind of file the text lives in, and not on a human
-      reader, whose cost §5's prose exemption already prices as non-gating.
+      **(b)** The test requires **both** halves to be nameable: **what in the system consumes the
+      text**, and **the decision it takes differently** if the text is wrong. Failing to name
+      either makes the finding Minor-or-below. It does not turn on what kind of file the text
+      lives in, nor on a human reader, whose cost §5's prose exemption already prices as
+      non-gating. A copy demoting only when *both* are absent inverts the rule.
       **(c)** The instrument carve-out is **symmetric**: an instrument finding keeps its severity
       whenever it shows the instrument changes what a gate concludes about product behaviour,
       in **either** direction. A copy naming only a false green fails, because it would demote a
@@ -191,7 +194,10 @@ deliverable rather than a convenience.
       remain legitimate readers of rule text they will later apply; what is excluded is the
       reviewing pass, not gates.
       **(f)** *(record, not severity)* A user's decision on a surfaced finding is **durably
-      recorded where history keeps it** — carrying enough of the finding to identify it again,
+      recorded where history keeps it, and legible as its own kind of record** — never mergeable
+      with or mistakable for a human-exception record, since the two differ in force: one
+      authorizes nothing, the other releases a named finding's hold. Carrying enough of the
+      finding to identify it again,
       naming who decided and when, surviving into a squash, and **bounded to the cycle it was
       taken in**. A copy that lets the decision live only in per-clone working state, or that
       lets one decision release the same finding in later cycles, fails.
@@ -232,7 +238,8 @@ deliverable rather than a convenience.
       deliberate and stated as such. Checkable by diffing the two regions.
 - [ ] **The provenance path is demonstrated end to end on this branch, at the floor this
       branch actually licenses.** This story is risk `high`, so every cycle citing it owes
-      floor **3** — and its closing commit body carries `floor 3 per <story path>`, showing the
+      floor **3** — and its closing commit body carries a provenance line **in the one pinned form**,
+      naming the cycle, that floor, and this story at its level, showing the
       derivation and the provenance line working at a real value.
       **The floor-1 demonstration is not on this branch, deliberately.** It was in an earlier
       draft and was unsatisfiable: a criterion demanding a floor-1 cycle here contradicts this
@@ -263,6 +270,14 @@ deliverable rather than a convenience.
   licenses the accepted cost: a level-0 cycle draws a hook reminder its derived floor does not
   owe, and a redundant warning is the price named here. Teaching the hook to fall silent would
   be the false ✓ the same sentence calls dangerous.
+- `## Prompts and scaffolding` — "**`/workflow-init` never overwrites silently.** Idempotent:
+  missing → write; identical → report unchanged; present and different → show the diff and ask."
+  This is why a downstream project adopts by re-running the scaffolder and can sit on a partial
+  adoption — the spec's rollout section rests on it.
+- `## Prompts and scaffolding` — "**The base taxonomy stays stack-neutral.** Project vocabulary…
+  goes only in that project's `docs/hardening-taxonomy.md`… Otherwise one project leaks into every
+  other." The severity test ships into projects whose reader kinds we have never seen, which is
+  why its list of readers is illustrative rather than closed.
 - `## Prompts and scaffolding` — "**`/workflow-init`'s templates stay inline** in the command
   body." The mirror edit lands in the command body, never in a file read from disk.
 - `## Prompts and scaffolding` — "**Prompt changes pass `docs/prompt-standards.md`** — all 12

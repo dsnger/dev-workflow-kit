@@ -1,15 +1,17 @@
 # Review-loop economics: pass floor, severity semantics, and the §5 loop-rule consolidation — Design
 
-**Date:** 2026-08-28 · **Revision:** 11, after Gate-A passes 1-9
-(27, 30, 54, 40, 33, 34, 32, 33, 28 findings)
+**Date:** 2026-08-28 · **Revision:** 12, after Gate-A passes 1-10
+(27, 30, 54, 40, 33, 34, 32, 33, 28, 27 findings)
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile (read from that header, not copied):** risk `high` · security `none` ·
 validation `battery+check+verification`, no `+abuse-path`.
 
 **What this document is, after revision 10.** Contract level only: settled decisions with their
-reasons, rules stated as required properties, named interfaces, and scope. **Exact replacement
-wordings, concrete formats, command lines and step-by-step procedures live in the plan**, where
-they get their own Gate A against this spec once it is stable. Nothing escapes review by moving;
+reasons, rules stated as required properties, named interfaces, and scope. **Exact replacement wordings,
+command lines and step-by-step procedures live in the plan**, where they get their own Gate A
+against this spec once it is stable. **Two formats are the exception and are pinned here**: the
+provenance line (§4.1) and the per-pass curve (§5.1), because **something other than a person
+parses them** — that is the test separating detail from contract here, not length. Nothing escapes review by moving;
 what changes is when it is reviewed. Revision 10 is a level-of-detail change and moves no
 decision — §11 lists what went where.
 
@@ -53,9 +55,22 @@ both reasons.
 closure. **Blocker/Major-must-resolve applies to in-set findings and is a precondition on closure
 not discharged by a quiet pass** — a pass raising no *new* Blocker/Major is not evidence an
 earlier one was resolved, so the closing report inventories each in-set Blocker/Major and its
-resolution from the per-pass findings files. **Where those files are unavailable, that is a
-disclosure, not a discharge: a cycle that cannot establish resolution does not close.** "Cannot
-tell" and "was resolved" are different states and only one permits closing. "A surfaced finding
+resolution. **The findings files establish the *inventory* — which in-set Blocker and Major
+findings exist — and not the resolutions, which they do not contain.** Each resolution is
+established from what the cycle actually did: the diff, the later pass that no longer raises it,
+or a recorded decline. Reading a resolution out of a findings file is reading something that was
+never written there. **Where those files are unavailable, that is a
+disclosure, not a discharge: a cycle that cannot establish resolution does not close on its own.**
+"Cannot tell" and "was resolved" are different states and only one permits closing.
+
+**And it does not loop forever either, which needs saying because §5 declines to make unavailable
+history a stop condition.** Those two rules govern different things — §5's answer is about the
+*tell computation*, a reporting duty, while this is a *precondition on closure* — and together
+they would leave a resumed cycle with lost history unable to close and with no terminal path. So
+the path is named: **a cycle that cannot establish resolution stops and surfaces to the human**,
+reporting which passes it could not read and which findings it therefore cannot account for. The
+human's answer resumes it, as any other surfaced stop does. What is forbidden is closing *silently*
+over an inventory nobody could check — not the cycle continuing to exist. "A surfaced finding
 stays open" is the mechanism making the other exits suspensions. **"No pass carrying a surfaced
 finding counts as clean" is the only participant.**
 
@@ -127,8 +142,11 @@ and unambiguous. Never silence, never a general remark about scope, never the ag
   real finding, and nothing detects it. The shipped text says exactly that, because "narrow" read
   as "safe" is the overclaim this repo logs most often.
 
-**The cycle nonce.** Generated once at cycle start, immutable, **collision-resistant**, and
-matching `[a-z0-9]{4,16}` so it is safe as a slot infix and as a path component. **It appears in
+**The cycle nonce.** Generated once at cycle start, immutable, and **collision-resistant in an
+operational sense rather than an aspirational one: at least 8 characters drawn uniformly from
+`[a-z0-9]`, from a source of randomness** — never derived from a name, a timestamp or a commit,
+each of which collides exactly where sibling cycles do. It matches `[a-z0-9]{8,16}`, so it is safe
+as a slot infix and as a path component. **It appears in
 every record the cycle writes**, not merely somewhere in history — a record without it cannot be
 attributed to a cycle, which is the whole function. **Deriving it from a gate plus a commit does not work**: sibling
 worktrees and restarted loops share loop names and base commits, and a `WIP:` parent identifies
@@ -138,7 +156,14 @@ different questions. **Recovery has two sources, because a Gate-A loop's commit 
 the loop the nonce lives in the advisory working record beside the findings files, and it becomes
 history at the loop's commit. A cycle that can recover it from **either** keeps its identity; a
 cycle that can recover it from **neither** has no identity and starts a new cycle — which costs
-passes rather than silently inheriting a decline.
+passes rather than silently inheriting a decline. **Where the sources disagree, or more than one
+candidate nonce is present, the cycle likewise has no identity**: guessing which is current is how
+a decline leaks between cycles, and the conservative reading costs passes instead.
+
+**The advisory working record is a cycle record too.** It carries the nonce like any other, and
+§5's per-cycle infix and refuse-on-collision rule apply to it as they do to findings slots — a file
+two cycles can both write is the same collision the infix exists to prevent, one artifact along.
+§5's optional-companion rules are otherwise unchanged, and the commit body remains *the* record.
 
 **The mid-cycle amend must preserve what it amends.** Required properties: the resulting message
 **begins `WIP:`** — the hook recognizes a WIP commit from the message the command supplies, and an
@@ -234,8 +259,10 @@ whose cited set licenses floor 1 must carry the floor-1 provenance line, and the
 reads it.** That is what makes the reduced floor observable at all, and it is why the provenance
 grammar is pinned here rather than downstream.
 
-**Named residual:** the hook's own message says a cycle "MUST reach a minimum" at its threshold
-(`codex-gate.sh:933`), which at level 0 contradicts a legitimate one-pass close. **Hook text is out
+**Named residual:** the hook's messages state its own threshold as an obligation — "MUST reach a
+minimum" (`codex-gate.sh:933`), the Gate-B floor line (`:947`) and the Gate-A floor line (`:967`),
+each rendering a ratio against `$floor` — all of which at level 0 report a shortfall against a
+number the cycle does not owe. **Hook text is out
 of scope by decision**, so this is disclosed, not fixed; what makes it tolerable is the precedence
 rule plus invariant 1.
 
@@ -254,17 +281,36 @@ plan. Revision 10 moved it and was wrong to; that is the one place the slimming 
 detail into contract, and it is the reason the restructuring guard exists.
 
 ```
-floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
+cycle <NONCE>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
 
+<NONCE>     := [a-z0-9]{8,16}                  the cycle nonce (§2.1)
+<N>         := <positive integer>              the derived floor
 <STORY-SET> := "none"                          the artifact cites no story
              | "{" <ENTRY> ("," <ENTRY>)* "}"
-<ENTRY>     := <path> " (level " <0|1|2> ")"   a profiled story
-             | <path> " (unprofiled)"          a cited story with no profile
+<ENTRY>     := <PATH> " (level " <0|1|2> ")"   a profiled story
+             | <PATH> " (unprofiled)"          a cited story with no profile
+<PATH>      := <bare-path> | <quoted-path>
 <KNOB>      := "absent" | <positive integer> | "unusable"
 ```
 
-Paths are repo-relative and contain no `,`, `{`, `}` or `;`; a path that would is written in
-double quotes with `\"` escaping. **The same reasoning fixes the curve's form in §5.1**: both are
+A `<bare-path>` is repo-relative and contains none of `,` `{` `}` `;` `"` or whitespace; any other
+path is a `<quoted-path>` — double-quoted, with `\` and `"` backslash-escaped and no other escape
+recognized. **The nonce leads every pinned form**, which is what lets §2.1's rule that it appears
+in *every* record be something the formats can satisfy.
+
+One instance per variant, all parsing under the grammar above:
+
+```
+cycle k7m2q9xa; floor 1 per {docs/superpowers/stories/A-story.md (level 0)}; hook reminder threshold absent
+cycle k7m2q9xa; floor 3 per {A-story.md (level 0), B-story.md (level 2)}; hook reminder threshold 3
+cycle k7m2q9xa; floor 3 per {A-story.md (level 0), C-story.md (unprofiled)}; hook reminder threshold 1
+cycle k7m2q9xa; floor 3 per none; hook reminder threshold unusable
+cycle k7m2q9xa; floor 3 per {"docs/stories/odd, name.md" (level 2)}; hook reminder threshold absent
+```
+
+**Everything that quotes this line elsewhere quotes an instance of the grammar.** A shorthand in a
+story criterion, a commit body or a report is either a valid instance or it is wrong — there is no
+informal variant, because the only reader that matters parses rather than reads. **The same reasoning fixes the curve's form in §5.1**: both are
 read by something other than a human.
 
 **The residual disclosure this implies ships in both copies**, in the words the story requires:
@@ -293,7 +339,10 @@ pass; **passes already run keep counting**; **closing requires the floor as curr
 corrected mid-cycle — and the same three rules cover it: the set is re-read at each pass, the
 floor is re-derived from it under unanimity, and closure requires the floor the current set
 yields. **Adding a story is a raise for this purpose** and carries the same one-further-pass
-consequence.
+consequence. **Removing one lowers the floor and releases nothing else**: an accepted in-set
+Blocker or Major stays in the set and must still resolve, because it entered by the user's answer
+and not by the story that first raised it. A set change moves the floor; it is not a route to
+discharge findings.
 
 **The consequence that must be stated:** a **raise costs at least one further pass regardless of
 the arithmetic**, because §5 already requires the final clean pass to run under the current
@@ -352,8 +401,16 @@ it to the plan would leave a durable interface undecided.
 <Loop> (passes <SPEC>, <MODELS>): Findings <n>, <n>, …. Blockers <n>, <n>, ….
 <Loop>    := "Gate-A spec loop" | "Gate-A plan loop" | "Gate B"
 <SPEC>    := a comma-and-range list of the pass numbers covered, e.g. "1-3" or "1,2,4"
-<MODELS>  := one model name, or "pass <p> <model>" entries where they differ
+<MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
+<PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
+<model>    := [A-Za-z0-9._-]+          as reported by the call, never recalled
 ```
+
+One bare `<model>` means every covered pass ran under it. `<PER-PASS>` entries are
+semicolon-separated and must cover **every** pass the `<SPEC>` names; a pass assembled from calls
+under different models joins them with `+`. **A model that cannot be determined is written
+`undetermined`**, never omitted and never guessed — `docs/coding-workflow.md` already requires
+recording it that way where neither config level names one.
 
 A skipped loop writes `<Loop>: skipped (see skip reason)` and no counts.
 
@@ -399,7 +456,13 @@ without its accounting.**
 the frozen final text** and **reviewed before any replacement text is written**. The gate is a
 gate, so it has the parts a gate has: it is **a Gate-A review of that artifact** under this
 story's profile, its **acceptance condition is a clean pass at the derived floor** like any other,
-and **failure means no replacement text is written** rather than a note and a continuation. The
+**it owes its own labelled curve** in the commit that carries the artifact — a gate exempt from the
+rules it enforces would be the gate-off path in miniature —
+and **failure means no replacement text is written** rather than a note and a continuation.
+**A finding that changes the passage list, a disposition or the spec itself feeds back rather than
+being absorbed**: the artifact is regenerated against the corrected text and re-reviewed, and where
+the finding changes *this spec*, the spec's own Gate A reopens on the changed rule. The artifact is
+downstream of the spec, so it cannot silently amend it. The
 plan names where in its sequence that falls.
 
 **The pass-2 tension, recorded rather than resolved by hindsight.** Gate-A pass 2 raised a Blocker
@@ -412,7 +475,7 @@ when it is produced.
 **The price of the split, stated.** Once dispositions are deferred, **the passage list is the sole
 guard against a dropped condition**, and the conditions artifact cannot catch what the list never
 named. Rows 20 and 21 were missing until pass 8 because revision 8 added rules rewriting them
-without extending the list. **The list is re-checked whenever the design adds a rule**, and the
+without extending the list. **The list is re-checked whenever the design adds a rule** — pass 10 added rows 22 and 23 for exactly that reason, the nonce rule having reached records the list never named —, and the
 plan's gate reads it against the final text rather than trusting it.
 
 ### 6.1 Floor-wording sites are generated, not hand-derived
@@ -434,7 +497,7 @@ stating a rule.
 
 ### 6.2 The passages this change rewrites
 
-Each present exactly once in both copies. **Twenty-one; the conditions artifact is incomplete
+Each present exactly once in both copies. **Twenty-three; the conditions artifact is incomplete
 without all of them.**
 
 | # | Passage | Rewritten by |
@@ -460,6 +523,8 @@ without all of them.**
 | 19 | "On squash-merge, copy every evidence entry…" | §5.1 — three record types added |
 | 20 | "Before each call, delete every target file…" (`:199/:386`) | §5 — the infix, and a **refuse-on-collision** case where the target belongs to another cycle |
 | 21 | The `baseSha`/WIP/closing-amend block (`:500-517`, template `:679-696`) | §2.1 — the WIP-amend properties; §4.1 and §5.1 add records the closing body must carry |
+| 22 | "The evidence entry lives in the commit body" | §2.1 — the nonce rule reaches every record a cycle writes, this one included |
+| 23 | "Optional companions, from field practice" (dispositions file, cycle-stable resume note) | §2.1 — both are records a cycle writes, so both carry the nonce; §5 also gives the dispositions file a defined role as the working record before a commit exists |
 
 **Row 18's change is a replacement, not an addition beside it.** Today's grammar admits three exact
 names; an infixed name satisfies none. The shipped text replaces each with one admitting an
@@ -533,7 +598,7 @@ Mode `battery+check+verification` (no `+abuse-path`).
   cycle where one exists; **recorded not-applicable with its reason where none does.** An agent must
   not create one to make a check runnable, which would be a fixture supplying its own input.
 - **Parity across every changed rule**, per story criterion 7 — §6.1's fourteen sites, §6.2's
-  twenty-one passages, and every rule §§2–5 insert, including §10's residual disclosure and §4.1's
+  twenty-three passages, and every rule §§2–5 insert, including §10's residual disclosure and §4.1's
   provenance properties, which the story requires in **both** copies. The copies already differ on
   192 lines, so parity cannot be asserted from a whole-section diff.
 - **A fresh twelve-item `docs/prompt-standards.md` pass** over every changed prompt region. **Item
@@ -575,7 +640,12 @@ design* rather than instructions to a future agent stay here.
   this change touches**, named rather than left to interpretation: **floor 3**; **severity
   classified without the demotion**, so nothing is collected that would otherwise iterate; **every
   suspension treated as binding**; **decline records treated as absent**, so no hold is released;
-  and **the curve duty treated as owed**. Not a re-derivation, which could hand a level-0 loop a
+  and **the curve duty treated as owed**. **That list is the whole of it** — the parts this change
+  touches are the floor, severity, the ordering's exits, the decline, and the curve, and each has an
+  entry above; a part not named here is a part this change did not touch. **A user knob set above 3
+  is not lowered by the fallback**: the knob moves the hook's reminder threshold while the fallback
+  sets the *obliged* floor, so a workspace asking for louder reminders keeps them. Not a
+  re-derivation, which could hand a level-0 loop a
   floor of 1 and *skip* passes on the strength of not knowing when it started.
 - **Downstream has no shipping commit.** The template travels into repositories whose history does
   not contain this change, so adoption binds from the `/workflow-init` run that **actually writes**
@@ -587,12 +657,18 @@ design* rather than instructions to a future agent stay here.
 - **The gate-off surface — routes known today, not a complete list**, since an enumeration read as
   complete guarantees what it omits. **One route is created here and is named as such**: a stated
   floor the cited set does not license, which could not exist before there was a derived floor to
-  state. Pre-existing and unchanged: omitting a higher-risk cited story, minting or editing a
-  profile to level 0, presenting an incomplete set, falsifying evidence entries, silencing
-  reminders, or not running a pass and reporting that it ran. **None of this is a guard**, and the
+  state. **A second is created here**: a **fabricated decline record**, which releases a real hold on a
+  real finding and which nothing authenticates — §2.1 says exactly that, and omitting it here while
+  admitting it there would be an enumeration contradicting its own source. Pre-existing and
+  unchanged: omitting a higher-risk cited story, minting or editing a profile to level 0,
+  presenting an incomplete set, falsifying evidence entries, silencing reminders, or not running a
+  pass and reporting that it ran. **None of this is a guard**, and the
   profile-minting path is bounded only by §5's existing human-confirmation rule.
 - **Rollback, once a rule has been adopted.** In this repo a bad rule is reverted like any other
-  commit, and the §10 activation rule then applies to loops in flight. **Downstream there is no
+  commit — **and the revert is itself a shipping commit for the *old* rules**, so a loop in flight
+  across it lands in the unknown-start case rather than cleanly under either version. That is
+  intended: the fallback's stricter reading is the right answer for a loop whose rules changed
+  underneath it, in either direction. **Downstream there is no
   revert**: a project's `CLAUDE.md` is its own file, so withdrawing a rule means shipping a
   corrected template and waiting for each project to re-run the scaffolder and accept the diff —
   the same partial-adoption path, with the same absence of detection. **A rule that turns out
@@ -627,7 +703,7 @@ directly.
 **Moved to the plan** — each reviewed in the plan's own Gate A against this spec: command lines
 for the mid-cycle amend (§2.1 keeps the required properties, which is what made the earlier pinned
 `-m` form's defect visible); the per-shape diagnostic check specifics in §5; per-site replacement
-wordings for §6.1's fourteen sites and §6.2's twenty-one passages; and the conditions artifact's
+wordings for §6.1's fourteen sites and §6.2's twenty-three passages; and the conditions artifact's
 production procedure (§6 keeps the method and the gate's acceptance condition).
 
 **Returned to the spec after pass 9:** the provenance grammar and the curve form. Both are read by
