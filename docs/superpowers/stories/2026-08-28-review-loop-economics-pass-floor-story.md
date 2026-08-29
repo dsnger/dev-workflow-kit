@@ -1,4 +1,4 @@
-# Review-loop economics: pass floor, severity semantics, and the §5 loop-rule consolidation — Story
+# Review-loop economics: pass floor and severity semantics — Story
 
 **Date:** 2026-08-28 · **Size:** story
 **Risk:** high · **Security:** none · **Validation:** battery+check+verification
@@ -65,16 +65,19 @@ Three outcomes, each observable in the shipped prompt text.
    false-green-only carve-out that criterion 5 had already moved past; and "without judgement
    calls" promised more than any prose rule can deliver — a stated test removes arbitrariness,
    not judgement, and the spec says so plainly, so the story must not promise otherwise.)*
-3. **The §5 loop rules stop being amended one clause at a time.** The six open contract
-   questions the `fic2` cycle raised and declined to answer get one coherent answer, taken
-   together, with Daniel's five recorded decisions as settled inputs. The alternative —
-   answering them as they surface — is what produced two stop-and-surfaces and a revert
-   inside a single cycle.
+**Scope narrowed 2026-08-29 — the loop-rule consolidation moved to a successor story.** A third
+outcome once sat here: answering the six open §5 contract questions in one coherent pass.
+**Those answers are all decided and recorded**; what did not converge was writing them down. Gate-A
+attribution over three consecutive passes measured it — parts 1 and 2 produced 4/1, 8/1 and 7/1
+Blocker/Major while the loop-rule sections produced 10, 11 and 14 and rising, each repair creating
+an interaction the next pass found. See
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`, which carries every
+recorded decision as a settled input rather than reopening any of them.
 
-**Why now, and why together.** Parts 1 and 2 each change what a loop is allowed to do; part
-3 is the accumulated debt of changing that a clause at a time. Shipping them separately would
-reproduce the churn this story exists to end, which is why the consolidation is the
-deliverable rather than a convenience.
+**Why parts 1 and 2 still ship together.** They are not merely adjacent: part 2's reachability test
+is what decides a part-1 question — a path-derived `docs-only` arm would be wrong here because
+`docs/hardening-log.md` is a `docs/**.md` path that drives rung escalation. Splitting *those two*
+would separate a rule from the argument that settles it.
 
 **Named out of scope**, so no criterion below absorbs them:
 
@@ -193,27 +196,7 @@ deliverable rather than a convenience.
       review itself as the reader — so a copy stating (a)–(d) and omitting (e) fails. Gates must
       remain legitimate readers of rule text they will later apply; what is excluded is the
       reviewing pass, not gates.
-      **(f)** *(record, not severity)* A user's decision on a surfaced finding is **durably
-      recorded where history keeps it, and legible as its own kind of record** — never mergeable
-      with or mistakable for a human-exception record, since the two differ in force: one
-      authorizes nothing, the other releases a named finding's hold. Carrying enough of the
-      finding to identify it again,
-      naming who decided and when, surviving into a squash, and **bounded to the cycle it was
-      taken in**. A copy that lets the decision live only in per-clone working state, or that
-      lets one decision release the same finding in later cycles, fails.
-- [ ] **Each of Q1–Q6 is answered or rejected in the shipped text, with a reason, and the
-      answers do not contradict each other.** Q1 (clean-completion precedence), Q2 (a declined
-      expansion's exit), Q3 (scope stop vs. clean completion), Q4 (whether a decline binds
-      later passes in the same cycle), Q5 (whether the three universal rules may carry an
-      in-set qualification), Q6 (what the pass-4 report does when prior-pass history is
-      unavailable) — as stated in `docs/field-reports/2026-08-26-fic2-cycle-evidence.md`.
-      **Where an answer qualifies a standing rule, the qualification is stated at every rule it
-      modifies, in both copies — and at no rule it does not modify.** Both halves are
-      falsifiable by reading: a rule the answer changes but does not mention leaves two
-      instructions disagreeing, which is why Q2 was reverted last cycle; a rule the answer does
-      *not* change but mentions anyway implies an exception that does not exist, which is its
-      own defect. Which rules those are is the design's to determine and the reviewer's to
-      check against it.
+
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering
@@ -318,6 +301,17 @@ deliverable rather than a convenience.
 
 ## 6. Suggested size
 
-`story` — three parts, but one coherent change to one subsystem's rules in two mirrored
-copies. Part 3's value *is* being done once; splitting it would reproduce the clause-by-clause
-churn the story exists to end.
+`story` — two coupled parts, one change to one subsystem's rules in two mirrored copies.
+
+**This note said the opposite until 2026-08-29, and the correction is worth keeping.** It read:
+"Part 3's value *is* being done once; splitting it would reproduce the clause-by-clause churn the
+story exists to end." **That reasoning was about the contract questions**, which were genuinely
+entangled — answering one moved the others — and it was right about them. They are now all settled
+and recorded, so the entanglement it described has been paid for.
+
+**What did not converge was a different problem with a different remedy.** Eleven Gate-A passes
+never brought Blocker/Major below 22, and the last three attributed 10, 11 and 14 of them to the
+loop-rule sections while parts 1 and 2 held at 4/1, 8/1 and 7/1. Each repair to one loop rule
+created an interaction the next pass found — density among shipped rules, not entanglement among
+open questions. Splitting is the standard remedy for the first and the failure mode for the second,
+which is why the same story can correctly refuse a split and then correctly take one.
