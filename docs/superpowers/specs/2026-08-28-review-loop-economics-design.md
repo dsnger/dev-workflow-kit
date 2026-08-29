@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 16 (rules only) · **Gate-A passes 1-14**
+**Date:** 2026-08-29 · **Revision:** 17 (rules only) · **Gate-A passes 1-15**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -134,8 +134,11 @@ profile-change path; the variable floor rides it.
 to a set already at floor 3 leaves the number alone while adding that story's lens set, its
 evidence obligations and its review scope; a pass run before it joined did not cover them.
 
-Where the change moves the **number**: upward is a raise with the same one-further-pass
-consequence; downward lowers the floor. **What a removal discharges, precisely:** obligations are
+**A profile change moves the number only sometimes, in both directions**: level 2 → level 1 leaves
+the floor at 3, exactly as level 0 → level 0 leaves it at 1. The one-further-pass consequence
+attaches to the **profile or set changing**, not to the number moving — the final clean pass must
+run under the current profile and against the current set regardless. Where the number does move,
+upward is a raise and downward a lowering. **What a removal discharges, precisely:** obligations are
 recomputed from the current set, so removing a story does remove *that story's* lenses and evidence
 duty. It **never discharges an accepted in-set Blocker or Major** — the user's acceptance put that
 finding in the fix set, not the citation, so removing the citation does not take it out.
@@ -202,8 +205,16 @@ cycle <NONCE>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <C
 <n>        := 0 | [1-9][0-9]*
 <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
 <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
-<model>    := [^ ;:,()]+ | "undetermined"   verbatim as the call reported it
+<model>    := <bare-model> | <quoted-model> | "undetermined"
+<bare-model> := [^ ;:,()+"]+              excludes the grammar's own delimiters, "+" included
+<quoted-model> := '"' ... '"'             for a reported identifier containing any of them,
+                                          with \ and " escaped
 ```
+
+**`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
+per-pass model list that omits or repeats a pass is malformed, not partially informative. **Every
+model contributing to a split logical pass is listed** for that pass, joined by `+`; recording one
+of two contributing models is the same loss as recording none.
 
 A skipped cycle writes `cycle <NONCE>; <CYCLE>: skipped (see skip reason)` and no counts. The
 properties the form exists to satisfy:
@@ -347,17 +358,32 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
 - **A conditional verification that a user's knob survives untouched** — byte-identical across a
   cycle where one exists; **recorded not-applicable with its reason where none does**, since
   creating one would be a fixture supplying its own input.
+- **A parse check over both pinned grammars.** The branch's own instances cannot exercise them:
+  three lines cannot cover quoted paths, each unusable-knob cause, gapped pass ranges, split-model
+  passes, a skipped cycle, or the cardinality rule that `<COUNTS>` matches `<SPEC>`. **The check
+  reads a set of constructed strings — valid ones that must parse and invalid ones that must be
+  rejected** — and records which grammar features each exercises. A grammar nothing ever parsed is
+  a format claim, not a format.
 - **Parity across every changed rule**, in both copies, since they already diverge and parity
   cannot be asserted from a whole-section diff.
-- **A fresh twelve-item `docs/prompt-standards.md` pass** over every changed prompt region, with
-  **item 7 read against the whole resulting prompt** — a contradiction is a relation between an
-  edited passage and an unedited one.
+- **A fresh twelve-item `docs/prompt-standards.md` pass.** Invariant 11 binds **each changed
+  prompt artifact as a complete prompt**, not the diff — so the items are read against the
+  resulting `CLAUDE.md` and the resulting scaffolded template, with the changed regions as the
+  reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
+  case, not the only one.
+  **One consequence to expect, and it is not this change's to absorb:** neither resulting prompt
+  currently carries a `Target model:` line, which item 1 requires — `workflow-init.md` names one
+  for the outer command and those bytes are not scaffolded. That is a **pre-existing absence this
+  pass will surface**, whose remedy touches whole-file properties rather than §5. **Route it rather
+  than fixing it here**; the pass's job is to find it, and expanding into it silently is the scope
+  failure this project logs.
 
 - **This branch's own three closing bodies carry the final forms**, since two story criteria
-  require them to demonstrate the provenance line and the curve, and the spec and plan cycles here
-  closed before those forms existed. **The plan carries the obligation to reconstruct those bodies
-  into the pinned forms**, and the verification confirms **all three** before closure — a
-  demonstration the branch does not actually contain is not a demonstration.
+  require it. **No reconstruction is needed and none is claimed:** the Gate-A spec cycle has not
+  closed — it is still in Gate A as this is written — and the Gate-A plan cycle has not started, so
+  both write their closing bodies natively in the pinned forms. Only the Gate-B cycle's body is
+  written later, likewise natively. **The verification confirms all three before closure**, because
+  a demonstration the branch does not actually contain is not a demonstration.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications
 reading closing commits are produced against the `WIP:` snapshot and **re-read against the content

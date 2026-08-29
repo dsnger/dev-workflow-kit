@@ -127,6 +127,11 @@ would separate a rule from the argument that settles it.
       cycles** — and says *why*: they derive from **the same cited-story set**, not from being one
       cycle. A copy that states the floor for one gate and leaves the others to inference fails
       this criterion, and so does one that gives the shared-cycle reason, which is false.
+      Both copies also state that **a change to the cited set requires the final clean pass to run
+      against the current set even when the floor number does not move** — a new member brings its
+      lenses and evidence duties with it — and that **removing a citation never discharges an
+      already accepted in-set Blocker or Major**, since acceptance and not the citation put it in
+      the fix set.
       **One predicate, not two** (Daniel, 2026-08-28). An earlier draft added a `docs-only`
       arm; it is dropped because it does no work and, read path-wise, does the wrong work.
       A diff-derived reading cannot serve Gate A at all — Gate A runs on a spec, before any
@@ -145,8 +150,11 @@ would separate a rule from the argument that settles it.
       enough that a reader can tell **which pass each number belongs to** — incomplete passes are
       excluded and they consume pass numbers — and **which model each pass ran under**, which an
       existing convention already requires beside a finding count. A **legitimately skipped** loop
-      records the skip rather than leaving a silent gap. Checkable: the requirement is stated in
-      both copies, and this story's own commits carry it for each loop that ran.
+      records the skip rather than leaving a silent gap. Both copies also state when separate calls
+      are **one logical pass**: only when they reviewed the **same tracked revision** — and that a
+      revision mismatch **ends the first as an incomplete pass** before the later one starts a new
+      pass, rather than merging two revisions into a single entry. Checkable: the requirement is
+      stated in both copies, and this story's own commits carry it for each cycle that ran.
       **All three, not Gate B alone** (revised 2026-08-28 after Gate-A pass 2). A Gate-B-only
       requirement would leave the *dominant* cost unmeasured: the loops this story cites as
       evidence are Gate-A loops — nineteen measured Gate-A passes on one spec, and this story's
