@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 30 (rules only) · **Gate-A passes 1-27**
+**Date:** 2026-08-29 · **Revision:** 31 (rules only) · **Gate-A passes 1-28**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -136,7 +136,9 @@ The properties the grammar exists to satisfy:
 ### 2.4 A profile or cited set that moves mid-cycle
 
 Three existing rules compose; no new rule. The floor derives from the **current** profile at each
-pass; **passes already run keep counting**; **closing requires the floor as currently derived.**
+pass; **passes already run keep counting**; **closing requires the floor as currently derived** — where the floor is what
+governs, which §2.1 notes is not every close: a zero-finding pass and a legitimate skip are
+unaffected by a moving profile because neither turns on the count.
 
 **Any profile change costs at least one further pass**, in either direction and whether or not the
 floor number moves, because §5 already requires the **final clean pass** to run under the current
@@ -454,10 +456,13 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
 - **Parity across every changed rule**, in both copies, since they already diverge and parity
   cannot be asserted from a whole-section diff.
 - **A fresh twelve-item `docs/prompt-standards.md` pass.** Invariant 11 binds **each changed
-  prompt artifact as a complete prompt**, not the diff — so the items are read against **each changed prompt artifact**: the resulting root `CLAUDE.md`,
-  the resulting scaffolded template, **and `plugins/dev-workflow/commands/workflow-init.md` as the
-  outer command prompt** — which this change edits and which carries its own target-model
-  declaration separate from the template it writes, with the changed regions as the
+  prompt artifact as a complete prompt**, not the diff — so the items are read against **each changed prompt artifact invariant 11 names**: the resulting
+  **scaffolded template** and **`plugins/dev-workflow/commands/workflow-init.md`** as the outer
+  command prompt, which carries its own target-model declaration separate from the template it
+  writes. **Root `CLAUDE.md` is not in that list** — invariant 11 enumerates skills, commands, agent
+  definitions, hook messages and scaffolded templates — so this change does not run the checklist
+  against it and takes no position on whether it should be run; that question is untouched here,
+  which is why no item of it needs a disposition, with the changed regions as the
   reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
   case, not the only one.
   **Item 1 is inapplicable to the scaffolded `CLAUDE.md`, recorded as a reasoned n/a** (decided
@@ -466,7 +471,7 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   the template is written, so a `Target model:` line written into it would be **false in every
   repo it lands in**. A standard cannot require writing a falsehood, and **an n/a recorded with its
   reason answers the item rather than skipping it** — the pattern `AGENTS.md`'s own commands table
-  already uses ("typecheck: n/a — no typed sources"). **This n/a is scoped to the scaffolded `CLAUDE.md` and to item 1**, and reaches nothing else:
+  already uses (its typecheck row reads "n/a — no typed sources (shell + markdown)"). **This n/a is scoped to the scaffolded `CLAUDE.md` and to item 1**, and reaches nothing else:
   every other item still binds that artifact, and every item still binds
   `plugins/dev-workflow/commands/workflow-init.md` as the outer command prompt. **Root `CLAUDE.md`
   is not part of this decision and is not being ruled on** — whether invariant 11 reaches project
@@ -501,10 +506,14 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   field of both pinned forms except two** — the **cycle identifier**, which no cycle
   on this branch can supply, and the **knob clause's non-absent form**, which cannot be shown where
   no user knob exists (the conditional verification above records that as not-applicable rather
-  than as satisfied). **The nonce is verified at a named later checkpoint**: the **Gate-A spec cycle of the next story
-  whose spec is written after the implementation commit lands**. Naming a cycle type and an
-  artifact rather than "the first cycle" matters because siblings can start concurrently and "first"
-  has no total ordering across them. That cycle's provenance line and curve must carry a real nonce,
+  than as satisfied). **The nonce is verified by an obligation placed on a future cycle, not by naming one in advance.**
+  Selecting "the next" cycle cannot work: concurrent siblings have no total ordering, and a cycle
+  running after a revert would be under the restored rules and owe no nonce at all. Instead the
+  implementation commit **records the obligation**, and **the first cycle that both starts under
+  these rules and closes discharges it** — its provenance line and curve must carry a real nonce,
+  the same one in both, distinct from any cycle open when it was generated. Whoever closes that
+  cycle performs the check and records that the obligation is discharged. The obligation is
+  self-identifying rather than pre-assigned, which is what removes the ordering problem. That cycle's provenance line and curve must carry a real nonce,
   the two must carry the **same** one, and it must differ from that of **any cycle open at the time
   it was generated** — which is the uniqueness the rule actually requires, and all it can check. Recording that as a checkpoint rather than as a satisfied criterion
   is the difference between a demonstration and a claim.
