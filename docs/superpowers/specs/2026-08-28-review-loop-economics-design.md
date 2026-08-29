@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 31 (rules only) · **Gate-A passes 1-28**
+**Date:** 2026-08-29 · **Revision:** 32 (rules only) · **Gate-A passes 1-29**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -140,8 +140,15 @@ pass; **passes already run keep counting**; **closing requires the floor as curr
 governs, which §2.1 notes is not every close: a zero-finding pass and a legitimate skip are
 unaffected by a moving profile because neither turns on the count.
 
-**Any profile change costs at least one further pass**, in either direction and whether or not the
-floor number moves, because §5 already requires the **final clean pass** to run under the current
+**Every rule in this section presupposes a cycle that still owes a gate.** A change that makes a
+Gate-B cycle **legitimately skippable** — the diff behaviourally trivial *and* the cited set
+unanimously level 0 — removes the review rather than adjusting its count, and the further-pass
+duties below do not apply to a cycle that is no longer running one. That is §5's existing skip,
+which this change leaves untouched; the skip's own obligations (its reason in the commit body, its
+skip record in place of a curve) are what govern instead.
+
+Otherwise: **any profile change costs at least one further pass**, in either direction and whether
+or not the floor number moves, because §5 already requires the **final clean pass** to run under the current
 profile — so no already-banked pass can be it. **That further pass must be clean and every other
 closure duty must be satisfied**; it is one more pass, not a licence to close on the next one. **What a lowering drops is whatever the changed values drop, not a fixed pair**: a mode-only
 override changes the evidence obligations while leaving the axis-derived lens sets alone, and
@@ -509,11 +516,15 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   than as satisfied). **The nonce is verified by an obligation placed on a future cycle, not by naming one in advance.**
   Selecting "the next" cycle cannot work: concurrent siblings have no total ordering, and a cycle
   running after a revert would be under the restored rules and owe no nonce at all. Instead the
-  implementation commit **records the obligation**, and **the first cycle that both starts under
-  these rules and closes discharges it** — its provenance line and curve must carry a real nonce,
-  the same one in both, distinct from any cycle open when it was generated. Whoever closes that
-  cycle performs the check and records that the obligation is discharged. The obligation is
-  self-identifying rather than pre-assigned, which is what removes the ordering problem. That cycle's provenance line and curve must carry a real nonce,
+  implementation commit **records the obligation**, and **any cycle that both starts under these
+  rules and closes discharges it** — its provenance line and curve must carry a real nonce, the
+  same one in both, distinct from any cycle open when it was generated. Whoever closes such a cycle
+  performs the check and records the discharge.
+  **"Any", deliberately, not "the first":** concurrent cycles share no ordering and no atomic
+  discharge state, so two closers could each see no prior discharge or each defer to the other.
+  **A duplicate discharge is harmless and explicitly allowed** — the obligation is satisfied by the
+  first record of it that exists, and a second changes nothing. A rule needing exactly one
+  discharger would need coordination this design does not have. That cycle's provenance line and curve must carry a real nonce,
   the two must carry the **same** one, and it must differ from that of **any cycle open at the time
   it was generated** — which is the uniqueness the rule actually requires, and all it can check. Recording that as a checkpoint rather than as a satisfied criterion
   is the difference between a demonstration and a claim.

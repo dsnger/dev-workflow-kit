@@ -226,9 +226,11 @@ would separate a rule from the argument that settles it.
 
 - [ ] **A cycle's records can be told apart from another cycle's.** Both copies require **each
       cycle started after these rules ship** to hold an identifier created at its start, unique
-      among cycles open when it was generated, and present in **each record the shipped text names
-      as carrying it** — a named set rather than an open one, so a reader can tell whether a given
-      record is in scope — **one per cycle, so a run of all three holds three**. Both copies also state the **bounded, self-terminating exception**:
+      among cycles open when it was generated, and present in **a named set of records** — the
+      provenance line, the per-pass curve (or the skip record standing in for one), the cycle's
+      findings slots, and its advisory working record — **and not required in records this change
+      neither introduces nor keys to a cycle**, so a reader can tell whether a given record is in
+      scope — **one per cycle, so a run of all three holds three**. Both copies also state the **bounded, self-terminating exception**:
       a cycle already running when the rules land has no identifier, cannot acquire one, and writes
       a reserved value that says so — and no later cycle can enter that state. They
       state how it is recovered by a cycle resumed after an interruption, what happens when it
@@ -238,9 +240,10 @@ would separate a rule from the argument that settles it.
       all began before these rules ship, so each closing body carries the reserved pre-rule cycle
       field and **none of them demonstrates a real identifier**. The branch demonstrates the field's
       presence and grammar; **a future cycle demonstrates a real one and the attribution it buys** —
-      the obligation is recorded at implementation and discharged by the first cycle that both
-      starts under these rules and closes, rather than assigned in advance to a cycle that
-      concurrent siblings and a possible revert make impossible to name.
+      the obligation is recorded at implementation and discharged by **any** cycle that both starts
+      under these rules and closes — not assigned in advance to a cycle that concurrent siblings and
+      a possible revert make impossible to name, and not to "the first", which concurrent closers
+      cannot agree on. A duplicate discharge is harmless and allowed.
 - [ ] **The shipped text says when it starts binding, and what an adopter gets when it does not
       fully arrive.** Both copies state: that a loop already running finishes under the rules it
       started with; what a loop does when its starting rules cannot be established, covering
