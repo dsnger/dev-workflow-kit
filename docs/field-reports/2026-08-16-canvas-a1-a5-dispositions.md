@@ -365,3 +365,14 @@ restatement that must track a moving original. It appeared in the story's accept
 (five Blocker occurrences), then inside the spec's own accounting table (four more). The lesson is
 not "write the table more carefully"; it is that a second copy of a moving thing drifts, and the
 remedy is to produce it once against something that has stopped moving.
+
+
+**The loop's first wrong finding, 2026-08-29.** Gate-A pass 13 of the review-loop-economics cycle
+returned a BLOCKER claiming a spec sentence was "syntactically incomplete at *every and the curve
+duty treated as owed*". `grep 'every and'` on the reviewed file returns nothing — the break existed
+in revision 13 and revision 14 had replaced the sentence. **Dismissed with that evidence.**
+
+Worth recording because it is the **first outright wrong finding in thirteen passes** of that
+loop — roughly 380 findings. That ratio is the argument for validating before applying rather than
+against it: the discipline cost thirteen passes' worth of checking and caught one, and the one it
+caught would otherwise have driven an edit to text that was already correct.
