@@ -343,7 +343,7 @@ time.
 
 **Also observed, 2026-08-28, same cycle:** three occurrences of an agent ending a turn on an
 announcement — "writing the spec now", "running pass 6" — with the named tool call never issued.
-Each cost a round-trip and one cost ~90 minutes of wall clock before a peer session noticed. No
+A fourth followed on 2026-08-29 ("running pass 10"), spotted by Daniel watching the terminal. Each cost a round-trip and one cost ~90 minutes of wall clock before a peer session noticed. No
 error, no timeout, nothing in flight: the announcement simply replaced the act. Remedy adopted for
 the remainder of that cycle: during an active gate cycle a turn ends with the tool call actually
 issued, a message sent, or an explicit statement that something is blocking — and noticing the
