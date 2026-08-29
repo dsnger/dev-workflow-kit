@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 33 (rules only) · **Gate-A passes 1-30**
+**Date:** 2026-08-29 · **Revision:** 34 (rules only) · **Gate-A passes 1-31**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -72,11 +72,9 @@ that flow only selects which advisory message fires, and the hook exits 0 on eve
 > that controls nothing.** Where the cycle's own closure rules are satisfied, a below-threshold
 > reminder is **noted in the pass report and disregarded.**
 >
-> **"The floor" here replaces the number, not the rules around it.** §5's existing exits are
-> untouched: a **zero-finding pass** still exits below the floor, and a **legitimate Gate-B skip**
-> still removes the review entirely, recording its skip and — per §4 — a skip line in place of a
-> curve. This change makes the floor a function of the profile; it does not make meeting the floor
-> the only way a cycle can close.
+> **This replaces the pass-count number and nothing else.** Every other rule §5 states about how a
+> cycle closes stands as written, and none of them is restated here — a summary is where their
+> conditions would get dropped.
 
 **Named residual, disclosed in both copies:** the hook's messages state its own threshold as an
 obligation, so at level 0 they report a shortfall the cycle does not owe. **Hook text is out of
@@ -136,15 +134,12 @@ The properties the grammar exists to satisfy:
 ### 2.4 A profile or cited set that moves mid-cycle
 
 Three existing rules compose; no new rule. The floor derives from the **current** profile at each
-pass; **passes already run keep counting**; **closing requires the floor as currently derived** — where the floor is what
-governs, which §2.1 notes is not every close: a zero-finding pass and a legitimate skip are
-unaffected by a moving profile because neither turns on the count.
+pass; **passes already run keep counting**; **closing requires the floor as currently derived.**
 
-**The further-pass duties below are about pass counts, so they reach only a cycle that is still
-running a gate.** Where §5's triviality skip applies, there is no pass count to adjust and these
-duties are silent — **§5's own skip rules govern, unchanged and not restated here**, because
-summarising an existing decision procedure is how its conditions get dropped. This change adds
-exactly one obligation to a skipped cycle, stated in §4: a skip record in place of a curve.
+**These are pass-count rules, so they apply while §5 says a gate is running** and are silent
+otherwise. What §5 says about when a gate runs — including how a moving profile or cited set bears
+on that — is §5's, unchanged and deliberately not summarised here. **This change's only
+skip-specific addition is in §4**: a skip record in place of a curve.
 
 **Two things are outside that scope and are not suspended by a skip.** The **provenance line** is
 owed by every cycle, skipped or not (§2.3). And an **accepted in-set Blocker or Major stays in the
