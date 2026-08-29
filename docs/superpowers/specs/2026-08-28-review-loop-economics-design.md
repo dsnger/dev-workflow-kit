@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 29 (rules only) · **Gate-A passes 1-26**
+**Date:** 2026-08-29 · **Revision:** 30 (rules only) · **Gate-A passes 1-27**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -68,9 +68,15 @@ that flow only selects which advisory message fires, and the hook exits 0 on eve
 
 **Precedence, shipped as text:**
 
-> **The derived floor controls whether a cycle may close. The hook's ratio is a reminder threshold
-> and controls nothing.** Where the derived floor and the ordinary closure rules are satisfied, a
-> below-threshold reminder is **noted in the pass report and disregarded.**
+> **The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder threshold
+> that controls nothing.** Where the cycle's own closure rules are satisfied, a below-threshold
+> reminder is **noted in the pass report and disregarded.**
+>
+> **"The floor" here replaces the number, not the rules around it.** §5's existing exits are
+> untouched: a **zero-finding pass** still exits below the floor, and a **legitimate Gate-B skip**
+> still removes the review entirely, recording its skip and — per §4 — a skip line in place of a
+> curve. This change makes the floor a function of the profile; it does not make meeting the floor
+> the only way a cycle can close.
 
 **Named residual, disclosed in both copies:** the hook's messages state its own threshold as an
 obligation, so at level 0 they report a shortfall the cycle does not owe. **Hook text is out of
@@ -319,11 +325,16 @@ creates that case is §10's. Everything below describes
 - Generated once at cycle start, immutable, and **collision-resistant operationally: 8 to 16
   characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — the same bound the
   grammar pins, 8 being where collision resistance starts and 16 where the field stops being a
-  usable infix — — never derived from a
+  usable infix — never derived from a
   name, a timestamp or a commit, each of which collides exactly where sibling cycles do.
 - Constrained so it is **safe as a slot infix and a path component**.
 - **It appears in every record the cycle writes** — for every cycle started after these rules
-  ship. **A pre-rule cycle has no nonce and cannot acquire one**, so its records carry
+  ship — and **the record set is named rather than left open**: the **provenance line**, the
+  **per-pass curve** (including a skip record standing in for one), and, because §5's slot and
+  companion rules already key them to a cycle, the cycle's **findings slots** and its **advisory
+  working record**. It is not required in records this change neither introduces nor keys to a
+  cycle — the evidence entry and a human-exception record among them — which are the successor's
+  to consider if it needs them. **A pre-rule cycle has no nonce and cannot acquire one**, so its records carry
   `none (pre-rule)` in the cycle field and are, by construction, not cycle-attributable. That is a
   bounded, self-terminating exception: it applies only to cycles already running when the rules
   land, and no later cycle can enter the state.
@@ -406,8 +417,12 @@ and states which.**
 re-initialized** projects. It does **not** update a downstream project's existing `CLAUDE.md` —
 invariant 9 forbids silent overwriting. Adoption is by re-running the scaffolder.
 
-**Packaging.** Editing the template triggers invariant 12: a `plugin.json` version bump and a
-`CHANGELOG.md` entry are in the implementation surface.
+**Packaging.** Editing the template triggers invariant 12: a `plugin.json` **version bump**, which
+`scripts/check-version-bump.sh` enforces on pull requests. A **`CHANGELOG.md` entry** is also in the
+implementation surface, as this repo's convention for every manifest version — **but nothing
+enforces it**: neither invariant 12 nor the checker mentions the changelog, and the checker verifies
+only that the version string differs from the base ref's. Saying CI enforces both would be a claim
+about a gate that does not make it.
 
 ---
 
@@ -452,10 +467,10 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   repo it lands in**. A standard cannot require writing a falsehood, and **an n/a recorded with its
   reason answers the item rather than skipping it** — the pattern `AGENTS.md`'s own commands table
   already uses ("typecheck: n/a — no typed sources"). **This n/a is scoped to the scaffolded `CLAUDE.md` and to item 1**, and reaches nothing else:
-  every other item still binds it, and every item still binds the other two changed prompt
-  artifacts. The root `CLAUDE.md` is outside this reasoning entirely — invariant 11's list does not
-  name project `CLAUDE.md` files, so item 1 never bound it and this decision neither excuses nor
-  endorses anything about it.
+  every other item still binds that artifact, and every item still binds
+  `plugins/dev-workflow/commands/workflow-init.md` as the outer command prompt. **Root `CLAUDE.md`
+  is not part of this decision and is not being ruled on** — whether invariant 11 reaches project
+  `CLAUDE.md` files at all is a separate question this change neither raises nor answers.
   **Nothing else moves for this:** `scripts/check-invariants.sh` is untouched and stays out of
   scope, `workflow-init.md` keeps its single declaration for the outer command, and the template
   adds none. **The implementation records the status where a future template editor meets it** — one

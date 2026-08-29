@@ -249,15 +249,17 @@ would separate a rule from the argument that settles it.
 - [ ] **The change leaves no shipped sentence contradicting it, and the package it ships in is
       valid.** Every user-facing statement this change falsifies is corrected in the same change —
       a reviewer can check each corrected line against the site list the plan carries — and the plugin
-      manifest's version and `CHANGELOG.md` are updated, which CI enforces on pull requests. Both
-      are checkable after the fact: no corrected sentence still asserts a fixed three-pass floor,
-      and the manifest version differs from its value on the base ref.
-      **Prompt conformance is judged item by item.** An item is satisfied, **or recorded n/a with
-      a reason that shows the item cannot truthfully be met** — the answer `AGENTS.md`'s own
-      commands table already gives where an item does not apply. That is a narrow door, not a
-      general one: **the reason has to establish inapplicability**, and "we would rather not" is
-      not such a reason. What fails this criterion is an item left unanswered, answered falsely, or
-      answered n/a without a reason that holds.
+      manifest's version and `CHANGELOG.md` are updated. Both are checkable after the fact: no
+      corrected sentence still asserts a fixed three-pass floor, and the manifest version differs
+      from its value on the base ref. **Only the version bump is CI-enforced** — the changelog
+      entry is this repo's convention and nothing checks it, so this criterion is what carries it.
+      **Prompt conformance is judged item by item, and this change records exactly one n/a**:
+      item 1 for the scaffolded `CLAUDE.md`, because that artifact is model-agnostic by design and
+      a target-model line would be false in every repo it lands in. **Every other item binds it,
+      and every item binds the outer command prompt.** An n/a is admissible only where the reason
+      **establishes that the item cannot truthfully be met** — the answer `AGENTS.md`'s commands
+      table already gives; "we would rather not" is not such a reason. What fails this criterion is
+      an item left unanswered, answered falsely, or answered n/a on a reason that does not hold.
 - [ ] **Every condition of the replaced prose is accounted for.** The change lists what each
       replaced §5 passage required and marks each requirement kept, moved, or deliberately
       dropped, per the AGENTS.md Don't quoted in §4. Checkable: the accounting exists and
@@ -340,8 +342,10 @@ would separate a rule from the argument that settles it.
 ## 5. Open questions
 
 - ~~**Which floor governs a cycle citing several stories with different profiles?**~~
-  **Answered 2026-08-28: unanimity.** Floor 1 only if every cited story is profiled and every
-  one is at level 0; any other set yields 3. It follows §5's own precedent for the analogous
+  **Answered 2026-08-28: unanimity.** Floor 1 only if the cited set is non-empty and every member
+  is profiled, resolvable and at level 0. A set with no story or any unprofiled member yields 3;
+  **a set containing a present-but-unresolvable profile stops and surfaces** rather than yielding
+  anything. It follows §5's own precedent for the analogous
   relaxation — "skip-eligible only if **every** cited story is" — and it is the only reading
   consistent with invariant 2's firing direction, since a lowest-cited-floor rule would
   under-review a cycle that also touches a high-risk story.
