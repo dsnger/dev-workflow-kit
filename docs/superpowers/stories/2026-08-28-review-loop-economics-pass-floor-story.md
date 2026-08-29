@@ -112,8 +112,12 @@ would separate a rule from the argument that settles it.
 
 - [ ] **The floor scales by profile, on one predicate, and both copies say which gates it
       moves.** `CLAUDE.md` §5 and the `/workflow-init` inline template mirror each state a
-      mandatory pass floor of **1** where `max(risk, security)` is 0 and **3** otherwise —
-      unprofiled cycles included, which keep today's 3. Two levels, not three: `high` gets no
+      mandatory pass floor of **1** only where the cited set is non-empty and every member is
+      profiled, resolvable and at level 0; **3** where no story is cited or any member is
+      unprofiled; and — stated, not left to a fallback — **a member whose profile is present but
+      unresolvable stops and surfaces**, per §5's existing rule, rather than yielding 3. A copy
+      that reads an unresolvable profile as 3 fails this criterion, because it converts a stop
+      condition into a silent default. Two levels, not three: `high` gets no
       extra mandatory passes, taking its added rigor from lens sets and evidence mode instead.
       **A cycle citing several stories reaches the reduced floor only unanimously** — every
       cited story profiled, every one at level 0 — so a single higher-profile or unprofiled

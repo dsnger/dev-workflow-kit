@@ -1,6 +1,6 @@
 # Review-loop economics: pass floor and severity semantics — Design
 
-**Date:** 2026-08-29 · **Revision:** 17 (rules only) · **Gate-A passes 1-15**
+**Date:** 2026-08-29 · **Revision:** 18 (rules only) · **Gate-A passes 1-16**
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 **Profile:** read from that header, never from here.
 
@@ -123,11 +123,12 @@ The properties the grammar exists to satisfy:
 Three existing rules compose; no new rule. The floor derives from the **current** profile at each
 pass; **passes already run keep counting**; **closing requires the floor as currently derived.**
 
-**A raise costs at least one further pass regardless of the arithmetic**, because §5 already
-requires the final clean pass to run under the current profile — so even a raise leaving the floor
-unchanged costs a pass. **A lowering** drops the floor, the lens sets and the evidence mode
-together, so it closes on **one further pass after the lowering**. That is the pre-existing
-profile-change path; the variable floor rides it.
+**Any profile change costs at least one further pass**, in either direction and whether or not the
+floor number moves, because §5 already requires the **final clean pass** to run under the current
+profile — so no already-banked pass can be it. **That further pass must be clean and every other
+closure duty must be satisfied**; it is one more pass, not a licence to close on the next one. A
+lowering additionally drops the lens sets and the evidence mode along with any change in the floor.
+That is the pre-existing profile-change path; the variable floor rides it.
 
 **The cited set is re-read at each pass, and the final clean pass runs against the current set** —
 **whenever its membership changes, not only when the floor number moves.** Adding a high-risk story
@@ -371,19 +372,27 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
   resulting `CLAUDE.md` and the resulting scaffolded template, with the changed regions as the
   reason the pass is owed rather than its scope. Item 7's whole-artifact reading is the clearest
   case, not the only one.
-  **One consequence to expect, and it is not this change's to absorb:** neither resulting prompt
-  currently carries a `Target model:` line, which item 1 requires — `workflow-init.md` names one
-  for the outer command and those bytes are not scaffolded. That is a **pre-existing absence this
-  pass will surface**, whose remedy touches whole-file properties rather than §5. **Route it rather
-  than fixing it here**; the pass's job is to find it, and expanding into it silently is the scope
-  failure this project logs.
+  **One known failure, fixed rather than routed.** Neither resulting prompt carries a
+  `Target model:` line, which item 1 requires — `workflow-init.md` names one for the outer command
+  and those bytes are not scaffolded. **Both resulting prompts get one.** An earlier revision
+  proposed routing it as out of scope, which cannot stand beside the sentence above: a change
+  cannot require each resulting prompt to pass all twelve items and knowingly leave one false. It
+  is one line per copy, in a file this change already edits, and the invariant that makes the pass
+  binding is the same invariant that makes the line required.
 
 - **This branch's own three closing bodies carry the final forms**, since two story criteria
   require it. **No reconstruction is needed and none is claimed:** the Gate-A spec cycle has not
   closed — it is still in Gate A as this is written — and the Gate-A plan cycle has not started, so
-  both write their closing bodies natively in the pinned forms. Only the Gate-B cycle's body is
-  written later, likewise natively. **The verification confirms all three before closure**, because
-  a demonstration the branch does not actually contain is not a demonstration.
+  both write their closing bodies natively in the pinned forms.
+  **The nonce is the one field this branch's spec cycle cannot supply natively, and the activation
+  rule already governs it.** That cycle began before the nonce rule existed; its slot discriminator
+  is short and deterministic, so it is not a nonce, and minting one now would be late-created
+  provenance dressed as a cycle record. **A cycle already running finishes under the rules it
+  started with** (§10), so this one records its provenance line and curve with the nonce field
+  marked `pre-rule` and says so. **The first cycle started after these rules ship carries a real
+  one**, and the verification confirms that rather than pretending this branch demonstrates it.
+  **The verification confirms all three bodies before closure**, because a demonstration the branch
+  does not contain is not a demonstration.
 
 **Revalidation.** §5 requires it before every re-review and before the closing amend. Verifications
 reading closing commits are produced against the `WIP:` snapshot and **re-read against the content
