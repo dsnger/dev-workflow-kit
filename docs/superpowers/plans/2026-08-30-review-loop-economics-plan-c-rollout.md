@@ -823,42 +823,96 @@ git commit --amend -m "WIP: review-loop economics"
 
 ---
 
-## Task 17: Record the cycle base
+## Task 17: Mark the superseded single-plan artifact
+
+**File:** `docs/superpowers/plans/2026-08-29-review-loop-economics.md`
+
+**Site** — pasted `grep -n`:
+
+```
+docs/superpowers/plans/2026-08-29-review-loop-economics.md:1:# Review-loop economics (pass floor + severity semantics) — Implementation Plan
+```
+
+> A 34 KB implementation plan for this same change is still in `docs/superpowers/plans/`, describing a topology, a task numbering and a commit protocol that all contradict the three plans that replaced it. **An executor finding it would follow it.**
+> 
+> **Marked, not deleted.** The field record cites its curve — 31 Blocker/Major at pass 1 — and it is the clearest specimen this cycle produced of a plan describing itself into failure. Deleting evidence to tidy a directory is how a record stops being able to explain a decision.
+
+- [ ] **Replace.** OLD:
+
+```
+# Review-loop economics (pass floor + severity semantics) — Implementation Plan
+```
+
+NEW:
+
+```
+# Review-loop economics (pass floor + severity semantics) — Implementation Plan
+
+> **SUPERSEDED, and kept as evidence rather than as instruction.** This single-plan version opened
+> **31 Blocker/Major at Gate-A pass 1** and was replaced by three plans:
+> `2026-08-29-review-loop-economics-plan-a-rules.md`,
+> `2026-08-30-review-loop-economics-plan-b-records.md` and
+> `2026-08-30-review-loop-economics-plan-c-rollout.md`.
+> **Do not execute anything below.** Its topology, its task numbering and its commit protocol all
+> disagree with the plans that replaced it. It is retained because the field record cites its
+> curve, and because the three findings that killed it are the clearest specimen this cycle
+> produced of a plan describing itself into failure.
+```
+
+- [ ] **Assert the new text is present.**
+
+```bash
+grep -cF -- "SUPERSEDED, and kept as evidence rather than as instruction" docs/superpowers/plans/2026-08-29-review-loop-economics.md
+```
+
+Before this task: `0`. After: `1`. Verified against a simulated tree carrying Plan A's and Plan B's edits.
+
+- [ ] **Amend the WIP commit.**
+
+```bash
+git add docs/superpowers/plans/2026-08-29-review-loop-economics.md
+git commit --amend -m "WIP: review-loop economics"
+```
+
+---
+
+## Task 18: Record the cycle base
 
 **Plan A prints its base SHA and does not persist it**, and Plan A is closed and byte-frozen, so
-Plan C establishes it. This is an action, not a proof: revision 2 wrapped it in a check that
-defined the base as the tip's parent and then proved one commit sat above that parent, which is
-true by construction and could not fail.
+Plan C establishes it.
 
-- [ ] **Record it**
+- [ ] **Record it, and assert the one thing that is not circular**
 
 ```bash
 git rev-parse --verify HEAD^2 >/dev/null 2>&1 && { echo "WIP IS A MERGE — stop"; exit 1; }
-mkdir -p .context
+git log -1 --pretty=%s | grep -q '^WIP: review-loop economics' || { echo "TIP IS NOT THE WIP"; exit 1; }
+git log -1 --pretty=%s HEAD^ | grep -qi -- '-\?wip' && { echo "PARENT IS ALSO A WIP — stacked, collapse first"; exit 1; }
 git rev-parse HEAD^ > .context/plan-a-base-sha
 cat .context/plan-a-base-sha
 ```
 
-The merge test is the one condition worth asserting, because `HEAD^` is ambiguous only there.
+> Revision 2 defined the base as `HEAD^` and then proved one commit sat above it — true by
+> construction, a check that could not fail. Revision 3 deleted the proof **and the need with it**.
+> The need is real: a **stacked** WIP would silently exclude the earlier snapshot from the review.
+> **What is checkable without circularity is whether the parent is itself a WIP commit** — that
+> asks something about a different commit, which is why it can fail.
+
 `.context/` is gitignored, so this never enters the reviewed diff.
 
 ---
 
-## Task 18: The evidence pack
+## Task 19: The evidence pack
 
 Spec §8 names seven obligations. **All seven are here** — they are what the author owes, not
-checks the plan invented about itself, and the mode is read from the story header at execution
-time.
+checks the plan invented about itself. The mode is read from the story header at execution time.
 
 - [ ] **1 — Battery.** The full `AGENTS.md` § Commands chain, green, **including
-  `sh scripts/check-version-bump.sh`**, which Plans A and B deferred for a stated reason and which
-  now runs because Task 11 landed the bump and the WIP exists. Pass it the recorded base rather
-  than a local `main` that may predate an earlier bump.
+  `sh scripts/check-version-bump.sh "$(cat .context/plan-a-base-sha)"`** — the checker takes a base
+  ref argument and **exits 2 with no argument**, so the bare invocation is not a run. Plans A and B
+  deferred this step for a stated reason; it runs now because Task 11 landed the bump and the WIP
+  exists.
 
 - [ ] **2 — A check that fails without the change**, read against **both** revisions:
-
-> *At a derived floor of 1, does a Blocker/Major-free pass 1 carrying a Minor close, or keep
-> looping?*
 
 ```bash
 base=$(cat .context/plan-a-base-sha)
@@ -866,39 +920,60 @@ git show "$base":CLAUDE.md | grep -cF 'Blocker/Major-free pass 1 carrying a Mino
 grep -cF 'a Blocker/Major-free pass below the floor' CLAUDE.md
 ```
 
-**Grep the discriminating text, not the common tail** — `carrying a Minor keeps` appears in both
-revisions and would return success either way. Pre-change says **pass 1** keeps looping, wrong at
-floor 1 where pass 1 *is* the floor; post-change says **below the floor**. Record which revision
-gave which answer.
+**Grep the discriminating text, not the common tail.** Pre-change says **pass 1** keeps looping —
+wrong at floor 1, where pass 1 *is* the floor; post-change says **below the floor**. Record which
+revision gave which answer.
 
-- [ ] **3 — A named verification of the risk path.** Recompute each provenance line's floor from
-  the `Story:` header of the artifact that cycle reviewed. **The observation that would exist if
-  the claim were false is a line whose floor the cited profiles do not license.**
+- [ ] **3 — A named verification of the risk path.** **Runs after Task 21 Step 2 drafts the
+  provenance lines and before Step 3 closes** — it verifies those lines, so it cannot precede them.
+  Recompute each line's floor from the `Story:` header of the artifact that cycle reviewed. **The
+  observation that would exist if the claim were false is a line whose floor the cited profiles do
+  not license.**
 
-- [ ] **4 — The conditional knob verification.** If `.context/codex-gate.floor` exists, record its
-  bytes and digest before the first Gate-B call and compare after. **If it does not exist, record
-  not-applicable with that reason and do not create one** — a fixture supplying its own input
-  proves nothing. Separately classify the value as numeric or as one of the pinned unusable
-  causes, which the provenance lines' knob clause needs and preservation does not supply.
+- [ ] **4 — The conditional knob verification.** Take **one** observation of the path and derive
+  everything from it, so bytes, digest and value class describe the same read:
 
-- [ ] **5 — A parse check over both pinned grammars.** Construct and parse, for each: a quoted
-  path; every `unusable(<CAUSE>)` value; a gapped `<SPEC>` such as `1,2,4`; a split-model pass; a
-  skipped cycle; a `?` count; and **at least one instance that must be rejected**. Record which
-  feature each exercises. §8 is explicit that the branch's own instances cannot exercise the
-  grammars, which is why this is constructed rather than observed.
+  - **absent** — no path. Record not-applicable with that reason. **Do not create one**; a fixture
+    supplying its own input proves nothing.
+  - **present but not a readable regular file** — a directory, a device, an unreadable file, **or a
+    symlink whose target does not resolve**. Record `unusable(unreadable)`. A broken symlink is
+    *present and unusable*, never absent — the state the stripped machinery got wrong and the one
+    this rule exists for.
+  - **a readable regular file** — record bytes and digest, and classify the value as numeric or as
+    one of the pinned unusable causes.
+
+  Recorded before the first Gate-B call and compared after. **Existence is not the check.**
+
+- [ ] **5 — A parse check over both pinned grammars**, with the features **assigned per grammar**
+  rather than to both. **Provenance:** a quoted path; each `unusable(<CAUSE>)` value; a
+  cited-story-with-no-profile entry; `none` for no story cited. **Curve:** a gapped `<SPEC>` such
+  as `1,2,4`; a split-model pass; a `?` count; a skipped cycle's skip record. **Each grammar gets
+  at least one instance that must be rejected** — for the curve, `<COUNTS>` shorter than `<SPEC>`
+  enumerates; for provenance, a repeated `<PATH>`. Record which feature each exercises.
 
 - [ ] **6 — Parity across every changed rule**, in both copies. **One difference is expected and
   is the only one**: the successor-story pointer, which `CLAUDE.md` carries and the template must
   not.
 
-- [ ] **7 — A fresh twelve-item `docs/prompt-standards.md` pass**, over each changed prompt
+- [ ] **7 — A fresh twelve-item `docs/prompt-standards.md` pass** over each changed prompt
   artifact invariant 11 names — the **resulting scaffolded template**, **`workflow-init.md`**, and
-  **`process-pr-review.md`**, which Task 14 changes. One status row per item per artifact.
-  **Item 1 for the scaffolded template is `N/A`**, and Task 10 ships the note saying why.
+  **`process-pr-review.md`**. One status row per item per artifact. **Item 1 for the scaffolded
+  template is `N/A`**; Task 10 ships the note saying why.
 
 ---
 
-## Task 19: The Gate-B cycle
+## Task 20: The Gate-B cycle
+
+- [ ] **Before the first call: prove the working tree holds only this change**
+
+```bash
+git status --porcelain          # must be empty
+base=$(cat .context/plan-a-base-sha)
+git diff --name-only "$base"..HEAD    # read it: every path must belong to Plans A, B or C
+```
+
+Explicit `git add` paths keep *new* strays out; they say nothing about content **already staged or
+already inside the WIP** from an earlier step. This reads what the reviewer will actually see.
 
 - [ ] **Run the loop.** `mcp__codex__review` against the WIP commit, **`baseSha` = the recorded
   base**. **Floor 3** — the old rules govern this cycle.
@@ -906,57 +981,70 @@ gave which answer.
 **Every call carries:** the old-rules sentence from Global Constraints; **the union of the
 `Story:` headers of Plans A, B and C**; and the current evidence entry quoted verbatim.
 
-**Findings go to the bare slots — `gate-b-<spec|quality>-pass-<p>.md`.** This cycle is pre-rule,
-has no nonce and cannot mint one; the nonce-infixed names Plan B introduces are reserved for
-cycles starting after the rules ship.
+**Findings go to `gate-b-<spec|quality>-rle-pass-<p>.md`.** Not the bare names: **this workspace
+already contains 61 files in the bare `gate-b-*-pass-*` family from earlier cycles**, and the
+delete-before-call step would destroy them — which is precisely the incident the slot rule exists
+to prevent, committed by the plan that ships the rule. Not a nonce either: this cycle is pre-rule
+and cannot mint one. **§8 names exactly this case** — *"its slot discriminator is short and
+deterministic, so it is not a nonce"* — and `rle` is that discriminator.
 
 **Delete both branch targets before a full call. For a single-branch resume, delete only the
-failed branch** — deleting both and recreating one makes the both-files check fail by
-construction. A resume passes the `sessionId` back **and** its `reviewType`, since the tool
-defaults to `full` and a resume omitting it can write the wrong slot.
+failed branch**, and **capture the reviewed commit the surviving branch ran against** before
+resuming — the two branches form one logical pass only if both reviewed the same commit, and the
+surviving branch's value is unrecoverable once the resume overwrites its result.
 
 - [ ] **After every accepted fix:** stage the exact paths the fix touched — **never `-u`** — amend
   with `-m "WIP: review-loop economics"`, **revalidate the evidence entry**, then re-review that
-  new commit against the same base. A fix changes the diff, so a pass run before it does not cover
-  what is being committed.
+  new commit against the same base.
+
+- [ ] **Before accepting a pass as final:** assert `HEAD` is the commit that pass reviewed. A pass
+  is clean about a commit, not about a branch, and an amend between the pass and the close would
+  leave the clean pass describing something else.
 
 ---
 
-## Task 20: Close the cycle
+## Task 21: Close the cycle
 
 - [ ] **Step 1: Revalidate the evidence** against the content the close will carry.
 
 - [ ] **Step 2: Assemble the closing body**
 
-It carries the evidence entry, and **one provenance line and one curve per cycle — five of each**,
-this change having run one Gate-A spec cycle, three Gate-A plan cycles and one Gate-B cycle.
+```bash
+body=$(mktemp) || exit 1
+```
 
-**One is native and four are reconstructed, and the body says which.** The Gate-B cycle writes its
-own records as it closes. The four Gate-A cycles closed before Plan B pinned the forms, so each of
-theirs is marked **"reconstructed from validated pass files (pre-rule cycle)"** with the files
-named. **Reconstruction from validated sources, marked as such, is not fabrication** — the marking
-is what separates them, exactly as `cycle none (pre-rule)` already separates a cycle that cannot
-have a nonce from one that simply lacks one.
+*(Revision 3 stripped the block that assigned `body` and left Step 3 expanding it — the strip
+removed an **action**, not theater. The lesson is the one this pass was asked to check for:
+deleting a check deletes whatever else was in the block.)*
 
-> **Why this does not contradict §8, and the reason is a failed premise rather than a scope
-> limit.** §8 says *"No reconstruction is needed and none is claimed"* — and gives its grounds in
-> the same breath: *"the Gate-A spec cycle has not closed … and the Gate-A plan cycle has not
-> started, so both write their closing bodies natively."* **That premise no longer holds.** The
-> spec cycle closed at pass 34, before Plan B existed to pin any form; and the single plan cycle
-> §8 anticipated became three, all of which closed the same way. §8's sentence was a true
-> prediction about a topology that changed. **What it was protecting — that no record silently
-> claims to be contemporaneous — is preserved by the marking, which is the stronger reading.**
->
-> **§8's "three closing bodies" is stale for the same reason**, and in the same way as the story
-> criterion's "a run of all three holds three": both were written before this change was split
-> into three plans. **The rule is one record per cycle**; the count follows from how many cycles
-> ran, which is five.
+It carries the evidence entry, and **one provenance line and one curve per cycle — five of each**:
+one Gate-A spec cycle, three Gate-A plan cycles, one Gate-B cycle.
 
-**Every cycle here is pre-rule**, so each carries `cycle none (pre-rule)`; minting a nonce for any
-would be late-created provenance. **The branch demonstrates every field of both forms except two**
-— the cycle identifier and the knob clause's non-absent form — **recorded as undemonstrable here
-with their reasons**, not as gaps and not as satisfied. **Any cycle that both starts under these
-rules and closes discharges the nonce demonstration**; duplicate discharge is harmless.
+**One is native and four are reconstructed, and each record says which in its own text** — a
+trailing ` — reconstructed from validated pass files (pre-rule cycle): <files>` on the four, and
+nothing on the native one. **The marker travels with the record**, because the squash carry copies
+records individually and a marker held in surrounding prose would not survive.
+
+**Validate the assembled body before amending** — this is an obligation, not a check the plan
+invented: **exactly five provenance lines and five curves**; each parses against its pinned
+grammar; each curve's `<COUNTS>` has exactly as many entries as its `<SPEC>` enumerates; every
+cycle field agrees between a cycle's line and its curve; four carry the reconstruction marker and
+one does not; and no `<`-placeholder survives.
+
+> **Why reconstruction does not contradict §8.** §8 says *"No reconstruction is needed and none is
+> claimed"* and gives its grounds in the same breath — *"the Gate-A spec cycle has not closed …
+> and the Gate-A plan cycle has not started"*. **That premise failed**: the spec cycle closed at
+> pass 34 before the forms existed, and the one plan cycle became three. §8's sentence was a true
+> prediction about a topology that changed. What it protects — that no record silently claims to be
+> contemporaneous — is preserved by the marker, which is the stronger reading. **§8's "three
+> closing bodies" is stale for the same reason**, exactly as the story criterion's "a run of all
+> three holds three" is: the rule is one record per cycle, and five cycles ran.
+
+**Every cycle here is pre-rule**, so each carries `cycle none (pre-rule)`. **The branch
+demonstrates every field of both forms except two** — the cycle identifier and the knob clause's
+non-absent form — **recorded as undemonstrable here with their reasons**, not as gaps and not as
+satisfied. **Any cycle that both starts under these rules and closes discharges the nonce
+demonstration.**
 
 - [ ] **Step 3: Close, and fail loudly if it does not**
 
@@ -969,26 +1057,22 @@ else
 fi
 ```
 
-The body is deleted **only after a successful amend**, and the subject check **fails** rather than
-printing. A transient failure that removed the body would destroy the only assembled copy of the
-evidence pack while leaving the cycle open.
+The body is deleted **only after a successful amend**.
 
 ---
 
 ## Self-Review
 
-**Spec coverage.** §7 rollout — Tasks 1-16. §8 evidence — Task 18, **all seven obligations**. The
-cycle and the close — Tasks 17, 19, 20.
+**Spec coverage.** §7 rollout — Tasks 1-17. §8 evidence — Task 19, all seven obligations. The
+cycle and the close — Tasks 18, 20, 21.
 
-**What was stripped, and what was not.** Revision 2 carried six checks that could not fail — a
-circular base proof, greps that printed counts without comparing them, a parse check with no
-parser, a knob state machine that classified a broken symlink as absent, and validation that
-printed rather than asserted. **Those are gone.** §8's seven obligations are not checks the plan
-invented about its own execution; they are what the author owes, and all seven stayed.
+**What was stripped, and what came back.** Revision 3 removed six checks that could not fail. Two
+of those removals took something real with them, and pass 3 found both: the base check had a
+circular *proof* but a genuine *need* (a stacked WIP), now met by asking about a different commit;
+and the closing-body block held `body=$(mktemp)` as well as its validation. **Deleting a check
+deletes whatever else was in the block** — recorded, because it is the cost of the cure.
 
-**Inherited obligations.** M8 and M10 at Task 19; M9 at Task 18 item 4; MINOR 12 and B6 at Task
-20.
+**Inherited obligations.** M8 and M10 at Task 20; M9 at Task 19 item 4; MINOR 12 and B6 at Task 21.
 
-**Known limit.** Gate A reviews this plan, not the edits. Each task's single check establishes
-that its edit landed at its site. What the edits do is Gate B's — here, Task 19, reading the real
-combined diff of all three plans.
+**Known limit.** Gate A reviews this plan, not the edits. What the edits do is Gate B's — here,
+Task 20, reading the real combined diff of all three plans.
