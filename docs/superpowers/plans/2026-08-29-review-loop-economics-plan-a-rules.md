@@ -170,7 +170,7 @@ plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with 
 
 > The text on disk ends **mid-line**: ` Open a TodoWrite "Codex pass N" per pass;` continues the same line after `review.` Match exactly this and no more; what follows stays.
 > >
-> > The between-cycle rule at the end is new in revision 5. Revision 4 promised "one derived value governs all three cycles" while §2.4's rules are silent when no gate is running, so an ordinary profile edit between two cycles left the promise undefined — a closed cycle at one floor and the next at another. The promise is now about the **predicate**, not a frozen number, and the interval is settled explicitly.
+> > **The between-cycle sentence is OPEN, not settled.** Pass-4 M3 found that "one derived value governs all three cycles" is undefined across an ordinary profile edit between cycles. Revision 5 answered by weakening the promise to a per-cycle derivation — and pass-5 M1 showed that contradicts spec §2, which says **one derived value** governs all three. The text below is revision 5's wording and is **awaiting a decision on whether the spec or the plan changes**; do not execute this task until that is resolved.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -467,9 +467,9 @@ CLAUDE.md:334:  @AGENTS.md. Re-review after every fix — a fix changes the diff
 plugins/dev-workflow/commands/workflow-init.md:518:  @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
 ```
 
-> **Third attempt at one sentence, and both lines are replaced.** The original, `which is where the 3 come from`, was a causal claim the new design makes false. Revision 1 made the hook the *cause* of the obligation. Revision 2 replaced only the second line, leaving `a fix changes the diff and the hook` in front of it, so the sentence read "the hook no longer covers the artifact" — the hook still the subject. `AGENTS.md` records this pattern taking four Gate-B rounds because each correction searched for the previous **phrase** rather than the **claim**.
+> **Third attempt at one sentence, and both lines are replaced.** The original, `which is where the 3 come from`, was a causal claim the new design makes false. Revision 1 made the hook the *cause* of the obligation. Revision 2 replaced only the second line, leaving `a fix changes the diff and the hook` in front of it, so the sentence read "the hook no longer covers the artifact".
 > >
-> > The claim being eliminated is named: *the hook causes the re-review obligation.* The test the replacement passes: **delete the hook and the sentence is still true.**
+> > The claim eliminated is *the hook causes the re-review obligation*. The load-bearing half — `a fix changes the artifact, so the prior review no longer covers it` — stands without the hook; the trailing clause describes what the hook does and is true only while it exists, which is a description, not the cause.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -514,7 +514,7 @@ CLAUDE.md:403:Lenses are **different questions, not more passes.** The 3-pass fl
 plugins/dev-workflow/commands/workflow-init.md:582:Lenses are **different questions, not more passes.** The 3-pass floor, the Blocker/Major
 ```
 
-> **Both lines, for the same reason as the previous task.** The old sentence's tail says the floor "is unchanged". Revision 3 replaced the first half and left that tail standing, so the shipped sentence still told a reader the floor was unchanged in the change that makes it profile-dependent. The claim eliminated here is *the floor is unchanged*; the replacement says outright that it is not.
+> **Both lines, for the same reason as the previous task.** The old tail says the floor "is unchanged". Revision 3 replaced the first half and left that tail, so the shipped sentence still told a reader the floor was unchanged in the change that makes it profile-dependent. The claim eliminated is *the floor is unchanged*.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -727,7 +727,7 @@ plugins/dev-workflow/commands/workflow-init.md:675:  rework) → both must resol
 
 > The four severity definitions stay verbatim; the reachability test is appended as the procedure that sets a **ceiling** on them.
 > >
-> > The final paragraph is new in revision 5. Without it the demotion and the five-tells rule collide: a pass could be Blocker/Major-free at or above the floor — therefore closeable — while two tells made stopping mandatory. Demotion now explicitly changes **which findings gate**, not **what the tells observe**, and clean completion governs.
+> > The last two paragraphs settle how demotion interacts with the untouched five-tells rule. **Per tell**, because a blanket claim was wrong in one direction: demoting a Blocker to Minor *does* remove it from the Blocker curve — that is the point — while the total, the clusters and the require↔withdraw comparison still see every reported finding. And the precedence is **against the two-tell stop only**: a finding that leaves the assigned fix set or opens a new structural question still stops the cycle at any severity.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -764,12 +764,18 @@ NEW:
   This is the finding-level analog of the path-level prose exemption: one principle at two
   granularities — text that *describes* the product versus text that *is* the product.
 
-  **Demotion changes which findings gate; it does not change what the pass-report tells
-  observe.** A demoted finding still counts toward instrument clustering and prose
-  clustering, because the tells measure where a loop's attention is going, not how much of
-  it blocks. Where a pass is Blocker/Major-free at or above the floor, the clean-completion
-  rule governs and the cycle closes: the two-tell stop is a rule for a loop still running,
-  not a bar to one that has finished.
+  **Demotion changes which findings gate. Per tell:** every reported finding, demoted or
+  not, counts toward the finding total, toward the instrument and prose clusters, and
+  toward the require↔withdraw comparison — those measure where a loop's attention is
+  going, not how much of it blocks. **The Blocker curve reads severity after this ceiling
+  is applied**, so a finding demoted to Minor leaves that series, which is what demoting it
+  is for.
+
+  **Against the two-tell stop only:** where a pass is Blocker/Major-free at or above the
+  floor **and no other rule here requires a stop**, the two-tell threshold alone does not
+  bar completion — it governs a loop still running, not one that has finished. It overrides
+  nothing else. A finding that leaves the assigned fix set, or opens a new structural or
+  contract question, still stops the cycle whatever severity it carries.
 ```
 
 - [ ] **Assert the new text is present.**
@@ -800,9 +806,9 @@ git commit --amend -m "WIP: review-loop economics"
 
 ```
 
-> **Plan B extends this list rather than rewriting it** — §10 says extending is safe and replacing is not. `at minimum` and `each further rule this change ships adds its own strict reading to this list` are what make that possible.
+> **Plan B extends this list rather than rewriting it** — §10 says extending is safe and replacing is not.
 > >
-> > The partial-adoption paragraph is widened in revision 5. Revision 4 named only the floor-without-severity coupling and then claimed "what prompt text can do is done" — an overclaim, and it missed the sharper case: a merge taking the floor predicate without the numeric replacements leaves the derived floor beside explicit `pass 3` obligations that contradict it.
+> > The partial-adoption trigger is **semantic, not a list of spellings**. Naming `pass 3`, `below 3` and `3-pass floor` missed the ones a partial merge happens to leave: the Gate-A loop description, the pass-1 closure rule and the re-review rationale each carry a fixed-three claim, and a merge can take some tasks and not others.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -833,9 +839,14 @@ so these rules bind only over the text a project's `CLAUDE.md` actually contains
 partial adoption can persist undetected. A project taking the floor rule without the
 severity test gets a floor whose docs-only question the severity test is what settles.
 **A partial adoption can also leave the derived floor standing beside the old fixed-number
-obligations — `pass 3`, `below 3`, `3-pass floor` — which contradict it outright. Where a
-project's text contains both, nothing here resolves which governs: stop, and have a human
-resolve it, before running a gate under it.** What prompt text can do about downstream
+obligations, which contradict it outright.** The trigger is semantic, not a list of
+spellings: **any surviving statement that the floor is a fixed number, or that closing
+turns on a specific pass number, sitting beside the derived predicate.** Enumerating the
+spellings would miss the ones a partial merge happens to leave — the Gate-A loop
+description, the pass-1 closure rule and the re-review rationale each carry one, and a
+merge can take some of them and not others. Where a project's text contains both kinds of
+rule, nothing here resolves which governs: **stop, and have a human complete or revert the
+adoption, before running a gate under it.** What prompt text can do about downstream
 adoption is limited, and that limit is what this paragraph states.
 ```
 
