@@ -8,57 +8,37 @@
 pass floor becomes a function of the cited story's profile, and finding severity is decided by
 whether something in the system takes a different decision.
 
-**Architecture:** Thirteen mirrored prose edits, one per task: `CLAUDE.md` §5 and the inline
-template in `/workflow-init`. **No code.** No file under `plugins/dev-workflow/hooks/` changes.
-
-**Tech Stack:** Markdown prompts; `git` for the records.
-
 **Spec:** `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` (revision 36).
 Plan A implements §2, §2.1, §2.2, §2.4, §3, and §10 in part.
 
 **Story:** `docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md`
 
-> **Read the profile from that header at execution time. This plan states no risk value, no
-> security value, no validation mode and no pass count derived from any of them** — not even to
-> illustrate a mistake, since quoting a stale-able value to explain why values go stale
-> reintroduces it.
+> **Read the profile from that header at execution time.** This plan states no risk value, no
+> security value, no validation mode and no pass count derived from any of them.
 
 ---
 
-## What this plan verifies, and what it does not
+## Plan A of three
 
-**Each task carries exactly one check: the new text is present at the site.** It fails trivially
-before the edit and passes after. That is the whole per-task instrument.
+| Plan | Ships | Spec sections |
+|---|---|---|
+| **A — this one** | the floor predicate and the severity test | §2, §2.1, §2.2, §2.4, §3, §10 (partial) |
+| **B** | the provenance line, the per-pass curve, the cycle nonce, slot naming | §2.3, §4, §5, §6 |
+| **C** | rollout: falsified sentences, packaging, the evidence pack, the review loop | §7, §8 |
 
-**This is a deliberate reduction, decided after three rounds of evidence.** Revisions 1–3 carried
-parity loops, count assertions, scoped range extractions, preflight state matrices and staging
-proofs. The Gate-A curve across those rounds:
+**Three Gate-A cycles, one Gate-B cycle** over the combined A+B+C diff, run and closed by Plan C.
+**Execution order A → B → C; Plan B may not open before Plan A's Gate-A loop closes.**
 
-| pass | findings | Blockers | B+M | of which instrument |
-|---|---|---|---|---|
-| 1 | 21 | 7 | 17 | most |
-| 2 | 16 | 6 | 14 | 5 of 6 Blockers |
-| 3 | 16 | 6 | 13 | **12 of 13 B+M — 92%** |
+**Plan C inherits these obligations**, which lived in a Gate-B section Plan A no longer has. A
+finding whose section moved is relocated, not repaired:
 
-By pass 3 exactly one Blocker/Major concerned the rules being shipped. The rules were converging
-and the verification machinery was diverging: each round's checks grew, and each round the
-reviewer found a new way they could report success while the thing they checked was absent or
-wrong. The decisive example — Plan A's own Task-2 verification proved the six *old* sentences were
-gone and never that the *new* ones had arrived, so **deleting those six sentences outright would
-have produced the plan's exact recorded observations.** Executing a check and pasting its true
-output does not make it a check that can fail in the direction that matters.
-
-**Where the verification went — nothing is dropped, it is relocated to the artifact that owns it:**
-
-| Obligation | Now discharged by |
+| Finding | What Plan C owes |
 |---|---|
-| the edits are correct, complete, and contradict nothing | **Gate B**, reviewing the actual combined A+B+C diff against the spec. This is its job, and it has demonstrably done it better than plan prose: the pass-2 reviewer built a sandbox at `.context/plan-a-pass2-sim/` and the pass-3 reviewer a replay at `.context/pass3_replay.rb`, each executing the plan rather than reading it |
-| every old condition kept, moved or deliberately dropped | the **old-conditions accounting** below, closed once, reviewed by this plan's Gate-A cycle — the `AGENTS.md` Don't is satisfied by that record, not by repeated greps |
-| the change does what it claims | the **differential named verification** and the **battery**, in Plan C, discharging the story's evidence mode |
-| the story's acceptance criteria | checked at the combined close |
-
-**The two prompt copies staying in parity** is part of what Gate B reviews, and the accounting
-below names the two passages where they already diverge so a reviewer is not surprised by them.
+| pass-1 M8 | single-branch Gate-B recovery: delete only the failed branch, never both |
+| pass-1 M9 | record the floor knob's existence and bytes before the cycle, compare after |
+| pass-1 M10 | never `git add -u`; stage an explicitly inspected path set |
+| pass-1 MINOR 12 | build the closing body with `mktemp`, not a fixed `/tmp` path |
+| pass-1 B6 | evidence revalidated after every fix and again before the closing amend |
 
 ---
 
@@ -66,22 +46,21 @@ below names the two passages where they already diverge so a reviewer is not sur
 
 - **This Gate-B cycle runs under the rules in force at its start — the OLD ones.** The new
   severity semantics, floor rule and record forms bind only **after** the closing commit ships
-  them. This is spec §10's activation rule applied to the change's own review: a reviewer applying
-  the new Minor-or-below ceiling to the change that introduces it would under-iterate on exactly
-  the diff needing most iteration. **Carry this sentence in the `additionalContext` of every
-  Gate-B call.**
+  them. **Carry this sentence in the `additionalContext` of every Gate-B call**: a reviewer
+  applying the new Minor-or-below ceiling to the change that introduces it would under-iterate
+  on exactly the diff needing most iteration.
 - **Prompt-only.** No file under `plugins/dev-workflow/hooks/` changes, and the floor knob
-  `.context/codex-gate.floor` is never written, never removed, never read for the derivation. This
-  is not a claim that nothing under `.context/` is written — the Gate-B calls and commit events in
-  this work write pass counters, fingerprints and disclosure markers there as always. Only the
-  floor knob is untouched.
+  `.context/codex-gate.floor` is never written, never removed, never read for the derivation.
+  This is not a claim that nothing under `.context/` is written — Gate-B calls and commit events
+  write counters, fingerprints and markers there as always.
 - **The §5 heading must keep matching `^#{1,6}[[:space:]]+([0-9]+\.)?[[:space:]]*Cross-Model Review`.**
   `codex-gate.sh:94` greps `CLAUDE.md` for it to build every reminder's citation.
-- **Every edit lands in BOTH copies.** Where the two copies already differ, the difference is
-  pre-existing, is named in the accounting, and is left exactly as it is.
+- **Every edit lands in both copies except Task 14**, which is `CLAUDE.md`-only and says why.
+  Where the two copies already differ, the difference is pre-existing, named in the accounting,
+  and left as it is.
 - **§5's other closure rules are never restated, only referred to.**
-- **Line numbers are provenance, never instructions.** Each task pastes its `grep -n` anchor as it
-  stood in the untouched tree; the edit is located by its OLD text.
+- **Line numbers are provenance, never instructions.** Each task pastes its `grep -n` anchor as
+  it stood in the untouched tree; the edit is located by its OLD text.
 
 ### The commit protocol
 
@@ -91,70 +70,37 @@ once after Plan C, closed once.**
 > **Never `git commit --amend --no-edit` inside the cycle.**
 > `plugins/dev-workflow/hooks/codex-gate.sh:763` recognizes a WIP commit by grepping the **Bash
 > command string** for `-m ... wip`; an amend without `-m` is not recognized, and the hook resets,
-> discarding the cycle's passes. Every amend below restates `-m "WIP: review-loop economics"`.
-> (On the backlog: `todos.md`.)
+> discarding the cycle's passes. Every amend restates `-m "WIP: review-loop economics"`.
 
-**The Gate-B cycle records its base SHA once, at cycle open, and uses it for every diff and every
+**The cycle records its base SHA once, at cycle open, and uses it for every diff and every
 Gate-B call** — not `HEAD~1`, which moves if a snapshot is ever stacked. Task 1 prints it.
-
-Plans B and C amend the same commit. Plan C adds the manifest bump, runs the single Gate-B loop,
-and closes with `git commit --amend -m "<real message>"`.
-
----
-
-## Why this is one of three plans
-
-| Plan | Ships | Spec sections |
-|---|---|---|
-| **A — this one** | the floor predicate and the severity test | §2, §2.1, §2.2, §2.4, §3, §10 (partial) |
-| **B** | the provenance line, the per-pass curve, the cycle nonce, slot naming | §2.3, §4, §5, §6 |
-| **C** | rollout: falsified sentences, packaging, the evidence pack, the review loop | §7, §8 |
-
-**Three Gate-A cycles, ONE Gate-B cycle.** Each plan is reviewed as its own artifact; the three
-ship **one diff**, reviewed once after Plan C. Execution order A → B → C; Plan B may not open
-before Plan A's Gate-A loop closes.
-
-### What Plan C inherits
-
-These came from Plan A's earlier Gate-B section, which no longer exists here. A finding whose
-section moved is **relocated, not repaired**, so Plan C must carry them explicitly:
-
-| Finding | What it requires of Plan C |
-|---|---|
-| pass-1 M8 | single-branch Gate-B recovery: delete only the failed branch, never both |
-| pass-1 M9 | record the floor knob's existence and bytes before the cycle, compare after |
-| pass-1 M10 | never `git add -u`; stage an explicitly inspected path set |
-| pass-1 MINOR 12 | build the closing body with `mktemp`, not a fixed `/tmp` path |
-| **pass-1 B6** | evidence revalidated after every fix and again before the closing amend |
 
 ---
 
 ## Old-conditions accounting
 
-**Derived from the edits this plan makes**, against §5 at HEAD. **Eleven passages, thirteen rows.**
-
-**Two passages diverge between the copies and get a row each.** Both divergences were found by
-`diff` over the passage's **full extent**, after a 13-line comparison window on the Gate-A passage
-produced a false IDENTICAL — a comparison that ended before the divergence.
+Derived from the edits this plan makes, against §5 at HEAD. **Eleven passages, thirteen rows.**
+Two passages diverge between the copies and get a row each; both divergences were found by
+`diff` over the passage's full extent.
 
 | # | Passage | Copy | What the existing prose requires | Disposition |
 |---|---|---|---|---|
-| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1), which also settles what a change between cycles does: it binds cycles not yet closed and never reopens a closed one · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · d–h **kept verbatim** in the second paragraph · **b kept verbatim inside the replacement** (it is in Task 1's OLD block and re-emitted in its NEW block) · i–m **kept verbatim outside the replaced range** |
+| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1) · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · **d–h kept in substance and rewritten in wording** in the second paragraph, since the replacement re-emits them around the new precedence — not kept verbatim, and the earlier claim that they were is corrected here · b **kept verbatim inside the replacement** · i–m **kept verbatim outside the replaced range** |
 | 2 | `if pass 3 still` | both | the final pass must be clean; if the pass at 3 still finds Blocker/Major, keep going until clean or clearly stuck, then STOP and surface | **kept**, `pass 3` → `the pass at the floor` (Task 3) |
 | 3 | `below 3` | both | the only early exit below the floor is a zero-finding pass; don't pad | **kept**, `below 3` → `below the floor` (Task 4) |
-| 4 | pass-1 Minor sentence | both | below the floor nothing closes; a zero-finding pass is the only exception; a Blocker/Major-free pass 1 carrying a Minor keeps looping | **kept**, `pass 1` → `pass below the floor` (Task 9) |
-| 5a | pass-report paragraph | `CLAUDE.md` | a. from pass 4 onward, three lines · b. carrier is your own status report · c. never the Codex reply · d. never the findings file · e. trend · f. cluster · g. require↔withdraw · h. the five tells · i. any-two makes stop-and-surface mandatory · j. "clearly stuck" is not a precondition · **k. "you report the tells" — second person** | **untouched.** Task 10 inserts a new paragraph *before* it and modifies nothing in it |
-| 5b | pass-report paragraph | template | a–j as above · **k′. "report the tells" — imperative, no addressee** · plus different wrapping | **untouched**, same reason. The divergence is pre-existing and is left alone |
+| 4 | pass-1 Minor sentence | both | below the floor nothing closes; a zero-finding pass is the only exception; a Blocker/Major-free pass 1 carrying a Minor keeps looping | **kept**, `pass 1` → `pass below the floor` (Task 9). The sentence that inverts at floor 1 |
+| 5a | pass-report paragraph | `CLAUDE.md` | a. from pass 4 onward, three lines · b. carrier is your own status report · c. never the Codex reply · d. never the findings file · e. trend · f. cluster · g. require↔withdraw · h. the five tells · i. any-two makes stop-and-surface mandatory · j. "clearly stuck" is not a precondition · **k. "you report the tells" — second person** | **untouched.** Task 10 inserts a new paragraph before it and modifies nothing in it |
+| 5b | pass-report paragraph | template | a–j as above · **k′. "report the tells" — imperative** · plus different wrapping | **untouched**, same reason. The divergence is pre-existing |
 | 6 | incomplete-pass | both | an incomplete pass is not a review: don't act on the partial list, don't count it toward the floor, don't read "no Blocker/Major visible" as clean | **kept**, `the 3-pass floor` → `the floor` (Task 5) |
-| 7a | Gate A loop | `CLAUDE.md` | a. two runs, each its own 3-pass loop · b. one broad prompt, re-run each pass · c. don't narrow per-dimension · d. the required opening phrase · e. coverage floor not a cage · f. every finding with severity and confidence · **g. the citation `` (`docs/prompt-standards.md`, "coverage first, filter later") ``** · h. one line per finding · i. literal `NO FINDINGS` · j. settle mechanically before each read pass | **a kept**, `3-pass loop` → `loop at the derived floor` (Task 6); **b–j untouched, g included** |
-| 7b | Gate A loop | template | a–f, h–j as above · **g′. the citation is ABSENT** — the template says "findings silently." and stops · plus different wrapping | same edit to `a`; **the missing citation is pre-existing and is left alone** |
-| 8 | `where the 3 come from` | both | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept, rationale replaced** — both lines, claim named (Task 7) |
-| 9 | Lenses | both | a. lenses are different questions, not more passes · b. the 3-pass floor is unchanged · c. the Blocker/Major filter is unchanged · d. the file-first protocol is unchanged · e. the clean-final-pass rule is unchanged | a **kept and sharpened** · **b deliberately dropped and replaced by its negation** — the floor is precisely what this change makes variable, so the sentence now says so · c, d, e **kept verbatim** (Task 8) |
+| 7a | Gate A loop | `CLAUDE.md` | a. two runs, each its own 3-pass loop · b. one broad prompt, re-run each pass · c. don't narrow per-dimension · d. the required opening phrase · e. coverage floor not a cage · f. every finding with severity and confidence · **g. the citation `` (`docs/prompt-standards.md`, "coverage first, filter later") `` ** · h. one line per finding · i. literal `NO FINDINGS` · j. settle mechanically before each read pass | **a kept**, `3-pass loop` → `loop at the derived floor` (Task 6); **b–j untouched, g included** |
+| 7b | Gate A loop | template | a–f, h–j as above · **g′. the citation is ABSENT** · plus different wrapping | same edit to `a`; the missing citation is pre-existing and left alone |
+| 8 | `where the 3 come from` | both | a. re-review after every fix · b. because a fix changes the diff · **c. and the hook invalidates the prior pass — which is where the 3 come from** | **a kept.** **b and c are DELIBERATELY DROPPED and replaced** (Task 7): the new design makes c false — the floor comes from the profile, not from invalidation — and b's framing put the hook in the causal position. What replaces them: a fix changes the artifact, so the prior review no longer covers it; the hook merely notices, at commit time. Recorded as a drop rather than as a keep, which the earlier row got wrong |
+| 9 | Lenses | both | a. lenses are different questions, not more passes · b. the 3-pass floor is unchanged · c. the Blocker/Major filter is unchanged · d. the file-first protocol is unchanged · e. the clean-final-pass rule is unchanged | a **kept and sharpened** · **b deliberately dropped and replaced by its negation** — the floor is what this change makes variable · c, d, e **kept verbatim** (Task 8) |
 | 10 | `Changing a profile:` | both | a. proposes the complete resulting header · b. human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's rules appended after them, never merged in (Task 11) |
-| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, **and nothing else**. Task 12 ships spec §3 alone; it states no consequence for the per-pass counts, the clusters or the stop thresholds, and chooses no precedence against any loop rule — all of that is §4 and successor-story material that spec §9 excludes. One sentence says the interaction is not settled here — a scope disclaimer rather than a rule. **`CLAUDE.md` alone adds the successor story's path**; the template must not, since it scaffolds into repositories where that path does not exist (Task 12) |
+| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended, and nothing else. Task 12 ships spec §3 alone — no consequence for the per-pass counts, the clusters or the stop thresholds, and no precedence against any loop rule, all of which §9 excludes. One sentence says the interaction is not settled here and gives the unresolved-state action; **`CLAUDE.md` alone adds the owner's path** (Task 14) |
 
-**Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff, is
-what confirms that against this table.
+**Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff,
+is what confirms that against this table.
 
 ---
 ## Task 1: The floor predicate
@@ -169,12 +115,12 @@ plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with 
 ```
 
 > The text on disk ends **mid-line**: ` Open a TodoWrite "Codex pass N" per pass;` continues the same line after `review.` Match exactly this and no more; what follows stays.
-> >
-> > **The between-cycle rule implements spec §2's one-value sentence, verified against revision 36 before it was written.** §2 says the value is one *"because they derive from **the same cited-story set**"* — a claim about the **source**, not about freezing a number in time. So the value is a function of that set's **current** confirmed profiles, read fresh wherever §5 already requires reading them: one source, therefore exactly one value at any moment.
-> >
-> > **A snapshot taken once at the first cycle's open was considered and rejected.** It would be "a remembered or copied value", which §5's Profiles section forbids in those words — *"the story header is the single writable copy … read the values fresh at each pass, never a remembered or copied value"* — and it points the wrong way on invariant 2: a human-confirmed **raise** between cycles would then leave work still in flight reviewed under the weaker profile, which is the under-review direction.
-> >
-> > **§2.4 does not merely permit this; it routes the question here.** Its pass-count rules *"apply while §5 says a gate is running and are silent otherwise"*, and it states that *"what §5 says about when a gate runs — including how a moving profile or cited set bears on that — is §5's, unchanged and deliberately not summarised here."* The between-cycle case was never a spec gap. §2.4 does not *supply* the answer — it is silent outside a running gate and says so — it **delegates** the question, and §5's read-fresh rule is what answers it.
+> 
+> **The between-cycle rule implements spec §2's one-value sentence, verified against revision 36 before it was written.** §2 says the value is one *"because they derive from **the same cited-story set**"* — a claim about the **source**, not about freezing a number in time. So the value is a function of that set's **current** confirmed profiles, read fresh wherever §5 already requires reading them: one source, therefore exactly one value at any moment.
+> 
+> **A snapshot taken once at the first cycle's open was considered and rejected.** It would be "a remembered or copied value", which §5's Profiles section forbids in those words — *"the story header is the single writable copy … read the values fresh at each pass, never a remembered or copied value"* — and it points the wrong way on invariant 2: a human-confirmed **raise** between cycles would then leave work still in flight reviewed under the weaker profile, which is the under-review direction.
+> 
+> **§2.4 does not merely permit this; it routes the question here.** Its pass-count rules *"apply while §5 says a gate is running and are silent otherwise"*, and it states that *"what §5 says about when a gate runs — including how a moving profile or cited set bears on that — is §5's, unchanged and deliberately not summarised here."* The between-cycle case was never a spec gap. §2.4 does not *supply* the answer — it is silent outside a running gate and says so — it **delegates** the question, and §5's read-fresh rule is what answers it.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -204,9 +150,10 @@ three cycles: the Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle. N
 because they are one cycle — they are three — but because they derive from the same
 cited-story set. That value is a function of the current confirmed profiles of that set,
 read fresh wherever this section already requires them to be read, so wherever a value can be
-derived at all there is exactly one, because there is one source. Two states below derive **no**
-value rather than a second one: governing headers that disagree, and a cited profile that is
-present but unresolvable. Both stop. A change to a profile or to the set
+derived at all there is exactly one, because there is one source. Some states derive **no** value
+rather than a second one, and each stops rather than defaulting: governing headers that
+disagree; a cited profile that is present but unresolvable; and a `Story:` header that cannot
+be read. A change to a profile or to the set
 therefore binds every open and future cycle — a raise costs an affected open cycle a
 further pass under the current profile, as the profile-change rule below requires — while a
 cycle that has already closed
@@ -224,9 +171,11 @@ Gate-A plan loop, and — since a Gate-B cycle reviews a diff and has no header 
 **the union of the `Story:` headers of every plan contributing to that diff, which the Gate-B
 call must carry in full**, as this section already requires of every cited path. **Every expected artifact contributes a set — a spec, and every plan contributing to the
 reviewed diff — and an expected artifact whose `Story:` header is absent contributes the empty
-set rather than dropping out of the comparison.** Within one header, identical repeated paths
-are one entry; two entries naming different stories are two members, and a header that cannot
-be read as a list of paths is malformed and stops. **Before each pass the deriving agent
+set rather than dropping out of the comparison.** **One path per entry**: a header citing several
+stories carries several entries, one path each. Exact duplicate paths are one member; entries
+naming different stories are different members; and a header that cannot be read as a list of
+paths that way is malformed and stops, reporting that as the cause rather than as a
+disagreement. **Before each pass the deriving agent
 compares every such set, and again before a clean pass is accepted as the cycle's final pass.**
 A header or profile that changed during that pass means the pass is not final — the same
 answer a change gets at every other read point. Where they name different sets the premise of a single value has
@@ -498,8 +447,8 @@ plugins/dev-workflow/commands/workflow-init.md:518:  @AGENTS.md. Re-review after
 ```
 
 > **Third attempt at one sentence, and both lines are replaced.** The original, `which is where the 3 come from`, was a causal claim the new design makes false. Revision 1 made the hook the *cause* of the obligation. Revision 2 replaced only the second line, leaving `a fix changes the diff and the hook` in front of it, so the sentence read "the hook no longer covers the artifact".
-> >
-> > The claim eliminated is *the hook causes the re-review obligation*. The load-bearing half — `a fix changes the artifact, so the prior review no longer covers it` — stands without the hook; the trailing clause describes what the hook does and is true only while it exists, which is a description, not the cause.
+> 
+> The claim eliminated is *the hook causes the re-review obligation*. The load-bearing half — `a fix changes the artifact, so the prior review no longer covers it` — stands without the hook; the trailing clause describes what the hook does and is true only while it exists, which is a description, not the cause.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -628,11 +577,7 @@ git commit --amend -m "WIP: review-loop economics"
 
 **Spec:** §2.2
 
-**Site** — pasted `grep -n`:
-
-```
-
-```
+**Site** — no `grep -n` line, deliberately: this task's target does not exist in the untouched tree. It is the text an earlier task inserts, so it is located by its OLD text below and by nothing else.
 
 > Inserted **before** the existing paragraph, which is not modified — including the `you report the tells` / `report the tells` divergence between the copies, which is pre-existing (accounting rows 5a/5b). Do not harmonize it.
 
@@ -756,10 +701,10 @@ plugins/dev-workflow/commands/workflow-init.md:675:  rework) → both must resol
 ```
 
 > The four severity definitions stay verbatim; the reachability test is appended as the procedure that sets a **ceiling** on them.
-> >
-> > **Task 12 ships spec §3 and nothing else** — the procedure, the exclusions, the symmetric instrument carve-out, the rationale rule, coverage-first and the kinship sentence. It chooses no precedence against any loop rule and states no consequence for the per-pass counts, the clusters or the stop thresholds. Earlier revisions did, three times, each time reaching past spec §9's exclusion of "the §5 loop-rule consolidation and everything its successor story owns", and each removal found another layer underneath. What remains is one sentence saying the interaction is **not settled here** — a scope disclaimer in §9's own pattern, not a rule.
-> >
-> > **This is the plan's one deliberate divergence between the copies, and it is stated because the constraint above requires that.** `CLAUDE.md` adds a second sentence naming the successor story's path; the scaffolded template does **not**. The template writes a `CLAUDE.md` into somebody else's repository, where `docs/superpowers/stories/…` does not exist and is never scaffolded — invariant 7 and the architecture boundary both say so. A shipped scaffold citing a path only this checkout has would make every initialized project carry an unresolvable authority for part of its own gate semantics. Both copies carry the disclaimer; only this repo's copy carries the pointer, and the successor story carries the reciprocal so the handoff is named on both sides regardless.
+> 
+> **Task 12 ships spec §3 and nothing else** — the procedure, the exclusions, the symmetric instrument carve-out, the rationale rule, coverage-first and the kinship sentence. It chooses no precedence against any loop rule and states no consequence for the per-pass counts, the clusters or the stop thresholds. Earlier revisions did, three times, each time reaching past spec §9's exclusion of "the §5 loop-rule consolidation and everything its successor story owns", and each removal found another layer underneath. What remains is one sentence saying the interaction is **not settled here** — a scope disclaimer in §9's own pattern, not a rule.
+> 
+> **This is the plan's one deliberate divergence between the copies, and it is stated because the constraint above requires that.** `CLAUDE.md` adds a second sentence naming the successor story's path; the scaffolded template does **not**. The template writes a `CLAUDE.md` into somebody else's repository, where `docs/superpowers/stories/…` does not exist and is never scaffolded. What forbids it is the **architecture dependency boundary** — nothing may depend on this repo's internal layout — together with **prompt-standards item 11**, which the scaffolded template must satisfy on its own. (Not invariant 7, which governs `examples/` as read-only reference and says nothing about story paths in templates.) A shipped scaffold citing a path only this checkout has would make every initialized project carry an unresolvable authority for part of its own gate semantics. Both copies carry the disclaimer; only this repo's copy carries the pointer, and the successor story carries the reciprocal so the handoff is named on both sides regardless.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -797,7 +742,9 @@ NEW:
   granularities — text that *describes* the product versus text that *is* the product.
 
   **How this demotion bears on the loop-health measures — the per-pass counts, the finding
-  clusters and the stop thresholds — is not settled here, and this change does not settle it.**
+  clusters and the stop thresholds — is not settled here, and this change does not settle it.
+  Until it is, a pass whose outcome would turn on that question reports the question and
+  stops rather than deciding it** — the same answer any unresolved gate question gets.
 ```
 
 - [ ] **Assert the new text is present.**
@@ -822,15 +769,11 @@ git commit --amend -m "WIP: review-loop economics"
 
 **Spec:** §10
 
-**Site** — pasted `grep -n`:
-
-```
-
-```
+**Site** — no `grep -n` line, deliberately: this task's target does not exist in the untouched tree. It is the text an earlier task inserts, so it is located by its OLD text below and by nothing else.
 
 > **Plan B extends this list rather than rewriting it** — §10 says extending is safe and replacing is not.
-> >
-> > The partial-adoption trigger is **semantic, not a list of spellings**. Naming `pass 3`, `below 3` and `3-pass floor` missed the ones a partial merge happens to leave: the Gate-A loop description, the pass-1 closure rule and the re-review rationale each carry a fixed-three claim, and a merge can take some tasks and not others.
+> 
+> The partial-adoption trigger is **semantic, not a list of spellings**. Naming `pass 3`, `below 3` and `3-pass floor` missed the ones a partial merge happens to leave: the Gate-A loop description, the pass-1 closure rule and the re-review rationale each carry a fixed-three claim, and a merge can take some tasks and not others.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -864,8 +807,10 @@ severity test gets a floor whose docs-only question the severity test is what se
 is a coherence requirement, stated semantically rather than as a list of spellings, and it
 runs in **both** directions: **exactly one definition of the floor must be present, and every
 statement that defines or constrains the floor, or makes closing depend on it, must resolve to
-that one definition.** Everything else keeps its own footing and is **not** required to derive
-from the floor: **the other closure and stop predicates** — assigned-fix-set membership, a new
+that one definition.** **The unknown-start fallback is not a second definition**: it is
+explicitly conditional on a cycle's starting rules being undeterminable and governs only that
+state, so it coexists with the predicate rather than competing with it. Everything else
+likewise keeps its own footing and is **not** required to derive from the floor: **the other closure and stop predicates** — assigned-fix-set membership, a new
 structural question, an accepted Blocker or Major, the tell thresholds; **independent reporting
 and diagnostic ordinals**, such as a duty owed from a given pass onward; and **the hook's
 reminder threshold together with any descriptive or historical pass number**, which say what a
@@ -898,7 +843,49 @@ git commit --amend -m "WIP: review-loop economics"
 
 ---
 
-## Task 14: The battery, and the hand-off to Plan B
+## Task 14: The successor pointer — `CLAUDE.md` only
+
+**Spec:** §9 deferral
+
+**Site** — no `grep -n` line, deliberately: this task's target does not exist in the untouched tree. It is the text an earlier task inserts, so it is located by its OLD text below and by nothing else.
+
+> **This task edits one copy and not the other, and that is the whole point.** The previous task's disclaimer ships to both. This pointer names a path that exists only in this repository, so it must **not** reach the scaffolded template — that template writes a `CLAUDE.md` into somebody else's project, and a shipped rule citing a path only this checkout has would leave every initialized project holding an unresolvable authority for part of its own gate semantics.
+> 
+> The handoff is still named on both sides regardless of which copy a reader holds: the successor story carries the reciprocal obligation in its own §4.
+
+- [ ] **Replace, in `CLAUDE.md` only.** OLD:
+
+```
+  stops rather than deciding it** — the same answer any unresolved gate question gets.
+```
+
+NEW:
+
+```
+  stops rather than deciding it** — the same answer any unresolved gate question gets.
+  That question is owned by the loop-rule consolidation work in
+  `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`.
+```
+
+- [ ] **Assert the new text is present in `CLAUDE.md`, and absent from the template.**
+
+```bash
+grep -cF -- "owned by the loop-rule consolidation work" \
+  CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+```
+
+Before this task: `0` and `0`. After: **`1` and `0`** — the divergence is the point, and the second number is as load-bearing as the first.
+
+- [ ] **Amend the WIP commit.**
+
+```bash
+git add CLAUDE.md
+git commit --amend -m "WIP: review-loop economics"
+```
+
+---
+
+## Task 15: The battery, and the hand-off to Plan B
 
 Plan A runs no Gate-B cycle. The single cycle covering all three plans opened at Task 1 and is
 reviewed and closed by Plan C.
@@ -921,52 +908,31 @@ claude plugin validate . --strict && echo "BATTERY-GREEN (version-bump deferred)
 
 > **`sh scripts/check-version-bump.sh main` is deliberately absent, and only that one step.** Plan
 > A changes a path under `plugins/dev-workflow/` while the manifest bump is Plan C's, so the
-> checker **would correctly fail here**. It is deferred to the combined close, where the bump
-> exists. `AGENTS.md` states this checker's precondition: it compares *commits*, and run mid-work
-> it reports clean and uselessly. **This is a deferral of one step with a named reason, not licence
-> to skip the rest** — `scripts/check-version-bump.test.sh`, the suite, still runs, because it does
-> not depend on the working tree's bump state.
-
-- [ ] **Confirm `scripts/check-invariants.sh` still passes**
-
-It is already in the battery above; called out because it is the one mechanical guard on a file
-this plan edits — it fails if `plugins/dev-workflow/commands/workflow-init.md` stops having exactly
-one `^Target model:` line.
+> checker **would correctly fail here**. `AGENTS.md` states its precondition: it compares
+> *commits*, and run mid-work it reports clean and uselessly. **This is a deferral of one step
+> with a named reason, not licence to skip the rest** — `scripts/check-version-bump.test.sh`, the
+> suite, still runs, because it does not depend on the working tree's bump state.
 
 - [ ] **Hand off to Plan B**
 
-Plan B amends the same WIP commit with the same message and uses the base SHA Task 1 printed. Plan
-A's Gate-A loop must have closed clean first.
+Plan B amends the same WIP commit with the same message and uses the base SHA Task 1 printed.
+Plan A's Gate-A loop must have closed first.
 
 ---
 
 ## Self-Review
 
-**Spec coverage.** §2 → Tasks 1–9. §2.1 → Tasks 1–2. §2.2 → Task 10. §2.4 → Task 11. §3 → Task 12.
-§10 activation, revert, downstream adoption, gate-off surface → Tasks 2 and 13, **partial by design
-and written to be extended** by Plan B. §2.3, §4, §5, §6 → Plan B. §7, §8 → Plan C, with the five
-relocated findings named above.
+**Spec coverage.** §2 → Tasks 1–9. §2.1 → Tasks 1–2. §2.2 → Task 10. §2.4 → Task 11. §3 → Task
+12. §10 activation, revert, downstream adoption, gate-off surface → Tasks 2 and 13, partial by
+design and written to be extended by Plan B. The §9 deferral → Tasks 12 and 14. §2.3, §4, §5,
+§6 → Plan B. §7, §8 → Plan C, with the five relocated obligations named above.
 
 **Placeholders.** None.
 
-**Instrument.** Thirteen edit tasks, one assert-new check each, no other checks. Every pattern was
-verified against a simulated post-edit tree to return `0` and `0` before its task and `1` and `1`
-after; each lies on one line, contains no `**`, and is passed after `--`. **What these checks
-prove is that the edit landed at the site — not that its content is right.** Content is Gate B's,
-against the combined diff.
+**Type consistency.** `max(risk, security)`, "derived floor", "reminder threshold", "cited set"
+and "level 0" are used identically throughout and match the spec's spellings.
 
-**Type consistency.** `max(risk, security)`, "derived floor", "reminder threshold", "cited set" and
-"level 0" are used identically throughout and match the spec's spellings.
-
-**Gate-B classification.** Plan A opens the single cycle at Task 1 and runs no review. Every later
-commit is an amend restating `-m "WIP: review-loop economics"`. Plan C closes.
-
-**Rerun and interruption.** Each task's assert-new check doubles as its own preflight: `1`/`1`
-means that task has run, `0`/`0` means it has not, and a `1`/`0` split means execution stopped
-between the two copies — bring the lagging copy up before continuing. No other state machinery;
-the OLD text is the edit's precondition and a task whose OLD text is absent has either run already
-or been damaged, which the surrounding git history settles.
-
-**Known limit, stated rather than checked.** The replacement wordings are proposals, not
-transcriptions — the spec pins the rules, not the sentences. This plan's Gate A reviews the
-wordings; Gate B reviews what they do to the shipped files.
+**Known limit.** The replacement wordings are proposals, not transcriptions — the spec pins the
+rules, not the sentences. Gate B, reading the real edits, is what checks what they do to the
+shipped files; this plan's own check per task establishes only that each edit landed at its
+site.

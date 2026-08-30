@@ -130,8 +130,11 @@ That bears directly on the loop-health measures this story owns: what a demoted 
 the per-pass counts, to the finding clusters, and to the stop thresholds. The parent **does not
 settle it** — three of its revisions tried, each reaching past its own §9 exclusion of "the §5
 loop-rule consolidation and everything its successor story owns", and each removal found another
-layer underneath. What it ships is one sentence naming this story as where the interaction is
-settled, and **this paragraph is the reciprocal**: the obligation is named in both documents so it
+layer underneath. What it ships is one sentence saying the interaction is **not settled
+there**, together with the conservative action for a pass that would turn on it — report the
+question and stop rather than deciding it. Only this repository's `CLAUDE.md` also names this
+story as the owner; the scaffolded template deliberately does not, because it writes into
+projects where this path does not exist. **This paragraph is the reciprocal**: the obligation is named in both documents so it
 cannot fall between them, which is the failure the passage list demonstrated in that same cycle.
 The design owes an answer covering at least: whether a demoted finding still counts toward the
 finding total and the clusters, and whether the Blocker curve reads severity before or after the
