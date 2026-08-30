@@ -53,9 +53,15 @@ creates. Executing Plan B against an un-edited tree will fail at Task 6, correct
 - **Line numbers are provenance, never instructions.**
 - **For Tasks 2, 3 and 4 the assert-new check is also the preflight, and the OLD text is not.**
   Each of those tasks re-emits its OLD text verbatim inside its NEW text, so **the OLD still
-  matches after the task has run** and tells you nothing about whether it did. `1` and `1` on the
-  assert means the task is done; `0` and `0` means it is not. Re-running on a `1/1` state would
-  insert a second copy.
+  matches after the task has run** and tells you nothing about whether it did. Read the assert's
+  two counts as a closed state space, and stop on anything that is not one of the first two:
+
+  | counts | state | action |
+  |---|---|---|
+  | `0` and `0` | not started | apply the replacement to both copies |
+  | `1` and `1` | done | skip the task |
+  | `1` and `0`, or `0` and `1` | **interrupted between the copies** | **STOP and surface. Do not replace either copy** — applying to both would duplicate the block in the copy that already has it while repairing the other |
+  | anything above `1` | **already duplicated** | **STOP and surface.** A previous run inserted twice; the extra copy is removed by hand before the task is retried |
 - **The two pinned grammars are inserted from the spec's own text, not retyped.** The escape
   specification inside the provenance grammar (`\"` and `\\`) is itself made of backslashes,
   and a transcription step ate them once — the grammar that pins the escape rules had its own
@@ -177,8 +183,9 @@ NEW:
 **The cycle nonce.** Both shipped records below carry a **cycle field**, because a record that
 cannot be attributed to a cycle cannot be told apart from another cycle's when several are read
 together. That is a limitation rather than a disqualification — a human reading one cycle's
-records knows which cycle they came from; what attribution buys is that a *later* reader does
-not have to. This section defines three **kinds** of cycle — the Gate-A spec loop, the Gate-A
+records knows which cycle they came from; what attribution buys is that a *later* reader
+**usually** does not have to. Usually, not always: the guarantee is probabilistic, for the two
+reasons stated at the end of this block. This section defines three **kinds** of cycle — the Gate-A spec loop, the Gate-A
 plan loop and the Gate-B cycle — and **one cycle field is produced per cycle run, not per
 kind**: a change carrying several plans runs a Gate-A plan cycle for each, and each of those is
 its own cycle with its own nonce.
@@ -211,11 +218,22 @@ passes rather than letting one cycle's records read as another's. **Starting a n
 not close, adopt or retire the cycles those candidates belong to** — they stay open, keep their
 own nonces, and are a human's to resolve; the new cycle simply does not claim them.
 
-**A cycle does not start without a valid, unique nonce.** Where generation fails — randomness
-unavailable, an invalid value, or a collision with a cycle known to be open — make **at most
-three attempts in total**, then stop and surface, **naming which of the three causes occurred**,
-since they need different fixes and one token would name a symptom rather than a cause. **No
-deterministic fallback.**
+**A cycle does not start without a nonce that is valid and not equal to any nonce observed on a
+known-open cycle at check time** — which is the exact property obtainable here, and is weaker
+than uniqueness. Where that fails, make **at most three attempts in total**, then stop and
+surface, **naming which of the three causes occurred**; each has its own check and its own fix,
+and one token would name a symptom rather than a cause:
+
+- **randomness unavailable** — the source errors or returns nothing. *Fix:* make a source
+  available, or run where one is. Retrying does not help and the attempts are spent proving it.
+- **an invalid value** — the drawn value is not 8 to 16 characters from `[a-z0-9]`. *Fix:*
+  redraw, which is what the remaining attempts are for. If it recurs the generator is wrong, not
+  unlucky, and that is what gets reported.
+- **a collision with a known-open cycle** — the value equals a nonce on a cycle still open.
+  *Fix:* redraw. A second collision at this width means the source is not behaving randomly, and
+  the report says so rather than repeating the draw.
+
+**No deterministic fallback.**
 
 **Two residuals, disclosed rather than guarded.** The uniqueness check compares against cycles
 *known to be open*, so a nonce can repeat one belonging to a cycle nobody can see; and two
