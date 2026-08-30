@@ -94,6 +94,20 @@ the inspiration: the adversarial verifier is a different model *family*
    (like `lanes`); and the plan is rendered on every rung — as a question or
    as a notice. Raising the rung follows measured P8 evidence, never precedes
    it (non-goal 4).
+8. **Four-eyes principle, with a scaling guard.** No artifact passes only its
+   author. The second pair of eyes is another model by default; in the
+   availability emergency (reviewer down, tokens exhausted) the same model as
+   a **different agent with fresh context** — never the same agent (the kit's
+   shipped two-tier reviewer fallback embodies this). Human eyes only where
+   the frequency is bounded — O(waves + exceptions), never O(stories) — and
+   every mandatory human touchpoint carries a maturity knob that lowers with
+   P8 evidence: presence is a dial that falls with trust, never a ratchet.
+   Two concrete rules: an architecture merge triggers re-classification of
+   the cards on the touched branches (their architecture verdicts are stale —
+   mechanical, no human involved); and the Sample-Gate draws architecture
+   merges at 100% as the starting value, knob downward with evidence —
+   bounded, because architecture changes batch into one meta-story per wave
+   (§9).
 
 ## 3. Maturity ladder
 
