@@ -307,3 +307,14 @@ visibility is what makes a token furnace invisible (their P0 gap, our P8).
   builder) as a Gate-B supplement — candidate small story, unscheduled.
 - How the clock's platform mechanics (loop/schedule) are configured per
   project — step 5.
+- Process dashboard / console status — "when is what running where"; builds
+  on the computed views plus P8 trace/analytics. Parked 2026-08-30, design
+  session planned 2026-08-31.
+- Sensible hooks and shortcuts through the pipeline for flexible use cases.
+  Parked 2026-08-30, same session.
+- Test layers beyond the lane battery: a smoke gate in the serial merge
+  queue (parallel lanes can each be green while their composition breaks —
+  currently unchecked), and the full E2E suite as a clock loop whose
+  failures are auto-filed as pool stories. Proposed 2026-08-30, to be
+  decided in the same session; concrete tools stay project truth in
+  AGENTS.md.
