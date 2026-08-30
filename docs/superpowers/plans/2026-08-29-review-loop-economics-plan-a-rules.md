@@ -170,7 +170,11 @@ plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with 
 
 > The text on disk ends **mid-line**: ` Open a TodoWrite "Codex pass N" per pass;` continues the same line after `review.` Match exactly this and no more; what follows stays.
 > >
-> > **The between-cycle sentence is OPEN, not settled.** Pass-4 M3 found that "one derived value governs all three cycles" is undefined across an ordinary profile edit between cycles. Revision 5 answered by weakening the promise to a per-cycle derivation — and pass-5 M1 showed that contradicts spec §2, which says **one derived value** governs all three. The text below is revision 5's wording and is **awaiting a decision on whether the spec or the plan changes**; do not execute this task until that is resolved.
+> > **The between-cycle rule implements spec §2's one-value sentence, verified against revision 36 before it was written.** §2 says the value is one *"because they derive from **the same cited-story set**"* — a claim about the **source**, not about freezing a number in time. So the value is a function of that set's **current** confirmed profiles, read fresh wherever §5 already requires reading them: one source, therefore exactly one value at any moment.
+> >
+> > **A snapshot taken once at the first cycle's open was considered and rejected.** It would be "a remembered or copied value", which §5's Profiles section forbids in those words — *"the story header is the single writable copy … read the values fresh at each pass, never a remembered or copied value"* — and it points the wrong way on invariant 2: a human-confirmed **raise** between cycles would then leave work still in flight reviewed under the weaker profile, which is the under-review direction.
+> >
+> > **§2.4 does not merely permit this; it routes the question here.** Its pass-count rules *"apply while §5 says a gate is running and are silent otherwise"*, and it states that *"what §5 says about when a gate runs — including how a moving profile or cited set bears on that — is §5's, unchanged and deliberately not summarised here."* The between-cycle case was never a spec gap. It was delegated, and §5's read-fresh rule already answers it.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -195,13 +199,16 @@ under the existing rule; it does not fall through to 3, because reading it as 3 
 turn a stop condition into a silent default. Across a cited set the floor is 1 if and
 only if the set is non-empty and every member is profiled, resolvable and at level 0
 — all four conditions, since "every cited story" is vacuously true of an empty set;
-no story cited, or any cited story unprofiled, gives 3. One derivation governs all
+no story cited, or any cited story unprofiled, gives 3. One derived value governs all
 three cycles: the Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle. Not
-because they are one cycle — they are three — but because the same predicate reads the
-same cited-story set. Each cycle derives its floor from that set as it stands during its
-own passes. A profile or cited-set change between cycles binds the cycles that have not
-closed and does not reopen one that has: passes already run keep counting, which is the
-existing rule and is not changed here.
+because they are one cycle — they are three — but because they derive from the same
+cited-story set. That value is a function of the current confirmed profiles of that set,
+read fresh wherever this section already requires them to be read, so at any moment there
+is exactly one value because there is one source. A change to a profile or to the set
+therefore binds every open and future cycle — a raise costs an affected open cycle a
+further pass under the current profile, as above — while a cycle that has already closed
+stands, its close having been valid under the profile current when it closed, which is the
+cycle-level form of passes already run keeping their count.
 
 **The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder
 threshold that controls nothing.** The hook still counts passes, and it still can't read
