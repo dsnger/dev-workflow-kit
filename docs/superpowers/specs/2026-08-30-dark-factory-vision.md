@@ -19,7 +19,7 @@ measurably matters — and, at full maturity, sampled rather than omnipresent:
 
 ```
 Story-Pool — filling is always consequence-free         [missing]
-  → Intake-Loop (PROACTIVE: a new story appearing triggers
+  → Klassifizierungs-Loop (PROACTIVE: a new story appearing triggers
     classification + architecture verdict, debounced/batched;
     attaches the card, triggers NO production)          [missing]
       ↳ reads the Architektur (AGENTS.md)               [exists, needs one extension]
@@ -70,13 +70,13 @@ the inspiration: the adversarial verifier is a different model *family*
    gates. (Until step 6 of the build path matures, merge remains human.)
 6. **Filling the pool is always consequence-free; classification is a
    proactive loop of its own.** A new story's appearance (debounced into
-   mini-batches) triggers exactly one thing: the Intake-Loop attaches the
+   mini-batches) triggers exactly one thing: the Klassifizierungs-Loop attaches the
    classification card and the architecture verdict. Production starts only
    through the human's Freigabe plus the clock. Two rules guard the seam: the
-   Intake-Loop only attaches cards, status changes only through defined
+   Klassifizierungs-Loop only attaches cards, status changes only through defined
    operations (human: freigeben; loop: klassifiziert) — never free-form edits
    by both writers on one field; and in Phase 0 the architecture verdict
-   waits until tree v1 exists. The intake zone (pool, Intake-Loop,
+   waits until tree v1 exists. The intake zone (pool, Klassifizierungs-Loop,
    Architektur) is the factory's first stage-4 proactive loop — at the front
    of the pipeline, not the end. "Unclassified" is a transient marker, never a
    working state: the pool is the single entry, and the marker exists only as
