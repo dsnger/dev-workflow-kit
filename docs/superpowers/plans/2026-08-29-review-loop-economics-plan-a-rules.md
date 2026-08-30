@@ -209,11 +209,15 @@ therefore binds every open and future cycle — a raise costs an affected open c
 further pass under the current profile, as the profile-change rule below requires — while a
 cycle that has already closed
 stands, its close having been valid under the profile current when it closed, which is the
-cycle-level form of passes already run keeping their count. **The set itself has one
-authority: the citations of the artifact under review.** Where two cycles of one change
-would run against artifacts citing different sets, the premise of a single value has
-failed — **stop and surface the disagreement** rather than deriving from either, exactly as
-an unresolvable profile stops rather than defaulting.
+cycle-level form of passes already run keeping their count. **The set has one authority:
+the artifact's `Story:` header, which carries the path of every cited story.** Nothing else
+is a citation. A story path appearing anywhere else in an artifact's body — including a
+sentence placing a story *outside* this change's scope — governs nothing, and **an agent
+deriving the set reads that header and does not grep the body for story paths**, because a
+grep finds mentions and cannot tell a citation from a disclaimer. Where the headers of two
+artifacts in one change name different sets, the premise of a single value has failed:
+**stop and surface the disagreement** rather than deriving from either, exactly as an
+unresolvable profile stops rather than defaulting.
 
 **The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder
 threshold that controls nothing.** The hook still counts passes, and it still can't read
