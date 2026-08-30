@@ -139,7 +139,7 @@ produced a false IDENTICAL — a comparison that ended before the divergence.
 
 | # | Passage | Copy | What the existing prose requires | Disposition |
 |---|---|---|---|---|
-| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1), which also settles what a change between cycles does: it binds cycles not yet closed and never reopens a closed one · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · d–h **kept verbatim** in the second paragraph · b, i–m **kept verbatim**, outside the replaced range |
+| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1), which also settles what a change between cycles does: it binds cycles not yet closed and never reopens a closed one · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · d–h **kept verbatim** in the second paragraph · **b kept verbatim inside the replacement** (it is in Task 1's OLD block and re-emitted in its NEW block) · i–m **kept verbatim outside the replaced range** |
 | 2 | `if pass 3 still` | both | the final pass must be clean; if the pass at 3 still finds Blocker/Major, keep going until clean or clearly stuck, then STOP and surface | **kept**, `pass 3` → `the pass at the floor` (Task 3) |
 | 3 | `below 3` | both | the only early exit below the floor is a zero-finding pass; don't pad | **kept**, `below 3` → `below the floor` (Task 4) |
 | 4 | pass-1 Minor sentence | both | below the floor nothing closes; a zero-finding pass is the only exception; a Blocker/Major-free pass 1 carrying a Minor keeps looping | **kept**, `pass 1` → `pass below the floor` (Task 9) |
@@ -174,7 +174,7 @@ plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with 
 > >
 > > **A snapshot taken once at the first cycle's open was considered and rejected.** It would be "a remembered or copied value", which §5's Profiles section forbids in those words — *"the story header is the single writable copy … read the values fresh at each pass, never a remembered or copied value"* — and it points the wrong way on invariant 2: a human-confirmed **raise** between cycles would then leave work still in flight reviewed under the weaker profile, which is the under-review direction.
 > >
-> > **§2.4 does not merely permit this; it routes the question here.** Its pass-count rules *"apply while §5 says a gate is running and are silent otherwise"*, and it states that *"what §5 says about when a gate runs — including how a moving profile or cited set bears on that — is §5's, unchanged and deliberately not summarised here."* The between-cycle case was never a spec gap. It was delegated, and §5's read-fresh rule already answers it.
+> > **§2.4 does not merely permit this; it routes the question here.** Its pass-count rules *"apply while §5 says a gate is running and are silent otherwise"*, and it states that *"what §5 says about when a gate runs — including how a moving profile or cited set bears on that — is §5's, unchanged and deliberately not summarised here."* The between-cycle case was never a spec gap. §2.4 does not *supply* the answer — it is silent outside a running gate and says so — it **delegates** the question, and §5's read-fresh rule is what answers it.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -208,7 +208,11 @@ is exactly one value because there is one source. A change to a profile or to th
 therefore binds every open and future cycle — a raise costs an affected open cycle a
 further pass under the current profile, as above — while a cycle that has already closed
 stands, its close having been valid under the profile current when it closed, which is the
-cycle-level form of passes already run keeping their count.
+cycle-level form of passes already run keeping their count. **The set itself has one
+authority: the citations of the artifact under review.** Where two cycles of one change
+would run against artifacts citing different sets, the premise of a single value has
+failed — **stop and surface the disagreement** rather than deriving from either, exactly as
+an unresolvable profile stops rather than defaulting.
 
 **The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder
 threshold that controls nothing.** The hook still counts passes, and it still can't read
