@@ -18,8 +18,11 @@ record in *that cycle's* closing body), the marker could not live inside a recor
 the pinned grammar, and moved beside the record it was not covered by the squash-carry rule, which
 enumerates records and not prose. **Daniel's resolution, 2026-08-30: the reconstruction leaves the
 commit body entirely.** Pre-rule history goes to this channel, which is committed prose that git
-carries on its own. The implementation commit will carry only the native records of the one cycle
-the new rules actually bind.
+carries on its own. The implementation commit carries only the native records of
+its own Gate-B cycle. **That cycle is also pre-rule** — it began before these rules shipped, so
+its records carry `cycle none (pre-rule)` like the rest. It writes them natively not because the
+new operational rules bind it, but because this branch's own acceptance and evidence criteria
+require them.
 
 ## The three curves
 
