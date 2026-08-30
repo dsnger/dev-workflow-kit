@@ -206,7 +206,8 @@ cited-story set. That value is a function of the current confirmed profiles of t
 read fresh wherever this section already requires them to be read, so at any moment there
 is exactly one value because there is one source. A change to a profile or to the set
 therefore binds every open and future cycle — a raise costs an affected open cycle a
-further pass under the current profile, as above — while a cycle that has already closed
+further pass under the current profile, as the profile-change rule below requires — while a
+cycle that has already closed
 stands, its close having been valid under the profile current when it closed, which is the
 cycle-level form of passes already run keeping their count. **The set itself has one
 authority: the citations of the artifact under review.** Where two cycles of one change
@@ -849,15 +850,16 @@ actually writes the text — which may write nothing, be declined, or be merged 
 so these rules bind only over the text a project's `CLAUDE.md` actually contains, and a
 partial adoption can persist undetected. A project taking the floor rule without the
 severity test gets a floor whose docs-only question the severity test is what settles.
-**A partial adoption can also leave the derived floor standing beside the old fixed-number
-obligations, which contradict it outright.** The trigger is semantic, not a list of
-spellings: **any surviving statement that the floor is a fixed number, or that closing
-turns on a specific pass number, sitting beside the derived predicate.** Enumerating the
-spellings would miss the ones a partial merge happens to leave — the Gate-A loop
-description, the pass-1 closure rule and the re-review rationale each carry one, and a
-merge can take some of them and not others. Where a project's text contains both kinds of
-rule, nothing here resolves which governs: **stop, and have a human complete or revert the
-adoption, before running a gate under it.** What prompt text can do about downstream
+**A partial adoption can leave a project's floor undefined or self-contradictory.** The rule
+is a coherence requirement, stated semantically rather than as a list of spellings, and it
+runs in **both** directions: **exactly one definition of the floor must be present, and every
+statement about pass counts or about closing must resolve to it.** Two states break it —
+**a fixed-number or specific-pass obligation surviving beside the derived predicate**, and
+**any claim or dependency on a derived floor with no predicate present to define it.** A
+merge can produce either: the Gate-A loop description, the pass-1 closure rule and the
+re-review rationale each carry a fixed-three claim and can be taken or left independently of
+the predicate itself. In either state nothing here resolves which rule governs: **stop, and
+have a human complete or revert the adoption, before running a gate under it.** What prompt text can do about downstream
 adoption is limited, and that limit is what this paragraph states.
 ```
 
