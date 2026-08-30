@@ -83,9 +83,16 @@ the inspiration: the adversarial verifier is a different model *family*
   classification's reject verdict reads. One document, read by gates, bots and
   triage alike.
 - **A project's roadmap is a view, not a document**: pool items plus status,
-  priority and dependencies (from classification) yield the order. The pool is
-  the single source; a separate roadmap file would be a second copy that
-  drifts.
+  priority, dependencies and **wave** yield the order. The pool is the single
+  source; a separate roadmap file would be a second copy that drifts.
+- **Waves structure a new project.** Phase 0 assigns every initial pool item a
+  wave mark (wave 1, 2, … or named milestones) — the deliberate "these
+  subareas develop together first, those later" decision, usually aligned with
+  tree branches but not required to be. The orchestrator pulls only from the
+  active wave (a focus throttle beside the lanes budget: lanes = how much at
+  once, wave = what at all). Opening the next wave is the human's call (or
+  automatic when the prior wave is fully merged — settled by build step 4).
+  Later stories get their wave mark at classification.
 - **The kit's own roadmap** to this vision is §7 of this document.
 
 ## 5. The classification card
@@ -104,6 +111,8 @@ in the intake skill today; 5–7 are new:
 6. **Architecture verdict** — from the Bewertungs-Loop: seamless, or
    re-evaluation needed (→ meta-story per decision 3).
 7. **Dependencies** — needs story Y first → wait mark and ordering.
+8. **Wave** — which development wave the item belongs to (§4); assigned in
+   Phase 0 for initial items, at classification for later ones.
 
 Verdicts: **freigeben / teilen / rückfragen / warten-auf / ablehnen** (with
 reason, back to the human — rejection is never deletion). Split rules: multiple
@@ -151,7 +160,37 @@ proceeds, the breaking part waits on the meta-story).
 - No autonomy expansion ahead of the measured evidence (P8) that the review
   economics support it.
 
-## 9. Open questions (owned by the stories that will answer them)
+## 9. Parallelism and flow control (decisions 2026-08-30, Daniel)
+
+- **Phase 0 exists once.** Initial brainstorming builds architecture tree v1
+  plus goals/out-of-scope before production starts. It is the only
+  everything-waits moment; after it, intake never freezes.
+- **Architecture churn blocks branches, never the factory.** An
+  architecture-relevant story is not rejected: classification parks it with
+  warten-auf behind its meta-story, and the meta-story locks exactly the tree
+  branches it touches. Stories on other branches keep flowing. The
+  Bewertungs-Loop batches architecture-relevant items into one meta-story per
+  wave instead of serial tree churn; the meta-story's priority is the human's
+  knob (pull it forward to unlock branches sooner, or defer it and let the
+  parked stories wait).
+- **The tree is the parallelism map.** Disjoint branches run in parallel
+  (N worktrees × one pipeline each — possible today; the record/nonce rules
+  are the foundation); same branch serializes. Classification's dependency and
+  architecture verdicts yield the schedule. Within a story, stages fan out to
+  subagents; Gate B's two review branches already run in parallel. What does
+  not parallelize: the serial passes of one review loop, the merge queue to
+  main, and the human's decisions.
+- **The parallelism budget is a user-owned knob.** It lives in the story
+  pool's header (one committed, visible place, e.g. `lanes: 3`), is never
+  written by an agent, and is read fresh by the orchestrator at every tick —
+  raising it buys throughput while the tree has disjoint branches; lowering it
+  throttles token spend (`lanes: 0` pauses intake of new lanes; running lanes
+  drain). Two automatic throttles on top: no new lane opens while any lane
+  stands in a mandatory stop, and no new lane opens while more than N
+  decisions are queued for the human — the measured bottleneck is decision
+  bandwidth, not compute.
+
+## 10. Open questions (owned by the stories that will answer them)
 
 - Sample percentage and drawing rule for the Sample-Gate (step 6).
 - Storage form of the pool (files in-repo vs. external board) — step 4.
