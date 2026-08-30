@@ -136,10 +136,13 @@ NEW:
 > cycle with no nonce; a cycle that has one writes `gate-a-spec-<nonce>-pass-<p>`,
 > `gate-a-plan-<nonce>-pass-<p>` or `gate-b-<spec|quality>-<nonce>-pass-<p>` instead, and uses
 > the nonce in every slot more than one cycle could write. The bare names are reserved for the
-> legacy single-cycle case they already serve. **A target owned by a DIFFERENT nonce is refused,
-> not overwritten, and the refusal names the collision** — which is the case this rule can
-> detect. Two cycles that drew the same nonce are indistinguishable to it and can still overwrite
-> each other; what makes that unlikely is the width of the draw, not this rule — this section already stops on a
+> legacy single-cycle case they already serve. **The decision is made on the path, which is what
+> a writer can observe: a cycle holding a nonce writes only paths carrying that nonce, and never
+> a bare path.** A bare path that already exists belongs to a legacy cycle and is neither written
+> nor deleted; an existing path carrying a *different* nonce is not one this cycle would write at
+> all, and finding one while resolving a slot is refused and reported rather than removed. **Two
+> cycles that drew the same nonce resolve to the same paths and are indistinguishable here** —
+> what makes that unlikely is the width of the draw, not this rule — this section already stops on a
 > target that survives deletion, and this extends that to a target that must not be deleted at
 > all. That rule exists because a bare slot was in fact overwritten once, destroying a previous
 > cycle's findings file.
@@ -148,7 +151,7 @@ NEW:
 - [ ] **Assert the new text is present.**
 
 ```bash
-grep -cF -- "A target owned by a DIFFERENT nonce is refused," \
+grep -cF -- "The decision is made on the path, which is what" \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
@@ -212,15 +215,20 @@ from a name, a timestamp or a commit**, each of which collides exactly where sib
 which is the one thing the nonce exists to prevent. The character set keeps it safe as a slot
 infix and a path component.
 
-**It appears in every record the cycle writes, and that set is named rather than left open**:
+**It appears in every record the cycle writes** — which keeps records apart **as far as distinct
+nonces allow**, and no further — **and that set is named rather than left open**:
 the provenance line, the per-pass curve (including a skip record standing in for one), the
 cycle's findings slots, and its advisory working record. **The working record is a cycle record
 too**: a cycle holding a nonce names it `gate-a-spec-<nonce>-resume.md`,
 `gate-a-plan-<nonce>-resume.md` or `gate-b-<nonce>-resume.md`, and the bare names above stay
 reserved for the legacy single-cycle case, exactly as the findings slots do. **Because recovery
-scopes candidates by artifact as well as by kind, the record's contents name that artifact** —
-its path, quoted by the same rule the provenance line uses where quoting is needed. The filename
-carries kind and nonce; the artifact key lives inside, where a path is representable. The nonce is not
+scopes candidates by artifact as well as by kind, the record's contents name that artifact**, and
+what counts as the artifact depends on the cycle kind: for a Gate-A cycle it is the reviewed
+document's path, quoted by the same rule the provenance line uses where quoting is needed; for a
+Gate-B cycle, which reviews a diff rather than a file, it is the **base commit's full
+40-character hex object name**, the same value the cycle's reviews are run against. The filename
+carries kind and nonce; the artifact key lives inside, where neither a path nor a hex name has to
+survive a filename. The nonce is not
 required in records this change neither introduces nor keys to a cycle — the evidence entry and
 a human-exception record among them.
 
@@ -245,7 +253,12 @@ Where generation fails, make **at most three attempts in total**, then stop and
 surface, **naming which of the three causes occurred**; each has its own check and its own fix,
 and one token would name a symptom rather than a cause:
 
-- **randomness unavailable** — the source errors or returns nothing. *Fix:* retry, since the
+The three are distinguished by **where** the attempt stopped, so they cannot both apply: the
+source failed to produce bytes; or it produced bytes that are not a well-formed nonce; or it
+produced a well-formed nonce that is already in use. An empty result is the first, never the
+second.
+
+- **randomness unavailable** — the source errors or produces no bytes. *Fix:* retry, since the
   condition can be transient; if it persists across the attempts, make a source available or run
   where one is, which is a change to the environment rather than another draw.
 - **an invalid value** — the drawn value is not 8 to 16 characters from `[a-z0-9]`. *Fix:*
@@ -455,7 +468,9 @@ NEW:
   A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry — **the curve counts logical
   passes; the hook counts calls**, and where they differ the body says so. **Both branches must
-  have reviewed the same tracked reviewed commit**; if it changed between them they are not one
+  have reviewed the same tracked reviewed commit**, recorded as its **full 40-character hex
+  object name** — abbreviations are ambiguous across repositories and across time, and this
+  comparison is the whole point of the rule; if it changed between them they are not one
   pass, the completed branch is recorded as incomplete and excluded, and the later branch begins
   a new one. Ending the pass is the conservative direction; merging two revisions would produce
   one entry describing two different artifacts.
@@ -516,8 +531,10 @@ NEW:
   of them are present: a curve
   without a cycle field cannot be attributed, a slot rule without a nonce has nothing to key on,
   and a carry rule naming records a project does not produce is inert. **A project whose text
-  carries some of them and not others stops and has a human complete or revert the adoption
-  before running a gate under it** — the same answer, and for the same reason, as a partial
+  carries some of them and not others, or carries all of them in versions that disagree, stops
+  and has a human complete, revert or reconcile the adoption before running a gate under it** —
+  disagreement is the harder case and gets the same stop, because a project holding two
+  definitions of a record has no single answer to what it owes — the same answer, and for the same reason, as a partial
   adoption of the floor rule.
 
   **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
