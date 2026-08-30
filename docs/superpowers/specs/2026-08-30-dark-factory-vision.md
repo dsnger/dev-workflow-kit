@@ -18,10 +18,15 @@ merged, reviewed software with the human concentrated where human judgement
 measurably matters — and, at full maturity, sampled rather than omnipresent:
 
 ```
-Story-Pool (status: draft → freigegeben)
-  → Takt-Loop (polls the pool)                          [missing]
-  → Klassifizierung (classification card, may reject/split/ask)  [missing]
-  → reads Projekt-Wahrheit: AGENTS.md                   [exists, needs one extension]
+Story-Pool — filling is always consequence-free         [missing]
+  → Intake-Loop (PROACTIVE: a new story appearing triggers
+    classification + architecture verdict, debounced/batched;
+    attaches the card, triggers NO production)          [missing]
+      ↳ reads the Architektur (AGENTS.md)               [exists, needs one extension]
+  → Freigabe (human sets "freigegeben" — the ONLY
+    production trigger)                                 [human]
+  → Takt-Loop (polls freigegebene stories of the active
+    wave → wakes the orchestrator → a lane opens)       [missing]
   → Spec-Loop   (intake + design + Gate A)              [exists]
   → Plan-Loop   (writing-plans + Gate A)                [exists]
   → Bau-Loop    (executing-plans, goal-based, TDD)      [exists]
@@ -62,6 +67,17 @@ the inspiration: the adversarial verifier is a different model *family*
 5. **End state is sampled audit, not per-merge approval.** The adversarial
    gate checks every merge; the human audits a sample. No merge skips both
    gates. (Until step 6 of the build path matures, merge remains human.)
+6. **Filling the pool is always consequence-free; classification is a
+   proactive loop of its own.** A new story's appearance (debounced into
+   mini-batches) triggers exactly one thing: the Intake-Loop attaches the
+   classification card and the architecture verdict. Production starts only
+   through the human's Freigabe plus the clock. Two rules guard the seam: the
+   Intake-Loop only attaches cards, status changes only through defined
+   operations (human: freigeben; loop: klassifiziert) — never free-form edits
+   by both writers on one field; and in Phase 0 the architecture verdict
+   waits until tree v1 exists. The intake zone (pool, Intake-Loop,
+   Architektur) is the factory's first stage-4 proactive loop — at the front
+   of the pipeline, not the end.
 
 ## 3. Maturity ladder
 
