@@ -37,7 +37,13 @@ Story-Pool — filling is always consequence-free         [missing]
 ```
 
 Every node is a loop with its own fresh context; only the artifact crosses an
-edge (story, spec, plan, diff, PR) — never the intermediate steps. Mandatory
+edge (story, spec, plan, diff, PR) — never the intermediate steps. A reviewer
+therefore judges only the result, never the process: separate eyes need
+separate heads, and separate heads come from separate context. Everything that
+matters must be *in* the artifact; process facts reach a reviewer only reified
+as artifacts (records, findings, evidence entries). The one deliberate
+exception is the judge/watchdog: it watches process signals (idle, thrash, no
+progress) and judges only liveness, never quality. Mandatory
 stops, scope questions and architecture re-evaluations escalate to the human;
 the factory stops and reports instead of spinning. A human override becomes a
 labeled example for tightening the rules.
