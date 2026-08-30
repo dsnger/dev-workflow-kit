@@ -5,8 +5,10 @@
 > checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the two pinned commit-body records — the provenance line and the per-pass curve —
-together with the cycle nonce that attributes them and the slot naming that keeps two cycles from
-overwriting each other.
+together with the cycle nonce that attributes them and the slot naming that keeps cycles holding
+**distinct** nonces from overwriting each other. Two cycles that drew the same nonce are
+indistinguishable to the naming, which is why the nonce is collision-resistant rather than
+collision-proof and why the shipped text says so at each claim.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` (revision 36).
 Plan B implements §2.3, §4, §5, and §6's method applied to its own passages, plus the §10
@@ -136,13 +138,19 @@ NEW:
 > cycle with no nonce; a cycle that has one writes `gate-a-spec-<nonce>-pass-<p>`,
 > `gate-a-plan-<nonce>-pass-<p>` or `gate-b-<spec|quality>-<nonce>-pass-<p>` instead, and uses
 > the nonce in every slot more than one cycle could write. The bare names are reserved for the
-> legacy single-cycle case they already serve. **The decision is made on the path, which is what
-> a writer can observe: a cycle holding a nonce writes only paths carrying that nonce, and never
-> a bare path.** A bare path that already exists belongs to a legacy cycle and is neither written
-> nor deleted; an existing path carrying a *different* nonce is not one this cycle would write at
-> all, and finding one while resolving a slot is refused and reported rather than removed. **Two
-> cycles that drew the same nonce resolve to the same paths and are indistinguishable here** —
-> what makes that unlikely is the width of the draw, not this rule — this section already stops on a
+> legacy single-cycle case they already serve. **Distinct-nonce paths coexist by construction and
+> are never in conflict** — a sibling cycle's slot is simply a different file.
+>
+> **The rule binds the deletion step, which is where the damage is done.** This section already
+> requires every target to be deleted and confirmed gone before a call. A cycle holding a nonce
+> **deletes only paths carrying its own nonce**; it never deletes a bare path or one carrying a
+> different nonce, and an attempt to do either **stops and names the path** instead of removing
+> it. That is reachable and observable: the step operates on a path it computed, and the check is
+> whether that path is the cycle's own. **The case it exists for is a nonce-holding cycle
+> computing a bare path** — the legacy spelling — **and deleting a file that belongs to somebody
+> else**, which is exactly what happened once. **Two cycles that drew the same nonce compute the
+> same paths and are indistinguishable to this rule**; what makes that unlikely is the width of
+> the draw, not this rule — this section already stops on a
 > target that survives deletion, and this extends that to a target that must not be deleted at
 > all. That rule exists because a bare slot was in fact overwritten once, destroying a previous
 > cycle's findings file.
@@ -151,7 +159,7 @@ NEW:
 - [ ] **Assert the new text is present.**
 
 ```bash
-grep -cF -- "The decision is made on the path, which is what" \
+grep -cF -- "The rule binds the deletion step, which is where" \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
@@ -233,13 +241,24 @@ required in records this change neither introduces nor keys to a cycle — the e
 a human-exception record among them.
 
 **A nonce is a candidate for recovery only if** it is keyed to this cycle's kind — Gate-A spec,
-Gate-A plan, or Gate B — **and** this cycle's artifact, **and** that cycle is still open.
+Gate-A plan, or Gate B — **and** this cycle's artifact, **and** that cycle is still open. **Those
+three are necessary and not sufficient, and the difference matters**: two Gate-A cycles can review
+the same document and two Gate-B cycles commonly share a base commit, so a sole match on kind and
+artifact is **not** identity. **A candidate is adopted only if it is positively linked to this
+run** — the working record this run itself wrote. A match that is merely consistent is treated as
+no identity, and the cycle starts fresh; adopting a sibling on a shared key would merge two
+cycles under one nonce, which is the failure this rule exists to prevent.
 History normally holds many closed cycles' nonces and they are not candidates; a working record
 left by a closed cycle is not one either, which is why that record is **retired at closure**
-rather than left to be found later. **Recovery has two sources**, because a Gate-A cycle's
-commit does not exist while it runs: the working record during the cycle, and history at its
-commit. Recovering a single candidate from **either** keeps identity **as far as the field can
-distinguish cycles** — two cycles sharing a nonce are one cycle to it. **No candidate,
+rather than left to be found later. **Recovery has two sources, and they answer different questions.** The **working record** is the
+source while the cycle runs, and it is the one the candidate rules above apply to — several files
+may be present and the run must decide which, if any, is its own. **History is the source once
+the cycle's own commit exists**, and there is no search there: the cycle is reading **its own
+commit body**, so kind and artifact are settled by which commit is being read, and the nonce is
+taken from the provenance line and the curve, which must agree. A Gate-A cycle mid-run has no
+such commit and therefore has only the working record. Recovering a single candidate from
+**either** keeps identity **as far as the field can distinguish cycles** — two cycles sharing a
+nonce are one cycle to it. **No candidate,
 disagreeing sources, or more than one candidate → no identity: start a new cycle**, which costs
 passes rather than letting one cycle's records read as another's — again, as far as distinct
 nonces allow. **Starting a new cycle does
@@ -460,7 +479,7 @@ NEW:
   pass numbers, the record **states which pass numbers it covers**. A valid zero-finding pass is
   recorded as zero, never omitted. **A count that cannot be recovered is written `?`, never
   guessed and never written as `0`** — a cycle keeps its identity through the nonce rather than
-  through its pass files, so a resumed cycle may know a pass happened and not what it found, and
+  through its pass files, as far as distinct nonces allow, so a resumed cycle may know a pass happened and not what it found, and
   zero and unknown are different facts. **`?` is per series**: a pass whose Findings are unknown
   may still have usable Blocker and Major counts, and a reader excludes the unknown value from
   the comparisons that read that series while keeping the pass's other series.
@@ -468,9 +487,12 @@ NEW:
   A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry — **the curve counts logical
   passes; the hook counts calls**, and where they differ the body says so. **Both branches must
-  have reviewed the same tracked reviewed commit**, recorded as its **full 40-character hex
-  object name** — abbreviations are ambiguous across repositories and across time, and this
-  comparison is the whole point of the rule; if it changed between them they are not one
+  have reviewed the same tracked reviewed commit.** Take it from **the head commit each call
+  reports having reviewed**, capture it **with that branch's result** rather than re-reading it
+  later — an intervening `WIP:` amend moves `HEAD`, so a value read afterwards is a different
+  commit — and require the two captured values to be **exactly equal** before the branches are
+  summed. Record it as the **full 40-character hex object name**, since abbreviations are
+  ambiguous across repositories and across time; if it changed between them they are not one
   pass, the completed branch is recorded as incomplete and excluded, and the later branch begins
   a new one. Ending the pass is the conservative direction; merging two revisions would produce
   one entry describing two different artifacts.
@@ -537,7 +559,7 @@ NEW:
   definitions of a record has no single answer to what it owes — the same answer, and for the same reason, as a partial
   adoption of the floor rule.
 
-  **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
+  **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT in the squash range into the squash body — a skip record carried without its reason is a pointer into a body the squash has made unreachable — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
 ```
 
 - [ ] **Assert the new text is present.**
