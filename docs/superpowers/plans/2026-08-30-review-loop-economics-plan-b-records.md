@@ -210,7 +210,10 @@ the provenance line, the per-pass curve (including a skip record standing in for
 cycle's findings slots, and its advisory working record. **The working record is a cycle record
 too**: a cycle holding a nonce names it `gate-a-spec-<nonce>-resume.md`,
 `gate-a-plan-<nonce>-resume.md` or `gate-b-<nonce>-resume.md`, and the bare names above stay
-reserved for the legacy single-cycle case, exactly as the findings slots do. The nonce is not
+reserved for the legacy single-cycle case, exactly as the findings slots do. **Because recovery
+scopes candidates by artifact as well as by kind, the record's contents name that artifact** —
+its path, quoted by the same rule the provenance line uses where quoting is needed. The filename
+carries kind and nonce; the artifact key lives inside, where a path is representable. The nonce is not
 required in records this change neither introduces nor keys to a cycle — the evidence entry and
 a human-exception record among them.
 
@@ -220,15 +223,18 @@ History normally holds many closed cycles' nonces and they are not candidates; a
 left by a closed cycle is not one either, which is why that record is **retired at closure**
 rather than left to be found later. **Recovery has two sources**, because a Gate-A cycle's
 commit does not exist while it runs: the working record during the cycle, and history at its
-commit. Recovering a single candidate from **either** keeps identity. **No candidate,
+commit. Recovering a single candidate from **either** keeps identity **as far as the field can
+distinguish cycles** — two cycles sharing a nonce are one cycle to it. **No candidate,
 disagreeing sources, or more than one candidate → no identity: start a new cycle**, which costs
-passes rather than letting one cycle's records read as another's. **Starting a new cycle does
+passes rather than letting one cycle's records read as another's — again, as far as distinct
+nonces allow. **Starting a new cycle does
 not close, adopt or retire the cycles those candidates belong to** — they stay open, keep their
 own nonces, and are a human's to resolve; the new cycle simply does not claim them.
 
-**A cycle does not start without a nonce that is valid and not equal to any nonce observed on a
-known-open cycle at check time** — which is the exact property obtainable here, and is weaker
-than uniqueness. Where that fails, make **at most three attempts in total**, then stop and
+**A cycle does not start without a valid nonce, unique among the cycles open when it was
+generated.** That is the requirement. **What the check can establish is narrower** — it compares
+against the cycles it can observe — and the gap between the two is the residual set out below.
+Where generation fails, make **at most three attempts in total**, then stop and
 surface, **naming which of the three causes occurred**; each has its own check and its own fix,
 and one token would name a symptom rather than a cause:
 
@@ -249,9 +255,11 @@ sequence rather than what happened.
 
 **No deterministic fallback.**
 
-**Two residuals, disclosed rather than guarded.** The check compares against cycles *known to be
-open*, so a nonce can repeat one belonging to a cycle nobody can see; and two cycles starting at
-the same moment can each check before either has published, so neither observes the other.
+**Residuals, disclosed rather than guarded, and this list is not exhaustive.** The check compares
+against cycles *known to be open*, so a nonce can repeat one belonging to a cycle nobody can see;
+two cycles starting at the same moment can each check before either has published, so neither
+observes the other; and the check deliberately ignores **closed** cycles, so a new cycle can
+redraw a closed one's value and then write to its surviving findings slots and working record.
 **What makes both unlikely is the width of the draw, not the check** — and unlikely is the
 honest word. Neither is a guard.
 
@@ -495,7 +503,10 @@ NEW:
 
 ```
   **These records are one contract, and a partial adoption breaks it.** The nonce, the slot
-  naming, the provenance line, the curve and this carry rule depend on one another: a curve
+  naming, the provenance line, the curve, this carry rule **and the unknown-start activation
+  semantics that say what a cycle owes when its starting rules cannot be established** depend on
+  one another, and the requirement is that the adopted definitions **agree**, not merely that all
+  of them are present: a curve
   without a cycle field cannot be attributed, a slot rule without a nonce has nothing to key on,
   and a carry rule naming records a project does not produce is inert. **A project whose text
   carries some of them and not others stops and has a human complete or revert the adoption
@@ -550,9 +561,11 @@ NEW:
 ```
 floor 3, severity classified without the demotion, the provenance-line duty owed, the curve
 duty owed, and the nonce duties at their strictest — the cycle is treated as post-rule, so it
-owes a nonce and every record that carries one, and where it cannot recover one it starts a new
-cycle rather than claiming `none (pre-rule)`, that reserved field being unavailable to a cycle
-whose start cannot be established. Each further rule this change ships adds its own strict
+owes a nonce, owes its provenance line and its curve or skip record, and uses that nonce in every
+cycle record it does write — which changes what a record is named, never whether one is owed, so
+the working record stays optional and a skipped cycle still writes no findings slots. Where it
+cannot recover a nonce it starts a new cycle rather than claiming `none (pre-rule)`, that reserved
+field being unavailable to a cycle whose start cannot be established. Each further rule this change ships adds its own strict
 reading to this list.
 ```
 
