@@ -151,7 +151,7 @@ produced a false IDENTICAL — a comparison that ended before the divergence.
 | 8 | `where the 3 come from` | both | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept, rationale replaced** — both lines, claim named (Task 7) |
 | 9 | Lenses | both | a. lenses are different questions, not more passes · b. the 3-pass floor is unchanged · c. the Blocker/Major filter is unchanged · d. the file-first protocol is unchanged · e. the clean-final-pass rule is unchanged | a **kept and sharpened** · **b deliberately dropped and replaced by its negation** — the floor is precisely what this change makes variable, so the sentence now says so · c, d, e **kept verbatim** (Task 8) |
 | 10 | `Changing a profile:` | both | a. proposes the complete resulting header · b. human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's rules appended after them, never merged in (Task 11) |
-| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, **and nothing else**. Task 12 ships spec §3 alone; it states no consequence for the per-pass counts, the clusters or the stop thresholds, and chooses no precedence against any loop rule — all of that is §4 and successor-story material that spec §9 excludes. One sentence names where the interaction is settled, which is a scope disclaimer rather than a rule (Task 12) |
+| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, **and nothing else**. Task 12 ships spec §3 alone; it states no consequence for the per-pass counts, the clusters or the stop thresholds, and chooses no precedence against any loop rule — all of that is §4 and successor-story material that spec §9 excludes. One sentence says the interaction is not settled here — a scope disclaimer rather than a rule. **`CLAUDE.md` alone adds the successor story's path**; the template must not, since it scaffolds into repositories where that path does not exist (Task 12) |
 
 **Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff, is
 what confirms that against this table.
@@ -203,8 +203,10 @@ no story cited, or any cited story unprofiled, gives 3. One derived value govern
 three cycles: the Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle. Not
 because they are one cycle — they are three — but because they derive from the same
 cited-story set. That value is a function of the current confirmed profiles of that set,
-read fresh wherever this section already requires them to be read, so at any moment there
-is exactly one value because there is one source. A change to a profile or to the set
+read fresh wherever this section already requires them to be read, so wherever a value can be
+derived at all there is exactly one, because there is one source. Two states below derive **no**
+value rather than a second one: governing headers that disagree, and a cited profile that is
+present but unresolvable. Both stop. A change to a profile or to the set
 therefore binds every open and future cycle — a raise costs an affected open cycle a
 further pass under the current profile, as the profile-change rule below requires — while a
 cycle that has already closed
@@ -212,14 +214,20 @@ stands, its close having been valid under the profile current when it closed, wh
 cycle-level form of passes already run keeping their count. **The set has one authority:
 the artifact's `Story:` header, which carries the path of every cited story.** Nothing else
 is a citation. A story path appearing anywhere else in an artifact's body — including a
-sentence placing a story *outside* this change's scope — governs nothing, and **an agent
+sentence placing a story *outside* this change's scope — **contributes nothing to the cited
+set and nothing to the floor derivation**, which is the only claim made about it; it may still
+be a perfectly good cross-reference for any other purpose. And **an agent
 deriving the set reads that header and does not grep the body for story paths**, because a
 grep finds mentions and cannot tell a citation from a disclaimer. **Each cycle's governing header is the
 header of the artifact it reviews**: the spec's for the Gate-A spec loop, the plan's for the
 Gate-A plan loop, and — since a Gate-B cycle reviews a diff and has no header of its own —
 **the union of the `Story:` headers of every plan contributing to that diff, which the Gate-B
-call must carry in full**, as this section already requires of every cited path. **Before each pass, the deriving agent compares every governing header that
-exists at that moment, and again before a clean pass is accepted as the cycle's final pass.**
+call must carry in full**, as this section already requires of every cited path. **Every expected artifact contributes a set — a spec, and every plan contributing to the
+reviewed diff — and an expected artifact whose `Story:` header is absent contributes the empty
+set rather than dropping out of the comparison.** Within one header, identical repeated paths
+are one entry; two entries naming different stories are two members, and a header that cannot
+be read as a list of paths is malformed and stops. **Before each pass the deriving agent
+compares every such set, and again before a clean pass is accepted as the cycle's final pass.**
 A header or profile that changed during that pass means the pass is not final — the same
 answer a change gets at every other read point. Where they name different sets the premise of a single value has
 failed: **stop and surface the disagreement** rather than deriving from either, exactly as an
@@ -749,7 +757,9 @@ plugins/dev-workflow/commands/workflow-init.md:675:  rework) → both must resol
 
 > The four severity definitions stay verbatim; the reachability test is appended as the procedure that sets a **ceiling** on them.
 > >
-> > **Task 12 ships spec §3 and nothing else** — the procedure, the exclusions, the symmetric instrument carve-out, the rationale rule, coverage-first and the kinship sentence. It chooses no precedence against any loop rule and states no consequence for the per-pass counts, the clusters or the stop thresholds. Earlier revisions did, three times, each time reaching past spec §9's exclusion of "the §5 loop-rule consolidation and everything its successor story owns", and each removal found another layer underneath. What remains is one sentence naming where that interaction is settled — a scope disclaimer in §9's own pattern, not a rule, and a body mention rather than a citation.
+> > **Task 12 ships spec §3 and nothing else** — the procedure, the exclusions, the symmetric instrument carve-out, the rationale rule, coverage-first and the kinship sentence. It chooses no precedence against any loop rule and states no consequence for the per-pass counts, the clusters or the stop thresholds. Earlier revisions did, three times, each time reaching past spec §9's exclusion of "the §5 loop-rule consolidation and everything its successor story owns", and each removal found another layer underneath. What remains is one sentence saying the interaction is **not settled here** — a scope disclaimer in §9's own pattern, not a rule.
+> >
+> > **This is the plan's one deliberate divergence between the copies, and it is stated because the constraint above requires that.** `CLAUDE.md` adds a second sentence naming the successor story's path; the scaffolded template does **not**. The template writes a `CLAUDE.md` into somebody else's repository, where `docs/superpowers/stories/…` does not exist and is never scaffolded — invariant 7 and the architecture boundary both say so. A shipped scaffold citing a path only this checkout has would make every initialized project carry an unresolvable authority for part of its own gate semantics. Both copies carry the disclaimer; only this repo's copy carries the pointer, and the successor story carries the reciprocal so the handoff is named on both sides regardless.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -787,8 +797,7 @@ NEW:
   granularities — text that *describes* the product versus text that *is* the product.
 
   **How this demotion bears on the loop-health measures — the per-pass counts, the finding
-  clusters and the stop thresholds — is settled by
-  `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`, not here.**
+  clusters and the stop thresholds — is not settled here, and this change does not settle it.**
 ```
 
 - [ ] **Assert the new text is present.**
@@ -854,13 +863,13 @@ severity test gets a floor whose docs-only question the severity test is what se
 **A partial adoption can leave a project's floor undefined or self-contradictory.** The rule
 is a coherence requirement, stated semantically rather than as a list of spellings, and it
 runs in **both** directions: **exactly one definition of the floor must be present, and every
-NORMATIVE statement that states or assumes a pass count — a numeric floor, a specific pass
-ordinal, or a dependency on the derived floor — must resolve to it.** Two kinds of statement
-are outside this and are not required to derive from the floor: **the other closure and stop
-predicates**, which are independent of it by design — assigned-fix-set membership, a new
-structural question, an accepted Blocker or Major, the tell thresholds — and **the hook's
-reminder threshold together with any descriptive or historical pass number**, which state
-what a tool says or what once happened rather than what a cycle owes. Four states break it, and the list is **not exhaustive**: a fixed-number or
+statement that defines or constrains the floor, or makes closing depend on it, must resolve to
+that one definition.** Everything else keeps its own footing and is **not** required to derive
+from the floor: **the other closure and stop predicates** — assigned-fix-set membership, a new
+structural question, an accepted Blocker or Major, the tell thresholds; **independent reporting
+and diagnostic ordinals**, such as a duty owed from a given pass onward; and **the hook's
+reminder threshold together with any descriptive or historical pass number**, which say what a
+tool reports or what once happened rather than what a cycle owes. Four states break it, and the list is **not exhaustive**: a fixed-number or
 specific-pass obligation surviving beside the derived predicate; a claim or dependency on a
 derived floor with no predicate to define it; **no definition at all**; and **two definitions
 at once**. A
