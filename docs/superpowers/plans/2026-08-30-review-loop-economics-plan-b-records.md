@@ -51,6 +51,13 @@ creates. Executing Plan B against an un-edited tree will fail at Task 6, correct
   a pinned form cannot survive.
 - **§5's other closure rules are never restated, only referred to.**
 - **Line numbers are provenance, never instructions.**
+- **One cycle field per cycle RUN, not per cycle kind — a confirmed reading, not a new rule.**
+  The story's criterion says "one per cycle, so a run of all three holds three". **"One per
+  cycle" is the rule**; the clause after "so" is a worked example written before this change was
+  split into three plans, and it does not outrank the rule it illustrates. This change runs
+  **five** cycles — one Gate-A spec, three Gate-A plan, one Gate B — and therefore holds five
+  fields, five provenance lines and five curves. The five-cycle shape is a consequence of two
+  decisions already taken: the plan split, and the single Gate-B cycle.
 - **For Tasks 2, 3 and 4 the assert-new check is also the preflight, and the OLD text is not.**
   Each of those tasks re-emits its OLD text verbatim inside its NEW text, so **the OLD still
   matches after the task has run** and tells you nothing about whether it did. Read the assert's
