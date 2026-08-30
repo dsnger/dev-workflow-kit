@@ -51,6 +51,15 @@ creates. Executing Plan B against an un-edited tree will fail at Task 6, correct
   a pinned form cannot survive.
 - **§5's other closure rules are never restated, only referred to.**
 - **Line numbers are provenance, never instructions.**
+- **For Tasks 2, 3 and 4 the assert-new check is also the preflight, and the OLD text is not.**
+  Each of those tasks re-emits its OLD text verbatim inside its NEW text, so **the OLD still
+  matches after the task has run** and tells you nothing about whether it did. `1` and `1` on the
+  assert means the task is done; `0` and `0` means it is not. Re-running on a `1/1` state would
+  insert a second copy.
+- **The two pinned grammars are inserted from the spec's own text, not retyped.** The escape
+  specification inside the provenance grammar (`\"` and `\\`) is itself made of backslashes,
+  and a transcription step ate them once — the grammar that pins the escape rules had its own
+  escapes collapsed. Copy the block; do not re-key it.
 
 ### The commit protocol
 
@@ -72,7 +81,7 @@ rewrite nothing, and are listed so a reader can confirm that rather than assume 
 
 | # | Passage | What the existing prose requires | Disposition |
 |---|---|---|---|
-| 1 | the findings-slot grammar | a. write the full list to `.context/codex-reviews/<slot>.md` · b. create the directory if needed · c. the path is relative to the reviewed repo root, because Codex resolves writes against its working directory · d. `<slot>` is one of exactly three names | a–c **kept verbatim** · d **kept and extended** (Task 1): the three bare names remain, reserved for the legacy single-cycle case, and a cycle holding a nonce uses the infixed form in every slot more than one cycle could write. A refusal rule is added, which is new and not a change to d |
+| 1 | the findings-slot grammar | a. write the full list to `.context/codex-reviews/<slot>.md` · b. create the directory if needed · c. the path is relative to the reviewed repo root, because Codex resolves writes against its working directory · d. `<slot>` is one of three named forms — four concrete names, since `gate-b-<spec\|quality>-pass-<p>` expands to two | a–c **kept verbatim** · d **kept and extended** (Task 1): the three bare names remain, reserved for the legacy single-cycle case, and a cycle holding a nonce uses the infixed form in every slot more than one cycle could write. A refusal rule is added, which is new and not a change to d |
 | 2 | the squash-merge carry | a. copy every evidence entry in the squash range · b. copy every human-exception record · c. into the squash body · d. because the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable | **a–d all kept verbatim**; three members added — the provenance lines, the curves, and a skipped cycle's skip record (Task 5). Extended rather than rewritten, because the successor story adds a decline record to this same sentence later |
 | 3 | the activation strict-fallback list *(text Plan A creates; this is the second accounting that passage owes, per §6)* | a. from the shipping commit · b. a running cycle finishes under its starting rules · c. where the start cannot be established, take the stricter reading of every part · d. at minimum floor 3 and severity without the demotion · e. each further rule this change ships adds its own strict reading · f. not a re-derivation · g. a user knob above 3 is not lowered · h. a revert is itself a shipping commit | **a–h all kept verbatim**; the list gains the provenance-line duty, the curve duty and the nonce duties at their strictest (Task 6). This is the append that **e** exists to license |
 
@@ -146,7 +155,11 @@ plugins/dev-workflow/commands/workflow-init.md:522:  Whoever runs the cycle writ
 
 > Inserted after the optional-companions block, whose text is re-emitted unchanged — this task rewrites nothing, it appends. The block is the right neighbour because the working record it describes is itself one of the records the nonce keys.
 > 
-> The bounded retry policy is this plan's to fix and it is fixed here: **at most three attempts, then stop and surface, naming which of the three causes occurred.** The spec delegates the number; what it requires is that the causes stay distinguishable, since randomness-unavailable, invalid-value and collision need different fixes.
+> The bounded retry policy is this plan's to fix and it is fixed here: **at most three attempts in total** — not three retries after a first try — **then stop and surface, naming which of the three causes occurred.** The spec delegates the number; what it requires is that the causes stay distinguishable, since randomness-unavailable, invalid-value and collision need different fixes.
+> 
+> **Two residuals are disclosed in the shipped text rather than guarded**, because neither can be closed by prompt rules: the uniqueness check compares against cycles *known to be open*, and two cycles starting simultaneously can each check before either publishes. What makes both unlikely is the width of the draw, not the check.
+> 
+> **This task inserts; it rewrites nothing.** The companions block is re-emitted verbatim, so its OLD text still matches afterwards — the assert-new check is this task's preflight, not the OLD.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -165,8 +178,10 @@ NEW:
 cannot be attributed to a cycle cannot be told apart from another cycle's when several are read
 together. That is a limitation rather than a disqualification — a human reading one cycle's
 records knows which cycle they came from; what attribution buys is that a *later* reader does
-not have to. This section defines three cycles, so a run of all three produces three cycle
-fields and, for cycles started after these rules ship, three distinct nonces.
+not have to. This section defines three **kinds** of cycle — the Gate-A spec loop, the Gate-A
+plan loop and the Gate-B cycle — and **one cycle field is produced per cycle run, not per
+kind**: a change carrying several plans runs a Gate-A plan cycle for each, and each of those is
+its own cycle with its own nonce.
 
 Generated once at cycle start, immutable, and collision-resistant operationally: **8 to 16
 characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — 8 being where
@@ -177,12 +192,14 @@ infix and a path component.
 
 **It appears in every record the cycle writes, and that set is named rather than left open**:
 the provenance line, the per-pass curve (including a skip record standing in for one), the
-cycle's findings slots, and its advisory working record — **the working record is a cycle
-record too**, and the slot rules above apply to it as they do to a findings slot. It is not
-required in records this change neither introduces nor keys to a cycle, the evidence entry and
+cycle's findings slots, and its advisory working record. **The working record is a cycle record
+too**: a cycle holding a nonce names it `gate-a-spec-<nonce>-resume.md`,
+`gate-a-plan-<nonce>-resume.md` or `gate-b-<nonce>-resume.md`, and the bare names above stay
+reserved for the legacy single-cycle case, exactly as the findings slots do. The nonce is not
+required in records this change neither introduces nor keys to a cycle — the evidence entry and
 a human-exception record among them.
 
-**A nonce is a candidate for recovery only if** it is keyed to this cycle's type — Gate-A spec,
+**A nonce is a candidate for recovery only if** it is keyed to this cycle's kind — Gate-A spec,
 Gate-A plan, or Gate B — **and** this cycle's artifact, **and** that cycle is still open.
 History normally holds many closed cycles' nonces and they are not candidates; a working record
 left by a closed cycle is not one either, which is why that record is **retired at closure**
@@ -190,12 +207,21 @@ rather than left to be found later. **Recovery has two sources**, because a Gate
 commit does not exist while it runs: the working record during the cycle, and history at its
 commit. Recovering a single candidate from **either** keeps identity. **No candidate,
 disagreeing sources, or more than one candidate → no identity: start a new cycle**, which costs
-passes rather than letting one cycle's records read as another's.
+passes rather than letting one cycle's records read as another's. **Starting a new cycle does
+not close, adopt or retire the cycles those candidates belong to** — they stay open, keep their
+own nonces, and are a human's to resolve; the new cycle simply does not claim them.
 
 **A cycle does not start without a valid, unique nonce.** Where generation fails — randomness
-unavailable, an invalid value, or a collision with an open cycle — **retry at most three times,
-then stop and surface, naming which of the three causes occurred**, since they need different
-fixes and one token would name a symptom rather than a cause. **No deterministic fallback.**
+unavailable, an invalid value, or a collision with a cycle known to be open — make **at most
+three attempts in total**, then stop and surface, **naming which of the three causes occurred**,
+since they need different fixes and one token would name a symptom rather than a cause. **No
+deterministic fallback.**
+
+**Two residuals, disclosed rather than guarded.** The uniqueness check compares against cycles
+*known to be open*, so a nonce can repeat one belonging to a cycle nobody can see; and two
+cycles starting at the same moment can each check before either has published, so neither
+observes the other. **What makes both unlikely is the width of the draw, not the check** — and
+unlikely is the honest word. Neither is a guard.
 
 **A cycle that began before these rules shipped has no nonce and cannot acquire one.** Its
 records carry the reserved `cycle none (pre-rule)` field and are, by construction, not
@@ -232,7 +258,9 @@ CLAUDE.md:687:  **On squash-merge, copy every evidence entry and every human-exc
 plugins/dev-workflow/commands/workflow-init.md:864:  **On squash-merge, copy every evidence entry and every human-exception record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
 ```
 
-> Inserted before the squash-merge sentence, which is re-emitted unchanged here and then edited by Task 5. **The grammar is copied verbatim from spec §2.3 rather than paraphrased** — the spec pins it precisely because a program parses it, and a paraphrase would be a second form.
+> Inserted before the squash-merge sentence, which is re-emitted unchanged here and then edited by Task 5 — so the OLD still matches after this task, and the assert-new check is its preflight.
+> 
+> **The grammar is the spec's block, copied — two spaces of indentation added so it stays inside its bullet, and nothing else changed.** Verified by de-indenting the shipped block and comparing it byte-for-byte with spec §2.3. That check earns its keep: an earlier attempt embedded the block through a transcription step that interpreted `\\"` as `"` and `\\\\` as `\\`, silently rewriting the very production that specifies which escapes are legal.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -242,30 +270,30 @@ plugins/dev-workflow/commands/workflow-init.md:864:  **On squash-merge, copy eve
 
 NEW:
 
-````
+```
   **Every cycle records one provenance line in its closing commit body** — default floor or
   not, so an absent line is never ambiguous between "the default applied" and "someone forgot".
-  Three cycles means three lines, one each. There is no informal variant; anything quoting this
-  form elsewhere quotes an instance of it, because the deferred metrics work parses it.
+  **One line per cycle**, so a change running five cycles records five. There is no informal
+  variant; anything quoting this form elsewhere quotes an instance of it, because the deferred
+  metrics work parses it.
 
-  ```
   <CYCLE-FIELD>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
 
   <CYCLE-FIELD> := "cycle " <NONCE> | "cycle none (pre-rule)"
-  <NONCE>       := [a-z0-9]{8,16}
-  <N>           := [1-9][0-9]*
-  <STORY-SET>   := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
-                   each <PATH> appears at most once; a repeated path, with or without
-                   conflicting levels, is malformed
-  <ENTRY>       := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
-  <PATH>        := <bare> | <quoted>
-  <bare>        := [A-Za-z0-9._/-]+   contains no delimiter, quote or whitespace
-  <quoted>      := a double-quoted string, non-empty, whose only escapes are \" and \\ ;
-                   a path containing a newline or other control character is NOT
-                   representable — the cycle stops and surfaces rather than emitting one
-  <KNOB>        := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
-  <CAUSE>       := "unreadable" | "empty" | "non-numeric" | "out-of-range"
-  ```
+  <NONCE>     := [a-z0-9]{8,16}
+  <N>         := [1-9][0-9]*
+  <STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
+                                            each <PATH> appears at most once; a repeated path,
+                                            with or without conflicting levels, is malformed
+  <ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
+  <PATH>      := <bare> | <quoted>
+  <bare>      := [A-Za-z0-9._/-]+           contains no delimiter, quote or whitespace
+  <quoted>    := a double-quoted string, non-empty, whose only escapes are \" and \\ ;
+                                            a path containing a newline or other control
+                                            character is NOT representable — the cycle stops
+                                            and surfaces rather than emitting one
+  <KNOB>      := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
+  <CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
 
   It carries that cycle's **cycle field** — the nonce for any cycle started after these rules
   ship, `none (pre-rule)` only for one that began before them — the **derived floor**, and **the
@@ -276,7 +304,7 @@ NEW:
   cause**, because those need different fixes.
 
   **On squash-merge, copy every evidence entry and every human-exception record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
-````
+```
 
 - [ ] **Assert the new text is present.**
 
@@ -307,7 +335,7 @@ CLAUDE.md:689:  **Recording a human exception.** Where a human decides that some
 plugins/dev-workflow/commands/workflow-init.md:866:  **Recording a human exception.** Where a human decides that something **no applicable rule
 ```
 
-> Inserted before the human-exception block, which is re-emitted unchanged. Same rule as the previous task: the grammar is copied from spec §4, not restated.
+> Inserted before the human-exception block, which is re-emitted unchanged — so again the OLD still matches afterwards and the assert-new check is the preflight. The grammar is spec §4's block with two spaces of indentation added and nothing else, verified the same way.
 > 
 > Note what the shipped text says about its own worth, because it is the part most likely to be dropped as hedging: the curve is durable **across** cycles and not **within** one, and it is **author-written and unchecked** — nothing compares it against the validated pass files. Whatever later reads it reads a self-report.
 
@@ -320,35 +348,41 @@ plugins/dev-workflow/commands/workflow-init.md:866:  **Recording a human excepti
 
 NEW:
 
-````
+```
   **Every cycle records its own per-pass curve in its own commit body.** Gate B alone would
   leave the dominant cost unrecorded — the loops this rule was built from are Gate-A loops.
 
-  ```
   <CYCLE-FIELD>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>. Majors <COUNTS>.
 
-  <CYCLE>      := "Gate-A spec" | "Gate-A plan" | "Gate B"
-  <SPEC>       := <RANGE> ("," <RANGE>)*   strictly ascending, non-overlapping
-  <RANGE>      := <p> | <p> "-" <p>
-  <p>          := [1-9][0-9]*
-  <COUNTS>     := <n> ("," <n>)*           exactly as many entries as <SPEC> enumerates
-  <n>          := 0 | [1-9][0-9]* | "?"    "?" = unrecoverable for that pass
-  <MODELS>     := <model> | <PER-PASS> ("; " <PER-PASS>)*
-  <PER-PASS>   := "pass " <p> " " <model> ("+" <model>)*
-  <model>      := <bare-model> | <quoted-model> | "undetermined"
-  <bare-model> := printable ASCII minus ; : , ( ) + " and space, and not the
-                  literal "undetermined", which is reserved
-  <quoted-model> := a non-empty double-quoted string, same two escapes as <quoted>
-  ```
+  <CYCLE>    := "Gate-A spec" | "Gate-A plan" | "Gate B"
+  <SPEC>     := <RANGE> ("," <RANGE>)*      strictly ascending, non-overlapping
+  <RANGE>    := <p> | <p> "-" <p>
+  <p>        := [1-9][0-9]*
+  <COUNTS>   := <n> ("," <n>)*              exactly as many entries as <SPEC> enumerates
+  <n>        := 0 | [1-9][0-9]* | "?"      "?" = the count is unrecoverable for that pass
+  <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
+  <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
+  <model>    := <bare-model> | <quoted-model> | "undetermined"
+                                            "undetermined" means the model could not be determined;
+                                            a real model so named is written as <quoted-model>
+  <bare-model> := [!-~]{1,} minus ; : , ( ) + " and space, and not the
+                                            literal "undetermined", which is reserved
+                                            printable ASCII only; a control character makes the
+                                            identifier unrepresentable, handled below
+  <quoted-model> := a non-empty double-quoted string, same two escapes as <quoted>;
+                                            a reported identifier containing a control character is
+                                            written `undetermined` — and the raw value is NOT
+                                            reproduced anywhere in the body, since a commit message
+                                            cannot safely carry one (NUL cannot appear at all).
+                                            What the body records instead is where the value came
+                                            from and which bytes were rejected, described rather
+                                            than embedded
 
   A skipped cycle writes `<CYCLE-FIELD>; <CYCLE>: skipped (see skip reason)` and no counts.
   **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
   list that omits or repeats a pass is malformed, not partially informative — and **every model
   contributing to a split logical pass is listed**, joined by `+`, since recording one of two is
-  the same loss as recording none. A reported identifier carrying a control character is written
-  `undetermined` and **the raw value is not reproduced anywhere in the body**; what the body
-  records instead is where the value came from and which bytes were rejected, described rather
-  than embedded.
+  the same loss as recording none.
 
   **Majors are recorded as well as Findings and Blockers**, because the severity rule moves the
   Blocker/Major line rather than the total, so totals and Blockers alone could not show even a
@@ -379,7 +413,7 @@ NEW:
 
   **Recording a human exception.** Where a human decides that something **no applicable rule
   required** was nonetheless worth skipping
-````
+```
 
 - [ ] **Assert the new text is present.**
 
@@ -468,8 +502,11 @@ NEW:
 
 ```
 floor 3, severity classified without the demotion, the provenance-line duty owed, the curve
-duty owed, and the nonce duties at their strictest; each further rule this change ships adds
-its own strict reading to this list.
+duty owed, and the nonce duties at their strictest — the cycle is treated as post-rule, so it
+owes a nonce and every record that carries one, and where it cannot recover one it starts a new
+cycle rather than claiming `none (pre-rule)`, that reserved field being unavailable to a cycle
+whose start cannot be established. Each further rule this change ships adds its own strict
+reading to this list.
 ```
 
 - [ ] **Assert the new text is present.**
