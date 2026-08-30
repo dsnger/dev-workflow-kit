@@ -139,7 +139,7 @@ produced a false IDENTICAL — a comparison that ended before the divergence.
 
 | # | Passage | Copy | What the existing prose requires | Disposition |
 |---|---|---|---|---|
-| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1) · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · d–h **kept verbatim** in the second paragraph · b, i–m **kept verbatim**, outside the replaced range |
+| 1 | floor paragraph | both | a. a hard floor of 3 passes per run · b. Blocker/Major only · c. the count is the hook's · d. the hook cannot read findings · e. the hook cannot tell the spec run from the plan run · f. it resets at `writing-plans` · g. therefore Gate A is instruction-backed · h. a satisfied count is not a clean review · i. a TodoWrite per pass · j. fix Blocker/Major after each · k. Codex is advisory · l. validate before applying · m. dismissed finding → one-line why | a. **replaced** by the derived predicate (Task 1), which also settles what a change between cycles does: it binds cycles not yet closed and never reopens a closed one · c. **moved** — the hook still counts, as its reminder threshold, not the obligation · d–h **kept verbatim** in the second paragraph · b, i–m **kept verbatim**, outside the replaced range |
 | 2 | `if pass 3 still` | both | the final pass must be clean; if the pass at 3 still finds Blocker/Major, keep going until clean or clearly stuck, then STOP and surface | **kept**, `pass 3` → `the pass at the floor` (Task 3) |
 | 3 | `below 3` | both | the only early exit below the floor is a zero-finding pass; don't pad | **kept**, `below 3` → `below the floor` (Task 4) |
 | 4 | pass-1 Minor sentence | both | below the floor nothing closes; a zero-finding pass is the only exception; a Blocker/Major-free pass 1 carrying a Minor keeps looping | **kept**, `pass 1` → `pass below the floor` (Task 9) |
@@ -151,7 +151,7 @@ produced a false IDENTICAL — a comparison that ended before the divergence.
 | 8 | `where the 3 come from` | both | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept, rationale replaced** — both lines, claim named (Task 7) |
 | 9 | Lenses | both | a. lenses are different questions, not more passes · b. the 3-pass floor is unchanged · c. the Blocker/Major filter is unchanged · d. the file-first protocol is unchanged · e. the clean-final-pass rule is unchanged | a **kept and sharpened** · **b deliberately dropped and replaced by its negation** — the floor is precisely what this change makes variable, so the sentence now says so · c, d, e **kept verbatim** (Task 8) |
 | 10 | `Changing a profile:` | both | a. proposes the complete resulting header · b. human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's rules appended after them, never merged in (Task 11) |
-| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them (Task 12) |
+| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, together with its precedence against the five-tells rule — a demoted finding still counts toward the tells, and a Blocker/Major-free pass at or above the floor still closes (Task 12) |
 
 **Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff, is
 what confirms that against this table.
@@ -169,6 +169,8 @@ plugins/dev-workflow/commands/workflow-init.md:272:**Both gates are a LOOP with 
 ```
 
 > The text on disk ends **mid-line**: ` Open a TodoWrite "Codex pass N" per pass;` continues the same line after `review.` Match exactly this and no more; what follows stays.
+> >
+> > The between-cycle rule at the end is new in revision 5. Revision 4 promised "one derived value governs all three cycles" while §2.4's rules are silent when no gate is running, so an ordinary profile edit between two cycles left the promise undefined — a closed cycle at one floor and the next at another. The promise is now about the **predicate**, not a frozen number, and the interval is settled explicitly.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -193,10 +195,13 @@ under the existing rule; it does not fall through to 3, because reading it as 3 
 turn a stop condition into a silent default. Across a cited set the floor is 1 if and
 only if the set is non-empty and every member is profiled, resolvable and at level 0
 — all four conditions, since "every cited story" is vacuously true of an empty set;
-no story cited, or any cited story unprofiled, gives 3. One derived value governs all
+no story cited, or any cited story unprofiled, gives 3. One derivation governs all
 three cycles: the Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle. Not
-because they are one cycle — they are three — but because they derive from the same
-cited-story set.
+because they are one cycle — they are three — but because the same predicate reads the
+same cited-story set. Each cycle derives its floor from that set as it stands during its
+own passes. A profile or cited-set change between cycles binds the cycles that have not
+closed and does not reopen one that has: passes already run keep counting, which is the
+existing rule and is not changed here.
 
 **The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder
 threshold that controls nothing.** The hook still counts passes, and it still can't read
@@ -721,6 +726,8 @@ plugins/dev-workflow/commands/workflow-init.md:675:  rework) → both must resol
 ```
 
 > The four severity definitions stay verbatim; the reachability test is appended as the procedure that sets a **ceiling** on them.
+> >
+> > The final paragraph is new in revision 5. Without it the demotion and the five-tells rule collide: a pass could be Blocker/Major-free at or above the floor — therefore closeable — while two tells made stopping mandatory. Demotion now explicitly changes **which findings gate**, not **what the tells observe**, and clean completion governs.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -756,6 +763,13 @@ NEW:
 
   This is the finding-level analog of the path-level prose exemption: one principle at two
   granularities — text that *describes* the product versus text that *is* the product.
+
+  **Demotion changes which findings gate; it does not change what the pass-report tells
+  observe.** A demoted finding still counts toward instrument clustering and prose
+  clustering, because the tells measure where a loop's attention is going, not how much of
+  it blocks. Where a pass is Blocker/Major-free at or above the floor, the clean-completion
+  rule governs and the cycle closes: the two-tell stop is a rule for a loop still running,
+  not a bar to one that has finished.
 ```
 
 - [ ] **Assert the new text is present.**
@@ -787,6 +801,8 @@ git commit --amend -m "WIP: review-loop economics"
 ```
 
 > **Plan B extends this list rather than rewriting it** — §10 says extending is safe and replacing is not. `at minimum` and `each further rule this change ships adds its own strict reading to this list` are what make that possible.
+> >
+> > The partial-adoption paragraph is widened in revision 5. Revision 4 named only the floor-without-severity coupling and then claimed "what prompt text can do is done" — an overclaim, and it missed the sharper case: a merge taking the floor predicate without the numeric replacements leaves the derived floor beside explicit `pass 3` obligations that contradict it.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -816,7 +832,11 @@ actually writes the text — which may write nothing, be declined, or be merged 
 so these rules bind only over the text a project's `CLAUDE.md` actually contains, and a
 partial adoption can persist undetected. A project taking the floor rule without the
 severity test gets a floor whose docs-only question the severity test is what settles.
-What prompt text can do is done; what it cannot is said.
+**A partial adoption can also leave the derived floor standing beside the old fixed-number
+obligations — `pass 3`, `below 3`, `3-pass floor` — which contradict it outright. Where a
+project's text contains both, nothing here resolves which governs: stop, and have a human
+resolve it, before running a gate under it.** What prompt text can do about downstream
+adoption is limited, and that limit is what this paragraph states.
 ```
 
 - [ ] **Assert the new text is present.**
