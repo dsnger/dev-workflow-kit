@@ -124,6 +124,19 @@ A third, for the same reason: the **clearly-stuck paragraph** is rewritten by bo
 because its "pass 1 carrying a Minor" sentence is false under a floor of 1, and by this story
 because the exit becomes a suspension in the ordering. **Both accountings owe it.**
 
+**A fourth, handed over rather than shared — the demotion/loop-health interaction.** The parent's
+severity test demotes a finding when nothing in the system takes a different decision from it.
+That bears directly on the loop-health measures this story owns: what a demoted finding does to
+the per-pass counts, to the finding clusters, and to the stop thresholds. The parent **does not
+settle it** — three of its revisions tried, each reaching past its own §9 exclusion of "the §5
+loop-rule consolidation and everything its successor story owns", and each removal found another
+layer underneath. What it ships is one sentence naming this story as where the interaction is
+settled, and **this paragraph is the reciprocal**: the obligation is named in both documents so it
+cannot fall between them, which is the failure the passage list demonstrated in that same cycle.
+The design owes an answer covering at least: whether a demoted finding still counts toward the
+finding total and the clusters, and whether the Blocker curve reads severity before or after the
+ceiling.
+
 ## 5. Open questions
 
 - **The profile.** Proposed `high / none / battery+check+verification`, on the same reasoning the

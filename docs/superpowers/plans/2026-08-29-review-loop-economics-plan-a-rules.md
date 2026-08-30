@@ -151,7 +151,7 @@ produced a false IDENTICAL — a comparison that ended before the divergence.
 | 8 | `where the 3 come from` | both | re-review after every fix, because a fix changes the diff and the hook invalidates the prior pass | **kept, rationale replaced** — both lines, claim named (Task 7) |
 | 9 | Lenses | both | a. lenses are different questions, not more passes · b. the 3-pass floor is unchanged · c. the Blocker/Major filter is unchanged · d. the file-first protocol is unchanged · e. the clean-final-pass rule is unchanged | a **kept and sharpened** · **b deliberately dropped and replaced by its negation** — the floor is precisely what this change makes variable, so the sentence now says so · c, d, e **kept verbatim** (Task 8) |
 | 10 | `Changing a profile:` | both | a. proposes the complete resulting header · b. human confirms, both directions · c. an agent never moves it alone · d. correct the header, append one log line · e. any axis change voids every prior override · f. `+abuse-path` follows current security · g. passes under the lower profile keep counting · h. only the final clean pass must run under the current profile · i. fold mid-cycle edits into the WIP by amend | **all nine kept verbatim**; §2.4's rules appended after them, never merged in (Task 11) |
-| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, together with the per-tell consequence of demotion — every reported finding still counts toward the total, the clusters and the require↔withdraw comparison, while the Blocker curve reads severity after the ceiling. **The five-tells rule's own conclusion is NOT changed**: it is a §5 loop rule, which spec §9 places out of scope, so Task 12 states the interaction and defers it to the successor story (Task 12) |
+| 11 | Severity | both | Blocker = wrong/unsafe/breaks invariant · Major = design flaw → rework · both must resolve · Minor and Nit → collect, never iterate | **all four kept verbatim**; the reachability test appended as the procedure that sets a ceiling on them, **and nothing else**. Task 12 ships spec §3 alone; it states no consequence for the per-pass counts, the clusters or the stop thresholds, and chooses no precedence against any loop rule — all of that is §4 and successor-story material that spec §9 excludes. One sentence names where the interaction is settled, which is a scope disclaimer rather than a rule (Task 12) |
 
 **Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff, is
 what confirms that against this table.
@@ -217,9 +217,11 @@ deriving the set reads that header and does not grep the body for story paths**,
 grep finds mentions and cannot tell a citation from a disclaimer. **Each cycle's governing header is the
 header of the artifact it reviews**: the spec's for the Gate-A spec loop, the plan's for the
 Gate-A plan loop, and — since a Gate-B cycle reviews a diff and has no header of its own —
-**the plan's, which the Gate-B call must carry in full**, as this section already requires of
-every cited path. **Before each pass, the deriving agent compares every governing header that
-exists at that moment.** Where they name different sets the premise of a single value has
+**the union of the `Story:` headers of every plan contributing to that diff, which the Gate-B
+call must carry in full**, as this section already requires of every cited path. **Before each pass, the deriving agent compares every governing header that
+exists at that moment, and again before a clean pass is accepted as the cycle's final pass.**
+A header or profile that changed during that pass means the pass is not final — the same
+answer a change gets at every other read point. Where they name different sets the premise of a single value has
 failed: **stop and surface the disagreement** rather than deriving from either, exactly as an
 unresolvable profile stops rather than defaulting.
 
@@ -747,7 +749,7 @@ plugins/dev-workflow/commands/workflow-init.md:675:  rework) → both must resol
 
 > The four severity definitions stay verbatim; the reachability test is appended as the procedure that sets a **ceiling** on them.
 > >
-> > The last two paragraphs settle how demotion interacts with the untouched five-tells rule. **Per tell**, because a blanket claim was wrong in one direction: demoting a Blocker to Minor *does* remove it from the Blocker curve — that is the point — while the total, the clusters and the require↔withdraw comparison still see every reported finding. And the precedence is **against the two-tell stop only**: a finding that leaves the assigned fix set or opens a new structural question still stops the cycle at any severity.
+> > **Task 12 ships spec §3 and nothing else** — the procedure, the exclusions, the symmetric instrument carve-out, the rationale rule, coverage-first and the kinship sentence. It chooses no precedence against any loop rule and states no consequence for the per-pass counts, the clusters or the stop thresholds. Earlier revisions did, three times, each time reaching past spec §9's exclusion of "the §5 loop-rule consolidation and everything its successor story owns", and each removal found another layer underneath. What remains is one sentence naming where that interaction is settled — a scope disclaimer in §9's own pattern, not a rule, and a body mention rather than a citation.
 
 - [ ] **Replace, in both copies.** OLD:
 
@@ -784,18 +786,9 @@ NEW:
   This is the finding-level analog of the path-level prose exemption: one principle at two
   granularities — text that *describes* the product versus text that *is* the product.
 
-  **Demotion changes which findings gate. Per tell:** every reported finding, demoted or
-  not, counts toward the finding total, toward the instrument and prose clusters, and
-  toward the require↔withdraw comparison — those measure where a loop's attention is
-  going, not how much of it blocks. **The Blocker curve reads severity after this ceiling
-  is applied**, so a finding demoted to Minor leaves that series, which is what demoting it
-  is for.
-
-  **What this does not decide.** Demotion and the five-tells rule interact: a pass can be
-  Blocker/Major-free at or above the floor while two tells are present. **This change does
-  not settle that interaction and does not weaken either rule.** The loop rules are outside
-  its scope by decision, and the two-tell rule therefore stands exactly as written — two
-  tells make stop-and-surface mandatory, not discretionary.
+  **How this demotion bears on the loop-health measures — the per-pass counts, the finding
+  clusters and the stop thresholds — is settled by
+  `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`, not here.**
 ```
 
 - [ ] **Assert the new text is present.**
@@ -861,16 +854,19 @@ severity test gets a floor whose docs-only question the severity test is what se
 **A partial adoption can leave a project's floor undefined or self-contradictory.** The rule
 is a coherence requirement, stated semantically rather than as a list of spellings, and it
 runs in **both** directions: **exactly one definition of the floor must be present, and every
-NORMATIVE statement — one that sets how many passes a gate owes, or when a cycle may close —
-must resolve to it.** The hook's reminder threshold and any descriptive or historical pass
-number are outside this: they state what a tool says or what once happened, not what a cycle
-owes. Four states break it, and the list is **not exhaustive**: a fixed-number or
+NORMATIVE statement that states or assumes a pass count — a numeric floor, a specific pass
+ordinal, or a dependency on the derived floor — must resolve to it.** Two kinds of statement
+are outside this and are not required to derive from the floor: **the other closure and stop
+predicates**, which are independent of it by design — assigned-fix-set membership, a new
+structural question, an accepted Blocker or Major, the tell thresholds — and **the hook's
+reminder threshold together with any descriptive or historical pass number**, which state
+what a tool says or what once happened rather than what a cycle owes. Four states break it, and the list is **not exhaustive**: a fixed-number or
 specific-pass obligation surviving beside the derived predicate; a claim or dependency on a
 derived floor with no predicate to define it; **no definition at all**; and **two definitions
 at once**. A
-merge can produce either: the Gate-A loop description, the pass-1 closure rule and the
+merge can produce any of them: the Gate-A loop description, the pass-1 closure rule and the
 re-review rationale each carry a fixed-three claim and can be taken or left independently of
-the predicate itself. In either state nothing here resolves which rule governs: **stop, and
+the predicate itself. In any such state nothing here resolves which rule governs: **stop, and
 have a human complete or revert the adoption, before running a gate under it.** What prompt text can do about downstream
 adoption is limited, and that limit is what this paragraph states.
 ```
