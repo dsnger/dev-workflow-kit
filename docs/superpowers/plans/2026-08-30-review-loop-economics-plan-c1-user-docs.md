@@ -35,27 +35,39 @@ takes the evidence, the Gate-B cycle and the close.
 the cited set, and the `codex-gate.floor` knob moves the hook's **reminder threshold** rather than
 that floor.
 
-**Three is still the right answer in most states — including this story's.** The claim being
-corrected is that it is *always* the answer, and that the knob moves it.
+**Three is still the right answer in most states.** The claim being corrected is that it is
+*always* the answer, and that the knob moves it. **This plan states no floor for this story** —
+the value is recomputed from the story header at execution time, and a number written here would
+be stale the moment that header moved.
 
 **The rule, exactly as Plan A ships it** (byte-frozen; quoted rather than summarised because a
 summary of this is what pass 1 and pass 2 both caught):
 
-- **Floor 1 if and only if** the cited set is **non-empty** and **every** member is **profiled**,
-  **resolvable** and at **level 0** — all four conditions, since *every member* is vacuously true
-  of an empty set.
-- **Floor 3** for: no story cited; any cited story unprofiled; or any resolvable member above
-  level 0. There are two levels, not three — `high` takes its rigor from lens sets and evidence
-  mode, not from extra passes.
+**The stop conditions come first, and they are not outvoted by the rest of the set.** A mixed
+set — one unresolvable member beside several level-0 ones — **stops**; it does not fall through to
+a floor. Reading a stop as 3 would turn a stop condition into a silent default, which is the one
+thing Plan A says the derivation must never do.
+
 - **No value, and the cycle stops** for: a cited profile present but **unresolvable**; governing
-  headers that **disagree**; a `Story:` header that **cannot be read**. Each stops rather than
-  defaulting, because reading a stop as 3 would turn a stop condition into a silent default.
+  headers that **disagree**; a `Story:` header that **cannot be read**.
+- **Otherwise, floor 1 if and only if** the cited set is **non-empty** and **every** member is
+  **profiled**, **resolvable** and at **level 0** — all four conditions, since *every member* is
+  vacuously true of an empty set.
+- **Otherwise, floor 3**: no story cited; any cited story unprofiled; or any resolvable member
+  above level 0. There are two levels, not three — `high` takes its rigor from lens sets and
+  evidence mode, not from extra passes.
 
 One derived value governs all three cycles, because they derive from the same cited-story set.
 
 Nine sentences state the claim wrongly, in eight replacements. They are the complete set in these
-two files, found by grepping the **claim** — every place a number of passes, a floor, a threshold,
-gate satisfaction, or the knob is described. Task 9 re-runs that grep against the finished files.
+two files **as of this revision**, found by reading for the claim — every place a number of
+passes, a floor, a threshold, gate satisfaction, or the knob is described. **Two of the nine were
+found by review rather than by that reading** (pass 1 and pass 2 each found one), which is the
+measure of how much the reading is worth.
+
+**Task 9 is a bounded mechanical check, not a proof of completeness.** It re-runs the *numeric*
+spellings and the two knob phrasings. A tenth sentence stating the claim without a number would
+pass it. The plan says so at the task rather than implying otherwise here.
 
 ### What this plan does not own, so that nothing falls between the pieces
 
@@ -82,13 +94,24 @@ absorbed** — taking them would make C1 a second Plan C, which is what the spli
   recognize as WIP is treated as a Gate-B cycle boundary and the cycle's Gate-B state is reset —
   regardless of whether the commit itself succeeded**, since that branch cannot observe exit
   status. Gate-A state is reset by skill events, not here. **Never `git commit --amend --no-edit`.**
-- **Every amend establishes identity first, statelessly:** the branch is `review-loop-economics`,
-  `HEAD`'s subject is exactly the WIP subject, and `HEAD^` is **not** itself a WIP. The three
-  together are what a subject match alone does not give.
-- **Every amend requires an empty index before staging.** `git commit --amend` commits the whole
+- **Every amend runs three cheap guards before staging**, and it is worth being exact about what
+  they establish: the branch is `review-loop-economics`, `HEAD`'s subject is exactly the WIP
+  subject, and `HEAD^` is not itself a WIP. **They catch the wrong branch, a closed cycle, a
+  stacked WIP and a plain out-of-order run. They do not establish that `HEAD` is *this* cycle's
+  WIP** — a different commit with the same subject on the same branch passes all three, and every
+  amend changes the SHA, so there is no stable value to compare against without a lock this plan
+  does not have. **Single-executor, single-worktree is a precondition of this plan, not something
+  it verifies.**
+- **Every amend inspects the index before staging.** `git commit --amend` commits the whole
   index, so a change staged by anything else would ride along, and `git add <path>` does nothing
-  to prevent that. The scoped read is `git diff HEAD -- <path>`, which sees the index as well as
-  the worktree; plain `git diff` does not.
+  to prevent that. **Empty is fine and this task's own path already staged is fine** — that is
+  what an interrupted add-then-amend leaves behind, and rejecting it would dead-end the resume
+  path this plan advertises. **Any other staged path stops.** The scoped read is
+  `git diff HEAD -- <path>`, which sees the index as well as the worktree; plain `git diff` does
+  not.
+- **Every git command whose output is tested has its status checked first.** `test -z "$(cmd)"`
+  reads a *failed* command's empty output as a clean result, which would let a broken index or an
+  unreadable repository pass a safety precondition.
 - **Every amend verifies the replacement reached `HEAD`** by reading the committed blob back.
 - **No ordinary commit until C3 closes the cycle.**
 - **Line numbers are provenance, never instructions.**
@@ -118,7 +141,8 @@ the one value a rollback needs.
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — collapse first"; exit 1; fi
-test -z "$(git status --porcelain)" || { echo "TREE NOT CLEAN — resolve before starting C1"; exit 1; }
+st=$(git status --porcelain) || { echo "git status FAILED — stop"; exit 1; }
+test -z "$st" || { echo "TREE NOT CLEAN — resolve before starting C1"; exit 1; }
 echo "PRE-C1 WIP: $(git rev-parse HEAD)   <-- record this value"
 ```
 
@@ -127,16 +151,24 @@ echo "PRE-C1 WIP: $(git rev-parse HEAD)   <-- record this value"
 
 ```bash
 sha=PASTE_THE_RECORDED_PRE_C1_WIP_SHA
-test -z "$(git status --porcelain)" || { echo "TREE NOT CLEAN — do not reset; inspect first"; exit 1; }
+st=$(git status --porcelain) || { echo "git status FAILED — stop"; exit 1; }
+test -z "$st" || { echo "TREE NOT CLEAN — do not reset; inspect first"; exit 1; }
+git log --oneline "$sha"..HEAD   # read it: every commit here must be C1's
 git rev-parse --verify "$sha^{commit}" >/dev/null 2>&1 || { echo "NOT A COMMIT — check the recorded value"; exit 1; }
 git log -1 --pretty=%s "$sha" | grep -qx 'WIP: review-loop economics' || { echo "RECORDED SHA IS NOT THE WIP — stop"; exit 1; }
 git reset --hard "$sha"
 ```
 
-> **`--hard` is safe here only because of the clean-tree precondition**, which Task 0 established
-> and every task below preserves — each ends with a commit and nothing uncommitted. If the tree is
-> **not** clean, the reset would destroy work that is not C1's: **stop and inspect instead.**
-> Plans A and B are behind the recorded commit and are untouched by this reset.
+> **What this rollback does and does not cover.** It restores the branch to the recorded commit,
+> and Plans A and B are behind that commit and untouched. It is **not** a general safety net: a
+> clean worktree says nothing about *commits* made after the checkpoint by anything else, and
+> `git status` cannot see them — so a `--hard` here would discard them. It also races anything
+> writing concurrently, which is why single-executor is a precondition above.
+>
+> **It covers exactly one state: a clean tree whose only commits since the checkpoint are C1's.**
+> Establish that by reading `git log <sha>..HEAD` before resetting. **Any other state — a dirty
+> tree, a staged edit, an unfamiliar commit — is a stop, and this plan supplies no recovery for
+> it**, because a recovery procedure nobody has exercised is worse than an instruction to look.
 
 ---
 
@@ -164,6 +196,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- README.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -196,8 +230,13 @@ test "$(grep -cxF -- '| `codex-gate.floor` | a positive integer; moves the 3-pas
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- README.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "README.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- README.md || { echo "git diff FAILED — stop"; exit 1; }
 git add README.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:README.md | grep -cxF -- '| `codex-gate.floor` | a positive integer; moves the hook'\''s reminder threshold. It does not change the floor §5 obliges, which §5 derives from the profile and the cited set. |')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -239,6 +278,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ] && [ "$n2" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ] && [ "$n2" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -275,8 +316,13 @@ test "$(grep -cxF -- 'both of you when a gate isn'\''t satisfied. Your job is th
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'both of you when its own counter or fingerprint says a gate may not have run —')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -323,6 +369,8 @@ if [ "$o1" -eq 1 ] && [ "$o2" -eq 1 ] && [ "$o3" -eq 1 ] && [ "$n1" -eq 0 ] && [
 elif [ "$o1" -eq 0 ] && [ "$o2" -eq 0 ] && [ "$o3" -eq 0 ] && [ "$n1" -eq 1 ] && [ "$n2" -eq 1 ] && [ "$n3" -eq 1 ] && [ "$n4" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -365,8 +413,13 @@ test "$(grep -cxF -- 'the counter, not an error. Your job: arbitrate disputed fi
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'the floor §5 derives, final pass clean — the one early exit is a pass that comes')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -401,6 +454,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -433,8 +488,13 @@ test "$(grep -cxF -- 'task-by-task plan (each task starts with a failing test); 
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'task-by-task plan (each task starts with a failing test); the same loop runs at the derived floor')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -470,6 +530,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -502,8 +564,13 @@ test "$(grep -cxF -- 'progress claims backed by test runs. If the Gate-A floor w
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'progress claims backed by test runs. If the hook'\''s own threshold wasn'\''t met, it says')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -535,6 +602,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -567,8 +636,13 @@ test "$(grep -cxF -- '`mcp__codex__review` the same way: three passes, final cle
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- '`mcp__codex__review` the same way: the derived floor, final clean. Verification is by')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -606,6 +680,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -638,8 +714,13 @@ test "$(grep -cxF -- 'is still owed and Gate A'\''s floor is unchanged at every 
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'is still owed; Gate A'\''s floor derives from the profile and the cited set exactly as Gate B'\''s does. The caution bias is')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -675,6 +756,8 @@ if [ "$o1" -eq 1 ] && [ "$n1" -eq 0 ]; then
 elif [ "$o1" -eq 0 ] && [ "$n1" -eq 1 ]; then
   if [ -n "$(git diff HEAD -- docs/getting-started.md)" ]; then
     echo "REPLACED BUT NOT YET IN THE WIP — run the amend step only, then skip"; exit 0
+    # the amend step accepts this task's path already being staged, so an interrupted
+    # add-then-amend resumes there rather than dead-ending on a non-empty index
   fi
   echo "ALREADY APPLIED AND COMMITTED — skip"; exit 0
 else
@@ -707,8 +790,13 @@ test "$(grep -cxF -- 'positive integer) moves the 3-pass floor, and `touch .cont
 git symbolic-ref --short HEAD | grep -qx 'review-loop-economics' || { echo "WRONG BRANCH — stop"; exit 1; }
 git log -1 --pretty=%s | grep -qx 'WIP: review-loop economics' || { echo "HEAD IS NOT THE WIP — stop"; exit 1; }
 if git log -1 --pretty=%s HEAD^ | grep -q '^WIP:'; then echo "STACKED WIP — stop"; exit 1; fi
-test -z "$(git diff --cached --name-only)" || { echo "INDEX NOT EMPTY — inspect it before staging"; exit 1; }
-git diff HEAD -- docs/getting-started.md
+staged=$(git diff --cached --name-only) || { echo "git diff --cached FAILED — stop"; exit 1; }
+case "$staged" in
+  "") : ;;
+  "docs/getting-started.md") echo "NOTE: only this task's path is staged — an interrupted amend; continuing" ;;
+  *) echo "UNEXPECTED STAGED PATHS: $staged — inspect before staging"; exit 1 ;;
+esac
+git diff HEAD -- docs/getting-started.md || { echo "git diff FAILED — stop"; exit 1; }
 git add docs/getting-started.md || exit 1
 git commit --amend -m "WIP: review-loop economics" || exit 1
 test "$(git show HEAD:docs/getting-started.md | grep -cxF -- 'positive integer) moves the hook'\''s reminder threshold, and `touch .context/codex-gate.off`')" -eq 1 || { echo "REPLACEMENT NOT IN HEAD"; exit 1; }
@@ -722,8 +810,9 @@ this task never made would ride along. The empty-index check above is what makes
 
 ## Task 9: Confirm the claim has no tenth site
 
-**Runs last.** The eight replacements above were found by grepping the claim. This re-runs that
-grep against the finished files, so completeness is a check rather than an assertion.
+**Runs last.** This re-runs the mechanical part of the discovery search against the finished
+files. **It is a bounded check, not a completeness proof** — see the boundary stated under the
+first command, and the plan's own count of sites that only review found.
 
 - [ ] **No numeric floor claim survives, except the one C2 owns.**
 
