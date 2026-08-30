@@ -23,8 +23,9 @@ Story-Pool — filling is always consequence-free         [missing]
     classification + architecture verdict, debounced/batched;
     attaches the card, triggers NO production)          [missing]
       ↳ reads the Architektur (AGENTS.md)               [exists, needs one extension]
-  → Freigabe (human sets "freigegeben" — the ONLY
-    production trigger)                                 [human]
+  → Freigabe (human — the ONLY production trigger;
+    reads a rendered wave plan, granularity knob:
+    decision 7)                                         [human]
   → Takt-Loop (polls freigegebene stories of the active
     wave → wakes the orchestrator → a lane opens)       [missing]
   → Spec-Loop   (intake + design + Gate A)              [exists]
@@ -77,7 +78,22 @@ the inspiration: the adversarial verifier is a different model *family*
    by both writers on one field; and in Phase 0 the architecture verdict
    waits until tree v1 exists. The intake zone (pool, Intake-Loop,
    Architektur) is the factory's first stage-4 proactive loop — at the front
-   of the pipeline, not the end.
+   of the pipeline, not the end. "Unclassified" is a transient marker, never a
+   working state: the pool is the single entry, and the marker exists only as
+   the intake trigger, as visible backlog when the loop stalls, and for Phase
+   0's deferred architecture verdicts.
+7. **Freigabe reads a rendered wave plan; its granularity is a maturity knob.**
+   The card answers "can this be built" — Freigabe answers "should this be
+   built now": value and timing, profile confirmation, capacity, and a
+   spot-check of the card (a Freigabe that regularly needs deep thought means
+   the card is missing a dimension → labeled example, tighten intake). The
+   knob: per story → batch → wave ("Go" on the rendered wave plan) → standing
+   auto-Freigabe (notified, not asked). Three things hold on every rung: flags
+   always escalate (high profile, architecture ⚠, rückfragen, scope doubt);
+   the knob is human-owned and committed, changed only by defined operation
+   (like `lanes`); and the plan is rendered on every rung — as a question or
+   as a notice. Raising the rung follows measured P8 evidence, never precedes
+   it (non-goal 4).
 
 ## 3. Maturity ladder
 
@@ -101,6 +117,14 @@ the inspiration: the adversarial verifier is a different model *family*
 - **A project's roadmap is a view, not a document**: pool items plus status,
   priority, dependencies and **wave** yield the order. The pool is the single
   source; a separate roadmap file would be a second copy that drifts.
+- **The execution plan is a computed view too** — the wave dry-run: dependency
+  graph (classification) + tree topology (the parallelism map) + waves and
+  priorities (human) + lanes and throttles yield lane assignments and order.
+  Recomputed at wave opening and every tick, never stored; the human
+  intervenes through the inputs, never by editing the plan. It generalizes
+  the orchestrator dry-run (build step 3). Waves are milestones that also
+  *steer* — the clock pulls only the active wave — so the roadmap is the
+  milestone-level view and the wave plan its per-milestone detail.
 - **Waves structure a new project.** Phase 0 assigns every initial pool item a
   wave mark (wave 1, 2, … or named milestones) — the deliberate "these
   subareas develop together first, those later" decision, usually aligned with
@@ -180,7 +204,12 @@ proceeds, the breaking part waits on the meta-story).
 
 - **Phase 0 exists once.** Initial brainstorming builds architecture tree v1
   plus goals/out-of-scope before production starts. It is the only
-  everything-waits moment; after it, intake never freezes.
+  everything-waits moment; after it, intake never freezes. It has two inputs:
+  a green field derives tree v1 from the pool; an existing project reads it
+  from the codebase (natural home: a `/workflow-init` extension). Tree v1 need
+  only be good enough to judge with — meta-stories correct it in use
+  (decision 3). A single incoming story is simply a mini-wave: the views
+  collapse to one line, no stage is skipped.
 - **Architecture churn blocks branches, never the factory.** An
   architecture-relevant story is not rejected: classification parks it with
   warten-auf behind its meta-story, and the meta-story locks exactly the tree
