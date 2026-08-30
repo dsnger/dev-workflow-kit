@@ -190,7 +190,51 @@ proceeds, the breaking part waits on the meta-story).
   decisions are queued for the human — the measured bottleneck is decision
   bandwidth, not compute.
 
-## 10. Open questions (owned by the stories that will answer them)
+## 10. Prior art: godarkfactory.com (reviewed 2026-08-30)
+
+A shipped, self-hosted dark factory (Go binary `godark`, Elastic License 2.0,
+beta): GitHub issues grouped into milestone "phases", topological dependency
+waves, a three-agent loop (implement → quality+functional review → auto-merge)
+in Docker sandboxes, all agents Claude. Validates most of this vision's shape
+— milestones↔waves, scenario specs↔pre-build checks, define-architecture /
+define-conventions↔Phase 0, watch↔clock loops, needs-human-review↔escalation.
+
+**Adopted into the build path** (owning step in brackets):
+- Local SQLite analytics — cost/duration/retries per step, written
+  non-fatally post-run; plus a trace ID per story propagated through every
+  stage artifact, and mechanical spec-delta capture. [step 2 — this is P8's
+  concrete shape]
+- Orchestrator dry-run (print the tick's execution plan before spending
+  tokens) and a forced-fresh-session knob (`max_resume_retries` analog) —
+  turns gap 7 into a mechanism. [step 3]
+- Mechanical vet preflight on pool items and artifacts before any model pass;
+  numeric split thresholds for the teilen verdict (their working values: max
+  5 acceptance criteria, 7 test cases); a machine-readable architecture
+  projection (may_depend_on / must_not_depend_on, cycle-checked) *generated
+  from* AGENTS.md — never a second source. Their GitHub-issues-as-pool is a
+  working data point for the pool-storage question. [step 4]
+- A judge watchdog (idle / tool-thrash / no-progress supervisor that is not
+  the hanging model) and push notifications on run events — the human is the
+  bottleneck; push, don't make them poll. [step 5]
+- Graduated auto-merge with mechanical risk thresholds (max lines/files) as
+  an independent floor under the semantic profile; punchlist generation as
+  the artifact a sampled audit works from. [step 6]
+
+**Deliberately not adopted:** `quality_strictness_decay` (their default —
+review gates weaken as retries mount; the inverse of the clean-final-pass
+rule); same-model review (their implementer and reviewers share one model
+family — correlated blind spots; our adversarial gate stays cross-model);
+daemon/Docker/GitHub as hard requirements (non-goal 1 stands); stop-the-world
+sequential milestones (branch-scoped locks and the lanes budget replace it).
+
+**Their documented scars, kept as constraints here:** manual state mutation
+under an automated resolver breaks it — every hand-edit of pool status must
+be a defined operation; planning artifacts need a defined home so they never
+contaminate implementation branches; run artifacts need a retention stance
+from day one (their P0 gap: unbounded disk growth); absent real-time cost
+visibility is what makes a token furnace invisible (their P0 gap, our P8).
+
+## 11. Open questions (owned by the stories that will answer them)
 
 - Sample percentage and drawing rule for the Sample-Gate (step 6).
 - Storage form of the pool (files in-repo vs. external board) — step 4.
