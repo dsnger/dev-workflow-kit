@@ -61,7 +61,13 @@ creates. Executing Plan B against an un-edited tree will fail at Task 6, correct
   | `0` and `0` | not started | apply the replacement to both copies |
   | `1` and `1` | done | skip the task |
   | `1` and `0`, or `0` and `1` | **interrupted between the copies** | **STOP and surface. Do not replace either copy** — applying to both would duplicate the block in the copy that already has it while repairing the other |
-  | anything above `1` | **already duplicated** | **STOP and surface.** A previous run inserted twice; the extra copy is removed by hand before the task is retried |
+  | any count above `1` | **already duplicated** | **STOP and surface.** |
+
+  **The two stop rows have one exit, and it is a human's**: restore both copies by hand to a
+  state the first two rows recognise — either both without the block, or both carrying exactly
+  one — and retry the task from there. **Removing a surplus copy is not by itself an exit**: a
+  `2/0` that becomes `1/0` has moved from one stop row to the other, which is why the exit is
+  defined as reaching `0/0` or `1/1` rather than as an edit.
 - **The two pinned grammars are inserted from the spec's own text, not retyped.** The escape
   specification inside the provenance grammar (`\"` and `\\`) is itself made of backslashes,
   and a transcription step ate them once — the grammar that pins the escape rules had its own
@@ -123,8 +129,10 @@ NEW:
 > cycle with no nonce; a cycle that has one writes `gate-a-spec-<nonce>-pass-<p>`,
 > `gate-a-plan-<nonce>-pass-<p>` or `gate-b-<spec|quality>-<nonce>-pass-<p>` instead, and uses
 > the nonce in every slot more than one cycle could write. The bare names are reserved for the
-> legacy single-cycle case they already serve. **A target owned by another nonce is refused,
-> not overwritten, and the refusal names the collision** — this section already stops on a
+> legacy single-cycle case they already serve. **A target owned by a DIFFERENT nonce is refused,
+> not overwritten, and the refusal names the collision** — which is the case this rule can
+> detect. Two cycles that drew the same nonce are indistinguishable to it and can still overwrite
+> each other; what makes that unlikely is the width of the draw, not this rule — this section already stops on a
 > target that survives deletion, and this extends that to a target that must not be deleted at
 > all. That rule exists because a bare slot was in fact overwritten once, destroying a previous
 > cycle's findings file.
@@ -133,7 +141,7 @@ NEW:
 - [ ] **Assert the new text is present.**
 
 ```bash
-grep -cF -- "A target owned by another nonce is refused," \
+grep -cF -- "A target owned by a DIFFERENT nonce is refused," \
   CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
 ```
 
@@ -224,22 +232,35 @@ than uniqueness. Where that fails, make **at most three attempts in total**, the
 surface, **naming which of the three causes occurred**; each has its own check and its own fix,
 and one token would name a symptom rather than a cause:
 
-- **randomness unavailable** — the source errors or returns nothing. *Fix:* make a source
-  available, or run where one is. Retrying does not help and the attempts are spent proving it.
+- **randomness unavailable** — the source errors or returns nothing. *Fix:* retry, since the
+  condition can be transient; if it persists across the attempts, make a source available or run
+  where one is, which is a change to the environment rather than another draw.
 - **an invalid value** — the drawn value is not 8 to 16 characters from `[a-z0-9]`. *Fix:*
-  redraw, which is what the remaining attempts are for. If it recurs the generator is wrong, not
-  unlucky, and that is what gets reported.
+  redraw. Repeated invalid output points at the generator rather than at luck, and the report
+  says which.
 - **a collision with a known-open cycle** — the value equals a nonce on a cycle still open.
-  *Fix:* redraw. A second collision at this width means the source is not behaving randomly, and
-  the report says so rather than repeating the draw.
+  *Fix:* redraw. A second collision at this width is possible but unlikely enough to be worth
+  reporting as a possible source defect, which the report states as a suspicion rather than a
+  finding.
+
+**Report every distinct cause observed across the attempts, in the order they occurred** — the
+attempts can fail for different reasons, and naming only the last would describe the tail of the
+sequence rather than what happened.
 
 **No deterministic fallback.**
 
-**Two residuals, disclosed rather than guarded.** The uniqueness check compares against cycles
-*known to be open*, so a nonce can repeat one belonging to a cycle nobody can see; and two
-cycles starting at the same moment can each check before either has published, so neither
-observes the other. **What makes both unlikely is the width of the draw, not the check** — and
-unlikely is the honest word. Neither is a guard.
+**Two residuals, disclosed rather than guarded.** The check compares against cycles *known to be
+open*, so a nonce can repeat one belonging to a cycle nobody can see; and two cycles starting at
+the same moment can each check before either has published, so neither observes the other.
+**What makes both unlikely is the width of the draw, not the check** — and unlikely is the
+honest word. Neither is a guard.
+
+**What follows from that, said here rather than left to be discovered.** The nonce is
+collision-**resistant**, not collision-**proof**, so everything built on it inherits that bound:
+two cycles sharing a nonce write to the same slots and are not refused, their records read as
+one cycle's, and a later reader cannot separate them. Attribution is therefore a strong default
+rather than a guarantee, and any reading of these records that would be wrong if two cycles
+shared a field should say so rather than assume they did not.
 
 **A cycle that began before these rules shipped has no nonce and cannot acquire one.** Its
 records carry the reserved `cycle none (pre-rule)` field and are, by construction, not
@@ -473,6 +494,14 @@ plugins/dev-workflow/commands/workflow-init.md:864:  **On squash-merge, copy eve
 NEW:
 
 ```
+  **These records are one contract, and a partial adoption breaks it.** The nonce, the slot
+  naming, the provenance line, the curve and this carry rule depend on one another: a curve
+  without a cycle field cannot be attributed, a slot rule without a nonce has nothing to key on,
+  and a carry rule naming records a project does not produce is inert. **A project whose text
+  carries some of them and not others stops and has a human complete or revert the adoption
+  before running a gate under it** — the same answer, and for the same reason, as a partial
+  adoption of the floor rule.
+
   **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
 ```
 
