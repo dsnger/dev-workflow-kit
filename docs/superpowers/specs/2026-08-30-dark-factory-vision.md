@@ -38,8 +38,10 @@ Story-Pool — filling never triggers production          [missing]
   → Plan-Loop   (writing-plans + Gate A)                [exists]
   → Bau-Loop    (executing-plans, goal-based, TDD)      [exists]
   → Verify      (battery + Gate B — adversarial model)  [exists]
-  → PR (open it; wait for the routed review bots and
-    process their findings — docs/pr-review-bots.md)    [exists]
+  → PR (open it, then apply the routing table in
+    docs/pr-review-bots.md — its Wait-for list is empty,
+    so nothing blocks: read what the opportunistic bots
+    have posted, handle later posts as follow-ups)      [exists]
   → Sample-Gate (draws x% of PRs for human audit)       [missing]
       ↳ drawn     → Audit (human, sampled)              [missing]
       ↳ not drawn → straight on (the ordinary path)     [missing]
@@ -116,12 +118,16 @@ the inspiration: the adversarial verifier is a different model *family*
    the clock.
 5. **End state is sampled audit, not per-merge approval.** The adversarial
    gate checks every merge; the human audits a sample. No merge skips both
-   gates — so **reviewer availability is an input to merge authorization**:
-   when no independent model family is available the cycle is gateless
-   (decision 8), and a gateless candidate never lands automatically. It waits,
-   or it goes to human audit; automatic landing resumes when an independent
-   reviewer does. (Until step 6 of the build path matures, merge remains human
-   anyway.)
+   gates — so **reviewer availability is an input to merge authorization**,
+   and the answer to an outage is to **wait**. A runtime outage never produces
+   a gateless cycle: the candidate stays in the merge queue until an
+   independent reviewer returns, and **no human substitutes for the gate**.
+   Sampled audit is QA, never authorization, and never stands in for an active
+   gate. "Gateless" exists only as a *declared project-level state* — the
+   kit's `.context/codex-gate.off`, chosen deliberately and visibly — never as
+   a runtime improvisation. That leaves the reviewer-availability question
+   closed where its own record closed it. (Until step 6 of the build path
+   matures, merge remains human anyway.)
 6. **Filling the pool never triggers production; classification is a
    proactive loop of its own.** (It is not free of *all* consequence — it
    spends tokens, writes a card and a status, may create a meta-story and may
@@ -155,9 +161,11 @@ the inspiration: the adversarial verifier is a different model *family*
    as a notice. Raising the rung follows measured P8 evidence, never precedes
    it (§8, "No autonomy expansion ahead of the measured evidence").
 8. **Four-eyes principle, with a scaling guard.** No artifact passes only its
-   author. The second pair of eyes is another model *family*; where none is
-   available the honest answer is to be **gateless and say so** — never
-   self-reviewed, and not a same-family agent either. That question is closed
+   author. The second pair of eyes is another model *family*; where a project
+   has none configured, the honest answer is to be **gateless and say so** — a
+   declared, visible project state, never self-reviewed and not a same-family
+   agent either. A *runtime* outage is a different thing and is no licence to
+   close a cycle: the work waits (decision 5). That question is closed
    with a negative answer and this vision does not reopen it: three fallback
    designs across nine Gate-A passes and 303 findings all failed
    structurally — the first of them being exactly this same-family tier-2
@@ -337,7 +345,13 @@ proceeds, the breaking part waits on the meta-story).
      queue entry, so it takes the run-lock and artifact halves of 5a's
      contract and none of the tick, usage-hold or report-only halves.
    - **5c** the E2E clock loop (failures auto-filed as pool stories, §9).
-   - **5d** drift audits and PR-bot processing.
+   - **5d** the drift audits: docs drift and reverse traceability,
+     report-only, findings filed as pool items.
+   - **5e** the PR poller: a report-only clock loop that notices a PR needing
+     attention and wakes the shipped `process-pr-review` station inside a
+     lane. It does not process the PR itself — that command fixes, commits and
+     hardens, which is lane work and not something a report-only clock loop
+     may do.
 6. **Stage 4 and sampled audit** (decision 5) — the highest-risk step, so it
    splits like the others:
    - **6a** the stage-4 orchestrator wake: a story turning *freigegeben* wakes
@@ -466,7 +480,9 @@ under an automated resolver breaks it — every hand-edit of pool status must
 be a defined operation; planning artifacts need a defined home so they never
 contaminate implementation branches; run artifacts need a retention stance
 from day one (their P0 gap: unbounded disk growth); absent real-time cost
-visibility is what makes a token furnace invisible (their P0 gap, our P8).
+visibility is what makes a token furnace invisible (their P0 gap; ours is
+2c's live counters — not the read-only P8 story, which is forbidden to
+instrument anything).
 
 **Second sweep (2026-08-31), against their full docs and the inspiration
 video.** The sweep produced two working notes that live outside the repo and
@@ -522,13 +538,17 @@ Adopted, with owning step:
   report-only — meaning it changes no product code and no pool *status*;
   filing a new pool item is the one write it does make, because a report
   nobody can act on is not a report (that is how the E2E loop files its
-  failure, §9). Fix permission is a maturity knob per loop. [step 5]
+  failure, §9). "Fix permission" is a maturity knob per loop, and it means
+  exactly one thing: the loop may **create and advance a normally classified
+  pool story**. It never means editing code directly. Every fix a loop wants
+  travels through classification, Freigabe and a wave like any other story —
+  decision 3's one process for everything covers the loops too. [step 5]
   Deployment is out of scope (§8).
 
 Redirected: their merge coordinator is our merge-queue station (§9); their
 `report` (executive summary over the analytics window) belongs to the
 dashboard topic (§11); their harness-as-router (CLAUDE.md compressed to a
-20-line signpost) becomes a kit story after P8 measures harness tokens per
+20-line signpost) becomes a kit story once 2c measures harness tokens per
 session — with fresh context per station, every story pays the harness
 size times its stations.
 
@@ -643,11 +663,16 @@ writes the story.
   wave can combine independent subsystems and mixed profiles, which §5 says
   must split. Batching by compatible branch and profile group is the candidate,
   and the O(waves) bound then counts batches rather than waves. [4c / step 6]
-- *The hardening ledger has no station* — the fingerprinted ledger and
-  `harden-finding` are one of the kit's three defining mechanisms (AGENTS.md),
-  and no station in §1 disposes of accepted gate or bot findings into it. An
-  autonomous factory that repairs instances without recording fingerprints
-  loses the escalation that turns a recurring finding into a rule. [4b / 5d]
+- *The hardening ledger covers only one of three finding sources* — the
+  fingerprinted ledger and `harden-finding` are one of the kit's three
+  defining mechanisms (AGENTS.md), and `process-pr-review` item 5 already
+  routes accepted actionable **bot** findings into it. Two sources have no
+  station: accepted **Gate A and Gate B** findings, and accepted findings from
+  a **sampled human audit** — the latter being the factory's highest-value
+  signal, since an audit finding is by definition something both gates let
+  through. Repairing those instances without recording fingerprints loses the
+  escalation that turns a recurring finding into a rule.
+  [gate findings 4b, audit findings 6b]
 - *Gate B and the rebase* — the queue rebases onto newer main after Gate B ran
   and then runs only smoke, so what lands is not byte-for-byte what the
   adversarial gate reviewed. Whether Gate B re-runs on the composed candidate,
@@ -656,7 +681,7 @@ writes the story.
   [5b]
 - *PR readiness before the queue* — nothing sequences PR opening, the routed
   review bots (`docs/pr-review-bots.md`) and required CI against Sample-Gate
-  entry and queue entry. [5d]
+  entry and queue entry. [5e]
 - *AC canonicalization* — decision 9's fingerprint needs a canonical
   serialization of the AC block, a baseline captured at lane opening, a
   durable record of the authorizing pool round-trip, and the exact evidence
