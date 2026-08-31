@@ -138,10 +138,13 @@ the inspiration: the adversarial verifier is a different model *family*
    declaration is the tracked **INACTIVE notice** `/workflow-init` writes into
    the project's own CLAUDE.md ("the gates below do not run"). The
    `.context/codex-gate.off` marker beside it is not that declaration: it
-   suppresses the hook reminder in one workspace, it is git-ignored so a clone
-   never sees it, and shipped CLAUDE.md says plainly that with it in place
-   "the gates still apply". Neither file authorizes anything. That leaves the
-   reviewer-availability question closed where its own record closed it. (Until step 6 of the build path
+   suppresses the hook reminder in one workspace, and shipped CLAUDE.md says
+   plainly that with it in place "the gates still apply". (Whether a clone
+   sees the marker depends on the repo: this kit ignores all of `.context/`,
+   while `/workflow-init` has target projects ignore `/.context/codex-reviews/`
+   specifically — so in a scaffolded project the marker is visible and
+   committable.) Neither file authorizes anything. That leaves the
+   reviewer-availability question exactly where its own record left it. (Until step 6 of the build path
    matures, merge remains human anyway.)
 6. **Filling the pool never triggers production; classification is a
    proactive loop of its own.** (It is not free of *all* consequence — it
@@ -180,22 +183,26 @@ the inspiration: the adversarial verifier is a different model *family*
    has none configured, the honest answer is to be **gateless and say so** — a
    declared, visible project state, never self-reviewed and not a same-family
    agent either. A *runtime* outage is a different thing and is no licence to
-   close a cycle: the work waits (decision 5). That question is closed
-   with a negative answer and this vision does not reopen it: three fallback
-   designs across nine Gate-A passes and 303 findings all failed
-   structurally — the first of them being exactly this same-family tier-2
-   shape —
-   (`docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md`),
-   and what ships is "be gateless — not self-reviewed"
-   (`docs/coding-workflow.md`, `/workflow-init`). Reopening it would be its own
-   story. Human eyes only where the frequency is bounded — O(waves +
+   close a cycle: the work waits (decision 5). What ships today is "be
+   gateless — not self-reviewed" (`docs/coding-workflow.md`,
+   `/workflow-init`), and this vision assumes nothing beyond it. What was
+   closed with a negative answer is narrower than "a same-family reviewer":
+   three fallback designs across nine Gate-A passes and 303 findings failed to
+   produce a safe *sanctioned zero-pass closure*
+   (`docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md`).
+   A same-family tier-2 reviewer is a different question and is **still open**
+   as a tracked, unshipped story
+   (`docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`)
+   — "a weaker review is still a review", per that design's §7, if its
+   containment proves buildable. If it ever ships, this decision follows it;
+   until then the second pair of eyes is another family, or none. Human eyes only where the frequency is bounded — O(waves +
    exceptions), never O(stories) — **as the end state**, which the rollout
    deliberately does not satisfy yet: decision 7's lower rungs are per-story
    and decision 5 keeps merge human until step 6. The bound is the target the
    knobs move toward, not a rule the bootstrap already obeys. Every mandatory
    human touchpoint carries a maturity knob that lowers with
-   P8 evidence — but only at *routine* touchpoints: Freigabe granularity,
-   sample rates, wave opening. The four paths §8 protects (mandatory stops,
+   P8 evidence — but a knob exists only at *routine* touchpoints: Freigabe
+   granularity, sample rates, wave opening. The four paths §8 protects (mandatory stops,
    profile confirmations, scope changes, architecture meta-stories) carry no
    such knob and stay human at every rung. Where a knob does exist, presence
    is a dial that falls with trust and rises again on adverse evidence, never
@@ -309,7 +316,7 @@ proceeds, the breaking part waits on the meta-story).
    rules of the in-flight review-economics story are the foundation for more.
    *(in flight)*
 
-## 7. Build path (each step = one story through the normal workflow)
+## 7. Build path (each *leaf* is one story; numbered entries are ordering groups)
 
 1. Finish the review-economics story (in flight) — floors by profile, severity
    calibration, measurable records. Without calibrated review economics every
@@ -356,8 +363,9 @@ proceeds, the breaking part waits on the meta-story).
      Ordered **before any autonomous lane execution** — it is the
      reward-hacking guard, and a build path that ships lanes without it looks
      complete while the guard is missing.
-5. **Stage 3: clock loops** (poll, drift audits, PR processing). Also an epic;
-   its stories are separate failure domains behind one shared contract:
+5. **Stage 3, plus the merge queue** (polling, drift audits, PR polling — and
+   one station, 5b, that is not a clock loop at all). Also an epic; its
+   stories are separate failure domains behind one shared contract:
    - **5a** the clock-loop contract itself: tick, run lock, environment
      preflight, usage-limit hold/resume, the report-only default, and the
      branch-claim and lane-budget rules the scheduler needs.
@@ -410,7 +418,10 @@ proceeds, the breaking part waits on the meta-story).
   from the codebase (natural home: a `/workflow-init` extension). Tree v1 need
   only be good enough to judge with — meta-stories correct it in use
   (decision 3). A single incoming story is simply a mini-wave: the views
-  collapse to one line, no stage is skipped.
+  collapse to one line and no *station* is bypassed — though a behaviourally
+  trivial change can still take the shipped Gate-B triviality skip, and an
+  undrawn PR does not reach Audit; §11 records the first as an open end-state
+  question.
 - **Architecture churn blocks branches, never the factory.** An
   architecture-relevant story is not rejected: classification parks it with
   warten-auf behind its meta-story, and the meta-story locks exactly the tree
@@ -599,9 +610,10 @@ framework, knowledge-graph disambiguation.
 
 ## 11. Open questions
 
-Most carry the step that will answer them. Three do not — hidden verification
-scenarios, the dashboard and the shortcuts topic are parked without a
-numbered owner, and are marked as such rather than counted as decomposed.
+Most carry the leaf or step that will answer them. Some do not: the three
+parked topics below — hidden verification scenarios, the dashboard, the
+shortcuts — and the stations near the end of this section that §1 draws but no
+leaf yet owns. Those are marked as such rather than counted as decomposed.
 
 - Sample percentage and drawing rule for the Sample-Gate (step 6).
 - Storage form of the pool (files in-repo vs. external board) — step 4.
@@ -610,7 +622,8 @@ numbered owner, and are marked as such rather than counted as decomposed.
 - How the clock's platform mechanics (loop/schedule) are configured per
   project — step 5.
 - Process dashboard / console status — "when is what running where"; builds
-  on the computed views plus P8 trace/analytics. Parked 2026-08-30, design
+  on the computed views plus 2c's traces and analytics — not P8, which is
+  read-only over the ledger and git. Parked 2026-08-30, design
   session planned 2026-08-31.
 - Sensible hooks and shortcuts through the pipeline for flexible use cases.
   Parked 2026-08-30, same session.
@@ -690,8 +703,8 @@ writes the story.
 - *Autonomy downgrade* — every knob lowers human presence on good evidence and
   nothing raises it back on bad (audit rejection, repeated smoke failure,
   deteriorating metrics). Triggers, authority, hysteresis and the immediate
-  safe state are unowned; without them "a dial, never a ratchet" is only half
-  true. [step 6]
+  safe state belong to 6d, which owns the promotion path in both directions;
+  until 6d defines them "a dial, never a ratchet" is only half true. [6d]
 - *Meta-story batching versus the split rule* — one architecture meta-story per
   wave can combine independent subsystems and mixed profiles, which §5 says
   must split. Batching by compatible branch and profile group is the candidate,
@@ -746,6 +759,41 @@ roadmap from reading complete while a drawn station is unbuilt.
   review-economics story contains no model-strength knob and step 3's
   definition omits it, so both cited owners can finish without it. Candidate:
   2a with the other loop rules, with §10 repointed.
+
+**Unresolved at close (Gate A pass 5, 2026-08-31).** The gate was closed on a
+scope disposition rather than a clean pass: leaf-level mechanics are outside
+this decomposition document, and each item below is owned by the named leaf
+story and its own Gate A. Pass 5 returned 15 findings and **zero Blockers**
+(the series ran 52, 34, 32, 26, 15). These went unfixed by decision, not by
+oversight, and a later reader should treat them as known:
+
+- *Labeled examples have no owner* — §1 turns a human override into a labeled
+  example, and decision 7 does the same for a Freigabe that repeatedly needs
+  deep thought, but no leaf captures, stores, routes or consumes them.
+  Candidate: 2a with the loop rules. [unowned]
+- *The orchestrator product is wider than step 3* — §6 gap 4 names question
+  routing, artifact handoff, a prediction ledger and batched human decisions;
+  step 3 owns the role, the handoff and the plan interface only. Three
+  capabilities have no leaf. [3, needs widening]
+- *"This closes the parallelism blind spot"* (§9) overstates what smoke
+  proves: it shows the configured smoke command passed on the composed
+  candidate, not that independently green lanes compose correctly outside
+  smoke coverage. The E2E layer is what reaches the rest, later. [5b / 5c]
+- *"Promotion evidence" names one owner for several knobs* — 6d owns the
+  automatic-merge threshold, but the Freigabe and wave-opening knobs belong to
+  4d and the sample rate to 6b, so the entry's single [6d] owner is too
+  narrow. [4d, 6b, 6d]
+- *Coarse owners remain on four top-level questions* — the Sample-Gate rule,
+  pool storage, clock platform configuration and E2E cadence still cite step
+  6, step 4 and step 5 rather than leaves, although this document makes the
+  leaf the unit of ownership. [6b, 4a, 5a, 5c]
+These are the whole remainder. Six further pass-5 findings named wordings that
+pass 4 had reported as fixed but had not written to disk — the §7 heading, step
+5's title, decision 8's "every mandatory touchpoint", the autonomy-downgrade
+owner, the §11 opening count, the dashboard's P8 attribution and the mini-wave
+"no stage is skipped". Those were applied at close rather than recorded, and
+the miss is noted here because a reader comparing the pass-4 record against the
+document would otherwise find them inconsistent.
 - *AC canonicalization* — decision 9's fingerprint needs a canonical
   serialization of the AC block, a baseline captured at lane opening, a
   durable record of the authorizing pool round-trip, and the exact evidence
@@ -756,9 +804,8 @@ roadmap from reading complete while a drawn station is unbuilt.
   resumed after reclassification is undefined, and each choice changes the
   Gate-B baseline. [4e]
 - *Given/when/then and the per-AC test report* — §10 assigns these to steps 1
-  and 4, but step 1's tracked story does not contain them and 4e covers only
-  IDs, immutability and the round-trip. The machine-checkable goal condition is
-  therefore unowned. [4e]
+  and 4, but step 1's tracked story does not contain them. 4e now owns them
+  explicitly (see §7), so what remains is repointing §10 away from step 1. [4e]
 - *Promotion evidence* — "measured P8 evidence" is the condition on every
   autonomy knob, but P8 measures ledger recurrence and review-severity mixes,
   not Freigabe accuracy, audit escapes or merge safety. Each knob needs its own
