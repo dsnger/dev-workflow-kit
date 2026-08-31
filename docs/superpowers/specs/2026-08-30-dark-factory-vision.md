@@ -497,6 +497,31 @@ proceeds, the breaking part waits on the meta-story).
   defined status operations, the record/nonce rules. The human-facing
   sparring chat is the one persistent conversation; its boundary is
   decisions and questions, never production. [owner: step 3]
+- **Shortcuts are shorter lanes, never side doors (decided 2026-08-31).**
+  Everything enters through the pool (seconds) and leaves through Verify
+  and the merge-queue smoke; what shrinks in between is decided by the
+  card, never by the builder (decision 8: an author never rates itself
+  trivial). Four cases: a **trivial lane** collapses Spec- and Plan-Loop —
+  the story text is the spec, no plan — with the light review the profile
+  rules already grant; a **hotfix lane** gets speed from priority, not
+  from skipped review — a standing "hotfix" wave bypasses wave steering
+  and jumps the queue, Verify stays full; an **experiment** runs in a
+  throwaway worktree and never merges — its artifact is a report, not a
+  diff, so no gates apply where nothing lands, and learnings become pool
+  stories; and **hand work by the human** is always allowed, but what
+  wants onto main passes the same gates — four eyes has no owner
+  exception. [owner: step 4 (card-driven depth), step 5 (hotfix wave)]
+- **Hooks are subscribers to station-boundary events (decided
+  2026-08-31).** The factory emits an event at every station boundary
+  (story arrived, classified, freigegeben, lane opened, merge landed,
+  escalation, audit drawn) — the trace infrastructure (2c) produces these
+  anyway. Project-owned hooks subscribe in two classes: **passive** hooks
+  notify, render or log (push, status line, dashboard and analytics are
+  the first four subscribers) and may change nothing; **active** hooks may
+  do exactly one thing — put a story into the pool (per the fix-permission
+  rule: never a direct fix), so everything mutating passes classification
+  and Freigabe. The E2E loop is the first active hook. [owner: 2c
+  (events), step 5 (subscriptions)]
 
 ## 10. Prior art: godarkfactory.com (reviewed 2026-08-30)
 
@@ -637,8 +662,8 @@ framework, knowledge-graph disambiguation.
 
 ## 11. Open questions
 
-Most carry the leaf or step that will answer them. Some do not: the two
-parked topics below — hidden verification scenarios and the shortcuts — and
+Most carry the leaf or step that will answer them. Some do not: the one
+parked topic below — hidden verification scenarios — and
 the stations near the end of this section that §1 draws but no
 leaf yet owns. Those are marked as such rather than counted as decomposed.
 
@@ -653,8 +678,10 @@ leaf yet owns. Those are marked as such rather than counted as decomposed.
   status.html / status line / optional menu bar, decision queue first,
   staleness visible); still open: the snapshot schema and the owning leaf,
   fed by 2c's traces and analytics. [2c / dashboard]
-- Sensible hooks and shortcuts through the pipeline for flexible use cases.
-  Parked 2026-08-30, same session.
+- Hooks and shortcuts — decided 2026-08-31 and recorded in §9 (shortcuts
+  are shorter lanes, never side doors; hooks are subscribers to
+  station-boundary events, passive or story-creating). Still open: the
+  event schema, with 2c. [2c / step 5]
 - Test layers are decided (§9); still open: whether a smoke failure that
   returns to a lane is surfaced to the human (a dashboard question), and the
   E2E cadence / flaky-handling rules — step 5.
