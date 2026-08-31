@@ -33,7 +33,10 @@ Story-Pool — filling is always consequence-free         [missing]
   → Bau-Loop    (executing-plans, goal-based, TDD)      [exists]
   → Verify      (battery + Gate B — adversarial model)  [exists]
   → Sample-Gate (draws x% of PRs for human audit)       [missing]
-  → Audit (human, sampled) → Merge/Deploy               [missing]
+  → Audit (human, sampled)                              [missing]
+  → Merge-Queue (serial: rebase onto main → smoke on the
+    candidate → green lands, red returns to the lane)   [missing]
+  → Merge/Deploy                                        [missing]
 ```
 
 Every node is a loop with its own fresh context; only the artifact crosses an
@@ -130,9 +133,10 @@ the inspiration: the adversarial verifier is a different model *family*
   profiles, loop rules, prompt standards, the classification card. Home: the
   kit's prompts. They are the product.
 - **Project conventions** (per target project): AGENTS.md — architecture tree,
-  invariants, verified commands, conventions, **plus one extension this vision
+  invariants, verified commands, conventions, **plus two extensions this vision
   requires: project goals and an explicit out-of-scope list**, which the
-  classification's reject verdict reads. One document, read by gates, bots and
+  classification's reject verdict reads, **and two verified command roles,
+  `smoke` and `e2e`**, beside quality/lint/test (test layers, §9). One document, read by gates, bots and
   triage alike.
 - **A project's roadmap is a view, not a document**: pool items plus status,
   priority, dependencies and **wave** yield the order. The pool is the single
@@ -206,7 +210,9 @@ proceeds, the breaking part waits on the meta-story).
    before automating further.
 3. Orchestrator story (codify the role as skill/agent per decision 1).
 4. Story pool + status + classification + architecture tree (decisions 2 and 4).
-5. Stage 3: clock and event loops (poll, audit, PR processing).
+5. Stage 3: clock and event loops (poll, audit, PR processing) — including the
+   E2E clock loop (failures auto-filed as pool stories) and the merge-queue
+   station (rebase + smoke on the candidate), see §9.
 6. Stage 4 + sampled audit (decision 5) — full automation first only for
    level-0 stories; merge stays human until this step ships and holds.
 
@@ -254,6 +260,20 @@ proceeds, the breaking part waits on the meta-story).
   stands in a mandatory stop, and no new lane opens while more than N
   decisions are queued for the human — the measured bottleneck is decision
   bandwidth, not compute.
+- **Three test layers, three cost classes** (decided 2026-08-31). The lane
+  battery (seconds, every cycle, exists) · a **smoke gate in the merge queue**
+  (minutes, every merge, new) · the **full E2E suite as a clock loop** (hours,
+  nightly or at wave close, stage 3). The merge queue is a station of its own:
+  serial, per candidate rebase onto current main → smoke on the composed
+  candidate → green lands, red returns to the lane as an artifact (like Gate-B
+  findings) while the queue continues with the next branch — main is never
+  red and no human is involved; repeated failure escalates via the judge.
+  This closes the parallelism blind spot (disjoint lanes each green, their
+  composition broken) and owns the merge-coordinator mechanics (rebase,
+  retry). An E2E failure becomes a pool story automatically, classified by
+  the normal intake, carrying the trace ID of the suspect merge. Concrete
+  tools stay project truth: AGENTS.md gains the command roles `smoke` and
+  `e2e`. Cadence and flaky rules belong to step 5.
 
 ## 10. Prior art: godarkfactory.com (reviewed 2026-08-30)
 
@@ -312,9 +332,6 @@ visibility is what makes a token furnace invisible (their P0 gap, our P8).
   session planned 2026-08-31.
 - Sensible hooks and shortcuts through the pipeline for flexible use cases.
   Parked 2026-08-30, same session.
-- Test layers beyond the lane battery: a smoke gate in the serial merge
-  queue (parallel lanes can each be green while their composition breaks —
-  currently unchecked), and the full E2E suite as a clock loop whose
-  failures are auto-filed as pool stories. Proposed 2026-08-30, to be
-  decided in the same session; concrete tools stay project truth in
-  AGENTS.md.
+- Test layers are decided (§9); still open: whether a smoke failure that
+  returns to a lane is surfaced to the human (a dashboard question), and the
+  E2E cadence / flaky-handling rules — step 5.
