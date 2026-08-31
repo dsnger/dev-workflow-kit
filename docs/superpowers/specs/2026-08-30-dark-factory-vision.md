@@ -55,7 +55,7 @@ The kit already holds the middle of this pipeline, and in one respect exceeds
 the inspiration: the adversarial verifier is a different model *family*
 (Codex), not merely a different context.
 
-## 2. Decisions (all 2026-08-30, Daniel)
+## 2. Decisions (Daniel; 2026-08-30 unless dated otherwise)
 
 1. **Orchestrator lives hybrid.** The orchestrator is kit prompts (a skill /
    agent definition any session can load — the product stays prompts). Only the
@@ -97,7 +97,9 @@ the inspiration: the adversarial verifier is a different model *family*
    spot-check of the card (a Freigabe that regularly needs deep thought means
    the card is missing a dimension → labeled example, tighten intake). The
    knob: per story → batch → wave ("Go" on the rendered wave plan) → standing
-   auto-Freigabe (notified, not asked). Three things hold on every rung: flags
+   auto-Freigabe (notified, not asked; the standing rule sets the status
+   *freigegeben* itself, so decision 4 holds — the clock still pulls only
+   *freigegeben*). Three things hold on every rung: flags
    always escalate (high profile, architecture ⚠, rückfragen, scope doubt);
    the knob is human-owned and committed, changed only by defined operation
    (like `lanes`); and the plan is rendered on every rung — as a question or
@@ -117,6 +119,19 @@ the inspiration: the adversarial verifier is a different model *family*
    merges at 100% as the starting value, knob downward with evidence —
    bounded, because architecture changes batch into one meta-story per wave
    (§9).
+9. **Acceptance criteria are read-only inside a lane** (2026-08-31). A
+   builder never edits the acceptance criteria of the story it builds — that
+   is the reward-hacking vector the inspiration warns about. An acceptance
+   criterion found wrong during build is a story mutation, not a spec edit:
+   the lane stops, the story returns to the pool flagged "AC change needed",
+   the human decides (an exception path, so O(exceptions)), and the story
+   re-enters classification. Descriptive spec details a fix changes are
+   still updated in the same commit (CLAUDE.md §5 stands); every spec change
+   is captured as spec-delta (§10, step 2) and shown to the reviewer beside
+   the diff, so baseline and change are both visible. Mechanically:
+   acceptance criteria carry IDs (§10 second sweep), the AC block's
+   fingerprint is compared at Gate B, and a changed block without the pool
+   round-trip is a Blocker.
 
 ## 3. Maturity ladder
 
@@ -125,7 +140,7 @@ the inspiration: the adversarial verifier is a different model *family*
 | 1 | Turn-based — skills with self-checks, red-first tests | shipped |
 | 2 | Goal-based — acceptance criteria as target, gates loop to clean with mandatory stops | shipped |
 | 3 | Time-based — clock loops: poll the pool, drift audits, PR-bot processing | missing |
-| 4 | Proactive — event-triggered: a spec turns "freigegeben" and the factory runs | missing |
+| 4 | Proactive — event-triggered: first instance is the intake zone (a story appearing triggers classification, decision 6); later a story turning "freigegeben" wakes the orchestrator without waiting for the tick | missing |
 
 ## 4. Conventions and roadmap — where each truth lives
 
@@ -225,6 +240,8 @@ proceeds, the breaking part waits on the meta-story).
   absence.
 - No autonomy expansion ahead of the measured evidence (P8) that the review
   economics support it.
+- No deployment stage. The factory ends at the merge; what follows (release
+  tags, environments, direct deploy) is the project's own CI.
 
 ## 9. Parallelism and flow control (decisions 2026-08-30, Daniel)
 
@@ -318,6 +335,68 @@ be a defined operation; planning artifacts need a defined home so they never
 contaminate implementation branches; run artifacts need a retention stance
 from day one (their P0 gap: unbounded disk growth); absent real-time cost
 visibility is what makes a token furnace invisible (their P0 gap, our P8).
+
+**Second sweep (2026-08-31), against their full docs and the inspiration
+video; the gap lists live in `docs/research/2026-08-30-*-gap-sweep.md`.**
+Adopted, with owning step:
+- Mechanical write protection for pool status, the `lanes` knob and the
+  architecture section of AGENTS.md (their `protected_paths` /
+  `denied_commands`). This would be the kit's first *blocking* hook —
+  defensible only because it depends on nothing external, unlike the
+  advisory gate hook (invariant 1); the story must argue that explicitly.
+  [step 4/5]
+- A run lock per orchestrator tick with stale-lock cleanup by the judge, so
+  a double-firing clock never runs two orchestrators. [step 5]
+- Usage-limit hold/resume: a hit rate limit pauses the run with a countdown
+  and resumes — never counted as a failure (their v0.18 lesson). [step 5]
+- Model strength per role as a project knob (cheap builder, strong
+  reviewer), with one asymmetry rule: the reviewer is never weaker than the
+  builder — cross-model stays. [step 1/3]
+- Minimum review cost/duration as an INCOMPLETE signal: a pass under the
+  floor does not count toward the pass floor. No new gate — the kit's
+  existing INCOMPLETE semantics. [step 2, P8]
+- Audit rejection flows back automatically: the human's "changes requested"
+  returns to the lane as an artifact (like a red smoke), and a PR once
+  rejected by the human is always re-audited by the human, never re-drawn.
+  [step 6]
+- Environment preflight before every tick (`doctor`: required env, host
+  services) — a clock session on a broken environment only burns tokens.
+  [step 5]
+- Phase 0 on an existing codebase also *reports* agent-hostile patterns
+  (codegen magic, implicit behaviour) — report only, never fixes. [Phase 0 /
+  `workflow-init`]
+- Wave close renders an as-built view (what was actually built, grounded in
+  code) — a generated view like the roadmap, never maintained; the standing
+  defence against docs drift. [step 4/5]
+- From the video: a hard round cap per Bau-Loop and a token budget per
+  story as preventive limits — reaching one is a mandatory stop, never a
+  silent kill; the caps apply to build loops, not to review loops, which
+  keep their floor and tells. [step 3/5] Acceptance criteria with IDs in
+  given/when/then form and a per-AC test report as a handoff artifact (the
+  machine-checkable goal condition; also what decision 9's fingerprint
+  protects). [step 1/4] Reverse traceability (code with no spec behind it)
+  as drift-audit content, report only. [step 5] Every clock loop starts
+  report-only; fix permission is a maturity knob per loop. [step 5]
+  Deployment is out of scope (§8).
+
+Redirected: their merge coordinator is our merge-queue station (§9); their
+`report` (executive summary over the analytics window) belongs to the
+dashboard topic (§11); their harness-as-router (CLAUDE.md compressed to a
+20-line signpost) becomes a kit story after P8 measures harness tokens per
+session — with fresh context per station, every story pays the harness
+size times its stations.
+
+Not adopted: the rollup branch (issue PRs into a wave branch, one rollup PR
+to main). It is a part of their stop-the-world milestone model, already
+rejected: the merge-queue smoke and the wave-close E2E give the same
+integration checkpoint, the as-built view gives the wave-level reading, and
+a wave branch would break the kit's merge-base-with-main semantics and make
+hotfixes a two-way merge — the opposite of flexible shortcuts (§11). A
+project that needs "main = whole waves only" solves that with release tags
+in its own CI (§8). Also not adopted, noted as a lesson only: hard byte
+caps on verify output and PR diffs in prompts (unbounded diffs blow context
+and cost). Irrelevant here: per-module monorepo batteries, LangGraph as a
+framework, knowledge-graph disambiguation.
 
 ## 11. Open questions (owned by the stories that will answer them)
 
