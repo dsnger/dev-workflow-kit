@@ -258,6 +258,19 @@ the inspiration: the adversarial verifier is a different model *family*
   the orchestrator dry-run (build step 3). Waves are milestones that also
   *steer* — the clock pulls only the active wave — so the roadmap is the
   milestone-level view and the wave plan its per-milestone detail.
+- **The live status is a computed view too — the dashboard (decided
+  2026-08-31).** The orchestrator writes a state snapshot every tick;
+  deterministic code — never a model, so a tick costs no tokens — renders
+  it into a local `status.html` (auto-refresh, with a visible staleness
+  stamp: "Stand 17:03 · Tick 42" — a dashboard that silently ages is worse
+  than none), a status-line ticker, and optionally a menu-bar script; a
+  console command renders the same snapshot on demand. The top element is
+  always the human's decision queue (flags, rückfragen, mandatory stops,
+  drawn audits) — the queue that throttles the factory. Events that need
+  the human push (§10); the dashboard is for looking, never for polling.
+  LLM summaries only on demand. Rejected: a daemon/TUI and a hosted
+  artifact page (account-bound). The wave plan and the dashboard share one
+  renderer — the plan is the forecast, the dashboard is the now.
 - **Waves structure a new project.** Phase 0 assigns every initial pool item a
   wave mark (wave 1, 2, … or named milestones) — the deliberate "these
   subareas develop together first, those later" decision, usually aligned with
@@ -470,6 +483,20 @@ proceeds, the breaking part waits on the meta-story).
   the normal intake, carrying the trace ID of the suspect merge. Concrete
   tools stay project truth: AGENTS.md gains the command roles `smoke` and
   `e2e`. Cadence and flaky rules belong to step 5.
+- **Role separation across running agents (decided 2026-08-31).** Spawned
+  subagents separate automatically — one task, fresh context, no shared
+  chat. Long-lived interactive sessions do not, so three rules hold:
+  **star, not mesh** — lanes never talk to each other or sideways;
+  everything crosses the orchestrator or is an artifact. **Role = task** —
+  an input artifact and an output artifact define a role, never chat
+  history; only the orchestrator lives long, and even it wakes fresh per
+  tick with the pool as its memory. **Identity lives in artifacts, not
+  session names** (names proved unstable across a restart on 2026-08-31):
+  lock files, slot infixes, status fields with defined writers. Enforced
+  by mechanics already decided: one worktree per lane, the run lock,
+  defined status operations, the record/nonce rules. The human-facing
+  sparring chat is the one persistent conversation; its boundary is
+  decisions and questions, never production. [owner: step 3]
 
 ## 10. Prior art: godarkfactory.com (reviewed 2026-08-30)
 
@@ -610,9 +637,9 @@ framework, knowledge-graph disambiguation.
 
 ## 11. Open questions
 
-Most carry the leaf or step that will answer them. Some do not: the three
-parked topics below — hidden verification scenarios, the dashboard, the
-shortcuts — and the stations near the end of this section that §1 draws but no
+Most carry the leaf or step that will answer them. Some do not: the two
+parked topics below — hidden verification scenarios and the shortcuts — and
+the stations near the end of this section that §1 draws but no
 leaf yet owns. Those are marked as such rather than counted as decomposed.
 
 - Sample percentage and drawing rule for the Sample-Gate (step 6).
@@ -621,10 +648,11 @@ leaf yet owns. Those are marked as such rather than counted as decomposed.
   builder) as a Gate-B supplement — candidate small story, unscheduled.
 - How the clock's platform mechanics (loop/schedule) are configured per
   project — step 5.
-- Process dashboard / console status — "when is what running where"; builds
-  on the computed views plus 2c's traces and analytics — not P8, which is
-  read-only over the ledger and git. Parked 2026-08-30, design
-  session planned 2026-08-31.
+- Process dashboard / console status — decided 2026-08-31 and recorded as
+  the live-status view in §4 (snapshot per tick, rendered by code into
+  status.html / status line / optional menu bar, decision queue first,
+  staleness visible); still open: the snapshot schema and the owning leaf,
+  fed by 2c's traces and analytics. [2c / dashboard]
 - Sensible hooks and shortcuts through the pipeline for flexible use cases.
   Parked 2026-08-30, same session.
 - Test layers are decided (§9); still open: whether a smoke failure that
