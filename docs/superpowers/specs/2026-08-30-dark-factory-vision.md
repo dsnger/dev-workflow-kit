@@ -70,12 +70,18 @@ the inspiration: the adversarial verifier is a different model *family*
 1. **Orchestrator lives hybrid.** The orchestrator is kit prompts (a skill /
    agent definition any session can load — the product stays prompts). Only the
    *clock* uses platform mechanics: a scheduled/loop wake-up starts an
-   orchestrator session. No daemon, no server-side infrastructure.
+   orchestrator session. No daemon, no server-side infrastructure. The stage-4
+   event wake (§3) is another adapter under this same boundary — a platform
+   trigger that *starts* a session, never a resident listener; where a platform
+   offers no such trigger, the event only shortens the next scheduled tick.
 2. **Project truth is AGENTS.md, and the architecture tree is subordinate to
-   the pool.** The architecture is built *from* the pool initially and
-   continuously re-evaluated against it (Bewertungs-Loop), versioned, living in
-   AGENTS.md beside the invariants and conventions. No second architecture
-   document that could drift.
+   the pool.** On a green field the architecture is built *from* the pool
+   initially; on an existing codebase tree v1 is read from the code instead
+   (§9). Where the two disagree, the code is the fact and the pool the intent
+   — reconciling them is Phase 0 work rather than a silent choice. Either way
+   the tree is continuously re-evaluated against the pool (Bewertungs-Loop),
+   versioned, living in AGENTS.md beside the invariants and conventions. No
+   second architecture document that could drift.
 3. **Architecture re-evaluation is a meta-story through the same factory.**
    When a story breaks the tree, classification produces a story "extend the
    architecture for X" with a high risk profile (heavy review, human in the
@@ -116,12 +122,21 @@ the inspiration: the adversarial verifier is a different model *family*
    as a notice. Raising the rung follows measured P8 evidence, never precedes
    it (§8, "No autonomy expansion ahead of the measured evidence").
 8. **Four-eyes principle, with a scaling guard.** No artifact passes only its
-   author. The second pair of eyes is another model by default; in the
-   availability emergency (reviewer down, tokens exhausted) the same model as
-   a **different agent with fresh context** — never the same agent (the kit's
-   shipped two-tier reviewer fallback embodies this). Human eyes only where
-   the frequency is bounded — O(waves + exceptions), never O(stories) — and
-   every mandatory human touchpoint carries a maturity knob that lowers with
+   author. The second pair of eyes is another model *family*; where none is
+   available the honest answer is to be **gateless and say so** — never
+   self-reviewed, and not a same-family agent either. That question is closed
+   with a negative answer and this vision does not reopen it: the same-family
+   tier-2 reviewer was designed three times across nine Gate-A passes and 303
+   findings and failed structurally
+   (`docs/superpowers/specs/2026-08-14-reviewer-availability-fallback-design.md`),
+   and what ships is "be gateless — not self-reviewed"
+   (`docs/coding-workflow.md`, `/workflow-init`). Reopening it would be its own
+   story. Human eyes only where the frequency is bounded — O(waves +
+   exceptions), never O(stories) — **as the end state**, which the rollout
+   deliberately does not satisfy yet: decision 7's lower rungs are per-story
+   and decision 5 keeps merge human until step 6. The bound is the target the
+   knobs move toward, not a rule the bootstrap already obeys. Every mandatory
+   human touchpoint carries a maturity knob that lowers with
    P8 evidence: presence is a dial that falls with trust, never a ratchet.
    Two concrete rules: an architecture merge triggers re-classification of
    the cards on the touched branches (their architecture verdicts are stale —
@@ -179,8 +194,10 @@ the inspiration: the adversarial verifier is a different model *family*
   subareas develop together first, those later" decision, usually aligned with
   tree branches but not required to be. The orchestrator pulls only from the
   active wave (a focus throttle beside the lanes budget: lanes = how much at
-  once, wave = what at all). Opening the next wave is the human's call (or
-  automatic when the prior wave is fully merged — settled by build step 4).
+  once, wave = what at all). Opening the next wave is the human's call; it
+  becomes automatic on prior-wave completion only where the human has raised
+  decision 7's knob to a standing rule for it, because an unasked wave opening
+  is a production trigger like any other (settled by build step 4).
   Later stories get their wave mark at classification.
 - **The kit's own roadmap** to this vision is §7 of this document.
 
@@ -238,12 +255,34 @@ proceeds, the breaking part waits on the meta-story).
 2. Loop-rule consolidation (successor story) + P8 passive metrics — measure
    before automating further.
 3. Orchestrator story (codify the role as skill/agent per decision 1).
-4. Story pool + status + classification + architecture tree (decisions 2 and
-   4) — including the proactive Intake-Loop, which is the factory's first
-   stage-4 loop (decision 6), so stage 4 starts here rather than at step 6.
-5. Stage 3: clock loops (poll, drift audits, PR processing) — including the
-   E2E clock loop (failures auto-filed as pool stories) and the merge-queue
-   station (rebase + smoke on the candidate), see §9.
+4. **Story pool and classification** (decisions 2 and 4). This is an epic, so
+   §5's own split rule applies to it; the ordered stories, behind named
+   interfaces:
+   - **4a** pool storage, item identity, and the status state machine — every
+     state, its authorizing operation, its precondition and its terminal or
+     resumable outcome.
+   - **4b** classification: the eight card dimensions, the verdicts, the split
+     and dependency rules — including the proactive Intake-Loop, which is the
+     factory's first stage-4 loop (decision 6), so stage 4 starts here rather
+     than at step 6.
+   - **4c** architecture bootstrap: Phase 0 and tree v1 (§9), plus the
+     machine-readable projection generated from AGENTS.md.
+   - **4d** Freigabe and wave control: the rendered wave plan, the granularity
+     knob and its standing rules, wave opening and closing (decision 7). No
+     other step owned this, and the pipeline cannot run without it.
+   - **4e** decision 9's mechanics: acceptance-criterion IDs, the read-only
+     rule inside a lane, the AC-block comparison at Gate B and the pool
+     round-trip. Ordered **before any autonomous lane execution** — it is the
+     reward-hacking guard, and a build path that ships lanes without it looks
+     complete while the guard is missing.
+5. **Stage 3: clock loops** (poll, drift audits, PR processing). Also an epic;
+   its stories are separate failure domains behind one shared contract:
+   - **5a** the clock-loop contract itself: tick, run lock, environment
+     preflight, usage-limit hold/resume, the report-only default, and the
+     branch-claim and lane-budget rules the scheduler needs.
+   - **5b** the merge-queue station (rebase + smoke on the candidate, §9).
+   - **5c** the E2E clock loop (failures auto-filed as pool stories, §9).
+   - **5d** drift audits and PR-bot processing.
 6. Stage 4 for the orchestrator wake (a story turning *freigegeben* wakes it
    without waiting for the tick) + sampled audit (decision 5) — full
    automation first only for level-0 stories; merge stays human until this
@@ -367,10 +406,14 @@ clone, so the durable record is the list below, not those paths.
 Adopted, with owning step:
 - Mechanical write protection for pool status, the `lanes` knob and the
   architecture section of AGENTS.md (their `protected_paths` /
-  `denied_commands`). This would be the kit's first *blocking* hook —
-  defensible only because it depends on nothing external, unlike the
-  advisory gate hook (invariant 1); the story must argue that explicitly.
-  [step 4/5]
+  `denied_commands`). This would be the kit's first *blocking* hook, and
+  invariant 1 ("the hook always exits 0") forbids one. Arguing that a
+  local-state check carries none of the external dependency invariant 1 names
+  is an argument *for amending* it, not an exemption from it — so this item's
+  prerequisite is an **invariant-1 amendment through an architecture
+  meta-story** (decision 3). Until that lands, enforcement lives outside the
+  hook: a repo-owned command or a required CI check.
+  [prerequisite meta-story, then step 4/5]
 - A run lock per orchestrator tick with stale-lock cleanup by the judge, so
   a double-firing clock never runs two orchestrators. [step 5]
 - Usage-limit hold/resume: a hit rate limit pauses the run with a countdown
@@ -440,3 +483,82 @@ framework, knowledge-graph disambiguation.
 - Test layers are decided (§9); still open: whether a smoke failure that
   returns to a lane is surfaced to the human (a dashboard question), and the
   E2E cadence / flaky-handling rules — step 5.
+
+**Recorded by Gate A pass 1 (2026-08-31).** Gaps this document does not close,
+each with the step that owns it. They are named rather than specified: a
+decomposition document that invented them would be taking design decisions
+nobody took, and a gap named here cannot be silently invented later by whoever
+writes the story.
+
+- *Pool and state* — cycles, self-dependencies and dangling targets; what a
+  dependency becomes when its target is split or rejected; the atomic
+  transition when the last dependency clears; which terminal statuses count as
+  resolved for wave closure and where carried-over items go; Phase 0's
+  empty-pool outcome; and whether an external board can satisfy the committed,
+  history-bearing, compare-and-set assumptions the `lanes` knob makes. [4a]
+- *Intake concurrency* — stable item IDs and idempotent classification writes,
+  so a re-delivered or overlapping debounce batch cannot produce a second card
+  or a second meta-story. [4b]
+- *The classification transaction* — the complete set of writes one
+  classification may make (card, status, meta-story, dependency link) and its
+  atomicity. Decision 6's "attaches cards only" and decision 3's meta-story
+  creation are the same act, so the seam guard needs the full list. [4b]
+- *Naming* — the verdict `freigeben` and the status `freigegeben` are one
+  letter apart, and the first must never produce the second. The classification
+  outcome needs a non-authorizing name. [4b]
+- *Architecture staleness* — an architecture merge makes verdicts stale, but
+  nothing yet revokes an already-*freigegeben* card or stops a running lane
+  whose verdict aged out mid-build. Binding cards and lanes to a tree version
+  is the candidate. [4c]
+- *Projection freshness* — what the generated projection does on a stale
+  digest, a parse failure, or a detected cycle. [4c]
+- *Approval binding* — the wave plan the human approves is recomputed every
+  tick from mutable inputs, so the clock can execute a materially different
+  plan than the one approved. Binding an approval to an input digest and
+  re-rendering when it moves is the candidate. [4d]
+- *The decision-queue throttle's `N`* — a committed knob with a default, a
+  range and an exact comparison, distinct from `lanes`. [5a]
+- *Branch-claim semantics* — "disjoint branches" is undefined for
+  ancestor/descendant overlap, shared roots, multi-branch stories, and a lane
+  whose touched set grows during the build. [5a]
+- *Orchestrator exclusion* — stale-lock cleanup is not exclusion: a live owner
+  paused in a usage-limit hold is exactly what a staleness heuristic
+  misreads. A lease with a heartbeat and a fencing token that every mutating
+  write checks is the candidate. [5a]
+- *Merge-queue terminal paths* — rebase conflict, unclean worktree, a branch
+  deleted while queued, a retry invalidated by newer main: each needs its
+  artifact, its return transition and a retry cap. [5b]
+- *E2E attribution* — a nightly or wave-close run covers many merges, so "the
+  trace ID of the suspect merge" is not derivable from it. Carrying the tested
+  merge range and marking attribution unknown unless deterministically
+  isolated is the candidate. [5c]
+- *Telemetry gaps* — analytics writes are non-fatal, yet review cost and
+  duration decide whether a pass counts. A missing or unattributable gate
+  measurement must read as INCOMPLETE, never as a cheap pass. [step 2]
+- *Live cost visibility* — post-run analytics detect overspend after it
+  happened, which is not the control §10 keeps from their P0 gap. Live
+  counters, alerts and stop thresholds are a different mechanism from P8's
+  passive record. [step 2 / dashboard]
+- *Retention* — run artifacts need a retention, compaction and deletion stance
+  from the first story that writes them; their P0 gap was exactly this. [step 2]
+- *Planning-artifact home* — where plans and specs live so they never
+  contaminate an implementation branch, and which of them are tracked. [step 3]
+- *Model strength order* — "the reviewer is never weaker than the builder"
+  needs a project-owned order across families and a fail-closed path for an
+  unknown or newly released model. [step 1/3]
+- *The triviality gap in decision 5* — "no merge skips both gates" does not
+  hold today: the shipped Gate-B triviality skip plus an undrawn Sample-Gate
+  leaves a change with neither. Whether the end state removes that skip, or
+  makes every Gate-B-skipped change a mandatory draw, is open. [step 6]
+- *Audit binding* — a draw and an audit verdict are not bound to the bytes
+  reviewed, so a later fix, rebase or Gate-B round can inherit an audit of
+  something else. Which mutations force resampling and re-audit is open. [step 6]
+- *Autonomy downgrade* — every knob lowers human presence on good evidence and
+  nothing raises it back on bad (audit rejection, repeated smoke failure,
+  deteriorating metrics). Triggers, authority, hysteresis and the immediate
+  safe state are unowned; without them "a dial, never a ratchet" is only half
+  true. [step 6]
+- *Meta-story batching versus the split rule* — one architecture meta-story per
+  wave can combine independent subsystems and mixed profiles, which §5 says
+  must split. Batching by compatible branch and profile group is the candidate,
+  and the O(waves) bound then counts batches rather than waves. [4c / step 6]
