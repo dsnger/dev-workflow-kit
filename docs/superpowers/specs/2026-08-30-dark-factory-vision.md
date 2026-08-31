@@ -22,19 +22,28 @@ measurably matters — and, at full maturity, sampled rather than omnipresent:
 ```
 Story-Pool — filling never triggers production          [missing]
   → Intake-Loop (PROACTIVE: a new story appearing triggers
-    classification + architecture verdict, debounced/batched;
-    attaches the card, triggers NO production)          [missing]
+    classification, debounced/batched; attaches the card,
+    triggers NO production)                             [missing]
       ↳ reads the Architektur (AGENTS.md)               [exists, needs one extension]
-  ⟳ Bewertungs-Loop (continuously re-evaluates the tree
-    against the pool: produces the meta-stories of
-    decision 3, and re-classifies the cards an
-    architecture merge made stale)                      [missing]
+      ↳ asks the Bewertungs-Loop for the architecture
+        verdict, and attaches the answer it returns     [missing]
+  ⟳ Bewertungs-Loop (the single producer of every
+    architecture verdict: answers Intake's request,
+    continuously re-evaluates the tree against the pool,
+    produces the meta-stories of decision 3, and
+    re-classifies the cards an architecture merge made
+    stale)                                              [missing]
   → Freigabe (the ONLY production trigger; the human, or
     a standing rule the human installed — decision 7;
     reads a rendered wave plan)                         [human]
   → Takt-Loop (polls freigegebene stories of the active
-    wave → wakes the orchestrator → a lane opens)       [missing]
-  → Spec-Loop   (intake + design + Gate A)              [exists]
+    wave → wakes the orchestrator → a lane opens). The
+    orchestrator is itself a model-operated node here,
+    so the vet preflight, fresh context, artifact-only
+    handoff and the judge all cover it                  [missing]
+  → Spec-Loop   (design + Gate A — the item was already
+    intaken and profiled at classification, so intake
+    does not run twice)                                 [exists]
   → Plan-Loop   (writing-plans + Gate A)                [exists]
   → Bau-Loop    (executing-plans, goal-based, TDD)      [exists]
   → Verify      (battery + Gate B — adversarial model)  [exists]
@@ -118,15 +127,21 @@ the inspiration: the adversarial verifier is a different model *family*
    the clock.
 5. **End state is sampled audit, not per-merge approval.** The adversarial
    gate checks every merge; the human audits a sample. No merge skips both
-   gates — so **reviewer availability is an input to merge authorization**,
-   and the answer to an outage is to **wait**. A runtime outage never produces
-   a gateless cycle: the candidate stays in the merge queue until an
-   independent reviewer returns, and **no human substitutes for the gate**.
+   gates — so **reviewer availability is an input to authorization**, and the
+   answer to an outage is to **wait where the outage happens**: a Gate-A
+   outage stops the lane before any candidate exists, a Gate-B outage holds
+   the work at Verify, and a candidate already queued stays queued. Nothing
+   advances past an unfinished gate, and **no human substitutes for the
+   gate**.
    Sampled audit is QA, never authorization, and never stands in for an active
-   gate. "Gateless" exists only as a *declared project-level state* — the
-   kit's `.context/codex-gate.off`, chosen deliberately and visibly — never as
-   a runtime improvisation. That leaves the reviewer-availability question
-   closed where its own record closed it. (Until step 6 of the build path
+   gate. "Gateless" exists only as a *declared project state*, and the shipped
+   declaration is the tracked **INACTIVE notice** `/workflow-init` writes into
+   the project's own CLAUDE.md ("the gates below do not run"). The
+   `.context/codex-gate.off` marker beside it is not that declaration: it
+   suppresses the hook reminder in one workspace, it is git-ignored so a clone
+   never sees it, and shipped CLAUDE.md says plainly that with it in place
+   "the gates still apply". Neither file authorizes anything. That leaves the
+   reviewer-availability question closed where its own record closed it. (Until step 6 of the build path
    matures, merge remains human anyway.)
 6. **Filling the pool never triggers production; classification is a
    proactive loop of its own.** (It is not free of *all* consequence — it
@@ -325,14 +340,20 @@ proceeds, the breaking part waits on the meta-story).
      and dependency rules — including the proactive Intake-Loop, which is the
      factory's first stage-4 loop (decision 6), so stage 4 starts here rather
      than at step 6.
-   - **4c** architecture bootstrap: Phase 0 and tree v1 (§9), plus the
-     machine-readable projection generated from AGENTS.md.
+   - **4c** architecture: Phase 0 and tree v1 (§9), the machine-readable
+     projection generated from AGENTS.md, **and the Bewertungs-Loop runtime**
+     — its continuous pool-versus-tree evaluation, its meta-story batching per
+     wave, and the re-classification an architecture merge triggers. The
+     bootstrap alone would leave §1's Bewertungs-Loop unbuilt.
    - **4d** Freigabe and wave control: the rendered wave plan, the granularity
      knob and its standing rules, wave opening and closing (decision 7). No
      other step owned this, and the pipeline cannot run without it.
    - **4e** decision 9's mechanics: acceptance-criterion IDs, the read-only
      rule inside a lane, the AC-block comparison at Gate B and the pool
-     round-trip. Ordered **before any autonomous lane execution** — it is the
+     round-trip — plus given/when/then normalization and the per-AC test
+     report as a handoff artifact, which is the machine-checkable goal
+     condition the fingerprint protects and which no other leaf owned.
+     Ordered **before any autonomous lane execution** — it is the
      reward-hacking guard, and a build path that ships lanes without it looks
      complete while the guard is missing.
 5. **Stage 3: clock loops** (poll, drift audits, PR processing). Also an epic;
@@ -401,8 +422,10 @@ proceeds, the breaking part waits on the meta-story).
 - **The tree is the parallelism map.** Disjoint branches run in parallel
   (N worktrees × one pipeline each — possible today; the record/nonce rules
   are the foundation); same branch serializes. Classification's dependency and
-  architecture verdicts yield the schedule. Within a story, stages fan out to
-  subagents; Gate B's two review branches already run in parallel. What does
+  architecture verdicts yield the schedule. Within a story the stages stay
+  serial — the plan needs the spec, the build needs the plan, Verify needs the
+  diff — but independent work *inside* one stage may fan out to subagents, as
+  Gate B's two review branches already do. What does
   not parallelize: the serial passes of one review loop, the merge queue to
   main, and the human's decisions.
 - **The parallelism budget is a user-owned knob.** It lives in the story
@@ -501,8 +524,12 @@ Adopted, with owning step:
   denied write, and invariant 4 keeps the hook POSIX `sh` with `jq` optional.
   The meta-story must decide fail-open or fail-closed for each local failure
   mode and say which of the three invariants it amends and which it preserves.
-  Until it lands, enforcement lives outside the hook: a repo-owned command or
-  a required CI check.
+  Until it lands there is no mechanical write protection at all. What exists
+  is **authorized-write tooling** (a repo-owned command an agent may choose to
+  use) and **merge-time detection** (a required CI check). Neither prevents an
+  unauthorized local write, and the factory can schedule or build from one for
+  as long as it takes a commit to reach CI. That bypass window is the reason
+  the blocking mechanism is wanted, and the interim path does not close it.
   [prerequisite meta-story, then step 4/5]
 - A run lock per orchestrator tick with stale-lock cleanup by the judge, so
   a double-firing clock never runs two orchestrators. [step 5]
@@ -554,12 +581,18 @@ size times its stations.
 
 Not adopted: the rollup branch (issue PRs into a wave branch, one rollup PR
 to main). It is a part of their stop-the-world milestone model, already
-rejected: the merge-queue smoke and the wave-close E2E give the same
-integration checkpoint, the as-built view gives the wave-level reading, and
+rejected. What replaces it is weaker, and saying so is the point: incremental
+smoke on each composed candidate *before* it lands, plus an E2E run over a
+wave that is already on main. There is no atomic whole-wave candidate and no
+pre-main whole-wave checkpoint, so some integration failures surface only
+after a partial wave has shipped. The as-built view gives the wave-level
+reading, and
 a wave branch would break the kit's merge-base-with-main semantics and make
 hotfixes a two-way merge — the opposite of flexible shortcuts (§11). A
-project that needs "main = whole waves only" solves that with release tags
-in its own CI (§8). Also not adopted, noted as a lesson only: hard byte
+project that needs "main = whole waves only" does not get it here: the queue
+lands individual candidates throughout a wave, so main is incremental by
+construction. Release tags in its own CI (§8) give that project release
+*boundaries*, which is a different thing and the most this design offers. Also not adopted, noted as a lesson only: hard byte
 caps on verify output and PR diffs in prompts (unbounded diffs blow context
 and cost). Irrelevant here: per-module monorepo batteries, LangGraph as a
 framework, knowledge-graph disambiguation.
@@ -669,10 +702,12 @@ writes the story.
   routes accepted actionable **bot** findings into it. Two sources have no
   station: accepted **Gate A and Gate B** findings, and accepted findings from
   a **sampled human audit** — the latter being the factory's highest-value
-  signal, since an audit finding is by definition something both gates let
-  through. Repairing those instances without recording fingerprints loses the
-  escalation that turns a recurring finding into a rule.
-  [gate findings 4b, audit findings 6b]
+  signal, since an audit finding is something the gates that ran did not
+  catch, or that no gate saw at all where Gate B was legitimately skipped and
+  Gate A reviewed only the spec and the plan. Repairing those instances without recording fingerprints loses the
+  escalation that turns a recurring finding into a rule. Gate findings belong
+  to the loop-rule owner rather than to the classifier — 4b is pre-production
+  and never sees a review loop. [gate findings 2a, audit findings 6b]
 - *Gate B and the rebase* — the queue rebases onto newer main after Gate B ran
   and then runs only smoke, so what lands is not byte-for-byte what the
   adversarial gate reviewed. Whether Gate B re-runs on the composed candidate,
@@ -682,6 +717,35 @@ writes the story.
 - *PR readiness before the queue* — nothing sequences PR opening, the routed
   review bots (`docs/pr-review-bots.md`) and required CI against Sample-Gate
   entry and queue entry. [5e]
+
+**Stations drawn in §1 that no leaf yet owns.** Each needs a leaf assigned
+before step 4 or step 5 planning begins; naming them here is what stops a
+roadmap from reading complete while a drawn station is unbuilt.
+
+- *The vet preflight* — §10 assigns it to step 4 as a whole, but 4a, 4b and 4c
+  divide storage, classification and architecture between them and none owns a
+  runner that fires before **every** model-operated node, including nodes that
+  do not exist yet. Candidate: its own leaf under the shared contract, with
+  its pool, split-threshold and projection checks mapped to 4a, 4b and 4c.
+- *The judge / watchdog* — §10 assigns it to step 5 as a whole, and it appears
+  in no leaf. It supervises the model loops **and** the merge queue, which is
+  not a clock loop, so it does not fall out of 5a either. Candidate: its own
+  leaf covering every supervised node plus the push notifications.
+- *The working orchestrator dry-run* — step 3 owns the plan interface and
+  says the runnable dry-run lands after 4d and 5a, but no later leaf owns it
+  and §10 still points at step 3. Candidate: a leaf after 5a, with §10
+  repointed to it.
+- *The as-built view at wave close* — §10 assigns it to steps 4 and 5, it is
+  in no leaf, and it is not drawn in §1. Candidate: 5d generates it and 4d
+  requires it in the wave-close transition.
+- *Punchlist generation* — §10 promises it as the artifact a sampled audit
+  reads, assigned to step 6 as a whole; 6b owns the draw and the audit state,
+  6c owns the merge thresholds, and neither owns producing the punchlist.
+  Candidate: 6b, since it is what the audit consumes.
+- *Model strength per role* — §10 assigns it to step 1/3, but the tracked
+  review-economics story contains no model-strength knob and step 3's
+  definition omits it, so both cited owners can finish without it. Candidate:
+  2a with the other loop rules, with §10 repointed.
 - *AC canonicalization* — decision 9's fingerprint needs a canonical
   serialization of the AC block, a baseline captured at lane opening, a
   durable record of the authorizing pool round-trip, and the exact evidence
