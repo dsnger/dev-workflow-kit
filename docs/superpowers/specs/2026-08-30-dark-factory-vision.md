@@ -33,14 +33,21 @@ Story-Pool — filling is always consequence-free         [missing]
   → Bau-Loop    (executing-plans, goal-based, TDD)      [exists]
   → Verify      (battery + Gate B — adversarial model)  [exists]
   → Sample-Gate (draws x% of PRs for human audit)       [missing]
-  → Audit (human, sampled)                              [missing]
+      ↳ drawn     → Audit (human, sampled)              [missing]
+      ↳ not drawn → straight on (the ordinary path)     [missing]
   → Merge-Queue (serial: rebase onto main → smoke on the
     candidate → green lands, red returns to the lane)   [missing]
-  → Merge/Deploy                                        [missing]
+  → Merge — the factory ends here; release and deploy
+    are the project's own CI (§8)                       [missing]
+
+  ⟳ E2E-Loop (clock: nightly or at wave close; a failure
+    is filed back into the Story-Pool, §9)              [missing]
 ```
 
-Every node is a loop with its own fresh context; only the artifact crosses an
-edge (story, spec, plan, diff, PR) — never the intermediate steps. A reviewer
+Every *model-operated* node is a loop with its own fresh context — the pool is
+a store, Freigabe and Audit are human, the merge queue is a mechanical
+operation. Only the artifact crosses an edge (story, spec, plan, diff, PR) —
+never the intermediate steps. A reviewer
 therefore judges only the result, never the process: separate eyes need
 separate heads, and separate heads come from separate context. Everything that
 matters must be *in* the artifact; process facts reach a reviewer only reified
@@ -49,7 +56,10 @@ exception is the judge/watchdog: it watches process signals (idle, thrash, no
 progress) and judges only liveness, never quality. Mandatory
 stops, scope questions and architecture re-evaluations escalate to the human;
 the factory stops and reports instead of spinning. A human override becomes a
-labeled example for tightening the rules.
+labeled example for tightening the rules — and it moves only knobs the human
+already owns: it never waives a mandatory stop, a gate obligation, profile
+evidence or an AGENTS.md invariant (CLAUDE.md §5: such a record "supplies no
+permission").
 
 The kit already holds the middle of this pipeline, and in one respect exceeds
 the inspiration: the adversarial verifier is a different model *family*
@@ -104,7 +114,7 @@ the inspiration: the adversarial verifier is a different model *family*
    the knob is human-owned and committed, changed only by defined operation
    (like `lanes`); and the plan is rendered on every rung — as a question or
    as a notice. Raising the rung follows measured P8 evidence, never precedes
-   it (non-goal 4).
+   it (§8, "No autonomy expansion ahead of the measured evidence").
 8. **Four-eyes principle, with a scaling guard.** No artifact passes only its
    author. The second pair of eyes is another model by default; in the
    availability emergency (reviewer down, tokens exhausted) the same model as
@@ -177,11 +187,15 @@ the inspiration: the adversarial verifier is a different model *family*
 ## 5. The classification card
 
 Every new pool item is classified before anything else. Dimensions 1–4 exist
-in the intake skill today; 5–7 are new:
+in the intake skill today; 5–8 are new:
 
 1. **Size** — story, or epic that must be split.
-2. **Risk/security profile** — drives floor, lenses, evidence mode.
-3. **Completeness** — too thin → one question back to the human; nothing is
+2. **Risk/security profile** — drives lenses and evidence mode today; it
+   drives the *pass floor* only once build step 1 lands (shipped CLAUDE.md
+   has a fixed 3-pass floor, and lenses are different questions, not more
+   passes).
+3. **Completeness** — too thin → one question round back to the human (several
+   targeted questions in it, as the shipped intake skill does); nothing is
    invented.
 4. **Invariant touch-list** — which AGENTS.md invariants the item affects.
 5. **Scope verdict** — inside project goals? Duplicate of a pooled or in-flight
@@ -203,7 +217,7 @@ proceeds, the breaking part waits on the meta-story).
 
 1. Story pool with status — the factory's trigger. *(missing)*
 2. Classification station beyond intake's current card (scope, architecture,
-   dependency dimensions). *(missing)*
+   dependency and wave dimensions). *(missing)*
 3. Architecture tree + Bewertungs-Loop in AGENTS.md. *(missing)*
 4. Orchestrator as product — the sparring-session practice codified as
    skill/agent: question routing, artifact handoff, prediction ledger, batched
@@ -224,12 +238,16 @@ proceeds, the breaking part waits on the meta-story).
 2. Loop-rule consolidation (successor story) + P8 passive metrics — measure
    before automating further.
 3. Orchestrator story (codify the role as skill/agent per decision 1).
-4. Story pool + status + classification + architecture tree (decisions 2 and 4).
-5. Stage 3: clock and event loops (poll, audit, PR processing) — including the
+4. Story pool + status + classification + architecture tree (decisions 2 and
+   4) — including the proactive Intake-Loop, which is the factory's first
+   stage-4 loop (decision 6), so stage 4 starts here rather than at step 6.
+5. Stage 3: clock loops (poll, drift audits, PR processing) — including the
    E2E clock loop (failures auto-filed as pool stories) and the merge-queue
    station (rebase + smoke on the candidate), see §9.
-6. Stage 4 + sampled audit (decision 5) — full automation first only for
-   level-0 stories; merge stays human until this step ships and holds.
+6. Stage 4 for the orchestrator wake (a story turning *freigegeben* wakes it
+   without waiting for the tick) + sampled audit (decision 5) — full
+   automation first only for level-0 stories; merge stays human until this
+   step ships and holds.
 
 ## 8. Non-goals
 
@@ -283,8 +301,13 @@ proceeds, the breaking part waits on the meta-story).
   nightly or at wave close, stage 3). The merge queue is a station of its own:
   serial, per candidate rebase onto current main → smoke on the composed
   candidate → green lands, red returns to the lane as an artifact (like Gate-B
-  findings) while the queue continues with the next branch — main is never
-  red and no human is involved; repeated failure escalates via the judge.
+  findings) while the queue continues with the next branch; repeated failure
+  escalates via the judge. The bounded claim: the queue never lands a
+  candidate whose configured smoke command fails. That is not a claim about
+  main's full-system health — only the E2E layer speaks to that, and it can
+  still find a failure on already-merged main. Landing is automatic from
+  build step 6 onward; until then the green outcome is a human merge
+  (decision 5).
   This closes the parallelism blind spot (disjoint lanes each green, their
   composition broken) and owns the merge-coordinator mechanics (rebase,
   retry). An E2E failure becomes a pool story automatically, classified by
@@ -326,7 +349,8 @@ define-conventions↔Phase 0, watch↔clock loops, needs-human-review↔escalati
 review gates weaken as retries mount; the inverse of the clean-final-pass
 rule); same-model review (their implementer and reviewers share one model
 family — correlated blind spots; our adversarial gate stays cross-model);
-daemon/Docker/GitHub as hard requirements (non-goal 1 stands); stop-the-world
+daemon/Docker/GitHub as hard requirements (§8, "No daemon or server-side
+runner", stands); stop-the-world
 sequential milestones (branch-scoped locks and the lanes budget replace it).
 
 **Their documented scars, kept as constraints here:** manual state mutation
@@ -337,7 +361,9 @@ from day one (their P0 gap: unbounded disk growth); absent real-time cost
 visibility is what makes a token furnace invisible (their P0 gap, our P8).
 
 **Second sweep (2026-08-31), against their full docs and the inspiration
-video; the gap lists live in `docs/research/2026-08-30-*-gap-sweep.md`.**
+video.** The two sweep files (`docs/research/2026-08-30-*-gap-sweep.md`) are
+local working notes under a git-ignored directory: they do not survive a
+clone, so the durable record is the list below, not those paths.
 Adopted, with owning step:
 - Mechanical write protection for pool status, the `lanes` knob and the
   architecture section of AGENTS.md (their `protected_paths` /
