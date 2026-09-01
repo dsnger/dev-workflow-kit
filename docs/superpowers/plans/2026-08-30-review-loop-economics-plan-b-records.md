@@ -378,8 +378,10 @@ NEW:
                                             a path containing a newline or other control
                                             character is NOT representable — the cycle stops
                                             and surfaces rather than emitting one
-  <KNOB>      := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
-  <CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
+  <KNOB>      := "absent" | [1-9][0-9]* | "unusable"
+                                            (narrowed 2026-09-02: the cause token this plan
+                                            originally shipped was withdrawn — see the spec's
+                                            §2.3 note and the field report)
 
   It carries that cycle's **cycle field** — the nonce for any cycle started after these rules
   ship, `none (pre-rule)` only for one that began before them — the **derived floor**, and **the
@@ -460,9 +462,9 @@ NEW:
                                             written `undetermined` — and the raw value is NOT
                                             reproduced anywhere in the body, since a commit message
                                             cannot safely carry one (NUL cannot appear at all).
-                                            What the body records instead is where the value came
-                                            from and which bytes were rejected, described rather
-                                            than embedded
+                                            (the source-and-rejected-bytes obligation this line
+                                            carried was withdrawn 2026-09-02 with the cause
+                                            vocabulary; nothing replaces it)
 
   A skipped cycle writes `<CYCLE-FIELD>; <CYCLE>: skipped (see skip reason)` and no counts.
   **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
@@ -486,9 +488,11 @@ NEW:
 
   A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry — **the curve counts logical
-  passes; the hook counts calls**, and where they differ the body says so. **Both branches must
-  have reviewed the same tracked reviewed commit.** Take it from **the head commit each call
-  reports having reviewed**, capture it **with that branch's result** rather than re-reading it
+  passes; the hook counts calls**, and where they differ the body says so. **Both branches must be
+  issued against the same tracked reviewed commit** — which is not a claim that either reviewed
+  it. Resolve `HEAD` to its full object name **before** each call and pass it explicitly; the
+  reviewer reports no reviewed head, so there is nothing to take from the result. Keep the value
+  you passed **with that branch's result** rather than re-reading it
   later — an intervening `WIP:` amend moves `HEAD`, so a value read afterwards is a different
   commit — and require the two captured values to be **exactly equal** before the branches are
   summed. Record it as the **full 40-character hex object name**, since abbreviations are

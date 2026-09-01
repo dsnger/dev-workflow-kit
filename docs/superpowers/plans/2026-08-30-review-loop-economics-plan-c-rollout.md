@@ -122,7 +122,7 @@ and what replaces it.
 | 16 | scaffolded template skip duties | as row 14, in the mirror | same disposition (Task 16) |
 | 17 | `getting-started.md` skip duties | as row 14, in an explanatory duty summary | same disposition (Task 17) |
 | 18 | `coding-workflow.md` skip duties | as row 14, in the other explanatory duty summary | same disposition (Task 18) |
-| 19 | §5 findings-slot rule, as Plan B leaves it | the bare names serve every cycle with no nonce | **kept and extended**: the bare-name reservation stands and the deletion binding stands; a no-nonce cycle writing where bare-slot files already exist takes a deterministic discriminator instead. Nothing is dropped — the exception is added because this cycle is that case (Task 19) |
+| 19 | §5 findings-slot rule, as Plan B leaves it | the bare names serve every cycle with no nonce | **kept, unchanged.** The extension this row originally described — a deterministic discriminator for a no-nonce cycle where bare-slot files already exist — was **dropped on 2026-09-02** with Tasks 19 and 20. The rule ships as Plan B leaves it; this cycle's own non-bare slots are a recorded plan-local exception, not a shipped production |
 | 20 | the same rule in the scaffolded mirror | as row 19 | same disposition, second copy (Task 20) |
 | 21 | spec §8 parse-check item | the evidence is a **parse** check over both grammars | **kept, and its mechanism corrected**: the coverage requirement — constructed valid and invalid strings, features recorded per grammar — is **unchanged**; the word `parse` is replaced by the comparison that exists, a `grep -E` match against each grammar's productions, with the cardinality rule named as the one case decided by counting instead. §5's own rule sends a fix that changes specified behaviour into the same commit (Task 21) |
 
@@ -648,13 +648,13 @@ NEW:
   rather than implying a guarantee.
 - **Findings slots take a per-cycle infix**, and the deletion step §5 already requires deletes
   only paths carrying the cycle's own infix. A cycle that holds a **nonce** uses it; a cycle with
-  **no** nonce keeps the **bare** names, *except* when the workspace already holds bare-slot files
-  from earlier cycles — then it takes a **short, deterministic discriminator** in the nonce's
-  position, which is not a nonce and claims none of a nonce's properties. Either way a cycle
-  deletes only its own paths, never a bare path belonging to somebody else and never another
-  cycle's. That rule exists because a bare slot was overwritten during this change's own
-  development, destroying a previous cycle's findings file — and this release's own Gate-B cycle
-  is the discriminator case, in the workspace where it happened.
+  **no** nonce keeps the **bare** names. A cycle deletes only its own paths, never a bare path
+  belonging to somebody else and never another cycle's. That rule exists because a bare slot was
+  overwritten during this change's own development, destroying a previous cycle's findings file.
+  **What this release does not ship** is a rule for the remaining case — a nonce-less cycle where
+  bare-slot files already exist. This release's own Gate-B cycle is that case, and it used a
+  recorded plan-local naming exception rather than a shipped rule; a general production is
+  deferred to the loop-rule consolidation story.
 - **What this change does not settle** is how demotion bears on the loop-health measures — the
   per-pass counts, the clusters and the stop thresholds. That is the loop-rule consolidation
   story's, and both documents say so, so the obligation cannot fall between them.
@@ -967,7 +967,17 @@ git commit --amend -m "WIP: review-loop economics"
 
 ---
 
-## Task 19: The slot rule admits a deterministic discriminator — 1 of 2, `CLAUDE.md` §5
+## Task 19: DROPPED — the slot rule admits a deterministic discriminator — 1 of 2, `CLAUDE.md`
+
+> **DROPPED by author decision, 2026-09-02. Do not execute this task or Task 20.** Shipping the
+> discriminator would have put a slot production into both prompt copies that the approved spec's
+> slot rules do not contain, leaving the source-of-truth section stale — Gate-A pass 7's first
+> BLOCKER. The general production is deferred to the loop-rule consolidation successor story.
+> **What replaces it for this cycle:** the `rle` slot names are a recorded plan-local naming
+> exception under the old rules, approved by the author and recorded in the closing commit body
+> and the field report. Task 23's second point cites Tasks 19 and 20 as admitting the name; read
+> that citation as superseded by this exception. Task 21 is unaffected: it never touched the slot
+> section, which is why dropping these two leaves nothing stale. §5
 
 **File:** `CLAUDE.md`
 
@@ -1034,7 +1044,12 @@ git commit --amend -m "WIP: review-loop economics"
 
 ---
 
-## Task 20: The slot rule admits a deterministic discriminator — 2 of 2, the scaffolded template
+## Task 20: DROPPED — the slot rule admits a deterministic discriminator — 2 of 2, the scaffolded template
+
+> **DROPPED by author decision, 2026-09-02, together with Task 19. Do not execute it.** See the
+> note under Task 19 for the reason and for what replaces it. Task 23's second point and this
+> plan's Self-Review both still say these two tasks admit the `rle` name into the shipped rule;
+> read both as superseded by the recorded plan-local naming exception.
 
 **File:** `plugins/dev-workflow/commands/workflow-init.md`
 
@@ -1203,9 +1218,10 @@ scaffolded mirror carries this rule too and is covered by item 6, which compares
   - **absent** — no path. Record not-applicable with that reason. **Do not create one**; a fixture
     supplying its own input proves nothing.
   - **present but not a readable regular file** — a directory, a device, an unreadable file, **or a
-    symlink whose target does not resolve**. Record `unusable(unreadable)`. A broken symlink is
+    symlink whose target does not resolve**. Record `unusable`. A broken symlink is
     *present and unusable*, never absent — the state the stripped machinery got wrong and the one
-    this rule exists for.
+    this rule exists for. (The cause token this step originally recorded was withdrawn on
+    2026-09-02; `unusable` no longer carries one.)
   - **a readable regular file** — record bytes and digest, and classify the value as numeric or as
     one of the pinned unusable causes.
 
@@ -1215,7 +1231,7 @@ scaffolded mirror carries this rule too and is covered by item 6, which compares
   Construct strings and match each against that grammar's own productions with `grep -E`: valid
   ones must match, invalid ones must not.
 
-  **Provenance:** a quoted path; each `unusable(<CAUSE>)` value; **a valid numeric knob value**;
+  **Provenance:** a quoted path; the `unusable` value; **a valid numeric knob value**;
   a cited-story-with-no-profile entry; `none` for no story cited; **a real `cycle <nonce>` field**.
   **Curve:** a gapped `<SPEC>` such as `1,2,4`; a split-model pass; a `?` count; a skipped cycle's
   skip record; **a `cycle <nonce>` field, the same nonce as the provenance instance**, so
@@ -1279,10 +1295,10 @@ should report success, and under `set -e` the first negative guard aborts before
    The third asks about a **different** commit, which is why it can fail. A stacked WIP would
    silently leave the earlier snapshot out of the only review.
 
-2. **The slots are `gate-b-<spec|quality>-rle-pass-<p>.md`**, and `rle` is the deterministic
-   discriminator **Tasks 19 and 20 admit into the shipped rule** — without them this form is
-   admitted by neither the bare names nor the nonce grammar, and the plan would contradict the
-   prompt it ships. **§8 states the same thing** — *"its slot discriminator is short and
+2. **The slots are `gate-b-<spec|quality>-rle-pass-<p>.md`**, and since Tasks 19 and 20 were
+   dropped, `rle` is admitted by **no shipped rule at all**: it is a **recorded plan-local naming
+   exception** under the old rules, approved by the author on 2026-09-02 and recorded in the
+   closing commit body and the field report. That is the whole of its authority. **§8 states the same thing** — *"its slot discriminator is short and
    deterministic, so it is not a nonce"*.
 
    The reason it is needed here: this cycle is pre-rule and **cannot mint a nonce**, so the
@@ -1319,7 +1335,9 @@ blocks are what it compares against.
 cycle's own output land here, then the body is composed from them.
 
 - [ ] **3 — A named verification of the risk path.** This cycle emits **one** provenance line.
-  Recompute its floor from the `Story:` header of the artifact this cycle reviewed. **The
+  Recompute its floor from the **union of the `Story:` headers of every plan contributing to the
+  reviewed diff** — Gate B reviews a diff and has no header of its own, which is what the shipped
+  rule says. (For this cycle all three plans cite one story, so the union is one path.) **The
   observation that would exist if the claim were false is a line whose floor the cited profile
   does not license.**
 
@@ -1339,6 +1357,12 @@ cycle's own output land here, then the body is composed from them.
 2. **This Gate-B cycle's provenance line.**
 3. **This Gate-B cycle's per-pass curve.**
 4. **Decline records**, if the cycle produced any.
+5. **The `rle` naming exception**, which Task 23 requires be recorded here — a plan-local
+   exception under the old rules, approved by the author 2026-09-02, with no shipped rule
+   behind it.
+6. **The standing decision record** for this cycle: the pass-2 discount, the dropped Tasks 19
+   and 20, the withdrawn knob-cause and model-cause vocabulary with its accepted capability
+   cost, and the closing disposition.
 
 **Nothing else, and the exclusions are the point.** No records for the four Gate-A cycles, no
 reconstruction, no reconstruction marker, no adjacent prose explaining one, and no line about the
@@ -1421,9 +1445,9 @@ every occurrence fixed in one pass: `AGENTS.md`'s own recipe, *search for the cl
 phrase*, used as the method rather than as a warning about it. The claim-to-site map is in the
 commit body.
 
-**Two of those claims changed what the plan ships**, and neither was a wording fix. The **slot
-rule gains a production** (Tasks 19 and 20), because the plan's own slot form was admitted by
-nothing the plan ships — the plan and the prompt it ships could not both be followed. And **§8's
+**One of those claims changed what the plan ships**, and it was not a wording fix. The slot rule
+was to gain a production (Tasks 19 and 20) — **that was dropped on 2026-09-02**, and the plan's
+own slot form is now a recorded plan-local exception instead of a shipped rule. And **§8's
 mechanism names four constraints a grep cannot decide instead of one**, because revision 6's
 correction of an overclaim was itself an overclaim.
 

@@ -168,9 +168,11 @@ would separate a rule from the argument that settles it.
       recorded as unknown rather than as zero, per series** — a pass may have one series lost and
       the others intact — and a reader excludes an unknown value only from the comparisons that
       read it. Both copies also state when separate calls
-      are **one logical pass**: only when they reviewed the **same tracked revision** — and that a
-      revision mismatch **ends the first as an incomplete pass** before the later one starts a new
-      pass, rather than merging two revisions into a single entry. Checkable: the requirement is
+      are **one logical pass**: only when they were **issued against the same tracked revision**,
+      which is what the retained request values establish and is not a claim that either branch
+      read it — the reviewer reports no reviewed revision. A mismatch **ends the first as an
+      incomplete pass** before the later one starts a new pass, rather than merging two
+      revisions into a single entry. Checkable: the requirement is
       stated in both copies, and this story's own commits carry it for each cycle that ran —
       **every field of the pinned form except the identifier, which no cycle on this branch can
       supply.** Those records carry the reserved pre-rule value, which by construction **does not

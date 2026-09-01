@@ -189,6 +189,13 @@ If a `CLAUDE.md` already exists with unrelated project content, do not overwrite
 offer to **append** sections §1–§5 (renumbering only if the file already uses those
 numbers) and say so in the report.
 
+> **Prompt-standards item 1 for the scaffolded `CLAUDE.md`: n/a, and why.** The file this
+> template writes is model-agnostic by design — its executing model is whatever the reader of
+> that project runs — so a `Target model:` line inside it would be false in every repo it lands
+> in. Recorded as a reasoned n/a rather than skipped: the item is answered. **This note sits
+> outside the fence** so it never scaffolds, and is deliberately **not** a `Target model:` line,
+> which would make this file's declaration count 2 and fail `scripts/check-invariants.sh`.
+
 ````markdown
 # <project>
 
@@ -269,15 +276,128 @@ counters and Gate B reports "not run" forever. A mapped name must itself start w
 to the hook or, for `Bash`/`Skill`, hijacks a lifecycle event. Register the server as
 `codex` to place its tools there.
 
-**Both gates are a LOOP with a HARD FLOOR: min 3 passes per run (Blocker/Major
-only), counted by the hook.** The hook counts passes but can't read findings or
-tell the spec run from the plan run (it resets at `writing-plans`), so Gate A —
-the spec run especially — is instruction-backed: a satisfied count is not a clean
-review. Open a TodoWrite "Codex pass N" per pass; fix Blocker/Major after each. Your
-final pass must be clean — if pass 3 still finds Blocker/Major, keep going until
+**Both gates are a LOOP with a HARD FLOOR: a minimum number of passes per run
+(Blocker/Major only), derived from the cited story's profile.**
+The derivation is max(risk, security): a value of 0 gives a floor of 1; every
+resolvable profile above that, and an artifact citing no story, gives 3. Two levels,
+not three — `high` takes its rigor from lens sets and evidence mode, not from extra
+passes. A cited story whose profile is present but unresolvable stops and surfaces
+under the existing rule; it does not fall through to 3, because reading it as 3 would
+turn a stop condition into a silent default. Across a cited set the floor is 1 if and
+only if the set is non-empty and every member is profiled, resolvable and at level 0
+— all four conditions, since "every cited story" is vacuously true of an empty set;
+no story cited, or any cited story unprofiled, gives 3. One derived value governs all
+three cycle *kinds*: the Gate-A spec loop, the Gate-A plan loop and the Gate-B cycle. Not
+because they are one cycle — they are separate cycles, and a change carrying several plans runs
+a Gate-A plan cycle per plan — but because they derive from the same
+cited-story set. That value is a function of the current confirmed profiles of that set,
+read fresh wherever this section already requires them to be read, so wherever a value can be
+derived at all there is exactly one, because there is one source. Some states derive **no** value
+rather than a second one, and each stops rather than defaulting: governing headers that
+disagree; a cited profile that is present but unresolvable; and a `Story:` header that cannot
+be read. A change to a profile or to the set
+therefore binds every open and future cycle — a raise costs an affected open cycle a
+further pass under the current profile, as the profile-change rule below requires — while a
+cycle that has already closed
+stands, its close having been valid under the profile current when it closed, which is the
+cycle-level form of passes already run keeping their count. **The set has one authority:
+the artifact's `Story:` header, which carries the path of every cited story.** Nothing else
+is a citation. A story path appearing anywhere else in an artifact's body — including a
+sentence placing a story *outside* this change's scope — **contributes nothing to the cited
+set and nothing to the floor derivation**, which is the only claim made about it; it may still
+be a perfectly good cross-reference for any other purpose. And **an agent
+deriving the set reads that header and does not grep the body for story paths**, because a
+grep finds mentions and cannot tell a citation from a disclaimer. **Each cycle's governing header is the
+header of the artifact it reviews**: the spec's for the Gate-A spec loop, the plan's for the
+Gate-A plan loop, and — since a Gate-B cycle reviews a diff and has no header of its own —
+**the union of the `Story:` headers of every plan contributing to that diff, which the Gate-B
+call must carry in full**, as this section already requires of every cited path. **Every expected artifact contributes a set — a spec, and every plan contributing to the
+reviewed diff — and an expected artifact whose `Story:` header is absent contributes the empty
+set rather than dropping out of the comparison.** **One path per entry**, and "entry" is
+decidable against the form these artifacts actually carry: a single line beginning `**Story:**`,
+then one or more paths, **each wrapped in backticks**, separated by `, `. Trailing prose after
+the last path is allowed and contributes nothing — several headers carry a reminder to read the
+profile fresh, and a reminder is not a citation. So a header citing several stories carries several entries,
+one path each. Exact duplicate paths are one member; entries naming different stories are
+different members; and a header that does not parse as that line is malformed and stops,
+reporting that as the cause rather than as a disagreement. **Before each pass the deriving agent
+compares every such set, and again before a clean pass is accepted as the cycle's final pass.**
+A header or profile that changed during that pass means the pass is not final — the same
+answer a change gets at every other read point. Where they name different sets the premise of a single value has
+failed: **stop and surface the disagreement** rather than deriving from either, exactly as an
+unresolvable profile stops rather than defaulting.
+
+**The derived floor is the pass count a cycle owes, and the hook's ratio is a reminder
+threshold that controls nothing.** The hook still counts passes, and it still can't read
+findings or tell the spec run from the plan run (it resets at `writing-plans`), so
+Gate A — the spec run especially — is instruction-backed: a satisfied count is not a
+clean review, and a below-threshold reminder is noted in the pass report and disregarded
+where the cycle's own closure rules are satisfied. This replaces the pass-count number
+and nothing else. Every other rule stated here about how a cycle closes stands as
+written, and none of them is restated — a summary is where their conditions would get
+dropped. Nothing here writes the floor knob: it stays the user's, never written, never
+removed, never read for this derivation. Open a TodoWrite "Codex pass N" per pass; fix Blocker/Major after each. Your
+final pass must be clean — if the pass at the floor still finds Blocker/Major, keep going until
 clean or clearly stuck → then STOP and surface to the user. The only early exit
-below 3 is a pass with **zero** findings; don't manufacture findings to pad. Codex is
+below the floor is a pass with **zero** findings; don't manufacture findings to pad. Codex is
 advisory — validate before applying; dismissed finding → one-line why.
+
+**Named residual:** the hook's messages state its own threshold as an obligation, so at a
+floor of 1 they report a shortfall the cycle does not owe. Hook text is out of scope here
+by decision; what makes that tolerable is the precedence rule above plus the hook exiting
+0 on every branch, not the reminder being harmless.
+
+**The gate-off surface — routes known today, not a complete list**, since an enumeration
+read as complete guarantees the routes it omits. One route is created here: a stated floor
+the cited set does not license, which could not exist before there was a derived floor to
+state. Pre-existing and unchanged: omitting a higher-risk cited story; minting or editing a
+profile to level 0; presenting an incomplete cited set; falsifying evidence entries;
+silencing reminders; or not running a pass and reporting that it ran. A user-set floor is
+not the lever — it moves what the hook says, not what the cycle owes.
+None of this is a guard: the floor is produced by the agent and nothing checks it against
+the cited profiles.
+
+**When these rules bind.** From the commit that ships them, and a cycle already running
+finishes under the rules it started with. Where a cycle's starting rules cannot be
+established it takes the stricter reading of every part this change touches — at minimum
+floor 3, severity classified without the demotion, the provenance-line duty owed, the curve
+duty owed, and the nonce duties at their strictest — the cycle is treated as post-rule, so it
+owes a nonce, owes its provenance line and its curve or skip record, and uses that nonce in every
+cycle record it does write — which changes what a record is named, never whether one is owed, so
+the working record stays optional and a skipped cycle still writes no findings slots. Where it
+cannot recover a nonce it starts a new cycle rather than claiming `none (pre-rule)`, that reserved
+field being unavailable to a cycle whose start cannot be established. Each further rule this change ships adds its own strict
+reading to this list. Not a re-derivation, which could hand a level-0
+cycle a floor of 1 and skip passes on the strength of not knowing when it started. A user
+knob set above 3 is not lowered by this fallback. A revert is itself a shipping commit for
+the old rules, and the activation rule wins wherever the start is determinable; the
+fallback covers only where it is not.
+
+**Downstream has no shipping commit.** Adoption binds from the `/workflow-init` run that
+actually writes the text — which may write nothing, be declined, or be merged in part —
+so these rules bind only over the text a project's `CLAUDE.md` actually contains, and a
+partial adoption can persist undetected. A project taking the floor rule without the
+severity test gets a floor whose docs-only question the severity test is what settles.
+**A partial adoption can leave a project's floor undefined or self-contradictory.** The rule
+is a coherence requirement, stated semantically rather than as a list of spellings, and it
+runs in **both** directions: **exactly one definition of the floor must be present, and every
+statement that defines or constrains the floor, or makes closing depend on it, must resolve to
+that one definition.** **The unknown-start fallback is not a second definition**: it is
+explicitly conditional on a cycle's starting rules being undeterminable and governs only that
+state, so it coexists with the predicate rather than competing with it. Everything else
+likewise keeps its own footing and is **not** required to derive from the floor: **the other closure and stop predicates** — assigned-fix-set membership, a new
+structural question, an accepted Blocker or Major, the tell thresholds; **independent reporting
+and diagnostic ordinals**, such as a duty owed from a given pass onward; and **the hook's
+reminder threshold together with any descriptive or historical pass number**, which say what a
+tool reports or what once happened rather than what a cycle owes. Four states break it, and the list is **not exhaustive**: a fixed-number or
+specific-pass obligation surviving beside the derived predicate; a claim or dependency on a
+derived floor with no predicate to define it; **no definition at all**; and **two definitions
+at once**. A
+merge can produce any of them: the Gate-A loop description, the pass-1 closure rule and the
+re-review rationale each carry a fixed-three claim and can be taken or left independently of
+the predicate itself. In any such state nothing here resolves which rule governs: **stop, and
+have a human complete or revert the adoption, before running a gate under it.** What prompt text can do about downstream
+adoption is limited, and that limit is what this paragraph states.
 
 **What a loop absorbs, and what stops it — a question of scope, not of action.** A finding
 that corrects the correction you just made **and stays inside the assigned fix set** is
@@ -319,13 +439,22 @@ finish, and it is why **a clean completion takes precedence over this exit**: a
 Blocker/Major-free pass **at or above the floor** has satisfied the clean-final-pass rule —
 collect the Minors and Nits and close — and reporting "will not converge" on a converged
 loop is a false report. **Below the floor nothing closes**, and a zero-finding pass remains
-the only exception, exactly as above; a Blocker/Major-free pass 1 carrying a Minor keeps
+the only exception, exactly as above; a Blocker/Major-free pass below the floor
+carrying a Minor keeps
 looping.
 **Surfacing does not close the cycle, and that is what makes this reachable.** You surface
 *with the finding still open* — the resolve rule is not waived, no pass is credited as
 clean, and the loop resumes on whatever the user decides. Reading it as "stop instead of
 fixing" would put the exit in competition with the rule that every Blocker and Major
 resolves, and then nothing could satisfy both.
+
+**Every pass report states three things about the floor**, from pass 1 onward: the
+derived floor, the risk and security values read, and the cited stories they were read
+from. A report giving the number alone leaves a reader unable to check the derivation
+while passes are still being spent — which is the only time checking it is cheap. Where
+no story is cited, or a cited story is unprofiled, the report says so in place of axis
+values; a multi-story set names each story and its values. This is owed by every pass;
+the three lines below are owed from pass 4 and are a different obligation.
 
 **From pass 4 onward every pass report carries three lines.** The carrier is **your own
 status report to the user** — never the Codex reply, which stays exactly one line per branch,
@@ -364,7 +493,26 @@ because the response stops carrying the findings at all. Append to the gate prom
 > `.context/codex-reviews/<slot>.md` (create the directory if needed; the path is
 > relative to that root — Codex resolves writes against its working directory, so
 > without this a valid file can land in a different checkout). `<slot>` is
-> `gate-a-spec-pass-<p>`, `gate-a-plan-pass-<p>`, or `gate-b-<spec|quality>-pass-<p>`.
+> `gate-a-spec-pass-<p>`, `gate-a-plan-pass-<p>`, or `gate-b-<spec|quality>-pass-<p>` for a
+> cycle with no nonce; a cycle that has one writes `gate-a-spec-<nonce>-pass-<p>`,
+> `gate-a-plan-<nonce>-pass-<p>` or `gate-b-<spec|quality>-<nonce>-pass-<p>` instead, and uses
+> the nonce in every slot more than one cycle could write. The bare names are reserved for the
+> legacy single-cycle case they already serve. **Distinct-nonce paths coexist by construction and
+> are never in conflict** — a sibling cycle's slot is simply a different file.
+>
+> **The rule binds the deletion step, which is where the damage is done.** This section already
+> requires every target to be deleted and confirmed gone before a call. A cycle holding a nonce
+> **deletes only paths carrying its own nonce**; it never deletes a bare path or one carrying a
+> different nonce, and an attempt to do either **stops and names the path** instead of removing
+> it. That is reachable and observable: the step operates on a path it computed, and the check is
+> whether that path is the cycle's own. **The case it exists for is a nonce-holding cycle
+> computing a bare path** — the legacy spelling — **and deleting a file that belongs to somebody
+> else**, which is exactly what happened once. **Two cycles that drew the same nonce compute the
+> same paths and are indistinguishable to this rule**; what makes that unlikely is the width of
+> the draw, not this rule — this section already stops on a
+> target that survives deletion, and this extends that to a target that must not be deleted at
+> all. That rule exists because a bare slot was in fact overwritten once, destroying a previous
+> cycle's findings file.
 >
 > One finding per line in the format above; escape a literal pipe inside a field as
 > `\|`.
@@ -410,6 +558,114 @@ terminator remain the only hard requirement, and a zero-finding pass needs no co
   Whoever runs the cycle writes it when useful, replaces it as the cycle moves, and
   deletes it once the cycle closes. Nothing depends on it existing.
 
+**The cycle nonce.** Both shipped records below carry a **cycle field**, because a record that
+cannot be attributed to a cycle cannot be told apart from another cycle's when several are read
+together. That is a limitation rather than a disqualification — a human reading one cycle's
+records knows which cycle they came from; what attribution buys is that a *later* reader
+**usually** does not have to. Usually, not always: the guarantee is probabilistic, for the two
+reasons stated at the end of this block. This section defines three **kinds** of cycle — the Gate-A spec loop, the Gate-A
+plan loop and the Gate-B cycle — and **one cycle field is produced per cycle run, not per
+kind**: a change carrying several plans runs a Gate-A plan cycle for each, and each of those is
+its own cycle with its own nonce.
+
+Generated once at cycle start, immutable, and collision-resistant operationally: **8 to 16
+characters drawn uniformly from `[a-z0-9]`, from a source of randomness** — 8 being where
+collision resistance starts and 16 where the field stops being a usable infix. **Never derived
+from a name, a timestamp or a commit**, each of which collides exactly where sibling cycles do,
+which is the one thing the nonce exists to prevent. The character set keeps it safe as a slot
+infix and a path component.
+
+**It appears in every record the cycle writes** — which keeps records apart **as far as distinct
+nonces allow**, and no further — **and that set is named rather than left open**:
+the provenance line, the per-pass curve (including a skip record standing in for one), the
+cycle's findings slots, and its advisory working record. **The working record is a cycle record
+too**: a cycle holding a nonce names it `gate-a-spec-<nonce>-resume.md`,
+`gate-a-plan-<nonce>-resume.md` or `gate-b-<nonce>-resume.md`, and the bare names above stay
+reserved for the legacy single-cycle case, exactly as the findings slots do. **Because recovery
+scopes candidates by artifact as well as by kind, the record's contents name that artifact**, and
+what counts as the artifact depends on the cycle kind: for a Gate-A cycle it is the reviewed
+document's path, quoted by the same rule the provenance line uses where quoting is needed; for a
+Gate-B cycle, which reviews a diff rather than a file, it is the **base commit's full
+40-character hex object name**, the same value the cycle's reviews are run against. The filename
+carries kind and nonce; the artifact key lives inside, where neither a path nor a hex name has to
+survive a filename. The nonce is not
+required in records this change neither introduces nor keys to a cycle — the evidence entry and
+a human-exception record among them.
+
+**A nonce is a candidate for recovery only if** it is keyed to this cycle's kind — Gate-A spec,
+Gate-A plan, or Gate B — **and** this cycle's artifact, **and** that cycle is still open. **Those
+three are necessary and not sufficient, and the difference matters**: two Gate-A cycles can review
+the same document and two Gate-B cycles commonly share a base commit, so a sole match on kind and
+artifact is **not** identity. **A candidate is adopted only if it is positively linked to this
+run** — the working record this run itself wrote. A match that is merely consistent is treated as
+no identity, and the cycle starts fresh; adopting a sibling on a shared key would merge two
+cycles under one nonce, which is the failure this rule exists to prevent.
+History normally holds many closed cycles' nonces and they are not candidates; a working record
+left by a closed cycle is not one either, which is why that record is **retired at closure**
+rather than left to be found later. **Recovery has two sources, and they answer different questions.** The **working record** is the
+source while the cycle runs, and it is the one the candidate rules above apply to — several files
+may be present and the run must decide which, if any, is its own. **History is the source once
+the cycle's own commit exists**, and there is no search there: the cycle is reading **its own
+commit body**, so kind and artifact are settled by which commit is being read, and the nonce is
+taken from the provenance line and the curve, which must agree. A Gate-A cycle mid-run has no
+such commit and therefore has only the working record. Recovering a single candidate from
+**either** keeps identity **as far as the field can distinguish cycles** — two cycles sharing a
+nonce are one cycle to it. **No candidate,
+disagreeing sources, or more than one candidate → no identity: start a new cycle**, which costs
+passes rather than letting one cycle's records read as another's — again, as far as distinct
+nonces allow. **Starting a new cycle does
+not close, adopt or retire the cycles those candidates belong to** — they stay open, keep their
+own nonces, and are a human's to resolve; the new cycle simply does not claim them.
+
+**A cycle does not start without a valid nonce, unique among the cycles open when it was
+generated.** That is the requirement. **What the check can establish is narrower** — it compares
+against the cycles it can observe — and the gap between the two is the residual set out below.
+Where generation fails, make **at most three attempts in total**, then stop and
+surface, **naming which of the three causes occurred**; each has its own check and its own fix,
+and one token would name a symptom rather than a cause:
+
+The three are distinguished by **where** the attempt stopped, so they cannot both apply: the
+source failed to produce bytes; or it produced bytes that are not a well-formed nonce; or it
+produced a well-formed nonce that is already in use. An empty result is the first, never the
+second.
+
+- **randomness unavailable** — the source errors or produces no bytes. *Fix:* retry, since the
+  condition can be transient; if it persists across the attempts, make a source available or run
+  where one is, which is a change to the environment rather than another draw.
+- **an invalid value** — the drawn value is not 8 to 16 characters from `[a-z0-9]`. *Fix:*
+  redraw. Repeated invalid output points at the generator rather than at luck, and the report
+  says which.
+- **a collision with a known-open cycle** — the value equals a nonce on a cycle still open.
+  *Fix:* redraw. A second collision at this width is possible but unlikely enough to be worth
+  reporting as a possible source defect, which the report states as a suspicion rather than a
+  finding.
+
+**Report every distinct cause observed across the attempts, in the order they occurred** — the
+attempts can fail for different reasons, and naming only the last would describe the tail of the
+sequence rather than what happened.
+
+**No deterministic fallback.**
+
+**Residuals, disclosed rather than guarded, and this list is not exhaustive.** The check compares
+against cycles *known to be open*, so a nonce can repeat one belonging to a cycle nobody can see;
+two cycles starting at the same moment can each check before either has published, so neither
+observes the other; and the check deliberately ignores **closed** cycles, so a new cycle can
+redraw a closed one's value and then write to its surviving findings slots and working record.
+**What makes both unlikely is the width of the draw, not the check** — and unlikely is the
+honest word. Neither is a guard.
+
+**What follows from that, said here rather than left to be discovered.** The nonce is
+collision-**resistant**, not collision-**proof**, so everything built on it inherits that bound:
+two cycles sharing a nonce write to the same slots and are not refused, their records read as
+one cycle's, and a later reader cannot separate them. Attribution is therefore a strong default
+rather than a guarantee, and any reading of these records that would be wrong if two cycles
+shared a field should say so rather than assume they did not.
+
+**A cycle that began before these rules shipped has no nonce and cannot acquire one.** Its
+records carry the reserved `cycle none (pre-rule)` field and are, by construction, not
+cycle-attributable. That exception is bounded and self-terminating: it reaches only cycles
+already running when the rules land, and no later cycle can enter the state.
+
 
 **Accept a pass only when** the file exists and is readable; its last line is exactly
 `END OF FINDINGS (<n> total)`; it contains exactly `<n>` finding lines *and nothing
@@ -418,7 +674,7 @@ the file" would accept a truncated file padded with fragments); and, for a `full
 pass, both branch files satisfy all of that. Anything else — missing, unreadable or
 empty file, wrong path, malformed terminator, count mismatch, extra lines, one branch
 file, an `INCOMPLETE` reply — is an **INCOMPLETE pass**, which is not a review: don't
-act on the partial list, don't count it toward the 3-pass floor, and don't read "no
+act on the partial list, don't count it toward the floor, and don't read "no
 Blocker/Major visible" as clean.
 
 **Reader:** the severity field is taken by splitting the line on **unescaped** pipes and
@@ -482,7 +738,7 @@ fingerprint components, so review artifacts cannot invalidate the review they do
 Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not all of
 `.context/`, which would strip the committed `codex-gate.on` adoption marker.
 
-- **Gate A — Spec, then plan (TWO runs, each its own 3-pass loop).** Run on the
+- **Gate A — Spec, then plan (TWO runs, each its own loop at the derived floor).** Run on the
   **spec** right after brainstorming (before `writing-plans`), then on the
   **plan** before `executing-plans`/`subagent-driven-development` — catching a
   spec flaw before it's baked into the plan. Tool: `mcp__codex__exec` (raw;
@@ -515,8 +771,8 @@ Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not 
 - **Gate B — Code.** Tests green, before `git commit`. Tool: `mcp__codex__review`
   (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
   spec + quality in parallel). Skip ONLY trivial changes. Check against
-  @AGENTS.md. Re-review after every fix — a fix changes the diff and the hook
-  invalidates the prior pass, which is where the 3 come from.
+  @AGENTS.md. Re-review after every fix — a fix changes the artifact, so the prior
+  review no longer covers it. The hook merely notices, at commit time.
 
   **A fix that changes specified behaviour updates the spec in the same commit.** If a
   Gate-B fix alters something the approved spec pins down — an ordering, a terminal
@@ -579,16 +835,31 @@ the reviewer, the other obliges the author.
   it; risk's *abuse* and security's *abuse paths* are **one lens carrying both labels**,
   not two questions.
 
-Lenses are **different questions, not more passes.** The 3-pass floor, the Blocker/Major
-filter, the file-first findings protocol and the clean-final-pass rule are unchanged.
+Lenses are **different questions, not more passes** — they change what a pass asks, never
+how many a cycle owes. The Blocker/Major filter, the file-first findings protocol and the
+clean-final-pass rule are unchanged. The floor is not among them: it is no longer a fixed
+number but derives from the profile and the cited set.
 
-**Reading the profile — three cases, three answers:**
+**Reading the profile — five cases, five answers:**
+0. **The ordinary case**: every cited story is readable and its profile resolves → derive the
+   floor from it and run. Stated first because a partition of failures alone is not a
+   partition, and an earlier revision of this list omitted it.
 1. The artifact **cites no story** → run unprofiled and **say so** in the pass. Artifacts
    predating this rule are the common case; stopping on them would halt in-flight work.
 2. The cited story has **no profile line** → same: today's behaviour.
-3. A profile is **present but unresolvable** → **stop and surface the cause**. That covers
-   the syntactic failures — unparseable line, a value outside the enums, two profile
-   blocks, a citation resolving to nothing — **and the semantic ones**: a `**Validation:**`
+3. The cited path **does not yield a readable story file** → **stop and surface which of
+   these it was**, because each has a different fix: the path does not exist (a typo, or a
+   file moved or deleted); it exists but is not a regular file, a directory being the common
+   case; it is a symlink that does not resolve; or it exists and is a regular file but cannot
+   be read for permissions. **Report what you observed; no test order is prescribed here**,
+   because the obvious one is wrong — an ordinary existence or regular-file test follows a
+   symlink, so a dangling link reads as absent rather than as a broken link.
+   This case exists because none of the answers above is available to an agent that never
+   obtained the file: it can establish neither that a profile is absent nor that one is
+   present but unresolvable.
+4. The story **is readable** and a profile is **present but unresolvable** → **stop and
+   surface the cause**. That covers the syntactic failures — unparseable line, a value
+   outside the enums, two profile blocks — **and the semantic ones**: a `**Validation:**`
    value disagreeing with `max(risk, security)`, or `+abuse-path` present without security
    `high` or absent with it. Only the **latest `mode override`** in the log, moving in a
    direction compatible with the current value, can explain such a mismatch — and if the
@@ -608,8 +879,9 @@ trivial** (the pre-existing judgement, unchanged by profiles), **and** for a pro
 profile *changes*, and a skip changes no profile value. **A skip removes the review, never
 the evidence**, and what is owed follows the profile: a skipped **profiled** story runs the
 battery and lands its evidence entry beside the reason; a skipped **unprofiled** story
-records the reason and the battery result and nothing more, because it owes no mode-derived
-entry and keeps exactly today's judgement-based skip.
+records the reason and the battery result, because it owes no mode-derived entry and keeps
+exactly today's judgement-based skip. **Neither is excused the records every cycle owes** —
+the provenance line, and a skip record in place of the curve.
 
 **A cycle citing several stories** aggregates along separate dimensions, never through one
 winning mode: the **battery runs once** for the cycle; **each cited _profiled_ story
@@ -666,6 +938,29 @@ the current profile. Inside an active Gate-B cycle, fold the edit into the activ
 snapshot by amend — a non-`WIP` commit reads to the hook as the cycle closing and would
 discard the accumulated passes.
 
+**While a gate is running, the floor derives from the current profile at each pass.**
+Passes already run keep counting; closing requires the floor as currently derived. These
+are pass-count rules, so they apply while a gate is running and are silent otherwise —
+what governs when a gate runs is unchanged and deliberately not summarised here.
+
+**Any profile change costs at least one further pass**, in either direction and whether or
+not the floor number moves, because the final clean pass must run under the current
+profile — so no already-banked pass can be it. That further pass must itself be clean and
+every other closure duty must be satisfied; it is one more pass, not a licence to close on
+the next one. What a lowering drops is whatever the changed values drop, not a fixed pair:
+a mode-only override changes the evidence obligations while leaving the axis-derived lens
+sets alone, and security `high` → `standard` keeps the security lens set while changing
+what evidence is owed. Every derived obligation is recomputed from the current profile.
+
+**The cited set is re-read at each pass, and the final clean pass runs against the current
+set** — whenever its membership changes, not only when the floor number moves. Adding a
+high-risk story to a set already at floor 3 leaves the number alone while adding that
+story's lens set, its evidence obligations and its review scope; a pass run before it
+joined did not cover them. Removing a story recomputes obligations from the current set
+and so does remove that story's lenses and evidence duty — but it never discharges an
+accepted in-set Blocker or Major: the acceptance put that finding in the fix set, not the
+citation.
+
 **What this does not do:** nothing checks which file a model actually read, whether the
 header changed mid-call, or whether the lens sets were appended. This is instruction-backed
 like the rest of §5; the detection is a reader comparing the pass against the story.
@@ -673,10 +968,41 @@ like the rest of §5; the detection is a reader comparing the pass against the s
 ### Mechanics (reference)
 - **Severity:** Blocker (wrong/unsafe/breaks invariant) · Major (design flaw →
   rework) → both must resolve. Minor · Nit → collect, never iterate.
+
+  **Deciding severity — one procedure. The subject list is illustration, not a second
+  rule.** Name what in the system consumes this text — whatever *acts* on it — and the
+  decision that act takes differently if the text is wrong. Both are required. If you
+  cannot name both, the finding is Minor or below: collect, never iterate.
+
+  The exclusions are contract, not commentary. The reader must consume the text in the
+  system's *operation*, not in reviewing it — the review pass raising the finding is not
+  an in-system reader of the text it reviews; without this the test demotes nothing.
+  Gates remain legitimate readers of rule text they will later apply. A human reader never
+  satisfies the test — the prose exemption already prices that cost as non-gating. The
+  list of reader kinds is illustrative, not closed, because this ships into projects whose
+  readers we have never seen. The test sets a ceiling, not a floor, and never chooses
+  between Blocker and Major — the four definitions above still decide that. The instrument
+  carve-out is symmetric: an instrument finding keeps its severity whenever it shows the
+  instrument changes what a gate concludes about product behaviour — a false green, and
+  equally a false red or a check blocking a valid change. Rationale prose is Minor only
+  when no rule's application depends on it, not categorically: `docs/prompt-standards.md`
+  requires rules to carry their why, so rationale a reader must consult to apply a rule
+  passes the test. This removes arbitrariness, not judgement. Coverage-first is unchanged
+  — the reviewer reports every finding with severity and confidence; the filter is ours.
+
+  This is the finding-level analog of the path-level prose exemption: one principle at two
+  granularities — text that *describes* the product versus text that *is* the product.
+
+  **How this demotion bears on the loop-health measures — the per-pass counts, the finding
+  clusters and the stop thresholds — is not settled here, and this change does not settle it.
+  Until it is, a pass whose outcome would turn on that question reports the question and
+  stops rather than deciding it** — the same answer any unresolved gate question gets.
 - **Tool routing:** docs (spec/plan, incl. code snippets) → `mcp__codex__exec`;
   implemented diff → `mcp__codex__review`. Never `review` a doc — it reads the
   git range, not the text.
-- **`baseSha`:** against main = merge-base with main (`headSha` = HEAD);
+- **`baseSha`:** against main = merge-base with main (`headSha` = the full 40-character
+  object name `HEAD` resolves to at that moment, never the symbolic `HEAD` — see the
+  branch-agreement rule below for why);
   pre-commit, `baseSha` = HEAD is an empty range (HEAD..HEAD) — make a WIP commit
   and set `baseSha` to its parent. **Name that commit `WIP: …`** — the hook treats a
   `wip`-prefixed commit message as cycle-internal, so it neither fires a Gate-B STOP
@@ -695,7 +1021,141 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   destroyed exactly when the cycle closes. The final commit body is the durable record;
   a PR shows commit messages, so there is no second home to keep in sync.
 
-  **On squash-merge, copy every evidence entry and every human-exception record in the squash range into the squash body — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
+  **Every cycle records one provenance line in its closing commit body** — default floor or
+  not, so an absent line is never ambiguous between "the default applied" and "someone forgot".
+  **One line per cycle**, so a change running five cycles records five. There is no informal
+  variant; anything quoting this form elsewhere quotes an instance of it, because the deferred
+  metrics work is intended to parse it — that consumer does not exist yet, and the form is pinned
+  now so that it can.
+
+  <CYCLE-FIELD>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
+
+  <CYCLE-FIELD> := "cycle " <NONCE> | "cycle none (pre-rule)"
+  <NONCE>     := [a-z0-9]{8,16}
+  <N>         := [1-9][0-9]*
+  <STORY-SET> := "none" | "{" <ENTRY> ("," <ENTRY>)* "}"
+                                            each <PATH> appears at most once; a repeated path,
+                                            with or without conflicting levels, is malformed
+  <ENTRY>     := <PATH> " (level " ("0"|"1"|"2") ")" | <PATH> " (unprofiled)"
+  <PATH>      := <bare> | <quoted>
+  <bare>      := [A-Za-z0-9._/-]+           contains no delimiter, quote or whitespace
+  <quoted>    := a double-quoted string, non-empty, whose only escapes are \" and \\ ;
+                                            a path containing a newline or other control
+                                            character is NOT representable — the cycle stops
+                                            and surfaces rather than emitting one
+  <KNOB>      := "absent" | [1-9][0-9]* | "unusable"
+
+  A filled instance, so the form is shown and not only described:
+
+  cycle none (pre-rule); floor 3 per {docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md (level 2)}; hook reminder threshold absent
+
+  It carries that cycle's **cycle field** — the nonce for any cycle started after these rules
+  ship, `none (pre-rule)` only for one that began before them — the **derived floor**, and **the
+  cited set that produced it**, each member with its level as a numeral. One floor and one set,
+  not an entry per story, since unanimity makes the floor a property of the set. It
+  distinguishes **a cited story with no profile** from **no story cited**. It records the
+  **workspace knob whenever the file exists**: the value if the observer read one, otherwise
+  `unusable`. **Nothing here describes what the hook does with that file, and the record does not
+  say why a value was unusable** — four successive attempts to state either were each wrong in a
+  different way, the last of them demonstrably so, and the rule for a claim needing a fourth
+  correction is to delete it. Whoever needs to know why reads the file and the hook.
+
+  **These records are one contract, and a partial adoption breaks it.** The nonce, the slot
+  naming, the provenance line, the curve, this carry rule **and the unknown-start activation
+  semantics that say what a cycle owes when its starting rules cannot be established** depend on
+  one another, and the requirement is that the adopted definitions **agree**, not merely that all
+  of them are present: a curve
+  without a cycle field cannot be attributed, a slot rule without a nonce has nothing to key on,
+  and a carry rule naming records a project does not produce is inert. **A project whose text
+  carries some of them and not others, or carries all of them in versions that disagree, stops
+  and has a human complete, revert or reconcile the adoption before running a gate under it** —
+  disagreement is the harder case and gets the same stop, because a project holding two
+  definitions of a record has no single answer to what it owes — the same answer, and for the same reason, as a partial
+  adoption of the floor rule.
+
+  **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT in the squash range into the squash body — a skip record carried without its reason is a pointer into a body the squash has made unreachable — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
+
+  **Every cycle records its own per-pass curve in its own commit body.** Gate B alone would
+  leave the dominant cost unrecorded — the loops this rule was built from are Gate-A loops.
+
+  <CYCLE-FIELD>; <CYCLE> (passes <SPEC>, <MODELS>): Findings <COUNTS>. Blockers <COUNTS>. Majors <COUNTS>.
+
+  <CYCLE>    := "Gate-A spec" | "Gate-A plan" | "Gate B"
+  <SPEC>     := <RANGE> ("," <RANGE>)*      strictly ascending, non-overlapping
+  <RANGE>    := <p> | <p> "-" <p>
+  <p>        := [1-9][0-9]*
+  <COUNTS>   := <n> ("," <n>)*              exactly as many entries as <SPEC> enumerates
+  <n>        := 0 | [1-9][0-9]* | "?"      "?" = the count is unrecoverable for that pass
+  <MODELS>   := <model> | <PER-PASS> ("; " <PER-PASS>)*
+  <PER-PASS> := "pass " <p> " " <model> ("+" <model>)*
+  <model>    := <bare-model> | <quoted-model> | "undetermined"
+                                            "undetermined" means the model could not be determined;
+                                            a real model so named is written as <quoted-model>
+  <bare-model> := [!-~]{1,} minus ; : , ( ) + " and space, and not the
+                                            literal "undetermined", which is reserved
+                                            printable ASCII only; a control character makes the
+                                            identifier unrepresentable, handled below
+  <quoted-model> := a non-empty double-quoted string, same two escapes as <quoted>;
+                                            an identifier that cannot be determined, or cannot be
+                                            represented, is written `undetermined`, and the raw
+                                            value is NOT reproduced anywhere in the body, since a
+                                            commit message cannot safely carry one (NUL cannot
+                                            appear at all). The record does not say why a pass
+                                            reached `undetermined`, and nothing here describes how
+                                            a model identifier fails — same rule, same reason as
+                                            the knob above
+
+  Two filled instances, one ordinary and one with a split logical pass:
+
+  cycle none (pre-rule); Gate B (passes 1-3, codex): Findings 16,29,4. Blockers 4,15,0. Majors 5,2,1.
+  cycle 7b2q9xk4; Gate-A spec (passes 1,2, pass 1 codex+claude; pass 2 codex): Findings 5,0. Blockers 1,0. Majors 2,0.
+
+  A skipped cycle writes `<CYCLE-FIELD>; <CYCLE>: skipped (see skip reason)` and no counts. **The skip
+  reason it points at is the text immediately following it in the same commit body** —
+  adjacency is the link. The cycle field is not: every pre-rule cycle writes
+  `cycle none (pre-rule)`, so it identifies nothing when a body carries more than one.
+  **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
+  list that omits or repeats a pass is malformed, not partially informative — and **every model
+  contributing to a split logical pass is listed**, joined by `+`, since recording one of two is
+  the same loss as recording none.
+
+  **Majors are recorded as well as Findings and Blockers**, because the severity rule moves the
+  Blocker/Major line rather than the total, so totals and Blockers alone could not show even a
+  change in the mix. **Subject categories are deliberately not recorded** — they are a judgement
+  per finding rather than a count, and the findings files carry the material.
+
+  **One entry per valid pass**, and since incomplete passes are excluded while still consuming
+  pass numbers, the record **states which pass numbers it covers**. A valid zero-finding pass is
+  recorded as zero, never omitted. **A count that cannot be recovered is written `?`, never
+  guessed and never written as `0`** — a cycle keeps its identity through the nonce rather than
+  through its pass files, as far as distinct nonces allow, so a resumed cycle may know a pass happened and not what it found, and
+  zero and unknown are different facts. **`?` is per series**: a pass whose Findings are unknown
+  may still have usable Blocker and Major counts, and a reader excludes the unknown value from
+  the comparisons that read that series while keeping the pass's other series.
+
+  A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
+  **branches of one logical pass** contributing one summed entry — **the curve counts logical
+  passes; the hook counts calls**, and where they differ the body says so **as prose beside the
+  curve**: neither grammar has a field for a call count, deliberately, since the count is a
+  property of how the pass was invoked rather than of what it found. **Both branches must be
+  issued against the same commit**, and that — not what they read — is what this rule
+  establishes. The result reports no reviewed revision, so there is nothing to read back and no
+  way to confirm from the reply what either branch actually looked at. What is available is the
+  request: **resolve `HEAD` to its full 40-character object name before each call and pass that
+  explicit value as `headSha`**, never the symbolic `HEAD`, which two calls can resolve
+  differently if a `WIP:` amend lands between them. Keep the value you passed **with that
+  branch's result**, and require the two kept values to be **exactly equal** before summing the
+  branches. Equal values mean the two calls were aimed at one commit; they are not evidence that
+  either branch reviewed it, and nothing available here would be. Record it as the **full 40-character hex object name**, since abbreviations are
+  ambiguous across repositories and across time; if it changed between them they are not one
+  pass, the completed branch is recorded as incomplete and excluded, and the later branch begins
+  a new one. Ending the pass is the conservative direction; merging two revisions would produce
+  one entry describing two different artifacts.
+
+  **What the curve is worth, stated rather than implied.** Durable **across** cycles; **not
+  within** a running one, since the commit does not exist until the cycle closes. And
+  **author-written and unchecked** — nothing compares it against the validated pass files, so
+  whatever reads it reads a self-reported curve and must not present it as measurement.
 
   **Recording a human exception.** Where a human decides that something **no applicable rule
   required** was nonetheless worth skipping — an optional check this environment cannot run, a

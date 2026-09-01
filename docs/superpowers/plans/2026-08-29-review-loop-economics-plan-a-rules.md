@@ -102,6 +102,14 @@ Two passages diverge between the copies and get a row each; both divergences wer
 **Nothing in §5 outside these eleven passages is edited.** Gate B, reviewing the combined diff,
 is what confirms that against this table.
 
+**Two rows added during the Gate-B cycle**, because two decision procedures were rewritten by
+its findings and this table is where old conditions are accounted for:
+
+| # | Passage | Copy | What the pre-fix prose required | Disposition |
+|---|---|---|---|---|
+| 12 | profile-reading cases | both | a. cites no story → unprofiled · b. no profile line → unprofiled · c. present but unresolvable → stop, covering unparseable lines, values outside the enums, two profile blocks, a citation resolving to nothing, and the semantic mismatches | a and b **kept verbatim**. c **split**: the failure-to-obtain-the-file half — including "a citation resolving to nothing" — becomes its own case 3 with four named sub-causes and a decidable order of tests, because an agent that never read the file can answer neither a nor b; the remaining syntactic and semantic failures stay as case 4, **unchanged in substance**. Nothing dropped |
+| 13 | `headSha` / branch agreement | both | a. both branches must have reviewed the same commit · b. take it from the head commit each call reports · c. capture it with the branch's result, not later · d. require exact equality before summing · e. record the full 40-character name | **b deliberately dropped**: the reviewer tool reports no head commit, so the condition was unsatisfiable as written. **a narrowed to what the mechanism supports** — both branches are *issued against* the same commit, stated with the explicit note that this is not evidence either reviewed it. c, d, e **kept**, now applied to the value passed rather than a value read back |
+
 ---
 ## Task 1: The floor predicate
 

@@ -31,17 +31,17 @@ settled decisions with rationale, not a wish list.
 **3. Gate A on the spec.** Claude sends the spec text to Codex
 (`mcp__codex__exec`) — a different model family, so it doesn't share Claude's blind
 spots. Blocker/Major findings get fixed, the review reruns on the revised spec:
-three passes minimum, final pass clean — the one early exit is a pass that comes
-back with zero findings. Hook messages like `⚠ Codex Gate A below floor (1/3)` are
+the floor its profile derives, final pass clean — the one early exit is a pass that
+comes back with zero findings. Hook messages like `⚠ Codex Gate A below floor (1/3)` are
 the counter, not an error. Your job: arbitrate disputed findings — Codex is
 advisory, and a dismissed finding needs a one-line reason.
 
 **4. Plan, and Gate A again.** `superpowers:writing-plans` turns the spec into a
-task-by-task plan (each task starts with a failing test); the same 3-pass loop runs
+task-by-task plan (each task starts with a failing test); the same loop runs at the derived floor
 on the plan. A flaw caught here never reaches code.
 
 **5. Implement.** `superpowers:executing-plans` works through the plan, test-first,
-progress claims backed by test runs. If the Gate-A floor wasn't met, the hook says
+progress claims backed by test runs. If the hook's own threshold wasn't met, it says
 so right when execution starts.
 
 **6. Quality battery.** The one command you wired at init (typecheck + lint + dead
@@ -50,12 +50,14 @@ skipping locally only postpones the red.
 
 **7. Gate B on the diff.** Claude makes a `WIP:`-prefixed commit (gives Codex a
 range to read; the hook knows WIP doesn't end the cycle), then loops
-`mcp__codex__review` the same way: three passes, final clean. Verification is by
+`mcp__codex__review` the same way: the derived floor, final clean. Invalidation is by
 **content** — any change to included content present when the hook runs, even from a
-formatter, flips it back to unsatisfied; `.context/` and untracked ignored paths are
+formatter, flips it back to unsatisfied. What that proves is bounded, and the hook's own
+source says so: the current fingerprint matches the one recorded on a counted call, which
+is not evidence that Codex read those bytes; `.context/` and untracked ignored paths are
 excluded, and staging counts, because the fingerprint covers the index and that is what
 a commit carries. On
-`✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)`, the real commit replaces
+`✓ Codex Gate B satisfied (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the calls the hook counted this cycle, the hook's own reminder threshold, and the **consecutive** counted calls on the current fingerprint since it last changed. The first is not the calls you made: the hook withholds the count for a recognized failure envelope, the backgrounding notice, and a result it can get no text from. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges — the real commit replaces
 the WIP via `git commit --amend`.
 
 **8. PR and bots.** Open the PR as usual; once the bots have commented, run
@@ -81,9 +83,9 @@ close-out (8–9). Trivial changes travel lighter, within limits: **Gate B** may
 only when the change is behaviourally trivial **and** the story is eligible — a profiled
 one at effective level 0 (risk `trivial` *and* security `none`), an unprofiled one by the
 prior judgement call. The profile supplies eligibility, never the skip itself; the battery
-is still owed and Gate A's floor is unchanged at every level. The caution bias is
+is still owed; Gate A's floor derives from the profile exactly as Gate B's does, and what the axes never subtract is the baseline questions. The caution bias is
 for non-trivial work, judgment is allowed. Two knobs: `.context/codex-gate.floor` (any
-positive integer) moves the 3-pass floor, and `touch .context/codex-gate.off`
+positive integer) moves the hook's reminder threshold, and `touch .context/codex-gate.off`
 silences the reminders in a scratch workspace (delete to re-enable; state keeps
 tracking while off, so nothing goes stale).
 
@@ -102,8 +104,9 @@ smallest that matches your intent:
 2. **One trivial change:** the hook warns, it never blocks. What §5 permits depends on
    the story: an **unprofiled** one keeps the old judgement call, while a **profiled**
    one may skip Gate B only at effective level 0 (risk `trivial` *and* security `none`),
-   still owes the battery, and records both the skip reason and its evidence entry in the
-   commit body. Gate A is not
+   still owes the battery, and records the skip reason, the battery result, the cycle's
+   provenance line, a skip record in place of the curve, and one evidence entry per cited
+   profiled story, in the commit body. Gate A is not
    skippable at any level.
 3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable;
    state keeps tracking, so nothing goes stale).

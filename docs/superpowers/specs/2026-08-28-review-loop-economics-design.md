@@ -10,7 +10,8 @@ Prompt-only, in two mirrored copies: `CLAUDE.md` §5 and `/workflow-init`'s inli
 **This document states rules and decisions.** Concrete formats, per-site wordings, the
 old-conditions passage list, and every procedure live in the plan, reviewed there against this
 spec. Two things stay pinned as *required properties* because a shipped criterion reads them and a
-program parses them: the provenance line (§2.3) and the per-pass curve (§4).
+program is intended to parse them — P8's deferred measurement, which does not exist yet: the
+provenance line (§2.3) and the per-pass curve (§4).
 
 **One constraint on the edit itself:** `codex-gate.sh:94` greps `CLAUDE.md` for the §5 heading to
 build every reminder's citation, so **the heading must keep matching
@@ -90,7 +91,8 @@ passes are still being spent, which is the only time checking it is cheap.
 ### 2.3 The provenance line — required properties
 
 One line per cycle, in its closing commit body. **The grammar is pinned here, not in the plan** —
-the parent story requires one form and says this spec states it, and P8 parses it. (Revision 15
+the parent story requires one form and says this spec states it, and P8 — deferred, and not
+built yet — is intended to parse it. (Revision 15
 moved it out and was wrong to; pass 9 had already settled this, and the test it settled on is
 whether anything but a person parses it.)
 
@@ -110,24 +112,29 @@ whether anything but a person parses it.)
                                           a path containing a newline or other control
                                           character is NOT representable — the cycle stops
                                           and surfaces rather than emitting one
-<KNOB>      := "absent" | [1-9][0-9]* | "unusable(" <CAUSE> ")"
-<CAUSE>     := "unreadable" | "empty" | "non-numeric" | "out-of-range"
+<KNOB>      := "absent" | [1-9][0-9]* | "unusable"
 ```
 
 Everything that quotes this line elsewhere quotes an instance of it; there is no informal variant.
 The properties the grammar exists to satisfy:
 
 - **Every cycle records it**, default floor or not, so an absent line is never ambiguous between
-  "the default applied" and "someone forgot". **Three cycles means three lines**, one per cycle.
+  "the default applied" and "someone forgot". **One line per cycle run**, so a change running
+  five cycles records five — the count is of cycle runs, not of the three cycle kinds.
 - It carries that cycle's **cycle field** — **the nonce (§5) for any cycle started after these
   rules ship, and `none (pre-rule)` only for a cycle that began before them** — the **derived
   floor**, and **the cited set that produced
   it with each member's level as a numeral** — one floor and one set, not an entry per story,
   since unanimity makes the floor a property of the set.
 - It distinguishes **a cited story with no profile** from **no story cited**.
-- It records the **workspace knob whenever the file exists**, including when present but unusable,
-  **naming the cause** — unreadable, empty, non-numeric, out-of-range — because those need
-  different fixes and one token names a symptom rather than a cause.
+- It records the **workspace knob whenever the file exists**: the value if one was read,
+  otherwise `unusable`. **It does not name why.** An earlier revision required a cause token —
+  unreadable, empty, non-numeric, out-of-range — on the reasoning that those need different
+  fixes. That was withdrawn on 2026-09-02, knowingly and at a cost: four successive attempts to
+  state the classification behind those tokens were each wrong in a different way, the last one
+  demonstrably (a file of `1`, NUL, `2` is accepted by the hook as twelve, in `sh`, `dash` and
+  `bash` alike). The record now says **that** a knob was unusable, no longer **why**; whoever
+  needs why reads the file and the hook.
 - It is **machine-extractable and has one form covering every case**, because the deferred P8
   measurement parses it.
 
@@ -248,9 +255,9 @@ reason as the provenance line:**
                                           written `undetermined` — and the raw value is NOT
                                           reproduced anywhere in the body, since a commit message
                                           cannot safely carry one (NUL cannot appear at all).
-                                          What the body records instead is where the value came
-                                          from and which bytes were rejected, described rather
-                                          than embedded
+                                          (the source-and-rejected-bytes obligation this line
+                                          carried was withdrawn 2026-09-02 with the cause
+                                          vocabulary; nothing replaces it)
 ```
 
 **`<PER-PASS>` keys must be exactly the passes `<SPEC>` expands to, each once, ascending** — a
@@ -306,9 +313,11 @@ here keeps a later reader from computing a demotion figure the baseline cannot b
 - A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
   **branches of one logical pass** contributing one summed entry. **The curve counts logical
   passes; the hook counts calls**, and where they differ the body says so.
-- **Both branches of one logical pass must have reviewed the same artifact revision**, identified
-  by the **tracked reviewed commit** — the plan fixes how it is encoded, but which thing is
-  compared is a decision, not a format. **If it changed between them they are not one pass**: the
+- **Both branches of one logical pass must be issued against the same artifact revision**,
+  identified by the **tracked reviewed commit** passed to each call — the plan fixes how it is
+  encoded, but which thing is compared is a decision, not a format. **What this establishes is
+  that the two calls were aimed at one revision, not that either branch read it**: the reviewer
+  reports no reviewed revision, so no stronger claim is available. **If it changed between them they are not one pass**: the
   completed branch is recorded as an incomplete pass and excluded, and the later branch begins a
   new one. Ending the pass is the conservative direction; merging two revisions would produce one
   entry describing two different artifacts.
@@ -464,12 +473,20 @@ Mode `battery+check+verification` (no `+abuse-path`; security is `none`).
 - **A conditional verification that a user's knob survives untouched** — byte-identical across a
   cycle where one exists; **recorded not-applicable with its reason where none does**, since
   creating one would be a fixture supplying its own input.
-- **A parse check over both pinned grammars.** The branch's own instances cannot exercise them:
+- **A grammar check over both pinned grammars.** The branch's own instances cannot exercise them:
   three lines cannot cover quoted paths, each unusable-knob cause, gapped pass ranges, split-model
   passes, a skipped cycle, or the cardinality rule that `<COUNTS>` matches `<SPEC>`. **The check
-  reads a set of constructed strings — valid ones that must parse and invalid ones that must be
-  rejected** — and records which grammar features each exercises. A grammar nothing ever parsed is
-  a format claim, not a format.
+  matches a set of constructed strings against each grammar's own productions with `grep -E` —
+  valid ones must match, invalid ones must not** — and records which grammar features each
+  exercises. **It is a grep plus field comparisons, not a parser**: these forms are pinned as
+  greppable field grammars and this repo ships no parser for either, so naming a parser would name
+  a check nobody can run. **A match decides the lexical productions and nothing else.** Every
+  constraint it cannot decide is checked by a comparison over the extracted fields: `<COUNTS>`
+  having as many entries as `<SPEC>` enumerates; a `<PATH>` occurring more than once; `<SPEC>`
+  ranges ascending and non-overlapping; a per-pass key present in one field and absent from its
+  partner. **That list is what reading both grammars for non-regular constraints produced, and it
+  is not proven complete** — a further one is checked the same way rather than folded into the
+  match. A grammar nothing was ever matched against is a format claim, not a format.
 - **Parity across every changed rule**, in both copies, since they already diverge and parity
   cannot be asserted from a whole-section diff.
 - **A fresh twelve-item `docs/prompt-standards.md` pass.** Invariant 11 binds **each changed
