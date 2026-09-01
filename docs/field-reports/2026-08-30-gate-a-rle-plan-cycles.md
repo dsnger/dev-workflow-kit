@@ -1,7 +1,7 @@
-# Gate-A plan cycles `rle` — A, B and C, the record preserved
+# Gate-A plan cycles `rle` — A, B, C and C1, the record preserved
 
 Companion to `2026-08-29-gate-a-rle-cycle-evidence.md`, which holds the **spec** cycle. This file
-holds the **three plan** cycles for the same change. Their validated findings files live under
+holds the **four plan** cycles for the same change. Their validated findings files live under
 `.context/codex-reviews/`, which is gitignored and whose slots are reused, so this is the durable
 record — the same reason the spec file and `2026-08-26-fic2-cycle-evidence.md` exist.
 
@@ -43,15 +43,37 @@ Blockers  2, 0, 0,  0, 0, 0, 0
 Majors    7, 3, 4,  7, 5, 6, 0
 ```
 
-**Plan C — rollout, packaging, evidence, the close.** Open at 5 passes when this file was written.
-Its closing figures belong in a later revision of this file, and its absence from the list below
-is a statement that the cycle had not closed, not that it closed at five.
+**Plan C — rollout, packaging, evidence, the close.** 7 passes, **closed as not converged**
+(Daniel, 2026-08-30). No clean pass was reached and none is claimed anywhere. The record is
+`.context/codex-reviews/gate-a-plan-planc-CLOSURE.md`.
 
 ```
-Findings 18, 20, 20, 23, 22
-Blockers  5,  4,  2,  4,  5
-Majors   11, 13, 13, 16, 13
+Findings 18, 20, 20, 23, 22, 19, 29
+Blockers  5,  4,  2,  4,  5,  2,  2
+Majors   11, 13, 13, 16, 13, 16, 19
 ```
+
+Blocker/Major never left the 15–21 band, and both the highest finding total and the highest
+Blocker+Major of the cycle are **pass 7 — the last one**.
+
+**Plan C1 — the user-facing floor description.** The first carve-out of the split. 3 passes,
+**stopped on the two-tell rule**, never closed.
+
+```
+Findings 14, 12, 17
+Blockers  0,  1,  0
+Majors    8,  7, 10
+```
+
+The finding count rose and Blocker+Major rose (8, 8, 10) — two of §5's five tells, which makes
+stop-and-surface mandatory rather than discretionary. **Daniel's decision, 2026-09-01: do not
+resume the loop. C1 is dissolved and its payload is reviewed at Gate B, on the artifact.**
+
+One operational note the cycle paid for: the slots are
+`gate-a-plan-planc1-pass-{1,2,3}.md`, with **no revision infix**. Four plan revisions were
+committed (bb358c2, 476236b, 7e42947, 52192d1) and three passes recorded, and which pass ran
+against which revision is not recoverable from the artifacts. A dispositions file must carry the
+revision it reviewed; this record cannot reconstruct it.
 
 ## What the three cost, and why they differ
 
@@ -84,6 +106,22 @@ Plan B state rules; Plan C had to *use* rules, and using them tempted it into re
 remedy was the same one the spec cycle recorded for restatements generally — **not a better
 restatement, a deletion** — but deleting a restatement leaves a gap where the plan-specific facts
 were tangled up in it, and pass 5 is a list of those.
+
+**C1 turns that into a second data point, and it generalizes further than the first.** C1 *was*
+the remedy for Plan C's non-convergence: take one statement site out, make the plan small, give it
+its own cycle. C1 is nine sentences in eight replacements across two files — about as small as a
+plan of this kind gets — and its curve rose anyway. So the cost is not carried by the plan's
+**size**.
+
+What both artifacts share is that they are prose describing replacements of prose, and a reviewer
+reading one has no decidable question to answer. Plan B is the contrast that makes this visible:
+its grammars can be checked against themselves, so a pass either finds an unreachable production
+or it does not. A sentence-replacement list can only be checked against a fresh reading of two
+other documents, and every pass brings a fresh reading. **A plan made of prose about prose has
+now failed to converge under Gate A twice, at two very different sizes.**
+
+Where that evidence points is Gate B: the same eight replacements, read as a diff against the
+files they changed, are a question with an answer.
 
 ## The superseded single-plan artifact
 
