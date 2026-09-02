@@ -1,7 +1,8 @@
-# Gate-A plan cycles `rle` — A, B, C and C1, the record preserved
+# Review cycles `rle` — the four Gate-A plan cycles and the Gate-B cycle, preserved
 
 Companion to `2026-08-29-gate-a-rle-cycle-evidence.md`, which holds the **spec** cycle. This file
-holds the **four plan** cycles for the same change. Their validated findings files live under
+holds the **four plan** cycles for the same change, and — since 2026-09-02 — the single
+**Gate-B** cycle that reviewed their combined diff. Their validated findings files live under
 `.context/codex-reviews/`, which is gitignored and whose slots are reused, so this is the durable
 record — the same reason the spec file and `2026-08-26-fic2-cycle-evidence.md` exist.
 
@@ -122,6 +123,82 @@ now failed to converge under Gate A twice, at two very different sizes.**
 
 Where that evidence points is Gate B: the same eight replacements, read as a diff against the
 files they changed, are a question with an answer.
+
+## The Gate-B cycle — five passes, closed as not converged
+
+The four cycles above are Gate-A. This one is the single Gate-B cycle over the combined
+A+B+C diff, and it closed the same way Plan C's did: **on the clearly-stuck exit, with no
+clean pass and none claimed.** Numbers extracted mechanically from
+`.context/codex-reviews/gate-b-{spec,quality}-rle-pass-{1..5}.md`, the same way the rest of
+this file was taken.
+
+```
+pass      1   2   3   4   5
+Findings 16  29  25  25  23
+Blockers  4  15   6   5  10
+Majors    5   2   9  10   6
+B+M       9  17  15  15  16
+```
+
+**Pass 2 is discounted and not counted toward the floor.** Both branch files were
+structurally valid — correct terminators, exact counts, six fields, no stray lines — but the
+reply contradicted itself: each of the two parallel reviewers reported *the other* branch
+`INCOMPLETE`, having mistaken its counterpart's legitimate file for a foreign write. The
+findings were acted on, because a file that passes every structural check is provably not the
+partial list the rule guards against; the pass was not credited, because an `INCOMPLETE` reply
+is an incomplete pass by rule. **A protocol note in the next call's `additionalContext` —
+"finding the other branch's file present is EXPECTED and is not a collision" — fixed it, and
+it did not recur in passes 3, 4 or 5.** This failure shape is worth naming because nothing in
+the file protocol anticipates it: `reviewType: full` runs two writers, and the rule that
+protects them from racing on one path does not tell either that the other exists.
+
+### What made it stick: one mechanism, four wrong descriptions
+
+Every round's Blocker/Major cluster traced to prose describing **what the hook does with the
+`.context/codex-gate.floor` knob**. The corrections, in order:
+
+| round | what was written | why it was wrong |
+|---|---|---|
+| 1 | "trims trailing newlines"; "exceeds the hook's accepted maximum" | the hook runs `tr -d '[:space:]'`, and it defines no maximum |
+| 2 | rewritten against the hook source, cause by cause | it gates on `-f` before reading, so a broken symlink never reaches the read, and a failed `cat` is indistinguishable from an empty file |
+| 3 | walkthrough deleted, one summary sentence kept: "an unusable value leaves the hook's default standing" | false. Tested: `printf '1\0002' > knob.bin` is **accepted as twelve** in `sh`, `dash` and `bash` — command substitution drops the NUL, and `1` `2` becomes `12` |
+| 4 | the claim deleted entirely, `<CAUSE>` dropped from the grammar | the note explaining *why* the description was deleted is itself a description of the hook |
+
+That last row is the one to remember. **There is no version of that paragraph that survives
+its own rule** — the remedy consumes any explanation of why the remedy was applied.
+`docs/prompt-standards.md` item 11 already prescribes deletion after a fourth correction; what
+this cycle adds is that the deletion has to include its own rationale, and the rationale then
+lives here, in a field report, where describing the hook is the point rather than a claim the
+product makes.
+
+The capability cost was accepted knowingly on 2026-09-02: the provenance record now says
+**that** a knob was unusable and no longer **why**. Whoever needs why reads the file and the
+hook.
+
+### Why the exit was taken rather than a sixth round
+
+All three §5 conditions were affirmed, not assumed:
+
+- **A plateau across passes.** Blocker+Major never returned to its pass-1 level of 9 and rose
+  on the last pass.
+- **Coverage affirmatively sufficient.** Across five passes the reviewers covered both prompt
+  copies, the spec, the story, all three plans, the hook source and the user docs. No
+  materially unreviewed area is known — and this file states that as a judgement, which the
+  exit requires, rather than inferring it from a low count.
+- **Blocker/Major regenerating across genuine repair attempts.** Each round's fix produced the
+  next round's findings on the same mechanism, four times.
+
+One further signal, and it is the one that settled it: **pass 5 returned as Blockers the very
+requirement the human had withdrawn the day before** — that `unusable` and `undetermined`
+distinguish their causes. The reviewer is not wrong that a collapsed record is less useful.
+But a gate cannot clear a finding whose resolution the human has already declined, and a loop
+that re-raises a decided question is no longer measuring the artifact. That is a
+require↔withdraw pair in the §5 sense, and it is what made the stop mandatory rather than
+discretionary.
+
+Open findings and their dispositions, including the two marked as a chosen cost rather than a
+missed defect, are in `.context/codex-reviews/gate-b-rle-pass-5-dispositions.md` — which is
+git-ignored, so what survives a clone is this section.
 
 ## The superseded single-plan artifact
 
