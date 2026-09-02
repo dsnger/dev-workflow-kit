@@ -289,10 +289,10 @@ Every new pool item is classified before anything else. Dimensions 1–4 exist
 in the intake skill today; 5–8 are new:
 
 1. **Size** — story, or epic that must be split.
-2. **Risk/security profile** — drives lenses and evidence mode today; it
-   drives the *pass floor* only once build step 1 lands (shipped CLAUDE.md
-   has a fixed 3-pass floor, and lenses are different questions, not more
-   passes).
+2. **Risk/security profile** — drives lenses, evidence mode **and the pass
+   floor**. The floor became profile-derived when build step 1 shipped
+   (0.11.0); before that the kit had a fixed 3-pass floor, and this line said
+   so. Lenses remain different questions rather than more passes.
 3. **Completeness** — too thin → one question round back to the human (several
    targeted questions in it, as the shipped intake skill does); nothing is
    invented.
@@ -326,14 +326,15 @@ proceeds, the breaking part waits on the meta-story).
 7. Fresh context per stage is convention, not enforced — long sessions
    measurably degrade. *(partial)*
 8. Same-repo parallelism — N worktrees × 1 agent works today; the record/nonce
-   rules of the in-flight review-economics story are the foundation for more.
-   *(in flight)*
+   rules the review-economics story shipped in 0.11.0 are the foundation for
+   more. *(foundation shipped; the parallelism itself is not)*
 
 ## 7. Build path (each *leaf* is one story; numbered entries are ordering groups)
 
-1. Finish the review-economics story (in flight) — floors by profile, severity
-   calibration, measurable records. Without calibrated review economics every
-   factory is a token furnace.
+1. ~~Finish the review-economics story~~ — **shipped in 0.11.0**: floors by
+   profile, severity by reachable consequence, and the two measurable records.
+   Without calibrated review economics every factory is a token furnace, which
+   is why this was step 1.
 2. **Measure before automating further** — three ordered leaves, not one
    story:
    - **2a** loop-rule consolidation (the successor story to step 1).

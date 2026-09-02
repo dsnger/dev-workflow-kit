@@ -767,3 +767,37 @@ backlog.
       fixtures. Part of that story: `ci.yml`'s `koalaman/shellcheck:v0.11.0` is
       tag-pinned by luck, not by the gate — a tag can be repointed, so digest-pinning
       it belongs to whoever takes the Docker surface on.
+
+## From PR #26 — backlog only, nothing implemented here
+
+- **Both-branches-misread-each-other.** `mcp__codex__review` with `reviewType: full` runs two
+  reviewers in parallel from one call. §5's file protocol keeps them from racing on a single
+  path, but never tells either that the other exists — so on PR #26's Gate-B pass 2 each read
+  its counterpart's legitimate findings file as a foreign write and reported the other branch
+  `INCOMPLETE`. Both files were structurally valid; the pass was discounted anyway, because an
+  `INCOMPLETE` reply is an incomplete pass by rule. One line of `additionalContext` fixed it
+  and it did not recur across three further passes. **Backlog:** ship that line as standing
+  prompt text in §5's Gate-B section and the scaffolded template, so it is not rediscovered per
+  cycle. Record: `docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md`.
+
+- **The self-consuming deletion — `prompt-standards.md` item 11 amendment.** Item 11 says to
+  delete a claim about a mechanism after a fourth correction rather than refine it a fifth
+  time. It does not say what happens to the *rationale* for the deletion — and on PR #26 that
+  rationale was itself a description of the mechanism (the tested NUL counter-example), so it
+  fell to the same rule. There is no version of that paragraph that survives its own rule. The
+  explanation was moved to a field report, where describing the hook is the point rather than
+  a claim the product makes. **Backlog:** amend item 11 to say the deletion takes its rationale
+  with it, and name the field report as the rationale's home.
+
+- **Valid findings from PR #26 recorded as out of scope** (per `process-pr-review` item 2 —
+  pre-existing and larger than the code this PR touches, so terminal there, not hardened):
+  - `docs/superpowers/plans/2026-08-29-review-loop-economics.md` is the **superseded**
+    single-plan artifact. CodeRabbit found two real defects in it — an impossible cycle
+    classification across Tasks 1–9, and `git commit --amend --no-edit` in Tasks 2–5, which
+    the hook does not recognize as a WIP amend and which therefore resets the cycle. Both are
+    true. The file is recorded as history and is not executed; marking superseded artifacts in
+    place is a convention gap this repo already owns and defers.
+  - `docs/superpowers/plans/2026-08-30-review-loop-economics-plan-c1-user-docs.md` — commands
+    whose output is tested do not check status, so a failed `git diff` with empty output can
+    select "ALREADY APPLIED AND COMMITTED". True, and C1 was dissolved into the rollout on
+    2026-09-01 without being executed. Fix it if C1 is ever revived.

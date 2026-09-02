@@ -1406,8 +1406,10 @@ explanatory prose, so Gate B is N/A.
 - [ ] **Extract Plan C's final curve mechanically**, the way that file's own numbers were taken:
 
 ```bash
-n=1
-while [ -f ".context/codex-reviews/gate-a-plan-planc-pass-$n.md" ]; do
+# Enumerate rather than counting up: an incomplete pass can leave a gap, and the curve
+# grammar permits a gapped <SPEC>, so stopping at the first missing file drops every
+# later pass from the record.
+for n in $(ls .context/codex-reviews/ | sed -n 's/^gate-a-plan-planc-pass-\([0-9]*\)\.md$/\1/p' | sort -n); do
   f=$(grep -cE '^(BLOCKER|MAJOR|MINOR|NIT) \|' ".context/codex-reviews/gate-a-plan-planc-pass-$n.md")
   b=$(grep -c '^BLOCKER' ".context/codex-reviews/gate-a-plan-planc-pass-$n.md")
   m=$(grep -c '^MAJOR' ".context/codex-reviews/gate-a-plan-planc-pass-$n.md")
@@ -1424,6 +1426,9 @@ done
 
 ```bash
 test "$(grep -cF -- "Open at 5 passes when this file was written" docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md)" -eq 0 || { echo "PROVISIONAL WORDING SURVIVES"; exit 1; }
+# Absence is half the check: a replacement that deletes the provisional text and writes no
+# closed record would pass it. Assert the closed record positively, and its cardinality.
+test "$(grep -cE '^Findings( +[0-9]+,?)+' docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md)" -ge 3 || { echo "CLOSED CURVES MISSING"; exit 1; }
 ```
 
 - [ ] **Commit it alone**, ordinary message, no `WIP:` prefix — the cycle is already closed and

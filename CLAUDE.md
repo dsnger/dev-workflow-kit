@@ -960,8 +960,9 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   request: **resolve `HEAD` to its full 40-character object name before each call and pass that
   explicit value as `headSha`**, never the symbolic `HEAD`, which two calls can resolve
   differently if a `WIP:` amend lands between them. Keep the value you passed **with that
-  branch's result**, and require the two kept values to be **exactly equal** before summing the
-  branches. Equal values mean the two calls were aimed at one commit; they are not evidence that
+  branch's result**, and require the two kept values — **`baseSha` and `headSha` both**, since a
+  range is selected by both ends and two calls can share a head over different bases — to be
+  **exactly equal** before summing the branches. Equal values mean the two calls were aimed at one commit; they are not evidence that
   either branch reviewed it, and nothing available here would be. Record it as the **full 40-character hex object name**, since abbreviations are
   ambiguous across repositories and across time; if it changed between them they are not one
   pass, the completed branch is recorded as incomplete and excluded, and the later branch begins

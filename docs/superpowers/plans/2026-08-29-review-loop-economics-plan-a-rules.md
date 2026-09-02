@@ -26,7 +26,10 @@ Plan A implements §2, §2.1, §2.2, §2.4, §3, and §10 in part.
 | **B** | the provenance line, the per-pass curve, the cycle nonce, slot naming | §2.3, §4, §5, §6 |
 | **C** | rollout: falsified sentences, packaging, the evidence pack, the review loop | §7, §8 |
 
-**Three Gate-A cycles, one Gate-B cycle** over the combined A+B+C diff, run and closed by Plan C.
+**One Gate-B cycle** over the combined A+B+C diff, run and closed by Plan C. The Gate-A
+cycles behind it are one per artifact: the spec's, and one per plan — five in the end, since
+Plan C was split and C1 got its own before being dissolved. Their record is
+`docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md`.
 **Execution order A → B → C; Plan B may not open before Plan A's Gate-A loop closes.**
 
 **Plan C inherits these obligations**, which lived in a Gate-B section Plan A no longer has. A

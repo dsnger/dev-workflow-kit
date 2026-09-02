@@ -343,9 +343,10 @@ Both shipped records carry a **cycle field**, because a record that cannot be at
 cannot be told apart from another cycle's when several are read together. **That is a limitation,
 not a disqualification** — the `fic2` baseline is entirely pre-rule and is used precisely because a
 human knows which cycle it came from. What attribution buys is that a *later* reader does not have
-to. **§5 defines three cycles — the Gate-A spec loop, the
-Gate-A plan loop and the Gate-B cycle — so a run of all three produces three cycle fields, and for
-post-rule cycles three distinct nonces.** A **pre-rule** cycle has no nonce — §10's activation rule is what makes a cycle pre-rule; its field is the
+to. **§5 defines three cycle *kinds* — the Gate-A spec loop, the
+Gate-A plan loop and the Gate-B cycle — and one cycle field is produced per cycle *run*, not per
+kind: a change carrying several plans runs a Gate-A plan cycle for each, so it produces
+`2 + number_of_plans` records, and for post-rule cycles that many distinct nonces.** A **pre-rule** cycle has no nonce — §10's activation rule is what makes a cycle pre-rule; its field is the
 reserved `none (pre-rule)` and its records are not cycle-attributable; the activation rule that
 creates that case is §10's. Everything below describes
 **post-rule cycles**, which is every cycle started after the implementation commit.
