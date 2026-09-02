@@ -200,6 +200,42 @@ Open findings and their dispositions, including the two marked as a chosen cost 
 missed defect, are in `.context/codex-reviews/gate-b-rle-pass-5-dispositions.md` — which is
 git-ignored, so what survives a clone is this section.
 
+## The decisions behind these cycles
+
+All Daniel's, in order. Recorded here because commit bodies are carried by the squash and
+this file is carried by git on its own, and because two of them are choices a later reader
+would otherwise read as oversights.
+
+1. **2026-09-01 — C1 dissolved** into the rollout after its own Gate A stopped on two tells;
+   no third prose plan; **plan-level Gate A skipped** for the sentence replacements after two
+   non-convergences, with verification moved to the artifact (asserts plus the combined Gate
+   B); execution ordered **A → B → C** on the sequencing finding.
+2. **2026-09-02 — Plan C Tasks 19 and 20 dropped.** The deterministic slot discriminator is
+   not shipped; a general production goes to the loop-rule consolidation story.
+3. **2026-09-02 — the `rle` slot infix is a recorded plan-local naming exception** under the
+   old rules that govern this cycle. No shipped rule admits the form. The cycle is pre-rule
+   and cannot mint a nonce, and the bare family already held 30 files that delete-before-call
+   would have destroyed.
+4. **2026-09-02 — the knob-cause vocabulary and the model-cause obligation withdrawn** from
+   the grammar and both prompt copies. Accepted capability cost, stated: the record says
+   **that** a knob was unusable, no longer **why**. Whoever needs why reads the file and the
+   hook.
+5. **2026-09-02 — close on the clearly-stuck exit** rather than a sixth round.
+6. **2026-09-02 — citation completeness accepted as a documented residual risk.** A
+   contributor who omits a high-risk story and cites only a level-0 one gets a floor of 1, and
+   nothing verifies the header is complete. That is the settled header-is-sole-authority
+   design rather than an oversight: a completeness check would need an independent source of
+   truth for what *should* have been cited, and none exists. **The countermeasure is the
+   sampled human audit, not a parser.** No mechanism was built.
+7. **2026-09-02 — no sixth Gate-B pass** after the closing repairs. What the post-close
+   commits carry instead: the honesty disclosure naming exactly which changes no pass
+   reviewed, a green battery over them, and two independent bot reviews across the whole PR.
+   None of that is a Gate-B pass, and the commit bodies say so.
+
+Decisions 6 and 7 both answer findings a reviewer raised and the human declined. They are
+recorded as chosen costs so that a later reader meets them as decisions rather than as
+defects nobody noticed.
+
 ## The superseded single-plan artifact
 
 `docs/superpowers/plans/2026-08-29-review-loop-economics.md` is the single-plan version of this
