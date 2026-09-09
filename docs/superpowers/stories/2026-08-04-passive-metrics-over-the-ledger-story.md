@@ -31,6 +31,36 @@ From `todos.md`, "**P8 — passive metrics, read-only over the ledger and git.**
 | It answers questions the ledger already contains the data for — which fingerprints recur, how often a rung holds | **kept** as the scope statement |
 | Trigger: 10 stories or 20 ledger rows, below which the sample says more about the last week than about the workflow | **moved** — the 20-row arm fired at 22 rows in the 2026-08-04 round, and the story arm reaches 10 with this story; recorded here |
 
+### Second question routed here, added 2026-08-28 (updated 2026-08-29: the forms it reads are now pinned)
+
+`docs/superpowers/stories/2026-08-28-review-loop-economics-pass-floor-story.md` defers to this story,
+rather than to a fresh backlog row, a **comparison** — not a measurement of its rule's effect. The
+question it hands over: **after roughly three profiled cycles run under the new floor and severity
+rules, do their recorded severity mixes differ from the `fic2` baseline curve of
+14 · 24 · 12 · 3 · 6 · 6 · 2** (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`)? That story
+cannot answer it inside its own cycle, and a single cycle would not answer it in any case. **Nor
+can any number of cycles yield a demotion figure**: that needs one finding classified under both
+rules, which nothing records — see acceptance criterion 5 for the two confounds any reported figure
+must carry.
+
+Two things this hand-off does not silently assume, because the row's "the data already exists"
+condition is doing real work:
+
+- **The per-pass curve is only sometimes in git.** Closing commit bodies carry it by habit, not
+  by rule: `3cdd075` records "Findings 14, 24, 12, 3, 6, 6, 2. Blockers 3, 4, 0, 0, 0, 0, 0" and
+  `baa75c1` records per-pass counts, while `7bbdb14` gives the pass total and no distribution.
+  The findings files those numbers come from live under `.context/`, which is gitignored and
+  per-clone. So this question is answerable from git only for cycles whose author wrote the
+  curve down.
+- ~~**Whether closing bodies should be *required* to carry the curve is not decided here.**~~
+  **Decided 2026-08-29 by the parent story**, which makes the curve and the provenance line
+  required and pins both forms. The subset problem this bullet raised is therefore closed for
+  cycles run under those rules and remains for every cycle before them — an analysis spanning both
+  says which side of that line each cycle falls on.
+
+Neither point changes this story's scope: still read-only, still no instrumentation, still
+nothing written back.
+
 ## 2. Desired outcome
 
 A reader can ask the ledger which fingerprints recur and how a rung has held, and get the answer
@@ -47,6 +77,24 @@ from the file rather than from recall — without the analysis writing anything 
       trust it.
 - [ ] What the analysis cannot answer from the ledger alone is stated, rather than left for a
       reader to infer from what it does answer.
+- [ ] **The review-loop question routed here is answerable, or its gap is named.** The
+      review-loop-economics story defers to this one a **comparison, not a measurement of its
+      rule's effect**: after roughly three profiled cycles under the new rules, compare their
+      recorded severity mixes with the `fic2` baseline — which carries complete per-pass totals and
+      Blockers and **Majors for only some passes**. **Two confounds must be named wherever a figure
+      is reported**: the curves are self-reported and unvalidated, and the cycles being compared
+      reviewed **different artifacts**, so a difference is evidence about the population as much as
+      about the rule. **No demotion figure is derivable** — that would need one finding classified
+      under both rules, which nothing records. **An unknown count is excluded per series, not per
+      pass**: a curve may record one series as unknown while the others are intact, and whatever is
+      reported states how many values were excluded from each series rather than how many passes
+      were dropped. That analysis reads **two pinned commit-body forms** — the provenance
+      line and the per-pass curve, both specified in
+      `docs/superpowers/specs/2026-08-28-review-loop-economics-design.md` — and its **first
+      checkpoint** is the first post-merge cycle whose cited set licenses floor 1, which must carry
+      the floor-1 provenance line. Whatever this analysis reports from those forms says plainly that
+      **the curves are author-written and unchecked**: nothing compares them against the validated
+      pass files, so they are self-reported and not measurement.
 
 ## 4. Affected AGENTS.md invariants
 

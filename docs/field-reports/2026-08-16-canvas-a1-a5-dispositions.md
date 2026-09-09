@@ -310,3 +310,69 @@ established neither whether the hash was computable at any given pass nor whethe
 failed to persist, and it did not read the hook at the site that computes it. Its one new lead — that the second
 shape's STOP arrived at a `git reset --soft`, which reaches the reset path only via `is_commit` —
 ties it to the item-2 row and is a lead, not a finding.
+
+---
+
+## Field note added 2026-08-28 — criteria that restate the design are a Blocker generator
+
+Observed across Gate-A passes 1–4 of the review-loop-economics cycle
+(`docs/superpowers/specs/2026-08-28-review-loop-economics-design.md`): **five Blocker-severity
+occurrences of one defect**, where the spec was revised and the story's acceptance criteria
+still described the superseded mechanism — criterion 8 demanding a floor a risk-`high` story
+cannot license; criterion 5 describing artifact-kind severity after a consequence-keyed test was
+settled; desired outcome 2 keeping a false-green-only carve-out; criterion 3 reversing the
+settled meanings of derived floor and hook knob; and criterion 4 requiring both shipped copies to
+describe a mechanism the design had deleted — where implementing the criterion would have
+recreated the rejected design in order to satisfy a criterion about it.
+
+The cause is structural rather than carelessness: those criteria embedded **mechanism detail**,
+so each had to track a design still in motion. A criterion that restates the design is a second
+copy of it, and this repo's ledger already records what a second copy does — "a restatement is a
+second copy that can drift".
+
+Remedy applied in that cycle: the criteria were rewritten to state **what must be observably
+true** rather than **how**, with the bound that a criterion which cannot be made observable
+without naming mechanism is one where the mechanism *is* the contract, and there it stays named.
+
+**Captured, not acted on beyond that cycle.** This is field evidence for whoever next touches
+`dev-workflow:intake`, whose story template says acceptance criteria "describe observable
+outcomes or constraints, never implementation steps" — the rule exists; what this record adds is
+five measured occurrences of the failure it is meant to prevent, and the observation that the
+drift shows up as *Blockers in a later gate* rather than as a bad-looking criterion at intake
+time.
+
+**Also observed, 2026-08-28, same cycle:** three occurrences of an agent ending a turn on an
+announcement — "writing the spec now", "running pass 6" — with the named tool call never issued.
+A fourth followed on 2026-08-29 ("running pass 10"), spotted by Daniel watching the terminal. Each cost a round-trip and one cost ~90 minutes of wall clock before a peer session noticed. No
+error, no timeout, nothing in flight: the announcement simply replaced the act. Remedy adopted for
+the remainder of that cycle: during an active gate cycle a turn ends with the tool call actually
+issued, a message sent, or an explicit statement that something is blocking — and noticing the
+turn ending with the call not in flight *is* that statement.
+
+**Prediction recorded 2026-08-28, before the pass that tests it.** Gate-A pass 7 of the
+review-loop-economics cycle found that the spec's own nineteen-row condition-inventory table (§6.2)
+had become the loop's largest finding source: **7 of 29 Blocker/Major, including 4 of 9 Blockers**,
+every one a row contradicting the design it existed to account for. The table was split out —
+method and passage list stay in the spec, the row-by-row dispositions move to an artifact produced
+once against frozen text and gated before implementation.
+
+Verbatim prediction, so it can be scored rather than remembered: **pass 8 should lose roughly 7 of
+29 Blocker/Major and 4 of 9 Blockers to the §6.2 removal. If pass 8 does not fall materially, the
+generator is elsewhere and the whole-artifact split becomes the live candidate.**
+
+Worth keeping either way: this is the third site of one defect class in a single cycle — a
+restatement that must track a moving original. It appeared in the story's acceptance criteria
+(five Blocker occurrences), then inside the spec's own accounting table (four more). The lesson is
+not "write the table more carefully"; it is that a second copy of a moving thing drifts, and the
+remedy is to produce it once against something that has stopped moving.
+
+
+**The loop's first wrong finding, 2026-08-29.** Gate-A pass 13 of the review-loop-economics cycle
+returned a BLOCKER claiming a spec sentence was "syntactically incomplete at *every and the curve
+duty treated as owed*". `grep 'every and'` on the reviewed file returns nothing — the break existed
+in revision 13 and revision 14 had replaced the sentence. **Dismissed with that evidence.**
+
+Worth recording because it is the **first outright wrong finding in thirteen passes** of that
+loop — roughly 380 findings. That ratio is the argument for validating before applying rather than
+against it: the discipline cost thirteen passes' worth of checking and caught one, and the one it
+caught would otherwise have driven an edit to text that was already correct.

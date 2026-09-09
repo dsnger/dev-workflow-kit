@@ -22,6 +22,47 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.11.0
+
+- **The mandatory pass floor is now a function of the cited story's profile**, not the constant 3.
+  `max(risk, security) == 0` gives a floor of **1**; every resolvable profile above that, and an
+  artifact citing no story, gives **3**. A cited story whose profile is present but unresolvable
+  **stops and surfaces** rather than defaulting. Across a cited set the floor is 1 only if the set
+  is non-empty and every member is profiled, resolvable and at level 0.
+- **The hook's ratio is a reminder threshold and controls nothing.** It always did; the text now
+  says so, and the `codex-gate.floor` knob is described as moving that threshold rather than the
+  obligation. `README.md` and `docs/getting-started.md` carried the old description and are
+  corrected.
+- **Finding severity is decided by whether something in the system takes a different decision.**
+  Name what consumes the text and the decision that changes if it is wrong; if you cannot name
+  both, the finding is Minor or below. The review pass raising a finding is not an in-system
+  reader of the text it reviews, gates remain readers of rule text they will later apply, and a
+  human reader never satisfies the test. It sets a ceiling, never a floor, and never chooses
+  between Blocker and Major.
+- **Two commit-body records are pinned**, so that a program can parse them — P8's deferred
+  measurement is the intended consumer, and **no parser for either form ships today**; the
+  evidence for this release matched constructed strings against the grammars instead: a
+  **provenance line**
+  carrying the cycle field, the derived floor and the cited set that produced it, and a
+  **per-pass curve** carrying Findings, Blockers and Majors per pass. One of each per cycle — a
+  change running five cycles records five.
+- **A cycle nonce** attributes those records. Eight to sixteen characters from `[a-z0-9]`, from a
+  source of randomness, never derived from a name, timestamp or commit. It is
+  collision-**resistant**, not collision-proof, and the shipped text says where that bound bites
+  rather than implying a guarantee.
+- **Findings slots take a per-cycle infix**, and the deletion step §5 already requires deletes
+  only paths carrying the cycle's own infix. A cycle that holds a **nonce** uses it; a cycle with
+  **no** nonce keeps the **bare** names. That rule exists because a bare slot was overwritten
+  during this change's own development, destroying a previous cycle's findings file.
+  **What this release does not ship** is a rule for the remaining case — a nonce-less cycle in a
+  workspace that already holds bare-slot files, where the bare names would collide with somebody
+  else's. That case is real: this release's own Gate-B cycle is one, and it used a recorded
+  plan-local naming exception rather than a shipped rule. A general slot production for it is
+  deferred to the loop-rule consolidation story.
+- **What this change does not settle** is how demotion bears on the loop-health measures — the
+  per-pass counts, the clusters and the stop thresholds. That is the loop-rule consolidation
+  story's, and both documents say so, so the obligation cannot fall between them.
+
 ## 0.10.0
 
 - §5's gate loop gained two rules it was missing, both mirrored into `workflow-init`'s scaffolded

@@ -148,18 +148,30 @@ be ambiguous, which is not an instruction.
    - **every cited story is eligible.** Resolve the cited story path(s) first, looking in
      **both** the PR body and the **commit bodies in the range** — the workflow puts the
      story path in the closing commit message, so a PR that cites nothing in its
-     description may still be profiled. Only when neither carries a citation is this §5's
-     "no story cited" case, which takes the unprofiled judgement call. A profiled story is
+     description may still be profiled. **This reads a record, and is not §5's
+     governing-set derivation**, which takes the cited set from a reviewed artifact's own
+     `Story:` header and forbids grepping an artifact body for story paths. A closing
+     commit body carries the path deliberately, as an evidence entry; an artifact body
+     mentioning one may be a disclaimer. Different question, different source — and this one
+     never relaxes the other: where no record carries a citation, that is an absence **in the
+     PR record**, and it takes the unprofiled judgement call for *this command's* skip
+     decision only. It is not §5's "no story cited" case, it cannot set a floor, and it can
+     neither override nor substitute for a governing set derived from a reviewed artifact's
+     `Story:` header. Where neither carries a citation, take the unprofiled judgement call
+     for this decision — without calling it §5's "no story cited" case, which is about a
+     reviewed artifact's header and not about this record. A profiled story is
      eligible only at effective level 0 (risk `trivial` *and* security `none`); an
      unprofiled story is eligible on the old judgement call. With several cited stories, each must be
      eligible on its own; one eligible story does not carry the rest. A cited profile that
-     is **present but unresolvable** (§5's third case) stops the run — surface the cause;
+     is **present but unresolvable** (§5's fourth case) stops the run — surface the cause;
      it is never treated as unprofiled.
 
    A skip removes the review and never the evidence. Every skipped cycle runs the battery
-   and records, in the commit body, **the skip reason and the battery result**. On top of
-   that: one mode-derived evidence entry per cited **profiled** story, and none for an
-   unprofiled one — which owes the reason and battery result and nothing further.
+   and records, in the commit body, **the skip reason and the battery result** — and, like
+   every other cycle, **its provenance line and, in place of a curve, its skip record**. On
+   top of that: one mode-derived evidence entry per cited **profiled** story, and none for an
+   unprofiled one — which owes the reason, the battery result, the provenance line and the
+   skip record, and nothing further.
 4. Stop and ask the user for: every `escalate-to-user` verdict, and every accepted
    finding that contradicts a settled decision. Do not implement these. A finding
    already recorded as out of scope by item 2 does **not** come here — it is terminal

@@ -76,8 +76,9 @@ story that captures *what* and defers *how*: the problem, the desired outcome, t
 acceptance criteria, which core invariants the change touches, the open questions,
 a rough size, and a **profile** — risk and security relevance, confirmed by the human,
 with a validation mode derived from the two. The two axes **add** review lenses at the
-gates for a risky or security-relevant change (they never subtract any: Gate A's floor and
-the baseline questions are the same at every level), while the derived mode calibrates
+gates for a risky or security-relevant change (they never subtract a baseline question; the
+floor itself derives from the profile, so it is not the same at every level), while the derived
+mode calibrates
 what evidence the author owes before Gate B. The design ("how") is deliberately left out —
 it belongs to the next stage. The value here is a shared, reviewable definition of done before
 anyone argues about approach.
@@ -127,8 +128,9 @@ prior review. Trivial changes may skip it, on terms that depend on the story: an
 unprofiled one keeps the judgement call, while a profiled one qualifies only at
 effective level 0 — trivial risk *and* no security relevance — so a trivial-looking
 change on security-relevant surface is not eligible. A skip removes the review, never
-the evidence: the battery still runs, the reason is recorded in the commit body, and
-so is one evidence entry per cited profiled story. **Explanatory**
+the evidence: the battery still runs, and the commit body carries the reason, the battery
+result, the cycle's provenance line, a skip record in place of the curve, and one evidence
+entry per cited profiled story. **Explanatory**
 documentation carries no gate at all — a wrong sentence there costs a confused reader
 rather than broken behaviour. Prompt artifacts are not explanatory prose: in a project
 whose product is prompts, the text *is* the behaviour, so the review policy requires Gate
@@ -276,8 +278,9 @@ top-level field alone is the wrong answer precisely where the override documente
 use, since `CODEX_DEV_REVIEW_MODEL` is stored at `tools.review.model`. If neither level names a
 model the probe establishes nothing — the CLI then picks its own default, and the only honest
 record is to set an explicit model or record the model as undetermined. Record the result beside
-the finding count in the pass record: the commit body's evidence entry, or the slot's
-dispositions file. This is
+the finding count in **the cycle's per-pass curve**, which pins a field for it — not the
+evidence entry and not the dispositions file, neither of which is keyed to a pass. The health
+probe above is how the value is established; the curve is where it goes. This is
 bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a right
 one.
 
