@@ -47,14 +47,25 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
 - **The pass-counter anomaly**, the CodeRabbit plan-metadata contradiction, and the
   fixture-per-predicate question — all still parked.
 
-**One expansion, authorised 2026-09-10 rather than absorbed.** Gate-A spec pass 4 raised, as a
-scope stop, that an accepted repair obligation lives only in the running session: a cycle that
-loses it can be replaced by one that closes the same artifact with the repair never made. The
-reliance is older than this story — §5 already puts "repair obligations you already accepted in
-earlier passes" in the fix set with nothing recording them — but this story is the one writing
-the closure rules, so the gap became its question. **Daniel accepted it into scope**: the change
-ships a second record label, `Accepted:`, sharing the decline record's form, transport, cycle
-nonce and carry rules. Criterion 7 below is what that adds; nothing else in this section moves.
+**One expansion, authorised 2026-09-10 and then split out again on the same day.** Gate-A spec
+pass 4 raised, as a scope stop, that an accepted repair obligation lives only in the running
+session. Daniel accepted it into scope, and the change grew a second record label, `Accepted:`,
+beside the decline record. Six passes later the loop had not converged and the evidence said why:
+of pass 10's twenty findings, nine belonged to **one subject this story never set out to
+answer** — whether a record survives a session, a commit amend, a squash, a rollback or a moved
+checkout. The closure ordering itself had converged, its remaining findings small.
+
+**Split 2026-09-10 on Daniel's decision. Deferred to
+`docs/superpowers/stories/2026-09-10-record-durability-story.md`**, whose subject is exactly that
+one: the `Accepted:`/`Declined:` record and its transport (settled decisions 9, 9b and 9c), the
+unavailable-history report (settled decision 10), the checkout-root condition that report grew,
+the rollback reading, and the slot-discriminator dissolution. **Those decisions stay settled** —
+they are not reopened, they are implemented there. Criterion 7 moves with them.
+
+**What this story keeps** is what its problem statement asked for: the ordering, the duty
+classification, and the severity/loop-health answer handed to it by the parent. The rule covering
+both directions of a user's answer stays here, because it is a rule about the loop; only the
+record that transports it moves.
 
 ## 3. Acceptance criteria
 
@@ -83,13 +94,10 @@ nonce and carry rules. Criterion 7 below is what that adds; nothing else in this
       Don't. A requirement neither kept nor explicitly dropped is a dropped condition.
 - [ ] **The two copies stay in parity** on every rule this story changes, deliberate wording
       differences stated as such.
-- [ ] **A user's answer that puts work into the fix set leaves a record, on the same terms as one
-      that keeps work out.** Both labels share one form, one transport, one attribution rule and
-      one carry rule, each stated once; recording an answer is a precondition to running the next
-      pass; and what the record does *not* buy is stated — it makes a lost obligation
-      recoverable, not automatically recovered, and nothing checks that a replacement cycle
-      looked. Checkable by reading: two labels with one set of rules, and a residual paragraph
-      that does not overclaim. *(Added 2026-09-10 with the expansion recorded in §2.)*
+*(Criterion 7 — that a user's answer putting work into the fix set leaves a record on the same
+terms as one keeping work out — was added 2026-09-10 and moved the same day to
+`docs/superpowers/stories/2026-09-10-record-durability-story.md` with the split recorded in §2.
+It is not withdrawn, and it is not this story's to satisfy.)*
 
 ## 4. Settled inputs — decided, paid for, and not to be reopened
 
