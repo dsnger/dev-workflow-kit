@@ -24,8 +24,8 @@ cycle and which merely *suspend* it, in what order a pass is read so the ranking
 rather than asserted, what any set of suspensions at once does, and which of the four standing
 duties participate in that ordering versus gate it as preconditions. On top of it: one
 commit-body record form with two labels, `Accepted:` and `Declined:`, so a user's answer on a
-surfaced finding has one rule in both directions and survives the session that made it; the
-answer to what a severity demotion does to the loop-health counts; the answer to the pass-4
+surfaced finding has one rule in both directions and is legible in history to whoever reads it;
+the answer to what a severity demotion does to the loop-health counts; the answer to the pass-4
 report when prior-pass history is unavailable; and the deferred slot discriminator, dissolved
 rather than shipped. **What does not:** the pass floor and severity semantics, which the parent
 shipped and this spec reads as given, and everything §11 lists as parked.
@@ -44,9 +44,9 @@ field and file set each predicate reads; the duties' classification; the scope s
 triggers and what each answer does; what a stuck or two-tell answer produces; the records'
 wording, attribution and recording point and the `Accepted:` label; and the raw-severity rule.
 Five standing sentences are edited at their source rather than worked around — the two that
-use *clean* in the file's sense, the resolve duty that never stated its scope, the recovery
-passage that would not have looked where the records live, and the curve's `?` rationale,
-which answered the unavailable-history question the other way (§4 items 11–15).
+use *clean* in the file's sense, the resolve duty that never stated its scope, the curve's `?`
+rationale, which answered the unavailable-history question the other way, and the Gate-A
+cadence, which made a revision unconditional (§4 items 11–15).
 
 ---
 
@@ -77,8 +77,10 @@ reviewer wrote, so that a ceiling cannot make two findings the same one.
 
 **First, clean completion.** §5 uses *clean* in two senses and now says which is which. A
 **clean findings file** is the `NO FINDINGS` signal the protocol defines. A **clean pass** is
-the predicate below: a clean findings file always gives one, and a clean pass need not have
-one, because a pass carrying only Minors and Nits, or findings a decline of this cycle
+the predicate below, read on the **logical pass with every required branch file combined**:
+one branch's clean findings file never establishes a clean pass, the other being free to carry
+an in-set Blocker. Every required file carrying that signal gives one, and a clean pass need
+not have it, because a pass carrying only Minors and Nits, or findings a decline of this cycle
 matches, is clean without being empty. **A pass is clean** when its findings carry no Blocker
 or Major at effective severity that is **in the assigned fix set**, and **no scope-stop
 trigger**. There are two triggers, defined here and nowhere else, so that cleanliness and
@@ -100,8 +102,9 @@ making the pass not final and costing the further pass that section requires. A 
 tells present on the closing pass go into the
 closing report and never block it, because reporting "will not converge" on a converged loop
 is a false report, and the clearly-stuck paragraph says the same of its own exit. **No other
-pass outcome closes a cycle**, because every other way out of a pass leaves a finding or a
-question open, and closing over one is the failure this ordering exists to prevent. The one
+pass outcome closes a cycle**, because every other pass either leaves a required repair, a
+finding hold or a question outstanding, or has an unmet closure precondition such as the
+floor — and closing over any of those is the failure this ordering exists to prevent. The one
 termination that is not a pass outcome is the Gate-B triviality skip, which ends a cycle
 having run no passes and is outside this ordering entirely.
 
@@ -149,81 +152,76 @@ pass unclean directly, so nothing has to read the act of surfacing.
 **Where the other two exits stand in this duty**, said here so no reader supplies a rule for
 them. The two-tell stop surfaces tells and not a finding, and was never in its domain. The
 clearly-stuck exit does surface findings, and where those carry a scope-stop trigger the duty
-reaches them exactly as it reaches any other. Where they do not — its regenerating findings
-are in-set, reviewer-written Blocker or Major, and the ceiling demotes them below Major — the
+reaches them exactly as it reaches any other. Where they do not — the two shapes the
+composition paragraph names, a demoted in-set finding and a declined out-of-set one — the
 pass is clean at effective severity, the two predicates reading different fields on purpose,
 and **clean completion wins by D3**: the pass closes at or above the floor and continues below
 it. The order decides that; the duty never needed to.
 
 **What a suspension asks, and what ends it.** Only a scope stop raises a **hold**, on its
-finding, and the hold ends when **every** answer that finding requires has been given — one for
-a single-trigger finding, both the question decision and the membership answer for one carrying
-both triggers — **and no direction is the wrong answer**, since a hold only accepting could end
-would be the resolve duty under another name. At a membership stop the answer is **accept** (the finding joins the
-fix set and resolves by its effective severity: Blocker or Major before any pass can be clean,
-Minor or Nit collected and never iterated) or **decline** (the finding stays outside, binding
-for the rest of this cycle). Either answer is **recorded** — Mechanics, the answer records —
-and that record is where a later pass, or a cycle that lost its session, reads it.
-**Membership is read when the answer is given, not frozen at the surface**: where the governing
-artifacts have broadened the set so that the held finding is now inside it, that broadening
-discharges the hold's **membership component** by itself — the finding is in-set, decline is
-unavailable to it, and it resolves by its effective severity like any other in-set finding.
-Where that same finding also opened a question, **the question component stands until its
-decision is given**, because a broadening answers who owns the work and never what the question
-asked. At a question
+finding. **The hold ends when every answer that finding requires has been given, in whichever
+direction each is given** — one answer for a single-trigger finding, both the question decision
+and the membership answer for one carrying both. That is **one rule with two parts**, how many
+answers and which way each may go, and neither part is a test the other has to pass: a hold
+only accepting could end would be the resolve duty under another name.
+At a membership stop the answer is **accept** (the finding joins the
+fix set, where its effective severity governs it) or **decline** (the finding stays outside,
+binding for the rest of this cycle). Either answer is **recorded** — Mechanics, the answer
+records — and that record is where a later pass reads it.
+**Membership is answered against the set as it stood at the pass that raised the question**,
+not against the set as it is when the answer arrives, and an explicit attributable answer is
+required whatever the governing artifacts do meanwhile — a hold discharged by a scope change
+is a hold nobody answered. A later broadening is a new fact the **next** pass reads; it never
+discharges a standing hold. At a question
 stop the answer is the user's decision on the question, and membership does not change: an
-in-set finding then routes through its effective severity like any other — a Blocker or Major
-resolves under that decision or is dismissed with its one-line why, a Minor or Nit is collected
-and never iterated; an
-out-of-set finding that opened the question is a membership stop as well and takes accept or
-decline. **Decline is available only at a membership stop**, because that is the only stop
+in-set finding then routes through its effective severity like any other, under that decision;
+an out-of-set finding that opened the question is a membership stop as well and takes accept or
+decline. **Effective severity routes an in-set finding in one place only** — the resolve duty
+above, which says what a Blocker or Major owes and that a Minor or Nit is collected and never
+iterated — and every branch here that puts a finding in the set hands it to that duty rather
+than restating it. **Decline is available only at a membership stop**, because that is the only stop
 whose question is whether a finding belongs to the set, and a decline anywhere else would
 waive work the cycle owes. The stuck and two-tell readings
 raise no hold: each asks one question, **continue or stop**. Continue is that suspension's
 resuming answer, and where it is the last one outstanding the loop resumes on the
 artifact as revised and the fix set as the governing artifacts now assign it — where several
 plans or stories govern one cycle, the union of the scopes they assign — **plus the findings
-this cycle accepted into it**, which its **latest** commit body carries (Mechanics, the answer
-records). One that body does not carry is not in the set, and the reviewer raises it again on
-the next pass like any other, which is the ordinary route and not a special one. A finding that a
+this cycle accepted into it**, which its commit bodies record (Mechanics, the answer records).
+One no body records is not in the set, and the reviewer raises it again on the next pass like
+any other, which is the ordinary route and not a special one. A finding that a
 narrowing has put outside the set surfaces at the next pass as a membership stop. **Stop
 leaves the suspension standing**: the cycle stays open under its nonce, resumable by a later
 continue, nothing it wrote is a closing commit, and an open cycle nobody resumes is a human's
 to resolve, exactly as the nonce rules already say of open cycles.
 
-**Composition, and what cannot happen.** Every question is answered on its own, and the loop
-resumes only when every answer resumes it — accept or decline at a membership stop, a decision
-at a question stop, continue at the stuck or two-tell reading; one stop answer leaves the
+**Composition, and what cannot happen.** Every **question** is answered on its own, and the
+loop resumes only when every answer resumes it — accept or decline at a membership stop, a
+decision at a question stop, continue at the health readings; one stop answer leaves the
 whole suspension standing, because a loop resumed over an unanswered question decides it by
-running. **Simultaneous health suspensions are one question, not two**: the stuck and two-tell
-readings both ask continue or stop, so one answer carrying every reason ends both, and asking
-twice would invite two answers to a question that has one. **Two pairings cannot occur**, and
+running. **The stuck and two-tell readings raise one question between them, not two**, both
+asking continue or stop, so one answer carrying every reason ends both — which is not an
+exception to the sentence before it but an instance of it, there being one question there to
+answer. **Two pairings cannot occur**, and
 no rule ranks them: clean completion and a **scope stop**, since that stop's triggers are the
 clean predicate's own second half, so a pass raising one is not clean; and a zero-finding pass
 and any suspension, since it has nothing to surface, nothing regenerating, no cluster and no
 require↔withdraw pair. **Clean completion and the clearly-stuck exit can**, and the overlap is
-admitted rather than argued away: that exit reads reviewer-written severity while cleanliness
-reads effective, so an in-set Blocker the ceiling demotes can regenerate across passes on a
-pass that is clean. **The order decides it and no new rule is needed** — the pass closes at or
+admitted rather than argued away. **Two shapes reach it**, since that exit reads
+reviewer-written severity and membership while cleanliness reads effective severity and the
+set: an **in-set** Blocker or Major the ceiling demotes below Major, and an **out-of-set** one
+matched by a binding decline of this cycle, which raises no membership trigger and sits outside
+the set the clean predicate reads. Either can regenerate across passes on a pass that is clean.
+**The order decides both and no new rule is needed** — the pass closes at or
 above the floor, ranking the exit exactly as the clearly-stuck paragraph's own precedence
 sentence says, and continues below it, where nothing closes anyway. **This ordering is one component of the
 closure-record contract** the one-contract rule names, and a copy carrying it without the
 rest of that list is a partial adoption that stops there.
 ```
 
-Why the shape, where the block's sentences do not carry it. The evaluation order answers the
-objection that a ranking between clean completion and the two-tell stop cannot fire if the stop
-can make the pass unclean: clean completion is read first, so a suspension is only ever
-evaluated on a pass that did not close — which works only because clean candidacy reads the
-**triggers** and never the act of surfacing, as the block's own sentence says.
-The three branches are AC 4, the duties paragraph AC 2,
-the composition sentences AC 1 — which asks that a conflict unable to co-occur be named with
-its reason rather than legislated, and is met on both sides: the scope stop cannot co-occur
-with clean completion and says why, the clearly-stuck exit can and is resolved by the order
-already stated rather than by a rule invented for it. The scope stop's two triggers are `b11`
-(membership) and `b13` (question) read separately, because an in-set finding that opens a
-question can neither join nor stay outside the set and needs its own answer — which is also why
-a matching decline suppresses the membership trigger only. Sentences the block points at rather
+Where the block maps onto the criteria: the three branches are AC 4, the duties paragraph
+AC 2, the composition sentences AC 1. The scope stop's two triggers are `b11` (membership) and
+`b13` (question) read separately, because an in-set finding that opens a question can neither
+join nor stay outside the set and needs its own answer. Sentences the block points at rather
 than restating (`a13` as §5(a) replaces it): C:116–118, C:760–764, C:422–424, C:176, and the
 clearly-stuck precedence sentence, kept verbatim under **D3**.
 
@@ -242,9 +240,15 @@ an in-set finding, which is the gate-off route a fabricated record would otherwi
 **The `Accepted:` label was beyond the story's *original* scope and is now authorised by it**:
 Daniel decided it at this cycle's Gate-A pass-4 scope stop, and the story records the expansion
 in its §2 and adds acceptance criterion 7 (at `4625679`). Three passes had found the same hole
-— an acceptance put a finding in the fix set and no artifact carried it, so a lost session left
-a cycle able to close over work it had agreed to do. The cheapest close was a second label on a
-record whose form, transport, nonce and carry rules already existed. This cycle runs under the
+— an acceptance put a finding in the fix set and no artifact carried it, so a cycle could close
+over work it had agreed to do with nothing left saying so. The cheapest close was a second
+label on a record whose form, transport, nonce and carry rules already existed. **What the
+label closes and what it leaves open** is criterion 7's second half and the block states it:
+the decision becomes legible to a human reading the history, and no more — a later revision of
+this spec had it drive an automatic recovery procedure, which grew an identity line, a
+snapshot rule, an authoritative-body rule and a branch search, produced Blockers on each of
+three successive passes, and was cut back to this on Daniel's decision at the pass-9 two-tell
+stop. This cycle runs under the
 pre-change rules and writes no such record for its own acceptance; the dispositions file and
 the working record are what today's rules provide.
 
@@ -256,9 +260,9 @@ byte-identical in both copies:
 ````
   **Recording an answer at a membership stop.** A membership stop asks whether a surfaced
   finding joins the assigned fix set, and the user's answer is recorded under one of two
-  labels sharing one form. **Accepted** puts the finding in the set, from where the severity
-  rules already govern it: a Blocker or Major owes resolution, a Minor or Nit is collected and
-  never iterated. **Declined** keeps it out and ends the membership half of its hold — the
+  labels sharing one form. **Accepted** puts the finding in the set, where the resolve duty
+  governs it — this block adds nothing to what that duty says. **Declined** keeps it out and
+  ends the membership half of its hold — the
   whole of it where membership was all that finding raised. Both are available at a
   membership stop and nowhere else: not for an in-set
   Blocker or Major, which owes resolution already, and neither is the answer to a question
@@ -270,20 +274,16 @@ byte-identical in both copies:
   chose.
 
   ```
-  Accepted: <handle> · <date> · cycle <nonce> · <kind> · <artifact>
+  Accepted: <handle> · <date> · cycle <nonce>
   Finding: <severity> | <location> | <defect> | <consequence> | <suggested fix>
 
-  Declined: <handle> · <date> · cycle <nonce> · <kind> · <artifact>
+  Declined: <handle> · <date> · cycle <nonce>
   Finding: <severity> | <location> | <defect> | <consequence> | <suggested fix>
   ```
 
   The `Finding:` line is the finding line from the pass's findings file with its confidence
   field removed — the five fields the sameness test reads, in the file's order, a literal pipe
-  escaped as `\|` exactly as there. `<kind>` is one of the three cycle kinds and `<artifact>`
-  the same key the working record uses — a Gate-A cycle's reviewed document path, a Gate-B
-  cycle's base commit as a full 40-character object name — because a record read back out of a
-  branch body must be attributable on its own, and an empty commit carrying only a record
-  supplies nothing else to attribute it by.
+  escaped as `\|` exactly as there.
 
   **Rules both labels share.** Each carries the **cycle nonce**, because a record that cannot
   be attributed to its cycle cannot bind to it. Each is **written when made**, into the cycle's
@@ -293,27 +293,9 @@ byte-identical in both copies:
   may carry it meanwhile and does not bind. Where the cycle has no artifact revision to carry
   it — the answered finding was that pass's only one — the record goes in an **empty commit of
   its own**, the destination the human-exception rule above already blesses: "An empty commit
-  carrying only the record is a legitimate destination". Each is **restated in every later body
-  of that cycle**, the closing one included, so that the cycle's **latest** body carries the
-  complete answer set: **that body is the authoritative snapshot**, and an answer missing from
-  it is lost whatever an earlier body says, because a rule that let any reachable body revive
-  an answer would make the set depend on how far back a reader looked. **Every body of the
-  cycle carries that snapshot, and a cycle with no answers carries it too** — one line,
-  `Cycle answers: none · cycle <nonce> · <kind> · <artifact>`, in the same fields the record
-  header carries. Two things follow, and both are why it is every body and not only the ones
-  with something to say. A body stating an empty set is distinguishable from one that dropped
-  its records, which is the difference every reader of these bodies turns on. And **the newest
-  body is found by that line and never by whether it happens to carry an answer**: a body
-  identified only by the records in it is invisible on the day it drops them, which is the
-  day it matters. **A body of this cycle whose snapshot is missing or malformed stops** the
-  cycle rather than being skipped, since skipping it is exactly what revives the superseded
-  body behind it. Everything that reads these records reads **that snapshot and no
-  earlier body**: recovery, the squash carry, and the fix set the loop resumes with. Each is
-  **copied on squash-merge** (the carry rule above). A cycle that resumes and finds no answer
-  in that snapshot **treats it as absent** — the unknown-start fallback's
-  reading, and the safe direction under both labels: an unrecorded decline means the hold
-  applies again, an unrecorded acceptance means the finding is raised afresh. There is no
-  second place to look, which is the point of naming one body authoritative. Each is an
+  carrying only the record is a legitimate destination". Each is **restated in the cycle's
+  closing body**, so that the record a reader of history meets is not buried in an intermediate
+  commit, and each is **copied on squash-merge** (the carry rule above). Each is an
   **unverified assertion** of the same kind as the human exception — nothing checks that the
   handle belongs to whoever decided, that a human was asked, or that the reason is honest.
 
@@ -325,10 +307,12 @@ byte-identical in both copies:
   bytes, since a reviewer rewrites its sentences between passes; the severity read is the one
   the reviewer wrote, per the ordering's field rule. **At most one effective label per cycle
   and five-field key.** Exactly equivalent same-label records collapse to one, which is what
-  makes restating the snapshot idempotent; two records disagreeing on that key — opposite
-  labels, or one label with disagreeing attribution — **stop**, because a finding both in the
-  set and kept out of it has no reading, and picking either would let a fabricated or replayed
-  record decide which. What a matching decline does to a re-raised finding is the closure
+  makes a restatement idempotent; two records disagreeing on that key — opposite labels, or one
+  label with disagreeing attribution — are **a question for the user**, answered and recorded
+  like any other answer, because a finding both in the set and kept out of it has no reading,
+  and picking either would let a fabricated or replayed record decide which. It is a question
+  and not a cycle state: the loop already knows how to stop on one and resume on its answer.
+  What a matching decline does to a re-raised finding is the closure
   ordering's membership trigger, which is defined there and not restated here. **Any
   difference — severity included — or any
   genuine uncertainty makes it a new finding**, classified afresh against the current fix set
@@ -347,24 +331,18 @@ byte-identical in both copies:
   false record can do — one fully identified finding, one cycle, **as far as distinct nonces
   allow**: two cycles sharing or redrawing a nonce are indistinguishable to these records as
   to every other, so a replayed answer can bind to the wrong cycle, and a bound is not safety.
-  **What the acceptance record buys, and what it does not:** a cycle that lost its session and
-  **recovers its own identity** reads its latest body among its recovery sources and finds what
-  it had accepted. One that cannot recover it starts a new cycle, which **inherits nothing** —
-  it names the cycles it did not adopt, marks their answers unknown, and obtains its own. So a
-  replacement can still review and close the same artifact while an older one stays open; the
-  record makes that discoverable rather than invisible, which is less than preventing it. **What no
-  record carries:** a question stop's decision, where it changed no membership — the five
-  fields identify a finding and not a question, and that decision's durable form is the
-  artifact revision it produces, **where it produces one**; a decision that changes nothing
-  stays in the session that made it — and a stuck or two-tell surface with its
-  continue-or-stop answer. From a closing body a reader can infer the close, the acceptances
-  and the declines; after a lost session neither the question decision nor the
-  continue-or-stop answer is recoverable from it. **A cycle that recovers its own identity but
-  not those answers re-surfaces their questions and takes fresh ones before another pass runs**
-  — the same answer the no-identity case gets and for the same reason, that an answer nobody
-  can read is an answer nobody gave. Running on instead would bypass a standing stop precisely
-  because no record carries it, which is the one way a suspension can be lost without anyone
-  deciding to lift it.
+  **What a record buys, and what it does not.** It makes the decision **legible in history to
+  a human reading it**, and that is the whole of it. It does not make an agent's recovery
+  automatic: nothing checks that a later cycle looked, no procedure is obliged to search for
+  it, and a cycle that lost its session is not promised its own answers back. Nor does any
+  record carry a question stop's decision where that changed no membership — the five fields
+  identify a finding and never a question — or a stuck or two-tell surface with its
+  continue-or-stop answer; after a lost session neither is reconstructable at all. A cycle that
+  resumes **continues on what it can read**, and the reviewer re-raises whatever is still true
+  of the artifact, which is the ordinary route and not a special one. So a replacement cycle
+  can review and close the same artifact while an older one stays open. The record makes that
+  discoverable to whoever reads the history, which is less than preventing it and is what this
+  record is for.
 
   **These records are one component of the closure-record contract** the one-contract rule
   above names, and a copy carrying them without the rest of that list is a partial adoption
@@ -372,13 +350,10 @@ byte-identical in both copies:
 ````
 
 **Which rules the answer modifies** (story AC 3): the scope stop's resume sentence (`b12`),
-and the hold and the clean-pass definition, both in the §3 block. Those three are the rules
-whose **closure behaviour** the answer qualifies, and it qualifies no other — not the
-Blocker/Major-resolve duty, not the floor, the tells or the stuck reading. The Severity
-bullet's edit (item 14) is not a counter-example and is the distinction worth holding: it
-states **the duty's own scope**, the assigned fix set, which **D5** always implied. The answer
-moves a finding into or out of that set and never changes what the duty demands of what is in
-it, so no rule there mentions a decline. A reader finding either label
+and the hold and the clean-pass definition, both in the §3 block — and no other, not the
+Blocker/Major-resolve duty, the floor, the tells or the stuck reading. The Severity bullet's
+edit (item 13) is not a counter-example: it states **the duty's own scope**, which **D5**
+always implied, and names no decline. A reader finding either label
 qualifying a *closure* rule outside those three has found a defect; a reader finding the
 records absent from any transport, attribution, activation or threat site listed next has
 found the opposite one. The two lists answer different questions: what the answer *changes*,
@@ -390,15 +365,11 @@ are in the site map and re-read at execution.
 1. **Squash carry** (C:892 / W:1076, `j1`). OLD: "…copy every evidence entry, every
    human-exception record, the provenance lines, the curves and any skipped cycle's skip
    record TOGETHER WITH THE SKIP REASON IT POINTS AT…". NEW: "…copy every evidence entry,
-   every human-exception record, **every cycle's latest answer-record snapshot — the complete
-   set as that cycle's newest body in the range states it, earlier restatements being
-   superseded rather than merged (part of the closure-record contract above; a copy carrying
-   this without the rest stops there)**, the provenance lines, the curves and any skipped
-   cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT…". Six members. Copying the
-   snapshot rather than every record in the range is what makes the carry agree with the
-   authoritative-body rule: a record restated in every body reaches the range many times, and
-   summing them would let a body that dropped an answer be overruled by an older one that
-   still carried it — the revival the snapshot rule exists to forbid.
+   every human-exception record, **every answer record (part of the closure-record contract
+   above; a copy carrying this without the rest stops there)**, the provenance lines, the
+   curves and any skipped cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT…".
+   Six members. A record restated in the closing body and copied here reaches the squash body
+   once, because exactly equivalent same-label records collapse under the sameness rule.
 2. **The named nonce set** (C:385–387 / W:579–581). OLD: "**and that set is named rather than
    left open**: the provenance line, the per-pass curve (including a skip record standing in
    for one), the cycle's findings slots, and its advisory working record." NEW: "**and that set
@@ -436,16 +407,15 @@ are in the site map and re-read at execution.
 7. **The gate-off surface** (C:143–151 / W:350–358). OLD tail: "…silencing reminders; or not
    running a pass and reporting that it ran." NEW tail: "…silencing reminders; not running a
    pass and reporting that it ran; **recording a decline nobody made, or one on an in-set
-   finding; or dropping an acceptance the cycle owes from the body that would carry it (part
+   finding; or omitting an acceptance the cycle owes from the body that would carry it (part
    of the closure-record contract below; a copy carrying this without the rest stops there)**."
    The list says it is not complete; this change opens those routes and names them, as the
-   parent did for the stated floor. "Dropping from the body" and not "deleting", because under
-   the snapshot rule an omission is the whole of the act.
+   parent did for the stated floor.
 8. **The closing message and the soft-reset path** (C:834–838 / W:1018–1022). Two insertions
    into a sentence whose other clauses are unchanged. After "…which owes no entry" add: "—
-   **and the cycle's complete answer-record snapshot, including any answer held only in WIP
-   bodies a `git reset --soft` collapsed**: the single commit after the reset carries the whole
-   set, because a body the reset discards is unreachable from the commit that replaces it
+   **and the cycle's answer records, including any held only in WIP bodies a
+   `git reset --soft` collapsed**: the single commit after the reset carries them all, because
+   a body the reset discards is unreachable from the commit that replaces it
    (part of the closure-record contract below; a copy carrying this without the rest stops
    there)". In the
    sentence after it, "so an entry written only into the WIP body" becomes "so an entry **or
@@ -460,7 +430,7 @@ are in the site map and re-read at execution.
    raw-versus-effective split and its assigned-fix-set boundary, the two clean-vocabulary
    edits, the answer records' membership in the named nonce set and the nonce exemption's
    criterion, the cycle-field count they falsify, the unknown-start item covering them, the
-   closing-message carry, the squash carry, the curve's validity rule, the recovery sources,
+   closing-message carry, the squash carry, the curve's validity rule, the Gate-A cadence,
    the no-identity report, the gate-off routes they open, the four pointer sentences that send
    a reader to the ordering — in the floor paragraph, the absorb rule, the clearly-stuck
    paragraph and the tells paragraph — and the pass-4 report's unavailable-history block with
@@ -472,8 +442,8 @@ are in the site map and re-read at execution.
    an ordering whose raw-versus-effective split has no counterpart in the severity rule, or a
    severity rule still calling that question unsettled and mandating a stop beside an ordering
    that decides it, is two answers to one question; and an answer record missing from the
-   squash carry, the nonce set or the recovery sources cannot survive a merge, be attributed,
-   or be found again." The stop sentence that follows is unchanged and now covers these states.
+   squash carry or the nonce set cannot survive a merge or be attributed." The stop sentence
+   that follows is unchanged and now covers these states.
    Then, before it: "**A project carrying any component of this contract owes all of them.**
    The pieces are separately mergeable and are not separately adoptable, so a copy holding one
    without the rest is an incomplete adoption and stops here." **Both halves of the guard ship,
@@ -502,46 +472,14 @@ are in the site map and re-read at execution.
    of the closure-record contract above; a copy carrying this without the rest stops there)."
    It adds no record — the report names state the workspace already holds — and closes the one
    shape "a human's to resolve" cannot reach: an open cycle nobody is told about.
-11. **The recovery sources** (C:411–417 / W:605–611) — the **whole passage** is replaced, not a
-   sentence inside it, because the sentence that must change ("no search there") is the same one
-   that makes the rest coherent. OLD: "**Recovery has two sources, and they answer different
-   questions.** The **working record** is the source while the cycle runs, and it is the one the
-   candidate rules above apply to — several files may be present and the run must decide which,
-   if any, is its own. **History is the source once the cycle's own commit exists**, and there is
-   no search there: the cycle is reading **its own commit body**, so kind and artifact are settled
-   by which commit is being read, and the nonce is taken from the provenance line and the curve,
-   which must agree. A Gate-A cycle mid-run has no such commit and therefore has only the working
-   record." NEW: "**Recovery has three sources, and they answer different questions.** The
-   **working record** is the source while the cycle runs, and it is the one the candidate rules
-   above apply to — several files may be present and the run must decide which, if any, is its
-   own. **The cycle's own commits on the current branch** are the source for the records those
-   bodies carry — its artifact revisions, and any empty commit carrying an answer record —
-   **searched newest first and no further back than the branch point**, each candidate validated
-   by cycle field, kind and artifact exactly as a working record is; a bounded search, because an
-   unbounded one would reach other cycles' commits. **A candidate is a cycle identity — the
-   cycle field, the kind and the artifact together — and not a body**, so one cycle's own
-   restatements across several bodies are one candidate and never trip the more-than-one rule;
-   **its newest body is the answer set and the search stops there**, since an older body is
-   superseded rather than merged. **History is the source once the cycle's own
-   closing commit exists**, and there is no search there: the cycle is reading **its own commit
-   body**, so kind and artifact are settled by which commit is being read, and the nonce is taken
-   from the provenance line and the curve, which must agree." The next sentence's "Recovering a
-   single candidate from **either**" becomes "from **any of the three**" — a one-word repair the
-   passage's arithmetic forces, and the failure rule after it ("No candidate, disagreeing sources,
-   or more than one candidate → no identity") is unchanged and already governs all three, which is
-   why the NEW does not restate it. Part of the closure-record contract above; a copy carrying
-   this without the rest stops there. Left alone, an answer record would exist and the
-   procedure meant to read it would never look, and story criterion 7 would fail on one unchanged
-   sentence.
-
-12. **The findings-file protocol's clean sentence** (C:329 / W:523), inside the gate-prompt
+11. **The findings-file protocol's clean sentence** (C:329 / W:523), inside the gate-prompt
    template both gates paste. OLD: "A clean pass is the single body line `NO FINDINGS` with
    `END OF FINDINGS (0 total)`." NEW: "A **clean findings file** is the single body line
    `NO FINDINGS` with `END OF FINDINGS (0 total)`." It describes a file and always did; the
    word *pass* in it is what makes §3's predicate look like a redefinition instead of the
    other sense. Its condition — what a reviewer writes when it finds nothing — is unchanged.
    Part of the closure-record contract below; a copy carrying this without the rest stops there.
-13. **The Gate-A clean-signal sentence** (C:565–566 / W:756–757; the two copies wrap it
+12. **The Gate-A clean-signal sentence** (C:565–566 / W:756–757; the two copies wrap it
    differently, so the shared fragment is what is quoted). OLD: "…when a pass is clean — the
    explicit clean signal is what lets you exit the loop:". NEW: "…when a pass finds nothing —
    the explicit signal is what lets a pass be read as clean without inspecting it further:".
@@ -552,37 +490,51 @@ are in the site map and re-read at execution.
    the rest stops there. The other **six** uses of "clean pass" in each copy (C:117, 728, 750,
    761, 769, 827; W:324, 914, 936, 947, 955, 1011) are the closure sense the ordering defines
    and are correct as they stand — counted and checked, not assumed.
-14. **The Severity bullet's resolve duty** (C:783–784 / W:969–970), which is the one place the
+13. **The Severity bullet's resolve duty** (C:783–784 / W:969–970), which is the one place the
    duty is stated and the only one without a scope. OLD: "- **Severity:** Blocker
    (wrong/unsafe/breaks invariant) · Major (design flaw → rework) → both must resolve. Minor ·
    Nit → collect, never iterate." NEW: "- **Severity:** Blocker (wrong/unsafe/breaks
    invariant) · Major (design flaw → rework) → both must resolve, **for every finding in the
-   assigned fix set**; one the user declined at a membership stop is outside that set, and owes
-   nothing **while the set still excludes it** (the closure ordering above; part of the
-   closure-record contract below, and a copy carrying this without the rest stops there).
-   Minor · Nit → collect, never iterate." Old condition:
+   assigned fix set** (the closure ordering above; part of the closure-record contract below,
+   and a copy carrying this without the rest stops there). Minor · Nit → collect, never
+   iterate." Old condition:
    every Blocker and Major resolves, unbounded. **Replaced**: the boundary **D5** always
    implied and no sentence carried. Without it a declined finding must stay outside the set
-   and still bars closure, which is a pass that can neither close nor suspend. The (c)
+   and still bars closure, which is a pass that can neither close nor suspend. **The edit names
+   the set and never a decline**, which is AC 3's second half: the answer moves a finding into
+   or out of the set, and this duty says only what it demands of what is in it — a mention of
+   the decline here would read as a direct waiver of Blocker/Major resolution rather than the
+   membership decision it is. The (c)
    pointer that calls this "the resolve rule" (`c17`) needs no edit: it names the rule, and
    the rule now carries its own scope.
 
-15. **The curve's one-entry-per-valid-pass paragraph** (C:943–950 / W:1127–1134), which is
+14. **The curve's one-entry-per-valid-pass paragraph** (C:943–950 / W:1127–1134), which is
    where `?` gets its rationale and where that rationale currently answers Q6 the other way.
    OLD, the clause: "so a resumed cycle may know a pass happened and not what it found, and
-   zero and unknown are different facts." NEW: "so a resumed cycle may hold durable proof that
-   a pass was **valid** and no longer hold what it found, and zero and unknown are different
-   facts. **Knowing that a pass ran is not that proof**: where validity cannot be established
-   — the slot gone or unreadable, and nothing recording that it was accepted — the pass is
+   zero and unknown are different facts." NEW: "so a cycle may have **validated a pass this
+   session** and no longer hold what it found, and zero and unknown are different facts.
+   **Knowing that a pass ran is not knowing it was valid**: where this session did not validate
+   it and the slot is gone or unreadable, the pass is
    **omitted from the pass specification** rather than entered with `?`, because this grammar
    takes one entry per *valid* pass and has no way to say "may not have been one", and the
    report names the numbers it omitted (part of the closure-record contract above; a copy
    carrying this without the rest stops there)." Old condition: a resumed cycle's knowledge
    that a pass happened is enough to keep its entry, with `?` for the counts. **Replaced**:
-   knowledge that it ran is separated from proof that it was valid, because §7 makes the
-   second unavailable after a lost session and the two answers cannot both govern one slot.
-   Kept: `?` itself, per series, for a pass whose validity is established and whose counts are
-   not. Without this edit the same missing slot both keeps an entry and is omitted.
+   knowledge that it ran is separated from validation, using **§7's own predicate — this
+   session validated it** — rather than a durability test no artifact satisfies, since this
+   change introduces no pass-validity record. Kept: `?` itself, per series, for a validated
+   pass whose counts are not recoverable. Without this edit the same missing slot both keeps an
+   entry and is omitted.
+
+15. **The Gate-A cadence** (C:573 / W:764), which makes a revision unconditional between
+   passes. OLD: "Each pass: validate, revise, re-run." NEW: "Each pass: validate, revise
+   **where the severity and scope rules require a repair**, re-run (part of the closure-record
+   contract below; a copy carrying this without the rest stops there)." Old condition: every
+   pass is followed by a revision before the next. Kept: the cadence and its order — validate
+   first, re-run last. **Replaced**: the revision is conditional, because the ordering's
+   continue branch reaches a below-floor pass whose only findings are Minors and Nits, which
+   are collected and never iterated, and an unconditional "revise" tells that pass to
+   manufacture the repair the severity rule forbids.
 
 The shorter "Copy every record into the squash body" sentence inside the human-exception block
 (C:1004–1007) is generic and already covers an answer record; it is not edited. The "records
@@ -628,7 +580,12 @@ answer that pass's suspensions require has been given** — what the stop preven
 **W only**, "…by its severity exactly as the severity rule already says…" becomes "…exactly as
 Mechanics already says…", matching C for the reason §6's first row gives.
 
-Accounting: `b1`–`b11`, `b13`–`b16` kept; `b12` **replaced** — old: an *immediate* resume on
+Accounting: `b1`–`b11`, `b13`–`b16` kept — `b6` among them, and it is worth naming: it fixes
+the assigned set **before the pass being answered**, and the ordering's membership answer is
+read against that same set rather than against a later one, so the two agree and `b6` needs no
+edit. An earlier revision of this spec had membership re-read when the answer arrived, which
+`b6` and **D4** both forbid — **D4** requiring a user answer for the hold to end at all — and
+the reversal is recorded here rather than left as a silent narrowing. `b12` **replaced** — old: an *immediate* resume on
 the membership answer alone. Kept: that the membership answer is what the stop asks for and
 that either direction ends it. Changed: the resume waits for every answer the pass's
 suspensions require, each recorded, because a loop resumed over an unanswered question decides
@@ -662,7 +619,7 @@ zero-finding exception); `c14` moved **to the ordering's continue branch** — t
 Minor-below-floor pass that "keeps looping" is precisely one that neither closes nor suspends,
 and the branch states it rather than leaving it to be read out of a negation; `c15`, `c17`
 kept in the pointer sentence, `c17`'s "resolve rule" now reading with the assigned-fix-set
-boundary §4 item 14 gives it, so the pointer needs no edit of its own; `c16` **replaced** —
+boundary §4 item 13 gives it, so the pointer needs no edit of its own; `c16` **replaced** —
 old: a clearly-stuck surface leaves its finding open, which read alone gives this exit a hold.
 Kept: that the findings are still open at the surface, and that the resolve duty is what keeps
 them so. Changed: the **hold** belongs to the scope stop, the only stop whose question is about
@@ -686,10 +643,20 @@ as a rule instead.
 **(d) From pass 4 onward** (C:255–261 / W:459–465) — **add** the Q6 sentence (§7). `d1`–`d7`
 kept, unchanged.
 
-**(e) The five tells** (C:263–268 / W:467–472) — **add** one pointer sentence after `e10`:
-"This stop is a **suspension** under the closure ordering above (part of the closure-record
-contract below; a copy carrying this without the rest stops there), and the loop resumes when
-every answer that pass's suspensions require has been given." `e1`–`e11` kept.
+**(e) The five tells** (C:263–268 / W:467–472) — **one edit and one added sentence**. The edit
+is `e7`, the shared fragment both copies carry (C:266 / W:470). OLD: "**Any two present makes
+stop-and-surface mandatory, not discretionary**". NEW: "**Any two present makes stop-and-surface
+mandatory, not discretionary, where the clean-completion branch did not close the pass**". Then
+the pointer, after `e10`: "This stop is a **suspension** under the closure ordering above (part
+of the closure-record contract below; a copy carrying this without the rest stops there), and
+the loop resumes when every answer that pass's suspensions require has been given."
+
+Accounting: `e1`–`e6`, `e8`–`e11` kept; `e7` **qualified** — old: two tells make the stop
+mandatory, unconditionally. Kept: the threshold, its mandatory force, and that the stuck reading
+is not a precondition for it. Changed: it is read after clean completion, not beside it.
+Authority **D2**, which ranks clean completion above this stop — unqualified, `e7` and the
+ordering decide a clean two-tell pass at or above the floor in opposite directions, which is
+AC 1's reachable conflict and the one thing this passage must not leave standing.
 
 **(f) The two rules above do not compete** (C:275–287 / W:473–483) — **unchanged**. "The two
 rules above" still names the absorb rule and the stuck reading; the block sits before both and
@@ -767,19 +734,16 @@ earlier pass had removed.":
 anything. **First the root**, which is a condition on the current pass being valid at all and
 not a stop of its own. The slots live in `.context/codex-reviews/` under the top-level
 directory of the checkout this cycle is running in — the same root the pass call is given as
-`workingDirectory`. Establishing it fails in **four** observable ways, each with its own fix:
-the working directory is **not inside a git repository** (run the pass from the checkout); the
-resolved top level **differs from the directory the call was given**, compared after both are
-**canonicalized**, so that a symlink or a trailing slash is not a mismatch (re-issue the call
-with the resolved root); **git is not there at all**, the command not existing (install it, or
-put it on the PATH); or **git ran and failed**, reported with the message it returned and never
-as a missing repository — that message is the discriminator, and prose cannot partition better
-than the tool does; the common shape is a refused repository ownership, whose fix is to trust
-the checkout. An error none of the four explains is a residual: report it as it came and stop,
-rather than filing it under the nearest shape.
+`workingDirectory`, the two compared after both are **canonicalized**, so that a symlink or a
+trailing slash is not a mismatch. That is **one condition**: either the slots being read are
+under that checkout or they are not.
 A pass whose root cannot be established is an **INCOMPLETE pass** — the
 state this section already defines, already uncounted toward the floor and already excluded
-from the curve — so nothing new is ranked in the closure ordering. What no check reaches: a
+from the curve — so nothing new is ranked in the closure ordering. The report carries **git's
+own message verbatim** and files it under no shape of its own: that message is the
+discriminator, and prose cannot partition git's failures better than git does — a partition
+written here would send a caller to the wrong repair on every case it guessed wrong, which is
+the whole of what such a list would add. What no check reaches: a
 slot written under a different root **in the past** is **indistinguishable from an absent
 slot**, because nothing records where a past call ran. Unobservable, not detected.
 **Then, per earlier pass, two questions.** Is the slot present and valid? And is the pass
@@ -813,7 +777,7 @@ that list is a partial adoption that stops there. Filled, over passes 1, 2 and 4
 unreadable:
 
     Root: `.context/codex-reviews/` under this checkout — confirmed. (Unconfirmable:
-      this pass is INCOMPLETE, root not established; re-run from the checkout.)
+      this pass is INCOMPLETE, root not established — git said: "<message>".)
     Trend: findings 24, 17, —, 18; Blockers 5, 2, —, 1 — pass 3 omitted: slot absent,
       acceptance unknown, so it is neither counted toward the floor nor entered in the
       curve. 2→4 spans that gap: rising, weaker evidence. Cluster: product behaviour
@@ -825,9 +789,12 @@ This is **D10**. Both historical lines are derivable from the mandated findings 
 (the `fic2` record verified that), so unavailability is a property of the workspace and the
 answer is disclosure, not a new stop or a mandatory artifact — the root condition reuses the
 INCOMPLETE state rather than adding one, so **D10**'s "not a new stop condition" stands as
-written. The partition is by what the agent can observe (`docs/prompt-standards.md` item 10):
-presence and validity from the slot, acceptance from this session alone, and where acceptance
-cannot be established the count moves in the direction that costs a pass. The example is
+written. The per-pass partition is by what the agent can observe
+(`docs/prompt-standards.md` item 10): presence and validity from the slot, acceptance from this
+session alone, and where acceptance cannot be established the count moves in the direction that
+costs a pass. The root is deliberately **not** partitioned — item 10 asks that a diagnostic
+state name its cause and its fix, and here git's message is the cause, named verbatim, while
+any prose list would be this spec guessing at causes it cannot observe. The example is
 there for item 4.
 
 ---
@@ -854,7 +821,12 @@ drop notes (Task 19, line 970; Task 20, line 1047) and Task 23's second point (l
 
 ---
 
-## 9. Verification — mode `battery+check+verification`
+## 9. Verification
+
+**The mode is read from the story's header at execution**, never from here — the same rule the
+spec's own header states, and the reason no value is named in this heading. What follows is
+what each level of that mode obliges, so that whichever it carries has its evidence described:
+the battery, the check, and the named verification of the risk path.
 
 **Battery.** The quality command in `AGENTS.md` § Commands runs once, green, at the Gate-B WIP
 commit (`check-version-bump.sh main` needs the committed bump, §10).
@@ -877,38 +849,40 @@ not:
   parent tree, and with it both labels: `Accepted: <handle>` and `Declined: <handle>` count
   **1** in each and **0** there, since one label shipping without the other is the shape the
   block's whole form exists to prevent;
-- the six-member squash-carry sentence: `every cycle's latest answer-record snapshot` count
-  **1** in each; **0** in the parent tree. The phrase asserted is the one §4 item 1's NEW text
-  actually contains — an earlier revision asserted `every answer record`, which appears nowhere
-  in it, so that check could not have passed against a conforming implementation and would have
-  read as a false red;
+- the six-member squash-carry sentence: `every answer record (part of the closure-record` count
+  **1** in each; **0** in the parent tree — the phrase checked against §4 item 1's NEW text
+  rather than assumed to match it;
 - the Q6 lead phrase `**Where an earlier pass's findings file is unavailable**` count **1** in
   each; **0** in the parent tree;
-- the recovery-source edit (§4 item 11): `Recovery has three sources` count **1** in each and
-  **0** in the parent tree, with `Recovery has two sources` at **0** in each and **1** there,
-  since the passage is replaced and a NEW installed beside a surviving OLD is the failure;
-- the **other four** source edits, each as a pair, because each is a standing sentence changing
+- the **five** source edits, each as a pair, because each is a standing sentence changing
   meaning rather than new text appearing, and a one-sided presence check would pass on a copy
   carrying both wordings. **Every fragment here is a single line in the file it is grepped
   from**, each OLD verified at 1 in both copies of the parent tree, because a fragment spanning
-  a line break makes `grep -F` count 0 and read as a failure — the earlier revision quoted
+  a line break makes `grep -F` count 0 and read as a failure — an earlier revision quoted
   three of them across their wraps: `A **clean findings file** is the single body line` at
   **1** in each and **0** in the parent, with `clean pass is the single body line` at **0** and
   **1**; `when a pass finds nothing` at **1** and **0**, with `when a pass is clean` at **0**
   and **1**; `for every finding in the assigned fix set` at **1** and **0**, with `both must
-  resolve. Minor` at **0** and **1**; `Knowing that a pass ran is not that proof` at **1** and
-  **0**, with `may know a pass happened` at **0** and **1**. The NEW fragments must be installed
+  resolve. Minor` at **0** and **1**; `Knowing that a pass ran is not knowing it was valid` at
+  **1** and **0**, with `may know a pass happened` at **0** and **1**; and
+  `revise **where the severity and scope rules require a repair**` at **1** and **0**, with
+  `Each pass: validate, revise, re-run` at **0** and **1**. The NEW fragments must be installed
   unwrapped at those points — a constraint on how the plan writes the edits, not on what they
   mean;
 - the contract markers, since a partial merge sees them and not the membership list: `part of
   the closure-record contract` **case-insensitively** at **17** in each and **0** in the parent
   — one per source edit in §4 except items 6 and 9, which are respectively unchanged and the
-  contract itself, plus one on each of the four pointer sentences §5(a), (b), (c) and (e)
-  install; several open a sentence and capitalise, which is why the count is case-insensitive
-  and why a case-sensitive one would under-count and read as a failure — plus the four
-  block-level sentences (`This ordering is one component`, `These records are one component`,
-  `This split is one component`, `This report and its root condition are one component`) at
-  **1** each and **0** there. **Twenty-one** markers in each copy.
+  contract itself (thirteen), plus one on each of the four pointer sentences §5(a), (b), (c)
+  and (e) install; several open a sentence and capitalise, which is why the count is
+  case-insensitive and why a case-sensitive one would under-count and read as a failure — plus
+  the four block-level sentences (`This ordering is one component`, `These records are one
+  component`, `This split is one component`, `This report and its root condition are one
+  component`) at **1** each and **0** there. **Twenty-one** markers in each copy. **Every one
+  of the twenty-one must be installed on a single line**, the same constraint the source-edit
+  fragments carry and for the same reason: this spec itself wraps the marker phrase at several
+  of the sites that quote it, and a wrapped marker in the shipped copy makes `grep -F` count it
+  as absent. The constraint is on how the plan writes the line, not on the sentence's meaning,
+  which is why the marker sentences are short enough to fit one.
 
 If the claim "the ordering and the records ship in both copies" were false, one working-tree
 count would be **0** or the parent-tree counts would not differ from it. The wiring can produce
@@ -924,9 +898,10 @@ stop, a hold awaiting its answer, accept, decline, a stop answer, two or three s
 once, a below-floor clean pass, a zero-finding pass, the unknown-start fallback; **and the
 stateful transitions**: a declined finding re-raised matching on all five fields and re-raised
 with one changed, the fix set broadened to include a declined finding, **the fix set broadened
-to include a finding whose hold is still awaiting its answer**, recovery after an accept
-and after a stop with the session lost (no identity → new cycle) **both with the answer records
-present in the branch's bodies and with them absent**, a `full` Gate-B pass with one branch
+while a hold is still awaiting its answer** — whose next state is the hold still standing, the
+row that tests the frozen reading — two records disagreeing on one five-field key, recovery
+after an accept and after a stop with the session lost (no identity → new cycle),
+a `full` Gate-B pass with one branch
 clean and the other carrying an in-set Blocker, a rollback with a cycle open under the new
 rules, and a copy adopting the ordering without the answer records, the reverse, or either
 without the severity split. **Columns** — the **record state** (which answer records the bodies
@@ -954,15 +929,18 @@ Gate-B re-review and before the closing amend, as §5 requires.
 
 - **Invariant 11 — `docs/prompt-standards.md`, all 12 items.** Most at risk: item 6 (every
   constraint in the shipped blocks carries its reason in the same sentence — **including the
-  three that were exempted until pass 6**: nothing else closes a cycle *because every other way
-  out leaves a finding or a question open*; a zero-finding pass is clean whatever the floor
-  *because a floor buys further looks at an artifact that keeps yielding findings*; decline is
-  available only at a membership stop *because that is the only stop whose question is
-  whether a finding belongs to the set*. The exemption was wrong twice over: item 6 admits no
+  three that were exempted until pass 6**: no other pass outcome closes a cycle *because every
+  other pass either leaves a required repair, a finding hold or a question outstanding, or has
+  an unmet closure precondition such as the floor*; a zero-finding pass is clean whatever the
+  floor *because a floor buys further looks at an artifact that keeps yielding findings*;
+  decline is available only at a membership stop *because that is the only stop whose question
+  is whether a finding belongs to the set*. The exemption was wrong twice over: item 6 admits no
   "settled elsewhere" clause, and a scaffolded copy cannot reach the story the reasons were
   said to live in); item 8 (token-lean — the blocks replace closure
-  sentences rather than adding beside them); item 4 (the Q6 example); item 10 (the Q6
-  partition and its root check); item 3 (the stop answer is a named, resumable state).
+  sentences rather than adding beside them); item 4 (the Q6 example); item 10 (the Q6 per-pass
+  partition, and the root condition, whose cause is git's own message rather than a partition
+  written here — item 10 asks for a cause and a fix, and a guessed cause is neither);
+  item 3 (the stop answer is a named, resumable state).
 - **Don't: "Never replace a decision procedure without accounting for its old conditions."**
   Satisfied by §5, against the committed inventory.
 - **Don't: "Never rename or delete a doc section without grepping for references first."** The
