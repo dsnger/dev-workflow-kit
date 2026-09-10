@@ -1,12 +1,10 @@
 # §5 loop-rule consolidation: exits, duties, and the decline — Story
 
 **Date:** 2026-08-29 · **Size:** story
-**Risk:** *(proposed)* high · **Security:** *(proposed)* none · **Validation:** *(proposed)* battery+check+verification
+**Risk:** high · **Security:** none · **Validation:** battery+check+verification
 
-> **DRAFT — the profile above is proposed, not confirmed.** Per §5 a profile is confirmed by the
-> human, and until it is this story is not executable. Nothing depends on it yet: the work it
-> describes is split out of a cycle that is still running, and the successor starts when someone
-> picks it up. The proposal's reasons are in §5.
+**Profile log:**
+- 2026-09-10 · adoption · proposed 2026-08-29 at the split from the parent cycle, confirmed by Daniel as proposed after the parent shipped (PR #26) · gates now read this header
 
 ## 1. Problem statement
 
@@ -147,6 +145,7 @@ ceiling.
   cycle. **No named `high` trigger matches literally**, so this is a judgement call under intake's
   "surfaces, not words", and the human decides it. The parent's experience is evidence for rather
   than against: eleven passes and three mandatory stops on this material.
+  *(Resolved 2026-09-10: confirmed as proposed — see the profile log.)*
 - **How much of the ordering is new text versus reference.** §5 already contains the two sentences
   from which "only clean completion closes" follows; whether the ordering is stated fresh or
   assembled from what is there changes the old-conditions accounting and the parity surface.
