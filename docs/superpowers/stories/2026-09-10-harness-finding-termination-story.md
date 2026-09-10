@@ -76,6 +76,30 @@ move between "absorb another round of this" and "hand the whole cycle to the hum
 that keeps producing the same shape of finding stops consuming rounds while the loop continues on
 everything else.
 
+**Two bounds exist that today do not, and both are mechanical rather than a reading.** Added
+2026-09-10 from the same session that produced the evidence above, on Daniel's question of how a
+project developing this kit avoids blocking itself while using it. The diagnosis that prompted them
+is that the cycle was not slow because of self-application; it was slow because **the loop had no
+ceiling and the artifact had no size limit**, and self-application only multiplied the readings each
+round had to consider.
+
+- **A pass ceiling.** §5 fixes a floor and no maximum. The only two ways up and out — the
+  clearly-stuck exit and the two-tell threshold — both require a *reading*, so a cycle that trips
+  neither grinds without anyone being obliged to decide. A ceiling turns that into a mandatory
+  stop-and-surface, the same shape the two-tell rule already has, where the human chooses to split,
+  to accept with stated residuals, or to continue for a named reason. Cycle `awsf1ec771` ran
+  **thirteen** Gate-A spec passes against a floor of 3 and reached no clean pass.
+- **An artifact size limit before the cycle starts.** §5's sizing guidance — "prefer smaller specs
+  with named interfaces and let the plan carry the detail" — is advice with no number, and it was
+  read and not followed. The same spec reached **989 lines**, of which the design was **173**; the
+  remaining **58%** was bookkeeping about the change, and it took roughly half the findings of every
+  pass. A limit checked before the first pass is a `wc -l`, not a judgement.
+
+**A third bound already exists in §5 and was simply not honoured**, which is worth recording because
+it needed no new rule: the instruction to settle mechanically what a parser can decide before
+spending a read pass on it. A precheck script was written before pass 1 of that cycle and then never
+run again, and roughly a quarter of the later passes' findings were things it decides in seconds.
+
 **Out of scope**, named so nothing absorbs them:
 - **The severity definitions.** Blocker, Major, Minor and Nit keep their current meanings; this
   story changes what follows from a severity, not what earns one.
@@ -109,6 +133,17 @@ everything else.
 - [ ] **Per-mechanism termination and the existing five tells do not duplicate or contradict each
       other.** Both copies say which applies when both would fire, and neither weakens the two-tell
       mandatory stop.
+- [ ] **A cycle cannot run unbounded without a human deciding.** A ceiling exists, it is stated as a
+      number derived the way the floor is, and reaching it without a clean pass is a mandatory
+      stop-and-surface naming the options. Checkable by reading: a pass count alone decides it, with
+      no reading of a curve or a cluster.
+- [ ] **An oversized artifact is stopped before the cycle starts, not diagnosed after it.** A stated
+      limit applies before pass 1, it is checkable by counting lines, and the shipped text says what
+      an over-limit artifact does instead — split, or move detail to the plan behind a named
+      interface.
+- [ ] **The two bounds and the existing exits compose without a fourth reading.** For every state
+      where a bound and an exit could both apply, the shipped text says which governs and why, or
+      names the pair as unable to co-occur.
 - [ ] **Every condition of the replaced prose is accounted for**, each marked kept, moved or
       deliberately dropped, per the AGENTS.md Don't — and **the two prompt copies stay in parity**
       on every rule this story changes, deliberate wording differences stated as such.
