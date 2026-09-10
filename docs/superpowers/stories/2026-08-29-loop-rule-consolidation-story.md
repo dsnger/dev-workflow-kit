@@ -47,6 +47,15 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
 - **The pass-counter anomaly**, the CodeRabbit plan-metadata contradiction, and the
   fixture-per-predicate question — all still parked.
 
+**One expansion, authorised 2026-09-10 rather than absorbed.** Gate-A spec pass 4 raised, as a
+scope stop, that an accepted repair obligation lives only in the running session: a cycle that
+loses it can be replaced by one that closes the same artifact with the repair never made. The
+reliance is older than this story — §5 already puts "repair obligations you already accepted in
+earlier passes" in the fix set with nothing recording them — but this story is the one writing
+the closure rules, so the gap became its question. **Daniel accepted it into scope**: the change
+ships a second record label, `Accepted:`, sharing the decline record's form, transport, cycle
+nonce and carry rules. Criterion 7 below is what that adds; nothing else in this section moves.
+
 ## 3. Acceptance criteria
 
 - [ ] **The ordering is stated once, in both copies, and covers every reachable conflict.** A
@@ -74,6 +83,13 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
       Don't. A requirement neither kept nor explicitly dropped is a dropped condition.
 - [ ] **The two copies stay in parity** on every rule this story changes, deliberate wording
       differences stated as such.
+- [ ] **A user's answer that puts work into the fix set leaves a record, on the same terms as one
+      that keeps work out.** Both labels share one form, one transport, one attribution rule and
+      one carry rule, each stated once; recording an answer is a precondition to running the next
+      pass; and what the record does *not* buy is stated — it makes a lost obligation
+      recoverable, not automatically recovered, and nothing checks that a replacement cycle
+      looked. Checkable by reading: two labels with one set of rules, and a residual paragraph
+      that does not overclaim. *(Added 2026-09-10 with the expansion recorded in §2.)*
 
 ## 4. Settled inputs — decided, paid for, and not to be reopened
 
