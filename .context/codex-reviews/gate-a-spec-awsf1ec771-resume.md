@@ -48,7 +48,54 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 19 | 6d52fcc | 15→**13** | 0→**1** | 12→**10** | yes | precheck caught a silent loss before the pass: `a20` ("don't manufacture findings to pad") had fallen out of the target text; restored to §A. Two known contradictions repaired in the same commit. **Only 6 of 13 findings are against the target text**; 5 are against the design spec and 2 against standing §5; session 01a0912a-7329-7450-bdb3-da043e88e7bb |
 | 20 | 5174d7a | 13→**9** | 1→**1** | 10→**5** | yes | **B+M 11→6, Majors halved.** Three of nine (3, 6, 9) regenerate from pass 19's own repairs; the Blocker is pass 19's Gate-A closing act, which names a revision in two record forms that have no field for one; session 01a0915d-6a5b-7633-a60a-881f0022816d |
 | 21 | 8dc22fb | 9→**6** | 1→**0** | 5→**5** | yes | **findings the lowest of the cycle; B+M 5 ties the pass-16 low; zero Blockers.** Finding 2 is my own overclaim from the pass-20 round; finding 1 is the sixth falsified standing sentence, found because the prompt asked for one; session 01a09195-8b00-7693-b42c-e85888188d3e |
-| 22 | — | — | — | — | not run | next action, after pass 21's findings are dispositioned |
+| 22 | 2ff9f24 | 6→**13** | 0→**1** | 5→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** Findings more than doubled and the Blocker returned. Three findings (5, 8, 12) are defects in sentences the pass-21 round itself wrote; the Gate-A closing act has now taken a Blocker or Major at passes 20, 21 and 22, each out of the previous repair. All 13 held open; session 01a091bb-b1cd-7562-98d1-a50647a30370 |
+| 23 | — | — | — | — | not run | blocked on the two-tell answer |
+
+## Pass-22 three-line report — MANDATORY TWO-TELL STOP
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 13, 9, 6, **13**. Blockers …, 1, 1, 0, **1**. Majors …, 10, 5, 5, **5**.
+  Blocker+Major …, 12, 11, 6, 5, **6**. The three-pass fall 13 → 9 → 6 reversed in one pass.
+- **Cluster (pass 22):** product 9 of 13 (1, 2, 3, 4, 5, 6, 7, 8, 11, 12 — ten on the strict
+  count); prose about the design or this artifact 3 (9, 10, 13); the instrument 0.
+- **require↔withdraw:** none. Near-miss named: finding 12 objects to the sentence the pass-21 round
+  wrote to answer pass 21's finding 2 — a second pass on one sentence, but it asks for a third
+  narrower wording rather than the removed one back.
+
+**Tells: two of five — the threshold. Stop-and-surface is mandatory, not discretionary.** The
+finding count rose 6 → 13 and the Blocker count failed to fall, 0 → 1.
+
+**What the count hides: B+M barely moved.** 5 → 6. The doubling is six new Minors and a Nit, which
+collect and never iterate. Read on Blocker+Major alone this is the flattest stretch of the cycle —
+6, 5, 6 — and that is the reading the stop is being surfaced on, not the headline number.
+
+**One mechanism is on its third consecutive pass and it is the Gate-A closing act.** Pass 20's
+Blocker, pass 21's finding 2 and pass 22's Blocker and findings 2, 8 and 12 all sit in that one
+paragraph, and **each came out of the previous round's repair of it**:
+- pass 20 said the closing act named a revision in forms with no field for one;
+- pass 21 said the repair claimed the pass had read the named commit's tree;
+- pass 22 says the rewritten paragraph still does not require the named commit's content to equal
+  the artifact at closing time (Blocker), carries no cycle nonce though standing Mechanics names a
+  **closed set** of cycle records and demands the nonce in every one (`CLAUDE.md:384–390`,
+  verified), is mechanically wrong about git in "that name stops resolving" (an amended commit's
+  old object stays addressable until pruned), and overshoots in the other direction with "no commit
+  name could record what was reviewed".
+
+**Three of the thirteen are defects in sentences this last round wrote** — 5, 8 and 12. That is the
+regeneration condition, nameable and not inferred.
+
+**Findings verified mechanically before this report:** the closed record set and nonce duty at
+`CLAUDE.md:384–390`; the legacy bare-slot reservation at `CLAUDE.md:390`; the human-exception
+Gate-A destination at `CLAUDE.md:988`; suspension classifications restated outside §A at target
+text lines 337 and 415.
+
+**The clearly-stuck reading is also satisfiable and is not being taken.** Its three conditions:
+a plateau on Blocker+Major (6, 5, 6, and never zero in twenty-two passes); coverage affirmable
+after twenty-two readings; and Blocker/Major regenerating from the previous round's repairs, which
+findings 1 and 5 name. It is not needed — the two-tell threshold stands alone — and taking it would
+close nothing, since surfacing credits no pass clean.
 
 ## Pass-21 three-line report
 
