@@ -118,12 +118,13 @@ to point at and so a reader can see the shape of the change without reading the 
 | (c) recognizing clearly stuck | §C |
 | (e) the five tells | §D |
 | Mechanics · Severity | the resolve duty is scoped and gains its discharge rule; the handed-over question is replaced by its answer |
-| Mechanics · `baseSha` | the `WIP:` warning stops claiming a closure the rules do not grant |
+| Mechanics · `baseSha` | two sentences: the `WIP:` warning stops claiming a closure the rules do not grant, and the `Finishing the cycle` lead-in performs the amend only where the ordering permits closing |
+| Mechanics, recording a human exception | one sentence: a prescribed continuation answer is distinguished from blanket assent. The answer-record material stays moved to the successor |
 | Gate B, the coverage instruction | `NO FINDINGS` only when the branch found none |
 | Mechanics, the curve's Majors rationale | rewritten on the pre-ceiling reading |
 | Mechanics, the one-contract paragraph | membership widened, with a semantic test a downstream reader can apply |
 | (i) when these rules bind | §H |
-| the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional |
+| the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional; the broad-prompt instruction stops assuming the artifact is revised between passes, keeping its breadth demand |
 | the profiles section, the lens paragraph | its unchanged-list is scoped to the lens sets |
 
 **Two sentences are deliberately not edited**, named so nobody looks for them: the "Copy every
@@ -153,7 +154,7 @@ here. This table says what happens to each inventoried passage, so the map stays
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
 | (f) the two rules above do not compete | **unchanged.** "The two rules above" still names the absorb rule and the stuck reading; the block sits before both and adds no third rule between them | — |
 | (g) Mechanics · Severity, the handed-over question | edited — the unsettled statement and its interim report-and-stop duty are replaced by the answer, in both copies, removing the one deliberate story-path divergence | §E |
-| (h) recording a human exception | **no longer edited.** The answer-record block that was to follow it moved to the successor with **D9** | — |
+| (h) recording a human exception | **edited in one sentence only** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
 | (i) when these rules bind | edited — the strict-reading list is added to, not rewritten | §H |
 | (j) the squash carry | **no longer edited.** It was to name the answer record, which moved; this change ships no record for it to carry | — |
 
@@ -300,9 +301,10 @@ repo's most persistent defect. The transport that could carry it left with the r
   the block replaces closure sentences rather than adding beside them, while the block was in
   fact restating triggers, duties, preconditions and the severity answer that their own
   paragraphs still defined, which is two authorities per copy. The claim now rests on what the
-  block does: **it owns the six things §2 names** — not restated here, one statement of that
-  boundary being the point — and **cites** every other rule where that rule is defined, so each
-  has one definition in the shipped text; **§4's site table is the check**. Then item 3 (the stop
+  block does: **it owns the evaluation of a pass and what follows from it, as the target text's §A
+  opening states that boundary** — not restated here, one statement of it being the point — and
+  **cites** every other rule where that rule is defined, so each has one definition in the shipped
+  text; **§4's site table is the check**. Then item 3 (the stop
   answer produces a named state, **parked**, with its own restart transition).
 - **Don't: "Never replace a decision procedure without accounting for its old conditions."**
   Satisfied by the plan's per-condition disposition list against the committed inventory (§5),
@@ -359,14 +361,14 @@ verification fragment with its counts (§7). Each is work this change still owes
 work a spec can do correctly, because all four are checked against files the plan edits.
 
 **Partial adoption — answered by the one-contract paragraph (target text §G), and what that answer is worth.**
-The set is mutually dependent, and **the rule that says which edits belong is stated rather than
-enumerated**: an edit is coupled when the block **cites it or depends on it** — the boundary its
-clean predicate reads, the sentences that give *clean* its two senses, the triggers it reads, the
-source rules whose old text the ordering falsifies, and the severity and dismissal rules it cites.
-The target text's §G carries a semantic membership test into that paragraph, which until now reached
-only the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start
-semantics. **An earlier revision of this section named the members as a list of item numbers and
-the list was wrong** — it omitted several edits the block plainly depends on — which is why the
+The set is mutually dependent, and **the membership rule is stated once, in the target text's §G,
+and is deliberately not restated here** — a second telling of it is a second definition, which is
+pass 21 finding 5. §G reads what a live rule **states** rather than what changing it would do, and
+it reaches a wider set than the paragraph did before: previously only the nonce, the slots, the
+provenance line, the curve, the carry rule and the unknown-start semantics. **An earlier revision
+of this section named the members as a list of item numbers and the list was wrong**, and a later
+one defined membership here by the edits the block cites or depends on — a test decidable only
+against this repository's own spec. Both are why the
 rule is stated and **the plan derives the membership against the real files**, where dependence is
 decidable and the numbering does not exist.
 
