@@ -47,7 +47,48 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 18 | 96c3611 | 9→**15** | 1→**0** | 7→**12** | yes | **first pass on the target text. ZERO BLOCKERS, first since pass 7.** Finding 1 names the restructure as half-done: §H is still paraphrase, not text. Findings 6,7,8 name three standing sentences by line number — the 15/16/17 mechanism, now findable; session 01a09068-de4a-7071-97a7-82cc4774544f |
 | 19 | 6d52fcc | 15→**13** | 0→**1** | 12→**10** | yes | precheck caught a silent loss before the pass: `a20` ("don't manufacture findings to pad") had fallen out of the target text; restored to §A. Two known contradictions repaired in the same commit. **Only 6 of 13 findings are against the target text**; 5 are against the design spec and 2 against standing §5; session 01a0912a-7329-7450-bdb3-da043e88e7bb |
 | 20 | 5174d7a | 13→**9** | 1→**1** | 10→**5** | yes | **B+M 11→6, Majors halved.** Three of nine (3, 6, 9) regenerate from pass 19's own repairs; the Blocker is pass 19's Gate-A closing act, which names a revision in two record forms that have no field for one; session 01a0915d-6a5b-7633-a60a-881f0022816d |
-| 21 | — | — | — | — | not run | next action, after pass 20's findings are dispositioned |
+| 21 | 8dc22fb | 9→**6** | 1→**0** | 5→**5** | yes | **findings the lowest of the cycle; B+M 5 ties the pass-16 low; zero Blockers.** Finding 2 is my own overclaim from the pass-20 round; finding 1 is the sixth falsified standing sentence, found because the prompt asked for one; session 01a09195-8b00-7693-b42c-e85888188d3e |
+| 22 | — | — | — | — | not run | next action, after pass 21's findings are dispositioned |
+
+## Pass-21 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 15, 13, 9, **6**. Blockers …, 0, 1, 1, **0**. Majors …, 12, 10, 5, **5**.
+  Blocker+Major …, 8, 5, 8, 12, 11, 6, **5** — level with the pass-16 low, and **6 findings is the
+  lowest of the cycle**, past pass 16's 8.
+- **Cluster (pass 21):** product 3 (1, 2, 3); prose about the design or this artifact 3 (4, 5, 6);
+  the instrument 0. **A tie rather than a cluster**, named because it is the first pass where
+  product does not dominate outright.
+- **require↔withdraw:** none. Near-miss: finding 2 objects to a sentence the pass-20 round itself
+  added — a later pass questioning an earlier pass's addition, the mirror of the pair's shape.
+
+**Tells: zero clearly, one on the conservative reading.** Findings fell 9 → 6, Blockers fell 1 → 0,
+no pair, no instrument cluster. The only candidate is the prose-about tie at 3 of 6; counted or
+not, one is not two, so **no mandatory stop**. The clearly-stuck exit is not reachable either — its
+first condition needs a plateau and the curve is at a cycle low.
+
+**Finding 2 is mine, and it is the defect `AGENTS.md` calls this repo's most persistent.** The
+pass-20 round removed an overclaim from the closing act and introduced a smaller one in the same
+sentence: "a reader wanting the reviewed content reads the tree of the commit the body sits in,
+**that tree being the one the pass read**". Verified false at `CLAUDE.md:553` — `mcp__codex__exec`
+"reviews the TEXT you pass, not the git tree" — and it contradicts my own sentence two paragraphs
+above saying the record establishes nothing about what the pass read. Exactly the pattern
+`AGENTS.md` records: *each correction introduced a subtler version of the same claim*.
+
+**Finding 1 is the sixth falsified standing sentence, and it was found because the prompt asked.**
+`CLAUDE.md:554–555` and `workflow-init.md:746–747` still say to re-run the Gate-A prompt "each pass
+over the revised artifact … because the artifact changes between passes", while §A continues on an
+**unrevised** artifact where no repair is owed. §H edits the cadence sentence and not this one. The
+mechanism is alive at passes 15, 16, 17, 19, 20 and 21; adding "look for a sixth" to the prompt is
+what surfaced it.
+
+**Findings 4 and 5 are the design falling behind the target text**, both from my own repair rounds:
+the passage map still says (h) is "no longer edited" while §F item 4 replaces a sentence in it, the
+`baseSha` row names only the WIP warning while §F item 5 replaces a second sentence there, and §9
+still defines contract membership by "an edit is coupled when the block cites it or depends on it"
+— the repository-only test §G was rewritten to replace.
 
 ## Pass-20 dispositions — and two of my claims corrected, both verified wrong
 
