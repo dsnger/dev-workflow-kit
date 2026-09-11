@@ -151,7 +151,7 @@ to run again.
 **The four standing duties, classified.** The **derived floor** is a **precondition on closure**:
 it gates closing, discharged by the count of valid logical passes reaching it with the last of
 them clean, or by the zero-finding exit. The **Blocker/Major-resolve duty** is a **precondition
-on closure and on any pass being clean**: Mechanics Severity, scoped to the assigned fix set,
+on closure**: Mechanics Severity, scoped to the assigned fix set,
 states what it demands and **what discharges it — a repair or a validated dismissal — and what a
 dismissal is**, all at that source. **It is discharged per finding and tracked across the cycle,
 never inferred from a later pass.** A findings file establishes the **inventory** of what that
@@ -159,8 +159,17 @@ pass found and not the resolution of anything, so a later pass that does not men
 in-set Blocker or Major says nothing about whether it was repaired or dismissed; reading its
 absence as discharge would let an omission close a cycle. **Closure therefore reads two things,
 not one**: the final pass is clean, *and* no in-set Blocker or Major raised anywhere in this cycle
-is still undischarged. A pass's cleanliness stays a fact about that pass's own findings, which is
-what §5 already says it is. The **hold** a surfaced finding places on closure **participates in the
+is still undischarged.
+
+**The duty is not a second test on whether a pass is clean, and the two are not run together.** A
+pass is clean on its own findings, which is what §5 already says cleanliness is. Stated as the
+case that separates them, because a reader who conflates them decides it wrongly: **pass 1 raises
+an in-set Major; it is neither repaired nor dismissed; pass 2 finds nothing.** Pass 2 **is** clean,
+and if it is at or above the floor the cycle is **eligible** — and the cycle **still cannot
+close**, because the second thing closure reads is unmet while that Major is undischarged. **The
+zero-finding route changes nothing here**: it is a route to eligibility, and eligibility reads the
+duty like every other final-acceptance precondition. What the open Major does *not* do is make
+pass 2 unclean, retroactively or otherwise. The **hold** a surfaced finding places on closure **participates in the
 ordering**: it gates closing while it stands, and is discharged by the answers that surface
 requires. **It attaches to every surfaced finding, whichever suspension surfaced it** — clean
 completion creates none, because it wins before anything is surfaced. **No-clean-credit** — no
@@ -325,7 +334,7 @@ reason §7 gives. Working around any of these would ship two instructions that d
 | 18 | the five-tells pointer | passage (e) | the passage says nothing about what its answer does; one sentence names the stop a suspension and defers to the ordering | addition |
 | 19 | the handed-over severity question | Mechanics · Severity, passage (g) | the paragraph says the demotion/loop-health question is unsettled and mandates a stop; replaced by the answer, which is the (g) text below | replacement |
 | 20 | the unknown-start strict-reading list | passage (i) | the list of what a cycle takes at its strictest omits the suspensions this change ships; it gains **every suspension binding, since unknown starting rules cannot waive an open hold** — the reason carried inline, as prompt-standards item 6 requires of the clause itself | addition |
-| 21 | the `WIP:`-naming warning's closure claim | Mechanics · `baseSha`, C and W — **outside the ten inventoried passages** | "A pre-review snapshot named anything else reads as a real commit and **closes the cycle**, discarding the passes you just accumulated" is an **event-derived closure path** beside the ordering's content-and-precondition-derived one, and the two decide an accidental commit in opposite directions. It becomes: the hook reads such a commit as closing and discards the counted passes, **while the cycle itself stays open until the ordering's closure conditions hold**. The warning keeps its force — the cost of the mistake is the lost pass credit — and stops claiming a closure the rules do not grant | replacement |
+| 21 | the `WIP:`-naming warning's closure claim | Mechanics · `baseSha`, C and W — **outside the ten inventoried passages** | "A pre-review snapshot named anything else reads as a real commit and **closes the cycle**, discarding the passes you just accumulated" is an **event-derived closure path** beside the ordering's content-and-precondition-derived one, and the two decide an accidental commit in opposite directions. It becomes: the hook reads such a commit as closing and discards the counted passes, **while the cycle itself stays open until the ordering's closure conditions hold**. The warning keeps its force — the cost of the mistake is the lost pass credit — and stops claiming a closure the rules do not grant. **The sibling sentence in the profile-change paragraph was checked and needs no edit**: it already says such a commit "reads **to the hook** as the cycle closing", which is the counter observation and claims no closure | replacement |
 | 22 | the one-contract paragraph | Mechanics, the "These records are one contract" paragraph, C and W — **outside the ten inventoried passages** | its coherence stop reaches the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start semantics, and reaches none of this change. Two changes, one contiguous rewrite of the paragraph's opening and its membership: the opening noun broadens from *records* to **the rules and records a cycle runs under**, since what is added is not a record; and the membership gains **the closure ordering together with every source edit it cites or depends on**, stated as that description and **not as a list of item numbers** — the numbering is this spec's working aid, it is not in the shipped text, and a shipped list would have to be re-derived whenever a span merges. **What this is: the same instruction to the agent, over a wider membership.** Not a checker, and none is built. **The plan establishes the membership against the real files** — every edit the block cites or depends on — which is where dependence is decidable | replacement |
 
 **Passage (g)'s replacement is design rather than bookkeeping, so it is stated here in full:**

@@ -60,16 +60,36 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 is product. One is not two, so no mandatory stop. The clearly-stuck exit is not reachable either:
 its first condition needs a plateau and the curve is at a cycle low.
 
-**What changed in the loop's shape, and it is worth naming.** Findings 2 and 4 are the first in
-this cycle where the spec disagrees with **standing §5 text rather than with itself** — the
-Mechanics `WIP:` warning claiming a non-WIP commit "closes the cycle", and the Reader paragraph
-normalizing severity tokens the (g) replacement assumed were raw. Both were invisible while the
-spec was still contradicting itself. That is the boundary work pass 13 predicted, arriving two
-passes after the rollback made room for it.
+**What changed in the loop's shape — and one claim here was withdrawn the same day.** Findings 2
+and 4 disagree with **standing §5 text rather than with the spec itself**: the Mechanics `WIP:`
+warning claiming a non-WIP commit "closes the cycle", and the Reader paragraph normalizing
+severity tokens the (g) replacement assumed were raw.
+
+**Withdrawn: that these were newly visible.** The `WIP:` warning was raised at **pass 15, finding
+2**, which named both sites (C 751–753 and 825–826). The pass-15 revision changed the block's
+prose and **did not add the §4 row**, so pass 16's finding 2 is a **regeneration from an
+incomplete repair of mine**, not boundary work arriving. Pass 16's row 21 closes it, and records
+that the sibling passage needs no edit because it already says "reads **to the hook** as the cycle
+closing". Finding 4 is genuinely first-seen; finding 2 is not, and saying so in the pass report
+was wrong.
+
+**Also withdrawn: "the spec no longer contradicts itself".** Pass 16's own Blocker repair shipped
+a contradiction — the duties paragraph kept the resolve duty as a precondition "on any pass being
+clean" while the sentences after it made cleanliness pass-local. The two decide the case *pass 1
+carries an open Major, pass 2 finds nothing* in opposite directions. Corrected before pass 17: the
+duty is a precondition on **closure** only, and that case is now walked through the ordering in the
+shipped text — pass 2 is clean, the cycle is eligible, and it still cannot close.
 
 **The rollback is holding.** No finding asked for a restored enumeration, no finding hit a stated
 total, and the one new source edit (item 21) cost no count update — which is what removing the
 totals bought.
+
+**What the falling curve does and does not show.** Every count here describes the revision the
+pass **reviewed**, never the repair made after it. Pass 16's five Blocker/Majors do not assess
+their own fix in `c792383`, and the contradiction that fix introduced is the proof: it was found
+by reading, not by the curve. The number to watch next is not the level but **whether pass 17's
+first Blocker comes out of this repair again or reaches something unreviewed** — three passes of a
+flat Blocker count say less than one pass's answer to that.
 
 **Minor 7 and Nit 8 are collected, not repaired as their own round.** Nit 8's number was correct
 and its wording was not: 58% measures the four bookkeeping sections (456 of 785), not "the
