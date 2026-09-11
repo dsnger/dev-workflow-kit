@@ -8,6 +8,20 @@
 > describes was split out of a cycle that is still running, and the successor starts when someone
 > picks it up. The proposal's reasons are in §5.
 
+> **DEFERRED — trigger-gated, Daniel 2026-09-10.** Not withdrawn and not re-scoped; the problem
+> below is real and the story stands as written. What is unbuilt is the premise it rests on.
+> **The two records §5 requires in a closing commit body exist in exactly one commit out of 110**
+> — `7c0d475`, the commit that shipped the rule requiring them. Every earlier commit predates the
+> rule and every later one is mid-cycle. So there is **no second data point on whether the
+> discipline holds at all**, and rules for how a record survives a session, an amend, a squash or
+> a rollback would be built on a record that has been produced once, by its own inventor.
+> **Trigger: two further cycles close and write a conformant provenance line and curve.** If the
+> discipline holds, this story starts with its premise established. If it does not, the answer is
+> a different transport rather than durability rules for a commit body nobody fills in — and that
+> is a cheaper thing to learn before the eight criteria below are spent on it.
+> Checking the trigger is one command:
+> `git log --all --format='%b' | grep -cE 'floor [0-9]+ per '`.
+
 ## 1. Problem statement
 
 **One question runs under every finding this story inherits: does a record survive?** §5 asks an
@@ -36,8 +50,9 @@ legacy cycles that hold no nonce. The closure ordering's own five findings were 
 artifact was carrying two subjects, and only one of them was converging.
 
 **Where the pass-by-pass evidence lives:** `.context/codex-reviews/gate-a-spec-awsf1ec771-resume.md`,
-with the per-pass findings files beside it. That directory is gitignored, so the figures above are
-quoted here rather than only cited — a reader on another machine has no way to open them.
+with the per-pass findings files beside it. That directory was gitignored when these figures were
+quoted, which is why they are quoted rather than only cited; it is tracked from 2026-09-10, so a
+reader on another machine can now open them.
 
 **Parent:** `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`, whose §2
 records the split and whose §4 holds the decisions this story implements.

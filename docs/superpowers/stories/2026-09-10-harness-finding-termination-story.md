@@ -50,8 +50,9 @@ rung harder (prose → lint → type → test)".
 **The concrete miss is measurable in this repository's own cycle.** Gate-A spec cycle nonce
 `awsf1ec771` on the loop-rule consolidation design ran twelve passes without a clean pass.
 Blocker+Major by pass: **20, 15, 10, 11, 15, 13, 9, 8, 12, 17, 14, 14.** The pass-by-pass record is
-`.context/codex-reviews/gate-a-spec-awsf1ec771-resume.md`, which is gitignored — hence the figures
-quoted rather than only cited.
+`.context/codex-reviews/gate-a-spec-awsf1ec771-resume.md`, tracked since 2026-09-10 — the figures
+are quoted here because they were quoted before that path was tracked, and they now cite something
+a reader can open.
 
 **Two mechanisms inside that cycle each produced the same shape of finding for four rounds, and
 each was repaired one instance at a time.** The spec's own verification assert list produced
@@ -76,24 +77,46 @@ move between "absorb another round of this" and "hand the whole cycle to the hum
 that keeps producing the same shape of finding stops consuming rounds while the loop continues on
 everything else.
 
-**Two bounds exist that today do not, and both are mechanical rather than a reading.** Added
-2026-09-10 from the same session that produced the evidence above, on Daniel's question of how a
-project developing this kit avoids blocking itself while using it. The diagnosis that prompted them
-is that the cycle was not slow because of self-application; it was slow because **the loop had no
-ceiling and the artifact had no size limit**, and self-application only multiplied the readings each
-round had to consider.
+**Two bounds exist that today do not. Both were proposed on 2026-09-10 as mandatory mechanisms and
+both were cut back on 2026-09-10 after an independent assessment read the field record against
+them** (`.context/assessment-brief.md`; the reading is in this section). The diagnosis that prompted
+them was that the cycle was slow because **the loop had no ceiling and the artifact had no size
+limit**. The first half survives as a *visibility* gap; the second half does not survive contact
+with the record.
 
-- **A pass ceiling.** §5 fixes a floor and no maximum. The only two ways up and out — the
-  clearly-stuck exit and the two-tell threshold — both require a *reading*, so a cycle that trips
-  neither grinds without anyone being obliged to decide. A ceiling turns that into a mandatory
-  stop-and-surface, the same shape the two-tell rule already has, where the human chooses to split,
-  to accept with stated residuals, or to continue for a named reason. Cycle `awsf1ec771` ran
-  **thirteen** Gate-A spec passes against a floor of 3 and reached no clean pass.
-- **An artifact size limit before the cycle starts.** §5's sizing guidance — "prefer smaller specs
-  with named interfaces and let the plan carry the detail" — is advice with no number, and it was
-  read and not followed. The same spec reached **989 lines**, of which the design was **173**; the
-  remaining **58%** was bookkeeping about the change, and it took roughly half the findings of every
-  pass. A limit checked before the first pass is a `wc -l`, not a judgement.
+Per the AGENTS.md Don't on replacing a decision procedure, what each proposal required and what
+became of it:
+
+- **A pass ceiling — kept as a report line, dropped as a stop.** *Kept:* the gap it named is real
+  and measured. §5 fixes a floor and no maximum, and its two ways out both need a *reading*, so a
+  flat loop can trip nothing: pass 12 of `awsf1ec771` sat at Blocker+Major 14 with **zero of five
+  tells**, invisible to every rule the kit has. Cycle `awsf1ec771` ran **thirteen** Gate-A spec
+  passes against a floor of 3 and reached no clean pass. *Dropped:* the mandatory stop-and-surface,
+  on two grounds. **§5 already has three exits and they fire** — `awsf1ec771` at passes 9 and 10,
+  Plan C at passes 4 and 5 — and the answer was "continue" every time, because a stop hands a
+  question over and ends nothing; a fourth stop asks the same question a fourth time. And **it
+  costs where the loop works**: the `rle` spec cycle ran 34 passes, closed clean, and still returned
+  Blockers at passes 30–32 (`docs/field-reports/2026-08-29-gate-a-rle-cycle-evidence.md`) — a
+  floor+3 ceiling would have interrupted it roughly nine times for no new information. *What ships
+  instead:* the pass report already carries the floor and the trend; it also carries **passes run
+  against the derived floor**, as a number. That makes the flat loop visible, obliges no new
+  reading, and composes with nothing.
+- **An artifact size limit — replaced by a restatement prohibition.** *Kept:* the observation that
+  an oversized artifact must be dealt with before pass 1 rather than diagnosed after it, and both
+  measurements behind it. The `awsf1ec771` spec reached **989 lines** of which the design was
+  **173**; cutting it to 532 (design 192) took Blocker+Major from 14 to 10, and the `rle` spec cut
+  from 604 to 332 lines took it from 28 to 12. *Dropped:* the line count as the test. **C1
+  falsifies it.** That plan was nine sentences in eight replacements — about as small as a plan of
+  this kind gets — and its curve rose anyway (Blocker+Major 8, 8, 10) until it stopped on two
+  tells; the field record draws the conclusion itself: "the cost is not carried by the plan's
+  **size**" (`docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md`). A line limit would pass a
+  200-line artifact made entirely of restatement and split a 600-line one made entirely of design.
+  *What ships instead:* the rule states what both successful cuts actually removed — **an artifact
+  quotes no text it does not change, and restates no rule its own repo already states.** That is
+  the one generator every field report names independently: "the remedy is never a better summary";
+  "a plan that restates a protocol its own repo already governs creates a second copy that drifts,
+  and Gate A will review the copy instead of the work"; "the block restates rules their own
+  paragraphs still own". Checkable by reading, before pass 1.
 
 **A third bound already exists in §5 and was simply not honoured**, which is worth recording because
 it needed no new rule: the instruction to settle mechanically what a parser can decide before
@@ -133,17 +156,20 @@ run again, and roughly a quarter of the later passes' findings were things it de
 - [ ] **Per-mechanism termination and the existing five tells do not duplicate or contradict each
       other.** Both copies say which applies when both would fire, and neither weakens the two-tell
       mandatory stop.
-- [ ] **A cycle cannot run unbounded without a human deciding.** A ceiling exists, it is stated as a
-      number derived the way the floor is, and reaching it without a clean pass is a mandatory
-      stop-and-surface naming the options. Checkable by reading: a pass count alone decides it, with
-      no reading of a curve or a cluster.
-- [ ] **An oversized artifact is stopped before the cycle starts, not diagnosed after it.** A stated
-      limit applies before pass 1, it is checkable by counting lines, and the shipped text says what
-      an over-limit artifact does instead — split, or move detail to the plan behind a named
-      interface.
-- [ ] **The two bounds and the existing exits compose without a fourth reading.** For every state
-      where a bound and an exit could both apply, the shipped text says which governs and why, or
-      names the pair as unable to co-occur.
+- [ ] **A loop that is going nowhere is visible without anyone reading a curve.** Every pass report
+      states the passes run against the derived floor, as a number, from pass 1 onward. Falsifiable
+      by reading a report: the number is there or it is not. **It creates no stop and no exit**, so
+      the shipped text adds no rule about how it ranks against the three that exist — a criterion
+      that demanded one would rebuild the lattice this change exists to avoid.
+- [ ] **An oversized artifact is stopped before the cycle starts, not diagnosed after it** — and the
+      test is restatement, not length. The shipped text says an artifact quotes no text it does not
+      change and restates no rule its own repo already states, and says what an offending artifact
+      does instead: delete the restatement and cite, or move the detail to the plan behind a named
+      interface. Falsifiable by reading one artifact against the rules it cites. **No line count
+      appears**, because C1 converged worse at nine sentences than the `rle` spec did at 332 lines.
+- [ ] **Neither bound adds a reading to the loop.** The visibility line is reported and never
+      evaluated; the restatement rule applies before pass 1 and is spent by then. The shipped text
+      states both facts, so no reader looks for a composition rule against the existing exits.
 - [ ] **Every condition of the replaced prose is accounted for**, each marked kept, moved or
       deliberately dropped, per the AGENTS.md Don't — and **the two prompt copies stay in parity**
       on every rule this story changes, deliberate wording differences stated as such.
