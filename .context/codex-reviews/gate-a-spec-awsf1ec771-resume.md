@@ -39,7 +39,54 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 | 13 | 78e5f97 | 16 | 2 | 8 | yes | **the loop turned: B+M 14 → 10, Majors 13 → 8**; session 01a08c98-b6cd-7bc3-9556-8f1c87491031 |
 | 14 | c06dd69 | 16→**10** | 2→**1** | 8→**5** | yes | spec byte-identical to 0168f88 (532 lines); **lowest B+M of the cycle, 6**; **SCOPE STOP surfaced on finding 6** (partial-adoption guard = a 21st edit, outside the twenty); session 01a08f70-6d1e-7cf1-baa3-6df3cc59bc32 |
-| 15 | (pending) | — | — | — | not run | next action. All 10 pass-14 findings applied; spec 532 → 578 lines, §4 now 22 edits |
+| 15 | 17cf2e9 | 10→**12** | 1→**1** | 5→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 6→8. **Six of twelve regenerate from pass 14's own repairs** (3, 4, 6, 7, 10, 11). All 12 held open; session 01a08fb2-6e8e-73d0-9d2b-8fb92d1571dd |
+| 16 | — | — | — | — | not run | blocked on the two-tell answer |
+
+## Pass-15 three-line report — MANDATORY TWO-TELL STOP
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh at this pass from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, profiled,
+level 2.
+
+- **Trend:** findings …, 21, 16, 10, **12**. Blockers …, 1, 2, 1, **1**. Majors …, 13, 8, 5, **7**.
+  Blocker+Major 20, 15, 10, 11, 15, 13, 9, 8, 12, 17, 14, 14, 10, 6, **8** — the fall reversed.
+- **Cluster (pass 15):** product 7 of 12 (1, 2, 3, 4, 5, 6, 11); the instrument 3 (§7's presence-only
+  list and two oracle gaps); bookkeeping 2 (the 16/21 double-count, the D1/D6/D8 citation claim).
+- **require↔withdraw:** none under the definition. Finding 11 objects to the health-only hold clause
+  that pass 14 finding 9 **asked for**, which is a later pass questioning an earlier pass's
+  addition — the mirror of the pair's shape, not the shape. Named rather than hidden.
+
+**Tells: two of five — the threshold. Stop-and-surface is mandatory, not discretionary.** The
+finding count rose 10 → 12; the Blocker count failed to fall, 1 → 1. The cluster is product and
+there is no pair, so it is exactly two.
+
+**The clearly-stuck reading is also satisfied on all three conditions**, though it is not needed:
+a plateau across fifteen passes (B+M never zero, never below 6); coverage affirmable after fifteen
+readings; and Blocker/Major findings regenerating from the previous round's own repairs — **six of
+twelve**, nameably: 3 and 4 are the citations pass 14's block edits lean on, 6 and 7 are item 22's
+own mechanics, 10 is the item 16/21 overlap pass 14 created, 11 is the health-hold clause pass 14
+finding 9 required.
+
+**What the pass says about pass 14's repairs, measured.** Three of the four changes made to item 21
+and 22 carry a defect: the coupled set §9 calls "exactly" items 1, 2, 3, 10–14 **omits** items 15,
+16, 17, 19 and 21, which the block also depends on (finding 5); item 22 adds non-records to a
+paragraph opening "These records are one contract" (finding 6); and items 16 and 21 replace
+overlapping spans, double-counting under the spec's own counting unit (finding 10). The
+enumeration in finding 5 was copied from the spec's earlier sentence rather than recomputed — the
+exact defect `AGENTS.md` names as "a rewrite reliably preserves the condition that motivated it
+and silently loses the others".
+
+**One mechanism is on its fourth round, and it is the same one the repeat criterion was brought in
+for.** Findings 1, 3 and 4 are one shape: **the block cites a rule whose source does not say what
+the block claims it says.** Gate-A closure (1), which severity field `c8` reads (3), what
+discharges the resolve duty (4). The same shape produced finding 14 at pass 11, four findings at
+pass 12 and finding 1 at pass 14. Each round repaired the instance and left the mechanism.
+
+**Finding 1 is a real design defect regardless of what is decided**, and it is the one that cannot
+be deferred: the block declares the Gate-B closing amend to be "the closure itself", but a Gate-A
+cycle closes with its spec or plan commit and has no amend path — so a clean Gate-A pass under this
+ordering can neither close nor suspend, which is precisely the state AC 4 exists to forbid. This
+cycle is itself a Gate-A cycle.
 
 ## Pass-14 three-line report — SCOPE STOP, and the loop is converging
 
