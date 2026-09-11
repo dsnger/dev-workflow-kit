@@ -5,7 +5,9 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 - **Kind:** Gate-A spec
 - **Nonce:** awsf1ec771 (drawn 2026-09-10 from /dev/urandom, 10 chars, no collision among open cycles)
-- **Artifact:** `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md`
+- **Artifact:** `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md` from pass 18 on
+  (passes 1–17 reviewed `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md`; the cycle
+  continues under this nonce, the artifact having been restructured rather than replaced)
 - **Branch:** loop-rule-consolidation
 - **Story:** `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md` — profile read from its header at each pass (was high / none / battery+check+verification at pass 1)
 - **Derived floor:** 3 (risk high → level 2; security none → 0; max 2 ≠ 0 → 3)
@@ -42,7 +44,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 15 | 17cf2e9 | 10→**12** | 1→**1** | 5→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 6→8. **Six of twelve regenerate from pass 14's own repairs** (3, 4, 6, 7, 10, 11). All 12 held open; session 01a08fb2-6e8e-73d0-9d2b-8fb92d1571dd |
 | 16 | 5d12884 | 12→**8** | 1→**1** | 7→**4** | yes | **B+M 8→5, lowest of the cycle.** One tell (Blockers flat). Five B/M applied; Minors 7 and Nit 8 collected. Findings 2 and 4 are the spec disagreeing with *standing* §5 text, not with itself; session 01a08fff-fadf-72f2-994d-618048bea473 |
 | 17 | c2d5fe1 | 8→**9** | 1→**1** | 4→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 5→8. **Three findings (4, 5, 7) are one mechanism on its third pass**: a standing §5 sentence the block falsifies that §4 does not name. All 9 held open; session 01a0901b-ecf3-73b2-886c-5b3c7dc63a74 |
-| 18 | — | — | — | — | not run | blocked on the two-tell answer |
+| 18 | — | — | — | — | not run | **two-tell stop ANSWERED 2026-09-11: interrupt the repair mode.** Target text produced (`…-target-text.md`, 476L); design cut 635→385L. Pass 18 aims at the target text |
+
+## TWO-TELL STOP ANSWERED 2026-09-11 — interrupt the repair mode, Gate A stays open
+
+**Neither A nor B as I put them.** The reviewer rejected both and was right on three verified
+points, each checked against the source before acting:
+
+1. **My B was not the clearly-stuck exit.** `CLAUDE.md:242` — "Surfacing does not close the cycle
+   … no pass is credited as clean". "End Gate A and move to Gate B" would have been a change to
+   the review procedure wearing an exit's name.
+2. **The C1 precedent does not show what I said.** `docs/field-reports/2026-08-30-gate-a-rle-plan-cycles.md:127`
+   — the Gate-B cycle that received the relocated work "closed as not converged … on the
+   clearly-stuck exit, with no clean pass and none claimed". It records a decision to relocate,
+   never a convergence. I cited it as a success; that is the overclaim `AGENTS.md` names, in my
+   own report.
+3. **My diagnosis was too broad.** "A spec cannot determine the affected sites" is false — the
+   standing text is on disk and greppable. What a spec cannot do is keep **four descriptions of a
+   future text** in agreement while all four are being revised: the block, the edit table, the
+   source sentences and the rationales. That is the actual generator.
+
+**What was done instead.** One **non-active target-text** file, `…-target-text.md`, carrying the
+§5 passages **as they will read** — 476 lines, marked NEW / REPLACED / CARRIED per section. The
+design spec stops re-narrating them: 635 → 385 lines, keeping the settled inputs, the passage map,
+parity, verification, invariants and what moved. Four descriptions become one text plus its
+reasons.
+
+**All nine pass-17 findings resolved in the target text**, none deferred and none renamed a
+residual:
+- **1 (Blocker)** Gate-A closure: a Gate-A cycle closes on the author's recorded acceptance of the
+  revision the clean pass reviewed — a commit that ordinarily already exists — and **no new
+  revision is made to close one**, a new revision being one no pass has reviewed.
+- **2** the block's opening now names the six things it owns and reserves citation for the rest.
+- **3** eligibility is defined on its own (clean at or above floor, or zero-finding) and closure is
+  eligibility plus preconditions plus the closing act; an eligible pass with an unmet precondition
+  lands on the third branch, which the branch now says.
+- **4, 5, 7** the three standing sentences the block falsifies — `b16`, the Gate-B coverage
+  instruction, the curve's Majors rationale — are written out in §F.
+- **6** the "counts exactly as it counts for the pass" claim is gone; the two counts are meant to
+  differ wherever the ceiling demotes.
+- **8** §G carries a **semantic** membership test a downstream reader can apply, replacing "every
+  source edit it cites or depends on", which named an edit set existing only in this repository.
+- **9** the clearly-stuck reading surfaces the current pass's live findings only; discharged
+  predecessors are history it consults.
+
+**Gate A is not closed and is not claimed closed.** It re-aims at the target text with these
+findings as its basis, the rules stay unactivated, and Gate B reviews the implementation diff
+later. Pass 18 is the next action.
 
 ## Pass-17 three-line report — MANDATORY TWO-TELL STOP
 
