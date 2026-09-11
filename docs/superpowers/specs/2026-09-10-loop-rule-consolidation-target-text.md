@@ -25,7 +25,9 @@ this file was written in. Gate A stays open and is re-aimed at this text, with p
 findings as the basis. The rules are not activated by this file. Gate B reviews the real
 implementation diff later, and this file is not that diff.
 
-**How to read a section.** Each is marked **NEW**, **REPLACED** or **CARRIED**. A CARRIED passage
+**How to read a section.** Sections **A**–**H** carry proposed text and each is marked **NEW** or
+**REPLACED**; a passage reproduced unchanged is labelled CARRIED where one appears. **§I is not
+proposed text** — it is this file's own metadata and ships nowhere. A CARRIED passage
 is reproduced from the current state unchanged, because the block cites it and a reader has to see
 what it says; it is here to be read, not to be edited. Both prompt copies take every NEW and
 REPLACED section **byte-identical**.
@@ -100,15 +102,21 @@ gates it. **A commit the hook reads as cycle-closing is a separate matter**: a n
 mid-cycle makes the hook read the cycle as closed and discards the passes counted so far, which
 is an observation about the counter — the cycle itself stays open until the conditions above
 hold, so an accidental commit destroys the pass credit and closes nothing. A plateau or tells on
-an eligible pass go into the closing report and never block it, because reporting "will not
-converge" on a converged loop is a false report. **No other pass outcome makes a cycle eligible
-to close**, because every other pass leaves a required repair, a hold or a question outstanding —
-and closing over any of those is the failure this ordering exists to prevent. The one termination
+**the pass that closes** go into the closing report and never block it, because reporting "will
+not converge" on a converged loop is a false report; on an eligible pass that does **not** close
+they go into that pass's ordinary report, there being no closing report to carry them. **No other pass outcome makes a cycle eligible
+to close**, because every other pass either leaves a required repair, a hold or a question
+outstanding **or has not reached the floor** — and closing over any of those is the failure this
+ordering exists to prevent. The floor is named separately because a below-floor pass whose only
+findings are Minors leaves nothing outstanding and is still not eligible. The one termination
 that is not a pass outcome is the Gate-B triviality skip, which runs no passes and is outside
 this ordering.
 
-**Second, only a pass that is not a clean completion can suspend** — that order is what makes
-"clean completion outranks the two-tell stop" executable rather than asserted. Three suspensions,
+**Second, only a pass that is not a clean completion can suspend — and *clean completion* here
+means the whole first branch, eligibility included.** So a clean pass **below** the floor is not
+a clean completion and can suspend, while an **eligible** pass cannot, whatever its preconditions
+do. That is what makes "clean completion outranks the two-tell stop" executable rather than
+asserted, and cleanliness alone never decides it. Three suspensions,
 by the names their paragraphs use and read by those paragraphs: the **scope stop**, raised by
 either trigger above — a **membership stop** by the first, a **question stop** by the second; the
 **clearly-stuck exit**; and the **two-tell stop**. A suspension waives nothing. Any non-empty set
@@ -164,7 +172,10 @@ on until it is answered. The **clearly-stuck reading surfaces findings** — **t
 pass being read that satisfy its regeneration condition, and only those**; earlier members of a
 regeneration chain that were repaired or dismissed are history the reading consults and never
 findings it re-surfaces, so no discharged finding takes a second hold. Each surfaced finding takes
-a hold like any other. **Where one finding is surfaced by both, it carries two hold components and
+a hold like any other. **A re-raised valid dismissal stays discharged for the resolve duty** — the
+dismissal was the resolution and a reviewer repeating the finding does not undo it, so no second
+dismissal is owed — and what the recurrence creates is the **clearly-stuck hold alone**, ended by
+that reading's continue-or-stop answer. **Where one finding is surfaced by both, it carries two hold components and
 each is discharged by its own answer, which is what keeps D4 and D5 exact**: the **membership**
 component ends on the membership answer in either direction, a decline releasing it as **D5**
 requires; the **clearly-stuck** component ends on the reading's continue-or-stop answer. Neither
@@ -219,9 +230,11 @@ that stop's triggers are the clean predicate's own second half, so a pass raisin
 and a zero-finding pass and any suspension, since it has nothing to surface, nothing regenerating,
 no cluster and no require↔withdraw pair. **Clean completion and the clearly-stuck exit can**, and
 the overlap is admitted rather than argued away: the two read different severity fields, as
-Mechanics · Severity sets out, so an **in-set** Blocker or Major the ceiling demotes below Major,
-or an **out-of-set** one this cycle has declined, can regenerate across passes on a pass that is
-clean. **The order decides it and no new rule is needed.** The clearly-stuck paragraph's own
+Mechanics · Severity sets out, so an **in-set** Blocker or Major the ceiling demotes below Major can regenerate across passes on
+a pass that is clean. **A declined finding is not a route into that reading**: the third condition
+admits regeneration across repair attempts and a re-raised validated dismissal, and a decline is
+neither — it is the user's decision that a *true* finding stays outside the set, which **D7** binds
+for the cycle. **The order decides it and no new rule is needed.** The clearly-stuck paragraph's own
 precedence sentence is stated here rather than there, because precedence is evaluation order and
 this paragraph is where evaluation order is stated once; its opening words point back to that
 paragraph, which is where the reading itself lives. That third condition is what makes a plateau
@@ -235,8 +248,10 @@ false report. Below the floor the pass **suspends**, clean completion having not
 
 ## B. Passage (b) — what a loop absorbs — REPLACED, in part
 
-Six sentences change — `b7`, `b8`, `b11`, `b12`, `b13`, `b16` — and the rest of the paragraph is
-carried. The changed sentences, final:
+This passage's replacements are split across two sections, so neither is the whole list: **`b7`,
+`b8`, `b11`, `b13` and `b16` are here**, and **`b3`, `b12` and `b17`–`b18` are in §H** with the
+other site-by-site replacements. Every other sentence in the paragraph is carried. The five here,
+final:
 
 **`b7`, the assigned fix set.**
 ```
@@ -266,12 +281,6 @@ whether the set now includes it.
 *Why:* unqualified, this and the clean predicate decide a re-raised declined finding in opposite
 directions.
 
-**`b12`.** Gains, at its end:
-```
-Any answer ends the hold; **what the pass does next is the closure ordering's**, not this
-sentence's.
-```
-
 **`b13`, the question trigger.** *New* is qualified:
 ```
 …opens a **new structural or contract question** — new meaning not already answered in this cycle,
@@ -291,8 +300,8 @@ nobody placed in or out of the set leaves its membership decided by default.
 *Why (pass 17 finding 4):* without it an agent follows the surviving source, asks only the
 structural question, and absorbs out-of-set work silently.
 
-**Carried unchanged:** the paragraph's opening, `b3` becomes a pure pointer (below), and every
-sentence not named here.
+**Carried unchanged:** the paragraph's opening and every sentence named in neither this section
+nor §H.
 
 ---
 
@@ -356,8 +365,9 @@ nothing, and continue or stop is answered there.
   findings file — case-folded, and a non-empty unrecognized token read as `MAJOR` — never the raw
   token, so a finding written `IMPORTANT` enters the curve as a Major. **The ceiling is applied
   after that and only to what the cycle owes**: cleanliness and the resolve duty read the
-  effective severity, so the same finding can be a Major to the curve and a Minor to the fix set,
-  and that difference is the point rather than a discrepancy. The line is **what the cycle owes
+  effective severity, so the same finding can be a Major to the curve and a Minor **at effective
+  severity**, and that difference is the point rather than a discrepancy. It stays in the fix set
+  either way; the ceiling moves what the cycle owes for it and never whether it is in. The line is **what the cycle owes
   versus what it observes about itself**, which is why no list of readings has to be kept complete
   here. Two reasons for the split. The curve must stay derivable from the findings files alone —
   the finding total counts finding lines and the Blocker and Major series count the lines whose
@@ -420,8 +430,11 @@ semantics **and the closure ordering together with every rule it reads** depend 
 and the requirement is that the adopted definitions **agree**, not merely that all of them are
 present. **Membership is decided by a test a reader can apply to the text in front of them, with
 no list to consult: a live rule belongs to this contract when changing it would change an input
-the closure ordering reads, which branch a pass takes, what a hold is or what discharges it, or
-whether a cycle may close.** A curve without a cycle field cannot be attributed, a slot rule
+the closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
+whether a cycle may close, or the production, identity or transport of any record this section
+obliges a cycle to write.** The last clause is why the squash carry belongs: it moves no pass and
+decides no branch, and a record that does not survive the merge is a record the cycle did not
+produce. A curve without a cycle field cannot be attributed, a slot rule
 without a nonce has nothing to key on, a carry rule naming records a project does not produce is
 inert, and a clean predicate without the fix-set boundary it reads decides membership by accident.
 **A project whose text carries some of them and not others, or carries all of them in versions
@@ -439,29 +452,101 @@ rather than doing the noticing.
 
 ---
 
-## H. The remaining source edits — REPLACED, and each is one sentence
+## H. The remaining replacements, written out — REPLACED
 
-- **the gate-prompt template's clean sentence** — a `NO FINDINGS` file is renamed a **clean
-  findings file**, which is what it always described.
-- **the Gate-A clean-signal sentence** — the `NO FINDINGS` signal becomes what lets a pass be read
-  as clean without inspecting it, rather than the only route to clean; a pass carrying Minors
-  alone is clean and could never produce that file.
-- **the lens paragraph's unchanged-list** — scoped to **the lens sets**, since the ordering
-  falsifies its claim that the Blocker/Major filter and the clean-final-pass rule are unchanged.
-- **the Gate-A cadence** — "validate, revise, re-run" becomes conditional on a repair being
-  required, since unconditional it tells a Minor-only pass to manufacture the repair the severity
-  rule forbids.
-- **`a13`** — "Every other rule stated here about how a cycle closes stands as written, and none
-  of them is restated" is scoped to that paragraph, which is what it was written to police;
-  categorically false once the ordering exists. *(It wraps across three lines in each copy.)*
-- **`a16`** — "fix Blocker/Major after each" points at Mechanics · Severity instead of restating
-  an unscoped version.
-- **`a17`–`a19`** — the floor paragraph's closure sentences are trimmed to point at the ordering.
-- **`b3`** — becomes a pure pointer to Mechanics · Severity, stopping its restatement of the four
-  severity actions; W's pointer also changes target to match C.
-- **`b17`–`b18`** — they name their stop a suspension and defer to the ordering.
-- **the unknown-start strict-reading list** — gains **every suspension binding, since unknown
-  starting rules cannot waive an open hold**, with the reason carried inline.
+Each is the final wording. Nothing here is a paraphrase; the plan installs these strings.
+
+**`b3`** — Mechanics is pointed at, and the four severity actions are no longer restated beside it.
+Both copies take C's wording; W's "the severity rule" pointer was written on the inventory's
+reasoning that W has no Mechanics section, which is false.
+```
+keep it here rather than handing it back, then act on it by its severity exactly as
+Mechanics · Severity says.
+```
+
+**`b12`** — the immediate-resumption command is **replaced**, not appended to. It is the only
+sentence in the standing text that resumes a loop on one answer, and the ordering resumes on all
+of them.
+```
+and the membership answer ends that finding's membership hold; **what the pass does next is the
+closure ordering's**, which resumes only when every answer outstanding on that surface has been
+given.
+```
+
+**`b17`–`b18`** — the stop is named a suspension and defers to the ordering rather than restating
+what ends it.
+```
+Stopping this way is **not an exit from the gate**: it is a **suspension** in the closure
+ordering's sense, the floor, the Blocker/Major filter and the clean-final-pass rule all stand,
+and what the answer does is stated there — what the stop prevents is a loop committing you to a
+design you never chose, which is a different failure from an unfinished review.
+```
+
+**`c18` and the surfacing sentence** — the two clauses findings 7 and 8 name. The resolve and hold
+duties are kept; the blanket no-clean-credit and the one-answer resumption go, because the
+ordering decides both and decided them differently.
+```
+**Surfacing does not close the cycle, and that is what makes this reachable.** You surface *with
+the finding still open* — the resolve rule is not waived, the hold stands until its answers are
+given, and **what the answer does is the closure ordering's**: continue resumes, stop parks.
+**A pass is credited clean or not on its own findings**, as that ordering defines cleanliness;
+surfacing a finding that carries a scope-stop trigger is what withholds the credit, and no
+credit is withheld for surfacing alone. Reading this as "stop instead of fixing" would put the
+exit in competition with the rule that every Blocker and Major resolves, and then nothing could
+satisfy both.
+```
+
+**`a13`** — scoped to its own paragraph, which is what it was written to police. *(It wraps
+across three lines in each copy: C 129–131, W 336–338.)*
+```
+Every other rule stated **in this paragraph** about how a cycle closes stands as written, and
+none of them is restated — a summary is where their conditions would get dropped.
+```
+
+**`a16`** — points at Mechanics instead of carrying an unscoped copy.
+```
+Open a TodoWrite "Codex pass N" per pass; resolve Blocker/Major after each as
+Mechanics · Severity requires.
+```
+
+**`a17`–`a19`** — the floor paragraph stops stating closure and the early exit, and points at the
+ordering that states them once. Three sentences become one.
+```
+What a clean final pass and the zero-finding early exit mean for closing is stated once in the
+closure ordering; this paragraph states the floor and nothing else. Codex is advisory — validate
+before applying; dismissed finding → one-line why.
+```
+
+**The Gate-A clean-signal sentence** — the signal stops being the only route to clean.
+```
+Ask for one line per finding and a literal `NO FINDINGS` when a pass found none — that explicit
+signal is what lets a pass be read as clean without inspecting it, and a pass carrying only
+Minors is clean too and could never produce that file:
+```
+
+**The gate-prompt template's clean sentence**, in the block both gates paste.
+```
+A **clean findings file** is the single body line `NO FINDINGS` with `END OF FINDINGS (0 total)`.
+```
+
+**The Gate-A cadence** — revision becomes conditional, since unconditional it tells a Minor-only
+pass to manufacture the repair the severity rule forbids.
+```
+Each pass: validate, revise **where a repair is required**, re-run.
+```
+
+**The lens paragraph's unchanged-list** — scoped to the lens sets, which is what that paragraph is
+about.
+```
+Lenses change what a pass asks, never how many a cycle owes: **the lens sets** leave every other
+rule in this section alone.
+```
+
+**The unknown-start strict-reading list** — gains the suspensions, reason inline.
+```
+…the curve duty owed, the nonce duties at their strictest, and **every suspension binding, since
+starting rules that cannot be established cannot be read as having waived an open hold**.
+```
 
 ---
 

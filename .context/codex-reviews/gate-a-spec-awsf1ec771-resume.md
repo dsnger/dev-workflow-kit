@@ -44,7 +44,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 15 | 17cf2e9 | 10→**12** | 1→**1** | 5→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 6→8. **Six of twelve regenerate from pass 14's own repairs** (3, 4, 6, 7, 10, 11). All 12 held open; session 01a08fb2-6e8e-73d0-9d2b-8fb92d1571dd |
 | 16 | 5d12884 | 12→**8** | 1→**1** | 7→**4** | yes | **B+M 8→5, lowest of the cycle.** One tell (Blockers flat). Five B/M applied; Minors 7 and Nit 8 collected. Findings 2 and 4 are the spec disagreeing with *standing* §5 text, not with itself; session 01a08fff-fadf-72f2-994d-618048bea473 |
 | 17 | c2d5fe1 | 8→**9** | 1→**1** | 4→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 5→8. **Three findings (4, 5, 7) are one mechanism on its third pass**: a standing §5 sentence the block falsifies that §4 does not name. All 9 held open; session 01a0901b-ecf3-73b2-886c-5b3c7dc63a74 |
-| 18 | — | — | — | — | not run | **two-tell stop ANSWERED 2026-09-11: interrupt the repair mode.** Target text produced (`…-target-text.md`, 476L); design cut 635→385L. Pass 18 aims at the target text |
+| 18 | 96c3611 | 9→**15** | 1→**0** | 7→**12** | yes | **first pass on the target text. ZERO BLOCKERS, first since pass 7.** Finding 1 names the restructure as half-done: §H is still paraphrase, not text. Findings 6,7,8 name three standing sentences by line number — the 15/16/17 mechanism, now findable; session 01a09068-de4a-7071-97a7-82cc4774544f |
+| 19 | — | — | — | — | not run | next action, after §H is written out as literal text |
+
+## Pass-18 three-line report — first pass on the target text
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 12, 8, 9, **15**. Blockers …, 1, 1, 1, **0**. Majors …, 7, 4, 7, **12**.
+  Blocker+Major …, 14, 10, 6, 8, 5, 8, **12**.
+- **Cluster (pass 18):** product 11 of 15; **prose about the artifact 4** — the opening's two
+  claims, §H's "one sentence", and the design spec disagreeing with the target text. Instrument 0.
+- **require↔withdraw:** none. Finding 1 asks for *more literal text*, which is the opposite of
+  asking the removed enumeration back.
+
+**Tells: one of five** — the finding count rose 9 → 15. **The Blocker count fell to zero**, the
+cluster is product, no pair. One is not two: no mandatory stop.
+
+**Zero Blockers, first since pass 7.** Read narrowly: no path the reviewer traced leaves a cycle
+unable to close and unable to suspend. That is the one thing the ordering exists to prevent and
+it is the first pass in eleven where nothing hit it.
+
+**Why the count rose, and it is not the usual reason.** The artifact changed shape. Findings 6, 7
+and 8 each name **a specific standing sentence by file and line** — `b12`'s immediate-resumption
+clause (C 205–208), `c18`'s no-clean-credit and the surfacing sentence's "the loop resumes on
+whatever the user decides" (C 243–244). That is the same mechanism that produced one finding at
+pass 15, one at 16 and three at 17 — but those were "§4 does not name a passage", and these are
+"this concrete sentence and that concrete sentence disagree, here are both". **The restructure
+made the mechanism decidable rather than recurring**, which is what it was for.
+
+**And finding 1 says the restructure is half-done, correctly.** §§A–G are concrete text and drew
+concrete findings. **§H is still paraphrase** — "is renamed", "becomes conditional", "are
+trimmed" — so the reviewer cannot read the future prompt there, and finding 2 catches the
+consequence: §B says six sentences change and lists `b3` as carried, while §H replaces `b3` and
+`b17`–`b18`. Two sections of one artifact giving incompatible instructions. **The remedy is to
+finish the job in the direction already chosen**, not to reconsider it.
+
+**The rest cluster into wording that the eligibility split left behind** (4, 5, 13 — the
+suspension gate's predicate, the exhaustive reason for ineligibility, where a blocked pass's
+health observations go), **three semantic questions** (9 the declined-finding overlap example, 10
+"a Minor to the fix set" conflating severity with membership, 14 whether a re-raised valid
+dismissal stays discharged), **one on §G's test** (11 — it excludes the squash-carry rule, which
+the same paragraph names as a member), and **one on the design spec** (12 — its ownership
+sentence still says the block is authoritative only for order and closure).
+
+**Minors 3 and 13 and Nit 15 are collected**, and 3 and 15 sit inside sections being rewritten
+anyway, so they cost no round of their own.
 
 ## TWO-TELL STOP ANSWERED 2026-09-11 — interrupt the repair mode, Gate A stays open
 

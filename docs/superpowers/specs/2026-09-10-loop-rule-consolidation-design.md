@@ -57,9 +57,13 @@ establish the **inventory** of findings, not their resolutions.
 What the table does not settle, this spec decides in the section that uses it: the evaluation
 order and the file set each predicate reads; the duties' classification; which stop each of the
 scope stop's two triggers raises and what each answer does; what a clearly-stuck or two-tell
-answer produces; and the raw-severity rule for the health measures. **It defines no trigger,
-duty or severity rule of its own** — each keeps its one definition where that definition already
-lives, and where one had to change to agree with the ordering it changed **at its source**.
+answer produces; and the raw-severity rule for the health measures. **The block owns exactly six
+things** — the evaluation order, closure and its eligibility, the hold and what discharges it,
+the composition of several suspensions, the pairs that cannot co-occur, and the clearly-stuck
+precedence sentence as a stated exception — **and defines no trigger, no severity rule and no
+closure precondition of its own**; each of those keeps its one definition where it already lives,
+and where one had to change to agree with the ordering it changed **at its source**. The target
+text's §A states the same six-part boundary in its own opening, and the two must not drift.
 
 **The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
 the edits; **no total is stated here or there**, because the unit — one contiguous replacement at
