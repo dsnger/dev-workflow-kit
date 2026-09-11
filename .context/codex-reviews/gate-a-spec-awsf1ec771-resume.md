@@ -606,35 +606,55 @@ after dismissal, not a withdrawal). One tell is not two — no mandatory stop.
 
 ## Prompt
 
-**`.context/gate-a-spec-prompt.md`** — durable copy, substitute `__SHA__` and `__P__`. It carries
-the pre-call checklist and the three "deliberately not here" blocks that have to stay in it, or the
-reviewer re-raises deferred material. The scratchpad copy is gone with its session.
+**`.context/gate-a-spec-prompt.md`** — durable copy, substitute `__SHA__` and `__P__`. **Rewritten
+at pass 18 for the new artifact.** It carries the pre-call checklist and the "deliberately not
+here" blocks, which must stay in or the reviewer re-raises deferred material.
+**It is gitignored** (`.context/*` admits only `codex-gate.on` and `codex-reviews/`), so it
+survives a context clear on this machine and not a fresh clone. This resume note and every pass
+file are tracked from 2026-09-10 and do survive.
 
-## STATE AT HANDOFF — 2026-09-10 evening
+## STATE AT HANDOFF — 2026-09-11 midday
 
-- **HEAD `0168f88`** on `loop-rule-consolidation`, tree clean. Spec **532 lines** (was 785).
-- **Pass 13's findings are all dispositioned and applied**; dispositions in
-  `gate-a-spec-awsf1ec771-pass-13-dispositions.md`. Findings 15, 16, 13, 14 dissolved with the cut;
-  4, 5, 12 became rows in the new §4 table; 6 became one line in §6; 10 was absorbed by §7's
-  narrowing; the rest fixed in §3.
-- **The next action is Gate-A spec pass 14** against `0168f88`. Nothing else is pending.
-- **The cut, measured:** the design is now **192 of 532 lines, 36%**, against 173 of 785, 22%.
-  §5 accounting 216 → 33, §7 verification 119 → 67, §4 quoting 83 → 54, §6 parity 38 → 18. The
-  bookkeeping did not vanish; the plan carries it, beside the edits, where it is checkable against
-  real files.
-- **Transition walk done and clean** — every state the spec names reaches close or park, and no
-  state returns itself with its input consumed. That was pass 13 finding 2's defect class.
+- **HEAD `ef9a504`** on `loop-rule-consolidation`, tree clean, 18 passes run, none clean.
+- **THE ARTIFACT CHANGED AT PASS 18.** Passes 1–17 reviewed the design spec; from pass 18 the
+  artifact is `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md` (562 lines)
+  and the design spec (389 lines) is an input. Same nonce: restructured, not replaced.
+- **Pass 18's fifteen findings are all dispositioned and applied**, dispositions implicit in commit
+  `ef9a504`'s body, which names each by number. No Minor or Nit got a round of its own.
+- **Next action: Gate-A spec pass 19** against `ef9a504`. Nothing else is pending.
+- **Where the loop stands.** B+M by pass: 20, 15, 10, 11, 15, 13, 9, 8, 12, 17, 14, 14, 10, 6, 8,
+  5, 8, 12. Blockers: 5, 2, 4, 1, 0, 4, 0, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1, **0**. Pass 18 is the
+  first zero-Blocker pass since pass 7 and the first pass on a fully concrete artifact — §H was
+  still paraphrase when pass 18 read it, so pass 19 is the first pass over text that is complete.
+- **Three structural interventions moved this cycle, and nothing else did:** the split at pass 10,
+  the cut at pass 13, the target-text restructure at pass 17/18. Ordinary repair rounds never did.
 
 ## Next — resume procedure, in order
 
-1. `git -C /Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit log --oneline -5` and `git status --short`. Branch is `loop-rule-consolidation`, tree must be clean.
+1. `git -C /Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit log --oneline -5` and `git status --short`. Branch `loop-rule-consolidation`, tree must be clean.
 2. Read this file's Passes table and the newest three-line report for where the loop stands.
-3. `python3 .context/spec-precheck.py docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md` — exit 0, and eyeball its COUNT list against the spec's enumerations.
-4. `rm -f .context/codex-reviews/gate-a-spec-awsf1ec771-pass-<N>.md`, confirm gone.
+3. `python3 .context/spec-precheck.py docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md` — exit 0 — and again on the design spec. Eyeball each COUNT note against its enumeration; two false counts have been caught this way before a pass was spent on them.
+4. `rm -f .context/codex-reviews/gate-a-spec-awsf1ec771-pass-<N>.md`, confirm gone. **Only paths carrying this nonce.**
 5. Fill `__SHA__` (current HEAD, short) and `__P__` into `.context/gate-a-spec-prompt.md`, call `mcp__codex__exec` with `workingDirectory` = repo root.
-6. Validate the file: last line exactly `END OF FINDINGS (<n> total)`, exactly `<n>` finding lines, nothing else. Anything else is an INCOMPLETE pass — do not count it, do not act on the partial list.
-7. Disposition every finding, then have a fork revise. Report the three lines to Daniel (trend, cluster, require↔withdraw) — the duty is active from pass 4 and every pass owes it, plus the floor line (floor 3, risk high, security none, read from the story header).
-8. Append a row and a report section here before running the next pass.
+6. Validate: last line exactly `END OF FINDINGS (<n> total)`, exactly `<n>` finding lines, nothing else. Anything else is INCOMPLETE — do not count it, do not act on the partial list.
+7. Disposition every finding. Report to Daniel: the floor line (floor 3, risk high, security none, read from the story header) **and** the three lines (trend, cluster, require↔withdraw) — owed by every pass from 4 on.
+8. Append a row and a report section here **before** running the next pass.
+
+## How this cycle is being run — read before deciding anything
+
+- **Daniel routes findings through an external reviewer**, who has corrected the agent's
+  recommendation at every stop since pass 14 and been right each time. Expect a recommendation to
+  be revised rather than executed, and **state options with their downsides rather than arguing
+  for one**.
+- **Verify every citation before acting on it.** Three of the agent's own claims were wrong and
+  caught this way: that the clearly-stuck exit permits moving to Gate B (`CLAUDE.md:242` says
+  surfacing closes nothing), that the C1 precedent shows convergence (the field report says that
+  cycle closed *not converged*), and that a case-sensitive grep had found every stale reference.
+- **Minor and Nit never get a repair round of their own.** They are collected; fixing one inside a
+  sentence already being rewritten is not a round.
+- **No known behavioural contradiction may be renamed a residual.**
+- **No new mechanism, no checker, no record-durability work** — all three excluded by name.
+
 
 ## Standing practices adopted mid-cycle — NONE of these is a shipped rule
 
@@ -664,7 +684,9 @@ nothing checks them. They are candidates captured in
 | pass 10 two-tell stop | **Split.** Record durability moves to `docs/superpowers/stories/2026-09-10-record-durability-story.md`; this story keeps the ordering, the duty classification and the severity/health answer. |
 | mid-loop, from another project | Anchor the repeat criterion in the kit; captured as the harness-finding-termination story. |
 | after pass 13 | **Cut the spec to the design**; the plan carries the bookkeeping. Precheck runs before every pass. |
-| pass 14 scope stop | **B — accept, bounded.** Extend the existing coherence *instruction* to the closure block and its coupled edits (§4 item 22). No checker, no new mechanism, no record-durability work. |
+| pass 14 scope stop | **B — accept, bounded.** Extend the existing coherence *instruction* to the closure block and its coupled edits (now the one-contract paragraph, target text §G). No checker, no new mechanism, no record-durability work. |
+| pass 15 | **Bounded rollback**, not another twelve-repair round: totals, item-number lists and enumerated precondition lists removed; behaviour stays decided in the design. |
+| pass 17 two-tell stop | **Interrupt the repair mode.** Produce a non-active **target-text** version; Gate A stays open, no transition to Gate B, no clearly-stuck close claimed. |
 
 ## For the execution phase, not needed yet
 
@@ -677,7 +699,8 @@ intention. One command; not needed while only the spec is being written.
 
 | What | Path |
 |---|---|
-| spec under review | `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md` |
+| **artifact under review (from pass 18)** | `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md` |
+| design — decisions and reasons, an input | `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md` |
 | condition inventory (135 ids, committed) | `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md` |
 | this story | `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md` |
 | successor, profile unconfirmed | `docs/superpowers/stories/2026-09-10-record-durability-story.md` |
