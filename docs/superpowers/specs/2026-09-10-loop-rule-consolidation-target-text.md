@@ -235,7 +235,8 @@ false report. Below the floor the pass **suspends**, clean completion having not
 
 ## B. Passage (b) — what a loop absorbs — REPLACED, in part
 
-Three sentences change; the rest of the paragraph is carried. The changed sentences, final:
+Six sentences change — `b7`, `b8`, `b11`, `b12`, `b13`, `b16` — and the rest of the paragraph is
+carried. The changed sentences, final:
 
 **`b7`, the assigned fix set.**
 ```
