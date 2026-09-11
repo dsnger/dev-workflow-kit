@@ -57,13 +57,14 @@ establish the **inventory** of findings, not their resolutions.
 What the table does not settle, this spec decides in the section that uses it: the evaluation
 order and the file set each predicate reads; the duties' classification; which stop each of the
 scope stop's two triggers raises and what each answer does; what a clearly-stuck or two-tell
-answer produces; and the raw-severity rule for the health measures. **The block owns exactly six
-things** — the evaluation order, closure and its eligibility, the hold and what discharges it,
-the composition of several suspensions, the pairs that cannot co-occur, and the clearly-stuck
-precedence sentence as a stated exception — **and defines no trigger, no severity rule and no
-closure precondition of its own**; each of those keeps its one definition where it already lives,
-and where one had to change to agree with the ordering it changed **at its source**. The target
-text's §A states the same six-part boundary in its own opening, and the two must not drift.
+answer produces; and the raw-severity rule for the health measures. **The block's ownership
+boundary is stated once, in the target text's §A opening, and is deliberately not restated here** —
+two copies of it are what let them drift, which is pass 20 finding 3. What this spec records is the
+decision behind it: the block defines no trigger and no severity rule of its own, and every closure
+precondition **that has a source of its own** keeps its one definition there, changed **at that
+source** where it had to change to agree with the ordering. **The closing-time sameness tests are
+the exception in substance and not in principle**: they borrow no rule and have no other source,
+being part of the closure decision the block owns.
 
 **The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
 the edits; **no total is stated here or there**, because the unit — one contiguous replacement at
@@ -176,7 +177,7 @@ pre-existing wording differences are deliberate and stay, which are not and are 
 **performs the extraction and diff**, passage by passage, against the real files. One divergence
 is decided here because it is a correctness call rather than a wording one: W's `b3` pointer
 names "the severity rule" on the inventory's reasoning that W has no Mechanics section, which is
-false, so W takes C's wording (`b3`, target text §H).
+false, so W takes C's wording (`b3`, target text §B).
 
 The same extraction runs a second check within each copy: that `b11` and `b13` as edited say what
 the block cites them as saying, **comparing the complete predicates and not a shared phrase** —
@@ -234,9 +235,12 @@ answer-state transitions once the predicates producing them are established**, w
 `fic2` defect — a state's inputs must include every input the rule reads — answered by
 restricting the claim rather than by widening the table. So the plan writes **separate named
 checks** for what the table therefore does not establish: that a logical pass was validated
-across every required branch file, and that each final-acceptance precondition the block cites
-held — the floor, the cited set and profile, and the evidence entry's revalidation. **No fixture
-per predicate is built**; that question is parked in the story's §2 and is not reopened.
+across every required branch file, and that **every closure condition the block states held at the
+closing act**. That set is **not enumerated here** — an enumeration is how this section came to
+name three of them while the block states more, which is pass 20 finding 4. **The plan reads the
+set off the block and writes one check per condition**, and fails where the block states a
+condition the plan has no check for. **No fixture per predicate is built**; that question is parked
+in the story's §2 and is not reopened.
 
 **That list is not exhaustive, and reading it as exhaustive is how the evidence entry would
 overclaim.** Two further things the table does not establish, named because they are the ones a

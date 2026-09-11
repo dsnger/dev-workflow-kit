@@ -49,6 +49,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 20 | 5174d7a | 13→**9** | 1→**1** | 10→**5** | yes | **B+M 11→6, Majors halved.** Three of nine (3, 6, 9) regenerate from pass 19's own repairs; the Blocker is pass 19's Gate-A closing act, which names a revision in two record forms that have no field for one; session 01a0915d-6a5b-7633-a60a-881f0022816d |
 | 21 | — | — | — | — | not run | next action, after pass 20's findings are dispositioned |
 
+## Pass-20 dispositions — and two of my claims corrected, both verified wrong
+
+**Correction 1 — the provenance claim was wrong.** I reported findings 3, 6 and 9 as pass 19's own
+repairs regenerating. **Finding 6 is not**: `git log -S` puts "this paragraph states the floor and
+nothing else" in **`ef9a504`**, the pass-18 repair, unchanged since. My pass-19 edit relabelled the
+span around it and never touched the sentence. The honest split, which keeps new repair damage
+apart from old misses:
+
+| Origin | Findings |
+|---|---|
+| **pass 19's own repairs** | 1 (the Blocker), 3, 4, 9 — four, not three |
+| **pre-existing, missed by earlier passes** | 2, 5, 6, 7, 8 |
+
+**Correction 2 — the Blocker diagnosis was too strong.** I wrote that the provenance and curve
+grammars have no revision field and concluded the closing act was impossible. **§A requires the
+naming in the commit *body*, not inside those two lines**, and their fixed grammars forbid no
+accompanying prose in the same body. The missing fields alone therefore prove nothing. What is
+real is narrower and still a defect: **how that naming looks and what it identifies was
+undetermined.** The repair states it as prose beside the two untouched lines, carrying the
+artifact path and the full 40-character object name, and says outright that it records and does
+not prove.
+
+| Findings | Disposition |
+|---|---|
+| 1 | **§A closing act rewritten.** Two fixed lines untouched; the revision naming is prose in the same body; both placements written out; explicitly not evidence and not durable provability. |
+| 3, 4 | **The finality checks belong to the closure decision §A owns.** The citation claim is corrected rather than the tests moved. Design §2 now **points at** §A instead of restating the boundary — two copies of it are what drifted — and §7's evidence duty covers **every** closure condition the block states, the plan reading the set off the block rather than a list repeated in §7. |
+| 2, 5 | **One mechanism, both replaced.** Surfacing no longer reopens a discharged resolve duty (resolution is repair **or** valid dismissal). Mechanics · Finishing the cycle becomes §F's fifth sentence: it states the **operation**, the ordering states the **permission**. |
+| 6 | **"and nothing else" deleted.** The pointer to the ordering carries it. |
+| 7, 8, 9 | **Collected, no round of their own.** Four `D2`/`D5`/`D7` labels removed from shipped blocks with the rule kept inline; "closing report" bound to the pass's existing status report; design §6's `b3` pointer moved §H → §B. |
+
+**§F is now five standing sentences, and three of them are one mechanism** — an entry point other
+than the ordering carrying an unqualified instruction. Naming the mechanism is why each is
+replaced rather than given an exception to point at.
+
+**The two Gate-A closing cases were walked concretely, as the reviewer required, and both needed a
+fix before they worked:**
+- **Reviewed commit still at the tip.** The amend rewrites that commit's object name, so the
+  naming line records a name that no longer resolves. Now stated, with what a reader does instead:
+  read the tree of the commit the body sits in, which the amend preserves.
+- **Reviewed commit behind the tip.** "The next commit on the branch" read two ways — the commit
+  that already follows the reviewed one, or the next one made. Now "the **next commit made**", and
+  it may carry only the record, on the empty-commit allowance Mechanics already grants a
+  human-exception record (`CLAUDE.md:995`, `workflow-init.md:1179`, verified).
+
+**The shipped text is now free of this file's own vocabulary.** No inventory ids, no D-labels, no
+editorial ellipses inside any fenced block — checked mechanically, not by eye.
+
 ## Pass-20 three-line report
 
 **Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from

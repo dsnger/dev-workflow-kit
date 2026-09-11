@@ -49,9 +49,12 @@ exactly six things**: the evaluation order, closure and its eligibility, the hol
 finding places and what discharges it, the composition of several suspensions, the pairs that
 cannot co-occur, and — as a stated exception, because precedence is evaluation order — the
 clearly-stuck precedence sentence quoted into it below. **Everything else it names it cites**:
-the scope triggers, the assigned fix set, every severity rule, and each closure precondition
-keep their one definition in the paragraph that owns them, and a reader who finds one of *those*
-defined here has found a defect.
+the scope triggers, the assigned fix set, every severity rule, and every closure precondition
+**that has a source of its own** keep their one definition in the paragraph that owns them, and a
+reader who finds one of *those* defined here has found a defect. **The closing-time sameness
+tests below are defined here and are not an exception to that**: they borrow no rule and have no
+other source, being part of the closure decision itself — the second of the six things this
+paragraph owns — rather than a precondition stated elsewhere and read from here.
 
 **What a pass is read from.** Every finding-derived predicate reads the validated findings file
 **or files** of the logical pass as **the concatenation of their finding lines after each file
@@ -98,14 +101,32 @@ they disagree, which the branches below do.
 
 **The closing act, by cycle kind.** A **Gate-B** cycle closes with the closing amend
 Mechanics · Finishing the cycle describes. A **Gate-A** cycle has no WIP snapshot to replace, so
-its closing act is **the commit body carrying this cycle's provenance line and its per-pass
-curve, naming there the revision the clean pass reviewed** — the two records Mechanics already
-obliges every cycle to write, and writing them is the author's recorded acceptance of that
-revision. **No separate act, form or record is introduced for Gate-A closure**, because a cycle
-that owes two records already has somewhere to say what it accepted. That body goes in the commit
-the clean pass reviewed where it is still the branch tip — **an amend of the message alone, which
-leaves the tree and so the reviewed revision untouched** — and in the next commit on the branch
-where it is not. **No new revision of the artifact is made to close a Gate-A cycle**, because a
+its closing act is **the commit body that carries this cycle's provenance line, its per-pass curve
+and, beside them, one line naming the revision the clean pass reviewed**. The first two are records
+Mechanics already obliges every cycle to write and **neither is altered here** — their grammars are
+fixed and neither has a field for a revision. The third is **ordinary prose in the same body**,
+which those grammars neither supply nor forbid. Writing that body is the author's recorded
+acceptance of that revision.
+
+**What the naming line says:** the artifact's repository-relative path, and the **full
+40-character object name** of the commit the clean pass reviewed, an abbreviation being ambiguous
+across repositories and across time. **What it is worth, said rather than implied:** it records
+what the author accepted and **establishes nothing about what the pass actually read**, which no
+reader can check from a commit body. It is a record, not evidence, and no durable provability is
+claimed for it.
+
+**Both placements are written out, because they identify the revision differently.** Where the
+reviewed commit is **still the branch tip**, the body goes into it as **an amend of the message
+alone**: the amend gives that commit a new object name and leaves its tree untouched, so what the
+pass reviewed changes as a commit and not as content. The naming line records the object name the
+commit carried **when the pass read it**, which the amend then supersedes — **a reader wanting the
+reviewed content reads the tree of the commit the body sits in**, that tree being the one the pass
+read. Where the reviewed commit is **no longer the tip**, the body goes into the **next commit made
+on the branch** — not the commit that happens to follow the reviewed one, which is already in the
+past — and that may be **a commit carrying only the record**, which changes no content and so
+raises no review obligation, exactly as Mechanics already allows for a human-exception record with
+nowhere else to go. Placement says nothing on this path, so the naming line is the only thing
+tying the closure to the revision, and it is written the same way. **No new revision of the artifact is made to close a Gate-A cycle**, because a
 new revision is one no pass has reviewed. Nothing is closed before that act, and what changes in
 between still gates it: the **profile**, the **cited set**, the **assigned fix set**, the
 **revision of the artifact the clean pass reviewed**, and — in a Gate-B cycle — the **evidence
@@ -117,9 +138,11 @@ text or a broadening of the set changes one and costs the pass. **A commit the h
 mid-cycle makes the hook read the cycle as closed and discards the passes counted so far, which
 is an observation about the counter — the cycle itself stays open until the conditions above
 hold, so an accidental commit destroys the pass credit and closes nothing. A plateau or tells on
-**the pass that closes** go into the closing report and never block it, because reporting "will
-not converge" on a converged loop is a false report; on an eligible pass that does **not** close
-they go into that pass's ordinary report, there being no closing report to carry them. **No other pass outcome makes a cycle eligible
+**the pass that closes** go into **that pass's status report to the user** — the carrier the
+three-line duty already names, and no second report form is introduced — and never block it,
+because reporting "will not converge" on a converged loop is a false report; on an eligible pass
+that does **not** close they go into the same place, a pass reporting what it read of the loop
+whether or not it closes. **No other pass outcome makes a cycle eligible
 to close**, because every other pass either leaves a required repair, a hold or a question
 outstanding **or has not reached the floor** — and closing over any of those is the failure this
 ordering exists to prevent. The floor is named separately because a below-floor pass whose only
@@ -191,9 +214,9 @@ a hold like any other. **A re-raised valid dismissal stays discharged for the re
 dismissal was the resolution and a reviewer repeating the finding does not undo it, so no second
 dismissal is owed — and what the recurrence creates is the **clearly-stuck hold alone**, ended by
 that reading's continue-or-stop answer. **Where one finding is surfaced by both, it carries two hold components and
-each is discharged by its own answer, which is what keeps D4 and D5 exact**: the **membership**
-component ends on the membership answer in either direction, a decline releasing it as **D5**
-requires; the **clearly-stuck** component ends on the reading's continue-or-stop answer. Neither
+each is discharged by its own answer**: the **membership**
+component ends on the membership answer **in either direction**, a decline releasing it exactly as
+an accept does; the **clearly-stuck** component ends on the reading's continue-or-stop answer. Neither
 answer discharges the other's component, and where the finding carries no scope-stop trigger the
 continue-or-stop answer is the only one its surface asks for and discharges the only component
 there is. **Resumption is still the composition rule's**, which waits for every outstanding
@@ -206,9 +229,9 @@ loop resumes is decided by the composition rule below and by nothing here**, so 
 answer is never itself a resumption and cannot step past a hold or a health question still
 awaiting its own answer. Nothing here turns one answer into another, since that would let a
 finding be moved out of the set and back into it to escape what it owes inside it. **There is no
-withdrawal inside the cycle that declined**, because **D7** binds a decline for the remainder of
-its cycle and admits no exception; a reconsideration is a later cycle's, where D7 gives the
-decline no effect at all and the finding takes the ordinary route. Either answer is an
+withdrawal inside the cycle that declined**, a decline binding for the remainder of
+its cycle and admitting no exception; a reconsideration is a later cycle's, where that decline has
+no effect at all and the finding takes the ordinary route. Either answer is an
 **explicit, attributable decision on that specific finding** — never silence, never a general
 remark about scope, never inferred, because a fix set changed by inference is a fix set nobody
 chose. **Membership is answered against the set as the absorb paragraph fixes it for the pass that
@@ -248,7 +271,7 @@ the overlap is admitted rather than argued away: the two read different severity
 Mechanics · Severity sets out, so an **in-set** Blocker or Major the ceiling demotes below Major can regenerate across passes on
 a pass that is clean. **A declined finding is not a route into that reading**: the third condition
 admits regeneration across repair attempts and a re-raised validated dismissal, and a decline is
-neither — it is the user's decision that a *true* finding stays outside the set, which **D7** binds
+neither — it is the user's decision that a *true* finding stays outside the set, and it binds
 for the cycle. **The order decides it and no new rule is needed.** The clearly-stuck paragraph's own
 precedence sentence is stated here rather than there, because precedence is evaluation order and
 this paragraph is where evaluation order is stated once; its opening words point back to that
@@ -377,7 +400,7 @@ continuation next to the conditional one and give the same pass two answers.
 **`e7`, the threshold.** Gains one clause; the sentence is given entire.
 ```
 **Any two present makes stop-and-surface mandatory, not discretionary** — read **after** the
-clean-completion branch of the closure ordering, which outranks it (**D2**) — and you report the
+clean-completion branch of the closure ordering, which outranks it — and you report the
 tells and hand the decision to the user, and the "clearly stuck" reading above is not a
 precondition for it.
 ```
@@ -435,10 +458,12 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The four standing sentences this change falsifies — REPLACED
+## F. The five standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All four are **known contradictions** and
-none is deferred.
+Each is a live sentence that the block makes wrong. All five are **known contradictions** and
+none is deferred. **Three of them share one mechanism** — an entry point other than the ordering
+carrying an unqualified instruction — which is why each is **replaced** rather than given an
+exception to point at.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -483,6 +508,22 @@ while the ordering makes **continue** the prescribed answer that restarts a park
 it stands, an agent following it refuses the exact transition the ordering requires. The
 distinction the repair draws is between a human waving a rule through — which this paragraph
 still forbids — and answering the question a suspension actually asked.
+
+**5. The `Finishing the cycle` lead-in** (Mechanics · `baseSha`). It wraps across C 827–828 and
+W 1011–1012.
+```
+**Finishing the cycle:** once the closure ordering reaches a Gate-B cycle's closing act — an
+eligible pass with every closure precondition holding, never a clean pass on its own — close it
+with `git commit --amend -m "<real message>"`; that replaces the WIP commit, and the hook reads
+the amend as the real cycle-closing commit. This section states the operation and never whether
+the cycle may close.
+```
+*Why (pass 20 finding 5):* the live sentence says "after the final clean pass, close it with
+`git commit --amend`", which is a complete instruction to whoever enters through Mechanics — and
+under the ordering a clean eligible pass is not enough, an unmet precondition leaving the cycle
+open. A reader entering there could amend over a standing hold, an undischarged Major or a changed
+evidence entry. The repair makes this section the **operation** and the ordering the **permission**,
+which is the same split the other two sentences of this mechanism take.
 
 ---
 
@@ -532,8 +573,11 @@ duties are kept; the blanket no-clean-credit and the one-answer resumption go, b
 ordering decides both and decided them differently.
 ```
 **Surfacing does not close the cycle, and that is what makes this reachable.** You surface *with
-the finding still open* — the resolve rule is not waived, the hold stands until its answers are
-given, and **what the answer does is the closure ordering's**: continue resumes, stop parks.
+the finding still open* — the resolve rule stands over it exactly as Mechanics · Severity states
+it, which means **repaired or validly dismissed**, so a recurrence of one already validly
+dismissed is already resolved and owes no second dismissal and no repair; the hold stands until
+its answers are given, and **what the answer does is the closure ordering's**: continue resumes,
+stop parks.
 **A pass is credited clean or not on its own findings**, as that ordering defines cleanliness;
 surfacing a finding that carries a scope-stop trigger is what withholds the credit, and no
 credit is withheld for surfacing alone. Reading this as "stop instead of fixing" would put the
@@ -560,8 +604,7 @@ qualifies; `a21` and `a22` are carried unchanged, reproduced here because the pl
 contiguous string. The per-condition accounting is the plan's.
 ```
 What a clean final pass and the zero-finding early exit mean for closing is stated once in the
-closure ordering; this paragraph states the floor and nothing else. Codex is advisory — validate
-before applying; dismissed finding → one-line why.
+closure ordering. Codex is advisory — validate before applying; dismissed finding → one-line why.
 ```
 
 **The Gate-A clean-signal sentence** — the signal stops being the only route to clean.
