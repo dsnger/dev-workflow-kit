@@ -38,7 +38,63 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 12 | 11b0e47 | 21 | 1 | 13 | yes | **two mechanisms ended by Daniel's repeat criterion**, brought in mid-loop from another project; session 01a08c7f-c573-7df1-8b31-7704ec7be064 |
 
 | 13 | 78e5f97 | 16 | 2 | 8 | yes | **the loop turned: B+M 14 → 10, Majors 13 → 8**; session 01a08c98-b6cd-7bc3-9556-8f1c87491031 |
-| 14 | 0168f88 | — | — | — | not run | next action. Spec cut to 532 lines; design 36% of it. |
+| 14 | c06dd69 | 16→**10** | 2→**1** | 8→**5** | yes | spec byte-identical to 0168f88 (532 lines); **lowest B+M of the cycle, 6**; **SCOPE STOP surfaced on finding 6** (partial-adoption guard = a 21st edit, outside the twenty); session 01a08f70-6d1e-7cf1-baa3-6df3cc59bc32 |
+| 15 | (pending) | — | — | — | not run | next action. All 10 pass-14 findings applied; spec 532 → 578 lines, §4 now 22 edits |
+
+## Pass-14 three-line report — SCOPE STOP, and the loop is converging
+
+**Floor line (owed every pass):** derived floor **3**; risk **high**, security **none**; read fresh
+at this pass from `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited
+story, profiled and resolvable at level 2. Floor long met; what is owed is a clean final pass.
+
+- **Trend:** findings …, 20, 21, 16, **10**. Blockers …, 1, 1, 2, **1**. Majors …, 13, 13, 8, **5**.
+  Blocker+Major 20, 15, 10, 11, 15, 13, 9, 8, 12, 17, 14, 14, 10, **6** — **the lowest of the
+  cycle**, and the second consecutive fall. Findings are also the lowest since pass 3.
+- **Cluster (pass 14):** product 6 of 10 (findings 1, 2, 3, 6, 7, 9); the instrument 3 (§7's
+  oracle and its residual, plus the (g) rationale's counting claim); bookkeeping 1 (the NIT's
+  failed quotation check).
+- **require↔withdraw:** none. Finding 2 demands *removing* the withdrawal path, which is a later
+  pass objecting to an earlier pass's addition — the mirror of the pair's shape, not the shape.
+
+**Tells: zero of five.** Findings falling hard, Blockers falling, cluster on product, no pair. The
+clearly-stuck reading is not reachable either: its third condition needs Blocker/Major regenerating
+across repair attempts, and this round's fixes reduced them.
+
+**The pass-13 note held.** Pass 13 predicted the reviewer was "running out of internal problems and
+working the boundary". Pass 14 confirms it: findings 1, 4, 7 and 10 are the spec's edges meeting
+standing text (`c8`, §7's own oracle, `b7`/`b8`, a §5 sentence that wraps across four lines), not
+the spec contradicting itself.
+
+**SCOPE STOP on finding 6, surfaced rather than absorbed.** The finding asks that the existing
+semantic partial-adoption stop be extended to cover the closure block and its twenty coupled
+edits. It is **true of the artifact** — §9 says so itself: "That is an admitted unsafe state, not a
+guarded one, and it is this change's own." So a validated dismissal is unavailable; a dismissal
+says a finding is false, and this one is not. And the repair is a **twenty-first edit** to a
+paragraph the story never set out to change, which leaves the assigned fix set. Under the absorb
+rule that stops the loop and goes to the user. The question is a genuine either/or: **ship the
+admitted residual, or spend one more source edit on a guard.**
+
+**SCOPE STOP ANSWERED 2026-09-10 by Daniel: B — accept, bounded.** In his words, to be carried
+into the text: *"eine begrenzte Erweiterung der vorhandenen Konsistenzregel auf die neue
+Abschlusslogik und ihre abhängigen Änderungen … beschreibe die Wirkung korrekt als Anweisung an
+den Agenten. Daraus soll weder ein neues Prüfsystem noch eine zusätzliche Record-Durability-Lösung
+entstehen."* Shipped as **§4 item 22**. Four corrections he made to the recommendation that
+preceded it, recorded because each was right and each had been argued the other way here:
+documented is not accepted, since the user project runs the copied `CLAUDE.md` and not this spec;
+the existing rule is an **instruction**, not a guard, and calling it one was the overclaim
+`AGENTS.md` names; "remove restatement" never meant "refuse every expansion", and the
+compatibility of the rules this change introduces belongs to this change; and B carries **no extra
+pass**, because one Blocker and five Majors oblige a further pass regardless.
+
+**The other nine are in-set and repairable**, and one is worth naming because it is a settled
+decision being contradicted: finding 2 shows the block invented a **withdrawal** path for a
+decline, which **D7** does not admit. Removing it restores the settled input rather than deciding
+anything new.
+
+**A precheck gap, recorded not fixed.** The precheck reported "OLD blocks checked: 0" and finding
+10 is exactly what an OLD-block check would have caught — a §4 quotation occurring in neither
+copy. It is a mechanical check the reviewer spent judgement on. Candidate for the precheck; not a
+new rule, and not this cycle's to build.
 
 ## Pass-13 three-line report
 
@@ -363,6 +419,7 @@ nothing checks them. They are candidates captured in
 | pass 10 two-tell stop | **Split.** Record durability moves to `docs/superpowers/stories/2026-09-10-record-durability-story.md`; this story keeps the ordering, the duty classification and the severity/health answer. |
 | mid-loop, from another project | Anchor the repeat criterion in the kit; captured as the harness-finding-termination story. |
 | after pass 13 | **Cut the spec to the design**; the plan carries the bookkeeping. Precheck runs before every pass. |
+| pass 14 scope stop | **B — accept, bounded.** Extend the existing coherence *instruction* to the closure block and its coupled edits (§4 item 22). No checker, no new mechanism, no record-durability work. |
 
 ## For the execution phase, not needed yet
 
