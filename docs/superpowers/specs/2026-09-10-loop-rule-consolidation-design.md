@@ -200,9 +200,10 @@ tree and the parent tree, so every assertion is observed passing where the chang
 failing where it does not. A one-sided presence check is not enough: a copy carrying the new
 wording **and** the old one satisfies it, which is the two-instructions-that-disagree failure §4
 exists to prevent. **An edit that only adds, replacing no wording, is checked by presence alone**, because there is
-no old text whose absence could be counted; which edits those are is read off §4's `Kind` column
-rather than listed here, a list of item numbers being the bookkeeping that has to be re-derived
-whenever a span merges. **The plan builds each pair
+no old text whose absence could be counted; **which edits those are the plan classifies against the
+real files**, an add-only edit being one whose site carries no wording the change removes. Neither
+this section nor §4 classifies them: a list of item numbers here is the bookkeeping that has to be
+re-derived whenever a span merges. **The plan builds each pair
 against the real files and runs both directions there**, under two constraints: a counted
 fragment must be **single-line in the file it is grepped from**, since one spanning a line break
 makes `grep -F` count zero and read as a failure; and the new wording must therefore be
@@ -218,10 +219,14 @@ guess reads as a failed check rather than a wrong one. **Nothing verifies that �
 complete or that the plan's fragments discriminate.** The enumeration moved to where the text
 exists; the completeness claim did not, because nothing supports it.
 
-The counterfactual is **ABSENT and is claimed as absent**: the parent carries no ordering block,
-and passage (g)'s old sentence is the one site where the parent is present and the change removes
-it. Nothing is claimed as "contradictory" — the second of the two defects Gate B found in the
-`fic2` instrument.
+**The counterfactual splits, and stating it as one understates what is owed.** For the **ordering
+block** it is **ABSENT and is claimed as absent**: the parent carries no such block, so no old
+wording of it can be shown to disappear and presence alone is the check. For **every replacement**
+the parent carries the old wording and the change removes it, so each owes the
+old-wording-gone half of its pair — and the replacements are not one site: the target text
+replaces standing wording in §§B, C, D, E, F and H, passage (g) among them. **Which sites those
+are the plan derives from the target text**, where the concrete replacements live. Nothing is
+claimed as "contradictory" — the second of the two defects Gate B found in the `fic2` instrument.
 
 **The named verification of the risk path** (story AC 4) is a **next-state table**, written in the
 plan and quoted by the closing commit body. **Its claim is narrow and stated as such: it covers
@@ -254,8 +259,9 @@ trigger, no-clean-credit being the clean predicate's own second half — and eve
 block names must hold **through the closing commit**, not merely during the pass, which is the
 window the block's own "in between" wording fixes. Naming only the distinct-state half would pass
 the exact no-progress defect AC 4 cites from the parent cycle. **The
-consumption clause is what keeps the oracle and §3 in agreement**: §3 says continue consumes the
-reading that raised the suspension and a further health suspension needs it recomputed over a
+consumption clause is what keeps the oracle and the shipped text in agreement**: the target text's
+§A says continue consumes the reading that raised the suspension and a further health suspension
+needs it recomputed over a
 pass run after the answer, so the *same* two-tell or clearly-stuck result **after** such a pass is
 new data and a legitimate row, not a failed transition. An earlier wording failed it "whether or
 not an input was consumed", which would have classified that legitimate case as a defect.
@@ -281,19 +287,19 @@ repo's most persistent defect. The transport that could carry it left with the r
 
 - **Invariant 11 — `docs/prompt-standards.md`, all 12 items.** Most at risk: item 6, every
   constraint in the shipped block carrying its reason in the same sentence — **including the
-  three exempted until pass 6**, which now carry theirs inline in §3: that no other pass outcome
-  makes a cycle eligible to close, that a zero-finding pass is clean whatever the floor, and that
-  decline is available only at a membership stop. The exemption was wrong twice over: item 6
+  three exempted until pass 6**, which now carry theirs inline in the target text's §A: that no
+  other pass outcome makes a cycle eligible to close, that a zero-finding pass is clean whatever
+  the floor, and that decline is available only at a membership stop. The exemption was wrong twice over: item 6
   admits no "settled elsewhere" clause, and a scaffolded copy cannot reach the story the reasons
   were said to live in. The unknown-start clause carries its reason inline for the same reason.
   Then **item 8 (token-lean), which an earlier revision claimed on the wrong ground** — it said
   the block replaces closure sentences rather than adding beside them, while the block was in
   fact restating triggers, duties, preconditions and the severity answer that their own
   paragraphs still defined, which is two authorities per copy. The claim now rests on what the
-  block does: it is authoritative for the evaluation order and for closure and **cites** every
-  other rule where that rule is defined, so each has one definition in the shipped text and §3's
-  table is the check. Then item 3 (the stop answer produces a named state, **parked**, with its
-  own restart transition).
+  block does: **it owns the six things §2 names** — not restated here, one statement of that
+  boundary being the point — and **cites** every other rule where that rule is defined, so each
+  has one definition in the shipped text; **§4's site table is the check**. Then item 3 (the stop
+  answer produces a named state, **parked**, with its own restart transition).
 - **Don't: "Never replace a decision procedure without accounting for its old conditions."**
   Satisfied by the plan's per-condition disposition list against the committed inventory (§5),
   with this spec's passage map keeping the ten-passage set complete.

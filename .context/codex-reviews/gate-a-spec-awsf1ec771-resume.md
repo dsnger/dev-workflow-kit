@@ -48,6 +48,41 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 19 | 6d52fcc | 15→**13** | 0→**1** | 12→**10** | yes | precheck caught a silent loss before the pass: `a20` ("don't manufacture findings to pad") had fallen out of the target text; restored to §A. Two known contradictions repaired in the same commit. **Only 6 of 13 findings are against the target text**; 5 are against the design spec and 2 against standing §5; session 01a0912a-7329-7450-bdb3-da043e88e7bb |
 | 20 | — | — | — | — | not run | next action, after pass 19's findings are dispositioned |
 
+## Pass-19 dispositions — one connected repair round, on the reviewer's order
+
+All 13 repaired or collected in one round; **no separate cycles for design and target text**, which
+was the reviewer's call against splitting them. Three of my report's claims were corrected by him
+and are recorded because each was right: "without the precheck `a20` would have shipped" is
+unproven — pass 19 read the already-repaired text, and what is proven is only that the precheck
+caught a real loss in time; "the five design findings are mechanical" understates findings 9 and
+11, which are responsibilities and evidence duties, and 9 repeats an incompletely repaired pass-18
+finding; and "only six hit the target text" draws an artificial line, since finding 8 objects to
+§C's own "word for word" instruction.
+
+| Findings | Disposition |
+|---|---|
+| 1, 2, 5 | **§A, one nexus.** The closing-act recheck gains the assigned fix set and the reviewed artifact revision; sameness reads the artifact and the duties, never the branch tip, so writing the closing body is not a change. Cleanliness is settled on the answers standing when the pass ran. The Gate-A closing act is the commit body carrying the provenance line and curve — records Mechanics already obliges, no new mechanism. |
+| 3, 4, 7, 8 | **Complete target passages.** `b11`'s exception scoped to the membership trigger; the human-exception sentence distinguishes prescribed continuation answers from blanket assent (§F, now four sentences); every ellipsis replaced by real context; §C's word-for-word claim scoped to the precedence sentence, the below-floor sentence marked replaced and split. |
+| 6 | **§G reads the rule's present content**, not an imagined edit to it. No membership list. |
+| 9, 10, 11, 12, 13 | **Design spec, brief pointers to the authoritative site.** §8 points at §2's boundary rather than restating it and at §4's table; §7's `Kind` column becomes the plan classifying against real files; the counterfactual splits into the block's absence and every replacement's old-wording-gone half; two stale `§3` citations point at target §A. |
+
+**§B is now the whole absorb paragraph, contiguous.** The split across §B and §H is what let the
+two sections instruct the plan differently about one sentence, so the split is gone rather than
+patched. Two things fell out of the merge: the shipped text would have carried the inventory id
+`` `b7` `` into `CLAUDE.md`, where it means nothing — now "as just defined" — and §H's "the only
+sentence in the standing text that resumes a loop on one answer" was false of `b18` and is gone,
+as the reviewer noted it could be.
+
+**One defect the transition walk caught, self-inflicted:** the repaired §A said a Gate-A cycle has
+"no amend" and two sentences later put the closing body into an existing commit, which is an amend.
+Now: no WIP snapshot **to replace**, and the closing body is an amend of the message alone, leaving
+the tree and so the reviewed revision untouched.
+
+**Observation, not repaired and not raised by the pass:** a cycle whose reviewer re-raises a validly
+dismissed in-set Major every pass can suspend (§C's third condition admits it) but can never be
+clean, so it can only ever **park**. That is a reachable stated outcome rather than a dead end, and
+§C's own rationale anticipates it.
+
 ## Pass-19 three-line report — first pass on a target text with no paraphrase left
 
 **Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
