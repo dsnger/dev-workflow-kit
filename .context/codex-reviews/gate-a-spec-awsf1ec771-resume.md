@@ -46,7 +46,52 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 17 | c2d5fe1 | 8→**9** | 1→**1** | 4→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 5→8. **Three findings (4, 5, 7) are one mechanism on its third pass**: a standing §5 sentence the block falsifies that §4 does not name. All 9 held open; session 01a0901b-ecf3-73b2-886c-5b3c7dc63a74 |
 | 18 | 96c3611 | 9→**15** | 1→**0** | 7→**12** | yes | **first pass on the target text. ZERO BLOCKERS, first since pass 7.** Finding 1 names the restructure as half-done: §H is still paraphrase, not text. Findings 6,7,8 name three standing sentences by line number — the 15/16/17 mechanism, now findable; session 01a09068-de4a-7071-97a7-82cc4774544f |
 | 19 | 6d52fcc | 15→**13** | 0→**1** | 12→**10** | yes | precheck caught a silent loss before the pass: `a20` ("don't manufacture findings to pad") had fallen out of the target text; restored to §A. Two known contradictions repaired in the same commit. **Only 6 of 13 findings are against the target text**; 5 are against the design spec and 2 against standing §5; session 01a0912a-7329-7450-bdb3-da043e88e7bb |
-| 20 | — | — | — | — | not run | next action, after pass 19's findings are dispositioned |
+| 20 | 5174d7a | 13→**9** | 1→**1** | 10→**5** | yes | **B+M 11→6, Majors halved.** Three of nine (3, 6, 9) regenerate from pass 19's own repairs; the Blocker is pass 19's Gate-A closing act, which names a revision in two record forms that have no field for one; session 01a0915d-6a5b-7633-a60a-881f0022816d |
+| 21 | — | — | — | — | not run | next action, after pass 20's findings are dispositioned |
+
+## Pass-20 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 9, 15, 13, **9**. Blockers …, 1, 0, 1, **1**. Majors …, 7, 12, 10, **5**.
+  Blocker+Major …, 6, 8, 5, 8, 12, 11, **6** — level with the pass-14 low, above pass 16's 5.
+- **Cluster (pass 20):** product 7 of 9 (1, 2, 3, 5, 6, 7, 8); the instrument 1 (4, §7's named
+  verification); prose about it 1 (9, a stale §H pointer in design §6).
+- **require↔withdraw:** none. **Three near-misses, all the same shape and all named:** findings 3,
+  6 and 9 object to additions pass 19 made — the mirror of the pair's shape, a later pass
+  questioning an earlier pass's addition, not a demand for something removed.
+
+**Tells: one of five** — the Blocker count flat at 1. Findings fell 13 → 9, Majors halved 10 → 5,
+the cluster is product. One is not two: no mandatory stop. The clearly-stuck exit is not reachable
+either, its first condition needing a plateau where the curve just fell.
+
+**The repair round worked and left a third of the next pass behind.** B+M 11 → 6 is the second-best
+of the cycle. But **findings 3, 6 and 9 are pass 19's own repairs regenerating**, and one of them
+is structural rather than wording: repairing pass-19 finding 1 put two closing-time preconditions
+**inside** the block, which collides with the block's own "owns exactly six things, cites
+everything else" boundary — and design §2 repeats the citation-only claim. That is the same
+mechanism as the §7 assert list at pass 12 and the four-descriptions problem at pass 17: a repair
+made at one site falsifies a claim another site still makes.
+
+**The Blocker is pass 19's repair failing on the records it cites.** Verified against `CLAUDE.md`:
+the provenance-line grammar is `<CYCLE-FIELD>; floor <N> per <STORY-SET>; hook reminder threshold
+<KNOB>` and the curve grammar carries cycle, kind, passes, models and counts — **neither has a
+field for a revision**, and the provenance line states outright that there is no informal variant.
+So "the commit body carrying the provenance line and curve, **naming there the revision the clean
+pass reviewed**" asks two fixed forms to say something they cannot express. On the non-tip path the
+body also lands in a different commit from the reviewed one, so placement does not identify it
+either.
+
+**Finding 5 is the standing-sentence mechanism again, on its fifth pass.** Mechanics · Finishing
+the cycle still reads "after the final clean pass, close it with `git commit --amend`" at C 827 and
+W 1011, which the ordering falsifies — a clean eligible pass with an unmet precondition must not
+close — and **§F does not replace it**. Same shape as passes 15, 16, 17 and 19.
+
+**Findings 7 and 9 are the same defect class the §B merge already caught once.** Editorial
+vocabulary leaking into shipped text: four `**D2**`/`**D5**`/`**D7**` labels sit inside fenced
+blocks that install byte-identically, and the scaffolded template ships neither the story nor a
+D-table. The merge caught `` `b7` `` doing this at pass 19; nobody swept for the rest.
 
 ## Pass-19 dispositions — one connected repair round, on the reviewer's order
 
