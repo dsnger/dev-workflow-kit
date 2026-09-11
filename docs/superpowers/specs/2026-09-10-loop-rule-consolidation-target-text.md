@@ -81,7 +81,8 @@ clean** when its findings carry no in-set Blocker or Major at effective severity
 scope-stop trigger** — the two the absorb paragraph defines, read there and not redefined here,
 each already carrying the qualification an answer given in this cycle puts on it. A pass with
 **zero** findings is clean whatever the floor, because a floor buys further looks at an artifact
-that keeps yielding findings, and one yielding none has already given what those looks were for.
+that keeps yielding findings, and one yielding none has already given what those looks were for;
+don't manufacture findings to pad.
 
 **Eligibility is exactly this and nothing more: a clean pass at or above the derived floor, or a
 zero-finding pass.** It is a property of the pass. **Closure is eligibility plus every closure
@@ -128,7 +129,7 @@ it is not asked twice; the two-tell stop surfaces tells and not a finding.
 **Third, a pass that neither closes nor suspends continues** — the loop runs another pass on the
 **current** artifact, revised where the severity and scope rules require a repair and unrevised
 where they do not. **An eligible pass with an unmet closure precondition lands here**: clean
-completion did not close it, and being clean it cannot suspend, so the loop continues on whatever
+completion did not close it, and being eligible it cannot suspend, so the loop continues on whatever
 the unmet precondition requires — most often a repair still owed from an earlier pass. A
 below-floor clean pass lands here too, **only where no suspension applies to it**; where one does,
 the second branch has already taken it, because clean completion did not close the pass and only
@@ -275,9 +276,12 @@ keeps out.
 ```
 **A correction that leaves that set stops the loop like any other out-of-scope finding** — except
 one this cycle has already declined, which is outside the set by that decision and raises no
-trigger — even when it opens no new question at all, and it resumes the moment the user says
-whether the set now includes it.
+trigger — even when it opens no new question at all,
 ```
+*The sentence continues with `b12`'s replacement, which is in §H* — the trailing resumption clause
+is `b12`, not `b11`, and quoting its live wording here as final would ship the immediate
+resumption the ordering replaces.
+
 *Why:* unqualified, this and the clean predicate decide a re-raised declined finding in opposite
 directions.
 
@@ -509,8 +513,10 @@ Open a TodoWrite "Codex pass N" per pass; resolve Blocker/Major after each as
 Mechanics · Severity requires.
 ```
 
-**`a17`–`a19`** — the floor paragraph stops stating closure and the early exit, and points at the
-ordering that states them once. Three sentences become one.
+**`a17`–`a22`** — the floor paragraph stops stating closure and the early exit, and points at the
+ordering that states them once. `a20` moves to §A unchanged, beside the zero-finding rule it
+qualifies; `a21` and `a22` are carried unchanged, reproduced here because the plan installs one
+contiguous string. The per-condition accounting is the plan's.
 ```
 What a clean final pass and the zero-finding early exit mean for closing is stated once in the
 closure ordering; this paragraph states the floor and nothing else. Codex is advisory — validate
