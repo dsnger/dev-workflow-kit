@@ -41,7 +41,56 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 14 | c06dd69 | 16→**10** | 2→**1** | 8→**5** | yes | spec byte-identical to 0168f88 (532 lines); **lowest B+M of the cycle, 6**; **SCOPE STOP surfaced on finding 6** (partial-adoption guard = a 21st edit, outside the twenty); session 01a08f70-6d1e-7cf1-baa3-6df3cc59bc32 |
 | 15 | 17cf2e9 | 10→**12** | 1→**1** | 5→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 6→8. **Six of twelve regenerate from pass 14's own repairs** (3, 4, 6, 7, 10, 11). All 12 held open; session 01a08fb2-6e8e-73d0-9d2b-8fb92d1571dd |
 | 16 | 5d12884 | 12→**8** | 1→**1** | 7→**4** | yes | **B+M 8→5, lowest of the cycle.** One tell (Blockers flat). Five B/M applied; Minors 7 and Nit 8 collected. Findings 2 and 4 are the spec disagreeing with *standing* §5 text, not with itself; session 01a08fff-fadf-72f2-994d-618048bea473 |
-| 17 | — | — | — | — | not run | next action |
+| 17 | c2d5fe1 | 8→**9** | 1→**1** | 4→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 5→8. **Three findings (4, 5, 7) are one mechanism on its third pass**: a standing §5 sentence the block falsifies that §4 does not name. All 9 held open; session 01a0901b-ecf3-73b2-886c-5b3c7dc63a74 |
+| 18 | — | — | — | — | not run | blocked on the two-tell answer |
+
+## Pass-17 three-line report — MANDATORY TWO-TELL STOP
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 10, 12, 8, **9**. Blockers …, 1, 1, 1, **1**. Majors …, 5, 7, 4, **7**.
+  Blocker+Major …, 12, 17, 14, 14, 10, 6, 8, 5, **8**. Four passes at 6, 8, 5, 8.
+- **Cluster (pass 17):** product **9 of 9**. The instrument 0, prose-about 0 — the cleanest
+  cluster of the cycle, and it is not good news: the findings are all about shipped behaviour.
+- **require↔withdraw:** none. Finding 6 objects to a sentence pass 16 added; finding 8 objects to
+  the rule that replaced the enumeration **without asking for the enumeration back** — it names
+  "without enumerating item numbers or adding a checker". Both are the mirror shape, not the shape.
+
+**Tells: two of five — the threshold. Stop-and-surface is mandatory.** The finding count rose
+8 → 9 and the Blocker count failed to fall, 1 → 1 for the fourth pass running.
+
+**The question asked before this pass has an answer, and it is the unwelcome one.** The test set
+was: does pass 17's Blocker come out of the last repair, or reach something unreviewed? **It comes
+out of the repair.** Finding 1 is Gate-A closure — introduced at pass 15, refined at 16, refined
+again at 17 — on its third round. Findings 2, 3 and 6 are also pass 15/16 repairs.
+
+**One mechanism is on its third pass and produced a third of this pass alone.** Findings 4, 5 and 7
+are one shape: **a standing §5 sentence the block falsifies, which §4 does not name.** `b16`'s
+"novelty overrides correction ancestry"; the Gate-B coverage instruction's "say `NO FINDINGS` if
+clean"; the curve rationale's "the severity rule moves the Blocker/Major line". The same shape was
+pass 16 finding 2 (the `WIP:` warning) and pass 15 finding 2 (the same warning, both sites). So:
+passes 15, 16 and 17, and three instances in this pass.
+
+**Its cause is structural, like the §7 assert list at pass 12.** §4 claims to name every passage
+the change touches. That claim cannot be established by a spec against text the same change is
+rewriting — each pass greps differently and finds another. The assert list had the same shape and
+the repeat criterion ended it in one pass, by moving the enumeration to where the text exists and
+printing the residual.
+
+**But three of them are KNOWN contradictions and cannot be deferred**, which is the line the
+reviewer drew and it holds: `b16`, the Gate-B coverage sentence and the curve rationale are live
+sentences that disagree with the block *today*. Renaming them a residual would be exactly the
+"no known behavioural contradiction becomes a residual" failure. The criterion applies to the
+**search** for further ones, never to these three.
+
+**The clearly-stuck reading is now satisfied on all three conditions**, stated because it is
+reachable and not because it is being taken: a plateau — B+M 6, 8, 5, 8 over four passes and never
+zero in seventeen; coverage affirmable after seventeen readings; and Blocker/Major regenerating
+from the previous round's own repairs, nameably, in four of this pass's nine.
+
+**Minor 9 collected**, not repaired: which findings the clearly-stuck reading surfaces when the
+regeneration chain spans several passes.
 
 ## Pass-16 three-line report
 
