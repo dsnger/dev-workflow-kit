@@ -167,10 +167,16 @@ single-trigger finding, both for one carrying both. That is **one rule with two 
 answers and which way each may go, and neither is a test the other has to pass. Where a health
 suspension applies to the same pass, its shared continue-or-stop answer is **additional** to
 those and not counted among them, the health readings asking about the loop rather than about
-this finding. **A health reading surfaces no finding and therefore creates no hold**; what it
-leaves outstanding is its own continue-or-stop question, which the composition rule below holds
-the cycle on until it is answered. That is why the duties paragraph attaches a hold to every
-surfaced *finding* and this one does not give a two-tell surface a hold of its own.
+this finding. **The two health readings differ in what they surface, and therefore in what they
+hold.** The **two-tell stop surfaces tells and no finding**, so it creates no hold; what it leaves
+outstanding is its own continue-or-stop question, which the composition rule below holds the cycle
+on until it is answered. The **clearly-stuck reading does surface findings** — those its third
+condition is about — and each takes a hold like any other surfaced finding, discharged by **every
+answer its own surface requires**: the scope-stop answers where that finding also carries a
+trigger, the continue-or-stop answer being additional there; and where it carries neither trigger,
+that continue-or-stop answer is the only answer its surface asks for and is what discharges the
+hold. So no surfaced finding is left without a discharging answer, and no surface without a
+finding is given a hold nothing could discharge.
 At a **membership stop** the answer is **accept**, the finding joining the fix set
 where Mechanics Severity governs it, or **decline**, the finding staying outside and binding so
 for the rest of this cycle. A later answer that contradicts a decline **does not reverse it**:
@@ -562,7 +568,7 @@ The set is mutually dependent, and **the rule that says which edits belong is st
 enumerated**: an edit is coupled when the block **cites it or depends on it** — the boundary its
 clean predicate reads, the sentences that give *clean* its two senses, the triggers it reads, the
 source rules whose old text the ordering falsifies, and the severity and dismissal rules it cites.
-Item 22 carries that description into the live one-contract paragraph, which until now reached
+Item 21 carries that description into the live one-contract paragraph, which until now reached
 only the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start
 semantics. **An earlier revision of this section named the members as a list of item numbers and
 the list was wrong** — it omitted several edits the block plainly depends on — which is why the
@@ -571,7 +577,7 @@ decidable and the numbering does not exist.
 
 **Stated as what it is.** That paragraph is **an instruction to the agent**: a project whose text
 carries some members and not others, or versions that disagree, **stops and has a human complete,
-revert or reconcile the adoption before running a gate under it**. Item 22 widens whom that
+revert or reconcile the adoption before running a gate under it**. Item 21 widens whom that
 sentence is about. It is not a guard and not a mechanical check, and this change builds neither —
 **nothing detects a partial adoption**, and the stop happens only where an agent reads the
 sentence and acts on it.
