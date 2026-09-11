@@ -1,0 +1,2 @@
+MINOR | high | docs/hardening-log.md:76 | The governing supersession says "the entry immediately above", directly violating the ledger grammar that entries never reference one another. | The durable correction is itself invalid and requires another corrective append, obscuring the row's governing state. | Append a new locator-identical supersession that describes only the 2026-08-16 row's false probe and ends with citations to the two current-answer locations, without mentioning either earlier entry.
+END OF FINDINGS (1 total)

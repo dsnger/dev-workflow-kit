@@ -631,8 +631,11 @@ backlog.
       surviving prior file is indistinguishable from a fresh one. The consequence is that a
       second cycle in the same repo silently erases the first cycle's findings artifacts.
       **Observed, not theorised:** the result-classification cycle's pass-1 call deleted the
-      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` is git-ignored,
-      so it is unrecoverable. §5 anticipates *concurrent* calls racing on one slot and says
+      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` was git-ignored,
+      so that file is unrecoverable. **Partly mitigated 2026-09-10:** `.context/codex-reviews/`
+      is tracked in this repo, so a slot overwritten after a commit is now recoverable from git
+      — the destroy-before-delete window between two commits is not, and target projects still
+      ignore the path, so the row stands. §5 anticipates *concurrent* calls racing on one slot and says
       so; it does not cover *sequential cycles* reusing them. Note the dispositions and
       resume-note companions have the same property. Any fix has to keep the pre-call delete
       — that check is load-bearing — so it is about naming (a cycle component in the slot) or
@@ -672,8 +675,10 @@ backlog.
 - [ ] **A recording mechanism for severity normalization.** Rider (b) normalizes an
       unrecognized severity token to `MAJOR` and records nothing. The drift is visible to the
       reader at the moment the pass is validated — the findings file carries the original token
-      on the finding line — but nothing is durable: `.context/` is git-ignored and slot
-      collisions have destroyed findings here (row above). A companion record was designed and
+      on the finding line — but nothing is durable *in a target project*: `.context/` is
+      git-ignored there and slot collisions have destroyed findings here (row above). In this
+      repo `.context/codex-reviews/` is tracked from 2026-09-10, which makes the original token
+      recoverable here and nowhere else. A companion record was designed and
       **cut**, at a measured cost: it needed a token-identity rule, a bijection audit, a
       logical-pass/attempt/credited-count identity model, edits to four shipped hook reminder
       strings, and a `docs/hardening-log.md` supersession row.

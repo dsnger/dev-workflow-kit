@@ -1,0 +1,7 @@
+# Gate B — quality branch — pass 15 dispositions
+
+1 finding, Major. Accepted. (The spec branch was CLEAN this pass — NO FINDINGS.)
+
+1  MAJOR the one-story profiled branch makes effective level 0 SUFFICIENT for a skip — ACCEPT, and it is the most serious defect of the whole Gate-B cycle, because it widens the gate-off path the change promises never to widen. My pass-11 rewrite listed eligibility per citation shape and left the fix's own triviality stated only in the no-story branch, with the catch-all reading as a fall-through. Read literally, a substantial logic fix could skip Gate B because its cited story happened to be profiled `trivial`/`none` — a NEW way to skip a gate, invented by a command while the policy it cites was being narrowed.
+   Restructured so the shape cannot be misread: the substantial-fix rule leads ("every substantial fix runs Gate B — no profile makes a substantial fix skippable"), and a skip requires BOTH a trivial fix AND every cited story eligible, stated as a conjunction rather than as branches a reader completes by fall-through.
+   Class note: this is the third defect introduced into this same file by a fix to it (pass 10 size-only skip -> pass 11 missing branches -> pass 15 sufficiency error). The pattern is that each rewrite preserved the NEW rule and lost an OLD condition that lived in prose the rewrite replaced. A decision procedure being rewritten should be diffed for conditions DROPPED, not only checked for the condition added.

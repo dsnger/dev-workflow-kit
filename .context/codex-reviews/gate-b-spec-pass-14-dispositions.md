@@ -1,0 +1,8 @@
+# Gate B — spec branch — pass 14 dispositions
+
+1 finding, Major. Accepted. (The quality branch was CLEAN this pass — NO FINDINGS.)
+
+1  MAJOR the corrected classifier description is STILL an overclaim — ACCEPT. My pass-13 fix named `is_prompt_path`'s regex as if it were the whole match set and said a bare `agents/` or `hooks/` "matches nothing"; `is_docs_only` also routes non-Markdown paths, mixed commits and an empty/undeterminable list to the reminder, so `hooks/codex-gate.sh` IS seen. "Fire full Gate B" also blurred an advisory hook that only prints and always exits 0 with the policy requirement itself.
+   FOURTH round of this class on ONE paragraph (pass 12: false rationale; pass 13: categorical prompt claim; pass 14: partial-matcher claim + enforcement blur). AGENTS.md predicts the shape exactly — "each correction introduced a subtler version of the same claim" — and this cycle reproduced it in a paragraph being rewritten to fix that very class.
+   So the fix is NOT a more precise enumeration. A user-facing methodology overview has no business restating a classifier: every restatement is a new copy that can drift from the source and a new chance to overclaim. The paragraph now says the policy requires Gate B for prompt artifacts, that the policy file spells out which paths count, that a reminder hook classifies independently, that both err toward firing, and that the hook only reminds and is not what makes the review happen. No path list, no enforcement claim, nothing to drift.
+   Generalisable lesson for the ledger: when a claim about a mechanism needs a fourth correction, delete the claim rather than refine it — the doc that needs it can cite the source instead.

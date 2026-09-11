@@ -1,0 +1,2 @@
+MINOR | high | plugins/dev-workflow/CHANGELOG.md:31 | The 0.9.1 entry says both corrected prompt copies point at `codex-gate.sh`, but CLAUDE.md:458-461 and workflow-init.md:648-651 contain no such pointer, and the same entry later says the mechanism claim was deleted | The release note falsely describes the shipped prompt and leaves the hook-mechanism accuracy branch not fully closed | Delete “pointing at `codex-gate.sh` instead,” while retaining the accurate statement that the copies do not restate the hook decision logic
+END OF FINDINGS (1 total)

@@ -10,8 +10,23 @@ _unrelated-seo-work/
 # Hook state. The adoption marker `.context/codex-gate.on` is meant to be committed
 # and shared; the mutable counters are per-clone scratch and must not be — a committed
 # passCount hands every fresh clone a pre-counted Gate-B pass.
+#
+# `codex-reviews/` is tracked from 2026-09-10, for the same reason `docs/field-reports/`
+# is: three field reports exist only because someone hand-carried per-pass counts out of
+# this directory before a `.context/` clear destroyed them. Tracked, those counts survive
+# on their own and `grep -cE '^(BLOCKER|MAJOR|MINOR|NIT) \|'` re-derives any curve. This
+# does NOT affect the Gate-B fingerprint: `codex-gate.sh` excludes `.context/` from all
+# three of its components by pathspec and `git rm --cached`, independent of this file, and
+# its own comment records that "`.context/` is committed in some projects".
+#
+# KNOWN DIVERGENCE, deliberate and local: `CLAUDE.md` §5 ("Why `.context/codex-reviews/`")
+# still says to ignore that path, and the `/workflow-init` template still writes that
+# instruction into target projects. Both are unchanged on purpose — editing §5 is a
+# two-copy prompt change with a full Gate-B cycle and a plugin version bump, which is a
+# separate decision. This repo deviates; nothing shipped does.
 .context/*
 !.context/codex-gate.on
+!.context/codex-reviews/
 
 # Local drafts and reading notes — working material, not repo content. `docs/field-reports/`
 # is deliberately NOT here: field reports are tracked, because a field-intake round cites
