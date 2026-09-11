@@ -45,7 +45,42 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 16 | 5d12884 | 12→**8** | 1→**1** | 7→**4** | yes | **B+M 8→5, lowest of the cycle.** One tell (Blockers flat). Five B/M applied; Minors 7 and Nit 8 collected. Findings 2 and 4 are the spec disagreeing with *standing* §5 text, not with itself; session 01a08fff-fadf-72f2-994d-618048bea473 |
 | 17 | c2d5fe1 | 8→**9** | 1→**1** | 4→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 5→8. **Three findings (4, 5, 7) are one mechanism on its third pass**: a standing §5 sentence the block falsifies that §4 does not name. All 9 held open; session 01a0901b-ecf3-73b2-886c-5b3c7dc63a74 |
 | 18 | 96c3611 | 9→**15** | 1→**0** | 7→**12** | yes | **first pass on the target text. ZERO BLOCKERS, first since pass 7.** Finding 1 names the restructure as half-done: §H is still paraphrase, not text. Findings 6,7,8 name three standing sentences by line number — the 15/16/17 mechanism, now findable; session 01a09068-de4a-7071-97a7-82cc4774544f |
-| 19 | — | — | — | — | not run | next action, after §H is written out as literal text |
+| 19 | 6d52fcc | 15→**13** | 0→**1** | 12→**10** | yes | precheck caught a silent loss before the pass: `a20` ("don't manufacture findings to pad") had fallen out of the target text; restored to §A. Two known contradictions repaired in the same commit. **Only 6 of 13 findings are against the target text**; 5 are against the design spec and 2 against standing §5; session 01a0912a-7329-7450-bdb3-da043e88e7bb |
+| 20 | — | — | — | — | not run | next action, after pass 19's findings are dispositioned |
+
+## Pass-19 three-line report — first pass on a target text with no paraphrase left
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 8, 9, 15, **13**. Blockers …, 1, 1, 0, **1**. Majors …, 4, 7, 12, **10**.
+  Blocker+Major …, 10, 6, 8, 5, 8, 12, **11**.
+- **Cluster (pass 19):** product 7 of 13 (1, 2, 3, 4, 5, 6, 8); **prose about the artifact or the
+  design 4** (7 the ellipses against "nothing here is a paraphrase", 9 the design's ownership
+  sentence, 12 and 13 two stale `§3` citations); the instrument 2 (10, 11 — §7's verification).
+- **require↔withdraw:** none. Named near-miss: finding 10 reports that design §7 cites a `Kind`
+  column the pass-17/18 cut removed, but its fix offers "require the plan to classify" instead of
+  restoring the column — a dangling reference reported, not the removed table demanded back. The
+  mirror shape, not the shape.
+
+**Tells: one of five** — the Blocker count failed to fall, 0 → 1. Findings fell 15 → 13, Majors
+fell 12 → 10, the cluster is product, no pair. One is not two: no mandatory stop.
+
+**Where the findings landed, and it is the new thing this pass shows.** Only **6 of 13** are
+against the target text (1, 2, 3, 5, 6, 7). **Five are against the design spec** (9, 10, 11, 12,
+13) and **two against standing §5 text** (4, 8). Four of the five design findings are stale
+internal references the pass-17/18 cut created — `§4`'s removed `Kind` column, `§3` cited twice for
+material that now lives in target §A, and an ownership sentence §2 already replaced. That is the
+restructure's own debris, mechanical to fix and not a design question.
+
+**The precheck earned its place this pass.** It caught `a20` — a live behavioural prohibition in
+both copies — vanishing inside a replacement span whose label said `a17`–`a19`. Nothing in the
+pass-19 findings names it, so had it not been caught here it would have shipped.
+
+**The Blocker is about the closing-time recheck's list.** §A gates the closing act on a changed
+profile, cited set or evidence entry, and not on the reviewed artifact revision or the assigned fix
+set — while the same block says a later broadening is "a new fact the **next** pass reads". Verified
+against the text: the list is those three and no more.
 
 ## Pass-18 three-line report — first pass on the target text
 
