@@ -14,8 +14,9 @@ take it.
 
 **Narrowed twice on 2026-09-10, and §9 lists what moved.** First the record-durability subject
 went to a successor story. Then the bookkeeping went to the plan: this spec was 785 lines of
-which the design was 173, and the remaining 58% — quoted OLD and NEW text, per-condition
-dispositions, the parity divergence list, the verification substrings — took roughly half the
+which the design was 173, and **58% of it sat in four bookkeeping sections** — quoted OLD and NEW
+text, per-condition dispositions, the parity divergence list, the verification substrings, 456
+lines between them — which took roughly half the
 findings of every Gate-A pass while describing work the plan performs against real files. **It
 is moved, not dropped.** The plan is the carrier and each section below names what it owes.
 
@@ -115,10 +116,12 @@ commit that is depends on the cycle kind** — for a **Gate-B** cycle the closin
 Mechanics · Finishing the cycle describes, for a **Gate-A** cycle the commit of the reviewed spec
 or plan, that gate having no WIP snapshot and no amend. Nothing is closed before that commit, and
 a profile, cited set or — in a Gate-B cycle — evidence entry that changes in between still gates
-it. **A commit the hook reads as cycle-closing is a separate matter**: Mechanics warns that a
-non-`WIP` commit mid-cycle resets the hook's counters, which is an observation about the counter
-and not a closure under these rules — a cycle with an unmet precondition is not closed by being
-committed over, and the warning stands as written. A plateau
+it. **A commit the hook reads as cycle-closing is a separate matter**: a non-`WIP` commit mid-cycle
+makes the hook read the cycle as closed and discards the passes counted so far, which is an
+observation about the counter — **the cycle itself stays open until the conditions above hold**,
+so an accidental commit destroys the pass credit and closes nothing. The Mechanics sentence that
+says such a snapshot "closes the cycle" is edited to say that, since left as written it is a
+second, event-derived closure path beside this one. A plateau
 or tells on that pass go into the closing report and never block it, because reporting "will not
 converge" on a converged loop is a false report. **No other pass outcome makes a cycle eligible
 to close**, because every other pass leaves a required repair, a hold or a question outstanding,
@@ -150,9 +153,14 @@ it gates closing, discharged by the count of valid logical passes reaching it wi
 them clean, or by the zero-finding exit. The **Blocker/Major-resolve duty** is a **precondition
 on closure and on any pass being clean**: Mechanics Severity, scoped to the assigned fix set,
 states what it demands and **what discharges it — a repair or a validated dismissal — and what a
-dismissal is**, all at that source; a validated pass finding **no in-set Blocker or Major at
-effective severity** is what shows it discharged, the clean predicate's own wording, so the two
-cannot drift. The **hold** a surfaced finding places on closure **participates in the
+dismissal is**, all at that source. **It is discharged per finding and tracked across the cycle,
+never inferred from a later pass.** A findings file establishes the **inventory** of what that
+pass found and not the resolution of anything, so a later pass that does not mention an earlier
+in-set Blocker or Major says nothing about whether it was repaired or dismissed; reading its
+absence as discharge would let an omission close a cycle. **Closure therefore reads two things,
+not one**: the final pass is clean, *and* no in-set Blocker or Major raised anywhere in this cycle
+is still undischarged. A pass's cleanliness stays a fact about that pass's own findings, which is
+what §5 already says it is. The **hold** a surfaced finding places on closure **participates in the
 ordering**: it gates closing while it stands, and is discharged by the answers that surface
 requires. **It attaches to every surfaced finding, whichever suspension surfaced it** — clean
 completion creates none, because it wins before anything is surfaced. **No-clean-credit** — no
@@ -171,17 +179,25 @@ this finding. **The two health readings differ in what they surface, and therefo
 hold.** The **two-tell stop surfaces tells and no finding**, so it creates no hold; what it leaves
 outstanding is its own continue-or-stop question, which the composition rule below holds the cycle
 on until it is answered. The **clearly-stuck reading does surface findings** — those its third
-condition is about — and each takes a hold like any other surfaced finding, discharged by **every
-answer its own surface requires**: the scope-stop answers where that finding also carries a
-trigger, the continue-or-stop answer being additional there; and where it carries neither trigger,
-that continue-or-stop answer is the only answer its surface asks for and is what discharges the
-hold. So no surfaced finding is left without a discharging answer, and no surface without a
-finding is given a hold nothing could discharge.
+condition is about — and each takes a hold like any other surfaced finding. **Where one finding is
+surfaced by both, it carries two hold components and each is discharged by its own answer, which
+is what keeps D4 and D5 exact**: the **membership** component ends on the membership answer in
+either direction, a decline releasing it as **D5** requires and as the absorb paragraph's own
+sentence says; the **clearly-stuck** component ends on the reading's continue-or-stop answer.
+Neither answer discharges the other's component, and where the finding carries no scope-stop
+trigger the continue-or-stop answer is the only one its surface asks for and discharges the only
+component there is. **Resumption is still the composition rule's**, which waits for every
+outstanding answer — so separating the components changes what each answer discharges and never
+lets one answer resume the loop alone. So no surfaced finding is left without a discharging
+answer, and no surface without a finding is given a hold nothing could discharge.
 At a **membership stop** the answer is **accept**, the finding joining the fix set
 where Mechanics Severity governs it, or **decline**, the finding staying outside and binding so
 for the rest of this cycle. A later answer that contradicts a decline **does not reverse it**:
-the decline **remains binding**, the contradiction is **surfaced to the user as information**,
-and the **cycle continues** — nothing here turns one answer into another, since that would let a
+the decline **remains binding** and the contradiction is **surfaced to the user as information**,
+changing neither membership, nor the cycle's state, nor any outstanding question — **whether the
+loop resumes is decided by the composition rule below and by nothing here**, so a contradictory
+answer is never itself a resumption and cannot step past a hold or a health question still
+awaiting its own answer. Nothing here turns one answer into another, since that would let a
 finding be moved out of the set and back into it to escape what it owes inside it. **There is no
 withdrawal inside the cycle that declined**, because **D7** binds a decline for the remainder of
 its cycle and admits no exception; a reconsideration is a later cycle's, where D7 gives the
@@ -309,24 +325,29 @@ reason §7 gives. Working around any of these would ship two instructions that d
 | 18 | the five-tells pointer | passage (e) | the passage says nothing about what its answer does; one sentence names the stop a suspension and defers to the ordering | addition |
 | 19 | the handed-over severity question | Mechanics · Severity, passage (g) | the paragraph says the demotion/loop-health question is unsettled and mandates a stop; replaced by the answer, which is the (g) text below | replacement |
 | 20 | the unknown-start strict-reading list | passage (i) | the list of what a cycle takes at its strictest omits the suspensions this change ships; it gains **every suspension binding, since unknown starting rules cannot waive an open hold** — the reason carried inline, as prompt-standards item 6 requires of the clause itself | addition |
-| 21 | the one-contract paragraph | Mechanics, the "These records are one contract" paragraph, C and W — **outside the ten inventoried passages** | its coherence stop reaches the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start semantics, and reaches none of this change. Two changes, one contiguous rewrite of the paragraph's opening and its membership: the opening noun broadens from *records* to **the rules and records a cycle runs under**, since what is added is not a record; and the membership gains **the closure ordering together with every source edit it cites or depends on**, stated as that description and **not as a list of item numbers** — the numbering is this spec's working aid, it is not in the shipped text, and a shipped list would have to be re-derived whenever a span merges. **What this is: the same instruction to the agent, over a wider membership.** Not a checker, and none is built. **The plan establishes the membership against the real files** — every edit the block cites or depends on — which is where dependence is decidable | replacement |
+| 21 | the `WIP:`-naming warning's closure claim | Mechanics · `baseSha`, C and W — **outside the ten inventoried passages** | "A pre-review snapshot named anything else reads as a real commit and **closes the cycle**, discarding the passes you just accumulated" is an **event-derived closure path** beside the ordering's content-and-precondition-derived one, and the two decide an accidental commit in opposite directions. It becomes: the hook reads such a commit as closing and discards the counted passes, **while the cycle itself stays open until the ordering's closure conditions hold**. The warning keeps its force — the cost of the mistake is the lost pass credit — and stops claiming a closure the rules do not grant | replacement |
+| 22 | the one-contract paragraph | Mechanics, the "These records are one contract" paragraph, C and W — **outside the ten inventoried passages** | its coherence stop reaches the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start semantics, and reaches none of this change. Two changes, one contiguous rewrite of the paragraph's opening and its membership: the opening noun broadens from *records* to **the rules and records a cycle runs under**, since what is added is not a record; and the membership gains **the closure ordering together with every source edit it cites or depends on**, stated as that description and **not as a list of item numbers** — the numbering is this spec's working aid, it is not in the shipped text, and a shipped list would have to be re-derived whenever a span merges. **What this is: the same instruction to the agent, over a wider membership.** Not a checker, and none is built. **The plan establishes the membership against the real files** — every edit the block cites or depends on — which is where dependence is decidable | replacement |
 
 **Passage (g)'s replacement is design rather than bookkeeping, so it is stated here in full:**
 
 ```
   **The demotion changes what a cycle must resolve, never what it observes.** **Every
-  loop-health reading** — the per-pass counts, the finding clusters, the tell thresholds and
-  the clearly-stuck reading's regenerating-Blocker-or-Major condition — reads the severity the
-  reviewer wrote in the findings file, before the ceiling is applied: a demoted finding still
-  counts in the finding total and in its cluster, and a Blocker demoted to Minor is still a
-  Blocker to the curve and still regeneration to that condition. Cleanliness and the resolve
+  loop-health reading observes the findings as the reviewer produced them, before the ceiling
+  is applied** — so a demoted finding still counts in the finding total and in its cluster, and
+  a Blocker demoted to Minor is still a Blocker to the curve and still regeneration to the
+  clearly-stuck reading's third condition. Where such a reading uses severity at all it takes
+  the **reader-normalized pre-ceiling severity**, which is the severity the Reader paragraph
+  above already produces from the findings file — case-folded, and a non-empty unrecognized
+  token read as `MAJOR` — never the raw token, so a finding written `IMPORTANT` counts for the
+  curve exactly as it counts for the pass. Cleanliness and the resolve
   duty read the effective severity, after the ceiling (the
   closure ordering above). The line is **what the cycle owes versus what it observes about
   itself**, which is why no list of readings has to be kept complete here. Two reasons for the
   split. The curve must stay derivable from the
-  findings files alone — counting finding lines and leading `BLOCKER` and `MAJOR` fields per
-  pass reproduces its three series, which is the only thing that makes a self-reported curve
-  checkable; the subject clusters are a judgement per finding and no count reproduces them.
+  findings files alone — the finding total counts finding lines and the Blocker and Major
+  series count the lines whose normalized severity is each, which is the only thing that makes
+  a self-reported curve checkable; the subject clusters use no severity at all, being a
+  judgement per finding that no count reproduces.
   And the demotion is the author's judgement about **the finding's repair severity**, never
   about which findings the fix set contains — a separate predicate the absorb paragraph
   defines, and one this must not be read as touching; a loop spending passes on findings the author keeps
@@ -338,7 +359,7 @@ Two sentences are **not** edited and are named so nobody looks for them: the "Co
 into the squash body" sentence inside the human-exception block, and the "records every cycle
 owes" list. This change ships no record.
 
-**Item 21 was added at Gate-A pass 14 on Daniel's decision**, as a **bounded extension of the
+**Item 22 was added at Gate-A pass 14 on Daniel's decision**, as a **bounded extension of the
 existing coherence instruction** — no checker, no new mechanism, and nothing about record
 durability, which stays with the successor story. It is the only edit in this table touching a
 passage no earlier revision named, and §9 states what it is worth. The `c8` widening that pass 14
@@ -563,12 +584,12 @@ line ranges (§4); the parity divergence list and the extraction-and-diff (§6);
 verification fragment with its counts (§7). Each is work this change still owes; none of it is
 work a spec can do correctly, because all four are checked against files the plan edits.
 
-**Partial adoption of the narrowed set — answered by §4 item 21, and what that answer is worth.**
+**Partial adoption of the narrowed set — answered by §4 item 22, and what that answer is worth.**
 The set is mutually dependent, and **the rule that says which edits belong is stated rather than
 enumerated**: an edit is coupled when the block **cites it or depends on it** — the boundary its
 clean predicate reads, the sentences that give *clean* its two senses, the triggers it reads, the
 source rules whose old text the ordering falsifies, and the severity and dismissal rules it cites.
-Item 21 carries that description into the live one-contract paragraph, which until now reached
+Item 22 carries that description into the live one-contract paragraph, which until now reached
 only the nonce, the slots, the provenance line, the curve, the carry rule and the unknown-start
 semantics. **An earlier revision of this section named the members as a list of item numbers and
 the list was wrong** — it omitted several edits the block plainly depends on — which is why the
@@ -577,14 +598,14 @@ decidable and the numbering does not exist.
 
 **Stated as what it is.** That paragraph is **an instruction to the agent**: a project whose text
 carries some members and not others, or versions that disagree, **stops and has a human complete,
-revert or reconcile the adoption before running a gate under it**. Item 21 widens whom that
+revert or reconcile the adoption before running a gate under it**. Item 22 widens whom that
 sentence is about. It is not a guard and not a mechanical check, and this change builds neither —
 **nothing detects a partial adoption**, and the stop happens only where an agent reads the
 sentence and acts on it.
 
 **What it therefore does not buy, said rather than implied.** A project that adopts the block
-without adopting item 21 is not reached at all, which is the partial-adoption case applied to the
-rule against partial adoption; the existing paragraph has the same property and item 21 neither
+without adopting item 22 is not reached at all, which is the partial-adoption case applied to the
+rule against partial adoption; the existing paragraph has the same property and item 22 neither
 worsens nor repairs it. Nor does it detect a *silent* half-merge in a project that did adopt it —
 it obliges a stop once someone notices, which is a different thing from noticing. **What it
 removes is the narrower state this spec previously admitted**: that the coherence rule did not
@@ -592,7 +613,7 @@ name this material at all, so an agent reading the sentence and willing to act o
 to act on. Two earlier revisions got this wrong in opposite directions — one claimed the existing
 rule already caught the block, and one assigned the guard to the successor story, whose scope is
 record durability and **excludes the closure ordering by name**. Both named a mechanism that did
-not exist; item 21 names a sentence that does, and claims only what that sentence does.
+not exist; item 22 names a sentence that does, and claims only what that sentence does.
 
 **Out of scope and parked**, unchanged:
 

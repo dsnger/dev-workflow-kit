@@ -40,7 +40,42 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 13 | 78e5f97 | 16 | 2 | 8 | yes | **the loop turned: B+M 14 → 10, Majors 13 → 8**; session 01a08c98-b6cd-7bc3-9556-8f1c87491031 |
 | 14 | c06dd69 | 16→**10** | 2→**1** | 8→**5** | yes | spec byte-identical to 0168f88 (532 lines); **lowest B+M of the cycle, 6**; **SCOPE STOP surfaced on finding 6** (partial-adoption guard = a 21st edit, outside the twenty); session 01a08f70-6d1e-7cf1-baa3-6df3cc59bc32 |
 | 15 | 17cf2e9 | 10→**12** | 1→**1** | 5→**7** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** B+M 6→8. **Six of twelve regenerate from pass 14's own repairs** (3, 4, 6, 7, 10, 11). All 12 held open; session 01a08fb2-6e8e-73d0-9d2b-8fb92d1571dd |
-| 16 | — | — | — | — | not run | blocked on the two-tell answer |
+| 16 | 5d12884 | 12→**8** | 1→**1** | 7→**4** | yes | **B+M 8→5, lowest of the cycle.** One tell (Blockers flat). Five B/M applied; Minors 7 and Nit 8 collected. Findings 2 and 4 are the spec disagreeing with *standing* §5 text, not with itself; session 01a08fff-fadf-72f2-994d-618048bea473 |
+| 17 | — | — | — | — | not run | next action |
+
+## Pass-16 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 16, 10, 12, **8**. Blockers …, 2, 1, 1, **1**. Majors …, 8, 5, 7, **4**.
+  Blocker+Major 20, 15, 10, 11, 15, 13, 9, 8, 12, 17, 14, 14, 10, 6, 8, **5** — **the lowest of the
+  cycle**, past the pass-14 low of 6.
+- **Cluster (pass 16):** product 7 of 8; bookkeeping 1 (the 58% claim); **the instrument 0**, the
+  first zero-instrument pass since pass 9.
+- **require↔withdraw:** none. Finding 3 objects to the hold split made *for* pass 15's finding 11,
+  which is a later pass questioning a repair — the mirror of the pair's shape, not the shape.
+
+**Tells: one of five** — the Blocker count flat at 1. Findings fell hard, Majors fell, the cluster
+is product. One is not two, so no mandatory stop. The clearly-stuck exit is not reachable either:
+its first condition needs a plateau and the curve is at a cycle low.
+
+**What changed in the loop's shape, and it is worth naming.** Findings 2 and 4 are the first in
+this cycle where the spec disagrees with **standing §5 text rather than with itself** — the
+Mechanics `WIP:` warning claiming a non-WIP commit "closes the cycle", and the Reader paragraph
+normalizing severity tokens the (g) replacement assumed were raw. Both were invisible while the
+spec was still contradicting itself. That is the boundary work pass 13 predicted, arriving two
+passes after the rollback made room for it.
+
+**The rollback is holding.** No finding asked for a restored enumeration, no finding hit a stated
+total, and the one new source edit (item 21) cost no count update — which is what removing the
+totals bought.
+
+**Minor 7 and Nit 8 are collected, not repaired as their own round.** Nit 8's number was correct
+and its wording was not: 58% measures the four bookkeeping sections (456 of 785), not "the
+remaining" after the design's 173. Fixed in the same clause while the surrounding sentence was
+already open; no revision round was spent on it. Minor 7 — whether the two-branch concatenation
+strips terminators and `NO FINDINGS` lines — stands open and is recorded here.
 
 ## Pass-15 three-line report — MANDATORY TWO-TELL STOP
 
