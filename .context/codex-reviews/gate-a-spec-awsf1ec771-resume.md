@@ -70,16 +70,24 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 **Tells: two of five — the threshold. Stop-and-surface is mandatory, not discretionary.** The
 finding count rose 10 → 14 and the Blocker count failed to fall, 0 → 1.
 
-**Every Blocker and Major comes out of a repair made in the last three rounds. All six, nameable:**
+**Provenance of the six Blocker/Majors — CORRECTED 2026-09-12 after the reviewer challenged it.**
+The first version of this table said all six came out of the last three repair rounds. **That was
+wrong**, and the two categories must stay apart: *damage made by a recent repair* and *an older
+defect only now rediscovered*. Traced with `git log -S` against each sentence:
 
-| # | Sev | What it says | Repair it comes from |
-|---|---|---|---|
-| 1 | BLOCKER | the artifact/request equality is written cycle-generally, but **Gate B passes a git range, not artifact text**, so it has no value to test — leaving an eligible Gate-B pass unable to close and, being eligible, unable to suspend | pass 25 (the per-condition gate reading) |
-| 2 | MAJOR | the source-block branch says its case is "settled first" while the **suspension branch is evaluated before it** | pass 24 (branch order) |
-| 3 | MAJOR | each gate was sent to "its own source", but the **assigned fix set has no closing-time source rule** to be sent to | pass 25 (same repair) |
-| 4 | MAJOR | design §2 still calls the block-owned closing tests plural and source-free | pass 25 (§A's neighbour was fixed, the design's was not) |
-| 5 | MAJOR | "the answer a suspension asks for" is given as continue-or-stop, but a **membership stop asks accept or decline** | pass 23 (§F entry 4) |
-| 6 | MAJOR | §H restates the resolve duty **unscoped**, while §E limits it to the assigned fix set | pass 24 (§H surfacing) |
+| # | Sev | What it says | Entered at | Round |
+|---|---|---|---|---|
+| 1 | BLOCKER | the artifact/request equality is written cycle-generally, but **Gate B passes a git range, not artifact text**, so it has no value to test — leaving an eligible Gate-B pass unable to close and, being eligible, unable to suspend | `31bbe8f` | **24** |
+| 2 | MAJOR | the source-block branch says its case is "settled first" while the **suspension branch is evaluated before it** | `31bbe8f` | **24** |
+| 3 | MAJOR | each gate was sent to "its own source", but the **assigned fix set has no closing-time source rule** to be sent to | `8b8e146` | **25** |
+| 4 | MAJOR | design §2 still calls the block-owned closing tests plural and source-free | `8dc22fb` | **20** |
+| 5 | MAJOR | "the answer a suspension asks for" is given as continue-or-stop, but a **membership stop asks accept or decline** | `5174d7a` | **19** |
+| 6 | MAJOR | §H restates the resolve duty **unscoped**, while §E limits it to the assigned fix set | (reworked) | **22** |
+
+**So: three of six from the last three rounds (24, 24, 25), and three rediscovered from rounds 19,
+20 and 22. None from round 23.** The loop is still producing repair damage, and it is also still
+finding old defects for the first time at pass 26 — which is the same fact that makes the
+clearly-stuck coverage condition unaffirmable.
 
 **Verified before this report, not inferred:** the equality condition and the closing-time gate list
 are written cycle-generally (target 117–120 and 149–153, the list naming the evidence entry as the
@@ -88,12 +96,26 @@ membership answer at target 259; and `CLAUDE.md:354`, which ships the optional
 `<slot>-dispositions.md` companion — an **eighth** standing sentence the target contradicts by
 saying a cross-session record is one "these rules do not ship" (finding 7).
 
-**One shape runs through findings 2, 3, 4, 5 and 6, and the Minors have been naming it for five
-passes.** Each is **a rule stated in §A that also lives at a source, or a source sentence §A's
-wording contradicts**. That is the two-authorities mechanism pass 11's finding 14 named. Finding 8
-has re-raised it as a collected Minor at passes 23, 24, 25 and 26; finding 9 is on its **fifth**
-appearance. The Majors were repaired one at a time while the Minor pointing at their common cause
-was collected each round under the standing rule.
+**The two-authorities reading explains part of the six, and my pass-26 report overstated it.**
+It was written as "one shape runs through findings 2, 3, 4, 5 and 6" and as "option C removes five
+findings as a class". **Neither is established**, and the reviewer's breakdown is the accurate one:
+
+| # | Would precise citation fix it? |
+|---|---|
+| 2 | **No** — evaluation order is something §A itself must decide. |
+| 3 | **No** — the closing rule for a fix-set change **does not exist anywhere**, and a missing rule cannot be replaced by citing one. |
+| 4 | **No** — it is a divergence between design and target text. |
+| 5, 6 | **Yes** — precise references, and removing a wrong restatement, do answer these two. |
+
+**"§A cites throughout" would itself be a false rule**, since §A must keep defining the evaluation
+order and its own closure decisions. **Option C is therefore not a bounded approach yet**, only a
+partial diagnosis.
+
+**And the Minor rule is not the culprit either.** It forbids Minors their own repair rounds; it does
+**not** forbid repairing a demonstrated common cause of several Majors. That a Minor was re-raised
+at passes 23–26 (finding 8) and another at five consecutive passes (finding 9) does **not**
+establish that clearing them would have prevented the heavy defects. Recorded because the pass-26
+report implied it did.
 
 **The clearly-stuck reading stands at two of three** — regeneration is nameable for all six, and
 B+M has never reached zero in twenty-six passes — but **coverage is not affirmable**: finding 1
@@ -1257,7 +1279,26 @@ here" blocks, which must stay in or the reviewer re-raises deferred material.
 survives a context clear on this machine and not a fresh clone. This resume note and every pass
 file are tracked from 2026-09-10 and do survive.
 
-## STATE AT HANDOFF — 2026-09-11 midday
+## PARKED 2026-09-12 — cycle open, not running. READ THIS FIRST.
+
+**Daniel's answer to the pass-26 two-tell stop: B — park the cycle open.** Gate A stays open, the
+target text stays **inactive**, all 14 pass-26 findings stay open and unrepaired. **No further
+repair round and no pass 27.** Restarted only by an explicit later decision.
+
+- **HEAD `56d8f5a`** on `loop-rule-consolidation`, tree clean, **26 passes run, none clean**.
+- **Nothing is closed and nothing is claimed closed.** Surfacing credits no pass as clean;
+  `CLAUDE.md` and `plugins/dev-workflow/commands/workflow-init.md` are untouched, so **no rule this
+  cycle wrote governs anything**, and the Gate-B scoping Blocker sits in text that ships to nobody.
+- **The 26 passes and their findings are kept**, not discarded. What is withdrawn is the funding of
+  this working method, not the work.
+- **Option C is not decided and no analysis of it is commissioned.** Its claimed common cause and
+  effect are only partly substantiated — see the pass-26 section. A later restart needs **a
+  concretely bounded alternative to the repair-round strategy**, and producing one is not an open
+  task.
+- **The prior investment is not a reason to continue.** Recorded because this cycle's reports twice
+  reached for it.
+
+## STATE AT HANDOFF — 2026-09-11 midday (superseded by the parking entry above)
 
 - **HEAD `ef9a504`** on `loop-rule-consolidation`, tree clean, 18 passes run, none clean.
 - **THE ARTIFACT CHANGED AT PASS 18.** Passes 1–17 reviewed the design spec; from pass 18 the
@@ -1331,6 +1372,7 @@ nothing checks them. They are candidates captured in
 | pass 14 scope stop | **B — accept, bounded.** Extend the existing coherence *instruction* to the closure block and its coupled edits (now the one-contract paragraph, target text §G). No checker, no new mechanism, no record-durability work. |
 | pass 15 | **Bounded rollback**, not another twelve-repair round: totals, item-number lists and enumerated precondition lists removed; behaviour stays decided in the design. |
 | pass 17 two-tell stop | **Interrupt the repair mode.** Produce a non-active **target-text** version; Gate A stays open, no transition to Gate B, no clearly-stuck close claimed. |
+| pass 26 two-tell stop | **B — park the cycle open.** Gate A open, target text inactive, all findings kept. No repair round, no pass 27. Option C undecided and uncommissioned; a restart needs a bounded alternative to the repair-round strategy. The 26 passes are explicitly **not** a reason to continue. |
 | pass 22 two-tell stop | **Continue, bounded.** Rollback of the source-revision line confirmed. One repair round for the seven pass-23 Majors under three precisions — the closing cases decide only *how* to close and never override an intervening artifact change; the stop-and-surface precondition keeps its blocking effect stated positively; §G's membership criterion admits no blanket exemption by section. Then pass 24, then a fresh decision. Recorded late: the answer was given 2026-09-12 after the agent found no confirmation on record. |
 
 ## For the execution phase, not needed yet
