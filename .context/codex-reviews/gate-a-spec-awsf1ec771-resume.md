@@ -51,7 +51,50 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 22 | 2ff9f24 | 6→**13** | 0→**1** | 5→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** Findings more than doubled and the Blocker returned. Three findings (5, 8, 12) are defects in sentences the pass-21 round itself wrote; the Gate-A closing act has now taken a Blocker or Major at passes 20, 21 and 22, each out of the previous repair. All 13 held open; session 01a091bb-b1cd-7562-98d1-a50647a30370 |
 | 23 | d6052fe | 13→**9** | 1→**0** | 5→**7** | yes | **zero tells, no mandatory stop.** But findings 1, 2 and 3 are all in the closing-act paragraph the rollback rewrote the day before, and the paragraph has now produced a Blocker or Major at passes 20, 21, 22 and 23; session 01a094e9-76bd-7521-9c93-c11491c14202 |
 | 24 | 6913c35 | 9→**8** | 0→**1** | 7→**3** | yes | **B+M 4 and Majors 3, both the lowest of the cycle.** One tell. The Blocker is new ground: the closing act reads `HEAD` and the working artifact and never the **index**, which is what `git commit` commits — `AGENTS.md:93`'s own documented failure class; session 01a0950c-f003-79d3-985f-73e2885c9621 |
-| 25 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
+| 25 | 31bbe8f | 8→**10** | 1→**0** | 3→**2** | yes | **B+M 2 and Majors 2, both by far the lowest of the cycle; zero Blockers.** Both Majors are new ground. **Five of the ten are re-raised collected Minors**, one on its fourth appearance; session 01a09522-65bc-7691-8adc-fb26e330810e |
+| 26 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
+
+## Pass-25 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 9, 8, **10**. Blockers …, 1, 0, **0**. Majors …, 7, 3, **2**.
+  Blocker+Major …, 6, 5, 6, 7, 4, **2** — **the lowest of the cycle by a wide margin**; Majors at 2
+  are also a cycle low, and this is the sixth zero-Blocker pass in twenty-five.
+- **Cluster (pass 25):** product 9 of 10; prose about the artifact 1 (finding 4); the instrument 0.
+- **require↔withdraw:** none. Finding 1 is adjacent and is not one: it does **not** ask the withdrawn
+  historical condition back for the artifact — it says the withdrawal leaked onto rules it was never
+  meant to touch.
+
+**Tells: one of five** — the finding count rose 8 → 10. Blockers fell to zero, Majors fell, the
+cluster is product, no pair. **No mandatory stop.**
+
+**What moved the count, and it is not new defect surface.** **Five of the ten are collected Minors
+being re-raised** — findings 3, 4, 5, 8 and 10. Finding 4 (one rationale installed in both §A and
+§C) is on its **fourth** appearance across passes 22, 23, 24 and 25; finding 3 on its third. Under
+the standing decision they get no repair round, so **they will return at every future pass and keep
+the finding count — and its tell — inflated by a fixed amount.** That is a property of the rule, not
+a signal about the artifact, and it is recorded here so the count is not misread later.
+
+**Both Majors are new ground and both are narrow.**
+- **Finding 1 — the withdrawal leaked.** The closing-time summary reads *"Any of them **differing**
+  at the closing act"* over profile, cited set, fix set and artifact together. For the artifact that
+  is exactly the decision taken: current equality. **For the profile it is wrong** — `CLAUDE.md:760`
+  says *"Any profile change costs at least one further pass, in either direction"*, a **change**,
+  not a differing value, and `CLAUDE.md:770` says the same of cited-set membership. A profile
+  changed and restored before closure satisfies my summary and violates the standing rule.
+- **Finding 2 — §G's test cannot see a wholly missing member.** It classifies sentences that are
+  present; where a partial adoption drops a member together with every sentence referring to it, a
+  reader holding only the shipped prompt has nothing to test and no way to notice the absence. The
+  remedy asked for is to **say so**, not to build anything.
+
+**Finding 7 verified in the hook source, not inferred.** §A says without qualification that a
+non-`WIP` commit mid-cycle makes the hook read the cycle as closed and discards the passes counted
+so far. `plugins/dev-workflow/hooks/codex-gate.sh:896` resets the **Gate-A** counter at skill
+boundaries — `superpowers:brainstorming` and `superpowers:writing-plans` — **not on a commit**. The
+claim holds for Gate B and is false as written for Gate A, which is the overclaim class `AGENTS.md`
+names, found for the fifth pass running.
 
 ## Pass-24 dispositions — and a recommendation of the reviewer's own, withdrawn
 
