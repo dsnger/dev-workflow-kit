@@ -54,12 +54,39 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 25 | 31bbe8f | 8→**10** | 1→**0** | 3→**2** | yes | **B+M 2 and Majors 2, both by far the lowest of the cycle; zero Blockers.** Both Majors are new ground. **Five of the ten are re-raised collected Minors**, one on its fourth appearance; session 01a09522-65bc-7691-8adc-fb26e330810e |
 | 26 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
 
+## Pass-25 dispositions — two Majors, one mis-scoped hook sentence, two corrected numbers
+
+**Two numeric corrections of mine, both verified against the pass files before acting:**
+1. The Blocker sequence for passes 23–25 is **0, 1, 0**; my trend line read 1, 0, 0. The tell
+   reading is unaffected — 1 → 0 is a fall either way.
+2. **The re-raised Minor pile does not explain the rise, and a constant base could not.** Pass 24
+   carried 3 Minors, pass 25 carries 7, of which **three are new**. Recurrence is also not
+   guaranteed. The claim that the pile keeps the count "inflated by a fixed amount" is withdrawn,
+   and the tell rule is neither explained away nor reinterpreted.
+
+| Finding | Disposition |
+|---|---|
+| 1 (Major) | **The joint equality sentence is dissolved rather than qualified.** What gates the closing act is now read **condition by condition**: the artifact on current equality; the **profile** and **cited set** on their own sources, which answer a **change** and not a differing value, so one changed and then restored **still costs the pass**; the fix set and the evidence entry likewise. The artifact's current-equality reading is stated as the artifact's alone. |
+| 2 (Major) | **§G names the limit without weakening the duty.** The test classifies sentences that are present and does not establish completeness — an adoption that drops a member with every sentence referring to it leaves nothing to mark the absence. **That bounds detection, never the obligation:** a partial adoption is a stop **however it becomes known**, including from outside this text. |
+| 7 (Minor) | **Repaired inside the paragraph Major 1 already opened**, so it costs no Minor round: the hook sentence is scoped to **Gate B**, and the text says it does not reach a Gate-A cycle's count, which the hook clears at the skill boundaries that start a new Gate-A cycle. Verified at `plugins/dev-workflow/hooks/codex-gate.sh:896`. |
+| 3, 4, 5, 6, 8, 9, 10 | **Collected, no round.** |
+
+**The neighbouring sentences were checked and one did not match.** The ownership boundary claimed
+that *"the closing-time sameness tests below are defined here … they borrow no rule and have no
+other source"* — true of the artifact's test and **false of the profile's and the cited set's**
+after this round, since those now defer to their sources. Corrected in the same round; it is exactly
+the mismatch the instruction warned about.
+
+**No zero-findings target is implied by any of this.** A pass carrying no in-set Blocker or Major at
+effective severity and no scope-stop trigger is clean with collected Minors still standing.
+
 ## Pass-25 three-line report
 
 **Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
 `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
 
-- **Trend:** findings …, 9, 8, **10**. Blockers …, 1, 0, **0**. Majors …, 7, 3, **2**.
+- **Trend:** findings …, 9, 8, **10**. Blockers …, **0, 1, 0** (corrected — the first version of this
+  line read 1, 0, 0 and was wrong; recounted from the pass files). Majors …, 7, 3, **2**.
   Blocker+Major …, 6, 5, 6, 7, 4, **2** — **the lowest of the cycle by a wide margin**; Majors at 2
   are also a cycle low, and this is the sixth zero-Blocker pass in twenty-five.
 - **Cluster (pass 25):** product 9 of 10; prose about the artifact 1 (finding 4); the instrument 0.
@@ -67,15 +94,24 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
   historical condition back for the artifact — it says the withdrawal leaked onto rules it was never
   meant to touch.
 
-**Tells: one of five** — the finding count rose 8 → 10. Blockers fell to zero, Majors fell, the
-cluster is product, no pair. **No mandatory stop.**
+**Tells: one of five** — the finding count rose 8 → 10. Blockers fell 1 → 0, Majors fell, the
+cluster is product, no pair. **No mandatory stop.** The tell stands as the rule states it.
 
-**What moved the count, and it is not new defect surface.** **Five of the ten are collected Minors
-being re-raised** — findings 3, 4, 5, 8 and 10. Finding 4 (one rationale installed in both §A and
-§C) is on its **fourth** appearance across passes 22, 23, 24 and 25; finding 3 on its third. Under
-the standing decision they get no repair round, so **they will return at every future pass and keep
-the finding count — and its tell — inflated by a fixed amount.** That is a property of the rule, not
-a signal about the artifact, and it is recorded here so the count is not misread later.
+**Five of the ten are collected Minors being re-raised** — findings 3, 4, 5, 8 and 10. Finding 4
+(one rationale installed in both §A and §C) is on its **fourth** appearance across passes 22–25;
+finding 3 on its third.
+
+**What that does and does not explain — corrected after the reviewer challenged it.** The first
+version of this report said the re-raised pile keeps the count "inflated by a fixed amount" and
+would return at every future pass. **Both halves are wrong.** A constant base cannot produce a
+**rise**, and the rise is real: pass 24 carried 3 Minors, pass 25 carries 7, of which **three are
+new** (§E's curve-derivability claim, the hook's scope, §G's "this section"). Nor is recurrence
+guaranteed — a reviewer may simply not raise a collected finding again. **The tell rule is not
+explained away and is not reinterpreted here.**
+
+**And no zero-findings target is being built.** A later pass with no in-set Blocker or Major at
+effective severity and no scope-stop trigger **is clean with collected Minors still standing**; the
+remaining closure conditions decide the rest. The Minor pile does not have to reach zero.
 
 **Both Majors are new ground and both are narrow.**
 - **Finding 1 — the withdrawal leaked.** The closing-time summary reads *"Any of them **differing**

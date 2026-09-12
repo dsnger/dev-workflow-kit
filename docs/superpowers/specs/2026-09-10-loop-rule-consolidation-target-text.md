@@ -54,10 +54,12 @@ evaluation order or as a thing beside it is a question of wording, not of author
 turns that wording into an argument about whether the paragraph has overrun its own boundary. **Everything else it names it cites**:
 the scope triggers, the assigned fix set, every severity rule, and every closure precondition
 **that has a source of its own** keep their one definition in the paragraph that owns them, and a
-reader who finds one of *those* defined here has found a defect. **The closing-time sameness
-tests below are defined here and are not an exception to that**: they borrow no rule and have no
-other source, being part of the closure decision this paragraph owns rather than a precondition
-stated elsewhere and read from here.
+reader who finds one of *those* defined here has found a defect. **The artifact's closing-time
+equality test below is defined here and is not an exception to that**: it borrows no rule and has
+no other source, being part of the closure decision this paragraph owns rather than a precondition
+stated elsewhere and read from here. **The other closing-time gates are not like it** — the
+profile's and the cited set's are their own sources' rules, cited from here and not restated, which
+is the sentence before this one applied rather than excepted.
 
 **What a pass is read from.** Every finding-derived predicate reads the validated findings file
 **or files** of the logical pass as **the concatenation of their finding lines after each file
@@ -145,18 +147,24 @@ what; the safe git sequence for each belongs to the plan.**
 **A human-exception record this cycle owes goes in the commit its closing act uses**, so the two
 never land in different places. **No new revision of the artifact is made to close a Gate-A
 cycle**, a new revision being one no pass has run against — and committing already-reviewed text
-that was never committed is not one. Nothing is
-closed before that act, and
-what changes in between still gates it: the **profile**, the **cited set**, the **assigned fix
-set**, the **artifact measured against the final pass's request text**, and — in a Gate-B cycle —
-the **evidence entry**. Any of them differing at the closing act makes that pass non-final and
-owes another, which is the same answer a mid-pass change already gets. **Sameness is read on the
-artifact and the duties, never on the branch tip**: writing the closing body is itself a commit,
-so a commit that only records the closure changes neither, while an edit to the artifact or a
-broadening of the set changes one and costs the pass. **A commit the hook reads as cycle-closing is a separate matter**: a non-`WIP` commit
-mid-cycle makes the hook read the cycle as closed and discards the passes counted so far, which
-is an observation about the counter — the cycle itself stays open until the conditions above
-hold, so an accidental commit destroys the pass credit and closes nothing. A plateau or tells on
+that was never committed is not one. **Nothing is closed before that act, and what still gates it in
+between is read condition by condition rather than as one comparison.** The **artifact** gates on
+the equality above and on nothing stronger. The **profile** and the **cited set** gate as their own
+sources say, and those sources answer a **change** and not a differing value: a profile change
+costs at least one further pass in either direction, and a cited-set membership change makes the
+final clean pass run against the current set — **so one of those changed and then restored still
+costs the pass**, which a single "do they differ" test would have let through. The **assigned fix
+set** and, in a Gate-B cycle, the **evidence entry** likewise keep the rules their own sources
+give them. **The artifact's current-equality reading belongs to the artifact and is not carried to
+any of the others.** None of these is read on the branch tip: writing the closing body is itself a
+commit and changes none of them.
+
+**A commit the hook reads as cycle-closing is a separate matter, and it is a Gate-B one.** A
+non-`WIP` commit mid-cycle makes the hook drop its Gate-B review state and that gate's counter —
+an observation about the counter, since the cycle itself stays open until the conditions above
+hold, so an accidental commit destroys Gate-B pass credit and closes nothing. **It does not reach
+a Gate-A cycle's count**, which the hook clears at the skill boundaries that start a new Gate-A
+cycle rather than on any commit. A plateau or tells on
 **the pass that closes** go into **that pass's status report to the user** — the carrier the
 three-line duty already names, and no second report form is introduced — and never block it,
 because reporting "will not converge" on a converged loop is a false report; on an eligible pass
@@ -622,7 +630,11 @@ carry rule naming records a project does not produce is inert, and a clean predi
 fix-set boundary it reads decides membership by accident.
 **A project whose text carries some of them and not others, or carries all of them in versions
 that disagree, stops and has a human complete, revert or reconcile the adoption before running a
-gate under it.**
+gate under it.** **The test classifies sentences that are present, and completeness is not among
+what it establishes**: where an adoption drops a member together with every sentence that would
+refer to it, what remains reads as coherent and nothing in it marks the absence. **That bounds
+what this text lets a reader detect, never what the rule obliges** — a partial adoption is a stop
+however it becomes known, and learning of it from outside this text is learning of it.
 ```
 
 **What this is, stated so nothing reads it as more:** an **instruction to the agent**, over a
