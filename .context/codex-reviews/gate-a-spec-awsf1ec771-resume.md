@@ -50,7 +50,55 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 21 | 8dc22fb | 9→**6** | 1→**0** | 5→**5** | yes | **findings the lowest of the cycle; B+M 5 ties the pass-16 low; zero Blockers.** Finding 2 is my own overclaim from the pass-20 round; finding 1 is the sixth falsified standing sentence, found because the prompt asked for one; session 01a09195-8b00-7693-b42c-e85888188d3e |
 | 22 | 2ff9f24 | 6→**13** | 0→**1** | 5→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** Findings more than doubled and the Blocker returned. Three findings (5, 8, 12) are defects in sentences the pass-21 round itself wrote; the Gate-A closing act has now taken a Blocker or Major at passes 20, 21 and 22, each out of the previous repair. All 13 held open; session 01a091bb-b1cd-7562-98d1-a50647a30370 |
 | 23 | d6052fe | 13→**9** | 1→**0** | 5→**7** | yes | **zero tells, no mandatory stop.** But findings 1, 2 and 3 are all in the closing-act paragraph the rollback rewrote the day before, and the paragraph has now produced a Blocker or Major at passes 20, 21, 22 and 23; session 01a094e9-76bd-7521-9c93-c11491c14202 |
-| 24 | — | — | — | — | not run | next action, after pass 23's findings are dispositioned |
+| 24 | 6913c35 | 9→**8** | 0→**1** | 7→**3** | yes | **B+M 4 and Majors 3, both the lowest of the cycle.** One tell. The Blocker is new ground: the closing act reads `HEAD` and the working artifact and never the **index**, which is what `git commit` commits — `AGENTS.md:93`'s own documented failure class; session 01a0950c-f003-79d3-985f-73e2885c9621 |
+| 25 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
+
+## Pass-24 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 13, 9, **8**. Blockers …, 1, 0, **1**. Majors …, 5, 7, **3**.
+  Blocker+Major …, 11, 6, 5, 6, 7, **4** — **the lowest of the cycle**, past pass 16's 5; Majors at
+  3 are also a cycle low.
+- **Cluster (pass 24):** product 6 of 8 (1, 2, 3, 5, 7, 8); the instrument 1 (4, design §7's
+  counterfactual list); prose about the artifact 1 (6, the duplicated rationale).
+- **require↔withdraw:** none. Named: finding 2 asks for the **removal** of the intervening-edit
+  prohibition this round added on the reviewer's explicit instruction — a later pass objecting to an
+  addition, the mirror of the pair's shape.
+
+**Tells: one of five** — the Blocker count rose 0 → 1. Findings fell, Majors fell hard, the cluster
+is product, no pair. **No mandatory stop.**
+
+**The Blocker is new ground and it is this repo's own documented failure class.** The closing act
+decides between its two cases by reading **`HEAD` and the working artifact**, and never the
+**index** — while `git commit --amend` commits the index. `HEAD` and the working tree can both
+carry the final request text while a different blob or mode sits staged at that path, and the
+closing act would then commit unreviewed content while stating that nothing at the path moved.
+`AGENTS.md:93` says exactly this about the hook's own fingerprint: *"The index component exists
+because `git commit` commits the index: without it, staging a change and reverting the file on disk
+read as unchanged and reported satisfied."* The target text reinvented the omission the hook was
+fixed for.
+
+**Two of the eight come out of this round's repairs, and one of them from the precision itself.**
+Finding 2 says the intervening-edit-and-restore prohibition — required by precision 1 — **cannot be
+observed by a content-only test** (unchanged text and text restored byte-for-byte are the same
+state) **and contradicts the later sentence** saying committing already-reviewed text is not a new
+revision. Finding 3 says precision 2's stop-and-surface exception arrives after the third branch has
+already stated an unqualified "continues", so the qualifier is in the wrong place. Neither is a
+reason to undo the precisions; both are about where and how they are stated.
+
+**Finding 4 is a pass-21 enumeration going stale**, the same mechanism as the `Kind` column: design
+§7 lists the replacement sections as §§B, C, D, E, F and H, and **§G is marked REPLACED** at target
+line 581. Confirmed by reading both.
+
+**Findings 5 and 6 are collected Minors being re-raised** — 5 for the second time (pass 23's 7), 6
+for the **third** (pass 22's 10, pass 23's 9). They get no round under the standing decision, and
+the repetition is recorded rather than treated as new.
+
+**The §A closing act has now produced a Blocker or Major at passes 20, 21, 22, 23 and 24** — five
+consecutive. Against that: Blocker+Major and Majors are both at cycle lows, and this pass's Blocker
+is the first in that paragraph that is **not** a repair of a repair.
 
 ## Pass-23 dispositions — EXECUTED 2026-09-12 under Daniel's bounded authorisation
 
