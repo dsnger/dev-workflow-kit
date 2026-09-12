@@ -119,7 +119,7 @@ to point at and so a reader can see the shape of the change without reading the 
 | (e) the five tells | §D |
 | Mechanics · Severity | the resolve duty is scoped and gains its discharge rule; the handed-over question is replaced by its answer |
 | Mechanics · `baseSha` | two sentences: the `WIP:` warning stops claiming a closure the rules do not grant, and the `Finishing the cycle` lead-in performs the amend only where the ordering permits closing |
-| Mechanics, recording a human exception | one sentence: a prescribed continuation answer is distinguished from blanket assent. The answer-record material stays moved to the successor |
+| Mechanics, recording a human exception | two sentences: a prescribed continuation answer is distinguished from blanket assent, and the Gate-A destination follows the closing act rather than naming the spec or plan commit. The answer-record material stays moved to the successor |
 | Gate B, the coverage instruction | `NO FINDINGS` only when the branch found none |
 | Mechanics, the curve's Majors rationale | rewritten on the pre-ceiling reading |
 | Mechanics, the one-contract paragraph | membership widened, with a semantic test a downstream reader can apply |
@@ -154,7 +154,7 @@ here. This table says what happens to each inventoried passage, so the map stays
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
 | (f) the two rules above do not compete | **unchanged.** "The two rules above" still names the absorb rule and the stuck reading; the block sits before both and adds no third rule between them | — |
 | (g) Mechanics · Severity, the handed-over question | edited — the unsettled statement and its interim report-and-stop duty are replaced by the answer, in both copies, removing the one deliberate story-path divergence | §E |
-| (h) recording a human exception | **edited in one sentence only** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
+| (h) recording a human exception | **edited in two sentences** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle; and the Gate-A destination follows the closing act, the spec-or-plan commit being that commit on only one of three closing paths. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
 | (i) when these rules bind | edited — the strict-reading list is added to, not rewritten | §H |
 | (j) the squash carry | **no longer edited.** It was to name the answer record, which moved; this change ships no record for it to carry | — |
 

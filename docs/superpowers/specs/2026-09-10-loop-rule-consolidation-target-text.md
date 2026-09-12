@@ -104,34 +104,37 @@ they disagree, which the branches below do.
 
 **The closing act, by cycle kind.** A **Gate-B** cycle closes with the closing amend
 Mechanics · Finishing the cycle describes. A **Gate-A** cycle has no WIP snapshot to replace, so
-its closing act is **the commit body that carries this cycle's provenance line, its per-pass curve
-and, beside them, one line naming the source revision the author accepts for this cycle**. The
-first two are records Mechanics already obliges every cycle to write and **neither is altered
-here** — their grammars are fixed and neither has a field for a revision. The third is **ordinary
-prose in the same body**, which those grammars neither supply nor forbid.
+it closes by **writing the closing commit — or the closing message of one that already exists —
+carrying the records this cycle already owes**: its provenance line and its per-pass curve, in the
+forms Mechanics fixes, **neither altered and neither joined by a further record, line or form**.
+Writing that body once every closure condition holds is the closing act, and nothing before it
+closes anything.
 
-**The naming line is an attribution by the author, and is written as one.** It carries the
-artifact's repository-relative path and the **full 40-character object name** of the commit being
-accepted, an abbreviation being ambiguous across repositories and across time. **It says which
-revision the author accepts; it says nothing about what the reviewer was given.** Gate A hands the
-reviewer text rather than a git range, so no commit name could record what was reviewed and none
-is offered as doing so. A reader of this line learns what was accepted and, about the review
-itself, nothing.
+**The closing commit carries, at the artifact path, the content the final pass was run against,
+unchanged.** That is the condition tying the closure to what was reviewed, and it is a condition
+on **content**, never on a commit name. **Committing already-reviewed content that was not yet
+committed is not a new revision** — a new revision is one no pass has run against, and these are
+the bytes the clean pass read. **This says what the closing commit contains and nothing about what
+the reviewer was given**: Gate A hands the reviewer text rather than a git range, so no part of
+this act is offered as evidence of the review payload.
 
-**Both placements are written out, because they carry the attribution differently.** Where the
-named commit is **still the branch tip**, the body goes into it as **an amend of the message
-alone**: the amend gives that commit a new object name and **leaves its tree untouched**, so the
-content the line attributes is unchanged by the act of recording it. The line names the commit as
-it stood before the amend and that name stops resolving, which costs nothing on this path — the
-content sits in the tree of the commit the body ends up in. Where the named commit is **no longer
-the tip**, the body goes into the **next commit made on the branch**, not the commit that happens
-to follow the named one, which is already in the past. That may be **a commit carrying only the
-record**: it changes no content, so it raises no review obligation. Mechanics grants such a commit
-today for a human-exception record with nowhere else to go — **that is the precedent for this and
-not a permission that already covers it**, the reasoning transferring where the allowance does
-not. Placement attributes nothing on this path, so the naming line carries the attribution alone,
-and it is written the same way. **No new revision of the artifact is made to close a Gate-A
-cycle**, a new revision being one no pass has run against. Nothing is closed before that act, and
+**Three cases, all decided here; the safe git sequence for each belongs to the plan.**
+- **The matching content is already at the branch tip.** Close by **amending that commit's
+  message**. The content is untouched, so the condition holds by construction.
+- **The matching content is committed but its commit is no longer the tip.** The content at the
+  artifact path is unchanged since the final pass — otherwise the sameness precondition has
+  already failed and nothing closes — so close with a **new commit that changes nothing at that
+  path** and carries the records in its body. **Nothing is restored or rewritten**: the content is
+  already there, and a commit that put an older copy back would be a revision no pass has run
+  against.
+- **The final content is still uncommitted.** **Commit it unchanged** and close in that commit.
+  This case had no answer before: an eligible pass over repairs nobody had committed could
+  neither close nor suspend.
+
+**A human-exception record this cycle owes goes in the commit its closing act uses**, so the two
+never land in different places on the second and third paths. **No new revision of the artifact is
+made to close a Gate-A cycle**, a new revision being one no pass has run against. Nothing is
+closed before that act, and
 what changes in between still gates it: the **profile**, the **cited set**, the **assigned fix
 set**, the **artifact as it stood when the pass was run against it**, and — in a Gate-B cycle —
 the **evidence entry**. Any of them differing at the closing act makes that pass non-final and
@@ -297,8 +300,9 @@ paragraph in `CLAUDE.md`, is absent from the template, and is left exactly as ea
 That divergence is pre-existing; this change neither creates nor removes it, and the plan's
 divergence list carries it. Earlier revisions split this passage's replacements across two
 sections and left one sentence half in each, which is how §B and §H came to instruct the plan
-differently about the same clause. Nothing about this passage is stated anywhere else in this
-file.
+differently about the same clause. **The replacement bytes for this passage appear here and
+nowhere else in this file** — other sections cite what this paragraph defines, as §A cites the fix
+set and the two triggers, and citing is not a second copy.
 
 **Changed:** `b3`, `b7`, `b8`, `b11`, `b12`, `b13`, `b16`, `b17`–`b18`. **Carried:** every other
 sentence. The rationales follow the text.
@@ -412,8 +416,8 @@ precondition for it.
 
 **A pointer is added** at the end of the passage:
 ```
-**What the answer does** is the closure ordering's: this stop is a **suspension**, it closes
-nothing, and continue or stop is answered there.
+**What the answer does** is the closure ordering's, which is where this stop's place among the
+suspensions and what its answer produces are both stated.
 ```
 
 ---
@@ -463,10 +467,10 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The six standing sentences this change falsifies — REPLACED
+## F. The seven standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All six are **known contradictions** and
-none is deferred. **Four of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All seven are **known contradictions** and
+none is deferred. **Five of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
 
@@ -533,11 +537,12 @@ which is the split every sentence of this mechanism takes.
 **6. The Gate-A broad-prompt instruction** (Gate A section). It wraps across C 553–555 and
 W 745–747.
 ```
-Use ONE broad prompt, re-run it unchanged each pass over the **current** artifact — revised where
-a repair is owed and unrevised where none is, an edit made to justify a pass being no reason to
-run one. Don't narrow per-dimension: new findings surface because the artifact changed, because
-an answer given since the last pass changed what the rules require of it, or because a broad
-prompt reaches what the last reading did not.
+Use ONE broad prompt: **its review question and dimensions stay the same every pass, while the
+artifact text it carries is always the current one**. Re-running it over an **unrevised** artifact
+is legitimate wherever no repair is owed, an edit made to justify a pass being no reason to run
+one. Don't narrow per-dimension: new findings surface because the artifact changed, because an
+answer given since the last pass changed what the rules require of it, or because a broad prompt
+reaches what the last reading did not.
 ```
 *Why (pass 21 finding 1):* the live wording says to re-run "over the revised artifact … because
 the artifact changes between passes", which the ordering's third branch contradicts — that branch
@@ -545,8 +550,22 @@ continues on an **unrevised** artifact wherever no repair is owed. A pass whose 
 Minors, or one run after a health answer with nothing left to repair, receives two instructions
 and can satisfy the live one only by manufacturing a change. **The replacement keeps the breadth
 demand**, which is what that sentence exists for and the reason it must not be narrowed
-per-dimension; it drops only the claim that a revision always precedes a pass, and replaces the
-reason with one that still holds when none did.
+per-dimension; it drops only the claim that a revision always precedes a pass.
+*And (pass 22 finding 5):* an earlier wording said to re-run the prompt "unchanged", which a Gate-A
+prompt cannot be while also carrying the artifact text it reviews. **Unchanged** now scopes to the
+question and the dimensions; the payload is replaced every pass, so no pass can be run against
+last pass's text.
+
+**7. The human-exception destination** (Mechanics, recording a human exception). It wraps across
+C 988–989 and W 1172–1173; only the Gate-A clause changes.
+```
+**Which commit:** an ungated change records it in that commit; a Gate-A cycle in the commit its
+closing act uses; a Gate-B cycle in the WIP commit, restated by the closing amend.
+```
+*Why (pass 22 finding 3):* the live clause sends a Gate-A cycle's exception record to "the spec or
+plan commit", which is the closing commit only on the first of the three closing paths. On the
+other two the record and the closure would land in different commits. Naming the closing act
+instead keeps them together on all three without changing the record's form or force.
 
 ---
 
@@ -566,10 +585,12 @@ obliges a cycle to write.** Asking instead what an imagined edit would do decide
 any rule can be edited into deciding a branch and none decides one when edited cosmetically, so
 membership would follow the edit a reader pictured rather than the text in front of them. The
 last clause is why the squash carry belongs: it moves no pass and
-decides no branch, and a record that does not survive the merge is a record the cycle did not
-produce. A curve without a cycle field cannot be attributed, a slot rule
-without a nonce has nothing to key on, a carry rule naming records a project does not produce is
-inert, and a clean predicate without the fix-set boundary it reads decides membership by accident.
+decides no branch, and a record that does not survive the merge is unreachable from the squash
+commit and from `main`'s history. A curve without a cycle field cannot be told from another
+cycle's where several are read together, a slot rule without a nonce cannot keep sibling cycles
+apart — the bare names staying reserved for the legacy single-cycle case they already serve — a
+carry rule naming records a project does not produce is inert, and a clean predicate without the
+fix-set boundary it reads decides membership by accident.
 **A project whose text carries some of them and not others, or carries all of them in versions
 that disagree, stops and has a human complete, revert or reconcile the adoption before running a
 gate under it.**
@@ -599,8 +620,7 @@ ordering decides both and decided them differently.
 the finding still open* — the resolve rule stands over it exactly as Mechanics · Severity states
 it, which means **repaired or validly dismissed**, so a recurrence of one already validly
 dismissed is already resolved and owes no second dismissal and no repair; the hold stands until
-its answers are given, and **what the answer does is the closure ordering's**: continue resumes,
-stop parks.
+its answers are given, and **what the answer does is the closure ordering's**.
 **A pass is credited clean or not on its own findings**, as that ordering defines cleanliness;
 surfacing a finding that carries a scope-stop trigger is what withholds the credit, and no
 credit is withheld for surfacing alone. Reading this as "stop instead of fixing" would put the

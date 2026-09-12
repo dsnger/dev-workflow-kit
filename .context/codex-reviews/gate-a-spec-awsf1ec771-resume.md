@@ -51,6 +51,61 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 22 | 2ff9f24 | 6→**13** | 0→**1** | 5→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** Findings more than doubled and the Blocker returned. Three findings (5, 8, 12) are defects in sentences the pass-21 round itself wrote; the Gate-A closing act has now taken a Blocker or Major at passes 20, 21 and 22, each out of the previous repair. All 13 held open; session 01a091bb-b1cd-7562-98d1-a50647a30370 |
 | 23 | — | — | — | — | not run | blocked on the two-tell answer |
 
+## TWO-TELL STOP ANSWERED 2026-09-12 — deliberate rollback, not a fourth hardening round
+
+**Neither A, B nor C as I put them.** The reviewer proposed a fourth option and corrected his own
+earlier recommendation to build the source-revision line: it was meant to *sharpen* the closing
+decision and instead introduced a new attribution duty with consequences for record identity,
+commit placement and content equality — an expansion the story's acceptance criteria never asked
+for. Hardening it sentence by sentence was judged worse than taking it back.
+
+**Two of my claims were corrected, and both corrections hold:**
+1. *"Stable apart from the closing act"* was too strong. Findings 4, 5 and 6 are elsewhere —
+   double-defined transitions, a possibly stale review payload, and the handling of valid legacy
+   cycles.
+2. *"Three passes on one paragraph = three times one defect shape"* does not follow. Pass 20's
+   Blocker rationale was itself partly disproven and pass 21 had a Major there, not a Blocker.
+   **What is proven is repeated overclaiming** — and that licenses no outsourcing of the closing
+   transition, which is why C was refused: "an act is needed, the plan picks which" leaves the rule
+   text non-executable, and the repeat criterion can end the added attribution mechanics without
+   ending the closure itself.
+
+**What was rolled back.** The source-revision line, the artifact-path-plus-object-name form, and
+every sentence explaining old commit names and their later readability. Recorded here as a
+deliberate reversal of a design decision, not as a defect quietly dropped.
+
+**What replaced it, and the Blocker is answered rather than renamed.** Gate A closes by writing
+the closing commit — or the closing message of one that exists — carrying **only the records the
+cycle already owes**. **The closing commit must carry, at the artifact path, the content the final
+pass was run against, unchanged.** That content condition is the link the Blocker said was
+missing, and it is a condition on content, never on a commit name. Committing already-reviewed but
+uncommitted content is explicitly **not** a new revision.
+
+**Three cases decided, the safe git sequence left to the plan:**
+
+| Case | Closing act |
+|---|---|
+| matching content already at the branch tip | amend that commit's message |
+| matching content committed, its commit no longer the tip | a new commit changing nothing at the artifact path, records in its body — **nothing restored or rewritten** |
+| final content still uncommitted | commit it unchanged and close in that commit |
+
+The third had **no answer before**: an eligible pass over repairs nobody had committed could
+neither close nor suspend. The walk also caught a reading of case 2 that invited restoring an older
+copy over newer content, which is now forbidden in the text.
+
+| Findings | Disposition |
+|---|---|
+| 1 (Blocker) | **Answered by the content condition**, not deferred. |
+| 2, 8, 9, 12 | **Dissolve with the rollback** — no new record, so no nonce duty and no "ships no record" conflict; no commit-name claims left to be wrong about git or to overshoot. |
+| 3 | **§F entry 7.** The Gate-A human-exception destination follows the closing act instead of naming the spec or plan commit, which is that commit on only one of three paths. |
+| 4 | **Transitions outside §A replaced by references.** §D no longer says the stop closes nothing or names its answers; §H drops "continue resumes, stop parks". |
+| 5 | **§F entry 6 rewritten.** "Unchanged" now scopes to the review question and dimensions; the artifact payload is replaced every pass, so no pass runs against last pass's text. |
+| 6, 7, 11 | **§G, one paragraph, one edit.** The legacy bare-slot reservation is preserved; the squash-carry and curve-attribution rationales are narrowed to what they actually establish. |
+| 10, 13 | **Collected.** 13's exclusivity claim was scoped in a clause already open; 10 — the precedence clause installed in both §A and §C — stands open and gets no round. |
+
+**§F is now seven standing sentences, five of them one mechanism.** That count is the honest
+measure of this change's reach into standing text, and it has grown at every pass that looked.
+
 ## Pass-22 three-line report — MANDATORY TWO-TELL STOP
 
 **Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
