@@ -49,7 +49,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 20 | 5174d7a | 13→**9** | 1→**1** | 10→**5** | yes | **B+M 11→6, Majors halved.** Three of nine (3, 6, 9) regenerate from pass 19's own repairs; the Blocker is pass 19's Gate-A closing act, which names a revision in two record forms that have no field for one; session 01a0915d-6a5b-7633-a60a-881f0022816d |
 | 21 | 8dc22fb | 9→**6** | 1→**0** | 5→**5** | yes | **findings the lowest of the cycle; B+M 5 ties the pass-16 low; zero Blockers.** Finding 2 is my own overclaim from the pass-20 round; finding 1 is the sixth falsified standing sentence, found because the prompt asked for one; session 01a09195-8b00-7693-b42c-e85888188d3e |
 | 22 | 2ff9f24 | 6→**13** | 0→**1** | 5→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** Findings more than doubled and the Blocker returned. Three findings (5, 8, 12) are defects in sentences the pass-21 round itself wrote; the Gate-A closing act has now taken a Blocker or Major at passes 20, 21 and 22, each out of the previous repair. All 13 held open; session 01a091bb-b1cd-7562-98d1-a50647a30370 |
-| 23 | — | — | — | — | not run | blocked on the two-tell answer |
+| 23 | d6052fe | 13→**9** | 1→**0** | 5→**7** | yes | **zero tells, no mandatory stop.** But findings 1, 2 and 3 are all in the closing-act paragraph the rollback rewrote the day before, and the paragraph has now produced a Blocker or Major at passes 20, 21, 22 and 23; session 01a094e9-76bd-7521-9c93-c11491c14202 |
+| 24 | — | — | — | — | not run | next action, after pass 23's findings are dispositioned |
+
+## Pass-23 three-line report
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 9, 6, 13, **9**. Blockers …, 1, 0, 1, **0**. Majors …, 5, 5, 5, **7**.
+  Blocker+Major …, 12, 11, 6, 5, 6, **7**. Five passes in the 5–7 band.
+- **Cluster (pass 23):** product 8 of 9; prose about the artifact 1 (finding 9, the duplicated
+  rationale); the instrument 0.
+- **require↔withdraw:** none. Finding 9 re-raises pass 22's finding 10, which was **collected as a
+  Minor**, not removed — a reviewer repeating a collected finding is not a withdrawal.
+
+**Tells: zero of five.** Findings fell 13 → 9, the Blocker went to 0, the cluster is product, no
+pair. **No mandatory stop**, and by the rules the loop continues on the third branch.
+
+**What the numbers do not say, stated because nothing obliges me to and it is the real finding.**
+**Four of the nine are defects in text written the day before** — findings 1, 2 and 3 are in the
+closing-act paragraph the rollback produced, finding 5 is in the §H sentence the pass-22 round
+rewrote. And the closing-act paragraph has now produced a Blocker or Major at **passes 20, 21, 22
+and 23**, four consecutive rounds, with the **overclaim specifically at 21, 22 and 23**:
+- pass 21: the repair claimed the pass had read the named commit's tree;
+- pass 22: it claimed no commit name could record what was reviewed, overshooting the other way;
+- pass 23: the content condition calls the compared bytes "what was reviewed" and "the bytes the
+  clean pass read", while Gate A only ever establishes the text placed in the request.
+
+**The rollback made the paragraph smaller and did not end its rounds.** That is the honest reading
+of a changed approach that was tried once.
+
+**Two of this round's three are self-contradictions inside one paragraph**, which is new and worse
+than an overclaim: line 109 forbids the closing body "joined by a further record, line or form"
+while line 134 requires an owed human-exception record in that same commit (finding 2); and cases
+1 and 2 both fire where an earlier commit introduced the content and later commits left that path
+alone — the tip carries matching content *and* its commit is not the tip (finding 1).
+
+**Finding 4 is genuinely new ground and not regeneration.** Standing preconditions exist whose own
+required action is **stop and surface** — disagreeing governing headers, an unresolvable cited
+profile, an unreadable `Story:` header (`CLAUDE.md:90`) — and §A's third branch tells an eligible
+pass with any unmet precondition to run another pass. An agent is told both to stop and to run.
+**That is why the clearly-stuck exit is not affirmable**: its second condition needs a stated
+judgement that coverage is sufficient, and pass 23 still reached material no earlier pass had.
+
+**The clearly-stuck reading stands at two of three** — a plateau (B+M 5–7 across five passes,
+never zero in twenty-three) and nameable regeneration (findings 1, 2, 3, 5) — with coverage
+unaffirmable. Two of three is not the exit.
 
 ## TWO-TELL STOP ANSWERED 2026-09-12 — deliberate rollback, not a fourth hardening round
 
