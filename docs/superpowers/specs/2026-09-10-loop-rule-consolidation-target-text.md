@@ -111,26 +111,36 @@ it excuses none**: every other record this cycle owes, a human-exception record 
 owed and written exactly as before. Writing that body once every closure condition holds is the
 closing act, and nothing before it closes anything.
 
-**The order is fixed, and the second step never repairs the first.** **First** every closure
-condition is established, among them that **the artifact as it now stands carries the text that
-went into the final pass's review request, unchanged**. **Only then** is the closing act performed,
-and the shape it takes is read off the repository as it stands. **That reading decides how a cycle
-closes, never whether it may**: where the artifact has moved since that request, the sameness
-condition has already failed, the pass is not final and another is owed — and **putting the request's
-old text back is not a way through**, being a revision no pass has run against.
+**The order is fixed.** **First** every closure condition is established, among them that **the
+artifact as it now stands is identical to the text that went into the final pass's review
+request**. **Only then** is the closing act performed, and the shape it takes is read off the
+repository as it stands. **That reading decides how a cycle closes, never whether it may**: where
+the artifact differs from that request text the condition has failed, the pass is not final, and
+another is owed.
+
+**The condition is current equality, and deliberately nothing more.** It does **not** say the
+artifact went untouched in between: text edited and then restored byte for byte satisfies it. That
+is a decision and not an oversight — a content comparison cannot tell those two states apart, and a
+condition nobody can check is a condition nobody applies. **Every other closure condition stands
+independently and is not relaxed by this one.** It likewise says nothing about **what the reviewer
+consumed**: Gate A hands the reviewer text rather than a git range, so no part of this act is
+offered as evidence of the review payload.
+
+**The content must survive into the commit the act produces, and carrying it there is part of the
+act.** The equality above is read on the artifact, while **the commit is written from the effective
+index** — so an act that does not carry that same content through has checked the condition without
+performing it. Both cases below owe the same thing: **the commit that closes the cycle contains, at
+the artifact path, exactly the text the condition was read against.** The safe command sequence and
+whatever demonstrates it belong to the plan; **the duty belongs here**, and it needs no new
+fingerprint and no new record.
 
 **Two cases, told apart by the repository's current state rather than by which commit introduced
 what; the safe git sequence for each belongs to the plan.**
 - **`HEAD` already carries that text at the artifact path.** Close by **amending `HEAD`'s message**
-  to add the records. Nothing at the artifact path moves.
+  to add the records, leaving that path as it stands.
 - **`HEAD` does not, the reviewed text being still uncommitted.** **Commit it unchanged** and close
   in that commit. This case had no answer before: an eligible pass over repairs nobody had
   committed could neither close nor suspend.
-
-**What the sameness condition is, and all it is.** It compares the artifact against **the text
-included in the final pass's review request** — not against a commit name, and **not against what
-the reviewer consumed**, which nothing here establishes: Gate A hands the reviewer text rather than
-a git range, so no part of this act is offered as evidence of the review payload.
 
 **A human-exception record this cycle owes goes in the commit its closing act uses**, so the two
 never land in different places. **No new revision of the artifact is made to close a Gate-A
@@ -172,17 +182,19 @@ because a reason left out is a decision made by omission. A finding the clearly-
 surfaces that also carries either trigger takes the scope stop's answers at that same surface, so
 it is not asked twice; the two-tell stop surfaces tells and not a finding.
 
-**Third, a pass that neither closes nor suspends continues** — the loop runs another pass on the
+**Third, and the branch is qualified before it is stated.** **Where any unmet closure condition's
+own source prescribes stop-and-surface** — a profile present but unresolvable, governing headers
+that disagree, a `Story:` header that cannot be read — **the cycle stays open, that source decides
+what must be repaired or answered, and no further pass runs while its block stands.** It is neither
+a suspension nor a continue and needs no name and no procedure of its own: the source rule carries
+both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
+another rule has stopped. **That case is settled first**, so what follows never reaches it.
+
+**Otherwise, a pass that neither closes nor suspends continues** — the loop runs another pass on the
 **current** artifact, revised where the severity and scope rules require a repair and unrevised
 where they do not. **An eligible pass with an unmet closure precondition lands here**: clean
 completion did not close it, and being eligible it cannot suspend, so the loop continues on whatever
-the unmet precondition requires — most often a repair still owed from an earlier pass.
-**Where that precondition's own source prescribes stop-and-surface instead** — a profile present
-but unresolvable, governing headers that disagree, a `Story:` header that cannot be read — **the
-cycle stays open, that source decides what must be repaired or answered, and no further pass runs
-while its block stands.** It is neither a suspension nor a continue, and it needs no name and no
-procedure of its own: the source rule already carries both, and the ordering's part is to send the
-reader there rather than to run a pass over a cycle another rule has stopped. A
+the unmet precondition requires — most often a repair still owed from an earlier pass. A
 below-floor clean pass lands here too, **only where no suspension applies to it**; where one does,
 the second branch has already taken it, because clean completion did not close the pass and only
 closing outranks a suspension. So does a pass whose only findings are Minors and Nits, which are

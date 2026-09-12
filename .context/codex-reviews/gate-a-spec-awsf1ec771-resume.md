@@ -53,6 +53,36 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 24 | 6913c35 | 9→**8** | 0→**1** | 7→**3** | yes | **B+M 4 and Majors 3, both the lowest of the cycle.** One tell. The Blocker is new ground: the closing act reads `HEAD` and the working artifact and never the **index**, which is what `git commit` commits — `AGENTS.md:93`'s own documented failure class; session 01a0950c-f003-79d3-985f-73e2885c9621 |
 | 25 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
 
+## Pass-24 dispositions — and a recommendation of the reviewer's own, withdrawn
+
+**Precision 1 from the pass-23 round is withdrawn by the reviewer and is not defended here.** It
+had required the closing act to forbid an intervening artifact change being papered over by
+restoring the request's old text. **That folded two different requirements into one**:
+
+| Requirement | Status |
+|---|---|
+| the artifact **as it now stands** equals the final pass's request text | **kept** — this is the condition |
+| the artifact was **never changed since**, restoration included | **withdrawn** — it does not follow from the first, and no content comparison can observe it |
+
+**My pass-24 report called finding 2 a question of placement and wording. That was wrong**, and the
+reviewer's correction is the reason: the two requirements are substantively different, and the
+second was introduced by the precision rather than by the design. **A byte-identical restoration now
+satisfies the content condition**, stated in the text as a decision with its reason, and **every
+other closure condition stands independently of it.**
+
+| Finding | Disposition |
+|---|---|
+| 1 (Blocker) | **The duty now reaches into the commit the act produces.** The equality is read on the artifact, the commit is written from the **effective index**, so an act that does not carry the same content through has checked the condition without performing it. Both cases owe: the closing commit contains, at the artifact path, exactly the text the condition was read against. Safe commands and evidence to the plan; **no new fingerprint, no new record**. |
+| 2 | **Historical prohibition removed**, per the withdrawal above. Current equality only, with no claim about reviewer consumption and none about gapless unchangedness. |
+| 3 | **The stop case is settled before the third branch states anything** — "Third, and the branch is qualified before it is stated", then the stop, then "Otherwise, a pass that neither closes nor suspends continues". Not another exception hung behind a contradicting instruction. |
+| 4 | **The stale section list is gone from design §7.** The obligation now reaches **every passage the target text marks REPLACED**, with no second enumeration beside the markers — and the sentence records that the old list omitted §G, so the reason survives the fix. |
+| 5, 6, 7, 8 | **Collected, no round.** 6 is on its third re-raise and 5 on its second; both are recorded as repeats rather than treated as new. |
+
+**The walk before the commit.** Case 1's amend writes from the index, so a different staged blob at
+the artifact path would be committed — the new duty is what catches it, and the plan builds the
+sequence. Case 2 is unchanged. The stop case is unreachable from the third branch by construction.
+Every replaced passage does carry a REPLACED marker, so item 4's pointer resolves.
+
 ## Pass-24 three-line report
 
 **Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from

@@ -225,9 +225,11 @@ exists; the completeness claim did not, because nothing supports it.
 block** it is **ABSENT and is claimed as absent**: the parent carries no such block, so no old
 wording of it can be shown to disappear and presence alone is the check. For **every replacement**
 the parent carries the old wording and the change removes it, so each owes the
-old-wording-gone half of its pair — and the replacements are not one site: the target text
-replaces standing wording in §§B, C, D, E, F and H, passage (g) among them. **Which sites those
-are the plan derives from the target text**, where the concrete replacements live. Nothing is
+old-wording-gone half of its pair. **The obligation reaches every passage the target text marks
+REPLACED, and no list of them is kept here** — a second enumeration beside the markers is the
+bookkeeping that goes stale, which it did: the list this sentence used to carry omitted §G while
+§G was marked REPLACED. **The plan reads the markers off the target text**, where the concrete
+replacements live. Nothing is
 claimed as "contradictory" — the second of the two defects Gate B found in the `fic2` instrument.
 
 **The named verification of the risk path** (story AC 4) is a **next-state table**, written in the
