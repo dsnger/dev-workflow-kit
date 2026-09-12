@@ -52,7 +52,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 23 | d6052fe | 13→**9** | 1→**0** | 5→**7** | yes | **zero tells, no mandatory stop.** But findings 1, 2 and 3 are all in the closing-act paragraph the rollback rewrote the day before, and the paragraph has now produced a Blocker or Major at passes 20, 21, 22 and 23; session 01a094e9-76bd-7521-9c93-c11491c14202 |
 | 24 | 6913c35 | 9→**8** | 0→**1** | 7→**3** | yes | **B+M 4 and Majors 3, both the lowest of the cycle.** One tell. The Blocker is new ground: the closing act reads `HEAD` and the working artifact and never the **index**, which is what `git commit` commits — `AGENTS.md:93`'s own documented failure class; session 01a0950c-f003-79d3-985f-73e2885c9621 |
 | 25 | 31bbe8f | 8→**10** | 1→**0** | 3→**2** | yes | **B+M 2 and Majors 2, both by far the lowest of the cycle; zero Blockers.** Both Majors are new ground. **Five of the ten are re-raised collected Minors**, one on its fourth appearance; session 01a09522-65bc-7691-8adc-fb26e330810e |
-| 26 | — | — | — | — | not run | **awaiting Daniel's decision**; no automatic follow-up round was authorised |
+| 26 | 8b8e146 | 10→**14** | 0→**1** | 2→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** **All six Blocker/Majors trace to repairs made in passes 23, 24 and 25**, each nameable. All 14 held open; session 01a09539-5b8c-7293-af82-cc5f3bd2ba48 |
+| 27 | — | — | — | — | not run | blocked on the two-tell answer |
+
+## Pass-26 three-line report — MANDATORY TWO-TELL STOP
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 8, 10, **14**. Blockers …, 1, 0, **1**. Majors …, 3, 2, **5**.
+  Blocker+Major …, 7, 4, 2, **6** — the pass-25 low of 2 tripled.
+- **Cluster (pass 26):** product 10 of 14; prose about the design or this artifact 2 (4, 9); the
+  instrument 0.
+- **require↔withdraw:** none. Finding 4 asks the **design** to follow the target text's singular
+  artifact equality, which is alignment rather than a demand for removed text.
+
+**Tells: two of five — the threshold. Stop-and-surface is mandatory, not discretionary.** The
+finding count rose 10 → 14 and the Blocker count failed to fall, 0 → 1.
+
+**Every Blocker and Major comes out of a repair made in the last three rounds. All six, nameable:**
+
+| # | Sev | What it says | Repair it comes from |
+|---|---|---|---|
+| 1 | BLOCKER | the artifact/request equality is written cycle-generally, but **Gate B passes a git range, not artifact text**, so it has no value to test — leaving an eligible Gate-B pass unable to close and, being eligible, unable to suspend | pass 25 (the per-condition gate reading) |
+| 2 | MAJOR | the source-block branch says its case is "settled first" while the **suspension branch is evaluated before it** | pass 24 (branch order) |
+| 3 | MAJOR | each gate was sent to "its own source", but the **assigned fix set has no closing-time source rule** to be sent to | pass 25 (same repair) |
+| 4 | MAJOR | design §2 still calls the block-owned closing tests plural and source-free | pass 25 (§A's neighbour was fixed, the design's was not) |
+| 5 | MAJOR | "the answer a suspension asks for" is given as continue-or-stop, but a **membership stop asks accept or decline** | pass 23 (§F entry 4) |
+| 6 | MAJOR | §H restates the resolve duty **unscoped**, while §E limits it to the assigned fix set | pass 24 (§H surfacing) |
+
+**Verified before this report, not inferred:** the equality condition and the closing-time gate list
+are written cycle-generally (target 117–120 and 149–153, the list naming the evidence entry as the
+Gate-B-only member and so implying the rest covers both); §F's sentence at target 540 against §A's
+membership answer at target 259; and `CLAUDE.md:354`, which ships the optional
+`<slot>-dispositions.md` companion — an **eighth** standing sentence the target contradicts by
+saying a cross-session record is one "these rules do not ship" (finding 7).
+
+**One shape runs through findings 2, 3, 4, 5 and 6, and the Minors have been naming it for five
+passes.** Each is **a rule stated in §A that also lives at a source, or a source sentence §A's
+wording contradicts**. That is the two-authorities mechanism pass 11's finding 14 named. Finding 8
+has re-raised it as a collected Minor at passes 23, 24, 25 and 26; finding 9 is on its **fifth**
+appearance. The Majors were repaired one at a time while the Minor pointing at their common cause
+was collected each round under the standing rule.
+
+**The clearly-stuck reading stands at two of three** — regeneration is nameable for all six, and
+B+M has never reached zero in twenty-six passes — but **coverage is not affirmable**: finding 1
+reaches Gate-B scoping that no earlier pass had read. Two of three is not the exit, and the two-tell
+threshold stands alone anyway.
 
 ## Pass-25 dispositions — two Majors, one mis-scoped hook sentence, two corrected numbers
 
