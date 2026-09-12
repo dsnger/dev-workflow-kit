@@ -52,7 +52,42 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 23 | d6052fe | 13→**9** | 1→**0** | 5→**7** | yes | **zero tells, no mandatory stop.** But findings 1, 2 and 3 are all in the closing-act paragraph the rollback rewrote the day before, and the paragraph has now produced a Blocker or Major at passes 20, 21, 22 and 23; session 01a094e9-76bd-7521-9c93-c11491c14202 |
 | 24 | — | — | — | — | not run | next action, after pass 23's findings are dispositioned |
 
-## Pass-23 disposition PROPOSAL — not executed, awaiting the pass-22 stop answer
+## Pass-23 dispositions — EXECUTED 2026-09-12 under Daniel's bounded authorisation
+
+**Three precisions the reviewer added to the proposal below, all applied:**
+
+1. **The closing cases decide only *how*, never *whether*.** The order is now written into the
+   contiguous paragraph: **first** every closure condition is established — among them that the
+   artifact as it now stands carries the final pass's request text unchanged — **then** the act is
+   performed. Where the artifact has moved, sameness has already failed and another pass is owed,
+   and **putting the request's old text back is explicitly not a way through**. That was the hole:
+   a `HEAD` comparison on its own would have let an intervening edit be papered over by restoring
+   the payload.
+2. **Item 4 states the stop's effect positively.** "Neither suspension nor continue" only said what
+   it is not. The text now says: **the cycle stays open, the precondition's own source decides what
+   must be repaired or answered, and no further pass runs while its block stands** — with no new
+   named state and no procedure of its own, because the source rule already carries both.
+3. **Item 8 admits no exemption by section.** The direct/indirect split stands, but the test is read
+   **on the sentence, never on the paragraph it sits in**: a sentence inside a routing or prompt
+   paragraph that fixes a valid input or an owed file **is** a member; a sentence anywhere that only
+   influences the findings is not. The examples now follow the criterion instead of replacing it.
+
+**Item 6 was simplified further on the reviewer's reading:** "alone" is deleted outright rather than
+scoped, with one clause saying independently carried triggers raise their own stop as usual.
+
+**Minor 7 stands open and collected**, not repaired: §A spells out the resolve duty's discharge
+while citing §E as its only statement. It is in no sentence this round opened, so it gets no round.
+**Minor 9** (the rationale in both §A and §C) likewise.
+
+**The walk, before the commit.** With the precondition established, the two cases are exhaustive and
+exclusive by construction: either `HEAD` carries that text at the artifact path or it does not. A
+working-tree edit elsewhere does not reach the condition; a working-tree edit *to the artifact*
+fails the precondition before any case is chosen. The stop-and-surface branch has no dead end,
+since the source rule carries its own exit.
+
+### The proposal as it stood before those precisions
+
+
 
 The reviewer's precondition for any round 24: the seven Majors dispositioned concretely, the
 behavioural decisions made **in the target text** rather than left to the plan, and **open parking
@@ -124,29 +159,35 @@ judgement that coverage is sufficient, and pass 23 still reached material no ear
 never zero in twenty-three) and nameable regeneration (findings 1, 2, 3, 5) — with coverage
 unaffirmable. Two of three is not the exit.
 
-## TWO-TELL STOP — ANSWER NOT INDEPENDENTLY RECORDED. Read this before trusting the heading below.
+## TWO-TELL STOP — ANSWERED 2026-09-12 by Daniel, after the record was corrected
 
-**Corrected 2026-09-12 after the reviewer challenged it.** This section was first written as "TWO-TELL
-STOP ANSWERED". **What is on record is narrower**: Daniel forwarded the reviewer's counter-proposal,
-and the agent executed it. **No separate decision by Daniel is recorded**, and the decisions table
-below carries no pass-22 row while every earlier stop — 4, 9, 10, 14, 17 — has one. The standing
-rule in force is `CLAUDE.md:217–218`: the loop **resumes once the question is answered**, and that
-answer is the user's.
+**What the record established, and what it did not.** This section was first written as "TWO-TELL
+STOP ANSWERED" on the strength of Daniel forwarding the reviewer's counter-proposal, which the agent
+then executed. **A missing decision entry does not show that Daniel never agreed** — what was
+established is only that **no unambiguous confirmation existed in the material**, the decisions table
+carrying no pass-22 row while every earlier stop has one. The fix was a clear answer, not a
+reconstruction of fault.
+
+**The governing rule, cited correctly on the second try.** The agent first cited `CLAUDE.md:217–218`,
+which is the **absorb paragraph** and governs the **scope** stop. The two-tell stop is governed by the
+tells paragraph at `CLAUDE.md:263–268`: *"Any two present makes stop-and-surface mandatory, not
+discretionary — you report the tells and hand the decision to the user."* The conclusion — do not
+continue unanswered — was right under either; the reason was wrong.
 
 **A second error of the agent's, in the same family.** The pass-23 report justified continuing with
 "by the rules the loop continues on the third branch". **That branch is in the target text, which is
-not installed.** The rule in force is the standing §5 sentence above. Continuing was justified by
-the rule this change proposes rather than the rule that governs — which is the shape of mistake the
-whole cycle exists to prevent.
+not installed.** Continuing was justified by the rule this change proposes rather than the rule that
+governs — the shape of mistake the whole cycle exists to prevent.
 
-**Consequence, stated and not minimised:** pass 23 was run while a mandatory stop may have stood
-unanswered. Its findings are real and its file validates, so nothing is discarded; what is not
-established is that the loop was entitled to resume. **Until Daniel answers, no pass 24 runs and no
-artifact edit is made.**
+**Consequence, stated and not minimised:** pass 23 was run before the stop's answer was recorded. Its
+findings are real and its file validates, so nothing is discarded; what was not established at the
+time was that the loop was entitled to resume.
 
-**What was executed under that unconfirmed answer** — the rollback — **stands as work and not as an
-authorised decision**, and the reviewer's own assessment of it is that the direction was right and
-the concrete draft is still contradictory.
+**Daniel's answer, 2026-09-12:** the rollback of the source-revision line is **confirmed**, and the
+stop is answered **continue**. Authorised: **one bounded repair round** for the seven Majors under
+three stated precisions, then **pass 24**, then **report and a fresh decision — no automatic further
+round**. Minor and Nit get no round of their own. Gate A stays open; no activation and no transition
+to Gate B.
 
 **Neither A, B nor C as I put them.** The reviewer proposed a fourth option and corrected his own
 earlier recommendation to build the source-revision line: it was meant to *sharpen* the closing
@@ -1087,7 +1128,7 @@ nothing checks them. They are candidates captured in
 | pass 14 scope stop | **B — accept, bounded.** Extend the existing coherence *instruction* to the closure block and its coupled edits (now the one-contract paragraph, target text §G). No checker, no new mechanism, no record-durability work. |
 | pass 15 | **Bounded rollback**, not another twelve-repair round: totals, item-number lists and enumerated precondition lists removed; behaviour stays decided in the design. |
 | pass 17 two-tell stop | **Interrupt the repair mode.** Produce a non-active **target-text** version; Gate A stays open, no transition to Gate B, no clearly-stuck close claimed. |
-| pass 22 two-tell stop | **OPEN — no decision recorded.** Daniel forwarded the reviewer's counter-proposal (deliberate rollback of the source-revision line) and the agent executed it; no separate answer from Daniel is on record. Pass 23 was run under that unconfirmed answer. Nothing further runs until this row is filled. |
+| pass 22 two-tell stop | **Continue, bounded.** Rollback of the source-revision line confirmed. One repair round for the seven pass-23 Majors under three precisions — the closing cases decide only *how* to close and never override an intervening artifact change; the stop-and-surface precondition keeps its blocking effect stated positively; §G's membership criterion admits no blanket exemption by section. Then pass 24, then a fresh decision. Recorded late: the answer was given 2026-09-12 after the agent found no confirmation on record. |
 
 ## For the execution phase, not needed yet
 

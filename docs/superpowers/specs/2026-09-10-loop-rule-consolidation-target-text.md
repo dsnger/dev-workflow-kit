@@ -106,37 +106,39 @@ they disagree, which the branches below do.
 Mechanics · Finishing the cycle describes. A **Gate-A** cycle has no WIP snapshot to replace, so
 it closes by **writing the closing commit — or the closing message of one that already exists —
 carrying the records this cycle already owes**: its provenance line and its per-pass curve, in the
-forms Mechanics fixes, **neither altered and neither joined by a further record, line or form**.
-Writing that body once every closure condition holds is the closing act, and nothing before it
-closes anything.
+forms Mechanics fixes, **neither of them altered**. **Closure introduces no new kind of record, and
+it excuses none**: every other record this cycle owes, a human-exception record among them, is
+owed and written exactly as before. Writing that body once every closure condition holds is the
+closing act, and nothing before it closes anything.
 
-**The closing commit carries, at the artifact path, the content the final pass was run against,
-unchanged.** That is the condition tying the closure to what was reviewed, and it is a condition
-on **content**, never on a commit name. **Committing already-reviewed content that was not yet
-committed is not a new revision** — a new revision is one no pass has run against, and these are
-the bytes the clean pass read. **This says what the closing commit contains and nothing about what
-the reviewer was given**: Gate A hands the reviewer text rather than a git range, so no part of
-this act is offered as evidence of the review payload.
+**The order is fixed, and the second step never repairs the first.** **First** every closure
+condition is established, among them that **the artifact as it now stands carries the text that
+went into the final pass's review request, unchanged**. **Only then** is the closing act performed,
+and the shape it takes is read off the repository as it stands. **That reading decides how a cycle
+closes, never whether it may**: where the artifact has moved since that request, the sameness
+condition has already failed, the pass is not final and another is owed — and **putting the request's
+old text back is not a way through**, being a revision no pass has run against.
 
-**Three cases, all decided here; the safe git sequence for each belongs to the plan.**
-- **The matching content is already at the branch tip.** Close by **amending that commit's
-  message**. The content is untouched, so the condition holds by construction.
-- **The matching content is committed but its commit is no longer the tip.** The content at the
-  artifact path is unchanged since the final pass — otherwise the sameness precondition has
-  already failed and nothing closes — so close with a **new commit that changes nothing at that
-  path** and carries the records in its body. **Nothing is restored or rewritten**: the content is
-  already there, and a commit that put an older copy back would be a revision no pass has run
-  against.
-- **The final content is still uncommitted.** **Commit it unchanged** and close in that commit.
-  This case had no answer before: an eligible pass over repairs nobody had committed could
-  neither close nor suspend.
+**Two cases, told apart by the repository's current state rather than by which commit introduced
+what; the safe git sequence for each belongs to the plan.**
+- **`HEAD` already carries that text at the artifact path.** Close by **amending `HEAD`'s message**
+  to add the records. Nothing at the artifact path moves.
+- **`HEAD` does not, the reviewed text being still uncommitted.** **Commit it unchanged** and close
+  in that commit. This case had no answer before: an eligible pass over repairs nobody had
+  committed could neither close nor suspend.
+
+**What the sameness condition is, and all it is.** It compares the artifact against **the text
+included in the final pass's review request** — not against a commit name, and **not against what
+the reviewer consumed**, which nothing here establishes: Gate A hands the reviewer text rather than
+a git range, so no part of this act is offered as evidence of the review payload.
 
 **A human-exception record this cycle owes goes in the commit its closing act uses**, so the two
-never land in different places on the second and third paths. **No new revision of the artifact is
-made to close a Gate-A cycle**, a new revision being one no pass has run against. Nothing is
+never land in different places. **No new revision of the artifact is made to close a Gate-A
+cycle**, a new revision being one no pass has run against — and committing already-reviewed text
+that was never committed is not one. Nothing is
 closed before that act, and
 what changes in between still gates it: the **profile**, the **cited set**, the **assigned fix
-set**, the **artifact as it stood when the pass was run against it**, and — in a Gate-B cycle —
+set**, the **artifact measured against the final pass's request text**, and — in a Gate-B cycle —
 the **evidence entry**. Any of them differing at the closing act makes that pass non-final and
 owes another, which is the same answer a mid-pass change already gets. **Sameness is read on the
 artifact and the duties, never on the branch tip**: writing the closing body is itself a commit,
@@ -174,7 +176,13 @@ it is not asked twice; the two-tell stop surfaces tells and not a finding.
 **current** artifact, revised where the severity and scope rules require a repair and unrevised
 where they do not. **An eligible pass with an unmet closure precondition lands here**: clean
 completion did not close it, and being eligible it cannot suspend, so the loop continues on whatever
-the unmet precondition requires — most often a repair still owed from an earlier pass. A
+the unmet precondition requires — most often a repair still owed from an earlier pass.
+**Where that precondition's own source prescribes stop-and-surface instead** — a profile present
+but unresolvable, governing headers that disagree, a `Story:` header that cannot be read — **the
+cycle stays open, that source decides what must be repaired or answered, and no further pass runs
+while its block stands.** It is neither a suspension nor a continue, and it needs no name and no
+procedure of its own: the source rule already carries both, and the ordering's part is to send the
+reader there rather than to run a pass over a cycle another rule has stopped. A
 below-floor clean pass lands here too, **only where no suspension applies to it**; where one does,
 the second branch has already taken it, because clean completion did not close the pass and only
 closing outranks a suspension. So does a pass whose only findings are Minors and Nits, which are
@@ -219,8 +227,9 @@ regeneration chain that were repaired or dismissed are history the reading consu
 findings it re-surfaces, so no discharged finding takes a second hold. Each surfaced finding takes
 a hold like any other. **A re-raised valid dismissal stays discharged for the resolve duty** — the
 dismissal was the resolution and a reviewer repeating the finding does not undo it, so no second
-dismissal is owed — and what the recurrence creates is the **clearly-stuck hold alone**, ended by
-that reading's continue-or-stop answer. **Where one finding is surfaced by both, it carries two hold components and
+dismissal is owed — and what the recurrence creates is the **clearly-stuck hold**, ended by
+that reading's continue-or-stop answer. Any trigger the recurrence independently carries raises its
+own stop as usual. **Where one finding is surfaced by both, it carries two hold components and
 each is discharged by its own answer**: the **membership**
 component ends on the membership answer **in either direction**, a decline releasing it exactly as
 an accept does; the **clearly-stuck** component ends on the reading's continue-or-stop answer. Neither
@@ -581,7 +590,15 @@ no list to consult, and the test reads what a rule states rather than what chang
 a live rule belongs to this contract when what it says determines or supplies an input the
 closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
 whether a cycle may close, or the production, identity or transport of any record this section
-obliges a cycle to write.** Asking instead what an imagined edit would do decides nothing, because
+obliges a cycle to write.** **Read it on the sentence, never on the section the sentence sits in.**
+A sentence is a member when **it itself** fixes one of those things — what counts as a valid
+finding line, which files or records are owed, what ends a hold. It is not a member when it only
+shapes what a review produces, as the choice of reviewer, the lens set and the wording of a prompt
+do: those change the findings without deciding what a finding *is* or what the ordering may do with
+one. **No paragraph is exempt as a paragraph** — a sentence inside a routing or prompt paragraph
+that fixes a valid input or an owed file is a member, and a sentence anywhere that only influences
+the findings is not. The examples follow the test; they do not stand in for it.
+Asking instead what an imagined edit would do decides nothing, because
 any rule can be edited into deciding a branch and none decides one when edited cosmetically, so
 membership would follow the edit a reader pictured rather than the text in front of them. The
 last clause is why the squash carry belongs: it moves no pass and
@@ -617,9 +634,10 @@ duties are kept; the blanket no-clean-credit and the one-answer resumption go, b
 ordering decides both and decided them differently.
 ```
 **Surfacing does not close the cycle, and that is what makes this reachable.** You surface *with
-the finding still open* — the resolve rule stands over it exactly as Mechanics · Severity states
-it, which means **repaired or validly dismissed**, so a recurrence of one already validly
-dismissed is already resolved and owes no second dismissal and no repair; the hold stands until
+the cycle and the new hold still open* — the resolve rule stands over the finding exactly as
+Mechanics · Severity states it, which means **repaired or validly dismissed**, so a recurrence of
+one already validly dismissed **stays resolved** and owes neither a second dismissal nor a repair;
+the hold stands until
 its answers are given, and **what the answer does is the closure ordering's**.
 **A pass is credited clean or not on its own findings**, as that ordering defines cleanliness;
 surfacing a finding that carries a scope-stop trigger is what withholds the credit, and no
