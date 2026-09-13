@@ -282,12 +282,13 @@ in set and what it owes; reading the old dismissal as covering it would let a fi
 since become true close a cycle. What a
 qualifying recurrence creates is the **clearly-stuck hold**, ended by that reading's
 continue-or-stop answer. Any trigger the recurrence independently carries raises its own
-stop as usual. **Where one finding is surfaced by both, it carries two hold components and each is
-discharged by its own answer**: the **membership** component ends on the membership answer **in
-either direction**, a decline releasing it exactly as an accept does; the **clearly-stuck**
-component ends on the reading's continue-or-stop answer. Neither answer discharges the other's
-component, and where the finding carries no scope-stop trigger the continue-or-stop answer is the
-only one its surface asks for and discharges the only component there is. **Resumption is still the
+stop as usual. **Where one finding is surfaced by more than one route it carries a hold
+component per route, and each is discharged by its own answer**: the **membership** component by
+the membership answer **in either direction**, a decline releasing it exactly as an accept does;
+the **question** component by the user's decision on that question; the **clearly-stuck** component
+by that reading's continue-or-stop answer. **No answer discharges another route's component**, and
+a finding surfaced by one route has one component, discharged by the one answer its surface asks
+for. **Resumption is still the
 composition rule's**, which waits for every outstanding answer. At a **membership stop** the answer
 is **accept**, the finding joining the fix set where Mechanics · Severity governs it, or
 **decline**, the finding staying outside and binding so for the rest of this cycle. A later answer
@@ -722,8 +723,10 @@ which is the split every sentence of this mechanism takes.
 **6. The Gate-A broad-prompt instruction** (Gate A section). It wraps across C 553–555 and
 W 745–747.
 ```
-Use ONE broad prompt: **its review question and dimensions stay the same every pass, while the
-artifact text it carries is always the current one**. Re-running it over an **unrevised** artifact
+Use ONE broad prompt: **its review question stays the same every pass, while the artifact text it
+carries and the dimensions it asks for are always the current ones** — the lens sets the profiles
+section derives are recomputed from the current profile and cited set each pass and appended, since
+a profile or cited-set change changes what is owed. Re-running it over an **unrevised** artifact
 is legitimate wherever no repair is owed, an edit made to justify a pass being no reason to run
 one. Don't narrow per-dimension: new findings surface because the artifact changed, because an
 answer given since the last pass changed what the rules require of it, or because a broad prompt
@@ -793,7 +796,8 @@ and the requirement is that the adopted definitions **agree**, not merely that a
 present. **Membership is decided by a test a reader can apply to the text in front of them, with
 no list to consult, and the test reads what a rule states rather than what changing it would do:
 a live rule belongs to this contract when what it says **defines the validity of an input the
-closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it,
+closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it, **what a suspension asks or what
+state its answer produces**,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
 identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the
