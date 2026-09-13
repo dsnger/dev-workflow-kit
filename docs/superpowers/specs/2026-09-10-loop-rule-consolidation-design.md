@@ -97,13 +97,16 @@ remaining rules this change ships, §A3's index condition names a **tree-to-tree
 the explicit `headSha` rather than membership of a range, and §G's membership test reaches rules
 deciding termination **without** a pass, the Gate-B triviality skip being the only such route.
 
-**A closing act that does not complete closes nothing and costs no pass** (pass 30 finding 4). A
-failed commit or amend leaves the cycle open with every condition still established and is
-retried once the concrete failure is repaired; no branch is taken, because nothing the review
-reads has changed. Retrying is available only while that holds — a repair touching anything a
-condition is read from re-establishes that condition first. **This adds no mechanism**: it says
-what "the act was not performed" already means, against a text that otherwise routes a `git`
-error into a full review pass.
+**A closing act that does not complete has not closed the cycle, and a failed command is not a
+pass outcome** (pass 30 finding 4). **The first wording of this was wrong and pass 31 said why**:
+it claimed every condition stayed established, which a pre-commit hook that modifies and stages
+content before failing falsifies, and it added a "no branch is taken" clause contradicting the
+pass-29 rule that a non-closing pass reaches the suspension branch. **The rule was shrunk rather
+than extended**: nothing is assumed about what a failed attempt left behind, every closure
+condition is re-established against the repository as it stands, the act is performed again where
+they hold, and where the attempt or its repair moved anything a condition is read from that
+condition's own rule decides the cost. **It introduces no branch and no mechanism.** Recorded
+because adopting a reviewer's suggested fix wholesale is what produced three Majors here.
 
 **One gap is named and not closed** (pass 29 finding 2, and §I carries it): a Gate-A closing act is
 written from the effective index, so a staged edit to a review input **no source rule governs** — a

@@ -156,15 +156,15 @@ nothing, and is not thereby made unclean. Keeping the two apart is what lets the
 case where they disagree, which the branches do. **The order inside closure is fixed: every
 condition is established first, and only then is the closing act performed.**
 
-**An act that does not complete has not closed the cycle, and costs no pass.** Where the commit or
-amend fails — a permission, signing, hook or repository error — **the cycle stays open with every
-condition still established, the failure is surfaced as the concrete command failure it is, and
-the act is retried once that is repaired.** No branch below is taken and no further review pass is
-owed, because nothing the review reads has changed: not the artifact, not a finding, not an answer,
-not a condition. **Retrying is only available while that stays true** — where the repair touches
-anything a closure condition is read from, that condition is re-established first and the ordinary
-rules decide what that costs. Reading a failed act as an ordinary non-closing pass would spend a
-review pass on a `git` error and report a loop-health problem the loop does not have.
+**An act that does not complete has not closed the cycle**, and a failed command is not a pass
+outcome. **Nothing is assumed about what the attempt left behind** — a hook can modify and stage
+content before failing, so the attempt itself can move what a condition is read from — and
+therefore: surface the concrete command failure, and **re-establish every closure condition against
+the repository as it now stands.** Where they all still hold, perform the act again; no review pass
+is owed, because nothing the review reads has changed. Where the attempt or its repair moved
+anything a condition is read from, **that condition has changed and its own rule decides what it
+costs**, a further pass included. This introduces no branch: the pass is where the branches below
+put it, and a retry is simply the act being performed once its conditions hold.
 
 **Closure introduces no new kind of record, and it excuses none**: every other record this cycle
 owes, a human-exception record among them, is owed and written exactly as before, and **a
@@ -404,8 +404,10 @@ says.
 **What the range does not reach, and the one condition this gate adds for it.** The reviewed range
 ends at a commit; **the closing amend commits the effective index**, and content staged before the
 final review sits in the index without being in the range, so it was never inside what the review
-request selected and no condition above excludes it. **So: the effective index tree at the closing act equals the tree of the explicit `headSha` the
-final pass's requests named** — a tree compared with a tree, since a range is not a thing an index
+request selected and no condition above excludes it. **So: the tree the closing act commits equals the tree of the explicit `headSha` the final pass's
+requests named** — read on what the act produces and not only on the index before it, since a hook
+running during the commit can stage content of its own; where the act produces a different tree it
+has produced unreviewed content and has not closed the cycle, which is the mismatch case below — a tree compared with a tree, since a range is not a thing an index
 can be inside and a staged revert at a path the range already touches would otherwise read as
 covered. A difference is not a
 failed review — it is content the request could not reach: fold it into the `WIP:` snapshot and
@@ -420,9 +422,10 @@ still**: it is advisory and compares its own inputs across its own invocations, 
 before the review call and still staged at the commit has not moved between them — an unmoved
 fingerprint says nothing changed since it last looked, never that anything reviewed it.
 
-**The act** is the closing amend Mechanics · Finishing the cycle describes, performed once the
-ordering reaches it — an eligible pass with every closure condition holding, **never a clean pass
-on its own**.
+**The act** is the one Mechanics · Finishing the cycle describes — the closing amend, or, where
+several `WIP:` snapshots piled up, the reset and single commit that section prescribes instead —
+performed once the ordering reaches it: an eligible pass with every closure condition holding,
+**never a clean pass on its own**.
 
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
@@ -545,7 +548,7 @@ clause left standing alone — its second half, the precedence sentence, moves i
 the second is new.
 
 ```
-So this exit needs three things **together**, and a missing one means keep going: a plateau
+So this exit needs three things **together**, and a missing one means only that *this* exit does not apply — what the pass does instead is the closure ordering's, another suspension or a close being open to it: a plateau
 visible across passes (six or more is where the field saw one); an **affirmative judgement that
 coverage is sufficient**, stated — a known materially unreviewed area forbids this exit outright,
 and disclosing it does not license it; and **Blocker or Major findings that keep regenerating
@@ -750,9 +753,10 @@ instead keeps them together on all three without changing the record's form or f
 W 914–915.
 ```
 If revalidation changes the entry, the clean pass no longer covers what is being committed: the
-pass did not close, so the closure ordering decides what happens next — fix, re-review and close
-on the entry that pass validated where it selects the continue branch, and where it selects a
-suspension, the answer comes first.
+pass did not close, so the closure ordering decides what happens next: where it selects the
+continue branch, fix and re-review, and where it selects a suspension, the answer comes first. The
+pass that follows is read by that ordering like any other and closes only if it reaches closure,
+on the entry revalidated for it.
 ```
 *Why (pass 30 finding 3):* the live sentence is a complete instruction to whoever enters through
 the profiles section — fix, re-review, close — and under the ordering a non-closing pass takes any
