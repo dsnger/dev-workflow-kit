@@ -110,7 +110,10 @@ source rule that prescribes it; the list is examples and not the set** — **the
 must be repaired or answered, and no further pass runs while its block stands.** It is neither a
 suspension nor a continue and needs no name and no procedure of its own: the source rule carries
 both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
-another rule has stopped. **Once its source condition is repaired the ordering is read again on that pass**, no closing act
+another rule has stopped. **Once its source condition is repaired**, a block that stood **before any pass of this cycle was
+read** — the ones its floor derivation and its cited set raise among them — leaves the cycle to run
+its next pass, there being no pass to read again; a block that stood **on a pass already read** has
+**that pass read again through the ordering**, no closing act
 having been attempted on it — **and where that pass also carried a suspension, this branch
 releases only its own block**: the composition rule still holds the cycle on every answer that
 suspension asked for, a continue still leads to a pass run after the answer, and a stop still parks
@@ -656,13 +659,15 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The eighteen standing sentences this change falsifies — REPLACED
+## F. The twenty-two standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All eighteen are **known contradictions** and
-none is deferred. **Fourteen of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All twenty-two are **known contradictions** and
+none is deferred. **Seventeen of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
-exception to point at. **Fourteen live in the two prompt copies and cite a line in each; the last
-four live in the shipped hook**, which has one copy and no template mirror.
+exception to point at. **Fifteen live in the two prompt copies and cite a line in each; the last
+seven live in the shipped hook**, which has one copy and no template mirror. The hook holds eight
+gate reminders in all; the one this change leaves alone is the docs-only notice, which states no
+closure permission.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -870,8 +875,11 @@ repair: the **operation** stays here, the **permission** is the ordering's.
 **10. The Gate-A below-floor reminder's honesty claim** (the shipped hook,
 `plugins/dev-workflow/hooks/codex-gate.sh` — one copy, no template mirror).
 ```
-Gate A has no content check in this hook; what the gate itself requires of the reviewed artifact is stated in $policy and is instruction-backed.
+Gate A has no content check in this hook; what the gate itself requires of the reviewed artifact is stated in $policy and is instruction-backed. What this cycle does next is that policy's closure ordering's, a further pass being one of its answers and not the only one.
 ```
+*Why (pass 55 finding 6):* the same reminder's tail reads "Run more passes before executing",
+which is the same unqualified next action as items 15–17 and is replaced with them; a below-floor
+pass carrying a suspension owes that suspension's answer first.
 *Why (pass 53 finding 19):* the live string says "Gate A has no content check behind it — this
 floor is the only thing keeping the spec review honest", which the Gate-A content condition
 falsifies: the floor is no longer the only thing, and a reader who believes it may treat the
@@ -915,6 +923,46 @@ precondition is unmet, so an author entering here can amend over a below-floor c
 hold or an undischarged Major. It is the fourteenth sentence sharing this section's mechanism, and
 the fourth found in the hook; the first three were found at pass 53 and this one at pass 54, which
 is why §I records the edit set as established by sweeping rather than by this file.
+
+**14. The Named residual's blanket exemption** (the §5 loop rule, the named residual). It wraps
+after "here" in each copy: C 139–140 and W 346–347.
+```
+**That particular overstatement is out of scope here by decision, and it is not a blanket exemption for hook text** — a reminder this change's own rules falsify is corrected in the same change, as the standing sentences above require.
+```
+*Why (pass 55 finding 2):* the live sentence reads "Hook text is out of scope here by decision",
+which the narrow scope opening of 2026-09-13 falsifies: seven reminder strings are edited by this
+change. Left standing, the installed text tells a reader the opposite of what the change did, and
+a plan following it omits the authorised repairs. The residual it was written for — the hook
+reporting its own threshold as an obligation at a floor of 1 — is untouched and stays out of
+scope. This one is **not** an entry point carrying an unqualified instruction; it is a false
+statement about scope, so it does not join that count.
+
+**15. The no-fingerprint reminder's next action** (the shipped hook, same file).
+```
+What this cycle does next is $policy's closure ordering's — a pass, an answer a suspension is waiting for, or a source block's repair — and this reminder decides none of it.
+```
+*Why (pass 55 finding 3):* the live string says "Run Gate B (mcp__codex__review) now", which sends
+the author into another pass whatever the cycle's state is — including a pass that carried a
+suspension whose answers are still outstanding, which the composition rule holds the cycle on. The
+diagnostic half, and the machinery checks after it, are kept: they are what the message is for.
+
+**16. The stale-fingerprint reminder's two instructions** (the shipped hook, same file).
+```
+A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's; where it may, that pass records a usable fingerprint.
+```
+*Why (pass 55 finding 4):* the live string carries two unqualified imperatives — "Run Gate B
+(mcp__codex__review) now" and "then run one more pass to record a usable fingerprint" — in the
+branch an author reads immediately before committing. Both step past a suspension or a source
+block that the ordering says is answered first. The long diagnostic list between them is untouched.
+
+**17. The Gate-B below-floor reminder's instruction** (the shipped hook, same file).
+```
+Per $policy the review is a LOOP with a hard minimum of $floor passes, and what this cycle does next — a further pass, an answer, or a repair — is that policy's closure ordering's; $policy's skip rule decides only whether a cycle runs at all, never whether one already running may stop short.
+```
+*Why (pass 55 finding 5):* the live string says "run more … or proceed only if $policy's skip rule
+applies to this change", which offers the triviality skip as an exit from a running cycle. The
+skip runs **no** passes and is decided before the cycle starts, so a below-floor cycle cannot
+reach it; and "run more" alone ignores a suspension the ordering sends that pass to.
 
 ---
 
@@ -1070,7 +1118,7 @@ be established as absent is cheaper to owe than to skip** —
 
 - **Minor, collected and open (pass 17 finding 9 is resolved above; this is the remainder):**
   nothing in this file establishes that the edit set is complete. It is the sites known at pass
-  17, plus the four hook reminder strings §F items 10–13 added at passes 53 and 54 — which is itself
+  17, plus the seven hook reminder strings §F items 10–13 and 15–17 added at passes 53, 54 and 55 — which is itself
   evidence that the set was not complete. **The plan sweeps both prompt copies and the shipped
   hook's reminder strings against the rule** — a live sentence the ordering falsifies gets
   edited — and prints what it found; a spec cannot establish that claim against text the same

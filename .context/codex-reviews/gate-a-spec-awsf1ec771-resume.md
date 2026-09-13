@@ -71,7 +71,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 52 | 06152d1 | 23→**29** | 0→**0** | 6→**5** | yes | one tell. **Two of five were pass 51's findings 1–2, still open because the pass-51 repair went to the wrong section** — see the pass-51 dispositions file. Pass 52 located them correctly at design §5 |
 | 53 | 81fffd1 | 29→**21** | 0→**0** | 5→**4** | yes | zero tells. **Three of four Majors are the first §F sites outside the two prompt copies** — reminder strings in `codex-gate.sh`. Daniel authorised a NARROW SCOPE OPENING on 2026-09-13: the three strings plus one exact-match test expectation are in, hook behaviour stays out, the Gate-B fingerprint overclaim stays parked. §F 14 → 17. Major 1 was a genuine internal contradiction (§A1 vs §A3 + §F-5 on what a failed attempt leaves behind); both assertions deleted |
 | 54 | c73367f | 21→**13** | 0→**0** | 4→**3** | yes | zero tells. All three Majors are pass-53 fallout and all are in-set: a **fourth** falsified hook string (the WIP reminder's "make the real commit when your final pass is clean") → §F item 13, 17→18; the design opening still said "No file under `plugins/dev-workflow/hooks/` changes"; §A1's continue branch re-enumerated §B's scope triggers instead of citing them |
-| 55 | — | — | — | — | not run | next, against the pass-54 repair commit |
+| 55 | 1940181 | 13→**18** | 0→**0** | 3→**6** | yes | one tell (findings rose). **Four more hook strings**, same class as item 13 — every gate reminder that tells the agent what to do next, ignoring a suspension the ordering sends that pass to. §F 18 → 22, covering **7 of the hook's 8** gate reminders. Also: the standing Named residual still said "Hook text is out of scope here by decision", which our own scope opening falsifies → item 14. §A1's source-block branch said a repaired block rereads "that pass" where the block stood before any pass existed |
+| 56 | — | — | — | — | not run | next, against the pass-55 repair commit |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -79,6 +80,34 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-55 report — one tell, and the scope opening's true size
+
+**Trend:** findings 29, 21, 13, **18** across 52–55; Blockers 0, 0, 0, **0**; Majors 5, 4, 3, **6**.
+**Cluster:** product behaviour — five of six Majors are shipped strings, one is the ordering itself.
+**Require↔withdraw:** none. **One tell** (the finding count rose); two would be a mandatory stop.
+
+**The number Daniel authorised was three; the real number is seven.** Pass 53 found three falsified
+hook strings, pass 54 a fourth, pass 55 four more. Before absorbing them I counted the ceiling:
+`codex-gate.sh` carries **eight** gate reminders, and §F now covers **seven** — the docs-only
+notice is the one left alone, because it states no closure permission. So this is a bounded class
+that has now been swept, not an open-ended expansion; the growth stops here unless the hook gains
+a reminder.
+
+**The class, stated once:** a gate reminder that ends by telling the agent what to do next —
+"Run Gate B now", "run more passes before executing", "run one more pass", "proceed if the skip
+rule applies" — states a permission the closure ordering owns, at the one moment the ordering
+exists to govern. Each is replaced with its diagnostic kept and the next action pointed at the
+ordering. Items 10–13 and 15–17.
+
+**Item 14 is the one worth noticing.** The standing §5 text says "Hook text is out of scope here by
+decision" — a sentence our own scope opening falsified on 2026-09-13. The change had made its own
+documentation wrong and no pass had looked there. The narrow residual it was written for (the hook
+reporting its threshold as an obligation at a floor of 1) stays out of scope.
+
+**Reading:** the rise from 13 to 18 is the scope opening being swept to its edge, not a plateau —
+Blockers are flat at zero and every Major was in-set and repairable. If pass 56 rises again with
+the hook class closed, that is a different signal and two tells.
 
 ## Pass-54 report — zero tells, and the scope opening paid for itself immediately
 
