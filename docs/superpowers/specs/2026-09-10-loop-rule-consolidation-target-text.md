@@ -103,7 +103,8 @@ rather than its position**, so reordering them breaks no reference.
 
 **The source-block branch, read first.** **Where any unmet closure condition's own source
 prescribes stop-and-surface** — a profile present but unresolvable, governing headers that
-disagree, a `Story:` header that cannot be read — **the cycle stays open, that source decides what
+disagree, a `Story:` header that cannot be read, an unobservable counterfactual, and **any other
+source rule that prescribes it; the list is examples and not the set** — **the cycle stays open, that source decides what
 must be repaired or answered, and no further pass runs while its block stands.** It is neither a
 suspension nor a continue and needs no name and no procedure of its own: the source rule carries
 both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
@@ -687,9 +688,9 @@ across C 1014–1015 and W 1198–1199.
 ```
 Those have their own terminal actions and this paragraph changes none of them: on a STOP you
 still stop, and **neither a human's general assent nor this record** lets an agent close or
-continue a cycle. **The answer a suspension asks for is not assent of that kind**: it is the
-answer the closure ordering prescribes for that suspension, given on the question that suspension
-raised, and both which answer that is and what it produces are stated there.
+continue a cycle. **The answers a suspension asks for are not assent of that kind**: they are the
+answers the closure ordering prescribes, one per surfacing route, and both which answers those are
+and what they produce are stated there.
 ```
 *Why (pass 19 finding 4):* the live sentence says no human answer lets an agent continue a cycle,
 while the ordering makes **continue** the prescribed answer that restarts a parked one. Left as
@@ -796,8 +797,8 @@ and the requirement is that the adopted definitions **agree**, not merely that a
 present. **Membership is decided by a test a reader can apply to the text in front of them, with
 no list to consult, and the test reads what a rule states rather than what changing it would do:
 a live rule belongs to this contract when what it says **defines the validity of an input the
-closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it, **what a suspension asks or what
-state its answer produces**,
+closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it, **what a suspension asks, or what state its answer or an
+incomplete closing act produces**,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
 identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the
@@ -923,7 +924,9 @@ dash-delimited list is given, the last item being the addition.
 the curve duty owed, the nonce duties at their strictest, **every suspension binding, since
 starting rules that cannot be established cannot be read as having waived an open hold**, **the
 repeated-dismissal cleanliness exclusion unavailable, a cycle that cannot establish its starting
-rules being unable to establish that they contained it**, and **every closure condition and
+rules being unable to establish that they contained it**, **the parked state binding after a closing act that cannot
+be repaired, a cycle whose starting rules cannot be established being the last one that should be
+left with no terminal transition**, and **every closure condition and
 pass-cost rule this change ships owed rather than waived — Gate A's content condition and its
 commit-carry duty, and the further pass an assigned-fix-set change costs — since a rule that cannot
 be established as absent is cheaper to owe than to skip** —

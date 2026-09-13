@@ -63,6 +63,36 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 34 | ea5e76c | 22→**19** | 1→**0** | 8→**5** | yes | **zero tells.** B+M 9→**5**, the largest fall of this stretch and the lowest since pass 29 — finishing the cut is what did it. All 5 Majors verified before repair, one of them (§F item 5) against `codex-gate.sh:876` rather than asserted; session 01a09acf-1185-7883-b23f-3ee707d5ad58 |
 | 35 | 8847414 | 19→**20** | 0→**0** | 5→**4** | yes | one tell (count rose by one). **B+M 5→4, third consecutive fall: 9, 5, 4.** All four Majors are over-narrow or over-wide wordings of my own earlier repairs; session 01a09ade-8e4c-7352-9e19-75be21c2178e |
 | 36 | 701aa50 | 20→**9** | 0→**0** | 4→**3** | yes | **zero tells. Findings more than halved; B+M 9, 5, 4, 3 across four passes.** All three Majors are pass-35 wordings of mine, two of them the same assurance class again; session 01a09aef-327b-7a11-8033-9e3584c47b27 |
+| 37 | a37b5ab | 9→**3** | 0→**1** | 3→**2** | yes | one tell (Blocker 0→1). **Findings 3 — lowest of the cycle.** The Blocker was real and mine: an unrepairable closing failure had no terminal state; now PARKED, the state a stop answer already produces; session 01a09afd-8b4c-7712-93c1-6a3afa109d87 |
+| 38 | cc7f6dd | 3→**10** | 1→**0** | 2→**3** | yes | one tell (count rose). B+M flat at 3. §G takes its fourth Major; dimensions unfrozen; hold components per route rather than per pair; session 01a09b09-ba8b-7773-b42f-93a2f4261814 |
+| 39 | 13005de | 10→**5** | 0→**0** | 3→**4** | yes | **zero tells.** Three of four Majors are the three-site fan-out of the pass-37/38 rules — §G limb, §H strict reading, §F pointer. Pattern named and now checked before each pass; session 01a09b1d-8cbc-7d43-8d2f-49ff2339c31f |
+
+## Passes 37–39 — the fan-out is the mechanism, and it is checkable
+
+**Floor line (unchanged across all three):** derived floor **3**; risk **high**, security **none**;
+read fresh from `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited
+story, level 2.
+
+- **Trend:** findings 9, 3, 10, **5**. Blockers 0, 1, 0, **0**. Majors 3, 2, 3, **4**.
+  Blocker+Major 3, 3, 3, **4**.
+- **Cluster (pass 39):** the ordering and the gate blocks 4 of 5; metadata 1; the instrument 0.
+- **require↔withdraw:** none across the three.
+- **Tells:** pass 37 one (Blocker rose to 1), pass 38 one (count rose), pass 39 **zero**.
+
+**The mechanism behind the plateau at 3, named rather than described.** Every rule this change adds
+owes **three further sites**: a limb in §G's membership test, a strict reading in §H's unknown-start
+list, and any §F pointer that states the rule at its own entry point. Pass 39's four Majors were
+three of those fan-outs plus one enumeration. **This is checkable before a pass rather than after
+one**, and is now part of the pre-review sweep: after adding a rule, check §G, §H and §F.
+
+**The enumerations keep costing.** §C's branch list cost two rounds, the both-routes pair cost one,
+and the source-block list cost pass 39 finding 1. Each is now either removed or explicitly marked
+as examples rather than the set.
+
+**§G has taken a Major at passes 32, 34, 35, 38 and 39** — five rounds, each naming a different
+limb, each fix correct for what it named. It is a semantic membership test over the whole section,
+which is why it is the last paragraph to settle; it is recorded as a regeneration chain and has not
+reached the two-tell threshold on its own.
 
 ## Pass-36 report — zero tells, B+M 9 → 5 → 4 → 3
 
