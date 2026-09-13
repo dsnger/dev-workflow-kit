@@ -140,7 +140,7 @@ to point at and so a reader can see the shape of the change without reading the 
 |---|---|
 | the closure ordering | **new**, and it is section A of the target text |
 | (a) the floor paragraphs | §H |
-| (b) what a loop absorbs | edited — it owns both scope triggers and the assigned fix set, so every qualification the ordering needs is made there. **What it now says, including what a change to the set and an accept at a membership stop cost, is stated in the target text's §B and nowhere here** | §B |
+| (b) what a loop absorbs | §B |
 | (c) recognizing clearly stuck | §C |
 | (e) the five tells | §D |
 | Mechanics · Severity | the resolve duty is scoped and gains its discharge rule; the handed-over question is replaced by its answer |
@@ -171,7 +171,7 @@ here. This table says what happens to each inventoried passage, so the map stays
 | Passage | This change | Target text |
 |---|---|---|
 | (a) the floor paragraphs | edited — closure sentences trimmed to a pointer, the no-restating prohibition scoped, the per-pass fix command pointed at Mechanics | §H |
-| (b) what a loop absorbs | edited — owns both triggers and the fix set, so every qualification the ordering needs is made **here**, which is what keeps one definition per rule; **gains the closing-time rule for a change to the set**, which no inventoried condition carried because none existed (Daniel, 2026-09-12: a change costs at least one further pass, in either direction and whether or not it is later undone, the window opening where the set is fixed for the pass); **an accept at a membership stop puts the finding in the set whatever its severity** (pass 27 finding 2), membership and the repair duty being different things, so an accepted Minor is in the set although Severity asks no repair for it | §B |
+| (b) what a loop absorbs | edited — it owns both scope triggers and the assigned fix set. **What it now says is stated in the target text's §B and nowhere here**; the decisions behind the two additions are recorded in §2 as decision 2 (a set change costs a further pass, Daniel 2026-09-12) and at pass 27 finding 2 (an accept enters the set whatever its severity) | §B |
 | (c) recognizing clearly stuck | edited — keeps its three-condition reading, stops carrying evaluation order; **its precedence sentence is split**, the operative clause moving into the block unchanged and capitalized there while the plateau rationale stays at this source (pass 26 finding 9, pass 27 finding 6); the third condition is widened here to admit a re-raised validated dismissal, and its reason is restated because the deadlock it named is now answered by the clean predicate | §C |
 | (d) from pass 4 onward | **no longer edited.** The unavailable-history block moved to the successor with **D10** | — |
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |

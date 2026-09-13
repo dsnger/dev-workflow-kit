@@ -301,9 +301,9 @@ the **question** component by the user's decision on that question; the **clearl
 by that reading's continue-or-stop answer. **No answer discharges another route's component**, and
 a finding surfaced by one route has one component, discharged by the one answer its surface asks
 for. **Resumption is still the
-composition rule's**, which waits for every outstanding answer. At a **membership stop** the answer
-is **accept**, the finding joining the fix set where Mechanics · Severity governs it, or
-**decline**, the finding staying outside and binding so for the rest of this cycle. A later answer
+composition rule's**, which waits for every outstanding answer. At a **membership stop** the answer is **accept** or **decline**;
+**what each does to the assigned fix set is the absorb paragraph's, which defines that set from
+these outcomes**, and what an in-set finding then owes is Mechanics · Severity's. A later answer
 that contradicts a decline **does not reverse it**: the decline **remains binding** and the
 contradiction is **surfaced to the user as information**, changing neither membership, nor the
 cycle's state, nor any outstanding question — **whether the loop resumes is decided by the
@@ -718,8 +718,8 @@ their definition site.
 **5. The `Finishing the cycle` lead-in** (Mechanics · `baseSha`). It wraps across C 827–828 and
 W 1011–1012.
 ```
-**Finishing the cycle:** once the closure ordering reaches a Gate-B cycle's closing act — an
-eligible pass with every closure precondition holding, never a clean pass on its own — close it with
+**Finishing the cycle:** **when a Gate-B cycle's closing act is performed is the closure
+ordering's, stated there entire**; this section gives only the operation. Close it with
 `git commit --amend -m "<real message>"`, which replaces the WIP commit; **where a `WIP:` snapshot
 would survive the amend** — several piled up, or a stray non-amending commit made one an
 ancestor — **reset to the parent of the first and commit once instead**. This section is the only
@@ -775,9 +775,10 @@ instead keeps them together on all three without changing the record's form or f
 **8. The profile-change paragraph's pass claim** (the profiles section). It wraps across C 752–753
 and W 938–939.
 ```
-Inside an active Gate-B cycle, fold the edit into the active `WIP:` snapshot — by amend where the
-snapshot is the tip, and otherwise by the shape that reaches it, a stray non-amending commit having
-made the snapshot an ancestor an amend would not touch. A non-`WIP` commit reads to the hook as the
+Inside an active Gate-B cycle, the edit must end up **in the content the next review reads** —
+folded into the active `WIP:` snapshot by amend where that snapshot is the tip, and otherwise
+reviewed as its own change, since no amend reaches a snapshot a stray commit has made an ancestor
+and this section prescribes no operation that does. A non-`WIP` commit reads to the hook as the
 cycle closing and would discard **the hook's count of** the accumulated passes.
 ```
 *Why (pass 33 finding 7):* the live clause says such a commit "would discard the accumulated
@@ -830,8 +831,8 @@ and is **revalidated before every Gate-B re-review and before the commit its clo
 produces** — a fix changes the diff even when the profile sits still.
 ```
 *Why (pass 46 finding 2):* the live clause names "the cycle-closing amend", which is one of the
-shapes a Gate-B closing act takes; where several `WIP:` snapshots piled up, or a stray non-amending
-commit left a `WIP:` ancestor, the act is a reset and a single commit and no amend occurs. Scoped
+shapes a Gate-B closing act takes, item 5 above defining the other and being the only place either
+is defined; where that other shape applies, no amend occurs. Scoped
 to the amend, the final revalidation is owed on one path and skipped on the others. It is the
 eighth sentence sharing this section's mechanism.
 
