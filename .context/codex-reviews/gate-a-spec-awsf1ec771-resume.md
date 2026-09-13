@@ -86,9 +86,19 @@ sentences (finding 4). **The artifact is now dense enough that a correct local r
 falsifies a sentence elsewhere in it.**
 
 **Clearly-stuck stands at two of three.** Plateau: yes, across six passes. Regeneration across
-genuine repair attempts: yes, and nameable per finding. **Coverage: not affirmable** — findings 5
-and 6 reach §G membership ground no earlier pass read. Two of three is not that exit, and the
-two-tell threshold stands alone anyway.
+genuine repair attempts: yes, and nameable per finding. **Coverage: not affirmable** — but **not
+for the reason first given here.** *(Corrected 2026-09-13 after the reviewer checked it.)* This
+section claimed findings 5 and 6 reached §G ground no earlier pass had read. **Finding 6 is pass
+31's finding 11 re-raised** — the same optional-record complaint — so it is not new ground and
+proves no earlier coverage gap. It proves no sufficiency either, which is why coverage stays
+unaffirmable. Two of three is not that exit, and the two-tell threshold stands alone anyway.
+
+**Two further corrections to this report, made after the reviewer checked it against the files.**
+**Three of six B+M do not hang on the Gate-B tree condition — two do.** Finding 4 is §A1's
+failed-act rule (target 159) against §F item 1's "discards the passes you just accumulated"
+(target 654); neither mentions the tree, and the conflict survives any cut of it. And **"this is
+no longer negligence" is withdrawn**: the contradicting sentences stood in the same file, and
+density explains the miss without making it unavoidable.
 
 **What is not in doubt.** The five settled behaviour decisions have held: none of the last four
 passes challenged one, and the Gate-A/Gate-B split has produced no finding since pass 27. The

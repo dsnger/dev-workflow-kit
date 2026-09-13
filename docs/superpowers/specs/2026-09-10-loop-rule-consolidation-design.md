@@ -92,10 +92,10 @@ blocked by an unresolved prior Major, a standing hold or stale evidence walk pas
 two-tell stop and keep spending passes. **This narrows a rule this change itself wrote, and
 contradicts no settled decision**: D2 and D3 forbid reporting "will not converge" on a loop that
 converged, and a loop still owing a repair, an answer or a closure condition has not converged.
-Three other pass-29 repairs are compliance rather than decision — the unknown-start list gains the
-remaining rules this change ships, §A3's index condition names a **tree-to-tree** comparison against
-the explicit `headSha` rather than membership of a range, and §G's membership test reaches rules
-deciding termination **without** a pass, the Gate-B triviality skip being the only such route.
+Two other pass-29 repairs are compliance rather than decision — the unknown-start list gains the
+remaining rules this change ships, and §G's membership test reaches rules deciding termination
+**without** a pass, the Gate-B triviality skip being the only such route. A third, sharpening the
+index condition to a tree-to-tree comparison, **left with that condition** in the 2026-09-13 cut.
 
 **A closing act that does not complete has not closed the cycle, and a failed command is not a
 pass outcome** (pass 30 finding 4). **The first wording of this was wrong and pass 31 said why**:
@@ -129,22 +129,27 @@ and its own closing act**, and neither gate's paragraph is an inventory of what 
 that was is now Gate A's own condition stated at Gate A's paragraph. **The split buys ownership and
 not brevity** — the three paragraphs together run slightly longer than the single block did.
 
-**Writing Gate B's closure down exposed one condition nobody had stated** (pass 27 finding 4).
-Gate B reviews a `baseSha`..`headSha` range while the closing amend commits the **effective
-index**, so content staged before the final review is in the index and in no reviewer's payload.
-A3 adds the one condition that closes it: the effective index at the closing act carries nothing
-outside the range the final pass's requests were aimed at, a difference being folded into the
-`WIP:` snapshot and re-reviewed. **A3 widens this gate's re-review duty to say so and does not
-attribute the breadth to the standing rule**, which requires a re-review after every *fix* and an
-index difference not being one (pass 28 finding 11). **Gate A's mirror of the same hazard is not a
-second condition**: a staged edit to a cited story or a profile header is published by A2's closing
-commit, and the source rules already answer it — a profile or cited-set change costs a further
-pass — so A2 says where those rules bite at the closing act and adds nothing (pass 28 finding 4). **The hook proves none of this, and A3 says so in
-the terms invariant 3 fixes**: its fingerprint includes an effective-index tree, so content staged
-before the review call and still staged at the commit leaves it unmoved between the two
-invocations — an unmoved fingerprint reports that nothing changed since it last looked, never that
-a review covered what it is looking at. That distinction is read from `AGENTS.md` invariant 3,
-which states the comparison; nothing is claimed here about the script beyond it.
+**The Gate-B tree-equality condition is deferred out of this change on Daniel's decision of
+2026-09-13, as a bounded scope cut.** Writing Gate B's closure down had exposed a real gap (pass 27
+finding 4): the gate reviews a `baseSha`..`headSha` range while the closing amend commits the
+**effective index**, so content staged before the review, or staged by a hook during the commit,
+reaches the closing commit through neither branch. The condition written for it, and the widened
+re-review duty it carried, **are removed from the target text**; the gap is recorded in §I as a
+later task and is **not** worked out here. **The price is stated rather than implied**: this
+delivery does not close that gap. Gate B's existing review, re-review and evidence duties stand
+unchanged and are not a substitute, and **the gate hook is not one either** — its fingerprint is
+advisory and compares its own inputs across its own invocations, so content staged before the
+review call and still staged at the commit leaves it unmoved between the two. **Faster convergence
+is plausible, not guaranteed.** What the cut removes is two of pass 32's six Blocker/Majors, both
+collisions this condition created — against the ordering's pre-act requirement and against the
+branch-tip sentence. **Pass 32's finding 4 is expressly not resolved by it**: §A1's failed-act rule
+contradicts §F item 1's pass-credit sentence without either mentioning the tree.
+
+**Gate A's mirror of the same hazard is not a second condition**: a staged edit to a cited story or
+a profile header is published by A2's closing commit, and the source rules answer what they govern —
+a profile change costs a further pass — so A2 says where those rules bite at the closing act and
+adds nothing (pass 28 finding 4). Where the staged edit touches a review input **no** source rule
+governs, nothing reaches it, which §I carries as its own residual (pass 29 finding 2).
 
 **The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
 the edits; **no total is stated here or there**, because the unit — one contiguous replacement at

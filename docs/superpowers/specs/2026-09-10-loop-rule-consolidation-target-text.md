@@ -73,10 +73,11 @@ one of *those* defined here has found a defect.
 
 **The conditions every cycle has, whatever its gate.** The duties classified below; and the
 **profile**, the **cited set** and the **assigned fix set**, each gating as its own source says and
-cited here without restatement. **Those three sources answer a change and not a differing value**,
-which is why one of them changed and then undone still costs a pass — the contrast that matters
-against a gate's own content condition, which may be a comparison of current values and says so
-where it is stated.
+cited here without restatement. **The profile and the assigned fix set answer a change and not a
+differing value**, which is why one of them changed and then undone still costs a pass; **the
+cited set answers as its own source says** — the final clean pass runs against the current set —
+which a change since undone can already satisfy. The contrast that matters is against a gate's own
+content condition, which may be a comparison of current values and says so where it is stated.
 
 **What a pass is read from.** Every finding-derived predicate reads the validated findings file
 **or files** of the logical pass as **the concatenation of their finding lines after each file has
@@ -389,7 +390,8 @@ pass has run against — and committing already-reviewed text that was never com
 ```
 **Gate B's content condition, and its closing act.** These are what Gate B adds to the conditions
 the ordering states for every cycle; that list is there and is not repeated here, so nothing below
-is an inventory of what this gate requires.
+is an inventory of what this gate requires. **This gate adds no content condition of its own**,
+and the next paragraph says why.
 
 **Its content condition is not an artifact/request equality, and none is written for it.** Gate B
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
@@ -401,27 +403,6 @@ the same commit**, so the re-review covers both; the battery and the mode-derive
 profiles section obliges before a call; and the **evidence entry**, revalidated as that section
 says.
 
-**What the range does not reach, and the one condition this gate adds for it.** The reviewed range
-ends at a commit; **the closing amend commits the effective index**, and content staged before the
-final review sits in the index without being in the range, so it was never inside what the review
-request selected and no condition above excludes it. **So: the tree the closing act commits equals the tree of the explicit `headSha` the final pass's
-requests named** — read on what the act produces and not only on the index before it, since a hook
-running during the commit can stage content of its own; where the act produces a different tree it
-has produced unreviewed content and has not closed the cycle, which is the mismatch case below — a tree compared with a tree, since a range is not a thing an index
-can be inside and a staged revert at a path the range already touches would otherwise read as
-covered. A difference is not a
-failed review — it is content the request could not reach: fold it into the `WIP:` snapshot and
-re-review, **which is what the pass does once the closure ordering selects its continue branch**;
-the mismatch means the pass did not close, so any suspension applying to it is answered first.
-**This gate's re-review duty is widened here to say so**, the standing rule requiring a
-re-review after every *fix* and an index difference not being one; the pass run over the widened
-snapshot becomes the candidate final one. **Nothing here establishes what either branch actually
-consumed** — the reply reports no reviewed revision, which is why the kept `baseSha` and `headSha`
-establish only that both calls were aimed at one range. **The hook's fingerprint establishes less
-still**: it is advisory and compares its own inputs across its own invocations, and content staged
-before the review call and still staged at the commit has not moved between them — an unmoved
-fingerprint says nothing changed since it last looked, never that anything reviewed it.
-
 **The act** is the one Mechanics · Finishing the cycle describes — the closing amend, or, where
 several `WIP:` snapshots piled up, the reset and single commit that section prescribes instead —
 performed once the ordering reaches it: an eligible pass with every closure condition holding,
@@ -429,8 +410,9 @@ performed once the ordering reaches it: an eligible pass with every closure cond
 
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
-since the cycle itself stays open until the conditions hold, so an accidental commit destroys
-Gate-B pass credit and closes nothing. **It does not reach a Gate-A cycle's count**, which the hook
+since the cycle itself stays open until the conditions hold, so an accidental commit resets what
+the hook reports and closes nothing; **the passes themselves stand on their validated findings
+files**. **It does not reach a Gate-A cycle's count**, which the hook
 clears at the skill boundaries that start a new Gate-A cycle rather than on any commit.
 ```
 
@@ -654,9 +636,11 @@ exception to point at.
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
 A pre-review snapshot named anything else reads to the hook as a real commit: the hook treats the
-cycle as closed and **discards the passes you just accumulated**, while the cycle itself stays
-open until the closure ordering's conditions hold. The cost of the mistake is the lost pass
-credit, not a close nobody intended.
+cycle as closed and **discards its count of the passes you just accumulated**, while the cycle
+itself stays open until the closure ordering's conditions hold. **What is lost is the hook's
+counter state and not the passes** — a valid pass is established by its validated findings file,
+which no commit touches — so the cost is a reminder that now understates what you hold, not a
+close nobody intended and not a review you have to run again.
 ```
 *The sibling sentence in the profile-change paragraph needs no edit* — it already says such a
 commit "reads **to the hook** as the cycle closing", which claims no closure.
@@ -780,14 +764,15 @@ a live rule belongs to this contract when what it says determines or supplies an
 closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
-identity or transport of any record **§5** obliges a
-cycle to write — §5 entire and not the Mechanics subsection this paragraph sits in, record duties
-being stated in both.** **Read it on the sentence, never on the section the sentence sits in.**
+identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the
+Mechanics subsection this paragraph sits in, record duties being stated in both, and the optional
+companions' slot rules carrying the nonce that keeps sibling cycles apart.** **Read it on the sentence, never on the section the sentence sits in.**
 A sentence is a member when **it itself** fixes one of those things — what counts as a valid
 finding line, which files or records are owed, what ends a hold. It is not a member when it only
-shapes what a review produces, as the choice of reviewer, the lens set and the wording of a prompt
-do: those change the findings without deciding what a finding *is* or what the ordering may do with
-one. **No paragraph is exempt as a paragraph** — a sentence inside a routing or prompt paragraph
+shapes what a review produces, as the choice of reviewer, the lens set and **prompt wording that only frames the
+review question** do: those change the findings without deciding what a finding *is* or what the
+ordering may do with one. **Prompt wording that fixes a valid input is a member**, the gate-prompt
+sentences defining a finding line and the `NO FINDINGS` signal being exactly that. **No paragraph is exempt as a paragraph** — a sentence inside a routing or prompt paragraph
 that fixes a valid input or an owed file is a member, and a sentence anywhere that only influences
 the findings is not. The examples follow the test; they do not stand in for it.
 Asking instead what an imagined edit would do decides nothing, because
@@ -920,6 +905,14 @@ be established as absent is cheaper to owe than to skip** —
 - **Partial adoption is instructed against, never detected.** §G says so in its own words.
 - **Which exit a cycle took is not observable from history.** The transport left with the record
   (successor story) and no story has taken it. An admitted gap, unowned.
+- **Deferred out of this change on Daniel's decision of 2026-09-13: a Gate-B tree-equality
+  condition.** Its purpose was to close the gap between what the final review request selected and
+  what the closing commit carries — content staged before the review, or staged by a hook during
+  the commit, reaches the closing commit through neither review branch. **The gap is real and this
+  change does not close it.** Gate B's existing review, re-review and evidence duties are unchanged
+  and are not a substitute; **the gate hook is not one either**, its fingerprint being advisory and
+  comparing its own inputs across its own invocations. Named as a later task and deliberately not
+  worked out here.
 - **A Gate-A closing act can publish a review input the final pass never read** (pass 29 finding
   2). The commit is written from the effective index, so a staged edit to a cited story's
   acceptance criteria or settled decisions — anything no source rule governs, profile values,
