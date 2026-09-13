@@ -62,6 +62,33 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 33 | 3ee9132 | 15→**22** | 1→**1** | 5→**8** | yes | **MANDATORY TWO-TELL STOP — third in six passes.** B+M 6→**9**, the worst since pass 26. **The scope cut did not reduce the count; it added cleanup debt.** Three findings are references to the cut condition my sweep did not reach. All 22 held open; session 01a09a7d-55f2-7513-b61b-09c9a34626d3 |
 | 34 | ea5e76c | 22→**19** | 1→**0** | 8→**5** | yes | **zero tells.** B+M 9→**5**, the largest fall of this stretch and the lowest since pass 29 — finishing the cut is what did it. All 5 Majors verified before repair, one of them (§F item 5) against `codex-gate.sh:876` rather than asserted; session 01a09acf-1185-7883-b23f-3ee707d5ad58 |
 | 35 | 8847414 | 19→**20** | 0→**0** | 5→**4** | yes | one tell (count rose by one). **B+M 5→4, third consecutive fall: 9, 5, 4.** All four Majors are over-narrow or over-wide wordings of my own earlier repairs; session 01a09ade-8e4c-7352-9e19-75be21c2178e |
+| 36 | 701aa50 | 20→**9** | 0→**0** | 4→**3** | yes | **zero tells. Findings more than halved; B+M 9, 5, 4, 3 across four passes.** All three Majors are pass-35 wordings of mine, two of them the same assurance class again; session 01a09aef-327b-7a11-8033-9e3584c47b27 |
+
+## Pass-36 report — zero tells, B+M 9 → 5 → 4 → 3
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 20, **9**. Blockers 0, **0**. Majors 4, **3**. Blocker+Major 4, **3**.
+- **Cluster (pass 36):** the ordering and the gate blocks 4 of 9; this file's own metadata 5; the
+  instrument 0.
+- **require↔withdraw:** none. All three Majors are follow-ons to the pass-35 repairs, not demands
+  for text an earlier pass removed.
+
+**Tells: zero of five.** Findings more than halved and no count rose.
+
+**All three Majors were mine, and two are the same class I keep re-introducing** — an assurance
+about what a mechanism guarantees. "What a pass is stands on its validated findings file" is false
+of a `full` Gate-B pass, which also needs both branch files and equal kept `baseSha`/`headSha`. And
+§A3 had named the reset-and-single-commit shape for a state standing Mechanics does not prescribe
+it for. **Both are now stated as duties and pointers rather than as guarantees or command shapes**:
+the reset erases counter state and does not invalidate a pass that met the validation rules stated
+where they live, and the closing act owes what Mechanics already requires — no `WIP:` commit left
+in history — with the sequence left to the plan like every other.
+
+**Four passes of falling counts, and the mechanism behind it is legible**: every Major since pass
+34 has been a wording of an earlier repair, narrowing or widening, and none has touched a settled
+decision or opened a behaviour question.
 
 ## Pass-35 report — one tell, B+M 9 → 5 → 4
 

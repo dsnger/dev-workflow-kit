@@ -415,11 +415,12 @@ performed once the ordering reaches it: an eligible pass with every closure cond
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
 since the cycle itself stays open until the conditions hold, so an accidental commit resets what
-the hook reports and closes nothing; **what a pass is stands on its validated findings file, not on
-that counter**. **It also leaves the `WIP:` snapshot as an ancestor**, which the closing amend
-replaces nothing of — so the closing act takes the reset-and-single-commit shape Mechanics gives
-for that case, a `WIP:` commit left in history being exactly what Mechanics says the amend exists
-to prevent. **It does not reach a Gate-A cycle's count**, which the hook
+the hook reports and closes nothing; **what the reset erases is counter state, and it does not
+invalidate a pass that already satisfied the validation rules this section states** — which is
+where what makes a pass valid stays. **It also leaves the `WIP:` snapshot as an ancestor**, which
+an amend of the stray tip would not replace, so **the closing act still owes what Mechanics already
+requires of it: no `WIP:` commit left in history.** Which git sequence reaches that from this state
+belongs to the plan, as every other closing sequence does. **It does not reach a Gate-A cycle's count**, which the hook
 clears at the skill boundaries that start a new Gate-A cycle rather than on any commit.
 ```
 
@@ -644,9 +645,10 @@ exception to point at.
 ```
 A pre-review snapshot named anything else reads to the hook as a real commit: the hook treats the
 cycle as closed and **discards its count of the passes you just accumulated**, while the cycle
-itself stays open until the closure ordering's conditions hold. **What the hook loses is its counter state**, and a
-valid pass is established by its validated findings file rather than by that counter — so the cost
-is a reminder that now understates what you hold, not a close nobody intended.
+itself stays open until the closure ordering's conditions hold. **What the hook loses is its counter state**, and that
+counter is not what makes a pass valid — so the reminder now understates what you hold, and no
+close was intended or made. **What such a commit does to the repository, and what the closing act
+then owes, is in the Gate-B closure paragraph**, not here.
 ```
 *The sibling sentence in the profile-change paragraph claims no closure* — it says such a commit
 "reads **to the hook** as the cycle closing" — **but its second half is falsified by this same
