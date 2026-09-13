@@ -62,9 +62,21 @@ boundary is stated once, in the target text's §A opening, and is deliberately n
 two copies of it are what let them drift, which is pass 20 finding 3. What this spec records is the
 decision behind it: the block defines no trigger and no severity rule of its own, and every closure
 precondition **that has a source of its own** keeps its one definition there, changed **at that
-source** where it had to change to agree with the ordering. **The closing-time sameness tests are
-the exception in substance and not in principle**: they borrow no rule and have no other source,
-being part of the closure decision the block owns.
+source** where it had to change to agree with the ordering.
+
+**The ordering is split into three paragraphs on Daniel's decision of 2026-09-12, and that split is
+the answer to pass 26's Blocker.** The ordering had stated one closure condition — the artifact's
+equality with the text sent to the reviewer — cycle-generally, while its explanation and its two
+repository cases were Gate-A's alone; Gate B passes a git range rather than artifact text, so an
+otherwise eligible Gate-B pass had no value with which to evaluate it and, being eligible, could
+not suspend either. **What is gate-general stays gate-general and what differs goes to the gate**:
+the ordering keeps the evaluation of a pass, the classification of the duties, and the closure
+conditions both gates share — the floor, the resolve duty, the hold, no-clean-credit, and the
+profile, cited-set and assigned-fix-set gates; each gate states only **its own content condition
+and its own closing act**, and neither gate's paragraph is an inventory of what that gate requires.
+**No closing-time test is an exception to the block's citation rule any more**, because the one
+that was is now Gate A's own condition stated at Gate A's paragraph. **The split buys ownership and
+not brevity** — the three paragraphs together run slightly longer than the single block did.
 
 **The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
 the edits; **no total is stated here or there**, because the unit — one contiguous replacement at
@@ -148,7 +160,7 @@ here. This table says what happens to each inventoried passage, so the map stays
 | Passage | This change | Target text |
 |---|---|---|
 | (a) the floor paragraphs | edited — closure sentences trimmed to a pointer, the no-restating prohibition scoped, the per-pass fix command pointed at Mechanics | §H |
-| (b) what a loop absorbs | edited — owns both triggers and the fix set, so every qualification the ordering needs is made **here**, which is what keeps one definition per rule | §B |
+| (b) what a loop absorbs | edited — owns both triggers and the fix set, so every qualification the ordering needs is made **here**, which is what keeps one definition per rule; **gains the closing-time rule for a change to the set**, which no inventoried condition carried because none existed (Daniel, 2026-09-12: a change costs at least one further pass, in either direction and whether or not it is later undone, the window opening where the set is fixed for the pass) | §B |
 | (c) recognizing clearly stuck | edited — keeps its three-condition reading, stops carrying evaluation order; its precedence sentence moves into the block unchanged, and the third condition itself is widened at this source to admit a re-raised validated dismissal | §C |
 | (d) from pass 4 onward | **no longer edited.** The unavailable-history block moved to the successor with **D10** | — |
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
@@ -222,8 +234,9 @@ complete or that the plan's fragments discriminate.** The enumeration moved to w
 exists; the completeness claim did not, because nothing supports it.
 
 **The counterfactual splits, and stating it as one understates what is owed.** For the **ordering
-block** it is **ABSENT and is claimed as absent**: the parent carries no such block, so no old
-wording of it can be shown to disappear and presence alone is the check. For **every replacement**
+and the two gate-closure paragraphs beside it** it is **ABSENT and is claimed as absent**: the
+parent carries none of the three, so no old wording of them can be shown to disappear and presence
+alone is the check. For **every replacement**
 the parent carries the old wording and the change removes it, so each owes the
 old-wording-gone half of its pair. **The obligation reaches every passage the target text marks
 REPLACED, and no list of them is kept here** — a second enumeration beside the markers is the
