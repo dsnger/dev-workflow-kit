@@ -54,6 +54,55 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 25 | 31bbe8f | 8→**10** | 1→**0** | 3→**2** | yes | **B+M 2 and Majors 2, both by far the lowest of the cycle; zero Blockers.** Both Majors are new ground. **Five of the ten are re-raised collected Minors**, one on its fourth appearance; session 01a09522-65bc-7691-8adc-fb26e330810e |
 | 26 | 8b8e146 | 10→**14** | 0→**1** | 2→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** **All six Blocker/Majors trace to repairs made in passes 23, 24 and 25**, each nameable. All 14 held open; session 01a09539-5b8c-7293-af82-cc5f3bd2ba48 |
 | 27 | d971ae7 | 14→**8** | 1→**1** | 5→**3** | yes | **restarted by Daniel 2026-09-13 after the gate-split counter-draft was applied. B+M 6→4; findings the second-lowest of the cycle. ONE tell — no mandatory stop.** Three of the eight are collected Minors knowingly left unrepaired (5, 7, 8); session 01a099dd-b906-7970-8b39-8a3498510af4 |
+| 28 | 233e915 | 8→**13** | 1→**4** | 3→**2** | yes | **MANDATORY TWO-TELL STOP.** B+M 4→6. Four of the six trace to the pass-27/28 repair rounds (2, 5 damage; 3, 6 carry-through); 1 and 4 are rediscovered. All 13 held open; session 01a099fb-0706-7c53-ab6e-a0ccd8e191d3 |
+
+## Pass-28 report — MANDATORY TWO-TELL STOP
+
+**Authorization in force:** Daniel's run-to-completion commission of 2026-09-13 — decide the
+repeated-refuted-finding rule, apply pass 27's three Majors, continue Gate A to a genuine clean
+close, then plan → Gate A → implement both copies → version bump → evidence → Gate B, reporting
+only at a prescribed stop, a new behaviour decision or a real obstacle. **A mandatory two-tell stop
+is the first of those**, so the loop stops here with every finding open.
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 14, 8, **13**. Blockers …, 1, 1, **4**. Majors …, 5, 3, **2**.
+  Blocker+Major …, 6, 4, **6**.
+- **Cluster (pass 28):** product behaviour 11 of 13; prose about the change 2 (5, 11 — both are
+  rationales overstating what a mechanism establishes); the instrument 0.
+- **require↔withdraw:** none.
+
+**Tells: two of five — the threshold. Stop-and-surface is mandatory, not discretionary.** The
+finding count rose 8 → 13 and the Blocker count failed to fall, 1 → 4.
+
+**Provenance of the six Blocker/Majors, traced with `git log -S` before being reported.**
+
+| # | Sev | Entered at | Round | Reading |
+|---|---|---|---|---|
+| 2 | BLOCKER | `d971ae7` | **27** | **My damage.** The pass-27 round wrote "pass-level uncleanliness is named separately", using a re-raised validated dismissal as its example; the pass-28 round then made exactly that case *not* unclean and left the example standing. The two sentences now contradict each other outright. |
+| 3 | BLOCKER | `ef9a504` | 18 | **Older text, broken by this round.** §H and the resolve-duty text say categorically that a recurrence stays resolved. That was safe while any re-raise was unclean; the new exclusion's three qualifications were written into the clean predicate only, so a *qualified* recurrence and an *unqualified* one now read alike at the discharge sites. |
+| 5 | MAJOR | new in `233e915` | **28** | **My damage, and it is the class `AGENTS.md` names as this repo's most persistent.** §A3's new rationale says staged content "was seen by no reviewer" and names "the range the final pass reviewed" — turning request targeting into observed coverage, which standing Mechanics explicitly refuses to claim. |
+| 6 | MAJOR | 11 / `c8f96b8` | 11 | **Older list, incomplete for this round's decision.** The unknown-start rule says each further rule this change ships adds its own strict reading; the new exclusion shipped without one. |
+| 1 | BLOCKER | round 1, reworked at 4 | 1 | **Rediscovered, oldest text in the cycle.** D3's preserved precedence rationale says "collect the Minors and Nits and close", which the strengthened clean predicate and the closure conditions now both qualify. |
+| 4 | BLOCKER | `8b8e146` | 25 | **Rediscovered, and it is the Gate-A mirror of pass 27's finding 4.** §A2 protects the artifact's text through the closing commit and no other closure input; a staged profile or story differing from the working tree is published by the closing act. |
+
+**So: two of six are damage this round made (2, 5), two are older text this round's decision
+broke or left incomplete (3, 6), and two are rediscovered defects (1, 4).** The loop is not
+regenerating blindly — it is finding the carry-through of a decision made one round ago.
+
+**What needs a decision and what does not, stated so the stop is actionable.**
+- **No decision needed** — 2, 3, 5, 6 and 11 carry an already-made decision through to the sites
+  that state it. That is exactly the `AGENTS.md` Don't about replacing a decision procedure
+  without accounting for its old conditions, applied to the new exclusion.
+- **Decision needed — finding 1.** Its fix replaces the rationale of the sentence **D3 preserves
+  verbatim**. Touching it is a change to a settled decision.
+- **Decision needed — finding 4.** Its fix adds a Gate-A closure condition symmetric with the
+  Gate-B one just decided. Same shape, but it is a new behaviour rule.
+
+**The five collected Minors return again** (7, 8, 9, 10, 12) — the ownership boundary, the curve's
+derivability, §G's scope word, §G's attribution overclaim, and the standing four-item list. None
+has been repaired in any round; they are not evidence of a plateau.
 
 ## Pass-27 report — ONE TELL, no mandatory stop, cycle open and NOT running
 
