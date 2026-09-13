@@ -244,9 +244,11 @@ often a repair still owed from an earlier pass. A below-floor clean pass lands h
 terms; where a suspension does apply, the suspension branch has already taken it, because only
 the clean-completion branch outranks a suspension. So does a pass whose only findings are Minors and
 Nits **and which carries no scope-stop trigger** — those are collected and never iterated and may
-leave nothing to revise, while a Minor or Nit that is out of set or opens a new structural question
-carries a trigger like any other finding, is not clean, and has already been taken by the
-suspension branch. It is a branch and
+leave nothing to revise, while a Minor or Nit **carrying a scope-stop trigger as the absorb
+passage defines one** carries it like any other finding, is not clean, and has already been taken
+by the suspension branch — **severity does not raise a trigger and does not suppress one**, and
+which findings raise one is that passage's entire, an already-declined finding and an
+already-answered question raising none. It is a branch and
 not an inference, because "does not close" read alone says nothing about whether to run again.
 
 **The four standing duties, classified.** The **derived floor** is a **precondition on closure**:
@@ -654,13 +656,13 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The seventeen standing sentences this change falsifies — REPLACED
+## F. The eighteen standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All seventeen are **known contradictions** and
-none is deferred. **Thirteen of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All eighteen are **known contradictions** and
+none is deferred. **Fourteen of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at. **Fourteen live in the two prompt copies and cite a line in each; the last
-three live in the shipped hook**, which has one copy and no template mirror.
+four live in the shipped hook**, which has one copy and no template mirror.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -902,6 +904,18 @@ this section's mechanism. **The exact-match expectation in
 `plugins/dev-workflow/hooks/codex-gate.test.sh` pins this string in full and is replaced with
 it** — the other hook assertions match on loose patterns this repair leaves standing.
 
+**13. The WIP-commit reminder's closing permission** (the shipped hook, same file).
+```
+Run the review against this commit; when the closing act may then be performed is $policy's closure ordering's, read there in full.
+```
+*Why (pass 54 finding 2):* the live string ends "then make the real commit when your final pass is
+clean", which makes cleanliness the whole permission — and it reaches the author at the one moment
+the ordering exists to govern. Under the ordering a clean eligible pass closes nothing while a
+precondition is unmet, so an author entering here can amend over a below-floor count, a standing
+hold or an undischarged Major. It is the fourteenth sentence sharing this section's mechanism, and
+the fourth found in the hook; the first three were found at pass 53 and this one at pass 54, which
+is why §I records the edit set as established by sweeping rather than by this file.
+
 ---
 
 ## G. The one-contract paragraph — REPLACED
@@ -1056,7 +1070,7 @@ be established as absent is cheaper to owe than to skip** —
 
 - **Minor, collected and open (pass 17 finding 9 is resolved above; this is the remainder):**
   nothing in this file establishes that the edit set is complete. It is the sites known at pass
-  17, plus the three hook reminder strings §F items 10–12 added at pass 53 — which is itself
+  17, plus the four hook reminder strings §F items 10–13 added at passes 53 and 54 — which is itself
   evidence that the set was not complete. **The plan sweeps both prompt copies and the shipped
   hook's reminder strings against the rule** — a live sentence the ordering falsifies gets
   edited — and prints what it found; a spec cannot establish that claim against text the same

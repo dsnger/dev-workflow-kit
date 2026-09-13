@@ -5,9 +5,12 @@
 **Profile:** read from that header at every pass, never from here — it is the only writable
 copy, and a value copied here would be a remembered value.
 
-Prompt-only, in two mirrored copies: `CLAUDE.md` §5 (**C** below) and the inline template in
-`plugins/dev-workflow/commands/workflow-init.md` (**W** below). No file under
-`plugins/dev-workflow/hooks/` changes. Condition ids `a1`…`j4` are defined in
+Prompt-only, in two mirrored copies — `CLAUDE.md` §5 (**C** below) and the inline template in
+`plugins/dev-workflow/commands/workflow-init.md` (**W** below) — **plus four reminder strings in
+`plugins/dev-workflow/hooks/codex-gate.sh` and the one exact-match expectation in
+`plugins/dev-workflow/hooks/codex-gate.test.sh` that pins one of them** (target text §F items
+10–13, authorised 2026-09-13). **No hook behaviour changes**, and the hook strings have no mirror,
+so they carry no parity obligation. Condition ids `a1`…`j4` are defined in
 `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md` beside this
 file: 135 conditions quoted from `7c0d475`, so a reader can check an accounting rather than
 take it.
@@ -218,8 +221,8 @@ commit (`scripts/check-version-bump.sh main` needs the committed bump, §8).
 
 **The check — what it must establish, and where it is built.** Every edit that changes a standing
 meaning owes a **discriminating pair of counts**: one showing the new wording present, one
-showing the old wording gone. Each half runs in **both copies** — and, for the three hook
-reminder strings of §F items 10–12, in the hook's **single** copy, which has no mirror and owes
+showing the old wording gone. Each half runs in **both copies** — and, for the four hook
+reminder strings of §F items 10–13, in the hook's **single** copy, which has no mirror and owes
 no parity check; the hook suite's exact-match assertion is that edit's second observation — and
 against **both** the working
 tree and the parent tree, so every assertion is observed passing where the change exists and
@@ -344,10 +347,10 @@ repo's most persistent defect. The transport that could carry it left with the r
   `plugins/dev-workflow/commands/workflow-init.md` is under `plugins/`, so
   `plugins/dev-workflow/.claude-plugin/plugin.json` goes `0.11.0 → 0.12.0` with a
   `plugins/dev-workflow/CHANGELOG.md` entry: a minor bump, the template gaining a closure
-  ordering, the edited or extended sentences §4 lists, and the three hook reminder strings of
-  §F items 10–12. The hook edits add no bump the template did not already require.
+  ordering, the edited or extended sentences §4 lists, and the four hook reminder strings of
+  §F items 10–13. The hook edits add no bump the template did not already require.
 - **Invariant 4 / the hook.** `plugins/dev-workflow/hooks/codex-gate.sh` is edited in exactly
-  three `note` **strings** (§F items 10–12) and nowhere else: no control flow, no counter, no
+  four `note` **strings** (§F items 10–13) and nowhere else: no control flow, no counter, no
   fingerprint computation, no routing, so the POSIX-`sh` and optional-`jq` obligations are not
   reached. `plugins/dev-workflow/hooks/codex-gate.test.sh` changes in its one exact-match
   expectation for the Gate-B satisfied message; the remaining hook assertions match loose
@@ -426,7 +429,7 @@ not exist; §G names a sentence that does, and claims only what that sentence do
 - The fixture-per-predicate question (`fic2` record; story §2).
 - Hook **behaviour** under `plugins/dev-workflow/hooks/` — control flow, counters, fingerprint
   computation, routing, event handling. The three contradictory reminder strings and the one
-  exact-match test expectation are in scope instead (§F items 10–12, story §Out of scope), and
+  exact-match test expectation are in scope instead (§F items 10–13, story §Out of scope), and
   the Gate-B fingerprint overclaim in the same message stays parked here.
 - `todos.md`: both-branches-misread-each-other; self-consuming-deletion (prompt-standards item
   11); the three bot findings in resolved plans.

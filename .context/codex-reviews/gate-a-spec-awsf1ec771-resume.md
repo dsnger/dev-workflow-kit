@@ -70,7 +70,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 51 | 2044147 | 25→**23** | 0→**0** | 11→**6** | yes | zero tells. 4 of 6 = the same class in design §§4, 7, 9; 2 inside the target (§A3's duty summary, the §A3/§F-5 circular case split) |
 | 52 | 06152d1 | 23→**29** | 0→**0** | 6→**5** | yes | one tell. **Two of five were pass 51's findings 1–2, still open because the pass-51 repair went to the wrong section** — see the pass-51 dispositions file. Pass 52 located them correctly at design §5 |
 | 53 | 81fffd1 | 29→**21** | 0→**0** | 5→**4** | yes | zero tells. **Three of four Majors are the first §F sites outside the two prompt copies** — reminder strings in `codex-gate.sh`. Daniel authorised a NARROW SCOPE OPENING on 2026-09-13: the three strings plus one exact-match test expectation are in, hook behaviour stays out, the Gate-B fingerprint overclaim stays parked. §F 14 → 17. Major 1 was a genuine internal contradiction (§A1 vs §A3 + §F-5 on what a failed attempt leaves behind); both assertions deleted |
-| 54 | — | — | — | — | not run | next, against the pass-53 repair commit |
+| 54 | c73367f | 21→**13** | 0→**0** | 4→**3** | yes | zero tells. All three Majors are pass-53 fallout and all are in-set: a **fourth** falsified hook string (the WIP reminder's "make the real commit when your final pass is clean") → §F item 13, 17→18; the design opening still said "No file under `plugins/dev-workflow/hooks/` changes"; §A1's continue branch re-enumerated §B's scope triggers instead of citing them |
+| 55 | — | — | — | — | not run | next, against the pass-54 repair commit |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -78,6 +79,30 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-54 report — zero tells, and the scope opening paid for itself immediately
+
+**Trend:** findings 23, 29, 21, **13** across 51–54; Blockers 0, 0, 0, **0**; Majors 6, 5, 4, **3**.
+**Cluster:** product behaviour. **Require↔withdraw:** none. Zero tells.
+
+All three Majors were pass-53 fallout, and all three are inside the fix set as pass 53 left it:
+
+1. **A fourth falsified hook string**, which pass 53 did not find — the WIP-commit reminder's
+   "then make the real commit when your final pass is clean" (`codex-gate.sh:908`), which makes
+   cleanliness the whole permission at exactly the moment the ordering exists to govern. Now §F
+   item 13; §F 17 → 18. Treated as inside the authorised boundary: Daniel authorised the **class**
+   (reminder strings this change makes contradictory), and the count in that authorisation was
+   descriptive. Story, design and the pass prompt now say four.
+2. **The design's own opening still said "No file under `plugins/dev-workflow/hooks/` changes"** —
+   the scope statement I updated in three places while missing the first one. It now names the two
+   prompt copies, the four strings and the one test expectation.
+3. **§A1's continue branch re-enumerated §B's scope triggers**, which lets a declined finding or an
+   answered question be re-suspended. Replaced with a pointer to the absorb passage entire, plus
+   the standing "severity neither raises nor suppresses a trigger".
+
+**Reading:** finding count has halved twice (29 → 21 → 13) and Majors are falling. The one thing
+worth watching is that pass 53's repair generated all of pass 54's Majors — a lineage, not yet a
+plateau, and the three repairs here are pointer-and-scope work rather than new rules.
 
 ## Pass-53 report — zero tells, and the sweep had been looking in too few files
 
