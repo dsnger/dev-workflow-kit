@@ -140,7 +140,7 @@ to point at and so a reader can see the shape of the change without reading the 
 |---|---|
 | the closure ordering | **new**, and it is section A of the target text |
 | (a) the floor paragraphs | §H |
-| (b) what a loop absorbs | §B |
+| (b) what a loop absorbs | edited — it owns both scope triggers and the assigned fix set, so every qualification the ordering needs is made there. **What it now says, including what a change to the set and an accept at a membership stop cost, is stated in the target text's §B and nowhere here** | §B |
 | (c) recognizing clearly stuck | §C |
 | (e) the five tells | §D |
 | Mechanics · Severity | the resolve duty is scoped and gains its discharge rule; the handed-over question is replaced by its answer |
@@ -288,13 +288,10 @@ missing two of them. **Which route a row must enter closure by, and which condit
 target text's §A and are not re-enumerated here** — an embedded copy can pass while disagreeing
 with the text it is meant to check, which is how this list came to name three conditions while the
 block stated more. Naming only the distinct-state half would pass
-the exact no-progress defect AC 4 cites from the parent cycle. **The
-consumption clause is what keeps the oracle and the shipped text in agreement**: the target text's
-§A says continue consumes the reading that raised the suspension and a further health suspension
-needs it recomputed over a
-pass run after the answer, so the *same* two-tell or clearly-stuck result **after** such a pass is
-new data and a legitimate row, not a failed transition. An earlier wording failed it "whether or
-not an input was consumed", which would have classified that legitimate case as a defect.
+the exact no-progress defect AC 4 cites from the parent cycle. **What a health answer consumes, and when a later suspension of the same reading is new data
+rather than a failed transition, are stated in the target text's §A and are read from there** — an
+earlier wording of this section embedded that rule and an earlier one still contradicted it, which
+is two authorities for one transition.
 
 **Evidence entry**, in the closing commit body, names: the battery run; every pair the plan built
 with its counts in each copy and each tree, and every presence check beside them; the §6 parity
@@ -396,10 +393,8 @@ against this repository's own spec. Both are why the
 rule is stated and **the plan derives the membership against the real files**, where dependence is
 decidable and the numbering does not exist.
 
-**Stated as what it is.** That paragraph is **an instruction to the agent**: a project whose text
-carries some members and not others, or versions that disagree, **stops and has a human complete,
-revert or reconcile the adoption before running a gate under it**. §G widens whom that
-sentence is about. It is not a guard and not a mechanical check, and this change builds neither —
+**Stated as what it is.** That paragraph is **an instruction to the agent**, and **what it obliges
+is stated in §G and not repeated here** — §G widens whom that sentence is about. It is not a guard and not a mechanical check, and this change builds neither —
 **nothing detects a partial adoption**, and the stop happens only where an agent reads the
 sentence and acts on it.
 

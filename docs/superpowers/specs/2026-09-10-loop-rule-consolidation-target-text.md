@@ -420,20 +420,14 @@ and the next paragraph says why.
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
 so there is no reviewed text to compare an artifact against, and **nothing is put in its place**:
 content the final review request did not select can reach the closing commit, and **no rule in this
-section reaches it**. What this gate does have is already in this section
-and is cited rather than restated: the range those two names fix and **the branch-agreement rule
-entire**, which says how `headSha` is resolved and passed, what is kept with each branch result and
-what must be equal before two branches are summed — cited here and not compressed, a part of it
-dropped being a range nobody checked; **a re-review after every fix**, a fix changing the artifact so
-the prior review no longer covers it; **a fix that changes specified behaviour updating the spec in
-the same commit**, so the re-review covers both; the battery and the mode-derived evidence the
-profiles section obliges before a call; and the **evidence entry**, revalidated as that section
-says.
+section reaches it**. **What this gate does have is every Gate-B duty this section already
+states, at the paragraphs that state them, and none of them is summarised here** — a compressed
+inventory is where a load-bearing part goes missing while the list still looks complete.
 
-**The act** is the one Mechanics · Finishing the cycle describes — the closing amend, or, where
-several `WIP:` snapshots piled up, the reset and single commit that section prescribes instead —
-performed once the ordering reaches it: an eligible pass with every closure condition holding,
-**never a clean pass on its own**.
+**The act** is the one Mechanics · Finishing the cycle describes, in whichever shape that section
+gives the repository's current state. **This paragraph says when it is performed and never which
+shape it takes**: once the ordering reaches it, on an eligible pass with every closure condition
+holding, **never a clean pass on its own**.
 
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
@@ -725,10 +719,11 @@ their definition site.
 W 1011–1012.
 ```
 **Finishing the cycle:** once the closure ordering reaches a Gate-B cycle's closing act — an
-eligible pass with every closure precondition holding, never a clean pass on its own — perform that gate's
-closing act as the ordering describes it — ordinarily `git commit --amend -m "<real message>"`,
-which replaces the WIP commit, and the shape the ordering names instead wherever the amend would
-leave a `WIP:` commit in history. **The hook treats any
+eligible pass with every closure precondition holding, never a clean pass on its own — close it with
+`git commit --amend -m "<real message>"`, which replaces the WIP commit; **where a `WIP:` snapshot
+would survive the amend** — several piled up, or a stray non-amending commit made one an
+ancestor — **reset to the parent of the first and commit once instead**. This section is the only
+place either shape is defined. **The hook treats any
 non-`WIP` commit *attempt* as a Gate-B boundary and clears its state even where the command
 fails**, so a failed closing act leaves that counter cleared and no commit made — a fact about the
 counter and not about the cycle. This section states the operation and never whether the cycle may
