@@ -156,6 +156,16 @@ nothing, and is not thereby made unclean. Keeping the two apart is what lets the
 case where they disagree, which the branches do. **The order inside closure is fixed: every
 condition is established first, and only then is the closing act performed.**
 
+**An act that does not complete has not closed the cycle, and costs no pass.** Where the commit or
+amend fails — a permission, signing, hook or repository error — **the cycle stays open with every
+condition still established, the failure is surfaced as the concrete command failure it is, and
+the act is retried once that is repaired.** No branch below is taken and no further review pass is
+owed, because nothing the review reads has changed: not the artifact, not a finding, not an answer,
+not a condition. **Retrying is only available while that stays true** — where the repair touches
+anything a closure condition is read from, that condition is re-established first and the ordinary
+rules decide what that costs. Reading a failed act as an ordinary non-closing pass would spend a
+review pass on a `git` error and report a loop-health problem the loop does not have.
+
 **Closure introduces no new kind of record, and it excuses none**: every other record this cycle
 owes, a human-exception record among them, is owed and written exactly as before, and **a
 human-exception record this cycle owes goes in the commit its closing act uses**, so the two never
@@ -399,7 +409,9 @@ final pass's requests named** — a tree compared with a tree, since a range is 
 can be inside and a staged revert at a path the range already touches would otherwise read as
 covered. A difference is not a
 failed review — it is content the request could not reach: fold it into the `WIP:` snapshot and
-re-review. **This gate's re-review duty is widened here to say so**, the standing rule requiring a
+re-review, **which is what the pass does once the closure ordering selects its continue branch**;
+the mismatch means the pass did not close, so any suspension applying to it is answered first.
+**This gate's re-review duty is widened here to say so**, the standing rule requiring a
 re-review after every *fix* and an index difference not being one; the pass run over the widened
 snapshot becomes the candidate final one. **Nothing here establishes what either branch actually
 consumed** — the reply reports no reviewed revision, which is why the kept `baseSha` and `headSha`
@@ -629,10 +641,10 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The seven standing sentences this change falsifies — REPLACED
+## F. The eight standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All seven are **known contradictions** and
-none is deferred. **Five of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All eight are **known contradictions** and
+none is deferred. **Six of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
 
@@ -733,6 +745,21 @@ closing act uses; a Gate-B cycle in the WIP commit, restated by the closing amen
 plan commit", which is the closing commit only on the first of the three closing paths. On the
 other two the record and the closure would land in different commits. Naming the closing act
 instead keeps them together on all three without changing the record's form or force.
+
+**8. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
+W 914–915.
+```
+If revalidation changes the entry, the clean pass no longer covers what is being committed: the
+pass did not close, so the closure ordering decides what happens next — fix, re-review and close
+on the entry that pass validated where it selects the continue branch, and where it selects a
+suspension, the answer comes first.
+```
+*Why (pass 30 finding 3):* the live sentence is a complete instruction to whoever enters through
+the profiles section — fix, re-review, close — and under the ordering a non-closing pass takes any
+applicable suspension first. An eligible pass with stale evidence and two tells could follow this
+path straight past a mandatory stop. It is the sixth sentence of this section's shared mechanism,
+an entry point other than the ordering carrying an unqualified instruction, and it takes the same
+repair: the **operation** stays here, the **permission** is the ordering's.
 
 ---
 
@@ -852,7 +879,9 @@ A **clean findings file** is the single body line `NO FINDINGS` with `END OF FIN
 **The Gate-A cadence** — revision becomes conditional, since unconditional it tells a Minor-only
 pass to manufacture the repair the severity rule forbids.
 ```
-Each pass: validate, revise **where a repair is required**, re-run.
+Each pass: validate, revise **where a repair is required**, and re-run **where the closure
+ordering selects its continue branch** — where it selects a suspension instead, the answer comes
+first and that ordering says what the answer produces.
 ```
 
 **The lens paragraph's unchanged-list** — scoped to the lens sets, which is what that paragraph is

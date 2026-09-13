@@ -97,6 +97,14 @@ remaining rules this change ships, §A3's index condition names a **tree-to-tree
 the explicit `headSha` rather than membership of a range, and §G's membership test reaches rules
 deciding termination **without** a pass, the Gate-B triviality skip being the only such route.
 
+**A closing act that does not complete closes nothing and costs no pass** (pass 30 finding 4). A
+failed commit or amend leaves the cycle open with every condition still established and is
+retried once the concrete failure is repaired; no branch is taken, because nothing the review
+reads has changed. Retrying is available only while that holds — a repair touching anything a
+condition is read from re-establishes that condition first. **This adds no mechanism**: it says
+what "the act was not performed" already means, against a text that otherwise routes a `git`
+error into a full review pass.
+
 **One gap is named and not closed** (pass 29 finding 2, and §I carries it): a Gate-A closing act is
 written from the effective index, so a staged edit to a review input **no source rule governs** — a
 cited story's acceptance criteria, say — is published by the closing commit unchecked. Profile
@@ -195,6 +203,7 @@ to point at and so a reader can see the shape of the change without reading the 
 | (i) when these rules bind | §H |
 | the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional; the broad-prompt instruction stops assuming the artifact is revised between passes, keeping its breadth demand |
 | the profiles section, the lens paragraph | its unchanged-list is scoped to the lens sets |
+| the profiles section, the evidence-entry revalidation remedy | its fix-re-review-close instruction becomes conditional on the ordering selecting continuation, a non-closing pass taking any applicable suspension first (pass 30 finding 3). The eighth falsified standing sentence, and the sixth sharing §F's mechanism |
 
 **Two sentences are deliberately not edited**, named so nobody looks for them: the "Copy every
 record into the squash body" sentence inside the human-exception block, and the "records every
