@@ -126,6 +126,28 @@ whatever the floor, because a floor buys further looks at an artifact that keeps
 and one yielding none has already given what those looks were for; don't manufacture findings to
 pad.
 
+**A repetition of a finding this cycle has validly dismissed does not, on its own, make a pass
+unclean.** Every part of this is required and the exclusion is narrow: the **dismissal was made in
+an earlier pass of this cycle**, its stated reason is **still true of the artifact as it now
+stands**, and the later finding **makes the same complaint and brings no new evidence** — no
+observation the dismissal did not answer, and no change to the text the reason turned on. Where any
+part fails — new evidence, relevant content changed, or genuine doubt that this finding is that
+one — the finding is read afresh like any other, and **doubt never resolves in the exclusion's
+favour**. Without it the standing duty *dismiss validly, then run another pass* cannot finish,
+because a reviewer repeating its own refuted claim would decide whether that claim had been dealt
+with. **It reaches only a dismissal this cycle made**, which is what an agent running the cycle
+knows; nothing here ships a record, and recognising a dismissal across a lost session has no more
+support than the paragraph above gives it.
+
+**It changes cleanliness and nothing else, which is what keeps it from being a waiver.** The
+repetition is **still a finding**: it stands in its pass's findings file, and every loop-health
+reading counts it exactly as it counts any other, so a loop spending passes on a point it keeps
+refuting still shows up as one. It remains the clearly-stuck reading's re-raise condition. **No
+earlier pass becomes clean in retrospect** — a pass's cleanliness is settled on what it found and
+is never rewritten, which this exclusion leaves untouched: it decides the pass being read and no
+other. And it is **not** a second dismissal; the resolve duty was discharged when the finding was
+dismissed and there is nothing here to discharge again.
+
 **Eligibility is exactly this and nothing more: a clean pass at or above the derived floor, or a
 zero-finding pass.** It is a property of the pass. **Closure is eligibility plus every closure
 condition of this cycle holding plus this cycle's gate's closing act**, and those conditions are
@@ -175,7 +197,10 @@ continues on whatever the unmet condition requires — most often a repair still
 pass. A below-floor clean pass lands here too, **only where no suspension applies to it**; where
 one does, the suspension branch has already taken it, because clean completion did not close the
 pass and only closing outranks a suspension. So does a pass whose only findings are Minors and
-Nits, which are collected and never iterated and may leave nothing to revise. It is a branch and
+Nits **and which carries no scope-stop trigger** — those are collected and never iterated and may
+leave nothing to revise, while a Minor or Nit that is out of set or opens a new structural question
+carries a trigger like any other finding, is not clean, and has already been taken by the
+suspension branch. It is a branch and
 not an inference, because "does not close" read alone says nothing about whether to run again.
 
 **The four standing duties, classified.** The **derived floor** is a **precondition on closure**:
@@ -342,6 +367,18 @@ the same commit**, so the re-review covers both; the battery and the mode-derive
 profiles section obliges before a call; and the **evidence entry**, revalidated as that section
 says.
 
+**What the range does not reach, and the one condition this gate adds for it.** The reviewed range
+ends at a commit; **the closing amend commits the effective index**, and content staged before the
+final review sits in the index without being in the range, so no reviewer saw it and no condition
+above excludes it. **So: the effective index at the closing act carries nothing outside the range
+the final pass reviewed.** A difference is not a failed review — it is unreviewed content: fold it
+into the `WIP:` snapshot and re-review, which the re-review rule above already requires of any
+change, and the pass that sees it becomes the candidate final one. **The hook's fingerprint
+establishes none of this**: it is advisory, it compares its own inputs across its own invocations,
+and content staged before the review call and still staged at the commit has not moved between
+them — an unmoved fingerprint says nothing changed since it last looked, never that a review
+covered what it is looking at.
+
 **The act** is the closing amend Mechanics · Finishing the cycle describes, performed once the
 ordering reaches it — an eligible pass with every closure condition holding, **never a clean pass
 on its own**.
@@ -380,8 +417,12 @@ severity exactly as Mechanics · Severity says. Ancestry decides where a finding
 never decides what you do with it, and it grants no Minor or Nit a repair round it would not
 otherwise get. **The assigned fix set is fixed before the pass you are answering: it is the
 union of the scope every approved story or plan governing this change assigns to this cycle,
-plus repair obligations you already accepted in earlier passes, minus every finding this cycle
-has declined.** A finding is in-set when repairing it stays inside **the assigned fix set as
+plus every finding this cycle has accepted at a membership stop together with any repair
+obligation accepted with it, minus every finding this cycle has declined.** **An accept puts the
+finding in the set whatever its severity**: membership and the repair duty are different things,
+so a Minor or Nit accepted into the set is in it though Mechanics · Severity asks no repair for
+it, and a later pass that recomputed it as outside would raise the membership question a second
+time and make the accept decide nothing. A finding is in-set when repairing it stays inside **the assigned fix set as
 just defined** — never merely because it arrived in the current pass, which would put every new
 finding in the set by definition and leave the boundary deciding nothing. Where membership is
 genuinely unclear treat the finding as **outside**, which costs a question and never a silent
@@ -469,16 +510,20 @@ coverage is sufficient**, stated — a known materially unreviewed area forbids 
 and disclosing it does not license it; and **Blocker or Major findings that keep regenerating
 across genuine repair attempts**, each round's fix producing the next — **or a finding the author
 has validly dismissed that the reviewer re-raises across passes**, the re-raise standing in for
-the regenerating fix, since a dismissal gets no repair and produces none and a false positive that
-returns every pass would otherwise leave the cycle unable to close and unable to suspend. That
-third condition is what makes a plateau rather than a finish. **Where this reading and a clean
+the regenerating fix, since a dismissal gets no repair and produces none, and a reviewer returning
+to the same refuted point every pass says the same thing about the loop that a fix producing the
+next finding says. That third condition is what makes a plateau rather than a finish. **Where this reading and a clean
 completion both apply, the closure ordering decides it** — the precedence sentence lives there,
 because precedence is evaluation order.
 ```
 
-*What follows in the live paragraph, and the two are not treated alike (pass 19 finding 8).* The
-**precedence sentence** moves into the block above **word for word**, which is what satisfies
-**D3**. The **below-the-floor sentence does not move at all — it is replaced**: it says a
+*What follows in the live paragraph, and the two are not treated alike (pass 19 finding 8).* **Only the operative precedence clause moves into the block above**, from "a clean completion takes
+precedence over this exit" to the end of the sentence, **capitalized there as a standalone
+sentence**; its opening clause — the plateau rationale — **stays here**, which is pass 26 finding
+9. So the words that move are unchanged and the sentence is **split, not moved whole**: saying it
+moves word for word would be false of the sentence and would have the plan preserve bytes that are
+not the proposed text. **D3 is satisfied by the operative clause surviving unchanged**, which is
+what D3 is about. The **below-the-floor sentence does not move at all — it is replaced**: it says a
 Blocker/Major-free pass below the floor carrying a Minor "keeps looping", while the ordering
 splits that case, such a pass **suspending** where any suspension applies to it and **continuing**
 where none does. Its two halves live in the ordering's suspension and continue branches, and no
@@ -754,8 +799,8 @@ closure ordering. Codex is advisory — validate before applying; dismissed find
 **The Gate-A clean-signal sentence** — the signal stops being the only route to clean.
 ```
 Ask for one line per finding and a literal `NO FINDINGS` when a pass found none — that explicit
-signal is what lets a pass be read as clean without inspecting it, and a pass carrying only
-Minors is clean too and could never produce that file:
+signal is what lets a pass be read as clean without inspecting it, and a pass carrying only Minors
+**and no scope-stop trigger** is clean too and could never produce that file:
 ```
 
 **The gate-prompt template's clean sentence**, in the block both gates paste.

@@ -64,6 +64,22 @@ decision behind it: the block defines no trigger and no severity rule of its own
 precondition **that has a source of its own** keeps its one definition there, changed **at that
 source** where it had to change to agree with the ordering.
 
+**One behaviour decision was added after the split, on Daniel's decision of 2026-09-13, and it
+changes the clean predicate.** A finding this cycle has **validly dismissed** and a later pass
+merely repeats, with no new evidence and no relevant change to the text the dismissal turned on,
+**does not on its own make that later pass unclean**. Without it the standing duty *dismiss
+validly, then run another pass* cannot finish: the reviewer would be the authority on whether its
+own refuted claim had been dealt with, and a cycle could be held permanently unclean by a repeated
+false positive. **It is deliberately narrow and it is not a waiver** — the repetition stays a
+finding in its file, every loop-health reading counts it, it remains the clearly-stuck reading's
+re-raise condition, no earlier pass becomes clean in retrospect, and doubt about whether it is the
+same complaint is resolved against the exclusion. **No new suspension type and no record mechanism
+were introduced for it**, which two earlier candidate answers would have required. **The Blocker
+that prompted it is accepted on that core and not on its reasoning**: pass 27 argued the cycle
+could *never* close, resting on a six-pass plateau the text does not set as a threshold and on a
+coverage judgement that is a fact about now rather than forever. The repeated-refuted-complaint
+problem stands on its own without either.
+
 **The ordering is split into three paragraphs on Daniel's decision of 2026-09-12, and that split is
 the answer to pass 26's Blocker.** The ordering had stated one closure condition — the artifact's
 equality with the text sent to the reviewer — cycle-generally, while its explanation and its two
@@ -77,6 +93,18 @@ and its own closing act**, and neither gate's paragraph is an inventory of what 
 **No closing-time test is an exception to the block's citation rule any more**, because the one
 that was is now Gate A's own condition stated at Gate A's paragraph. **The split buys ownership and
 not brevity** — the three paragraphs together run slightly longer than the single block did.
+
+**Writing Gate B's closure down exposed one condition nobody had stated** (pass 27 finding 4).
+Gate B reviews a `baseSha`..`headSha` range while the closing amend commits the **effective
+index**, so content staged before the final review is in the index and in no reviewer's payload.
+A3 adds the one condition that closes it: the effective index at the closing act carries nothing
+outside the reviewed range, a difference being folded into the `WIP:` snapshot and re-reviewed
+under the re-review rule that already exists. **The hook proves none of this, and A3 says so in
+the terms invariant 3 fixes**: its fingerprint includes an effective-index tree, so content staged
+before the review call and still staged at the commit leaves it unmoved between the two
+invocations — an unmoved fingerprint reports that nothing changed since it last looked, never that
+a review covered what it is looking at. That distinction is read from `AGENTS.md` invariant 3,
+which states the comparison; nothing is claimed here about the script beyond it.
 
 **The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
 the edits; **no total is stated here or there**, because the unit — one contiguous replacement at
@@ -160,8 +188,8 @@ here. This table says what happens to each inventoried passage, so the map stays
 | Passage | This change | Target text |
 |---|---|---|
 | (a) the floor paragraphs | edited — closure sentences trimmed to a pointer, the no-restating prohibition scoped, the per-pass fix command pointed at Mechanics | §H |
-| (b) what a loop absorbs | edited — owns both triggers and the fix set, so every qualification the ordering needs is made **here**, which is what keeps one definition per rule; **gains the closing-time rule for a change to the set**, which no inventoried condition carried because none existed (Daniel, 2026-09-12: a change costs at least one further pass, in either direction and whether or not it is later undone, the window opening where the set is fixed for the pass) | §B |
-| (c) recognizing clearly stuck | edited — keeps its three-condition reading, stops carrying evaluation order; its precedence sentence moves into the block unchanged, and the third condition itself is widened at this source to admit a re-raised validated dismissal | §C |
+| (b) what a loop absorbs | edited — owns both triggers and the fix set, so every qualification the ordering needs is made **here**, which is what keeps one definition per rule; **gains the closing-time rule for a change to the set**, which no inventoried condition carried because none existed (Daniel, 2026-09-12: a change costs at least one further pass, in either direction and whether or not it is later undone, the window opening where the set is fixed for the pass); **an accept at a membership stop puts the finding in the set whatever its severity** (pass 27 finding 2), membership and the repair duty being different things, so an accepted Minor is in the set although Severity asks no repair for it | §B |
+| (c) recognizing clearly stuck | edited — keeps its three-condition reading, stops carrying evaluation order; **its precedence sentence is split**, the operative clause moving into the block unchanged and capitalized there while the plateau rationale stays at this source (pass 26 finding 9, pass 27 finding 6); the third condition is widened here to admit a re-raised validated dismissal, and its reason is restated because the deadlock it named is now answered by the clean predicate | §C |
 | (d) from pass 4 onward | **no longer edited.** The unavailable-history block moved to the successor with **D10** | — |
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
 | (f) the two rules above do not compete | **unchanged.** "The two rules above" still names the absorb rule and the stuck reading; the block sits before both and adds no third rule between them | — |
