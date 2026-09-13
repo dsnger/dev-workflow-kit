@@ -53,7 +53,50 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 24 | 6913c35 | 9→**8** | 0→**1** | 7→**3** | yes | **B+M 4 and Majors 3, both the lowest of the cycle.** One tell. The Blocker is new ground: the closing act reads `HEAD` and the working artifact and never the **index**, which is what `git commit` commits — `AGENTS.md:93`'s own documented failure class; session 01a0950c-f003-79d3-985f-73e2885c9621 |
 | 25 | 31bbe8f | 8→**10** | 1→**0** | 3→**2** | yes | **B+M 2 and Majors 2, both by far the lowest of the cycle; zero Blockers.** Both Majors are new ground. **Five of the ten are re-raised collected Minors**, one on its fourth appearance; session 01a09522-65bc-7691-8adc-fb26e330810e |
 | 26 | 8b8e146 | 10→**14** | 0→**1** | 2→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** **All six Blocker/Majors trace to repairs made in passes 23, 24 and 25**, each nameable. All 14 held open; session 01a09539-5b8c-7293-af82-cc5f3bd2ba48 |
-| 27 | — | — | — | — | not run | blocked on the two-tell answer |
+| 27 | d971ae7 | 14→**8** | 1→**1** | 5→**3** | yes | **restarted by Daniel 2026-09-13 after the gate-split counter-draft was applied. B+M 6→4; findings the second-lowest of the cycle. ONE tell — no mandatory stop.** Three of the eight are collected Minors knowingly left unrepaired (5, 7, 8); session 01a099dd-b906-7970-8b39-8a3498510af4 |
+
+## Pass-27 report — ONE TELL, no mandatory stop, cycle open and NOT running
+
+**Restart:** Daniel authorized the restart on 2026-09-13 for one thing only — apply the gate-split
+counter-draft to the inactive target text, align the design, run **exactly** pass 27, report, and
+stop. **No automatic follow-up round, no activation, no Gate B.** That authorization is spent.
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings …, 10, 14, **8**. Blockers …, 0, 1, **1**. Majors …, 2, 5, **3**.
+  Blocker+Major …, 2, 6, **4**.
+- **Cluster (pass 27):** product behaviour 7 of 8; prose about the change 1 (finding 6); the
+  instrument 0.
+- **require↔withdraw:** none. Findings 5, 7 and 8 are collected Minors returning — pass 26's 8, 11
+  and 13, knowingly left unrepaired under the no-Minor-rounds instruction. A collected Minor
+  returning is not a withdrawal reversed.
+
+**Tells: one of five — below the threshold. No mandatory stop.** The finding count fell 14 → 8;
+the Blocker count failed to fall, 1 → 1, which is the one tell. The clearly-stuck exit is **not**
+reachable either: coverage is not affirmable, finding 4 reaching Gate-B index-versus-range ground
+no earlier pass had read.
+
+**The pass is not clean** — one Blocker and three Majors, all in-set — **so the cycle continues**,
+and the continue branch is where it sits. It is **not** parked: no suspension applies. What holds
+it is the authorization, not the rules.
+
+**Provenance of the four Blocker/Majors, traced with `git log -S` before being reported.**
+
+| # | Sev | Entered at | Reading |
+|---|---|---|---|
+| 1 | BLOCKER | clause new in `d971ae7`; trap older | **Rediscovered, made findable by this round.** The clean predicate already made a re-raised validated dismissal unclean; this round's pass-26-finding-10 repair named pass-level uncleanliness out loud, and naming it exposed that such a cycle can neither close nor suspend. The defect is not new; its visibility is. |
+| 2 | MAJOR | round 4, reworked at 11 and `0168f88` | **Rediscovered, older.** Untouched this round. |
+| 3 | MAJOR | round 3, reworked at 9 and `0168f88` | **Rediscovered, older.** Untouched this round. |
+| 4 | MAJOR | §A3 is new text in `d971ae7` | **This round's new text, real gap.** Gate B reviews a `baseSha`..`headSha` range while the closing amend commits the effective index; staged content present before the final review is in neither. §A3 is the first text to make that comparable. |
+
+**One Minor is genuine damage from this round:** finding 6. §A1 dropped the "That third condition…"
+opening per pass-26 finding 9, which makes §C's and design §5's surviving "moves … word for word"
+claim false. Repairing finding 9 broke that claim; nothing else did.
+
+**What the six pass-26 Blocker/Majors did.** None of them returns. Findings 1–6 of pass 26 are
+absent from pass 27, and the pass-27 Blocker is on different ground. That is the strongest evidence
+the split worked; it is **not** a claim that the text is correct.
 
 ## Pass-26 three-line report — MANDATORY TWO-TELL STOP
 
