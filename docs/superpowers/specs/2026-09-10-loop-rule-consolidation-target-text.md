@@ -99,7 +99,9 @@ identity, sameness or recovery rule in these rules; the optional `<slot>-disposi
 advisory and authoritative for nothing.
 
 **The four branches are named, and a cross-reference anywhere in this section names the branch
-rather than its position**, so reordering them breaks no reference.
+rather than its position**, so reordering them breaks no reference. **They are read once, on the
+pass, before any closing act is attempted** — so a pass that reached the act has already been
+classified and is not classified again by what the act does.
 
 **The source-block branch, read first.** **Where any unmet closure condition's own source
 prescribes stop-and-surface** — a profile present but unresolvable, governing headers that
@@ -608,8 +610,10 @@ suspensions and what its answer produces are both stated.
   carrying the one-line why this section already requires, that the finding is not true of the
   artifact. A dismissal does not rewrite the pass that found it and the later clean pass is still
   owed; **a dismissal is not a decline**, a dismissal saying the finding is false and a decline
-  being the user's decision that a **true** finding stays outside the set. Minor · Nit → collect,
-  never iterate.
+  being the user's decision that a **true** finding stays outside the set. Minor · Nit → collect;
+  **their severity buys no repair round and no further pass.** Where accepting one into the
+  assigned fix set costs a pass, that cost is the **set change's** and is stated at the absorb
+  paragraph, not this severity's.
 ```
 
 **The handed-over question, replaced by its answer.**
@@ -774,9 +778,9 @@ about a mechanism rather than an entry point carrying an unqualified instruction
 **9. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
 W 914–915.
 ```
-If revalidation changes the entry, the pass was read against an entry that no longer stands: the pass
-did not close, so **what happens next is the closure ordering's, read there in full** — this
-paragraph states the fix and the re-review it owes and never which branch the pass takes. The pass
+If revalidation changes the entry, the pass was read against an entry that no longer stands: **fix the
+entry and re-review on it**, and **which branch the pass takes meanwhile is the closure ordering's,
+read there in full** — this paragraph states the repair and never the branch. The pass
 that follows is read by that ordering like any other and closes only if it reaches closure, on the
 entry revalidated for it.
 ```
