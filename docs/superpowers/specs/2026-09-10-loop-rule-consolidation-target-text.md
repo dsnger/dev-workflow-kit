@@ -409,9 +409,10 @@ and the next paragraph says why.
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
 so there is no reviewed text to compare an artifact against, and **nothing is put in its place** —
 the bullet in §I records what that leaves open. What this gate does have is already in this section
-and is cited rather than restated: the range those two names fix, **both branches issued
-with `baseSha` and `headSha` exactly equal before they are summed**, a shared head over different
-bases being two ranges and not one pass; **a re-review after every fix**, a fix changing the artifact so
+and is cited rather than restated: the range those two names fix and **the branch-agreement rule
+entire**, which says how `headSha` is resolved and passed, what is kept with each branch result and
+what must be equal before two branches are summed — cited here and not compressed, a part of it
+dropped being a range nobody checked; **a re-review after every fix**, a fix changing the artifact so
 the prior review no longer covers it; **a fix that changes specified behaviour updating the spec in
 the same commit**, so the re-review covers both; the battery and the mode-derived evidence the
 profiles section obliges before a call; and the **evidence entry**, revalidated as that section
@@ -773,11 +774,11 @@ about a mechanism rather than an entry point carrying an unqualified instruction
 **9. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
 W 914–915.
 ```
-If revalidation changes the entry, the pass was read against an entry that no longer stands: the
-pass did not close, so the closure ordering decides what happens next: where it selects the
-continue branch, fix and re-review, and where it selects a suspension, the answer comes first. The
-pass that follows is read by that ordering like any other and closes only if it reaches closure,
-on the entry revalidated for it.
+If revalidation changes the entry, the pass was read against an entry that no longer stands: the pass
+did not close, so **what happens next is the closure ordering's, read there in full** — this
+paragraph states the fix and the re-review it owes and never which branch the pass takes. The pass
+that follows is read by that ordering like any other and closes only if it reaches closure, on the
+entry revalidated for it.
 ```
 *Why (pass 30 finding 3):* the live sentence is a complete instruction to whoever enters through
 the profiles section — fix, re-review, close — and under the ordering a non-closing pass takes any
