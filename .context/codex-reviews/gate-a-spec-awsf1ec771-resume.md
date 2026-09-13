@@ -55,6 +55,44 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 26 | 8b8e146 | 10→**14** | 0→**1** | 2→**5** | yes | **TWO-TELL STOP — mandatory, surfaced to Daniel.** **All six Blocker/Majors trace to repairs made in passes 23, 24 and 25**, each nameable. All 14 held open; session 01a09539-5b8c-7293-af82-cc5f3bd2ba48 |
 | 27 | d971ae7 | 14→**8** | 1→**1** | 5→**3** | yes | **restarted by Daniel 2026-09-13 after the gate-split counter-draft was applied. B+M 6→4; findings the second-lowest of the cycle. ONE tell — no mandatory stop.** Three of the eight are collected Minors knowingly left unrepaired (5, 7, 8); session 01a099dd-b906-7970-8b39-8a3498510af4 |
 | 28 | 233e915 | 8→**13** | 1→**4** | 3→**2** | yes | **MANDATORY TWO-TELL STOP.** B+M 4→6. Four of the six trace to the pass-27/28 repair rounds (2, 5 damage; 3, 6 carry-through); 1 and 4 are rediscovered. All 13 held open; session 01a099fb-0706-7c53-ab6e-a0ccd8e191d3 |
+| 29 | 36db7f0 | 13→**10** | 4→**0** | 2→**5** | yes | zero tells; all 5 Majors verified by counter-case; session 01a09a0a-c844-7792-b136-f779a4b82730 |
+| 30 | 95439f8 | 10→**9** | 0→**0** | 5→**4** | yes | zero tells; 3 of 4 are carry-through of the pass-29 decision — my pre-review sweep was too narrow; session 01a09a16-99f4-7ca1-973e-2ac344f65a7c |
+| 31 | e48259d | 9→**13** | 0→**0** | 4→**6** | yes | one tell; 3 of 6 are damage from the pass-30 failed-act repair, adopted from the reviewer's suggested fix without testing the fix. Rule shrunk, not extended; session 01a09a23-e45f-7f80-b6b0-d7dab19cac19 |
+| 32 | 45b7d36 | 13→**15** | 0→**1** | 6→**5** | yes | **MANDATORY TWO-TELL STOP.** Findings rose and the Blocker returned. **Three of six B+M are collisions between my own repairs of passes 29–31.** All 15 held open; session 01a09a31-a7bb-7a03-9437-6c9396908fdb |
+
+## Pass-32 report — MANDATORY TWO-TELL STOP, and the repair strategy is the subject
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 9, 13, **15**. Blockers 0, 0, **1**. Majors 4, 6, **5**.
+  Blocker+Major 4, 6, **6**.
+- **Cluster (pass 32):** product behaviour 11 of 15; prose about this file's own metadata 4
+  (11, 12, 14, 15); the instrument 0.
+- **require↔withdraw:** none, on the strict reading. But findings 2 and 4 are **my own repairs
+  contradicting each other**, which the five tells do not have a name for.
+
+**Tells: two of five — mandatory.** The finding count rose 13 → 15 and the Blocker count failed to
+fall, 0 → 1.
+
+**The reading that matters, and it is not the tell count.** Over passes 29–32 the Blocker/Major
+count went **5, 4, 6, 6** while findings went **10, 9, 13, 15**. Every round's repairs were
+verified against a concrete case first, the pre-review sweep was widened twice, and the count still
+did not fall. **Three of this pass's six B+M are collisions between repairs I made in the three
+preceding rounds** — the pass-31 "tree the act produces" against the pass-29 "established before
+the act" (Blocker 1); the same tree comparison against the older "no condition is read on the
+branch tip" (finding 2); the pass-31 failed-act retry against §F item 1's and §A3's pass-credit
+sentences (finding 4). **The artifact is now dense enough that a correct local repair reliably
+falsifies a sentence elsewhere in it.**
+
+**Clearly-stuck stands at two of three.** Plateau: yes, across six passes. Regeneration across
+genuine repair attempts: yes, and nameable per finding. **Coverage: not affirmable** — findings 5
+and 6 reach §G membership ground no earlier pass read. Two of three is not that exit, and the
+two-tell threshold stands alone anyway.
+
+**What is not in doubt.** The five settled behaviour decisions have held: none of the last four
+passes challenged one, and the Gate-A/Gate-B split has produced no finding since pass 27. The
+defects are in the seams between repairs, not in the decisions.
 
 ## Pass-28 report — MANDATORY TWO-TELL STOP
 
