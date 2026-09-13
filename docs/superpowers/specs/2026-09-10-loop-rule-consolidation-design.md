@@ -74,7 +74,13 @@ false positive. **It is deliberately narrow and it is not a waiver** — the rep
 finding in its file, every loop-health reading counts it, it remains the clearly-stuck reading's
 re-raise condition, no earlier pass becomes clean in retrospect, and doubt about whether it is the
 same complaint is resolved against the exclusion. **No new suspension type and no record mechanism
-were introduced for it**, which two earlier candidate answers would have required. **The Blocker
+were introduced for it**, which two earlier candidate answers would have required. **Its three
+qualifications are carried to every site that states the discharge** — the ordering's suspension
+paragraph, §C's third condition and §H's surfacing sentence — because stated only at the clean
+predicate they would leave a recurrence that has *become* true reading as discharged (pass 28
+finding 3). **It also has an unknown-start strict reading**: unavailable where a cycle cannot
+establish that its starting rules contained it, since the standing fallback says each rule this
+change ships adds its own (pass 28 finding 6). **The Blocker
 that prompted it is accepted on that core and not on its reasoning**: pass 27 argued the cycle
 could *never* close, resting on a six-pass plateau the text does not set as a threshold and on a
 coverage judgement that is a fact about now rather than forever. The repeated-refuted-complaint
@@ -98,8 +104,13 @@ not brevity** — the three paragraphs together run slightly longer than the sin
 Gate B reviews a `baseSha`..`headSha` range while the closing amend commits the **effective
 index**, so content staged before the final review is in the index and in no reviewer's payload.
 A3 adds the one condition that closes it: the effective index at the closing act carries nothing
-outside the reviewed range, a difference being folded into the `WIP:` snapshot and re-reviewed
-under the re-review rule that already exists. **The hook proves none of this, and A3 says so in
+outside the range the final pass's requests were aimed at, a difference being folded into the
+`WIP:` snapshot and re-reviewed. **A3 widens this gate's re-review duty to say so and does not
+attribute the breadth to the standing rule**, which requires a re-review after every *fix* and an
+index difference not being one (pass 28 finding 11). **Gate A's mirror of the same hazard is not a
+second condition**: a staged edit to a cited story or a profile header is published by A2's closing
+commit, and the source rules already answer it — a profile or cited-set change costs a further
+pass — so A2 says where those rules bite at the closing act and adds nothing (pass 28 finding 4). **The hook proves none of this, and A3 says so in
 the terms invariant 3 fixes**: its fingerprint includes an effective-index tree, so content staged
 before the review call and still staged at the commit leaves it unmoved between the two
 invocations — an unmoved fingerprint reports that nothing changed since it last looked, never that

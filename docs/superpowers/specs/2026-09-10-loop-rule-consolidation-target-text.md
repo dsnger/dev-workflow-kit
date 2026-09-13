@@ -159,8 +159,15 @@ condition is established first, and only then is the closing act performed.**
 **Closure introduces no new kind of record, and it excuses none**: every other record this cycle
 owes, a human-exception record among them, is owed and written exactly as before, and **a
 human-exception record this cycle owes goes in the commit its closing act uses**, so the two never
-land in different places. **No closure condition is read on the branch tip**: writing the closing
-body is itself a commit and changes none of them.
+land in different places. **No closure condition is read on the branch tip**, the conditions being
+read where their sources say and not off the tip — but **the closing act must not publish a value
+none of them was established under.** A commit is written from the effective index, so a staged
+edit to a cited story, a profile header or any other source-owned input lands in the closing commit
+even though the pass read the working tree; the source rules already forbid the result — a profile
+change costs a further pass, a cited-set change makes the final clean pass run against the current
+set — so what this says is **where those rules bite at the closing act**, and it adds no condition
+of its own. Where the act would publish such a change, the change has happened and its own rule
+applies: another pass is owed.
 
 A plateau or tells on **the pass that closes** go into **that pass's status report to the user** —
 the carrier the three-line duty already names, and no second report form is introduced — and never
@@ -171,9 +178,9 @@ because every other pass either leaves a required repair, a hold or a question o
 has not reached the floor, or is itself unclean on its own findings** — and closing over any of
 those is the failure this ordering exists to prevent. The floor is named separately because a
 below-floor pass whose only findings are Minors leaves nothing outstanding and is still not
-eligible; **pass-level uncleanliness is named separately** because an in-set finding already
-validly dismissed and re-raised leaves the resolve duty discharged and still makes its pass
-unclean. The one termination that is not a pass outcome is the Gate-B triviality skip, which runs
+eligible; **pass-level uncleanliness is named separately** because an in-set Blocker or Major
+repaired after the pass that raised it discharges the resolve duty without making that pass clean,
+so a cycle can owe nothing and still hold no pass it may close on. The one termination that is not a pass outcome is the Gate-B triviality skip, which runs
 no passes and is outside this ordering.
 
 **Then the suspension branch, which only a pass that is not a clean completion reaches — and
@@ -238,10 +245,15 @@ on until it is answered. The **clearly-stuck reading surfaces findings** — **t
 pass being read that satisfy its regeneration condition, and only those**; earlier members of a
 regeneration chain that were repaired or dismissed are history the reading consults and never
 findings it re-surfaces, so no discharged finding takes a second hold. Each surfaced finding takes
-a hold like any other. **A re-raised valid dismissal stays discharged for the resolve duty** — the
-dismissal was the resolution and a reviewer repeating the finding does not undo it, so no second
-dismissal is owed — and what the recurrence creates is the **clearly-stuck hold**, ended by that
-reading's continue-or-stop answer. Any trigger the recurrence independently carries raises its own
+a hold like any other. **A re-raised valid dismissal stays discharged for the resolve duty on
+exactly the terms the clean predicate sets out above** — the same complaint, no new evidence, no
+change to the text the dismissal turned on, and the dismissal's reason still true of the artifact.
+The dismissal was the resolution and a reviewer repeating it does not undo it, so no second
+dismissal is owed. **Where any of those fails the recurrence is an ordinary fresh finding**, judged
+at its current effective severity and owing a repair or a dismissal of its own; reading the old
+dismissal as covering it would let a finding that has since become true close a cycle. What a
+qualifying recurrence creates is the **clearly-stuck hold**, ended by that reading's
+continue-or-stop answer. Any trigger the recurrence independently carries raises its own
 stop as usual. **Where one finding is surfaced by both, it carries two hold components and each is
 discharged by its own answer**: the **membership** component ends on the membership answer **in
 either direction**, a decline releasing it exactly as an accept does; the **clearly-stuck**
@@ -298,8 +310,8 @@ cluster and no require↔withdraw pair. **Clean completion and the clearly-stuck
 overlap is admitted rather than argued away: the two read different severity fields, as
 Mechanics · Severity sets out, so an **in-set** Blocker or Major the ceiling demotes below Major
 can regenerate across passes on a pass that is clean. **A declined finding is not a route into that
-reading**: the third condition admits regeneration across repair attempts and a re-raised validated
-dismissal, and a decline is neither — it is the user's decision that a *true* finding stays outside
+reading**: the third condition admits regeneration across repair attempts and a qualifying
+re-raised validated dismissal, and a decline is neither — it is the user's decision that a *true* finding stays outside
 the set, and it binds for the cycle. **The order decides it and no new rule is needed.** The
 clearly-stuck paragraph's own precedence clause is stated here rather than there, because
 precedence is evaluation order and this paragraph is where evaluation order is stated once; the
@@ -307,7 +319,11 @@ rationale that clause turns on stays beside the reading in that paragraph, which
 reading itself lives. **A clean completion takes precedence over this exit**: a Blocker/Major-free
 pass **at or above the floor** has satisfied the clean-final-pass rule — collect the Minors and
 Nits and close — and reporting "will not converge" on a converged loop is a false report. Below the
-floor the pass **suspends**, the clean pass having failed eligibility.
+floor the pass **suspends**, the clean pass having failed eligibility. **That sentence ranks two
+readings and licenses no closure**, its "close" being the clean-completion branch's and carrying
+every condition that branch carries: a Minor or Nit bearing a scope-stop trigger makes the pass
+unclean, so the sentence does not reach it, and an undischarged duty, a standing hold or an unmet
+gate condition leaves an eligible pass at the continue branch exactly as that branch says.
 ```
 
 ### A2 — Gate A's closure
@@ -369,15 +385,18 @@ says.
 
 **What the range does not reach, and the one condition this gate adds for it.** The reviewed range
 ends at a commit; **the closing amend commits the effective index**, and content staged before the
-final review sits in the index without being in the range, so no reviewer saw it and no condition
-above excludes it. **So: the effective index at the closing act carries nothing outside the range
-the final pass reviewed.** A difference is not a failed review — it is unreviewed content: fold it
-into the `WIP:` snapshot and re-review, which the re-review rule above already requires of any
-change, and the pass that sees it becomes the candidate final one. **The hook's fingerprint
-establishes none of this**: it is advisory, it compares its own inputs across its own invocations,
-and content staged before the review call and still staged at the commit has not moved between
-them — an unmoved fingerprint says nothing changed since it last looked, never that a review
-covered what it is looking at.
+final review sits in the index without being in the range, so it was never inside what the review
+request selected and no condition above excludes it. **So: the effective index at the closing act
+carries nothing outside the range the final pass's requests were aimed at.** A difference is not a
+failed review — it is content the request could not reach: fold it into the `WIP:` snapshot and
+re-review. **This gate's re-review duty is widened here to say so**, the standing rule requiring a
+re-review after every *fix* and an index difference not being one; the pass run over the widened
+snapshot becomes the candidate final one. **Nothing here establishes what either branch actually
+consumed** — the reply reports no reviewed revision, which is why the kept `baseSha` and `headSha`
+establish only that both calls were aimed at one range. **The hook's fingerprint establishes less
+still**: it is advisory and compares its own inputs across its own invocations, and content staged
+before the review call and still staged at the commit has not moved between them — an unmoved
+fingerprint says nothing changed since it last looked, never that anything reviewed it.
 
 **The act** is the closing amend Mechanics · Finishing the cycle describes, performed once the
 ordering reaches it — an eligible pass with every closure condition holding, **never a clean pass
@@ -509,7 +528,9 @@ visible across passes (six or more is where the field saw one); an **affirmative
 coverage is sufficient**, stated — a known materially unreviewed area forbids this exit outright,
 and disclosing it does not license it; and **Blocker or Major findings that keep regenerating
 across genuine repair attempts**, each round's fix producing the next — **or a finding the author
-has validly dismissed that the reviewer re-raises across passes**, the re-raise standing in for
+has validly dismissed that the reviewer re-raises across passes on the terms the closure ordering
+sets**, a recurrence failing them being an ordinary fresh finding and not a re-raise at all, the
+re-raise standing in for
 the regenerating fix, since a dismissal gets no repair and produces none, and a reviewer returning
 to the same refuted point every pass says the same thing about the loop that a fix producing the
 next finding says. That third condition is what makes a plateau rather than a finish. **Where this reading and a clean
@@ -579,7 +600,10 @@ suspensions and what its answer produces are both stated.
   severity**, and that difference is the point rather than a discrepancy. It stays in the fix set
   either way; the ceiling moves what the cycle owes for it and never whether it is in. The line is **what the cycle owes
   versus what it observes about itself**, which is why no list of readings has to be kept complete
-  here. Two reasons for the split. The curve must stay derivable from the findings files alone —
+  here. Two reasons for the split. The curve's **three numeric series** must stay derivable from
+  the validated findings files alone wherever those files remain available — the rest of the curve
+  is not and does not claim to be, its cycle field, pass ranges and model identifiers coming from
+  elsewhere, and an unrecoverable count being written `?` exactly as the standing grammar allows —
   the finding total counts finding lines and the Blocker and Major series count the lines whose
   normalized severity is each, which is the only thing that makes a self-reported curve checkable;
   the subject clusters use no severity at all, being a judgement per finding that no count
@@ -713,8 +737,9 @@ present. **Membership is decided by a test a reader can apply to the text in fro
 no list to consult, and the test reads what a rule states rather than what changing it would do:
 a live rule belongs to this contract when what it says determines or supplies an input the
 closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
-whether a cycle may close, or the production, identity or transport of any record this section
-obliges a cycle to write.** **Read it on the sentence, never on the section the sentence sits in.**
+whether a cycle may close, or the production, identity or transport of any record **§5** obliges a
+cycle to write — §5 entire and not the Mechanics subsection this paragraph sits in, record duties
+being stated in both.** **Read it on the sentence, never on the section the sentence sits in.**
 A sentence is a member when **it itself** fixes one of those things — what counts as a valid
 finding line, which files or records are owed, what ends a hold. It is not a member when it only
 shapes what a review produces, as the choice of reviewer, the lens set and the wording of a prompt
@@ -727,8 +752,10 @@ any rule can be edited into deciding a branch and none decides one when edited c
 membership would follow the edit a reader pictured rather than the text in front of them. The
 last clause is why the squash carry belongs: it moves no pass and
 decides no branch, and a record that does not survive the merge is unreachable from the squash
-commit and from `main`'s history. A curve without a cycle field cannot be told from another
-cycle's where several are read together, a slot rule without a nonce cannot keep sibling cycles
+commit and from `main`'s history. A curve without a cycle field cannot be reliably told from
+another cycle's in every multi-cycle context — kind and surrounding context sometimes separate
+them, which is why the standing rule calls missing attribution a limitation rather than a
+disqualification — a slot rule without a nonce cannot keep sibling cycles
 apart — the bare names staying reserved for the legacy single-cycle case they already serve — a
 carry rule naming records a project does not produce is inert, and a clean predicate without the
 fix-set boundary it reads decides membership by accident.
@@ -764,7 +791,9 @@ ordering decides both and decided them differently.
 **Surfacing does not close the cycle, and that is what makes this reachable.** You surface *with
 the cycle and the new hold still open* — the resolve rule stands over the finding exactly as
 Mechanics · Severity states it, **which scopes it to the assigned fix set**, so a recurrence of
-one already validly dismissed **stays resolved** and owes neither a second dismissal nor a repair;
+one already validly dismissed **stays resolved on the terms the closure ordering sets** and owes
+neither a second dismissal nor a repair, while a recurrence failing any of them is an ordinary
+fresh finding;
 the hold stands until
 its answers are given, and **what the answer does is the closure ordering's**.
 **A pass is credited clean or not on its own findings**, as that ordering defines cleanliness;
@@ -825,8 +854,10 @@ rule in this section alone.
 dash-delimited list is given, the last item being the addition.
 ```
 — at minimum floor 3, severity classified without the demotion, the provenance-line duty owed,
-the curve duty owed, the nonce duties at their strictest, and **every suspension binding, since
-starting rules that cannot be established cannot be read as having waived an open hold** —
+the curve duty owed, the nonce duties at their strictest, **every suspension binding, since
+starting rules that cannot be established cannot be read as having waived an open hold**, and **the
+repeated-dismissal cleanliness exclusion unavailable, a cycle that cannot establish its starting
+rules being unable to establish that they contained it** —
 ```
 
 ---
