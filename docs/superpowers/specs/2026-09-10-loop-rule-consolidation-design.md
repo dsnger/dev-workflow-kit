@@ -67,97 +67,35 @@ decision behind it: the block defines no trigger and no severity rule of its own
 precondition **that has a source of its own** keeps its one definition there, changed **at that
 source** where it had to change to agree with the ordering.
 
-**One behaviour decision was added after the split, on Daniel's decision of 2026-09-13, and it
-changes the clean predicate.** A finding this cycle has **validly dismissed** and a later pass
-merely repeats, with no new evidence and no relevant change to the text the dismissal turned on,
-**does not on its own make that later pass unclean**. Without it the standing duty *dismiss
-validly, then run another pass* cannot finish: the reviewer would be the authority on whether its
-own refuted claim had been dealt with, and a cycle could be held permanently unclean by a repeated
-false positive. **It is deliberately narrow and it is not a waiver** — the repetition stays a
-finding in its file, every loop-health reading counts it, it remains the clearly-stuck reading's
-re-raise condition, no earlier pass becomes clean in retrospect, and doubt about whether it is the
-same complaint is resolved against the exclusion. **No new suspension type and no record mechanism
-were introduced for it**, which two earlier candidate answers would have required. **Its three
-qualifications are carried to every site that states the discharge** — the ordering's suspension
-paragraph, §C's third condition and §H's surfacing sentence — because stated only at the clean
-predicate they would leave a recurrence that has *become* true reading as discharged (pass 28
-finding 3). **It also has an unknown-start strict reading**: unavailable where a cycle cannot
-establish that its starting rules contained it, since the standing fallback says each rule this
-change ships adds its own (pass 28 finding 6). **The Blocker
-that prompted it is accepted on that core and not on its reasoning**: pass 27 argued the cycle
-could *never* close, resting on a six-pass plateau the text does not set as a threshold and on a
-coverage judgement that is a fact about now rather than forever. The repeated-refuted-complaint
-problem stands on its own without either.
+**The behaviour decisions of this change are recorded here and stated nowhere here.** Each rule's
+words live in the target text; this section says **that** a decision was made, **who** made it,
+**when**, and **what question it answered**. A second telling of the rule itself is what drifted at
+§F and at the edit map, and it is not rebuilt.
 
-**Clean completion outranks a suspension by taking the pass to the closing act, not by eligibility alone** (pass 29
-finding 1). The earlier wording barred every eligible pass from suspending, which let a clean pass
-blocked by an unresolved prior Major, a standing hold or stale evidence walk past §D's **mandatory**
-two-tell stop and keep spending passes. **This narrows a rule this change itself wrote, and
-contradicts no settled decision**: D2 and D3 forbid reporting "will not converge" on a loop that
-converged, and a loop still owing a repair, an answer or a closure condition has not converged.
-Two other pass-29 repairs are compliance rather than decision — the unknown-start list gains the
-remaining rules this change ships, and §G's membership test reaches rules deciding termination
-**without** a pass, the Gate-B triviality skip being the only such route. A third, sharpening the
-index condition to a tree-to-tree comparison, **left with that condition** in the 2026-09-13 cut.
+| # | Decided | Question it answered | Stated in |
+|---|---|---|---|
+| 1 | 2026-09-12, Daniel | how a closure condition belonging to one gate can be stated cycle-generally without leaving the other gate unable to evaluate it (pass 26's Blocker) | target §A1, §A2, §A3 |
+| 2 | 2026-09-12, Daniel | what a change to the assigned fix set does at closing time, no rule having existed anywhere (pass 26 finding 3) | target §B |
+| 3 | 2026-09-13, Daniel | whether a reviewer repeating a claim the author has validly refuted can hold a cycle unclean indefinitely (pass 27's Blocker) | target §A1, with §C, §H and §H's unknown-start list for its reach |
+| 4 | 2026-09-13, agent in scope | whether an eligible pass that cannot close may still reach a suspension, §D's two-tell stop being mandatory (pass 29 finding 1) | target §A1, §D |
+| 5 | 2026-09-13, agent in scope | what a closing act that does not complete leaves behind, and what a failure nobody can repair produces (pass 30 finding 4, narrowed at pass 31, terminal state at pass 37) | target §A1 |
 
-**A closing act that does not complete has not closed the cycle, and a failed command is not a
-pass outcome** (pass 30 finding 4). **The first wording of this was wrong and pass 31 said why**:
-it claimed every condition stayed established, which a pre-commit hook that modifies and stages
-content before failing falsifies, and it added a "no branch is taken" clause contradicting the
-pass-29 rule that a non-closing pass reaches the suspension branch. **The rule was shrunk rather
-than extended**: nothing is assumed about what a failed attempt left behind, every closure
-condition is re-established against the repository as it stands, the act is performed again where
-they hold, and where the attempt or its repair moved anything a condition is read from that
-condition's own rule decides the cost. **It introduces no branch and no mechanism.** Recorded
-because adopting a reviewer's suggested fix wholesale is what produced three Majors here.
+**Two were reached by narrowing rather than by adding**, recorded because the first attempt at each
+was wider than its defect: decision 5 first claimed every condition stayed established and added a
+branch, both withdrawn at pass 31; and the Gate-B tree-equality condition that decision 1 exposed
+was cut from this delivery entirely on 2026-09-13.
 
-**One gap is named and not closed** (pass 29 finding 2, and §I carries it): a Gate-A closing act is
-written from the effective index, so a staged edit to a review input **no source rule governs** — a
-cited story's acceptance criteria, say — is published by the closing commit unchecked. Profile
-values, cited-set membership and the assigned fix set are governed and answer themselves. **Neither gate answers this after the
-2026-09-13 cut**: Gate B's own version of the hazard is deferred with that condition, and Gate A's
-has never been decided. The text states both residuals instead of inventing a rule for either.
+**What that cut costs, stated rather than implied.** Content staged before the final review, or
+staged by a hook during the commit, reaches the closing commit through neither review branch.
+**This delivery does not close that gap**; the target text's §I records it as a later task. Gate B's
+existing review, re-review and evidence duties are unchanged and are not a substitute, and the gate
+hook is not one either — its fingerprint is advisory and compares its own inputs across its own
+invocations. Faster convergence was the reason for the cut and was not guaranteed by it.
 
-**The ordering is split into three paragraphs on Daniel's decision of 2026-09-12, and that split is
-the answer to pass 26's Blocker.** The ordering had stated one closure condition — the artifact's
-equality with the text sent to the reviewer — cycle-generally, while its explanation and its two
-repository cases were Gate-A's alone; Gate B passes a git range rather than artifact text, so an
-otherwise eligible Gate-B pass had no value with which to evaluate it and, being eligible, could
-not suspend either. **What is gate-general stays gate-general and what differs goes to the gate**:
-the ordering keeps the evaluation of a pass, the classification of the duties, and the closure
-conditions both gates share — the floor, the resolve duty, the hold, no-clean-credit, and the
-profile, cited-set and assigned-fix-set gates; each gate states only **its own content condition
-and its own closing act**, and neither gate's paragraph is an inventory of what that gate requires.
-**No closing-time test is an exception to the block's citation rule any more**, because the one
-that was is now Gate A's own condition stated at Gate A's paragraph. **The split buys ownership and
-not brevity** — the three paragraphs together run slightly longer than the single block did.
-
-**The Gate-B tree-equality condition is deferred out of this change on Daniel's decision of
-2026-09-13, as a bounded scope cut.** Writing Gate B's closure down had exposed a real gap (pass 27
-finding 4): the gate reviews a `baseSha`..`headSha` range while the closing amend commits the
-**effective index**, so content staged before the review, or staged by a hook during the commit,
-reaches the closing commit through neither branch. The condition written for it, and the widened
-re-review duty it carried, **are removed from the target text**; the gap is recorded in §I as a
-later task and is **not** worked out here. **The price is stated rather than implied**: this
-delivery does not close that gap. Gate B's existing review, re-review and evidence duties stand
-unchanged and are not a substitute, and **the gate hook is not one either** — its fingerprint is
-advisory and compares its own inputs across its own invocations, so content staged before the
-review call and still staged at the commit leaves it unmoved between the two. **Faster convergence
-is plausible, not guaranteed.** What the cut removes is two of pass 32's six Blocker/Majors, both
-collisions this condition created — against the ordering's pre-act requirement and against the
-branch-tip sentence. **Pass 32's finding 4 is expressly not resolved by it**: §A1's failed-act rule
-contradicts §F item 1's pass-credit sentence without either mentioning the tree.
-
-**Gate A's mirror of the same hazard is not a second condition**: a staged edit to a cited story or
-a profile header is published by A2's closing commit, and the source rules answer what they govern —
-a profile change costs a further pass — so A2 says where those rules bite at the closing act and
-adds nothing (pass 28 finding 4). Where the staged edit touches a review input **no** source rule
-governs, nothing reaches it, which §I carries as its own residual (pass 29 finding 2).
-
-**The closure-ordering block is an addition beside the source edits**, not one of them. §4 lists
-the edits; **no total is stated here or there**, because the unit — one contiguous replacement at
-one site — is not stable across revisions that merge or split a span, and a stated total then
-disagrees with its own table. The plan counts what it writes.
+**One further gap is named and not closed** (§I carries it): a Gate-A closing act is written from
+the effective index, so a staged edit to a review input **no source rule governs** is published by
+the closing commit unchecked. Neither gate answers this after the cut, and the text states the
+residual rather than inventing a rule.
 
 ---
 ## 3. Where the text is
@@ -239,19 +177,17 @@ here. This table says what happens to each inventoried passage, so the map stays
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
 | (f) the two rules above do not compete | **unchanged.** "The two rules above" still names the absorb rule and the stuck reading; the block sits before both and adds no third rule between them | — |
 | (g) Mechanics · Severity, the handed-over question | edited — the unsettled statement and its interim report-and-stop duty are replaced by the answer, in both copies, removing the one deliberate story-path divergence | §E |
-| (h) recording a human exception | **edited; §F states which sentences and how** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle; and the Gate-A destination follows the closing act, the spec-or-plan commit being that commit on only one of three closing paths. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
+| (h) recording a human exception | **edited; §F states which sentences change and how, and is the only place that does** | §F |
 | (i) when these rules bind | edited — the strict-reading list is added to, not rewritten | §H |
 | (j) the squash carry | **no longer edited.** It was to name the answer record, which moved; this change ships no record for it to carry | — |
 
-**Three reversals are recorded here rather than left as silent narrowings**, because each was
-made in an earlier revision of this spec and each contradicted something settled. Membership was
-briefly re-read when the answer arrived, which `b6` and **D4** both forbid. The hold was briefly
-narrowed to scope stops, which contradicted `c16` and the story's own third standing duty; it
-attaches to **every** surfaced finding. And `c18` — no pass credited as clean on a clearly-stuck
-surface — is **replaced** rather than kept: where that exit's regenerating findings are in-set
-and the ceiling demotes them below Major, the pass is clean at effective severity, closes at or
-above the floor and suspends below it. Authority **D3**, under which the old reading and D3's own
-preserved sentence decide that pass in opposite directions.
+**Three reversals are recorded here as history and not as rules**, because each was made in an
+earlier revision of this spec and each contradicted something settled: membership was briefly
+re-read when the answer arrived; the hold was briefly narrowed to scope stops; and `c18` was
+briefly kept rather than replaced. **What each of those rules now says is in the target text's §A
+and nowhere here** — an earlier version of this paragraph restated the current hold, cleanliness,
+floor and suspension behaviour while presenting itself as accounting, which is two authorities for
+one branch.
 
 ---
 
@@ -348,13 +284,10 @@ or closed state — **the same stop returning with its reading unconsumed, that 
 intervening validated pass run after the answer** — or when it closes on anything other than the
 route the block states. **The closure conditions are read from the block and not re-enumerated
 here**: a re-enumeration is a second definition that drifts, and pass 15 found this list already
-missing two of them. Concretely the row must **enter closure from the clean-completion branch**, a
-zero-finding pass being an eligibility route inside that branch rather than a branch of its own — so a pass carrying a scope-stop trigger cannot close on the answer to that
-trigger, no-clean-credit being the clean predicate's own second half — and every precondition the block names must hold
-**when it is established, immediately before the closing act**, which is the window the block
-fixes. **The oracle does not require a precondition to be re-read on what the act produces** — the
-condition that would have demanded that left with the 2026-09-13 cut, and the gap it addressed is
-recorded in the target text's §I rather than checked here. Naming only the distinct-state half would pass
+missing two of them. **Which route a row must enter closure by, and which conditions must hold when, are read from the
+target text's §A and are not re-enumerated here** — an embedded copy can pass while disagreeing
+with the text it is meant to check, which is how this list came to name three conditions while the
+block stated more. Naming only the distinct-state half would pass
 the exact no-progress defect AC 4 cites from the parent cycle. **The
 consumption clause is what keeps the oracle and the shipped text in agreement**: the target text's
 §A says continue consumes the reading that raised the suspension and a further health suspension

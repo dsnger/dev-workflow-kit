@@ -194,9 +194,9 @@ does not show lands in the closing commit; where the edit changes something a **
 governs — a profile value, cited-set membership, the assigned fix set — **the change has happened
 and that source's own rule applies**, so a further pass is owed and no condition is added here for
 it. **Where it changes a review input no source rule governs** — a cited story's acceptance
-criteria or settled decisions, say — **nothing here reaches it**, and that is stated as a residual
-in §I rather than answered: the artifact's own equality condition covers the artifact, and the
-inputs beside it have only the rules their sources give them.
+criteria or settled decisions, say — **nothing here reaches it, and nothing in this section does**:
+the artifact's own equality condition covers the artifact, and the inputs beside it have only the
+rules their sources give them.
 
 A plateau or tells on **the pass that closes** go into **that pass's status report to the user** —
 the carrier the three-line duty already names, and no second report form is introduced — and never
@@ -418,8 +418,9 @@ and the next paragraph says why.
 
 **Its content condition is not an artifact/request equality, and none is written for it.** Gate B
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
-so there is no reviewed text to compare an artifact against, and **nothing is put in its place** —
-the bullet in §I records what that leaves open. What this gate does have is already in this section
+so there is no reviewed text to compare an artifact against, and **nothing is put in its place**:
+content the final review request did not select can reach the closing commit, and **no rule in this
+section reaches it**. What this gate does have is already in this section
 and is cited rather than restated: the range those two names fix and **the branch-agreement rule
 entire**, which says how `headSha` is resolved and passed, what is kept with each branch result and
 what must be equal before two branches are summed — cited here and not compressed, a part of it
@@ -793,8 +794,9 @@ about a mechanism rather than an entry point carrying an unqualified instruction
 **7a. The mid-run recovery sentence** (Mechanics, the cycle nonce). It wraps across C 416–417 and
 W 610–611.
 ```
-A Gate-A cycle has such a commit only where its reviewed text is already committed and its closing
-act would amend that commit's message; otherwise it has only the working record.
+A Gate-A cycle has such a commit only once its own closing commit exists — an already-committed
+revision of the reviewed text is not one, carrying no provenance line and no curve for a nonce to
+be taken from — so mid-run it has only the working record.
 ```
 *Why (pass 48 finding 1):* the live sentence says a Gate-A cycle mid-run has no commit of its own
 and therefore has only the working record. §A2 admits the case where `HEAD` already carries the
