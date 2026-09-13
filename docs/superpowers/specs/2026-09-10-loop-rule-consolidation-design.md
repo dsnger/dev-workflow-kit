@@ -86,6 +86,24 @@ could *never* close, resting on a six-pass plateau the text does not set as a th
 coverage judgement that is a fact about now rather than forever. The repeated-refuted-complaint
 problem stands on its own without either.
 
+**Clean completion outranks a suspension by closing the cycle, not by being eligible** (pass 29
+finding 1). The earlier wording barred every eligible pass from suspending, which let a clean pass
+blocked by an unresolved prior Major, a standing hold or stale evidence walk past §D's **mandatory**
+two-tell stop and keep spending passes. **This narrows a rule this change itself wrote, and
+contradicts no settled decision**: D2 and D3 forbid reporting "will not converge" on a loop that
+converged, and a loop still owing a repair, an answer or a closure condition has not converged.
+Three other pass-29 repairs are compliance rather than decision — the unknown-start list gains the
+remaining rules this change ships, §A3's index condition names a **tree-to-tree** comparison against
+the explicit `headSha` rather than membership of a range, and §G's membership test reaches rules
+deciding termination **without** a pass, the Gate-B triviality skip being the only such route.
+
+**One gap is named and not closed** (pass 29 finding 2, and §I carries it): a Gate-A closing act is
+written from the effective index, so a staged edit to a review input **no source rule governs** — a
+cited story's acceptance criteria, say — is published by the closing commit unchecked. Profile
+values, cited-set membership and the assigned fix set are governed and answer themselves. Gate B's
+equivalent is answered because its index condition was decided; **Gate A's is a behaviour decision
+nobody has made**, so the text states the residual instead of inventing a rule for it.
+
 **The ordering is split into three paragraphs on Daniel's decision of 2026-09-12, and that split is
 the answer to pass 26's Blocker.** The ordering had stated one closure condition — the artifact's
 equality with the text sent to the reviewer — cycle-generally, while its explanation and its two

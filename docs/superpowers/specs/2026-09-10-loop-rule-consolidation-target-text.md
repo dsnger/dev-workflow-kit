@@ -160,14 +160,15 @@ condition is established first, and only then is the closing act performed.**
 owes, a human-exception record among them, is owed and written exactly as before, and **a
 human-exception record this cycle owes goes in the commit its closing act uses**, so the two never
 land in different places. **No closure condition is read on the branch tip**, the conditions being
-read where their sources say and not off the tip — but **the closing act must not publish a value
-none of them was established under.** A commit is written from the effective index, so a staged
-edit to a cited story, a profile header or any other source-owned input lands in the closing commit
-even though the pass read the working tree; the source rules already forbid the result — a profile
-change costs a further pass, a cited-set change makes the final clean pass run against the current
-set — so what this says is **where those rules bite at the closing act**, and it adds no condition
-of its own. Where the act would publish such a change, the change has happened and its own rule
-applies: another pass is owed.
+read where their sources say and not off the tip. **That is not a claim that the act publishes what
+the pass read.** A commit is written from the effective index, so a staged edit the working tree
+does not show lands in the closing commit; where the edit changes something a **source rule**
+governs — a profile value, cited-set membership, the assigned fix set — **the change has happened
+and that source's own rule applies**, so a further pass is owed and no condition is added here for
+it. **Where it changes a review input no source rule governs** — a cited story's acceptance
+criteria or settled decisions, say — **nothing here reaches it**, and that is stated as a residual
+in §I rather than answered: the artifact's own equality condition covers the artifact, and the
+inputs beside it have only the rules their sources give them.
 
 A plateau or tells on **the pass that closes** go into **that pass's status report to the user** —
 the carrier the three-line duty already names, and no second report form is introduced — and never
@@ -183,11 +184,17 @@ repaired after the pass that raised it discharges the resolve duty without makin
 so a cycle can owe nothing and still hold no pass it may close on. The one termination that is not a pass outcome is the Gate-B triviality skip, which runs
 no passes and is outside this ordering.
 
-**Then the suspension branch, which only a pass that is not a clean completion reaches — and
-*clean completion* means that whole branch, eligibility included.** So a clean pass **below** the
-floor is not a clean completion and can suspend, while an **eligible** pass cannot, whatever its
-conditions do. That is what makes "clean completion outranks the two-tell stop" executable rather
-than asserted, and cleanliness alone never decides it. Three suspensions, by the names their
+**Then the suspension branch, which a pass reaches unless it closed the cycle.** **Clean completion
+outranks a suspension by closing, not by being eligible**: a pass that took the branch above, met
+every closure condition and had the closing act performed has ended the cycle, and a suspension has
+nothing left to suspend. **A pass that did not close reaches this branch whatever its
+cleanliness** — a clean pass below the floor, and equally an eligible pass the cycle's unmet
+conditions kept from closing. That is what makes "clean completion outranks the two-tell stop"
+executable rather than asserted, and cleanliness alone never decides it. **What D2 and D3 forbid is
+reporting "will not converge" on a loop that converged, and a loop still owing a repair, an answer
+or a closure condition has not converged** — so a mandatory two-tell stop and the clearly-stuck
+reading stay reachable exactly where the loop is still running, which is the only place their
+question means anything. Three suspensions, by the names their
 paragraphs use and read by those paragraphs: the **scope stop**, raised by either trigger above — a
 **membership stop** by the first, a **question stop** by the second; the **clearly-stuck exit**;
 and the **two-tell stop**. A suspension waives nothing. Any non-empty set of them can apply to one
@@ -199,11 +206,11 @@ stop surfaces tells and not a finding.
 **Otherwise the continue branch: a pass that neither closes nor suspends continues** — the loop
 runs another pass on the **current** artifact, revised where the severity and scope rules require a
 repair and unrevised where they do not. **An eligible pass with an unmet closure condition lands
-here**: clean completion did not close it, and being eligible it cannot suspend, so the loop
-continues on whatever the unmet condition requires — most often a repair still owed from an earlier
-pass. A below-floor clean pass lands here too, **only where no suspension applies to it**; where
-one does, the suspension branch has already taken it, because clean completion did not close the
-pass and only closing outranks a suspension. So does a pass whose only findings are Minors and
+here**, and like every other non-closing pass **only where no suspension applies to it**: clean
+completion did not close it, so the loop continues on whatever the unmet condition requires — most
+often a repair still owed from an earlier pass. A below-floor clean pass lands here on the same
+terms; where a suspension does apply, the suspension branch has already taken it, because only
+closing outranks a suspension. So does a pass whose only findings are Minors and
 Nits **and which carries no scope-stop trigger** — those are collected and never iterated and may
 leave nothing to revise, while a Minor or Nit that is out of set or opens a new structural question
 carries a trigger like any other finding, is not clean, and has already been taken by the
@@ -320,10 +327,11 @@ reading itself lives. **A clean completion takes precedence over this exit**: a 
 pass **at or above the floor** has satisfied the clean-final-pass rule — collect the Minors and
 Nits and close — and reporting "will not converge" on a converged loop is a false report. Below the
 floor the pass **suspends**, the clean pass having failed eligibility. **That sentence ranks two
-readings and licenses no closure**, its "close" being the clean-completion branch's and carrying
-every condition that branch carries: a Minor or Nit bearing a scope-stop trigger makes the pass
-unclean, so the sentence does not reach it, and an undischarged duty, a standing hold or an unmet
-gate condition leaves an eligible pass at the continue branch exactly as that branch says.
+readings and licenses no closure**, its "close" being the closure this ordering defines and
+carrying every condition that closure carries: a Minor or Nit bearing a scope-stop trigger makes
+the pass unclean, so the sentence does not reach it, and an undischarged duty, a standing hold or
+an unmet gate condition means the pass does not close — leaving it on the suspension branch where
+one applies and the continue branch where none does, exactly as those branches say.
 ```
 
 ### A2 — Gate A's closure
@@ -386,8 +394,10 @@ says.
 **What the range does not reach, and the one condition this gate adds for it.** The reviewed range
 ends at a commit; **the closing amend commits the effective index**, and content staged before the
 final review sits in the index without being in the range, so it was never inside what the review
-request selected and no condition above excludes it. **So: the effective index at the closing act
-carries nothing outside the range the final pass's requests were aimed at.** A difference is not a
+request selected and no condition above excludes it. **So: the effective index tree at the closing act equals the tree of the explicit `headSha` the
+final pass's requests named** — a tree compared with a tree, since a range is not a thing an index
+can be inside and a staged revert at a path the range already touches would otherwise read as
+covered. A difference is not a
 failed review — it is content the request could not reach: fold it into the `WIP:` snapshot and
 re-review. **This gate's re-review duty is widened here to say so**, the standing rule requiring a
 re-review after every *fix* and an index difference not being one; the pass run over the widened
@@ -558,9 +568,9 @@ continuation next to the conditional one and give the same pass two answers.
 **`e7`, the threshold.** Gains one clause; the sentence is given entire.
 ```
 **Any two present makes stop-and-surface mandatory, not discretionary** — read **after** the
-clean-completion branch of the closure ordering, which outranks it — and you report the
-tells and hand the decision to the user, and the "clearly stuck" reading above is not a
-precondition for it.
+clean-completion branch of the closure ordering, which outranks it **by closing the cycle and only
+then** — and you report the tells and hand the decision to the user, and the "clearly stuck"
+reading above is not a precondition for it.
 ```
 
 **A pointer is added** at the end of the passage:
@@ -737,7 +747,9 @@ present. **Membership is decided by a test a reader can apply to the text in fro
 no list to consult, and the test reads what a rule states rather than what changing it would do:
 a live rule belongs to this contract when what it says determines or supplies an input the
 closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
-whether a cycle may close, or the production, identity or transport of any record **§5** obliges a
+whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
+skip being the one such route and its eligibility test therefore a member**, or the production,
+identity or transport of any record **§5** obliges a
 cycle to write — §5 entire and not the Mechanics subsection this paragraph sits in, record duties
 being stated in both.** **Read it on the sentence, never on the section the sentence sits in.**
 A sentence is a member when **it itself** fixes one of those things — what counts as a valid
@@ -855,9 +867,12 @@ dash-delimited list is given, the last item being the addition.
 ```
 — at minimum floor 3, severity classified without the demotion, the provenance-line duty owed,
 the curve duty owed, the nonce duties at their strictest, **every suspension binding, since
-starting rules that cannot be established cannot be read as having waived an open hold**, and **the
+starting rules that cannot be established cannot be read as having waived an open hold**, **the
 repeated-dismissal cleanliness exclusion unavailable, a cycle that cannot establish its starting
-rules being unable to establish that they contained it** —
+rules being unable to establish that they contained it**, and **every closure condition and
+pass-cost rule this change ships owed rather than waived — the gate content conditions and their
+commit-carry duty, and the further pass an assigned-fix-set change costs — since a rule that cannot
+be established as absent is cheaper to owe than to skip** —
 ```
 
 ---
@@ -872,3 +887,11 @@ rules being unable to establish that they contained it** —
 - **Partial adoption is instructed against, never detected.** §G says so in its own words.
 - **Which exit a cycle took is not observable from history.** The transport left with the record
   (successor story) and no story has taken it. An admitted gap, unowned.
+- **A Gate-A closing act can publish a review input the final pass never read** (pass 29 finding
+  2). The commit is written from the effective index, so a staged edit to a cited story's
+  acceptance criteria or settled decisions — anything no source rule governs, profile values,
+  cited-set membership and the assigned fix set being the ones that are governed — lands in the
+  closing commit unchecked. Gate B's equivalent **is** answered, its index condition being one of
+  this change's decisions; **Gate A's is not, and the asymmetry is deliberate only in the sense
+  that nobody has decided it.** Named here rather than answered, because answering it is a
+  behaviour decision this change has not been given.
