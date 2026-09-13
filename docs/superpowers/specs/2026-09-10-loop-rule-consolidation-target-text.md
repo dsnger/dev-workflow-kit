@@ -63,9 +63,9 @@ wording, not of authority. It also owns the **classification** of the standing d
 their definitions at their own sources and are read here for every cycle whatever its gate, while
 the hold and no-clean-credit are defined here, being properties of the evaluation itself.
 
-**What belongs to a gate is what the two gates do differently: the content condition each gate's
-closure requires, and the closing act.** Each is stated in that gate's own paragraph below and read
-from there, and **neither gate's paragraph restates the conditions this one gives every cycle**, so
+**What belongs to a gate is what the two gates do differently: the content condition its closure
+requires, where it has one, and the closing act.** **Gate A has such a condition and Gate B has
+none**; each paragraph below states its own and is read from there, and **neither gate's paragraph restates the conditions this one gives every cycle**, so
 neither is a complete inventory on its own. **Everything else this paragraph names it cites**: the
 scope triggers, the assigned fix set, every severity rule and every closure precondition with a
 source of its own keep their one definition in the paragraph that owns them, and a reader who finds
@@ -157,15 +157,15 @@ nothing, and is not thereby made unclean. Keeping the two apart is what lets the
 case where they disagree, which the branches do. **The order inside closure is fixed: every
 condition is established first, and only then is the closing act performed.**
 
-**An act that does not complete has not closed the cycle**, and a failed command is not a pass
-outcome. **Nothing is assumed about what the attempt left behind** — a hook can modify and stage
-content before failing, so the attempt itself can move what a condition is read from — and
-therefore: surface the concrete command failure, and **re-establish every closure condition against
-the repository as it now stands.** Where they all still hold, perform the act again; no review pass
-is owed, because nothing the review reads has changed. Where the attempt or its repair moved
-anything a condition is read from, **that condition has changed and its own rule decides what it
-costs**, a further pass included. This introduces no branch: the pass is where the branches below
-put it, and a retry is simply the act being performed once its conditions hold.
+**An act that does not complete has not closed the cycle**, and it is not a branch: the branches
+below decide what a *pass* is, and this cycle's pass already took the clean-completion branch and
+reached closure. **A failed act returns to the closure step it failed in, not to the branches.**
+**Nothing is assumed about what the attempt left behind** — a hook can modify and stage content
+before failing, so the attempt itself can move what a condition is read from — so surface the
+concrete command failure and **re-establish every closure condition against the repository as it
+now stands.** Where they all still hold, perform the act again. Where the attempt or its repair
+moved anything a condition is read from, **that condition has changed and its own rule decides what
+it costs**, a further pass included, and the cycle is back in the ordering with that pass owed.
 
 **Closure introduces no new kind of record, and it excuses none**: every other record this cycle
 owes, a human-exception record among them, is owed and written exactly as before, and **a
@@ -395,8 +395,9 @@ and the next paragraph says why.
 
 **Its content condition is not an artifact/request equality, and none is written for it.** Gate B
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
-so there is no reviewed text to compare an artifact against. What holds that place is already in
-this section and is cited rather than restated: the range those two names fix, **both branches
+so there is no reviewed text to compare an artifact against, and **nothing is put in its place** —
+the bullet in §I records what that leaves open. What this gate does have is already in this section
+and is cited rather than restated: the range those two names fix, **both branches
 issued against the same commit**; **a re-review after every fix**, a fix changing the artifact so
 the prior review no longer covers it; **a fix that changes specified behaviour updating the spec in
 the same commit**, so the re-review covers both; the battery and the mode-derived evidence the
@@ -411,8 +412,8 @@ performed once the ordering reaches it: an eligible pass with every closure cond
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
 since the cycle itself stays open until the conditions hold, so an accidental commit resets what
-the hook reports and closes nothing; **the passes themselves stand on their validated findings
-files**. **It does not reach a Gate-A cycle's count**, which the hook
+the hook reports and closes nothing; **what a pass is stands on its validated findings file, not
+on that counter**. **It does not reach a Gate-A cycle's count**, which the hook
 clears at the skill boundaries that start a new Gate-A cycle rather than on any commit.
 ```
 
@@ -530,7 +531,7 @@ clause left standing alone — its second half, the precedence sentence, moves i
 the second is new.
 
 ```
-So this exit needs three things **together**, and a missing one means only that *this* exit does not apply — what the pass does instead is the closure ordering's, another suspension or a close being open to it: a plateau
+So this exit needs three things **together**, and a missing one means only that *this* exit does not apply — what the pass does instead is the closure ordering's — another suspension, a continue, or a close: a plateau
 visible across passes (six or more is where the field saw one); an **affirmative judgement that
 coverage is sufficient**, stated — a known materially unreviewed area forbids this exit outright,
 and disclosing it does not license it; and **Blocker or Major findings that keep regenerating
@@ -626,9 +627,9 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The eight standing sentences this change falsifies — REPLACED
+## F. The nine standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All eight are **known contradictions** and
+Each is a live sentence that the block makes wrong. All nine are **known contradictions** and
 none is deferred. **Six of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
@@ -637,13 +638,13 @@ exception to point at.
 ```
 A pre-review snapshot named anything else reads to the hook as a real commit: the hook treats the
 cycle as closed and **discards its count of the passes you just accumulated**, while the cycle
-itself stays open until the closure ordering's conditions hold. **What is lost is the hook's
-counter state and not the passes** — a valid pass is established by its validated findings file,
-which no commit touches — so the cost is a reminder that now understates what you hold, not a
-close nobody intended and not a review you have to run again.
+itself stays open until the closure ordering's conditions hold. **What the hook loses is its counter state**, and a
+valid pass is established by its validated findings file rather than by that counter — so the cost
+is a reminder that now understates what you hold, not a close nobody intended.
 ```
-*The sibling sentence in the profile-change paragraph needs no edit* — it already says such a
-commit "reads **to the hook** as the cycle closing", which claims no closure.
+*The sibling sentence in the profile-change paragraph claims no closure* — it says such a commit
+"reads **to the hook** as the cycle closing" — **but its second half is falsified by this same
+repair and is item 8 below.**
 
 **2. The Gate-B coverage instruction** (Gate B section).
 ```
@@ -733,7 +734,20 @@ plan commit", which is the closing commit only on the first of the three closing
 other two the record and the closure would land in different commits. Naming the closing act
 instead keeps them together on all three without changing the record's form or force.
 
-**8. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
+**8. The profile-change paragraph's pass claim** (the profiles section). It wraps across C 752–753
+and W 938–939.
+```
+Inside an active Gate-B cycle, fold the edit into the active `WIP:` snapshot by amend — a non-`WIP`
+commit reads to the hook as the cycle closing and would discard **the hook's count of** the
+accumulated passes.
+```
+*Why (pass 33 finding 7):* the live clause says such a commit "would discard the accumulated
+passes". A pass is established by its validated findings file; what the commit reaches is the
+hook's counter. Left standing it tells an author that a stray commit destroyed review work it
+cannot reach. **This one does not share the section's shared mechanism** — it is a false claim
+about a mechanism rather than an entry point carrying an unqualified instruction.
+
+**9. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
 W 914–915.
 ```
 If revalidation changes the entry, the clean pass no longer covers what is being committed: the
@@ -888,7 +902,7 @@ the curve duty owed, the nonce duties at their strictest, **every suspension bin
 starting rules that cannot be established cannot be read as having waived an open hold**, **the
 repeated-dismissal cleanliness exclusion unavailable, a cycle that cannot establish its starting
 rules being unable to establish that they contained it**, and **every closure condition and
-pass-cost rule this change ships owed rather than waived — the gate content conditions and their
+pass-cost rule this change ships owed rather than waived — Gate A's content condition and its
 commit-carry duty, and the further pass an assigned-fix-set change costs — since a rule that cannot
 be established as absent is cheaper to owe than to skip** —
 ```
@@ -917,7 +931,6 @@ be established as absent is cheaper to owe than to skip** —
   2). The commit is written from the effective index, so a staged edit to a cited story's
   acceptance criteria or settled decisions — anything no source rule governs, profile values,
   cited-set membership and the assigned fix set being the ones that are governed — lands in the
-  closing commit unchecked. Gate B's equivalent **is** answered, its index condition being one of
-  this change's decisions; **Gate A's is not, and the asymmetry is deliberate only in the sense
-  that nobody has decided it.** Named here rather than answered, because answering it is a
+  closing commit unchecked. **Neither gate answers this**: Gate B's own version of the
+  hazard is the bullet above, deferred out of this delivery, and Gate A's has never been decided. Named here rather than answered, because answering it is a
   behaviour decision this change has not been given.

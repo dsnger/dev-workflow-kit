@@ -96,11 +96,22 @@ across genuine repair attempts, each round's fix producing the next: yes, and na
 **Coverage: not affirmable** — design §7's oracle had not been read at this depth by any earlier
 pass. Two of three is not that exit.
 
-**What five rounds of tightened method did not do.** Every repair since pass 29 was verified
-against a concrete case first; suggested fixes were tested before adoption and one was withdrawn
-for being wider than its defect; the pre-review sweep was widened twice; a scope cut removed a whole
-condition. **The Blocker/Major count did not fall in any of them.** That is the finding this stop
-carries, and it is about the approach rather than about any sentence in the artifact.
+**What five rounds of tightened method did and did not do.** *(Corrected 2026-09-13 after the
+reviewer checked it.)* This section claimed the Blocker/Major count "did not fall in any of them".
+**That is false**: P28→P29 fell 6→5 and P29→P30 fell 5→4, by this table's own numbers. What the
+evidence supports is the narrower claim — **no sustained convergence**, with the count returning to
+6, 6 and then 9.
+
+**And the provenance given here for findings 2 and 3 was wrong.** They complain about the
+failed-act rule, which `3ee9132` did not touch; it came from the pass-31 round. **What that commit
+did newly add was the unsupported assurance "which no commit touches"** — a claim the repair
+commission never asked for, which I wrote on my own initiative and which finding 6 then caught.
+That is the accurate charge against the round.
+
+**"Not locally repairable" is withdrawn.** Line count does not establish it: the 923 lines carry
+installation notes, rationales and history as well as rules, and the nine Blocker/Majors are
+incomplete carry-throughs, over-wide claims and one contradictory path — none of which needs a new
+product decision.
 
 ## Pass-32 report — MANDATORY TWO-TELL STOP, and the repair strategy is the subject
 

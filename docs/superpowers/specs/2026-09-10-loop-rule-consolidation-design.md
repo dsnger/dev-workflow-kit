@@ -111,9 +111,9 @@ because adopting a reviewer's suggested fix wholesale is what produced three Maj
 **One gap is named and not closed** (pass 29 finding 2, and §I carries it): a Gate-A closing act is
 written from the effective index, so a staged edit to a review input **no source rule governs** — a
 cited story's acceptance criteria, say — is published by the closing commit unchecked. Profile
-values, cited-set membership and the assigned fix set are governed and answer themselves. Gate B's
-equivalent is answered because its index condition was decided; **Gate A's is a behaviour decision
-nobody has made**, so the text states the residual instead of inventing a rule for it.
+values, cited-set membership and the assigned fix set are governed and answer themselves. **Neither gate answers this after the
+2026-09-13 cut**: Gate B's own version of the hazard is deferred with that condition, and Gate A's
+has never been decided. The text states both residuals instead of inventing a rule for either.
 
 **The ordering is split into three paragraphs on Daniel's decision of 2026-09-12, and that split is
 the answer to pass 26's Blocker.** The ordering had stated one closure condition — the artifact's
@@ -316,7 +316,9 @@ old-wording-gone half of its pair. **The obligation reaches every passage the ta
 REPLACED, and no list of them is kept here** — a second enumeration beside the markers is the
 bookkeeping that goes stale, which it did: the list this sentence used to carry omitted §G while
 §G was marked REPLACED. **The plan reads the markers off the target text**, where the concrete
-replacements live. Nothing is
+replacements live. **§F now states nine falsified standing sentences**, the ninth being the
+profile-change paragraph's pass claim (pass 33 finding 7); six of the nine share the section's
+entry-point mechanism and that one does not. Nothing is
 claimed as "contradictory" — the second of the two defects Gate B found in the `fic2` instrument.
 
 **The named verification of the risk path** (story AC 4) is a **next-state table**, written in the
@@ -349,9 +351,11 @@ route the block states. **The closure conditions are read from the block and not
 here**: a re-enumeration is a second definition that drifts, and pass 15 found this list already
 missing two of them. Concretely the row must **enter closure from the clean-completion or
 zero-finding branch** — so a pass carrying a scope-stop trigger cannot close on the answer to that
-trigger, no-clean-credit being the clean predicate's own second half — and every precondition the
-block names must hold **through the closing commit**, not merely during the pass, which is the
-window the block's own "in between" wording fixes. Naming only the distinct-state half would pass
+trigger, no-clean-credit being the clean predicate's own second half — and every precondition the block names must hold
+**when it is established, immediately before the closing act**, which is the window the block
+fixes. **The oracle does not require a precondition to be re-read on what the act produces** — the
+condition that would have demanded that left with the 2026-09-13 cut, and the gap it addressed is
+recorded in the target text's §I rather than checked here. Naming only the distinct-state half would pass
 the exact no-progress defect AC 4 cites from the parent cycle. **The
 consumption clause is what keeps the oracle and the shipped text in agreement**: the target text's
 §A says continue consumes the reading that raised the suspension and a further health suspension
