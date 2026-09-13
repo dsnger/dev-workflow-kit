@@ -208,9 +208,9 @@ no passes and is outside this ordering.
 it and a suspension applies to it.** **Clean completion outranks a suspension by taking the pass to
 the closing act, not by eligibility alone**: a pass that took the branch above, met
 every closure condition and had the closing act performed has ended the cycle, and a suspension has
-nothing left to suspend. **A pass that did not close reaches this branch whatever its
-cleanliness, where a suspension applies to it** — a clean pass below the floor, and equally an
-eligible pass the cycle's unmet conditions kept from closing. Cleanliness is what this branch stops
+nothing left to suspend. **A pass the clean-completion branch did not take reaches this branch
+whatever its cleanliness, where a suspension applies to it** — a clean pass below the floor, and
+equally an eligible pass whose unmet closure conditions kept that branch from taking it. Cleanliness is what this branch stops
 asking about; whether a suspension applies is still what puts a pass here, and where none does the
 continue branch has it. That is what makes "clean completion outranks the two-tell stop"
 executable rather than asserted, and cleanliness alone never decides it. **What D2 and D3 forbid is
@@ -231,10 +231,10 @@ the two branches above took the pass, it continues** — the loop
 runs another pass on the **current** artifact, revised where the severity and scope rules require a
 repair and unrevised where they do not. **An eligible pass with an unmet closure condition lands
 here**, and like every other non-closing pass **only where no suspension applies to it**: clean
-completion did not close it, so the loop continues on whatever the unmet condition requires — most
+completion did not take it, so the loop continues on whatever the unmet condition requires — most
 often a repair still owed from an earlier pass. A below-floor clean pass lands here on the same
 terms; where a suspension does apply, the suspension branch has already taken it, because only
-closing outranks a suspension. So does a pass whose only findings are Minors and
+the clean-completion branch outranks a suspension. So does a pass whose only findings are Minors and
 Nits **and which carries no scope-stop trigger** — those are collected and never iterated and may
 leave nothing to revise, while a Minor or Nit that is out of set or opens a new structural question
 carries a trigger like any other finding, is not clean, and has already been taken by the
@@ -588,8 +588,8 @@ continuation next to the conditional one and give the same pass two answers.
 **`e7`, the threshold.** Gains one clause; the sentence is given entire.
 ```
 **Any two present makes stop-and-surface mandatory, not discretionary** — read **after** the
-clean-completion branch of the closure ordering, which outranks it **by closing the cycle and only
-then** — and you report the tells and hand the decision to the user, and the "clearly stuck"
+clean-completion branch of the closure ordering, which outranks it **by taking the pass to the
+closing act and only then** — and you report the tells and hand the decision to the user, and the "clearly stuck"
 reading above is not a precondition for it.
 ```
 
