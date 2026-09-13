@@ -204,8 +204,9 @@ repaired after the pass that raised it discharges the resolve duty without makin
 so a cycle can owe nothing and still hold no pass it may close on. The one termination that is not a pass outcome is the Gate-B triviality skip, which runs
 no passes and is outside this ordering.
 
-**Then the suspension branch, which a pass reaches unless it closed the cycle.** **Clean completion
-outranks a suspension by closing, not by being eligible**: a pass that took the branch above, met
+**Then the suspension branch, which a pass reaches where the clean-completion branch did not take
+it and a suspension applies to it.** **Clean completion outranks a suspension by taking the pass to
+the closing act, not by eligibility alone**: a pass that took the branch above, met
 every closure condition and had the closing act performed has ended the cycle, and a suspension has
 nothing left to suspend. **A pass that did not close reaches this branch whatever its
 cleanliness, where a suspension applies to it** — a clean pass below the floor, and equally an
@@ -225,8 +226,8 @@ decision made by omission. A finding the clearly-stuck reading surfaces that als
 trigger takes the scope stop's answers at that same surface, so it is not asked twice; the two-tell
 stop surfaces tells and not a finding.
 
-**Otherwise the continue branch, which no source block reaches: where none stands, a pass that
-neither closes nor suspends continues** — the loop
+**Otherwise the continue branch, which no source block reaches: where none stands and neither of
+the two branches above took the pass, it continues** — the loop
 runs another pass on the **current** artifact, revised where the severity and scope rules require a
 repair and unrevised where they do not. **An eligible pass with an unmet closure condition lands
 here**, and like every other non-closing pass **only where no suspension applies to it**: clean
@@ -650,10 +651,10 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The nine standing sentences this change falsifies — REPLACED
+## F. The ten standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All nine are **known contradictions** and
-none is deferred. **Six of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All ten are **known contradictions** and
+none is deferred. **Seven of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
 
@@ -713,8 +714,10 @@ their definition site.
 W 1011–1012.
 ```
 **Finishing the cycle:** once the closure ordering reaches a Gate-B cycle's closing act — an
-eligible pass with every closure precondition holding, never a clean pass on its own — close it
-with `git commit --amend -m "<real message>"`; that replaces the WIP commit. **The hook treats any
+eligible pass with every closure precondition holding, never a clean pass on its own — perform that gate's
+closing act as the ordering describes it — ordinarily `git commit --amend -m "<real message>"`,
+which replaces the WIP commit, and the shape the ordering names instead wherever the amend would
+leave a `WIP:` commit in history. **The hook treats any
 non-`WIP` commit *attempt* as a Gate-B boundary and clears its state even where the command
 fails**, so a failed closing act leaves that counter cleared and no commit made — a fact about the
 counter and not about the cycle. This section states the operation and never whether the cycle may
@@ -774,6 +777,18 @@ passes". A pass is established by its validated findings file; what the commit r
 hook's counter. Left standing it tells an author that a stray commit destroyed review work it
 cannot reach. **This one does not share the section's shared mechanism** — it is a false claim
 about a mechanism rather than an entry point carrying an unqualified instruction.
+
+**9b. The severity-deciding fallback** (Mechanics · Severity). It wraps across C 788–789 and
+W 974–975.
+```
+If you cannot name both, the finding is Minor or below: collect; **its severity buys no repair
+round and no further pass**, and any pass a later scope decision costs is that decision's.
+```
+*Why (pass 44 finding 2):* the live clause ends "collect, never iterate", which is an unqualified
+command at an entry point other than the ordering. Accepting an out-of-set Minor changes the
+assigned fix set, and that change costs a further pass — owed by the set change, not by the
+Minor's severity. Left standing, the two instructions decide the same pass in opposite directions.
+It is the seventh sentence sharing this section's mechanism.
 
 **9. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
 W 914–915.
