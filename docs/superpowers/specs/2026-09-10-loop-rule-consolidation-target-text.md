@@ -269,9 +269,10 @@ a hold like any other. **A re-raised valid dismissal stays discharged for the re
 exactly the terms the clean predicate sets out above** — the same complaint, no new evidence, no
 change to the text the dismissal turned on, and the dismissal's reason still true of the artifact.
 The dismissal was the resolution and a reviewer repeating it does not undo it, so no second
-dismissal is owed. **Where any of those fails the recurrence is an ordinary fresh finding**, judged
-at its current effective severity and owing a repair or a dismissal of its own; reading the old
-dismissal as covering it would let a finding that has since become true close a cycle. What a
+dismissal is owed. **Where any of those fails the recurrence is an ordinary fresh finding** and is
+handled as one — by the severity and scope rules at their own sources, which decide whether it is
+in set and what it owes; reading the old dismissal as covering it would let a finding that has
+since become true close a cycle. What a
 qualifying recurrence creates is the **clearly-stuck hold**, ended by that reading's
 continue-or-stop answer. Any trigger the recurrence independently carries raises its own
 stop as usual. **Where one finding is surfaced by both, it carries two hold components and each is
@@ -414,8 +415,11 @@ performed once the ordering reaches it: an eligible pass with every closure cond
 **A commit the hook reads as cycle-closing is a Gate-B matter.** A non-`WIP` commit mid-cycle makes
 the hook drop its Gate-B review state and that gate's counter — an observation about the counter,
 since the cycle itself stays open until the conditions hold, so an accidental commit resets what
-the hook reports and closes nothing; **what a pass is stands on its validated findings file, not
-on that counter**. **It does not reach a Gate-A cycle's count**, which the hook
+the hook reports and closes nothing; **what a pass is stands on its validated findings file, not on
+that counter**. **It also leaves the `WIP:` snapshot as an ancestor**, which the closing amend
+replaces nothing of — so the closing act takes the reset-and-single-commit shape Mechanics gives
+for that case, a `WIP:` commit left in history being exactly what Mechanics says the amend exists
+to prevent. **It does not reach a Gate-A cycle's count**, which the hook
 clears at the skill boundaries that start a new Gate-A cycle rather than on any commit.
 ```
 
@@ -533,7 +537,7 @@ clause left standing alone — its second half, the precedence sentence, moves i
 the second is new.
 
 ```
-So this exit needs three things **together**, and a missing one means only that *this* exit does not apply — what the pass does instead is the closure ordering's — another suspension, a continue, or a close: a plateau
+So this exit needs three things **together**, and a missing one means only that *this* exit does not apply — what the pass does instead is the closure ordering's, read there in full: a plateau
 visible across passes (six or more is where the field saw one); an **affirmative judgement that
 coverage is sufficient**, stated — a known materially unreviewed area forbids this exit outright,
 and disclosing it does not license it; and **Blocker or Major findings that keep regenerating
@@ -778,8 +782,8 @@ semantics **and the closure ordering together with every rule it reads** depend 
 and the requirement is that the adopted definitions **agree**, not merely that all of them are
 present. **Membership is decided by a test a reader can apply to the text in front of them, with
 no list to consult, and the test reads what a rule states rather than what changing it would do:
-a live rule belongs to this contract when what it says **defines an input's validity or how it is
-read**, which branch a pass takes, what a hold is or what discharges it,
+a live rule belongs to this contract when what it says **defines the validity of an input the
+closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
 identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the

@@ -61,6 +61,32 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 32 | 45b7d36 | 13→**15** | 0→**1** | 6→**5** | yes | **MANDATORY TWO-TELL STOP.** Findings rose and the Blocker returned. **Three of six B+M are collisions between my own repairs of passes 29–31.** All 15 held open; session 01a09a31-a7bb-7a03-9437-6c9396908fdb |
 | 33 | 3ee9132 | 15→**22** | 1→**1** | 5→**8** | yes | **MANDATORY TWO-TELL STOP — third in six passes.** B+M 6→**9**, the worst since pass 26. **The scope cut did not reduce the count; it added cleanup debt.** Three findings are references to the cut condition my sweep did not reach. All 22 held open; session 01a09a7d-55f2-7513-b61b-09c9a34626d3 |
 | 34 | ea5e76c | 22→**19** | 1→**0** | 8→**5** | yes | **zero tells.** B+M 9→**5**, the largest fall of this stretch and the lowest since pass 29 — finishing the cut is what did it. All 5 Majors verified before repair, one of them (§F item 5) against `codex-gate.sh:876` rather than asserted; session 01a09acf-1185-7883-b23f-3ee707d5ad58 |
+| 35 | 8847414 | 19→**20** | 0→**0** | 5→**4** | yes | one tell (count rose by one). **B+M 5→4, third consecutive fall: 9, 5, 4.** All four Majors are over-narrow or over-wide wordings of my own earlier repairs; session 01a09ade-8e4c-7352-9e19-75be21c2178e |
+
+## Pass-35 report — one tell, B+M 9 → 5 → 4
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 19, **20**. Blockers 0, **0**. Majors 5, **4**. Blocker+Major 5, **4**.
+- **Cluster (pass 35):** an **even split** — 10 on the ordering and the gate blocks, 10 on this
+  file's or the design's own metadata. Disclosed because it is borderline: all four Majors are
+  product behaviour and the metadata half is mostly NITs collected across several passes, so this
+  is read as **not** the prose-cluster tell. The instrument: 0.
+- **require↔withdraw:** none. Pass 35's §G finding is a follow-on to the replacement pass 34 asked
+  for, not a demand for text an earlier pass removed.
+
+**Tells: one of five** — the count rose by one. Below the mandatory threshold.
+
+**What is now excluded.** A reader entering at §C can no longer walk past a source block, because
+§C stopped enumerating branches at all — the enumeration was the defect in both rounds it appeared.
+A non-qualifying recurrence of a dismissed finding is no longer forced into a repair it may not
+owe. A stray non-`WIP` commit is priced for what it actually costs: the hook's counter **and** a
+`WIP:` snapshot left in history, which the closing amend would not replace. §G's "input" is the
+ordering's input.
+
+**All four Majors were wordings of my own earlier repairs** — two too wide, two too narrow. None
+required a new decision, and none of the five settled decisions was touched.
 
 ## Pass-34 report — zero tells, B+M 9 → 5
 
