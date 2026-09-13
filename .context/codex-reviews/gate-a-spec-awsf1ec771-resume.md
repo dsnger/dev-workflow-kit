@@ -59,6 +59,48 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 30 | 95439f8 | 10→**9** | 0→**0** | 5→**4** | yes | zero tells; 3 of 4 are carry-through of the pass-29 decision — my pre-review sweep was too narrow; session 01a09a16-99f4-7ca1-973e-2ac344f65a7c |
 | 31 | e48259d | 9→**13** | 0→**0** | 4→**6** | yes | one tell; 3 of 6 are damage from the pass-30 failed-act repair, adopted from the reviewer's suggested fix without testing the fix. Rule shrunk, not extended; session 01a09a23-e45f-7f80-b6b0-d7dab19cac19 |
 | 32 | 45b7d36 | 13→**15** | 0→**1** | 6→**5** | yes | **MANDATORY TWO-TELL STOP.** Findings rose and the Blocker returned. **Three of six B+M are collisions between my own repairs of passes 29–31.** All 15 held open; session 01a09a31-a7bb-7a03-9437-6c9396908fdb |
+| 33 | 3ee9132 | 15→**22** | 1→**1** | 5→**8** | yes | **MANDATORY TWO-TELL STOP — third in six passes.** B+M 6→**9**, the worst since pass 26. **The scope cut did not reduce the count; it added cleanup debt.** Three findings are references to the cut condition my sweep did not reach. All 22 held open; session 01a09a7d-55f2-7513-b61b-09c9a34626d3 |
+
+## Pass-33 report — MANDATORY TWO-TELL STOP, and the scope cut did not help
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 15, **22**. Blockers 1, **1**. Majors 5, **8**. Blocker+Major 6, **9**.
+  Across passes 28–33: B+M **6, 5, 4, 6, 6, 9**; findings **13, 10, 9, 13, 15, 22**.
+- **Cluster (pass 33):** the ordering and the gate paragraphs 13 of 22; this file's or the design's
+  own metadata 8; the verification instrument 1 (design §7's oracle).
+- **require↔withdraw:** none.
+
+**Tells: two of five — mandatory. Third mandatory stop in six passes** (28, 32, 33).
+
+**The cut did not reduce the count.** It removed the two collisions it was predicted to remove, and
+the pass still rose 15 → 22 with B+M at its worst since pass 26. **Three findings are references to
+the removed condition that my sweep did not reach** — §I line 920 still says "Gate B's equivalent
+**is** answered, its index condition being one of this change's decisions"; design §2 says the
+same; design §7's oracle still requires every precondition to hold through the closing commit.
+I grepped the target text for the condition's own vocabulary and did not grep for sentences that
+merely *rely* on it, which is the third round running that a sweep was too narrow.
+
+**Three of the remaining Blocker/Majors come out of this round's own repairs.** The failed-act
+rule's "nothing the review reads has changed" is falsified by §I's own admitted residuals
+(finding 2); the same rule contradicts the continue branch (finding 3); and §F item 1's new "which
+no commit touches" contradicts §A1's own statement that a commit attempt and its hooks may modify
+what a condition is read from (finding 6). **Finding 7 is a ninth falsified standing sentence** —
+the profiles paragraph at `CLAUDE.md` 752–753 still says a non-`WIP` commit "would discard the
+accumulated passes", which this round's repair made false. Verified against the file before being
+reported.
+
+**Clearly-stuck stands at two of three, again.** Plateau across six passes: yes. Regeneration
+across genuine repair attempts, each round's fix producing the next: yes, and nameable per finding.
+**Coverage: not affirmable** — design §7's oracle had not been read at this depth by any earlier
+pass. Two of three is not that exit.
+
+**What five rounds of tightened method did not do.** Every repair since pass 29 was verified
+against a concrete case first; suggested fixes were tested before adoption and one was withdrawn
+for being wider than its defect; the pre-review sweep was widened twice; a scope cut removed a whole
+condition. **The Blocker/Major count did not fall in any of them.** That is the finding this stop
+carries, and it is about the approach rather than about any sentence in the artifact.
 
 ## Pass-32 report — MANDATORY TWO-TELL STOP, and the repair strategy is the subject
 
