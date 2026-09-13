@@ -435,7 +435,7 @@ since the cycle itself stays open until the conditions hold, so an accidental co
 the hook reports and closes nothing; **what the reset erases is counter state, and it does not
 invalidate a pass that already satisfied the validation rules this section states** — which is
 where what makes a pass valid stays. **A stray commit that succeeds and does not amend also leaves the
-`WIP:` snapshot as an ancestor** — a failed attempt adds no commit, and an amend replaces the tip —
+`WIP:` snapshot as an ancestor**, an amend replacing the tip instead —
 so in that one shape **the closing act still owes what Mechanics already requires of it: no `WIP:`
 commit left in history.** Which git sequence reaches that from this state
 belongs to the plan, as every other closing sequence does. **It does not reach a Gate-A cycle's count**, which the hook
@@ -654,12 +654,13 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The fourteen standing sentences this change falsifies — REPLACED
+## F. The seventeen standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All fourteen are **known contradictions** and
-none is deferred. **Ten of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All seventeen are **known contradictions** and
+none is deferred. **Thirteen of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
-exception to point at.
+exception to point at. **Fourteen live in the two prompt copies and cite a line in each; the last
+three live in the shipped hook**, which has one copy and no template mirror.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -725,7 +726,7 @@ would survive the amend** — several piled up, or a stray non-amending commit m
 ancestor — **reset to the parent of the first and commit once instead**. This section is the only
 place either shape is defined. **The hook treats any
 non-`WIP` commit *attempt* as a Gate-B boundary and clears its state even where the command
-fails**, so a failed closing act leaves that counter cleared and no commit made — a fact about the
+fails**, so a failed closing act leaves that counter cleared — a fact about the
 counter and not about the cycle. This section states the operation and never whether the cycle may
 close.
 ```
@@ -863,6 +864,43 @@ applicable suspension first. An eligible pass with stale evidence and two tells 
 path straight past a mandatory stop. It is the sixth sentence of this section's shared mechanism,
 an entry point other than the ordering carrying an unqualified instruction, and it takes the same
 repair: the **operation** stays here, the **permission** is the ordering's.
+
+**10. The Gate-A below-floor reminder's honesty claim** (the shipped hook,
+`plugins/dev-workflow/hooks/codex-gate.sh` — one copy, no template mirror).
+```
+Gate A has no content check in this hook; what the gate itself requires of the reviewed artifact is stated in $policy and is instruction-backed.
+```
+*Why (pass 53 finding 19):* the live string says "Gate A has no content check behind it — this
+floor is the only thing keeping the spec review honest", which the Gate-A content condition
+falsifies: the floor is no longer the only thing, and a reader who believes it may treat the
+condition as optional. The repair keeps the true half — **this hook** checks only the count — and
+sends the reader to the gate's own text for what else is owed. It is the eleventh sentence sharing
+this section's mechanism, and the first of three that live in the hook rather than in either
+prompt copy.
+
+**11. The Gate-A satisfied reminder's clean definition** (the shipped hook, same file).
+```
+Proceed only if your final pass was clean and every other closure condition holds, both as $policy defines them.
+```
+*Why (pass 53 finding 20):* the live string defines a clean final pass as "no new Blocker/Major",
+an abbreviated second copy of a definition the ordering now states in full — a pass carrying a
+scope-stop trigger is not clean under it, whatever the severity of what triggered it. Left
+standing, the hook presents such a pass as clean at exactly the moment an author is deciding
+whether to proceed. The repair **cites** the definition rather than restating it, which is also
+what keeps a later change to the definition from falsifying this string again. It is the twelfth
+sentence sharing this section's mechanism.
+
+**12. The Gate-B satisfied reminder's clean definition** (the shipped hook, same file). **Its
+fingerprint clause is untouched**: that overclaim predates this change, is parked with the
+Gate-B tree-equality material, and no condition here reaches it.
+```
+Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them.
+```
+*Why (pass 53 finding 20):* the same abbreviated definition, in the branch an author reads
+immediately before committing, and it takes the same repair. It is the thirteenth sentence sharing
+this section's mechanism. **The exact-match expectation in
+`plugins/dev-workflow/hooks/codex-gate.test.sh` pins this string in full and is replaced with
+it** — the other hook assertions match on loose patterns this repair leaves standing.
 
 ---
 
@@ -1018,8 +1056,10 @@ be established as absent is cheaper to owe than to skip** —
 
 - **Minor, collected and open (pass 17 finding 9 is resolved above; this is the remainder):**
   nothing in this file establishes that the edit set is complete. It is the sites known at pass
-  17. **The plan sweeps both copies against the rule** — a live sentence the ordering falsifies
-  gets edited — and prints what it found; a spec cannot establish that claim against text the same
+  17, plus the three hook reminder strings §F items 10–12 added at pass 53 — which is itself
+  evidence that the set was not complete. **The plan sweeps both prompt copies and the shipped
+  hook's reminder strings against the rule** — a live sentence the ordering falsifies gets
+  edited — and prints what it found; a spec cannot establish that claim against text the same
   change rewrites, which is the mechanism that produced a finding at passes 15, 16 and 17.
 - **Partial adoption is instructed against, never detected.** §G says so in its own words.
 - **Which exit a cycle took is not observable from history.** The transport left with the record

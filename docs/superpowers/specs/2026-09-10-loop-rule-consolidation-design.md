@@ -218,7 +218,10 @@ commit (`scripts/check-version-bump.sh main` needs the committed bump, §8).
 
 **The check — what it must establish, and where it is built.** Every edit that changes a standing
 meaning owes a **discriminating pair of counts**: one showing the new wording present, one
-showing the old wording gone. Each half runs in **both copies** and against **both** the working
+showing the old wording gone. Each half runs in **both copies** — and, for the three hook
+reminder strings of §F items 10–12, in the hook's **single** copy, which has no mirror and owes
+no parity check; the hook suite's exact-match assertion is that edit's second observation — and
+against **both** the working
 tree and the parent tree, so every assertion is observed passing where the change exists and
 failing where it does not. A one-sided presence check is not enough: a copy carrying the new
 wording **and** the old one satisfies it, which is the two-instructions-that-disagree failure §4
@@ -341,9 +344,15 @@ repo's most persistent defect. The transport that could carry it left with the r
   `plugins/dev-workflow/commands/workflow-init.md` is under `plugins/`, so
   `plugins/dev-workflow/.claude-plugin/plugin.json` goes `0.11.0 → 0.12.0` with a
   `plugins/dev-workflow/CHANGELOG.md` entry: a minor bump, the template gaining a closure
-  ordering and the edited or extended sentences §4 lists.
-- **Invariant 4 / the hook.** Untouched: `plugins/dev-workflow/hooks/codex-gate.sh` is not
-  edited, and the §5 heading it greps (`Cross-Model Review`) does not move.
+  ordering, the edited or extended sentences §4 lists, and the three hook reminder strings of
+  §F items 10–12. The hook edits add no bump the template did not already require.
+- **Invariant 4 / the hook.** `plugins/dev-workflow/hooks/codex-gate.sh` is edited in exactly
+  three `note` **strings** (§F items 10–12) and nowhere else: no control flow, no counter, no
+  fingerprint computation, no routing, so the POSIX-`sh` and optional-`jq` obligations are not
+  reached. `plugins/dev-workflow/hooks/codex-gate.test.sh` changes in its one exact-match
+  expectation for the Gate-B satisfied message; the remaining hook assertions match loose
+  patterns these repairs leave standing. The §5 heading the hook greps (`Cross-Model Review`)
+  does not move.
 
 **Every path in this spec is written repository-relative and in full** — no ellipsis shorthand
 and no bare basename. An abbreviated citation fails the path-existence check a review pass runs
@@ -415,6 +424,9 @@ not exist; §G names a sentence that does, and claims only what that sentence do
 - The pass-counter anomaly (`fic2` record).
 - The CodeRabbit plan-metadata contradiction (`fic2` record).
 - The fixture-per-predicate question (`fic2` record; story §2).
-- Hook code under `plugins/dev-workflow/hooks/`.
+- Hook **behaviour** under `plugins/dev-workflow/hooks/` — control flow, counters, fingerprint
+  computation, routing, event handling. The three contradictory reminder strings and the one
+  exact-match test expectation are in scope instead (§F items 10–12, story §Out of scope), and
+  the Gate-B fingerprint overclaim in the same message stays parked here.
 - `todos.md`: both-branches-misread-each-other; self-consuming-deletion (prompt-standards item
   11); the three bot findings in resolved plans.

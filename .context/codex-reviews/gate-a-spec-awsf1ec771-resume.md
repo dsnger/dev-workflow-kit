@@ -69,7 +69,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 50 | 68eb365 | 10→**25** | 0→**0** | 4→**11** | yes | one tell. 8 of 11 Majors = the design restating what the target owns, third appearance. design §2's prose of all five decisions replaced by a decision RECORD (92 lines → 30); §A1 and §A3 stopped pointing at §I, which ships nowhere |
 | 51 | 2044147 | 25→**23** | 0→**0** | 11→**6** | yes | zero tells. 4 of 6 = the same class in design §§4, 7, 9; 2 inside the target (§A3's duty summary, the §A3/§F-5 circular case split) |
 | 52 | 06152d1 | 23→**29** | 0→**0** | 6→**5** | yes | one tell. **Two of five were pass 51's findings 1–2, still open because the pass-51 repair went to the wrong section** — see the pass-51 dispositions file. Pass 52 located them correctly at design §5 |
-| 53 | — | — | — | — | not run | next, against `06152d1` |
+| 53 | 81fffd1 | 29→**21** | 0→**0** | 5→**4** | yes | zero tells. **Three of four Majors are the first §F sites outside the two prompt copies** — reminder strings in `codex-gate.sh`. Daniel authorised a NARROW SCOPE OPENING on 2026-09-13: the three strings plus one exact-match test expectation are in, hook behaviour stays out, the Gate-B fingerprint overclaim stays parked. §F 14 → 17. Major 1 was a genuine internal contradiction (§A1 vs §A3 + §F-5 on what a failed attempt leaves behind); both assertions deleted |
+| 54 | — | — | — | — | not run | next, against the pass-53 repair commit |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -77,6 +78,32 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-53 report — zero tells, and the sweep had been looking in too few files
+
+**Trend:** findings 25, 23, 29, **21** across 50–53; Blockers 0, 0, 0, **0**; Majors 11, 6, 5, **4**.
+**Cluster:** product behaviour — three of four Majors are shipped hook strings the change falsifies;
+the fourteen Minors are the familiar second-copy class. **Require↔withdraw:** none.
+Two tells would be mandatory-stop; zero are present.
+
+**What this pass found that fifty-two did not.** §F's sweep had been run against `CLAUDE.md` §5
+and the `workflow-init.md` mirror only. `plugins/dev-workflow/hooks/codex-gate.sh` ships reminder
+strings the agent acts on at exactly the moment it decides whether to proceed, and two of them
+state rules this change supersedes: "Gate A has no content check behind it — this floor is the
+only thing keeping the spec review honest" (`:967`), and the clean-pass definition "no new
+Blocker/Major" (`:973` and `:956`). Both verified verbatim.
+
+**The boundary, and who drew it.** The story and design put hook code out of scope. Daniel took an
+independent reviewer opinion, which argued prompt-standards item 7 reaches a hook reminder and that
+the cost had been overstated. Checking bore that out: three `note` strings, one exact-match
+expectation at `codex-gate.test.sh:1019`, no fixtures, and the version bump already owed for the
+template. **Daniel authorised the narrow opening.** Hook behaviour — control flow, counters,
+fingerprint computation, routing — stays out, and the Gate-B fingerprint overclaim stays parked
+with the tree-equality material.
+
+**Carry into pass 54:** the prompt now records the opening so the boundary is not re-argued, and
+sweep 1 names the hook as a third site. Expect §F citation Nits (items 4 and 8 are one line off)
+and the standing second-copy class.
 
 ## Passes 50–52 — the second-copy class, and one mis-located repair
 
