@@ -89,7 +89,7 @@ could *never* close, resting on a six-pass plateau the text does not set as a th
 coverage judgement that is a fact about now rather than forever. The repeated-refuted-complaint
 problem stands on its own without either.
 
-**Clean completion outranks a suspension by closing the cycle, not by being eligible** (pass 29
+**Clean completion outranks a suspension by taking the pass to the closing act, not by eligibility alone** (pass 29
 finding 1). The earlier wording barred every eligible pass from suspending, which let a clean pass
 blocked by an unresolved prior Major, a standing hold or stale evidence walk past §D's **mandatory**
 two-tell stop and keep spending passes. **This narrows a rule this change itself wrote, and
@@ -206,21 +206,11 @@ to point at and so a reader can see the shape of the change without reading the 
 | (c) recognizing clearly stuck | §C |
 | (e) the five tells | §D |
 | Mechanics · Severity | the resolve duty is scoped and gains its discharge rule; the handed-over question is replaced by its answer |
-| Mechanics · `baseSha` | two sentences: the `WIP:` warning stops claiming a closure the rules do not grant, and the `Finishing the cycle` lead-in performs the amend only where the ordering permits closing |
-| Mechanics, recording a human exception | two sentences: a prescribed continuation answer is distinguished from blanket assent, and the Gate-A destination follows the closing act rather than naming the spec or plan commit. The answer-record material stays moved to the successor |
-| Gate B, the coverage instruction | `NO FINDINGS` only when the branch found none |
-| Mechanics, the curve's Majors rationale | rewritten on the pre-ceiling reading |
+| every standing sentence this change falsifies | **enumerated once, in the target text's §F**, with its replacement text and its reason. **No row for any of them appears here** — a second enumeration beside §F went stale at five passes running, and the plan reads the list, the count and the replacements off §F |
 | Mechanics, the one-contract paragraph | membership widened, with a semantic test a downstream reader can apply |
 | (i) when these rules bind | §H |
 | the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional; the broad-prompt instruction stops assuming the artifact is revised between passes, keeping its breadth demand |
 | the profiles section, the lens paragraph | its unchanged-list is scoped to the lens sets |
-| the §5 loop rule, the HARD FLOOR parenthetical | "(Blocker/Major only)" no longer describes what the floor is spent on, a scope-stop trigger and an accepted Minor both bearing on it (pass 47 finding 1); §F item 8a |
-| the Gate-A section, the coverage instruction's filter clause | the filter is scoped to what must be repaired, every line still being read for cleanliness, the triggers, the fix set and loop health (pass 47 finding 2); §F item 8b |
-| Mechanics, the cycle nonce's mid-run recovery sentence | a Gate-A cycle does have a commit of its own where `HEAD` already carries the reviewed text (pass 48 finding 1); §F item 7a |
-| the profiles section, the evidence-entry revalidation trigger | scoped to the commit the closing act produces rather than to the amend (pass 46 finding 2); §F item 9a |
-| Mechanics · Severity, the severity-deciding fallback | "collect, never iterate" scoped to the severity's own cost (pass 44 finding 2); §F item 9b |
-| the profiles section, the profile-change paragraph | its claim that a stray non-`WIP` commit "would discard the accumulated passes" is narrowed to the hook's count of them (pass 33 finding 7); §F item 8 |
-| the profiles section, the evidence-entry revalidation remedy | its fix-re-review-close instruction becomes conditional on the ordering selecting continuation, a non-closing pass taking any applicable suspension first (pass 30 finding 3). The eighth falsified standing sentence, and the sixth sharing §F's mechanism |
 
 **Two sentences are deliberately not edited**, named so nobody looks for them: the "Copy every
 record into the squash body" sentence inside the human-exception block, and the "records every
@@ -249,7 +239,7 @@ here. This table says what happens to each inventoried passage, so the map stays
 | (e) the five tells | edited — the threshold is read after clean completion, and a pointer says what its answer does | §D |
 | (f) the two rules above do not compete | **unchanged.** "The two rules above" still names the absorb rule and the stuck reading; the block sits before both and adds no third rule between them | — |
 | (g) Mechanics · Severity, the handed-over question | edited — the unsettled statement and its interim report-and-stop duty are replaced by the answer, in both copies, removing the one deliberate story-path divergence | §E |
-| (h) recording a human exception | **edited in two sentences** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle; and the Gate-A destination follows the closing act, the spec-or-plan commit being that commit on only one of three closing paths. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
+| (h) recording a human exception | **edited; §F states which sentences and how** — a prescribed continuation answer is distinguished from blanket assent, which the ordering makes the restart of a parked cycle; and the Gate-A destination follows the closing act, the spec-or-plan commit being that commit on only one of three closing paths. The answer-record block that was to follow it stays moved to the successor with **D9**, and nothing else in the passage changes | §F |
 | (i) when these rules bind | edited — the strict-reading list is added to, not rewritten | §H |
 | (j) the squash carry | **no longer edited.** It was to name the answer record, which moved; this change ships no record for it to carry | — |
 
@@ -376,9 +366,7 @@ not an input was consumed", which would have classified that legitimate case as 
 **Evidence entry**, in the closing commit body, names: the battery run; every pair the plan built
 with its counts in each copy and each tree, and every presence check beside them; the §6 parity
 diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row
-count. It is revalidated before every Gate-B re-review and before the commit that gate's closing act
-produces, as the target text's §F item 9a requires — the amend being one of the shapes that act
-takes.
+count. **When it is revalidated is stated once, in the target text's §F**, and is not repeated here.
 
 **One observability residual, stated because the lens set asks for it and nothing here answers
 it.** A closing commit body records that a cycle closed and what its curve was; it records

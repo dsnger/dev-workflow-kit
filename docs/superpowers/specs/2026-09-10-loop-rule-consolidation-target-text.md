@@ -111,9 +111,11 @@ must be repaired or answered, and no further pass runs while its block stands.**
 suspension nor a continue and needs no name and no procedure of its own: the source rule carries
 both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
 another rule has stopped. **Once its source condition is repaired the ordering is read again on that pass**, no closing act
-having been attempted on it — **and where that pass also carried a suspension, its answers are
-still owed and the composition rule still holds the cycle**, this branch releasing only its own
-block — the read-once rule below is about a pass that reached the act, not
+having been attempted on it — **and where that pass also carried a suspension, this branch
+releases only its own block**: the composition rule still holds the cycle on every answer that
+suspension asked for, a continue still leads to a pass run after the answer, and a stop still parks
+the cycle until an explicit later continue — so the reread happens where no suspension of that
+pass is outstanding, and otherwise the suspension's own route runs first — the read-once rule below is about a pass that reached the act, not
 about one a block held before it, and without this a repair that moves no pass-cost value would
 leave a clean eligible pass with no route to the act and none to a suspension.
 **It is read first and it silences nothing.** Where the same pass also
