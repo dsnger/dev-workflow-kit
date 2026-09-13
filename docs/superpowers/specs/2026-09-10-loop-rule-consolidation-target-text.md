@@ -655,10 +655,10 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The eleven standing sentences this change falsifies — REPLACED
+## F. The thirteen standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All eleven are **known contradictions** and
-none is deferred. **Eight of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All thirteen are **known contradictions** and
+none is deferred. **Ten of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
 
@@ -679,7 +679,9 @@ repair and is item 8 below.**
 ```
 Same coverage rule as Gate A: put "report every finding with severity and confidence; write
 `NO FINDINGS` only when the branch found none" in `additionalContext`, with the same one-line
-format. You filter to Blocker/Major, Codex never does.
+format. **You filter to Blocker/Major for what must be repaired, and read every line for
+everything else** — cleanliness, the scope triggers, the assigned fix set and the loop-health
+readings all take Minor and Nit lines. Codex never filters.
 ```
 *Why (pass 17 finding 5):* "say `NO FINDINGS` if clean" plus the ordering's clean-pass-with-Minors
 tells a reviewer to emit an empty file over real Minors.
@@ -773,15 +775,40 @@ instead keeps them together on all three without changing the record's form or f
 **8. The profile-change paragraph's pass claim** (the profiles section). It wraps across C 752–753
 and W 938–939.
 ```
-Inside an active Gate-B cycle, fold the edit into the active `WIP:` snapshot by amend — a non-`WIP`
-commit reads to the hook as the cycle closing and would discard **the hook's count of** the
-accumulated passes.
+Inside an active Gate-B cycle, fold the edit into the active `WIP:` snapshot — by amend where the
+snapshot is the tip, and otherwise by the shape that reaches it, a stray non-amending commit having
+made the snapshot an ancestor an amend would not touch. A non-`WIP` commit reads to the hook as the
+cycle closing and would discard **the hook's count of** the accumulated passes.
 ```
 *Why (pass 33 finding 7):* the live clause says such a commit "would discard the accumulated
 passes". A pass is established by its validated findings file; what the commit reaches is the
 hook's counter. Left standing it tells an author that a stray commit destroyed review work it
 cannot reach. **This one does not share the section's shared mechanism** — it is a false claim
 about a mechanism rather than an entry point carrying an unqualified instruction.
+
+**8a. The HARD FLOOR parenthetical** (the §5 loop rule). It wraps across C 72–73 and W 279–280.
+```
+**Both gates are a LOOP with a HARD FLOOR: a minimum number of passes per run (a clean final pass
+being what the floor is spent on, and cleanliness taking more than Blocker/Major), derived from the
+cited story's profile.**
+```
+*Why (pass 47 finding 1):* the live parenthetical reads "(Blocker/Major only)". Under the ordering
+a scope-stop trigger makes a pass unclean whatever the finding's severity, and an assigned-fix-set
+change costs a further pass even where the accepted finding is a Minor. A reader entering here can
+treat a Minor-or-Nit-only outcome as outside the floor's business, which it no longer is.
+
+**8b. The Gate-A coverage instruction's filter clause** (the Gate A section). It wraps across
+C 561–564 and W 753–756.
+```
+with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
+every line for everything else**, Codex never filters, because a model told to report only high
+severity drops real findings silently
+```
+*Why (pass 47 finding 2):* "you filter to Blocker/Major downstream" is now false of the reading
+rather than of the repairing. Cleanliness, the two scope triggers, the fix set and every
+loop-health reading take Minor and Nit lines, so an author who discards them before those
+predicates run can close on a pass that was never clean. It is the ninth and tenth sentences
+sharing this section's mechanism, with 8a.
 
 **9a. The evidence-entry revalidation trigger** (the profiles section). It wraps across C 726–727
 and W 912–913.
