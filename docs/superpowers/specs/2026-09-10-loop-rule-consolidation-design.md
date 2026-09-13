@@ -31,8 +31,9 @@ duties participate in that ordering versus gate it as preconditions. With it: th
 a severity demotion does to the loop-health counts, and the standing sentences the ordering
 falsifies or leaves ambiguous if they are not edited at their source. **§4 lists the sites row by
 row and claims no total over them**, a count over spans that merge and split being bookkeeping the
-plan re-derives against the files. **The nine falsified standing sentences are a different count**
-and the target text's §F states it, because those are individually enumerated sentences rather than
+plan re-derives against the files. **The falsified standing sentences are a different count**
+and **only the target text's §F states it**, which is why no number for them appears here — a
+second copy of that count is what went stale four times, because those are individually enumerated sentences rather than
 spans.
 
 **What does not:** the pass floor and severity semantics, which the parent shipped and this spec
@@ -213,6 +214,11 @@ to point at and so a reader can see the shape of the change without reading the 
 | (i) when these rules bind | §H |
 | the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional; the broad-prompt instruction stops assuming the artifact is revised between passes, keeping its breadth demand |
 | the profiles section, the lens paragraph | its unchanged-list is scoped to the lens sets |
+| the §5 loop rule, the HARD FLOOR parenthetical | "(Blocker/Major only)" no longer describes what the floor is spent on, a scope-stop trigger and an accepted Minor both bearing on it (pass 47 finding 1); §F item 8a |
+| the Gate-A section, the coverage instruction's filter clause | the filter is scoped to what must be repaired, every line still being read for cleanliness, the triggers, the fix set and loop health (pass 47 finding 2); §F item 8b |
+| Mechanics, the cycle nonce's mid-run recovery sentence | a Gate-A cycle does have a commit of its own where `HEAD` already carries the reviewed text (pass 48 finding 1); §F item 7a |
+| the profiles section, the evidence-entry revalidation trigger | scoped to the commit the closing act produces rather than to the amend (pass 46 finding 2); §F item 9a |
+| Mechanics · Severity, the severity-deciding fallback | "collect, never iterate" scoped to the severity's own cost (pass 44 finding 2); §F item 9b |
 | the profiles section, the profile-change paragraph | its claim that a stray non-`WIP` commit "would discard the accumulated passes" is narrowed to the hook's count of them (pass 33 finding 7); §F item 8 |
 | the profiles section, the evidence-entry revalidation remedy | its fix-re-review-close instruction becomes conditional on the ordering selecting continuation, a non-closing pass taking any applicable suspension first (pass 30 finding 3). The eighth falsified standing sentence, and the sixth sharing §F's mechanism |
 
@@ -319,9 +325,9 @@ old-wording-gone half of its pair. **The obligation reaches every passage the ta
 REPLACED, and no list of them is kept here** — a second enumeration beside the markers is the
 bookkeeping that goes stale, which it did: the list this sentence used to carry omitted §G while
 §G was marked REPLACED. **The plan reads the markers off the target text**, where the concrete
-replacements live. **§F now states nine falsified standing sentences**, the ninth being the
-profile-change paragraph's pass claim (pass 33 finding 7); six of the nine share the section's
-entry-point mechanism and that one does not. Nothing is
+replacements live. **§F states the falsified standing sentences and their count**, and the plan reads
+both off §F rather than from here; the count has moved at five passes and a copy of it here would
+be stale again by the next. Nothing is
 claimed as "contradictory" — the second of the two defects Gate B found in the `fic2` instrument.
 
 **The named verification of the risk path** (story AC 4) is a **next-state table**, written in the
@@ -352,8 +358,8 @@ or closed state — **the same stop returning with its reading unconsumed, that 
 intervening validated pass run after the answer** — or when it closes on anything other than the
 route the block states. **The closure conditions are read from the block and not re-enumerated
 here**: a re-enumeration is a second definition that drifts, and pass 15 found this list already
-missing two of them. Concretely the row must **enter closure from the clean-completion or
-zero-finding branch** — so a pass carrying a scope-stop trigger cannot close on the answer to that
+missing two of them. Concretely the row must **enter closure from the clean-completion branch**, a
+zero-finding pass being an eligibility route inside that branch rather than a branch of its own — so a pass carrying a scope-stop trigger cannot close on the answer to that
 trigger, no-clean-credit being the clean predicate's own second half — and every precondition the block names must hold
 **when it is established, immediately before the closing act**, which is the window the block
 fixes. **The oracle does not require a precondition to be re-read on what the act produces** — the
@@ -370,8 +376,9 @@ not an input was consumed", which would have classified that legitimate case as 
 **Evidence entry**, in the closing commit body, names: the battery run; every pair the plan built
 with its counts in each copy and each tree, and every presence check beside them; the §6 parity
 diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row
-count. It is revalidated before every Gate-B re-review and before the closing amend, as §5
-requires.
+count. It is revalidated before every Gate-B re-review and before the commit that gate's closing act
+produces, as the target text's §F item 9a requires — the amend being one of the shapes that act
+takes.
 
 **One observability residual, stated because the lens set asks for it and nothing here answers
 it.** A closing commit body records that a cycle closed and what its curve was; it records

@@ -111,7 +111,9 @@ must be repaired or answered, and no further pass runs while its block stands.**
 suspension nor a continue and needs no name and no procedure of its own: the source rule carries
 both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
 another rule has stopped. **Once its source condition is repaired the ordering is read again on that pass**, no closing act
-having been attempted on it — the read-once rule below is about a pass that reached the act, not
+having been attempted on it — **and where that pass also carried a suspension, its answers are
+still owed and the composition rule still holds the cycle**, this branch releasing only its own
+block — the read-once rule below is about a pass that reached the act, not
 about one a block held before it, and without this a repair that moves no pass-cost value would
 leave a clean eligible pass with no route to the act and none to a suspension.
 **It is read first and it silences nothing.** Where the same pass also
@@ -655,9 +657,9 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The thirteen standing sentences this change falsifies — REPLACED
+## F. The fourteen standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All thirteen are **known contradictions** and
+Each is a live sentence that the block makes wrong. All fourteen are **known contradictions** and
 none is deferred. **Ten of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
@@ -785,6 +787,18 @@ passes". A pass is established by its validated findings file; what the commit r
 hook's counter. Left standing it tells an author that a stray commit destroyed review work it
 cannot reach. **This one does not share the section's shared mechanism** — it is a false claim
 about a mechanism rather than an entry point carrying an unqualified instruction.
+
+**7a. The mid-run recovery sentence** (Mechanics, the cycle nonce). It wraps across C 416–417 and
+W 610–611.
+```
+A Gate-A cycle has such a commit only where its reviewed text is already committed and its closing
+act would amend that commit's message; otherwise it has only the working record.
+```
+*Why (pass 48 finding 1):* the live sentence says a Gate-A cycle mid-run has no commit of its own
+and therefore has only the working record. §A2 admits the case where `HEAD` already carries the
+reviewed text, and there the cycle does have a commit a later reader can read. Left standing, the
+two describe the same mid-run state incompatibly and a recovering run cannot tell whether history
+is a source.
 
 **8a. The HARD FLOOR parenthetical** (the §5 loop rule). It wraps across C 72–73 and W 279–280.
 ```
