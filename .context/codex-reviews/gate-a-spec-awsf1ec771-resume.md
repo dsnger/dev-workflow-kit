@@ -66,6 +66,10 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 37 | a37b5ab | 9→**3** | 0→**1** | 3→**2** | yes | one tell (Blocker 0→1). **Findings 3 — lowest of the cycle.** The Blocker was real and mine: an unrepairable closing failure had no terminal state; now PARKED, the state a stop answer already produces; session 01a09afd-8b4c-7712-93c1-6a3afa109d87 |
 | 38 | cc7f6dd | 3→**10** | 1→**0** | 2→**3** | yes | one tell (count rose). B+M flat at 3. §G takes its fourth Major; dimensions unfrozen; hold components per route rather than per pair; session 01a09b09-ba8b-7773-b42f-93a2f4261814 |
 | 39 | 13005de | 10→**5** | 0→**0** | 3→**4** | yes | **zero tells.** Three of four Majors are the three-site fan-out of the pass-37/38 rules — §G limb, §H strict reading, §F pointer. Pattern named and now checked before each pass; session 01a09b1d-8cbc-7d43-8d2f-49ff2339c31f |
+| 50 | 68eb365 | 10→**25** | 0→**0** | 4→**11** | yes | one tell. 8 of 11 Majors = the design restating what the target owns, third appearance. design §2's prose of all five decisions replaced by a decision RECORD (92 lines → 30); §A1 and §A3 stopped pointing at §I, which ships nowhere |
+| 51 | 2044147 | 25→**23** | 0→**0** | 11→**6** | yes | zero tells. 4 of 6 = the same class in design §§4, 7, 9; 2 inside the target (§A3's duty summary, the §A3/§F-5 circular case split) |
+| 52 | 06152d1 | 23→**29** | 0→**0** | 6→**5** | yes | one tell. **Two of five were pass 51's findings 1–2, still open because the pass-51 repair went to the wrong section** — see the pass-51 dispositions file. Pass 52 located them correctly at design §5 |
+| 53 | — | — | — | — | not run | next, against `06152d1` |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -73,6 +77,30 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Passes 50–52 — the second-copy class, and one mis-located repair
+
+**Floor line (unchanged):** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 23, 29 (from 25). Blockers 0, 0, 0. Majors 11, 6, **5**.
+  Blocker+Major 11, 6, **5**.
+- **Cluster:** the ordering and the gate blocks, and the design's restatements of them. The
+  instrument: 0.
+- **Tells:** pass 50 one, pass 51 zero, pass 52 one. None reached the threshold.
+
+**One class produced most of it: a rule stated twice.** Design §2 restated all five behaviour
+decisions in prose and is now a **decision record** — that a decision was made, who, when, what
+question it answered, which target section states it. §§4, 7 and 9 followed. Inside the target,
+§A3's seven-duty summary went, and the §A3/§F-item-5 circular definition of the closing act
+resolved to item 5 as the single source.
+
+**One repair went to the wrong place and is recorded in
+`gate-a-spec-awsf1ec771-pass-51-dispositions.md`.** Pass 51's findings 1 and 2 were labelled design
+§4; the text was at §5. §4 was already a pure `| §B |` pointer, so the repair rewrote a clean row
+and left the offending one untouched. **A finding's section label is a claim about the artifact and
+gets the same verification as any other claim** — locating by quoted content costs one grep. Daniel
+raised it; pass 52 found the same thing independently.
 
 ## Passes 40–46 — the two-tell stop at pass 46, and how it was answered
 
