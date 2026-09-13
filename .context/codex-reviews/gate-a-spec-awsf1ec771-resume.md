@@ -66,6 +66,44 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 37 | a37b5ab | 9→**3** | 0→**1** | 3→**2** | yes | one tell (Blocker 0→1). **Findings 3 — lowest of the cycle.** The Blocker was real and mine: an unrepairable closing failure had no terminal state; now PARKED, the state a stop answer already produces; session 01a09afd-8b4c-7712-93c1-6a3afa109d87 |
 | 38 | cc7f6dd | 3→**10** | 1→**0** | 2→**3** | yes | one tell (count rose). B+M flat at 3. §G takes its fourth Major; dimensions unfrozen; hold components per route rather than per pair; session 01a09b09-ba8b-7773-b42f-93a2f4261814 |
 | 39 | 13005de | 10→**5** | 0→**0** | 3→**4** | yes | **zero tells.** Three of four Majors are the three-site fan-out of the pass-37/38 rules — §G limb, §H strict reading, §F pointer. Pattern named and now checked before each pass; session 01a09b1d-8cbc-7d43-8d2f-49ff2339c31f |
+| 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
+| 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
+| 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
+| 43 | 95f8591 | 1→**6** | 0→**0** | 1→**3** | yes | one tell; branches restated as read ONCE before any act; accepted-Minor pass cost attributed to the set change, not the severity |
+| 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
+| 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
+| 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Passes 40–46 — the two-tell stop at pass 46, and how it was answered
+
+**Floor line (unchanged):** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 3, 2, 1, 6, 7, 7, **9**. Blockers 0, 0, 0, 0, 0, 0, **1**.
+  Majors 3, 2, 1, 3, 3, 1, **2**. Blocker+Major 3, 2, 1, 3, 3, 1, **3**.
+- **Cluster (pass 46):** the ordering and the gate blocks 6 of 9; metadata 3; the instrument 0.
+- **require↔withdraw:** none across the seven.
+
+**Pass 46 carries two tells — the count rose 7 → 9 and the Blocker count failed to fall, 0 → 1 —
+and §5 makes stop-and-surface mandatory at two.** Daniel answered that question in advance on
+2026-09-13 at 17:02: *"Keine Stopps, wenn nicht zwingend notwendig. Keine Stopps wenn kein
+absoluter Block."* **The stop's terminal action is to surface and hand the decision to the user,
+which is done here and in the commit body; the decision was already given.** What the rule forbids
+is unaffected and is honoured: no pass is credited clean, every finding stays open, and the cycle
+stays open. This is recorded rather than left implicit because an agent continuing past a mandatory
+stop on its own judgement would be the gate-off path §5 names.
+
+**What passes 40–46 did.** The three-site fan-out check, run before pass 40 rather than after,
+produced the first round with no fan-out Major. Compressed pointers and enumerations were then the
+whole remaining stock: §F item 4 took back an enumeration, §A3 compressed the branch-agreement
+rule, §C and §F item 9 enumerated branches. Passes 43–45 were three rounds on one subject —
+classification still referred to closing in four places after the leads had been reworded — and
+pass 45 swept all four at once.
+
+**Two more standing sentences were found false**, taking §F from nine to eleven: Mechanics'
+severity fallback ending "collect, never iterate" against the accepted-Minor pass cost, and the
+evidence-entry revalidation trigger naming only "the cycle-closing amend" while §A3 has two
+non-amend closing shapes.
 
 ## Passes 37–39 — the fan-out is the mechanism, and it is checkable
 

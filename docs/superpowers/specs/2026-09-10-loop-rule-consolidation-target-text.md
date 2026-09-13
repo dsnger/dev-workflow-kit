@@ -110,7 +110,11 @@ source rule that prescribes it; the list is examples and not the set** — **the
 must be repaired or answered, and no further pass runs while its block stands.** It is neither a
 suspension nor a continue and needs no name and no procedure of its own: the source rule carries
 both, and this ordering's part is to send the reader there rather than to run a pass over a cycle
-another rule has stopped. **It is read first and it silences nothing.** Where the same pass also
+another rule has stopped. **Once its source condition is repaired the ordering is read again on that pass**, no closing act
+having been attempted on it — the read-once rule below is about a pass that reached the act, not
+about one a block held before it, and without this a repair that moves no pass-cost value would
+leave a clean eligible pass with no route to the act and none to a suspension.
+**It is read first and it silences nothing.** Where the same pass also
 carries a suspension, that suspension is surfaced with its reasons and its questions exactly as the
 suspension branch requires and its answers are collected; what the block adds is that **no next
 pass runs until its own source condition is repaired**, whatever those answers were.
@@ -651,10 +655,10 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The ten standing sentences this change falsifies — REPLACED
+## F. The eleven standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All ten are **known contradictions** and
-none is deferred. **Seven of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All eleven are **known contradictions** and
+none is deferred. **Eight of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at.
 
@@ -758,7 +762,8 @@ last pass's text.
 C 988–989 and W 1172–1173; only the Gate-A clause changes.
 ```
 **Which commit:** an ungated change records it in that commit; a Gate-A cycle in the commit its
-closing act uses; a Gate-B cycle in the WIP commit, restated by the closing amend.
+closing act uses; a Gate-B cycle in the WIP commit, restated by the commit its closing act
+produces.
 ```
 *Why (pass 22 finding 3):* the live clause sends a Gate-A cycle's exception record to "the spec or
 plan commit", which is the closing commit only on the first of the three closing paths. On the
@@ -777,6 +782,18 @@ passes". A pass is established by its validated findings file; what the commit r
 hook's counter. Left standing it tells an author that a stray commit destroyed review work it
 cannot reach. **This one does not share the section's shared mechanism** — it is a false claim
 about a mechanism rather than an entry point carrying an unqualified instruction.
+
+**9a. The evidence-entry revalidation trigger** (the profiles section). It wraps across C 726–727
+and W 912–913.
+```
+and is **revalidated before every Gate-B re-review and before the commit its closing act
+produces** — a fix changes the diff even when the profile sits still.
+```
+*Why (pass 46 finding 2):* the live clause names "the cycle-closing amend", which is one of the
+shapes a Gate-B closing act takes; where several `WIP:` snapshots piled up, or a stray non-amending
+commit left a `WIP:` ancestor, the act is a reset and a single commit and no amend occurs. Scoped
+to the amend, the final revalidation is owed on one path and skipped on the others. It is the
+eighth sentence sharing this section's mechanism.
 
 **9b. The severity-deciding fallback** (Mechanics · Severity). It wraps across C 788–789 and
 W 974–975.
