@@ -691,8 +691,8 @@ across C 1014–1015 and W 1198–1199.
 Those have their own terminal actions and this paragraph changes none of them: on a STOP you
 still stop, and **neither a human's general assent nor this record** lets an agent close or
 continue a cycle. **The answers a suspension asks for are not assent of that kind**: they are the
-answers the closure ordering prescribes, one per surfacing route, and both which answers those are
-and what they produce are stated there.
+answers the closure ordering prescribes, and both which answers those are and what they produce are
+stated there.
 ```
 *Why (pass 19 finding 4):* the live sentence says no human answer lets an agent continue a cycle,
 while the ordering makes **continue** the prescribed answer that restarts a parked one. Left as
