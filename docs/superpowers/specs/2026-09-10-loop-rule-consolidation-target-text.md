@@ -409,8 +409,9 @@ and the next paragraph says why.
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
 so there is no reviewed text to compare an artifact against, and **nothing is put in its place** —
 the bullet in §I records what that leaves open. What this gate does have is already in this section
-and is cited rather than restated: the range those two names fix, **both branches
-issued against the same commit**; **a re-review after every fix**, a fix changing the artifact so
+and is cited rather than restated: the range those two names fix, **both branches issued
+with `baseSha` and `headSha` exactly equal before they are summed**, a shared head over different
+bases being two ranges and not one pass; **a re-review after every fix**, a fix changing the artifact so
 the prior review no longer covers it; **a fix that changes specified behaviour updating the spec in
 the same commit**, so the re-review covers both; the battery and the mode-derived evidence the
 profiles section obliges before a call; and the **evidence entry**, revalidated as that section
@@ -798,7 +799,8 @@ present. **Membership is decided by a test a reader can apply to the text in fro
 no list to consult, and the test reads what a rule states rather than what changing it would do:
 a live rule belongs to this contract when what it says **defines the validity of an input the
 closure ordering reads, or how that input is read**, which branch a pass takes, what a hold is or what discharges it, **what a suspension asks, or what state its answer or an
-incomplete closing act produces**,
+incomplete closing act produces**, **what a gate's closing act is**, **which version of these rules
+governs a cycle**,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
 identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the
