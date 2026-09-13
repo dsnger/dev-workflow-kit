@@ -60,6 +60,30 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 31 | e48259d | 9→**13** | 0→**0** | 4→**6** | yes | one tell; 3 of 6 are damage from the pass-30 failed-act repair, adopted from the reviewer's suggested fix without testing the fix. Rule shrunk, not extended; session 01a09a23-e45f-7f80-b6b0-d7dab19cac19 |
 | 32 | 45b7d36 | 13→**15** | 0→**1** | 6→**5** | yes | **MANDATORY TWO-TELL STOP.** Findings rose and the Blocker returned. **Three of six B+M are collisions between my own repairs of passes 29–31.** All 15 held open; session 01a09a31-a7bb-7a03-9437-6c9396908fdb |
 | 33 | 3ee9132 | 15→**22** | 1→**1** | 5→**8** | yes | **MANDATORY TWO-TELL STOP — third in six passes.** B+M 6→**9**, the worst since pass 26. **The scope cut did not reduce the count; it added cleanup debt.** Three findings are references to the cut condition my sweep did not reach. All 22 held open; session 01a09a7d-55f2-7513-b61b-09c9a34626d3 |
+| 34 | ea5e76c | 22→**19** | 1→**0** | 8→**5** | yes | **zero tells.** B+M 9→**5**, the largest fall of this stretch and the lowest since pass 29 — finishing the cut is what did it. All 5 Majors verified before repair, one of them (§F item 5) against `codex-gate.sh:876` rather than asserted; session 01a09acf-1185-7883-b23f-3ee707d5ad58 |
+
+## Pass-34 report — zero tells, B+M 9 → 5
+
+**Floor line:** derived floor **3**; risk **high**, security **none**; read fresh from
+`docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`. One cited story, level 2.
+
+- **Trend:** findings 22, **19**. Blockers 1, **0**. Majors 8, **5**. Blocker+Major 9, **5**.
+- **Cluster (pass 34):** the ordering and the gate paragraphs 12 of 19; this file's or the design's
+  own metadata 7; the instrument 0.
+- **require↔withdraw:** none.
+
+**Tells: zero of five.** The count fell and the Blocker went to zero.
+
+**What is now excluded that was not before** — the measure that matters more than the count. A
+source-blocked pass can no longer be run through the continue branch. §G's membership test no
+longer classifies reviewer choice and lens sets as contract members. A reader can no longer take
+evidence revalidation as covering what the closing commit carries. And the two mechanism claims
+that were false are gone: the hook clears its Gate-B state on any non-`WIP` commit **attempt**,
+success or not — read at `codex-gate.sh:876`, not inferred — and a stray commit reaches that
+counter and nothing else.
+
+**Still open and stated as such:** the ownership boundary (three sections describe one hold
+discharge), the standing four-item predicate list, and §H's enumeration of its own additions.
 
 ## Pass-33 report — MANDATORY TWO-TELL STOP, and the scope cut did not help
 

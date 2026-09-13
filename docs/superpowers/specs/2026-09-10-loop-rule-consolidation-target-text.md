@@ -74,10 +74,11 @@ one of *those* defined here has found a defect.
 **The conditions every cycle has, whatever its gate.** The duties classified below; and the
 **profile**, the **cited set** and the **assigned fix set**, each gating as its own source says and
 cited here without restatement. **The profile and the assigned fix set answer a change and not a
-differing value**, which is why one of them changed and then undone still costs a pass; **the
-cited set answers as its own source says** — the final clean pass runs against the current set —
-which a change since undone can already satisfy. The contrast that matters is against a gate's own
-content condition, which may be a comparison of current values and says so where it is stated.
+differing value**, which is why one of them changed and then undone still costs a pass. **The cited
+set answers as its own source says**, and that source says two things: a governing header changed
+**during** a pass makes that pass not final, and the final clean pass runs against the **current**
+set. The contrast that matters is against a gate's own content condition, which may be a comparison
+of current values and says so where it is stated.
 
 **What a pass is read from.** Every finding-derived predicate reads the validated findings file
 **or files** of the logical pass as **the concatenation of their finding lines after each file has
@@ -214,7 +215,8 @@ decision made by omission. A finding the clearly-stuck reading surfaces that als
 trigger takes the scope stop's answers at that same surface, so it is not asked twice; the two-tell
 stop surfaces tells and not a finding.
 
-**Otherwise the continue branch: a pass that neither closes nor suspends continues** — the loop
+**Otherwise the continue branch, which no source block reaches: where none stands, a pass that
+neither closes nor suspends continues** — the loop
 runs another pass on the **current** artifact, revised where the severity and scope rules require a
 repair and unrevised where they do not. **An eligible pass with an unmet closure condition lands
 here**, and like every other non-closing pass **only where no suspension applies to it**: clean
@@ -355,8 +357,8 @@ the ordering states for every cycle; that list is there and is not repeated here
 final pass's review request.** Gate A hands the reviewer text rather than a git range, which is why
 this condition is Gate A's and is written nowhere else. It is **current equality and deliberately
 nothing more**: it does **not** say the artifact went untouched in between, and text edited and
-then restored byte for byte satisfies it — the one place in this cycle's conditions where an undone
-change costs nothing, and stated here because the ordering's conditions answer a change instead.
+then restored byte for byte satisfies it — stated here because the ordering's conditions answer a change
+instead, and said of this condition rather than as a claim about every other.
 That is a decision rather than an oversight: a content comparison cannot tell those two states
 apart, and a condition nobody can check is a condition nobody applies. It likewise says nothing
 about **what the reviewer consumed**: no part of this act is offered as evidence of the review
@@ -690,9 +692,11 @@ W 1011–1012.
 ```
 **Finishing the cycle:** once the closure ordering reaches a Gate-B cycle's closing act — an
 eligible pass with every closure precondition holding, never a clean pass on its own — close it
-with `git commit --amend -m "<real message>"`; that replaces the WIP commit, and the hook reads
-the amend as the real cycle-closing commit. This section states the operation and never whether
-the cycle may close.
+with `git commit --amend -m "<real message>"`; that replaces the WIP commit. **The hook treats any
+non-`WIP` commit *attempt* as a Gate-B boundary and clears its state even where the command
+fails**, so a failed closing act leaves that counter cleared and no commit made — a fact about the
+counter and not about the cycle. This section states the operation and never whether the cycle may
+close.
 ```
 *Why (pass 20 finding 5):* the live sentence says "after the final clean pass, close it with
 `git commit --amend`", which is a complete instruction to whoever enters through Mechanics — and
@@ -750,7 +754,7 @@ about a mechanism rather than an entry point carrying an unqualified instruction
 **9. The evidence-entry revalidation remedy** (the profiles section). It wraps across C 728–729 and
 W 914–915.
 ```
-If revalidation changes the entry, the clean pass no longer covers what is being committed: the
+If revalidation changes the entry, the pass was read against an entry that no longer stands: the
 pass did not close, so the closure ordering decides what happens next: where it selects the
 continue branch, fix and re-review, and where it selects a suspension, the answer comes first. The
 pass that follows is read by that ordering like any other and closes only if it reaches closure,
@@ -774,8 +778,8 @@ semantics **and the closure ordering together with every rule it reads** depend 
 and the requirement is that the adopted definitions **agree**, not merely that all of them are
 present. **Membership is decided by a test a reader can apply to the text in front of them, with
 no list to consult, and the test reads what a rule states rather than what changing it would do:
-a live rule belongs to this contract when what it says determines or supplies an input the
-closure ordering reads, which branch a pass takes, what a hold is or what discharges it,
+a live rule belongs to this contract when what it says **defines an input's validity or how it is
+read**, which branch a pass takes, what a hold is or what discharges it,
 whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
 skip being the one such route and its eligibility test therefore a member**, or the production,
 identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the

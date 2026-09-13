@@ -29,9 +29,11 @@ cycle and which merely *suspend* it, in what order a pass is read so the ranking
 rather than asserted, what any set of suspensions at once does, and which of the four standing
 duties participate in that ordering versus gate it as preconditions. With it: the answer to what
 a severity demotion does to the loop-health counts, and the standing sentences the ordering
-falsifies or leaves ambiguous if they are not edited at their source, which §4 lists row by row
-**without claiming a total** — a count over spans that merge and split is bookkeeping the plan
-re-derives against the files.
+falsifies or leaves ambiguous if they are not edited at their source. **§4 lists the sites row by
+row and claims no total over them**, a count over spans that merge and split being bookkeeping the
+plan re-derives against the files. **The nine falsified standing sentences are a different count**
+and the target text's §F states it, because those are individually enumerated sentences rather than
+spans.
 
 **What does not:** the pass floor and severity semantics, which the parent shipped and this spec
 reads as given, and everything §9 lists as moved or parked.
@@ -211,6 +213,7 @@ to point at and so a reader can see the shape of the change without reading the 
 | (i) when these rules bind | §H |
 | the Gate-A section and the gate-prompt template | the two senses of *clean* are separated; the cadence makes revision conditional; the broad-prompt instruction stops assuming the artifact is revised between passes, keeping its breadth demand |
 | the profiles section, the lens paragraph | its unchanged-list is scoped to the lens sets |
+| the profiles section, the profile-change paragraph | its claim that a stray non-`WIP` commit "would discard the accumulated passes" is narrowed to the hook's count of them (pass 33 finding 7); §F item 8 |
 | the profiles section, the evidence-entry revalidation remedy | its fix-re-review-close instruction becomes conditional on the ordering selecting continuation, a non-closing pass taking any applicable suspension first (pass 30 finding 3). The eighth falsified standing sentence, and the sixth sharing §F's mechanism |
 
 **Two sentences are deliberately not edited**, named so nobody looks for them: the "Copy every
