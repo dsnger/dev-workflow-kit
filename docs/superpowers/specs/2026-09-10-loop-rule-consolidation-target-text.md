@@ -167,6 +167,11 @@ concrete command failure and **re-establish every closure condition against the 
 now stands.** Where they all still hold, perform the act again. Where the attempt or its repair
 moved anything a condition is read from, **that condition has changed and its own rule decides what
 it costs**, a further pass included, and the cycle is back in the ordering with that pass owed.
+**Where the failure cannot be repaired at all** — a signing key nobody has, a permission nobody can
+grant — **surface it and leave the cycle parked**: open, not running, spending no passes, restarted
+by an explicit later continue, which is the state a stop answer already produces and is named here
+rather than invented. A cycle that can neither close nor be parked is the outcome this sentence
+exists to prevent.
 
 **Closure introduces no new kind of record, and it excuses none**: every other record this cycle
 owes, a human-exception record among them, is owed and written exactly as before, and **a
@@ -200,8 +205,10 @@ no passes and is outside this ordering.
 outranks a suspension by closing, not by being eligible**: a pass that took the branch above, met
 every closure condition and had the closing act performed has ended the cycle, and a suspension has
 nothing left to suspend. **A pass that did not close reaches this branch whatever its
-cleanliness** — a clean pass below the floor, and equally an eligible pass the cycle's unmet
-conditions kept from closing. That is what makes "clean completion outranks the two-tell stop"
+cleanliness, where a suspension applies to it** — a clean pass below the floor, and equally an
+eligible pass the cycle's unmet conditions kept from closing. Cleanliness is what this branch stops
+asking about; whether a suspension applies is still what puts a pass here, and where none does the
+continue branch has it. That is what makes "clean completion outranks the two-tell stop"
 executable rather than asserted, and cleanliness alone never decides it. **What D2 and D3 forbid is
 reporting "will not converge" on a loop that converged, and a loop still owing a repair, an answer
 or a closure condition has not converged** — so a mandatory two-tell stop and the clearly-stuck
@@ -417,9 +424,10 @@ the hook drop its Gate-B review state and that gate's counter — an observation
 since the cycle itself stays open until the conditions hold, so an accidental commit resets what
 the hook reports and closes nothing; **what the reset erases is counter state, and it does not
 invalidate a pass that already satisfied the validation rules this section states** — which is
-where what makes a pass valid stays. **It also leaves the `WIP:` snapshot as an ancestor**, which
-an amend of the stray tip would not replace, so **the closing act still owes what Mechanics already
-requires of it: no `WIP:` commit left in history.** Which git sequence reaches that from this state
+where what makes a pass valid stays. **A stray commit that succeeds and does not amend also leaves the
+`WIP:` snapshot as an ancestor** — a failed attempt adds no commit, and an amend replaces the tip —
+so in that one shape **the closing act still owes what Mechanics already requires of it: no `WIP:`
+commit left in history.** Which git sequence reaches that from this state
 belongs to the plan, as every other closing sequence does. **It does not reach a Gate-A cycle's count**, which the hook
 clears at the skill boundaries that start a new Gate-A cycle rather than on any commit.
 ```
