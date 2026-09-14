@@ -14,8 +14,14 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 ## Resume here
 
 **Next action:** Gate-A plan pass 6 against `33cdfa8`. The prompt is
-`.context/gate-a-plan-prompt.md` — **durable and current**; substitute `__SHA__` and `__P__`,
+`.context/gate-a-plan-prompt.md` — current at that commit; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
+
+**That prompt file is untracked.** `.gitignore` carries `.context/*` with only `codex-gate.on` and
+`codex-reviews/` exempt, so it survives a context clear but not a `.context/` cleanup. **If it is
+gone, rebuild it from this record** — the pass history below, the settled-and-not-open blocks and the
+collected list are what it carries, and `.context/gate-a-spec-prompt.md` is the same shape for the
+spec cycle.
 
 **After a clean close:** implement the plan — both prompt copies, the seven hook strings and their
 test expectations, version bump 0.11.0 → 0.12.0 + CHANGELOG, the quality battery, the evidence
