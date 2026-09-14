@@ -928,11 +928,13 @@ having closed**, which is the one fact that covers all of them. The repair **cit
 what keeps a later change to the definition from falsifying this string again. It is the twelfth
 sentence sharing this section's mechanism.
 
-**12. The Gate-B satisfied reminder's clean definition** (the shipped hook, same file). **Its
-fingerprint clause is untouched**: that overclaim predates this change, is parked with the
-Gate-B tree-equality material, and no condition here reaches it.
+**12. The Gate-B satisfied reminder, both channels** (the shipped hook, same file). **The complete
+resulting text, for the reason item 15 gives.** Its first two sentences are **carried verbatim**:
+the fingerprint overclaim in the second predates this change, is parked with the Gate-B
+tree-equality material, and no condition here reaches it — so it is reproduced rather than edited,
+and reproducing it is not endorsing it.
 ```
-Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them.
+Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them.
 ```
 ```
 ✓ Codex Gate B hook checks passed ($passes/$floor cycle, $fresh on current fingerprint)
