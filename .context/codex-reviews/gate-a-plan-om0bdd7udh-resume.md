@@ -34,7 +34,8 @@ worth checking before a pass rather than after.
 | 2 | 9f13a2c | 32→**32** | 1→**0** | 28→**25** | yes | one tell (findings flat, and they cluster on the plan's own checks — the instrument). **Pass 1's repair reproduced the same defect at the next condition down:** three OLD fragments are *preserved inside their own replacements*, so their old-count can never reach zero. My checker tested single-line and unique but not that third condition, though this plan states all three. Checker fixed to test against the target's **fenced blocks**; three rows replaced; the fourteen §F OLD fragments derived and committed rather than deferred |
 | 3 | b767a2a | 32→**31** | 0→**0** | 25→**23** | yes | one tell (instrument cluster). **Pass 2's three fragments came back — because I repaired the table and left the same fragments quoted inline in the task steps.** Second-copy defect, in the plan written to avoid it. Structural repair: the table is the only authored copy and Task 0 **generates** the shell variables from it, so no step can restate a fragment. 8 Minors collected |
 | 4 | 6ace06f | 31→**20** | 0→**10** | 23→**7** | yes | **MANDATORY TWO-TELL STOP** — Blockers rose 0→10, and the findings cluster on the instrument for the fourth pass running. Surfaced, standing answer applied, loop continued. **The awk generator pass 3 introduced was broken three ways**; it is deleted, not debugged — the helper is transcribed by hand and validated against the real files, with empty-string guards, because a silently unset variable makes `grep -cF ""` match every line. **A fourth fragment (F4) was preserved in its own replacement and invisible to my checker**, which compared without normalizing the block's line breaks |
-| 5 | — | — | — | — | not run | next, against the pass-4 repair commit |
+| 5 | 58b3660 | 20→**16** | 10→**7** | 7→**7** | yes | **MANDATORY TWO-TELL STOP** — instrument cluster for the fifth pass, plus a require↔withdraw pair (pass 4 demanded OLD rows for clauses pass 5 classifies as add-only). Surfaced, standing answer applied, loop continued. **The pre-written shell is deleted.** Design §7 says the plan builds each pair *against the real files*; five passes of findings were blocks written in advance for text that does not exist yet. One stated procedure replaces them |
+| 6 | — | — | — | — | not run | next, against the pass-5 repair commit |
 
 ## Pass-1 report
 
@@ -200,3 +201,40 @@ finding in four passes has been about the apparatus that checks it, and each of 
 apparatus has introduced a new defect in it. That is the signal the two tells are carrying, and the
 answer taken here is to make the apparatus smaller — no parser, no generated state, hand-written
 lines whose only guarantee is a check against the real files.
+
+
+## Pass-5 report — MANDATORY TWO-TELL STOP, and the over-specification named
+
+**Trend:** findings 32, 32, 31, 20, **16**; Blockers 1, 0, 0, 10, **7**; Majors 28, 25, 23, 7, **7**.
+**Cluster:** the verification apparatus, fifth pass running. **Require↔withdraw:** pass 4 finding 16
+told me to derive an OLD row per addition in the strict-reading block; pass 5 finding 10 says those
+clauses are add-only and have no old wording to remove. **Two tells, mandatory stop**, surfaced, loop
+continued on the standing answer.
+
+**What five passes have actually been saying.** Findings 1, 3, 4, 9, 11, 13 and 16 of this pass, and
+most of passes 2, 3 and 4, are one thing: **shell written in advance for text that does not exist
+yet.** Helpers defined in one shell and called in another; loop bodies outside their loops; `sed`
+ranges whose delimiters occur in their own data; `sed -n "/x/,/x/p"` for a single line, which runs to
+the next match instead; variables no step sets; a generated helper whose empty variable makes
+`grep -cF ""` match every line. **Every one was a defect in the apparatus and none in the change.**
+
+**Design §7 already said not to do this:** the plan *builds each pair against the real files and runs
+both directions there*. **There** — with the installed text open. I had been pre-writing it.
+
+**So the pre-written blocks are gone**, replaced by one procedure stated once: take the OLD from its
+row, install, choose a NEW from the installed text, check it the three ways, count four values,
+expect `0/1/1/0`. Plus the two rules that were only ever implicit — **guard every count against an
+empty pattern**, and **an add-only edit owes presence alone**, which is the withdraw half of this
+pass's tell made into a rule.
+
+**Four findings were the condition table, which is now five for five.** `e8` was marked carried while
+§D removes W's form of it; `i4`–`i8` were marked kept while §H reproduces them inside a replacement
+block; `h5` needed its own row because §F item 7 changes two conditions; and `g2`/`g3` are **dropped**
+rather than replaced, which owes an absence check and had none. **A dropped condition with no check
+is the failure `AGENTS.md` names, and it took five passes to find the last of them.**
+
+**Two were genuine state bugs.** `.context/loop-rule-base` was accepted on being non-empty, so an
+abandoned run's value would silently put every edit outside Gate B's range; it is now validated as an
+ancestor of `HEAD` with only this run's `WIP:` commits between, and removed at close. And the
+prompt-standards result was written into the plan after the last WIP commit, where neither Gate B's
+range nor `reset --soft` would reach it.
