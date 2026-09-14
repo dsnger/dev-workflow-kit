@@ -80,7 +80,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 61 | 5197b0c | 8→**1** | 0→**0** | 5→**1** | yes | zero tells. **One finding.** Item 12 had only its long message repaired; the terse operator line "✓ Codex Gate B satisfied" stayed — a gate verdict the hook cannot establish, and the one systemMessage items 15 and 16 had already taught me to check. Now "hook checks passed". Its fixture moves with it: `expected_msg` scope 2 → 3 |
 | 62 | 888d2d1 | 1→**1** | 0→**0** | 1→**1** | yes | zero tells. One finding, the last thread of the same repair: item 12's `additionalContext` block held only the replaced sentence while the §F opening now promises a complete message for items 12, 15 and 16. Installing it literally would have deleted the two parked sentences. Now complete, the parked pair carried verbatim |
 | 63 | ef00b29 | 1→**3** | 0→**0** | 1→**3** | yes | **two tells** (findings rose 1→1→3; two of three cluster on the test instrument). Surfaced, standing answer applied, loop continued. **Third wrong claim about which test assertions a change touches** — "Gate B satisfied" occurs 21 times and "STOP" 14, against §F's claim that loose patterns were left standing. Claim replaced by a **duty on the plan to sweep**, and §F now states that no count of them appears anywhere, with the two wrong counts as the reason. Item 15 also carried an unconditional floor MUST a zero-finding pass does not owe |
-| 64 | — | — | — | — | not run | next, against the pass-63 repair commit. **Zero Blockers and zero Majors closes the cycle** |
+| 64 | 38042c8 | 3→**1** | 0→**0** | 3→**1** | yes | zero tells. One finding: the claim pass 63 deleted from §F survived at a **second** design site — "the remaining hook assertions match loose patterns these repairs leave standing". Deleted; §F's sweep duty is the single source |
+| 65 | — | — | — | — | not run | next, against the pass-64 repair commit. **Zero Blockers and zero Majors closes the cycle** |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -88,6 +89,20 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-64 report — one finding, the deleted claim's second copy
+
+**Trend:** findings 1, 3, **1** across 62–64; Blockers 0, 0, **0**; Majors 1, 3, **1**.
+**Cluster:** product behaviour, one finding. **Require↔withdraw:** none. **Zero tells** — pass 63's
+two did not return.
+
+Pass 63 removed §F's claim that the remaining hook assertions could be left standing, replacing it
+with a sweep duty on the plan. The design carried the same sentence at a second site and I updated
+only the first. Deleted, so §F's duty is the single source.
+
+**That is the cycle's oldest mechanism, caught in one pass rather than several:** a rule stated in
+both the design and the target, repaired in one copy. It is worth noting that the repair-detection
+loop is now finding each instance the pass after it is created rather than three passes later.
 
 ## Pass-63 report — TWO TELLS, and the third wrong claim of one kind
 
