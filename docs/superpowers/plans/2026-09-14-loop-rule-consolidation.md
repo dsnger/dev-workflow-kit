@@ -194,19 +194,29 @@ condition missing its observation, and every one of them was in a task that had 
 its ids and not the rest. **An enumeration per task is a second copy of the disposition table**,
 and it goes stale exactly the way every other enumeration in this cycle has.
 
-**Each editing task instead runs this, against the disposition table's rows for its own passage:**
+**The unit is the source block a task replaces, not the passage it sits in.** A passage can be
+edited by two tasks — passage (c) is split between Task 4's clearly-stuck block and Task 7's
+`c18`-and-surfacing block, and passage (a) between Tasks 7 and 8 — so **a task walks the conditions
+its own replaced blocks cover, and stops at their boundaries.** Walking the whole passage makes a
+task append rows it cannot discharge after its own install, and makes two tasks append a row each
+for the same condition, which is the fragment table's one-copy rule broken from a new direction.
 
-- [ ] **Before installing** — walk every condition in this task's passage and derive the
+**Each editing task runs this, against the disposition table's rows for its own blocks:**
+
+- [ ] **Before installing** — walk every condition those blocks cover and derive the
   **pre-existing** fragment its disposition owes: the **OLD** half for a *replaced* one, the
   **absence** fragment for a *moved* or *dropped* one, the **preservation** fragment for a
   *carried* one, and, for a *kept* one, a preservation fragment **only where no untouched span can
   hold it** — which is the case for every kept condition in a passage this task replaces whole, and
   for any that shares a line with changed text. Check each the three ways, confirm its expected
   pre-edit count, and append it to the fragment table under the next free `P` id.
-- [ ] **After installing** — run each one to the result its class owes, and choose the
-  **post-install** halves: the **NEW** for each pair, and the destination **presence** for each
-  moved condition, taken from the installed text and verified the three ways before counting.
-  Record those in this task's fragment evidence.
+- [ ] **After installing** — run each one **to the result its own class owes, which is not the same
+  result for all of them**: a *replaced* row to the four-value pair, a *moved* or *dropped* row to
+  `parent=1 worktree=0`, a *carried* or *kept* row to `parent=1 worktree=1`. **A step that says
+  "run a pair for every row" cannot be satisfied on correct text**, because a carried fragment has
+  to still be there. Choose the **post-install** halves — the **NEW** for each pair, the
+  destination **presence** for each moved condition — from the installed text, verified the three
+  ways before counting. Record those in this task's fragment evidence.
 - [ ] **Then walk the conditions as a reader**, which confirms the counts and replaces none of them.
 
 **Two consequences worth stating, because both have been got wrong.** A **kept** condition inside a
@@ -713,10 +723,15 @@ three ways before this step counts with it.
 
 Expected for all four: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
-**Run a pair for every row step 1b derived**, and a **presence check** for §B's one added rule —
-the closing-time set-change rule — which replaces no wording and so owes `new/worktree=1
-new/parent=0` and no OLD half, per the add-only rule. Choose each NEW fragment from the installed
-text and verify it the three ways before counting it.
+**Run a pair for every *replaced* row step 1b derived** — and only those. §B's carried rows are in
+that set too and they owe `parent=1 worktree=1`, not a pair; step 4 runs them. A blanket "a pair
+for every row" cannot be satisfied by a correct §B installation, because carried wording has to
+still be there.
+
+Plus a **presence check** for §B's one added rule — the closing-time set-change rule — which
+replaces no wording and so owes `new/worktree=1 new/parent=0` and no OLD half, per the add-only
+rule. Choose each NEW fragment from the installed text and verify it the three ways before counting
+it.
 
 - [ ] **Step 4: Run the post-install half, then walk the passage**
 
@@ -765,10 +780,14 @@ Expected: `P4=1` for both files.
 is **preserved in target §C's fenced replacement**, so its old-count could never reach zero. Derive
 `c4`'s OLD from the part of the sentence the replacement removes.
 
-**Run the pre-install half of the disposition procedure over passage (c)** — every condition in it,
-by its class, derived from the live passage now and appended to the fragment table under the next
-free `P` id. Refer to the rows afterwards by the condition they observe, never by a number picked
-here: Task 3 appends first and how many rows it adds is decided at execution.
+**Run the pre-install half of the disposition procedure over the block this task replaces** — the
+clearly-stuck block, **ending before the Surfacing paragraph**, which is Task 7's
+`c18`-and-surfacing block and whose conditions Task 7 derives. Passage (c) is edited by two tasks;
+walking the whole passage here makes this task append rows it cannot discharge after its own
+install, and makes both tasks append a row for the same condition. Derive each from the live text
+now and append it under the next free `P` id, referring to the rows afterwards by the condition
+they observe, never by a number picked here: Task 3 appends first and how many rows it adds is
+decided at execution.
 
 **Two things about passage (c) that the class alone does not tell you:**
 
@@ -811,9 +830,17 @@ observation at all. **A later draft reintroduced exactly that pair** by naming r
 |---|---|---|
 | `c4`, the widened third condition | the `c4` row (step 1) | the clause §C puts in place of "a missing one means keep going" |
 | `c8`, the re-raised dismissal | the `c8` row (step 1) | `a recurrence failing them being an ordinary fresh finding` — **install that clause's line unwrapped** so the fragment sits wholly on one line |
-| `c14`, the below-floor Minor | row **P4** | the ordering's replacement for the below-floor sentence |
+| `c14`, the below-floor Minor — **suspend** | row **P4** | the ordering's **suspension** outcome for a below-floor pass |
+| `c14`, the below-floor Minor — **continue** | *(none — add-only)* | the ordering's **continuation** outcome where no suspension applies — presence alone, `worktree=1 parent=0` |
 
 Each NEW is confirmed single-line and unique in the installed file before it is counted.
+
+**`c14` is replaced by two noncontiguous outcomes and owes two observations.** The old sentence
+stated one unconditional continuation; the ordering splits it into a **suspension** where one
+applies and a **continuation** where none does, and they do not sit together. One NEW fragment
+observes one of them, so the other can be omitted while the pair, the three §A paragraph samples
+and the parity diff all pass. P4's absence pairs with the suspension clause; the continuation
+clause is add-only at its destination and owes presence.
 
 **Plus both halves of every move — `c10`, `c11`, `c12`, `c13`, and `c9`'s moved clause.** A move
 removes wording here and adds it in §A, so it owes an **absence** at this source, `parent=1
@@ -1070,9 +1097,11 @@ Expected: `1` twenty times. **Any `0` means the wording drifted since this table
 
 - [ ] **Step 1b: Derive the rows the ten locators do not cover, still before installing**
 
-**Run the pre-install half of the disposition procedure over passages (a), (c) and (i) and over
-§G** — every condition those ten blocks touch or reproduce, by its class, derived from the **live**
-text now and appended to the fragment table. **Step 2 installs over all of it**, so a derivation
+**Run the pre-install half of the disposition procedure over this task's ten blocks** — every
+condition *they* touch or reproduce, by its class, derived from the **live** text now and appended
+to the fragment table. **Their boundaries are the bound**: passage (c) is shared with Task 4, which
+owns the clearly-stuck block and stops before the Surfacing paragraph this task's `c18` block
+begins at, and passage (a) is shared with Task 8, which owns item 8a's block. **Step 2 installs over all of it**, so a derivation
 afterwards has no live wording left to check against — and that includes the **preservation
 fragments for the nine carried conditions** `a15`, `a21`, `a22`, `c15` and `i4`–`i8`, which an
 earlier draft chose from the installed text at step 4.
@@ -1728,10 +1757,28 @@ not a fixed count — and diff the two copies:
 # copy. Build it by reading those markers off the target text, then:
 while IFS=$(printf '\t') read -r s e; do
   echo "== $s"
-  diff <(sed -n "/$s/,/$e/p" CLAUDE.md) \
-       <(sed -n "/$s/,/$e/p" plugins/dev-workflow/commands/workflow-init.md)
+  for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+    # Anchors are DERIVED from the target text, so they carry ** and / and .
+    # Unescaped they are a basic regular expression, not a literal.
+    test "$(grep -cF "$s" "$f")" = 1 || { echo "start anchor not unique in $f"; exit 1; }
+    test "$(grep -cF "$e" "$f")" = 1 || { echo "end anchor not unique in $f"; exit 1; }
+  done
+  se=$(printf '%s' "$s" | sed 's/[][\.*^$\/]/\\&/g')
+  ee=$(printf '%s' "$e" | sed 's/[][\.*^$\/]/\\&/g')
+  a=$(sed -n "/$se/,/$ee/p" CLAUDE.md)
+  b=$(sed -n "/$se/,/$ee/p" plugins/dev-workflow/commands/workflow-init.md)
+  test -n "$a" && test -n "$b" || { echo "empty extraction for '$s' — region not found"; exit 1; }
+  printf '%s\n' "$a" > .context/loop-rule-a.txt
+  printf '%s\n' "$b" > .context/loop-rule-b.txt
+  diff .context/loop-rule-a.txt .context/loop-rule-b.txt
 done < .context/loop-rule-changed-sites
 ```
+
+**Three assertions, and each one has already been the failure mode somewhere in this cycle.**
+A derived anchor containing `**`, `/` or `.` is a **regular expression** to `sed`, not a literal,
+so it can error or match the wrong line; a non-unique anchor selects a region that is not the one
+named; and **two empty extractions diff equal**, which certifies parity for a block neither `sed`
+ever found. Without the empty test that failure is silent and looks like success.
 
 **The list is a step output, not an assumed input.** An earlier draft gave one generic command with
 undefined `$start` and `$end` and no step producing them, so the task could record a divergence list
@@ -1744,6 +1791,14 @@ what makes §H's nine sites visible; reading it section by section is what hid e
 
 **Where it goes:** this plan, under the heading `## Divergence list (Task 14 output)` at the end of
 the document, replaced idempotently on re-run by the same rule Task 13 uses.
+
+**It carries the site list as well as the differences — one line per destination block examined,
+with its parity result, "no difference" included.** The derived list lives in `.context/`, which is
+ignored, so nothing durable would otherwise say *which* blocks were compared. **A site missing from
+the list and a site that compared equal produce the same record** if only differences are written
+down, and Task 15's block-by-block parity claim would then rest on a record that cannot
+distinguish them — the same failure Task 12b's "including nothing" rule exists for. Continue to
+derive the set from the target's markers; copy the identifiers and results here.
 
 - [ ] **Step 2: Classify every difference the diff reports**
 
@@ -1871,6 +1926,19 @@ risk.
 
 **A reader check, deliberately** — no pattern decides whether a constraint carries its reason.
 
+**Expected result: all twelve pass. A failure stops this step.** Invariant 11 is not "record the
+score"; recording a failure and continuing ships a prompt change that violates it, which is the one
+outcome this step exists to prevent. **On any failure: repair the text, then re-run every check the
+repair invalidated** — the affected pairs, presence, absence and preservation counts, the parity
+and untouched checks over the blocks touched, and the whole step-4 battery — and only then commit
+the refreshed record. A repair made after the battery, with the battery not re-run, is the same
+defect as a Gate-B fix with no re-run.
+
+**Record the subject set once, at the top of the output section**, and make each item's result
+refer to it: the §A–§H blocks installed in C, the same in W, and the seven hook strings.
+**Twelve `PASS` lines alone cannot be told from a review that skipped a copy or the hook** — the
+subject list is what makes the twelve lines mean something.
+
 **Commit the result before step 6.** Gate B reviews the range `$BASE..HEAD`; an edit to this plan
 left in the worktree is in neither that range nor the final `reset --soft`, which stages only what
 the discarded commits contained. The same applies to every record this plan collects — the sweep, the
@@ -1905,7 +1973,13 @@ It names: the battery run; **every pair this plan built, with its counts in each
 for those two reader records. **An entry assembled from one section would silently drop whatever
 the other five hold.**
 
-**The absence checks belong in the entry as much as the pairs do.** `g2`, `g3` and `g4` are dropped rather than replaced, and `c9`–`c13` and `a18`–`a20` are moved, so the observation that proves each is gone is an absence — `parent=1 worktree=0` — and nothing else in the entry carries it. An entry listing only pairs and presence checks claims the verification set while omitting the half that proves obsolete instructions were removed, which is the failure the absence checks exist for.
+**All four record shapes belong in the entry, not only pairs and presence.** A **dropped**
+condition's absence and a **moved** condition's absence are what prove an obsolete instruction was
+removed; a **carried** or span-less **kept** condition's preservation count is what proves
+reproduced text survived. An entry listing only pairs and presence claims the verification set
+while omitting both. **Read the set off the disposition table and the fragment evidence, not from
+an enumeration here** — an id list in this step was already stale once, naming `a18`–`a20` after
+`a17` had joined them.
 
 **State the §A presence checks as presence, not as pairs** — its counterfactual is absent and is claimed as absent.
 
@@ -2014,26 +2088,49 @@ test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
 # Everything that must be IN the squashed commit has to be committed before the
 # reset: reset --soft stages only what the discarded commits already contained.
 # The ONLY thing allowed to differ from the reviewed HEAD is the final pass's own
-# findings file, which could not exist when that pass was issued. Anything else
-# means a change rode along that no pass reviewed.
-git status --porcelain | grep -v '^.. \.context/codex-reviews/gate-b-' && {
-  echo "untracked or modified paths beyond the final findings files — NOT closing"; exit 1; }
+# findings files, which could not exist when that pass was issued. Name them
+# EXACTLY — from the slot paths the final call was told to write — and require the
+# dirty set to be those paths, added, and nothing else.
+# NONCE and P are this cycle's nonce and its final pass number — the same two the
+# final call's slot paths were built from. Set them to the values you used.
+NONCE=<this cycle's nonce>; P=<the final pass number>
+FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
+expected=$(printf '%s\n' $FINAL | sort)
+actual=$(git status --porcelain | sed -n 's/^?? //p; s/^A  //p' | sort)
+test "$expected" = "$actual" || {
+  echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1; }
 
-git add .context/codex-reviews/
-if ! git diff --cached --quiet; then
-  git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
-fi
+# shellcheck disable=SC2086
+git add $FINAL
+git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
 test -z "$(git status --porcelain)" || { echo "tree not clean before reset — aborting"; exit 1; }
 
+# Keep the pre-reset tip: after the reset it is the ONLY way back to the reviewed
+# history if the closing commit fails.
+git rev-parse HEAD > .context/loop-rule-wip-tip
 git reset --soft "$BASE"
-git commit -F .context/loop-rule-closing-msg || { echo "closing commit FAILED — base file kept for recovery"; exit 1; }
+git commit -F .context/loop-rule-closing-msg || {
+  echo "closing commit FAILED — restoring the reviewed tip"
+  git reset --hard "$(cat .context/loop-rule-wip-tip)"
+  echo "history restored; fix the cause, then re-run step 8. Base and tip files kept."
+  exit 1; }
 
 case "$(git log -1 --pretty=%s)" in
   WIP:*|wip:*) echo "closing commit still reads WIP — cycle NOT closed"; exit 1 ;;
 esac
 test -z "$(git status --porcelain)" || { echo "worktree dirty after close — aborting before cleanup"; exit 1; }
-rm -f .context/loop-rule-base
+rm -f .context/loop-rule-base .context/loop-rule-wip-tip
 ```
+
+**The failure branch is the point of `.context/loop-rule-wip-tip`.** A closing commit can fail on
+an unset identity, a signing key or a hook, and by then the reset has already run: `HEAD` is at
+`$BASE` with the whole implementation staged. **Re-running step 8 from that state hits its own
+dirty-tree guard and refuses**, correctly — the guard cannot tell a staged implementation from a
+record that rode along. `reset --hard` back to the recorded tip returns the repository to the
+reviewed history, with every WIP commit and the reviewed `HEAD` intact, so the executor fixes the
+cause and re-runs rather than inventing a recovery sequence at the riskiest moment.
+
+**Both files are removed only after a successful close**, so a later run cannot inherit either.
 
 **Every check in that block fails the script; none of them is a comment.** An earlier draft
 suppressed the record commit with `|| true` and left the status and log lines as things to look at,
@@ -2121,9 +2218,23 @@ as extracted and the result in both directions, per copy.*
 
 ## Fragment evidence (per-task output)
 
-*Empty until the tasks run. One subsection per task — `### Task 1`, `### Task 3`, … — each holding
-that task's chosen NEW and presence fragments with the four counts observed for each, and the
-absence checks with their two. A task replaces its own subsection idempotently on re-run and
-touches no other. **The OLD fragments live in the fragment table, never here**; this section is
-where the halves that do not exist until installation are recorded, and it is what Task 15 step 5
-reads to assemble the closing evidence entry.*
+*Empty until the tasks run. One subsection per task — `### Task 1`, `### Task 3`, … — replaced
+idempotently on re-run, touching no other. **The pre-existing fragments live in the fragment table,
+never here**; this section records what each observation actually returned, and it is what Task 15
+step 5 reads to assemble the closing evidence entry.*
+
+***Four record shapes, because the classes do not return the same number of values.** Every
+observation this plan makes is one of them, and a shape that fits only pairs is how a required
+count gets run and then vanishes from both the plan and the closing evidence:*
+
+```
+pair         <condition> <fragment: OLD> <fragment: NEW> old/worktree old/parent new/worktree new/parent <copy>
+presence     <what> <fragment> worktree parent <copy>          # add-only, and a moved condition's destination
+absence      <condition> <fragment> parent worktree <copy>      # dropped, and a moved condition's source
+preservation <condition> <fragment> parent worktree <copy>      # carried, and kept where no span holds it
+```
+
+*A **moved** condition therefore contributes two lines — one `absence` at its source, one
+`presence` at its destination — and both are required for it to count as observed. **Every one of
+the four classes goes into the closing evidence entry**; naming only pairs and presence leaves the
+absences and preservations run but unrecorded.*
