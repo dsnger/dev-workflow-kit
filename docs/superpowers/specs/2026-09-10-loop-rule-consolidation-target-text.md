@@ -477,7 +477,17 @@ never decides what you do with it, and it grants no Minor or Nit a repair round 
 otherwise get. **The assigned fix set is fixed before the pass you are answering: it is the
 union of the scope every approved story or plan governing this change assigns to this cycle,
 plus every finding this cycle has accepted at a membership stop together with any repair
-obligation accepted with it, minus every finding this cycle has declined.** **An accept puts the
+obligation accepted with it, minus every finding this cycle has declined.** **A decline excludes
+the finding it answers and nothing else**: it does not cancel a repair obligation that the
+approved scope, or another accepted finding, has independently put in the set. So where a `full`
+Gate-B pass's two branch files carry the same complaint, **each line is a finding of its own, owes
+its own explicit answer, and each answer binds only its own line** — an acceptance puts its own
+finding in, a decline takes only its own finding out, and neither reads the other; the set is
+whatever the definition above then computes. **A declined finding stays declined for the cycle**,
+and performing a repair to discharge a different finding's obligation neither reverses that
+decision nor returns it to the set. **This adds no deduplication, no reconciliation stop and no
+rule that an acceptance overrides a decline** — the two answers are about different findings, and
+until both are given the unanswered one's membership hold stands. **An accept puts the
 finding in the set whatever its severity**: membership and the repair duty are different things,
 so a Minor or Nit accepted into the set is in it though Mechanics · Severity asks no repair for
 it, and a later pass that recomputed it as outside would raise the membership question a second

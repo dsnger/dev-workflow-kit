@@ -82,6 +82,7 @@ words live in the target text; this section says **that** a decision was made, *
 | 3 | 2026-09-13, Daniel | whether a reviewer repeating a claim the author has validly refuted can hold a cycle unclean indefinitely (pass 27's Blocker) | target §A1, with §C, §H and §H's unknown-start list for its reach |
 | 4 | 2026-09-13, agent in scope | whether an eligible pass that cannot close may still reach a suspension, §D's two-tell stop being mandatory (pass 29 finding 1) | target §A1, §D |
 | 5 | 2026-09-13, agent in scope | what a closing act that does not complete leaves behind, and what a failure nobody can repair produces (pass 30 finding 4, narrowed at pass 31, terminal state at pass 37) | target §A1 |
+| 6 | 2026-09-14, Daniel | what an accept on one `full` Gate-B branch file and a decline on the other do to the assigned fix set, the two lines being distinct findings (pass 59 finding 7) | target §B, at the fix-set definition |
 
 **Two were reached by narrowing rather than by adding**, recorded because the first attempt at each
 was wider than its defect: decision 5 first claimed every condition stayed established and added a
