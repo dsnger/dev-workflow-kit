@@ -117,7 +117,7 @@ whose count must stay **one** has to be **present** in it, unchanged. Those are 
 
 | The row's class | Its fragment must be | Because its expected result is |
 |---|---|---|
-| **replaced** (OLD half), **dropped**, **moved** (source) | **wholly inside the live text the edit removes** — which implies, but is stronger than, absent from the replacement block | `worktree=0` — a fragment the edit does not reach survives whatever the block says |
+| **replaced** (OLD half), **dropped**, **moved** (source) | **absent from the region's post-edit text** — the unchanged prefix, plus the replacement block, plus the unchanged suffix — not merely from the block | `worktree=0` — a fragment the edit does not reach survives whatever the block says |
 | **carried** | **present, unchanged**, in the replacement block | `worktree=1` — the block is what preserves it, so a fragment absent from the block cannot be found afterwards |
 | **kept** sharing a line with changed text | **outside** every replacement block's extent | `worktree=1` — it is not reproduced by any block; it survives because nothing replaces it |
 
@@ -125,14 +125,23 @@ whose count must stay **one** has to be **present** in it, unchanged. Those are 
 so a task either stops before installing or quietly drops its carried coverage. The table's cut
 widened at pass 9 to hold these rows; this test did not widen with it.
 
-**And for the disappearing classes, "absent from the replacement block" is the wrong test — it is
-necessary and not sufficient.** A fragment sitting in the unchanged text *before* an edit passes it
-and then survives the install, because the edit never reaches it. **Three rows failed exactly that
-way** — F11 ended just before item 8b's first changed word, F12 just before item 9a's, F13 just
-before item 9b's — and each would have returned `old/worktree=1` after a **correct** installation,
-so Task 8 could not have met its own required result. **Resolve the removed span in the live file
-and require the fragment to lie wholly inside it.** The narrower test is the only one that
-distinguishes "this wording goes" from "this wording is near something that goes".
+**And for the disappearing classes, "absent from the replacement block" is the wrong subject.** Most
+items replace only part of their live region, so what stands afterwards is **the unchanged prefix,
+plus the block, plus the unchanged suffix** — and a fragment sitting in that prefix is absent from
+the block, passes the test, and survives the install because the edit never reaches it. **Three
+rows failed exactly that way**: F11 ended just before item 8b's first changed word, F12 just before
+item 9a's, F13 just before item 9b's, so each would have returned `old/worktree=1` after a
+**correct** installation and Task 8 could not have met its own required result.
+
+**So compare against the post-edit region, not the block.** Build it — prefix, block, suffix — and
+require the fragment to be gone from it. **The fragment does not have to lie wholly inside the
+removed text**, which would be too strong and would reject rows like F7 that run from unchanged
+wording into changed wording: overlapping the removal by one word is enough to make the whole
+fragment unfindable afterwards, and that is what the count measures.
+
+**All twelve §F rows whose items declare a live range were re-checked this way** at the commit that
+records this. **F1, F2 and F3 were not**: their §F notes give no line range, so the region cannot be
+built mechanically — **check those three by reading, before Task 8 installs.**
 
 **The third check compares against the target's fenced blocks with line breaks normalized.** `F4` is one line in `CLAUDE.md` but the block wraps it between `you` and `still`; a substring test finds nothing and the row looks usable. Pass 4 found it, and re-running the normalized check over every row then in the table found that one and no other.
 
