@@ -13,9 +13,13 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** Gate-A plan pass 6 against `33cdfa8`. The prompt is
-`.context/gate-a-plan-prompt.md` — current at that commit; substitute `__SHA__` and `__P__`,
+**Next action:** Gate-A plan pass 8 against `54e793b`. The prompt is
+`.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
+
+**Three rules pass 7 installed, each of which had been contradicted in two or three places at
+once.** Check them every pass: a row a task must derive is derived **before** that task's install
+step; **no task pre-assigns a fragment id**; the fragment table holds **OLD fragments only**.
 
 **That prompt file is untracked.** `.gitignore` carries `.context/*` with only `codex-gate.on` and
 `codex-reviews/` exempt, so it survives a context clear but not a `.context/` cleanup. **If it is
@@ -59,7 +63,9 @@ worth checking before a pass rather than after.
 | 3 | b767a2a | 32→**31** | 0→**0** | 25→**23** | yes | one tell (instrument cluster). **Pass 2's three fragments came back — because I repaired the table and left the same fragments quoted inline in the task steps.** Second-copy defect, in the plan written to avoid it. Structural repair: the table is the only authored copy and Task 0 **generates** the shell variables from it, so no step can restate a fragment. 8 Minors collected |
 | 4 | 6ace06f | 31→**20** | 0→**10** | 23→**7** | yes | **MANDATORY TWO-TELL STOP** — Blockers rose 0→10, and the findings cluster on the instrument for the fourth pass running. Surfaced, standing answer applied, loop continued. **The awk generator pass 3 introduced was broken three ways**; it is deleted, not debugged — the helper is transcribed by hand and validated against the real files, with empty-string guards, because a silently unset variable makes `grep -cF ""` match every line. **A fourth fragment (F4) was preserved in its own replacement and invisible to my checker**, which compared without normalizing the block's line breaks |
 | 5 | 58b3660 | 20→**16** | 10→**7** | 7→**7** | yes | **MANDATORY TWO-TELL STOP** — instrument cluster for the fifth pass, plus a require↔withdraw pair (pass 4 demanded OLD rows for clauses pass 5 classifies as add-only). Surfaced, standing answer applied, loop continued. **The pre-written shell is deleted.** Design §7 says the plan builds each pair *against the real files*; five passes of findings were blocks written in advance for text that does not exist yet. One stated procedure replaces them |
-| 6 | — | — | — | — | **not run — NEXT** | against `33cdfa8`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`33cdfa8` and `__P__`=`6` |
+| 6 | 33cdfa8 | 16→**11** | 7→**2** | 7→**6** | yes | one tell only (instrument cluster), no mandatory stop. **Task 11's sweep locator matched only `Gate B not satisfied` — 3 hits — and missed the 25 assertions greping the bare verdict word**, which §F items 15/16 remove: the suite would have gone red and the battery could not have passed. Task 15 step 5 deferred the provenance line, curve and human-exception record to an action step 7 did not contain. Passage (h) counted 24 kept less `h4`/`h19` where `h5` is replaced too, and the untouched middle span enclosed F7b's line. **Five tasks derived OLD fragments after their own install step.** Task 8 rebuilt fourteen rows the table already held as fifteen, dropping F7b. §G's semantic membership test had no observation; the strict-reading tail's add-only clauses were told to produce OLD rows they cannot have; Task 10 promised seven pairs and listed six |
+| 7 | 34250be | 11→**13** | 2→**4** | 6→**4** | yes | **MANDATORY THREE-TELL STOP** — findings rose, Blockers rose, instrument cluster for the seventh pass. Surfaced, standing answer applied, loop continued. **Two of the four Blockers were pass 6's own repairs half-applied**: Task 4 kept its post-install derivation beside the new pre-install one, and Task 3's "ids continue the `P` series" collided with Task 4's pre-assigned `P19`/`P20`. The other two are five-pass survivors — `git log "$BASE"..HEAD` standing in for an ancestry test, and the single-line squash-carry site inside a `sed` range the same task forbids two paragraphs earlier. **Seventh condition-table misclassification in seven passes:** §B was credited with a second added rule that lives in §A |
+| 8 | — | — | — | — | **not run — NEXT** | against `54e793b`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`54e793b` and `__P__`=`8` |
 
 ## Pass-1 report
 
