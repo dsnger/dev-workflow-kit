@@ -13,13 +13,25 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** Gate-A plan pass 8 against `54e793b`. The prompt is
+**Next action:** Gate-A plan pass 11 against `55a27c9`. The prompt is
 `.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
 
-**Three rules pass 7 installed, each of which had been contradicted in two or three places at
-once.** Check them every pass: a row a task must derive is derived **before** that task's install
-step; **no task pre-assigns a fragment id**; the fragment table holds **OLD fragments only**.
+**The rules passes 6–10 installed, every one of which had been contradicted in two or three places
+at once when found.** Check them every pass:
+
+- `## What each disposition owes, stated once` fixes the observation per class; `## How a task
+  discharges that table` is the per-task procedure. **No task enumerates its condition ids.**
+- Every **pre-existing** fragment is derived **before** its task's install step — OLD halves,
+  absence fragments, and carried/kept preservation fragments alike. Only post-install fragments
+  go to `## Fragment evidence (per-task output)`.
+- **No task pre-assigns a fragment id.** Tasks 3, 4, 6, 7 and 10 append.
+- Untouched **spans are derived, not written out**. `.context/loop-rule-untouched` carries `span`
+  and `cond` records, both parseable, both consumed by Tasks 2 and 14.
+- **Destination blocks, not target sections**, are the unit for the parity site list.
+- Task 15 re-runs every affected check — mechanical *and* reader — after each Gate-B fix, and the
+  complete set before the candidate final pass; only a clean response against that exact `HEAD`
+  closes, and the final pass's own findings file is the sole permitted post-review addition.
 
 **That prompt file is untracked.** `.gitignore` carries `.context/*` with only `codex-gate.on` and
 `codex-reviews/` exempt, so it survives a context clear but not a `.context/` cleanup. **If it is
@@ -65,7 +77,10 @@ worth checking before a pass rather than after.
 | 5 | 58b3660 | 20→**16** | 10→**7** | 7→**7** | yes | **MANDATORY TWO-TELL STOP** — instrument cluster for the fifth pass, plus a require↔withdraw pair (pass 4 demanded OLD rows for clauses pass 5 classifies as add-only). Surfaced, standing answer applied, loop continued. **The pre-written shell is deleted.** Design §7 says the plan builds each pair *against the real files*; five passes of findings were blocks written in advance for text that does not exist yet. One stated procedure replaces them |
 | 6 | 33cdfa8 | 16→**11** | 7→**2** | 7→**6** | yes | one tell only (instrument cluster), no mandatory stop. **Task 11's sweep locator matched only `Gate B not satisfied` — 3 hits — and missed the 25 assertions greping the bare verdict word**, which §F items 15/16 remove: the suite would have gone red and the battery could not have passed. Task 15 step 5 deferred the provenance line, curve and human-exception record to an action step 7 did not contain. Passage (h) counted 24 kept less `h4`/`h19` where `h5` is replaced too, and the untouched middle span enclosed F7b's line. **Five tasks derived OLD fragments after their own install step.** Task 8 rebuilt fourteen rows the table already held as fifteen, dropping F7b. §G's semantic membership test had no observation; the strict-reading tail's add-only clauses were told to produce OLD rows they cannot have; Task 10 promised seven pairs and listed six |
 | 7 | 34250be | 11→**13** | 2→**4** | 6→**4** | yes | **MANDATORY THREE-TELL STOP** — findings rose, Blockers rose, instrument cluster for the seventh pass. Surfaced, standing answer applied, loop continued. **Two of the four Blockers were pass 6's own repairs half-applied**: Task 4 kept its post-install derivation beside the new pre-install one, and Task 3's "ids continue the `P` series" collided with Task 4's pre-assigned `P19`/`P20`. The other two are five-pass survivors — `git log "$BASE"..HEAD` standing in for an ancestry test, and the single-line squash-carry site inside a `sed` range the same task forbids two paragraphs earlier. **Seventh condition-table misclassification in seven passes:** §B was credited with a second added rule that lives in §A |
-| 8 | — | — | — | — | **not run — NEXT** | against `54e793b`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`54e793b` and `__P__`=`8` |
+| 8 | 54e793b | 13→**15** | 4→**2** | 4→**9** | yes | **MANDATORY TWO-TELL STOP** (findings rose, instrument cluster). Task 15 step 7 never re-ran the battery after a Gate-B fix; step 8 suppressed its record commit with `\|\| true`. Two more condition misclassifications: `a1` is carried inside §F item 8a's block **and the untouched span opened on that line**; `e10` is kept outside §D. `c10`–`c13` and `a18`–`a20` are moved and had only a reader walk; nine carried conditions owed preservation checks and three had them |
+| 9 | ebb371b | 15→**9** | 2→**2** | 9→**6** | yes | **MANDATORY TWO-TELL STOP** (Blockers flat, instrument cluster). The floor span ended on the line carrying both changed `a13` and kept `a14`. **Root repair: `## What each disposition owes, stated once`** — kept/carried/replaced/moved/dropped/add-only. Spans are now derived, not written out. The fragment table's cut became "exists before the edit" |
+| 10 | ba614f6 | 9→**17** | 2→**1** | 6→**14** | yes | **MANDATORY TWO-TELL STOP** (findings rose, instrument cluster). **Eleven of seventeen were one family: the tasks had not been brought into line with pass 9's table.** Root repair: **no task enumerates its condition ids** — `## How a task discharges that table` states the procedure and each task walks its passage's rows by class. A *kept* condition inside a wholly replaced passage has no span and owes a per-condition count; carried and kept preservation fragments are pre-existing and derived before the install |
+| 11 | — | — | — | — | **not run — NEXT** | against `55a27c9`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`55a27c9` and `__P__`=`11` |
 
 ## Pass-1 report
 
