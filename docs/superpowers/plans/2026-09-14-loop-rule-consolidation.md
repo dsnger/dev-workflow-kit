@@ -4,7 +4,7 @@
 
 **Goal:** Install one closure ordering into both §5 copies, replace the twenty-three standing sentences it falsifies across those copies and the shipped hook, and ship the result as plugin 0.12.0.
 
-**Architecture:** Every string this change installs is already written in final form in the target text. This plan does not restate any of it. Each task names the **site**, quotes the **anchor** it installs at, cites the **target-text section** whose fenced block is the bytes to install, and builds the **discriminating pair of counts** that shows the new wording present and the old wording gone. Copying the replacement text into this plan would create the second-copy defect the whole cycle fought; a citation into an approved artifact that travels with this plan is not a placeholder.
+**Architecture:** Every string this change installs is already written in final form in the target text. This plan does not restate any of it. Each task names the **site**, quotes the **anchor** it installs at, cites the **target-text section** whose fenced block supplies the wording, and runs the **discriminating pair of counts** — the new wording present, the old wording gone — from the one verified fragment table below. Copying the replacement text into this plan would create the second-copy defect the whole cycle fought; a citation into an approved artifact that travels with this plan is not a placeholder.
 
 **Tech Stack:** Markdown prompt text, POSIX `sh` (the hook), `grep`/`diff` for verification, `shellcheck`, the `claude` CLI.
 
@@ -19,11 +19,57 @@
 - **Both prompt copies take every NEW and REPLACED section byte-identical**, except §F's seven hook items, whose destination is the shipped hook and its test and which carry no parity obligation (target §"How to read a section", §F opening).
 - **C** = `CLAUDE.md`. **W** = `plugins/dev-workflow/commands/workflow-init.md`. Every line number below is re-read at execution; the inventory's numbers cite `7c0d475` and have drifted.
 - **Every hook replacement installs into a double-quoted POSIX-shell `note` argument** and therefore carries no backtick, no `$(`, no backslash and no double quote. `$policy`, `$floor`, `$passes`, `$passesA` and `$fresh` are the intended interpolations (target §F opening).
-- **Install every replacement unwrapped** — as one line in the file — because a counted fragment must be single-line for `grep -F` to find it (design §7).
+- **The target's fenced blocks are normative in their words, not in their line breaks.** The spec wraps for its own readability; each copy keeps its own wrapping style. What design §7 requires is narrower and is the rule here: **every fragment this plan counts must sit wholly within one line of the file it is grepped from**, and where installing a replacement would put a counted fragment across a wrap, that fragment's line is installed unwrapped. The fragment table below states, for every count, the line it must sit on. **Nothing in this plan claims the installed bytes equal the fenced block's bytes**, and no check asserts it.
 - **Invariant 5 (exact pinning)** and **invariant 12 (a plugin change requires a version bump)**: this change touches `plugins/`, so `plugins/dev-workflow/.claude-plugin/plugin.json` goes `0.11.0 → 0.12.0` with a CHANGELOG entry (design §8).
 - **Invariant 11:** every prompt change passes all 12 items of `docs/prompt-standards.md`. Most at risk: item 6 (every constraint carries its reason in the same sentence) and item 8 (token-lean).
 - **Invariant 4 / the hook:** no control flow, counter, fingerprint computation, routing or event handling changes. Only `note` strings and their expectations.
 - **Gate-B cycle discipline:** snapshot commits are named `WIP: …`; the cycle closes by `git commit --amend`. A non-`WIP` commit mid-cycle resets the hook's counters.
+
+---
+
+## Verification fragments — verified against the real files
+
+**Every fragment below was tested with `python3 <scratch>/frag.py "<fragment>"` against `CLAUDE.md` and the template at `5871d0a`, and each returned exactly one hit per copy on the line shown.** No task may invent a fragment; a task needing one not listed here adds it to this table and re-runs that check first. This table exists because the first draft scattered guessed fragments across ten tasks and pass 1 found that most of them wrapped across lines and counted zero in a correct tree — the exact defect design §7 records from four consecutive spec revisions.
+
+**Three ways a fragment fails, all of which this table's check catches:** it wraps across a line break, so `grep -F` counts zero in a correct file; it is **preserved inside its own replacement**, so its old-wording-gone count can never reach zero; or it is not unique, so a count of 1 proves nothing about which occurrence changed.
+
+| # | Edit | OLD fragment (single-line, not preserved in its replacement) | C | W |
+|---|---|---|---|---|
+| P1 | §A1/A2/A3 | *(none — counterfactual ABSENT, presence only)* | — | — |
+| P2 | `b7`, the fix-set definition | `scope the approved story or plan assigns to this cycle, plus repair obligations you already` | 201 | 408 |
+| P3 | `b12`, immediate resumption | `the moment the user says whether the set now includes it` | 208 | 415 |
+| P4 | `c14`, below-floor Minor | `a Blocker/Major-free pass below the floor` | 239 | 442 |
+| P5 | `e7`, the threshold — **C** | `the tells and hand the decision to the user, and the` | 267 | — |
+| P5w | `e7`, the threshold — **W** | `tells and hand the decision to the user, and the` | — | 471 |
+| P6 | `g1`/`g2`, the handed-over question | `is not settled here, and this change does not settle it` | 811 | 997 |
+| P7 | §G, the one-contract paragraph | `These records are one contract` | 879 | 1063 |
+| P8 | `c18`, no-clean-credit | `the resolve rule is not waived, no pass is credited as` | 243 | 446 |
+| P9 | `a13`, the no-restating prohibition | `Every other rule stated here about how a cycle closes` | 129 | 336 |
+| P10 | `a16`, the per-pass fix command | `fix Blocker/Major after each` | 132 | 339 |
+| P11 | `a17`, the clean-final-pass rule | `final pass must be clean` | 133 | 340 |
+| P12 | Gate-A clean signal | `when a pass is clean` | 565 | 757 |
+| P13 | gate-prompt template clean sentence | `clean pass is the single body line` | 329 | 523 |
+| P14 | Gate-A cadence | `Each pass: validate, revise, re-run` | 573 | 764 |
+| P15 | lens unchanged-list | `The Blocker/Major filter, the file-first findings protocol` | 653 | 839 |
+| P16 | strict-reading list | `nonce duties at their strictest` | 157 | 364 |
+| P17 | §F item 14, Named residual | `Hook text is out of scope here` | 139 | 346 |
+| P18 | §F item 18, work-loop line | `execute → tests green → Gate B → commit` | 63 | 262 |
+
+**`e7` is the one edit needing a per-copy fragment**, because W drops the pronoun: C reads `you report the tells`, W reads `report the tells`. That is the recorded `e8` divergence, and it **does not survive this change** — see Task 5.
+
+**The NEW fragment for every pair is taken from the installed line and checked the same way**, since the new wording does not exist until the task installs it. Each task's step says which sentence of its target block to take it from, and the step fails if the fragment it chooses is not single-line and unique in the installed file. **This is the one place the plan cannot pre-verify**, and it is disclosed rather than papered over.
+
+**The four-value command, defined once and cited by number afterwards:**
+
+```bash
+pair() {  # pair <OLD> <NEW> <file>
+  printf '%s  old/worktree=%s old/parent=%s new/worktree=%s new/parent=%s\n' "$3" \
+    "$(grep -cF "$1" "$3")" "$(git show "$BASE:$3" | grep -cF "$1")" \
+    "$(grep -cF "$2" "$3")" "$(git show "$BASE:$3" | grep -cF "$2")"
+}
+```
+
+**A pair passes only on `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.** All four values matter: a copy carrying the new wording **and** the old one satisfies a one-sided presence check and is exactly the two-instructions-that-disagree failure the pair exists to catch.
 
 ---
 
@@ -79,7 +125,7 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 | c17 | **replaced** — the resolve rule now scopes to the assigned fix set and states what a validly dismissed recurrence owes. |
 | c18 | **replaced** — the blanket no-clean-credit goes; a pass is credited on its own findings, and a scope-stop trigger is what withholds credit. |
 | c19 | **replaced** — the one-answer resumption goes; what the answer does is the ordering's. |
-| c20 | **carried**, with "Blocker and Major" narrowed to "**in-set** Blocker and Major". |
+| c20 | **replaced.** The prohibition on the "stop instead of fixing" reading survives, but its scope narrows from "every Blocker and Major" to "every **in-set** Blocker and Major" — a meaning change, installed by §H's `c18`-and-surfacing block. **Marked replaced rather than carried**, because a narrowed condition recorded as preserved is exactly the dropped-condition failure AGENTS.md requires this accounting to expose. |
 
 ### Passage (d) — from pass 4 onward (Task 0 check only)
 
@@ -140,23 +186,51 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 - [ ] **Step 1: Confirm the approved artifacts and a clean tree**
 
 ```bash
-git log --oneline -1        # expect ba15e83 or later on loop-rule-consolidation
+git log --oneline -1        # expect 5871d0a or later on loop-rule-consolidation
 git status --porcelain      # expect empty
-BASE=$(git rev-parse HEAD)  # every counterfactual count runs against this
-echo "$BASE"
+git rev-parse HEAD > .context/loop-rule-base
+cat .context/loop-rule-base
 ```
+
+**Persist it to a file, not to a shell variable.** Each task runs in its own shell invocation, so a
+`BASE=` assignment in Task 0 is gone by Task 1 and every parent-tree count would run against an
+empty revision — which fails loudly in `git show` but quietly in a `grep -c` pipeline. Every later
+task begins with:
+
+```bash
+BASE=$(cat .context/loop-rule-base)
+```
+
+**This commit is also `baseSha` for Gate B.** It is the parent of the first WIP snapshot, and it is
+the only value that puts the whole implementation inside the reviewed range. `.context/` is ignored
+by the hook's fingerprint, so the file itself moves nothing.
 
 - [ ] **Step 2: Re-read the five untouched ranges and record their current line numbers**
 
 Passages (d), (f) and (j) are not edited by this change, and passage (a)'s arithmetic and passage (h)'s twenty-three kept conditions are mostly untouched. Record where they are now, because the inventory's numbers cite `7c0d475`:
 
+**Five ranges, each with a start and an end anchor** — the three whole passages, plus the floor
+arithmetic and the kept human-exception conditions, which later verification consumes and which the
+first draft omitted:
+
 ```bash
-grep -n 'From pass 4 onward every pass report carries three lines' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-grep -n 'The two rules above do not compete' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
-grep -n 'On squash-merge, copy every evidence entry' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  echo "== $f"
+  grep -n 'From pass 4 onward every pass report carries three lines' "$f"   # (d) start
+  grep -n 'Those three lines expose' "$f"                                    # (d) end
+  grep -n 'The two rules above do not compete' "$f"                          # (f) start
+  grep -n 'Findings go to a FILE' "$f"                                       # (f) end
+  grep -n 'On squash-merge, copy every evidence entry' "$f"                  # (j) single line
+  grep -n 'Both gates are a LOOP with a HARD FLOOR' "$f"                     # (a) arithmetic start
+  grep -n 'Nothing here writes the floor knob' "$f"                          # (a) arithmetic end
+  grep -n 'Recording a human exception' "$f"                                 # (h) start
+  grep -n 'because writing it down makes it sound' "$f"                      # (h) end
+done
 ```
 
-Expected: two hits each, one per copy. Write the six line numbers into a scratch note — Task 14 diffs against them.
+Expected: one hit per pattern per file. Write all the line numbers into
+`.context/loop-rule-untouched` — **Task 2 and the final check in Task 14 both read them**, so a
+scratch note that dies with the session is not enough.
 
 - [ ] **Step 3: Confirm the parity baseline of the inventoried ranges**
 
@@ -209,18 +283,27 @@ Insert the three blocks before the anchor line, blank-line separated, byte-ident
 
 **Placement constraint from the disposition table:** §A must not land between passage (b) and passage (c), because `f1` ("the two rules above") names those two and would then name the wrong pair. Inserting *before* (b) satisfies this.
 
-- [ ] **Step 4: Run the presence counts in both copies and both trees**
+- [ ] **Step 4: Run a presence count per paragraph, in both copies and both trees**
+
+**Three counts, not one.** A single count on §A1's opening lets §A2 or §A3 be omitted from both
+copies while every count and the parity diff still pass — the paragraphs are installed together and
+nothing else observes them.
 
 ```bash
+BASE=$(cat .context/loop-rule-base)
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s worktree: ' "$f"
-  grep -cF 'How a cycle ends — one ordering, stated here and referenced everywhere else' "$f"
-  printf '%s parent:   ' "$f"
-  git show "$BASE:$f" | grep -cF 'How a cycle ends — one ordering, stated here and referenced everywhere else'
+  for frag in 'How a cycle ends — one ordering' \
+              '<a single-line fragment unique to §A2, taken from the installed file>' \
+              '<a single-line fragment unique to §A3, taken from the installed file>'; do
+    printf '%s | worktree=%s parent=%s | %s\n' "$f" \
+      "$(grep -cF "$frag" "$f")" "$(git show "$BASE:$f" | grep -cF "$frag")" "$frag"
+  done
 done
 ```
 
-Expected: worktree `1`, parent `0`, for both files. A parent count above zero means `$BASE` is wrong.
+Expected: `worktree=1 parent=0` for all six. **Add the two §A2/§A3 fragments to the fragment table
+once chosen**, with the check that verified each is single-line and unique — they are the two rows
+that cannot be pre-verified because the text does not exist until this task installs it.
 
 - [ ] **Step 5: Check parity of the installed block**
 
@@ -281,36 +364,56 @@ Read the installed text around "The two rules above do not compete" and confirm 
 - Modify: `CLAUDE.md` — the passage beginning `**What a loop absorbs, and what stops it`
 - Modify: `plugins/dev-workflow/commands/workflow-init.md` — the same
 
-**The bytes:** target §B, which states it is "the only place this file states anything about" passage (b). **Preserve the two deliberate divergences** the inventory records and §B confirms: W says `the severity rule` where C says `Mechanics` (b3); and the field-mint parenthetical closes the paragraph in C and is absent from W. §B says it stops short of that parenthetical, which is left exactly as each copy has it.
+**The bytes:** target §B, which states it is "the only place this file states anything about" passage (b).
 
-- [ ] **Step 1: Record the old-wording fragments**
+**`b3` is aligned here, not in Task 14.** Design §6 decides it explicitly: W's pointer names "the
+severity rule" on the inventory's reasoning that W has no Mechanics section, **which is false**, so
+**W takes C's wording**. Installing W's old wording here and repairing it two tasks later would have
+this task knowingly install text contrary to the approved target, and would make Task 14 repair a
+defect this task introduced.
 
-Two fragments that must reach zero, chosen because each is single-line in the file and is **not** preserved inside the replacement:
+**One divergence is preserved:** the field-mint parenthetical closes the paragraph in C and is
+absent from W. §B says it stops short of that parenthetical, which is left exactly as each copy has
+it.
+
+- [ ] **Step 1: Confirm the two OLD fragments still count 1**
+
+Rows **P2** (`b7`, the fix-set definition) and **P3** (`b12`, immediate resumption) of the fragment
+table. Both are verified single-line and unique; re-confirm before editing, since earlier tasks
+have touched these files:
 
 ```bash
-grep -cF 'plus repair obligations you already accepted in earlier passes' CLAUDE.md
-grep -cF 'it resumes the moment the user says whether the set now includes it' CLAUDE.md
+BASE=$(cat .context/loop-rule-base)
+grep -cF 'scope the approved story or plan assigns to this cycle, plus repair obligations you already' CLAUDE.md
+grep -cF 'the moment the user says whether the set now includes it' CLAUDE.md
 ```
 
-Expected before the edit: `1` each. Re-check both against W with the same command.
+Expected: `1` each, and the same against W.
+
+**The first draft of this plan named `plus repair obligations you already accepted in earlier
+passes` here, which wraps across C 201–202 and W 408–409 and counts zero in a correct file.**
 
 - [ ] **Step 2: Install §B's text over the passage in both copies**
 
 Replace from `**What a loop absorbs, and what stops it` through the sentence §B ends at, keeping each copy's own closing parenthetical.
 
-- [ ] **Step 3: Run the discriminating pair, both copies, both trees**
+- [ ] **Step 3: Run two discriminating pairs, both copies, both trees**
+
+`b7` and `b12` are separate meaning changes and each owes its own pair; one pair covering both
+would let the surviving instruction pass behind the repaired one.
 
 ```bash
-NEW='union of the scope every approved story or plan governing this change assigns to this cycle'
-OLD='plus repair obligations you already accepted in earlier passes'
+BASE=$(cat .context/loop-rule-base)
+# pair() is defined once in the fragment-table section
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  printf '%s new/worktree=%s new/parent=%s old/worktree=%s old/parent=%s\n' "$f" \
-    "$(grep -cF "$NEW" "$f")" "$(git show "$BASE:$f" | grep -cF "$NEW")" \
-    "$(grep -cF "$OLD" "$f")" "$(git show "$BASE:$f" | grep -cF "$OLD")"
+  pair 'scope the approved story or plan assigns to this cycle, plus repair obligations you already' \
+       'union of the scope every approved story or plan governing this change assigns to this cycle' "$f"
+  pair 'the moment the user says whether the set now includes it' \
+       '<the single-line fragment of §B's resumption sentence, taken from the installed file>' "$f"
 done
 ```
 
-Expected per file: `new/worktree=1 new/parent=0 old/worktree=0 old/parent=1`. **All four values matter** — a copy carrying both the new and the old wording satisfies a one-sided presence check and is exactly the two-instructions-that-disagree failure this pair exists to catch.
+Expected for all four: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
 - [ ] **Step 4: Walk the carried conditions**
 
@@ -366,9 +469,19 @@ The precedence clause must appear **once**, inside the ordering. A second occurr
 
 - [ ] **Step 4: Run the discriminating pair, both copies, both trees**
 
-Same four-value shape as Task 3, with `OLD='a Blocker/Major-free pass below the floor'` and `NEW` a single-line fragment of §C's re-raised-dismissal clause taken from the installed file.
+Row **P4**. `NEW` is the single-line fragment `a recurrence failing them being an ordinary fresh
+finding`, from §C's re-raised-dismissal clause — **install that clause's line unwrapped** so the
+fragment sits wholly on one line, and confirm it is unique before counting.
 
-Expected: `new/worktree=1 new/parent=0 old/worktree=0 old/parent=1`.
+```bash
+BASE=$(cat .context/loop-rule-base)
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  pair 'a Blocker/Major-free pass below the floor' \
+       'a recurrence failing them being an ordinary fresh finding' "$f"
+done
+```
+
+Expected: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
 - [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` split, `c10`–`c14` gone from here.
 
@@ -389,27 +502,53 @@ git commit -m "WIP: widen the clearly-stuck third condition and split its preced
 
 **The bytes:** target §D's two fenced blocks — the `e7` sentence entire, and the pointer paragraph added at the end of the passage.
 
-**Parity note:** W drops the pronoun (`report the tells`, not `you report the tells`). §D's block carries C's wording; **W keeps its own pronoun** unless the parity divergence list decides otherwise in Task 14. Record which you chose — this is one of the two divergences the inventory flags for passage (e), and the other (e11, the C-only rationale paragraph) is untouched.
+**`e8` does not survive this change.** §D supplies the complete replacement sentence, which reads
+`you report the tells`, and the Global Constraints make every replaced section byte-identical across
+the copies. **Install §D's sentence as written in both copies** — W gains the pronoun — and remove
+`e8` from the surviving-divergence list Task 14 carries. Keeping W's old pronoun would mean
+knowingly installing text the approved target does not say, and would leave Task 14 classifying as
+deliberate a divergence this task chose to create.
 
-- [ ] **Step 1: Record the old wording**
+**`e11`, the C-only rationale paragraph, is untouched and stays C-only.**
+
+- [ ] **Step 1: Confirm the per-copy OLD fragments**
+
+`Any two present makes stop-and-surface mandatory, not discretionary` **survives inside the
+replacement**, so it can never be the old half — that is the trap design §7 records from four spec
+revisions. Rows **P5** (C) and **P5w** (W) instead, and they differ because W drops the pronoun:
 
 ```bash
-grep -cF 'Any two present makes stop-and-surface mandatory, not discretionary' CLAUDE.md
+grep -cF 'the tells and hand the decision to the user, and the' CLAUDE.md                          # 1
+grep -cF 'tells and hand the decision to the user, and the' plugins/dev-workflow/commands/workflow-init.md  # 1
 ```
 
-Expected `1` — but note this fragment **survives inside the replacement**, so it cannot be the old-wording half of the pair. Use instead:
-
-```bash
-grep -cF 'and the "clearly stuck" reading above is not a precondition for it' CLAUDE.md
-```
-
-and pair it against the installed sentence's new clause. **This is the trap design §7 records:** four spec revisions named a fragment preserved inside its own replacement, whose old-wording-gone count could never reach zero.
+**The first draft named `and the "clearly stuck" reading above is not a precondition for it`, which
+wraps across C 267–268 and W 471–472 and counts zero in both correct files.**
 
 - [ ] **Step 2: Install §D's `e7` sentence and the pointer paragraph**
 
-- [ ] **Step 3: Run the discriminating pair**, both copies, both trees, with `NEW='read **after** the clean-completion branch of the closure ordering'` and `OLD` from Step 1.
+- [ ] **Step 3: Run the discriminating pair, and a presence check for the pointer**
 
-Expected: `new/worktree=1 new/parent=0 old/worktree=0 old/parent=1`.
+The `e7` replacement and §D's added pointer paragraph are two separate observations. **The pointer
+is add-only** — it replaces no wording — so it is checked by presence alone, and without that check
+it can be omitted from both copies while the `e7` pair, the condition walk and the parity diff all
+pass.
+
+```bash
+BASE=$(cat .context/loop-rule-base)
+pair 'the tells and hand the decision to the user, and the' \
+     'read **after** the clean-completion branch of the closure ordering' CLAUDE.md
+pair 'tells and hand the decision to the user, and the' \
+     'read **after** the clean-completion branch of the closure ordering' plugins/dev-workflow/commands/workflow-init.md
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  printf 'pointer %s worktree=%s parent=%s\n' "$f" \
+    "$(grep -cF 'where this stop'"'"'s place among the suspensions' "$f")" \
+    "$(git show "$BASE:$f" | grep -cF 'where this stop'"'"'s place among the suspensions')"
+done
+```
+
+Expected: both pairs `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`; both pointer checks
+`worktree=1 parent=0`.
 
 - [ ] **Step 4: Confirm `e1`–`e6` and `e8`–`e11` are untouched**, and that e11 is still C-only.
 
@@ -458,7 +597,18 @@ grep -c '2026-08-29-loop-rule-consolidation-story.md' CLAUDE.md
 
 Expected: `0`. The story path may still appear in `docs/` — this check is scoped to `CLAUDE.md`.
 
-- [ ] **Step 5: Parity** — this passage should now be byte-identical, the one recorded divergence having been removed. Diff the two Severity bullets and expect no output.
+- [ ] **Step 5: Parity over both §E blocks**
+
+**The bullet and the answer paragraph are two installs and the diff must cover both** — scoping the
+check to the Severity bullet alone lets the long answer paragraph differ between the copies while
+the pair and the stated parity check pass.
+
+```bash
+diff <(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' CLAUDE.md) \
+     <(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' plugins/dev-workflow/commands/workflow-init.md)
+```
+
+Expected: no output. This passage should now be byte-identical, `g4` having been removed and `g2`/`g3` having gone from both copies.
 
 - [ ] **Step 6: Commit**
 
@@ -480,46 +630,77 @@ git commit -m "WIP: answer the demotion question and scope the resolve duty to t
 
 **`i12` is the licence for the strict-reading addition and stays in place.** The list is extended at the end, not rewritten; §H gives the whole dash-delimited list so one contiguous string installs.
 
-- [ ] **Step 1: Locate all eight sites in both copies**
+- [ ] **Step 1: Locate all ten sites in both copies**
+
+**Ten sites: one §G block and nine §H blocks.** Every locator below is a fragment-table row, so each
+is verified single-line and unique. The first draft used five locators that count zero in a correct
+file — `These rules and records are one contract` (the live text says `These records are one
+contract`), `Your final pass must be clean` (wraps C 132–133), ``a literal `NO FINDINGS` when a pass
+is clean`` (one line in C, wraps in W), `A clean pass is the single body line` (the line break falls
+after `A`), and `at minimum floor 3, severity classified without the demotion` (wraps C 155–156).
 
 ```bash
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   echo "== $f"
-  grep -n 'These rules and records are one contract' "$f"
-  grep -n 'Surfacing does not close the cycle' "$f"
-  grep -n 'Every other rule stated here about how a cycle closes' "$f"
-  grep -n 'Open a TodoWrite' "$f"
-  grep -n 'Your final pass must be clean' "$f"
-  grep -n 'literal `NO FINDINGS` when a pass is clean' "$f"
-  grep -n 'A clean pass is the single body line' "$f"
-  grep -n 'Each pass: validate, revise, re-run' "$f"
-  grep -n 'Lenses are \*\*different questions, not more passes\*\*' "$f"
-  grep -n 'at minimum floor 3, severity classified without the demotion' "$f"
+  grep -cF 'These records are one contract' "$f"                              # P7  §G
+  grep -cF 'the resolve rule is not waived, no pass is credited as' "$f"       # P8  c18
+  grep -cF 'Every other rule stated here about how a cycle closes' "$f"        # P9  a13
+  grep -cF 'fix Blocker/Major after each' "$f"                                 # P10 a16
+  grep -cF 'final pass must be clean' "$f"                                     # P11 a17
+  grep -cF 'when a pass is clean' "$f"                                         # P12 Gate-A clean signal
+  grep -cF 'clean pass is the single body line' "$f"                           # P13 template clean sentence
+  grep -cF 'Each pass: validate, revise, re-run' "$f"                          # P14 Gate-A cadence
+  grep -cF 'The Blocker/Major filter, the file-first findings protocol' "$f"   # P15 lens list
+  grep -cF 'nonce duties at their strictest' "$f"                              # P16 strict-reading list
 done
 ```
 
-Expected: one hit per pattern per file. A pattern with zero hits means the wording drifted since the inventory — find it before installing.
+Expected: `1` twenty times. **Any `0` means the wording drifted since this table was verified at
+`5871d0a`** — re-derive that fragment and update the table before installing anything.
 
-- [ ] **Step 2: Install §G and all eight §H blocks, one site at a time, verifying each before moving to the next**
+- [ ] **Step 2: Install the §G block and all nine §H blocks — ten sites — one at a time, verifying each before moving to the next**
 
-- [ ] **Step 3: Run one discriminating pair per block**, both copies, both trees. Old-wording fragments, each single-line and none preserved inside its own replacement:
+- [ ] **Step 3: Run one discriminating pair per block**, both copies, both trees, one per row P7–P16.
 
-| Block | OLD fragment |
-|---|---|
-| §G one-contract | `These rules and records are one contract` |
-| `c18`/surfacing | `no pass is credited as clean` |
-| `a13` | `Every other rule stated here about how a cycle closes` |
-| `a16` | `fix Blocker/Major after each` |
-| `a17`–`a22` | `Your final pass must be clean` |
-| Gate-A clean signal | `a literal \`NO FINDINGS\` when a pass is clean` |
-| template clean sentence | `A clean pass is the single body line` |
-| Gate-A cadence | `Each pass: validate, revise, re-run` |
-| lens unchanged-list | `The Blocker/Major filter, the file-first findings protocol` |
-| strict-reading list | `the nonce duties at their strictest, the cycle is treated as post-rule` |
+`NEW` for each is taken from the installed block; **check each chosen fragment is single-line and
+unique in the installed file before counting it**, and add it to the fragment table. The suggested
+source sentence per block:
 
-Expected for each: `old/worktree=0 old/parent=1`, and the matching new fragment `1` / `0`.
+| Row | Block | NEW taken from |
+|---|---|---|
+| P7 | §G one-contract | the widened-membership clause of §G's block |
+| P8 | `c18`/surfacing | `A pass is credited clean or not on its own findings` |
+| P9 | `a13` | `Every other rule stated **in this paragraph**` |
+| P10 | `a16` | `resolve Blocker/Major after each as` |
+| P11 | `a17`–`a22` | `What a clean final pass and the zero-finding early exit mean for closing` |
+| P12 | Gate-A clean signal | `and no scope-stop trigger** is clean too` |
+| P13 | template clean sentence | `A **clean findings file** is the single body line` |
+| P14 | Gate-A cadence | `revise **where a repair is required**` |
+| P15 | lens unchanged-list | `**the lens sets** leave every other` |
+| P16 | strict-reading list | `every suspension binding, since` |
 
-**The strict-reading list is add-only at its tail but replaces the dash-delimited run**, so it owes a full pair rather than presence alone. **The gate-prompt template's clean sentence is add-only** if the site carries no wording the change removes — classify it against the real file, per design §7, and check by presence alone if so.
+```bash
+BASE=$(cat .context/loop-rule-base)
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  pair 'These records are one contract'                            '<P7 NEW>'  "$f"
+  pair 'the resolve rule is not waived, no pass is credited as'    '<P8 NEW>'  "$f"
+  pair 'Every other rule stated here about how a cycle closes'     '<P9 NEW>'  "$f"
+  pair 'fix Blocker/Major after each'                              '<P10 NEW>' "$f"
+  pair 'final pass must be clean'                                  '<P11 NEW>' "$f"
+  pair 'when a pass is clean'                                      '<P12 NEW>' "$f"
+  pair 'clean pass is the single body line'                        '<P13 NEW>' "$f"
+  pair 'Each pass: validate, revise, re-run'                       '<P14 NEW>' "$f"
+  pair 'The Blocker/Major filter, the file-first findings protocol' '<P15 NEW>' "$f"
+  pair 'nonce duties at their strictest'                           '<P16 NEW>' "$f"
+done
+```
+
+Expected for all twenty: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
+
+**Two classification notes, decided against the real files rather than asserted.** The
+strict-reading list **replaces the dash-delimited run** even though its addition is at the tail, so
+it owes a full pair. The gate-prompt template's clean sentence **replaces** `A clean pass is the
+single body line …`, which is why P13 has an OLD at all; it is not add-only.
 
 - [ ] **Step 4: Confirm `a21`, `a22`, `a15` survived** — they are carried inside blocks that install contiguously, so a mis-scoped replacement silently drops them.
 
@@ -530,7 +711,7 @@ grep -cF 'Open a TodoWrite' CLAUDE.md
 
 Expected: `1` each.
 
-- [ ] **Step 5: Parity** for all nine sites.
+- [ ] **Step 5: Parity** for all ten sites, each extracted by its own bounded region rather than a fixed line window.
 
 - [ ] **Step 6: Commit**
 
@@ -562,9 +743,26 @@ grep -n -F '<the live sentence §F quotes>' CLAUDE.md plugins/dev-workflow/comma
 
 - [ ] **Step 2: Install all fourteen replacements**
 
-- [ ] **Step 3: Run one discriminating pair per item**, both copies, both trees, choosing each OLD fragment single-line and not preserved inside its replacement.
+- [ ] **Step 3: Build this task's fourteen fragment rows, then run fourteen pairs**
 
-Expected per item: `new/worktree=1 new/parent=0 old/worktree=0 old/parent=1`.
+**Do not choose fragments at run time.** Step 1 located each item's live sentence; for each, pick a
+single-line OLD fragment from the located line, run it through the fragment check, and **append the
+row to the plan's fragment table with the line numbers the check reported**. Only then run the
+pairs. A fragment chosen and used in the same breath is how the first draft shipped five that count
+zero.
+
+For each item, the OLD fragment must satisfy all three: single-line in both copies (or one fragment
+per copy where the wrapping differs, as `e7` needed); unique in each; and **not preserved inside its
+own replacement** — compare it against the §F block before accepting it.
+
+```bash
+BASE=$(cat .context/loop-rule-base)
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  pair '<item OLD>' '<item NEW>' "$f"    # ×14
+done
+```
+
+Expected for all twenty-eight: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
 - [ ] **Step 4: Count what was installed**
 
@@ -641,14 +839,28 @@ git commit -m "WIP: correct the Named residual's blanket exemption and the work-
 
 **Shell constraint, and it is not advisory:** every string installs into a double-quoted `note` argument. No backtick, no `$(`, no backslash, no double quote. A backtick reached §F once and would have executed `WIP` at install time, shipped the reminder with the word missing, and failed ShellCheck — while the fixture copied from it would have made the suite pass on the corruption.
 
-- [ ] **Step 1: Verify the constraint before installing**
+- [ ] **Step 1: Verify the constraint before installing, reading each block as inert data**
 
-```bash
-# For each of the seven §F blocks, confirm the text you are about to install is clean:
-printf '%s' "<the block>" | grep -nE '`|\$\(|\\\\|"' && echo HAZARD || echo clean
+**The probe must never put the candidate text inside double quotes.** A backtick or `$(` there is
+executed by the probe itself, `$policy` expands away, and the check then certifies a string that is
+not the one to be installed — the probe would run the hazard it exists to detect.
+
+Read the blocks straight from the spec file instead, and test the literal characters:
+
+```python
+# python3 - <<'EOF'   (single-quoted heredoc: the shell expands nothing)
+import re, pathlib
+spec = pathlib.Path("docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md").read_text()
+sec  = spec[spec.index("## F."):spec.index("## G.")]
+for i, block in enumerate(re.findall(r"```\n(.*?)\n```", sec, re.S), 1):
+    bad = [c for c in ("`", "$(", "\\", '"') if c in block]
+    print(i, "HAZARD" if bad else "clean", bad, block[:60])
+# EOF
 ```
 
-Expected: `clean` seven times. A hit here stops the task.
+Expected: every block destined for the hook prints `clean`. **Blocks for the prompt copies may
+legitimately contain backticks and quotes** — they are markdown, not shell arguments — so read the
+block index against §F's item numbers rather than requiring all of them clean.
 
 - [ ] **Step 2: Locate the seven `note` calls**
 
@@ -660,13 +872,23 @@ Expected: thirteen hits. Seven are the gate reminders this task edits; four take
 
 - [ ] **Step 3: Install the seven replacements, one at a time**
 
-- [ ] **Step 4: Confirm no behaviour changed**
+- [ ] **Step 4: Confirm no behaviour changed, by line number rather than by shape**
+
+**A content filter cannot do this.** A pattern admitting "letters and allowed punctuation" admits
+`else`, `fi` and `return` — a control-flow edit would pass the check it exists to fail. Compare the
+**changed line numbers** against the seven `note` calls instead:
 
 ```bash
-git diff plugins/dev-workflow/hooks/codex-gate.sh | grep -E '^[-+]' | grep -vE '^[-+]\s*(note "|[A-Za-z ,.—;:()/$-]+")' | head
+BASE=$(cat .context/loop-rule-base)
+git diff -U0 "$BASE" -- plugins/dev-workflow/hooks/codex-gate.sh \
+  | grep -E '^@@' | sed -E 's/^@@ -([0-9]+).*/\1/'
+grep -n 'note "' plugins/dev-workflow/hooks/codex-gate.sh
 ```
 
-Expected: only the `---`/`+++` header lines. **Any changed line that is not inside a `note` string is out of scope** — no control flow, no counter, no fingerprint computation, no routing (invariant 4, design §8).
+**Every changed hunk must start inside one of the seven gate-reminder `note` calls this task
+edits.** A hunk anywhere else is a behaviour change and is out of scope — no control flow, no
+counter, no fingerprint computation, no routing (invariant 4, design §8). Read the two lists side by
+side; do not automate the comparison with a pattern, which is what failed here the first time.
 
 - [ ] **Step 5: Discriminating pairs, worktree and parent**
 
@@ -686,7 +908,16 @@ for pair in 'this floor is the only thing keeping the spec review honest|instruc
 done
 ```
 
-Expected: `old/worktree=0`, `old/parent` ≥ 1, `new/worktree` ≥ 1, `new/parent=0` for each. The `STOP` pair covers two messages, so its counts are 2 rather than 1 — **state the number you observed rather than asserting it**.
+**Two more pairs, because four cover only five of the seven items.** Without them, item 11's old
+abbreviated clean definition and item 17's running-cycle skip exit can both survive while every
+listed pair passes:
+
+```bash
+  'floor met by COUNT ONLY|Proceed only once this Gate-A cycle has closed'    # item 11
+  'or proceed only if $policy|skip rule decides only whether a cycle runs at all'  # item 17
+```
+
+Expected: `old/worktree=0`, `old/parent` ≥ 1, `new/worktree` ≥ 1, `new/parent=0` for each of the six. The `STOP` pair covers two messages, so its counts are 2 rather than 1 — **state the number you observed rather than asserting it**.
 
 - [ ] **Step 6: ShellCheck**
 
@@ -741,10 +972,12 @@ Expected: exit 0 from both. **`HOOK_SH` selects the shell the hook runs under; w
 - [ ] **Step 5: Confirm no verdict vocabulary survives**
 
 ```bash
-grep -n 'Gate B satisfied\|Gate B not satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh
+grep -c 'Gate B satisfied\|Gate B not satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh
 ```
 
-Expected: no hits, or only hits you can justify one by one in the commit body.
+Expected: **`0`. Not "no hits you cannot justify"** — step 3 requires every label and comment to move
+to observed hook state, and a justify-in-the-commit-body escape hatch is how the old gate-verdict
+vocabulary survives a sweep. Where a test still needs that case, name it by what the hook observed.
 
 - [ ] **Step 6: ShellCheck the test file**
 
@@ -801,6 +1034,11 @@ The two copies are byte-identical over this material, so a divergence here is a 
 
 **The oracle.** A row **fails** when its required answer does not produce a **distinct** resumable or closed state — the same stop returning with its reading unconsumed, that is, without an intervening validated pass run after the answer — or when it closes on anything other than the route the block states. **Read the closure conditions and the routes off the installed §A, not from this plan** — an embedded copy can pass while disagreeing with the text it checks.
 
+**Where it goes:** this plan, under the heading `## Next-state table (Task 13 output)` at the end of
+the document. **Task 13 replaces that whole section idempotently** — re-running it must not append a
+second table. If the heading is absent, create it; if present, replace everything under it up to the
+next `## `.
+
 - [ ] **Step 1: Enumerate the rows**
 
 One row per (starting state, answer) pair the installed ordering admits. At minimum, and **this is a floor rather than the set**: a clean eligible pass with every condition met; a clean eligible pass with an unmet precondition; a clean pass below the floor; a zero-finding pass below the floor; a pass carrying a membership trigger, answered accept and answered decline; a pass carrying a new-question trigger, answered; a pass carrying both; a two-tell stop, answered; a clearly-stuck surface, answered; a source block raised before any pass was read; a source block raised on a pass already read; a closing act that does not complete and is repaired; a closing act that cannot be repaired; a `full` Gate-B pass with one branch clean and one not; the same complaint in both branch files under each of accept/accept, accept/decline, decline/accept and decline/decline.
@@ -834,17 +1072,29 @@ Design §6: the two copies must agree on every rule this change ships. **The pla
 
 **One divergence is decided by the design and is not a judgement call:** W's `b3` pointer names "the severity rule" on the inventory's reasoning that W has no Mechanics section, **which is false** — so **W takes C's wording** (design §6, target §B).
 
-- [ ] **Step 1: Extract and diff each changed passage**
+- [ ] **Step 1: Extract and diff every changed site, from the target text's own markers**
+
+**Nine fixed 25-line windows are not the site list.** They omit §G, both gate-prompt instructions,
+the human-exception edits, the WIP and finishing-cycle text, the evidence-revalidation trigger and
+the curve rationale — every one of which this change ships, and any of which could differ between
+the copies while a nine-window diff passes.
+
+**Drive the list from the artifact:** every section the target text marks NEW or REPLACED, and every
+item in §F whose destination is a prompt copy. For each, extract a **bounded** region — from its
+first line to the first line of the next passage, not a fixed count — and diff the two copies:
 
 ```bash
-for anchor in 'How a cycle ends' 'What a loop absorbs' 'Recognizing "clearly stuck"' \
-              'Those three lines expose' '\*\*Severity:\*\*' 'Surfacing does not close' \
-              'When these rules bind' 'Named residual' 'The work loop includes'; do
-  echo "== $anchor"
-  diff <(grep -A25 -E "$anchor" CLAUDE.md) \
-       <(grep -A25 -E "$anchor" plugins/dev-workflow/commands/workflow-init.md)
-done
+# one bounded region per changed site; $start and $end are that site's own anchors
+diff <(sed -n "/$start/,/$end/p" CLAUDE.md) \
+     <(sed -n "/$start/,/$end/p" plugins/dev-workflow/commands/workflow-init.md)
 ```
+
+**Fail this step where a site named by §§A–H has no region in your list** — that is the same
+completeness failure as Task 13's per-condition checks, and it is caught the same way: by reading
+the set off the artifact rather than from a list kept here.
+
+**Where it goes:** this plan, under the heading `## Divergence list (Task 14 output)` at the end of
+the document, replaced idempotently on re-run by the same rule Task 13 uses.
 
 - [ ] **Step 2: Classify every difference the diff reports**
 
@@ -853,6 +1103,22 @@ Three buckets: **deliberate and stays** (the field-mint parenthetical, e11, f5�
 - [ ] **Step 3: Apply W's `b3` alignment**
 
 - [ ] **Step 4: Re-run the diff** and confirm only the deliberate divergences remain.
+
+- [ ] **Step 4b: Diff all five untouched ranges against the parent, after every text edit**
+
+Task 2 ran this after Task 1 only, and Task 14's parity diff compares C against W rather than either
+against the parent. **A later task can alter an untouched condition identically in both copies and
+every other check still passes** — the parity diff sees no difference and no pair covers text no
+task claims to change.
+
+```bash
+BASE=$(cat .context/loop-rule-base)
+# for each of the five ranges recorded in .context/loop-rule-untouched, in both copies:
+diff <(git show "$BASE:$f" | sed -n "$start,$end p") <(sed -n "$start,$end p" "$f")
+```
+
+Expected: no output, ten times. **This is the last check before Gate B** and it is the only one that
+would catch an identical accidental edit in both copies.
 
 - [ ] **Step 5: Commit**
 
@@ -915,11 +1181,16 @@ It names: the battery run; **every pair this plan built, with its counts in each
 - [ ] **Step 6: Run Gate B**
 
 ```bash
-git rev-parse HEAD          # the WIP commit
-git rev-parse HEAD^         # baseSha
+BASE=$(cat .context/loop-rule-base)   # the parent of the FIRST WIP, from Task 0
+git rev-parse HEAD                    # the current WIP tip
 ```
 
-`mcp__codex__review` with `reviewType: full`, `baseSha` = the WIP commit's parent, `headSha` = the full 40-character object name `HEAD` resolves to **at that moment**, resolved once and kept with each branch's result. Carry the story path and the evidence entry quoted verbatim. Write findings to `.context/codex-reviews/gate-b-<spec|quality>-<nonce>-pass-<p>.md` — **draw a fresh nonce for this cycle**; it is a different cycle from `awsf1ec771`.
+**`baseSha` is `$BASE`, never `HEAD^`.** This plan makes a WIP commit per task, so `HEAD^` is the
+parent of the *last* one and the review range would hold the version bump alone — Gate B would
+close having reviewed none of the prompt or hook changes. `$BASE` is the parent of the first WIP
+and is the only value whose range contains the whole implementation.
+
+`mcp__codex__review` with `reviewType: full`, `baseSha` = `$BASE`, `headSha` = the full 40-character object name `HEAD` resolves to **at that moment**, resolved once and kept with each branch's result. Carry the story path and the evidence entry quoted verbatim. Write findings to `.context/codex-reviews/gate-b-<spec|quality>-<nonce>-pass-<p>.md` — **draw a fresh nonce for this cycle**; it is a different cycle from `awsf1ec771`.
 
 **Standing lens, every call:** "which existing statements does this diff falsify?" and **name what this diff changes the size, value or position of** — a list, a count, a version, an identifier, a cited line — then grep for where each is described elsewhere.
 
@@ -951,3 +1222,15 @@ The closing body carries: the validated evidence entry; the provenance line; the
 **One correction applied from this review:** §G was missing a task; it is now installed by Task 7, which names nine sites rather than eight.
 
 **One residual this plan does not close, stated rather than left to be found.** Nothing here establishes that the edit set is complete — it is the sites §F knows, and §F's own §I records that it cannot establish completeness either. Task 8's step 1 re-derives every citation against the real file, and Task 14's diff catches a copy that fell out of step; neither is a completeness check. The sweep for an affected site this text has not found is design §7's, owed by whoever executes, and a site found during execution is a finding against the spec rather than a gap in this plan.
+
+---
+
+## Next-state table (Task 13 output)
+
+*Empty until Task 13 runs. Task 13 replaces this entire section.*
+
+---
+
+## Divergence list (Task 14 output)
+
+*Empty until Task 14 runs. Task 14 replaces this entire section.*
