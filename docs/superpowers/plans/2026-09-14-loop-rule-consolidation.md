@@ -2091,7 +2091,7 @@ It names: the battery run; **every pair this plan built, with its counts in each
 for those two reader records. **An entry assembled from one section would silently drop whatever
 the other five hold.**
 
-**All four record shapes belong in the entry, not only pairs and presence.** A **dropped**
+**Every record shape belongs in the entry, not only pairs and presence.** A **dropped**
 condition's absence and a **moved** condition's absence are what prove an obsolete instruction was
 removed; a **carried** or span-less **kept** condition's preservation count is what proves
 reproduced text survived. An entry listing only pairs and presence claims the verification set
