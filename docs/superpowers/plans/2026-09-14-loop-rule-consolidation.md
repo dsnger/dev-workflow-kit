@@ -379,8 +379,9 @@ every install and the final soft reset would run from the wrong starting tree.
 **The inputs are compared by blob, not merely found.** `ba15e83` being an ancestor says the
 approved commit is in this history; it does not say the three files still hold what was approved,
 and a later unapproved edit to the target text would supply different installation instructions to
-every task. **`ba15e83` appears once, as the approval commit**, and the loop compares each input's
-object id against its version there.
+every task. **`ba15e83` has exactly one role here — the approval commit** — and the loop compares each input's
+object id against its version there. (It is written more than once; the claim is about its role,
+not its occurrences.)
 
 **What this cannot establish, stated rather than implied:** that *this plan revision* is the one
 Gate A closed on. A plan cannot name its own closing commit, and any sha written here would be from
@@ -561,6 +562,27 @@ none of passages (g), (h) or (j) — so `g4`, which sits at C 815 / W 997, could
 whose expected list named it — and the truncation hid about fifty of the roughly ninety lines the
 comparison actually emits.
 
+**Read both copies from the source the re-entry rule selects, not from the worktree unconditionally.**
+On a clean first run they are the same; once `$BASE..HEAD` is non-empty the worktree carries this
+plan's own edits, and comparing them would fold introduced drift into the inherited-drift record —
+after which Task 14 can no longer tell the two apart, which is the whole purpose of this baseline.
+**Set `C_SRC` and `W_SRC` first:**
+
+```bash
+BASE=$(cat .context/loop-rule-base)
+if [ -n "$(git log --oneline "$BASE"..HEAD)" ]; then
+  git show "$BASE:CLAUDE.md" > .context/loop-rule-c.src
+  git show "$BASE:plugins/dev-workflow/commands/workflow-init.md" > .context/loop-rule-w.src
+  C_SRC=.context/loop-rule-c.src; W_SRC=.context/loop-rule-w.src
+else
+  C_SRC=CLAUDE.md; W_SRC=plugins/dev-workflow/commands/workflow-init.md
+fi
+printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.txt
+```
+
+**The `base` line is written first and by this step**, not assumed: the re-entry rule compares it,
+so a first run that omits it produces an artifact its own next run must reject.
+
 ```bash
 # Tab-separated start and end anchors: the anchors contain colons, so a
 # colon delimiter splits '**Severity:**' at the wrong place and yields an
@@ -579,14 +601,14 @@ printf '%b\n' \
  > .context/loop-rule-sites
 while IFS=$(printf '\t') read -r s e; do
   echo "== $s"
-  diff <(sed -n "/$s/,/$e/p" CLAUDE.md) \
-       <(sed -n "/$s/,/$e/p" plugins/dev-workflow/commands/workflow-init.md)
-done < .context/loop-rule-sites | tee .context/loop-rule-baseline-diff.txt
+  diff <(sed -n "/$s/,/$e/p" "$C_SRC") \
+       <(sed -n "/$s/,/$e/p" "$W_SRC")
+done < .context/loop-rule-sites | tee -a .context/loop-rule-baseline-diff.txt
 
 # The squash-carry sentence is ONE line and must not go through the loop.
 echo "== On squash-merge" | tee -a .context/loop-rule-baseline-diff.txt
-diff <(grep -F 'On squash-merge, copy every evidence entry' CLAUDE.md) \
-     <(grep -F 'On squash-merge, copy every evidence entry' plugins/dev-workflow/commands/workflow-init.md) \
+diff <(grep -F 'On squash-merge, copy every evidence entry' "$C_SRC") \
+     <(grep -F 'On squash-merge, copy every evidence entry' "$W_SRC") \
   | tee -a .context/loop-rule-baseline-diff.txt
 ```
 
@@ -676,11 +698,18 @@ git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
 git commit -m "WIP: install the closure ordering into both §5 copies"
 ```
 
-**The plan is staged here because this task writes its fragment evidence into the plan.** Every
-task that records a fragment — an appended OLD row, or a chosen NEW fragment with its counts —
-stages the plan with its own edit; otherwise the reviewed fragment evidence stays dirty and is
-swept into a later, unrelated commit, and the task commits are not the independently reviewable
-units this plan claims they are. The same applies to Tasks 3, 4, 6, 7 and 8.
+**The plan is staged here because this task writes its fragment evidence into the plan**, and the
+rule is stated by behaviour rather than by a list of task numbers: **every task that appends a
+fragment-table row or records an observation in `## Fragment evidence (per-task output)` stages
+this plan in its own commit.** On the current shape that is every editing task, Tasks 1 and 3–11,
+but the rule is the behaviour and a task that stops recording stops owing it.
+
+**A task-number list here was wrong twice** — it named Tasks 3, 4, 6, 7 and 8 while Tasks 5, 9, 10
+and 11 also record — and a stale list is the same defect as a stale count. **The cost of the
+omission is concrete:** the evidence stays dirty after the task commits, so Task 0's re-entry path,
+which requires a clean tree, cannot be used after an interruption; and if execution continues, that
+task's evidence is swept into a later unrelated commit rather than the independently reviewable
+snapshot this plan promises.
 
 Named `WIP:` because Task 15 runs Gate B over the whole change and closes it with **one
 `git reset --soft "$BASE"` and a single commit**, per the Global Constraints and Task 15 step 8 —
@@ -814,7 +843,8 @@ as inherited drift. **Any difference other than the parenthetical is a failure o
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: replace passage (b) with the absorb paragraph that owns the fix set"
 ```
 
@@ -940,7 +970,8 @@ step only runs them.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: widen the clearly-stuck third condition and split its precedence sentence"
 ```
 
@@ -1043,7 +1074,8 @@ the class alone does not tell you:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: read the two-tell threshold after the clean-completion branch"
 ```
 
@@ -1138,7 +1170,8 @@ Expected: no output. This passage should now be byte-identical, `g4` having been
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: answer the demotion question and scope the resolve duty to the fix set"
 ```
 
@@ -1299,7 +1332,8 @@ Expected: `1` each, and `1` in each copy for every one of the nine.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: install the one-contract paragraph and the remaining prompt-copy replacements"
 ```
 
@@ -1376,7 +1410,8 @@ State the number you observed. **Do not carry a count from §F into a check** �
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: replace the fourteen falsified sentences in the two prompt copies"
 ```
 
@@ -1421,7 +1456,8 @@ The hook reporting its own threshold as an obligation at a floor of 1 is **not**
 - [ ] **Step 6: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: correct the Named residual's blanket exemption and the work-loop sequence"
 ```
 
@@ -1560,7 +1596,8 @@ point where green is expected.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add plugins/dev-workflow/hooks/codex-gate.sh
+git add plugins/dev-workflow/hooks/codex-gate.sh \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: replace the seven gate reminders the ordering falsifies"
 ```
 
@@ -1642,7 +1679,8 @@ Expected: exit 0. **The `--exclude=SC2015` is a single-code exclusion**, not a b
 - [ ] **Step 7: Commit**
 
 ```bash
-git add plugins/dev-workflow/hooks/codex-gate.test.sh
+git add plugins/dev-workflow/hooks/codex-gate.test.sh \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: move every hook assertion that names a replaced reminder string"
 ```
 
