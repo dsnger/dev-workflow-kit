@@ -667,7 +667,10 @@ carrying an unqualified instruction — which is why each is **replaced** rather
 exception to point at. **Fifteen live in the two prompt copies and cite a line in each; the last
 seven live in the shipped hook**, which has one copy and no template mirror. The hook holds eight
 gate reminders in all; the one this change leaves alone is the docs-only notice, which states no
-closure permission.
+closure permission. **Three of the seven are pinned by exact-match expectations in
+`plugins/dev-workflow/hooks/codex-gate.test.sh`** — items 12, 15 and 16, at that file's three
+`expected_ctx` assignments — and each is replaced there with its complete resulting message in the
+same change. The remaining four are matched by loose patterns these repairs leave standing.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -909,13 +912,12 @@ Per $policy, commit only if your final pass was clean and every other closure co
 ```
 *Why (pass 53 finding 20):* the same abbreviated definition, in the branch an author reads
 immediately before committing, and it takes the same repair. It is the thirteenth sentence sharing
-this section's mechanism. **The exact-match expectation in
-`plugins/dev-workflow/hooks/codex-gate.test.sh` pins this string in full and is replaced with
-it** — the other hook assertions match on loose patterns this repair leaves standing.
+this section's mechanism. This message is one of the three pinned by an exact-match expectation,
+replaced there with the complete resulting message as the section opening requires.
 
 **13. The WIP-commit reminder's closing permission** (the shipped hook, same file).
 ```
-Run the review against this commit; when the closing act may then be performed is $policy's closure ordering's, read there in full.
+Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full.
 ```
 *Why (pass 54 finding 2):* the live string ends "then make the real commit when your final pass is
 clean", which makes cleanliness the whole permission — and it reaches the author at the one moment
@@ -940,12 +942,19 @@ statement about scope, so it does not join that count.
 
 **15. The no-fingerprint reminder's next action** (the shipped hook, same file).
 ```
-What this cycle does next is $policy's closure ordering's — a pass, an answer a suspension is waiting for, or a source block's repair — and this reminder decides none of it.
+What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it — including whether the state file's deletion below is followed by a pass.
 ```
 *Why (pass 55 finding 3):* the live string says "Run Gate B (mcp__codex__review) now", which sends
 the author into another pass whatever the cycle's state is — including a pass that carried a
 suspension whose answers are still outstanding, which the composition rule holds the cycle on. The
 diagnostic half, and the machinery checks after it, are kept: they are what the message is for.
+*And (pass 57 findings 2 and 3):* an earlier wording enumerated the ordering's routes as a pass, a
+suspension's answer or a source block's repair, which **omits the closing act** — an absent
+fingerprint is not a closure condition and Gate B has no content condition, so a clean eligible
+cycle whose fingerprint merely could not be stored still has its commit route. The enumeration is
+removed rather than extended, per this section's own preference. The same finding's second half
+reaches the sentence's tail, "delete it and run a fresh pass": the deletion stays as a remedy, the
+pass after it does not, and the new sentence says so where a reader meets it.
 
 **16. The stale-fingerprint reminder's two instructions** (the shipped hook, same file).
 ```

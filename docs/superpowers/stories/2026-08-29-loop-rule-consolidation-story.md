@@ -46,8 +46,8 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
 - **Hook behaviour** (anything under `plugins/dev-workflow/hooks/` that decides what the hook
   does): its control flow, counters, fingerprint computation, routing and event handling, all
   unchanged from the parent. **One narrow exception, authorised 2026-09-13:** the seven reminder
-  **strings** this change makes contradictory, and the single exact-match expectation in
-  `plugins/dev-workflow/hooks/codex-gate.test.sh` that pins one of them, are in scope — listed as
+  **strings** this change makes contradictory, and the three exact-match expectations in
+  `plugins/dev-workflow/hooks/codex-gate.test.sh` that pin three of them, are in scope — listed as
   items 10–13 and 15–17 of the target text's §F. Prompt-standards item 7 requires a superseded instruction
   to be corrected in the same change, and a hook reminder is prompt text the agent acts on. The
   Gate-B fingerprint overclaim in the same message stays parked.

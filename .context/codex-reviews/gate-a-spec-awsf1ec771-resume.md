@@ -73,7 +73,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 54 | c73367f | 21→**13** | 0→**0** | 4→**3** | yes | zero tells. All three Majors are pass-53 fallout and all are in-set: a **fourth** falsified hook string (the WIP reminder's "make the real commit when your final pass is clean") → §F item 13, 17→18; the design opening still said "No file under `plugins/dev-workflow/hooks/` changes"; §A1's continue branch re-enumerated §B's scope triggers instead of citing them |
 | 55 | 1940181 | 13→**18** | 0→**0** | 3→**6** | yes | one tell (findings rose). **Four more hook strings**, same class as item 13 — every gate reminder that tells the agent what to do next, ignoring a suspension the ordering sends that pass to. §F 18 → 22, covering **7 of the hook's 8** gate reminders. Also: the standing Named residual still said "Hook text is out of scope here by decision", which our own scope opening falsifies → item 14. §A1's source-block branch said a repaired block rereads "that pass" where the block stood before any pass existed |
 | 56 | 6b8854f | 18→**13** | 0→**0** | 6→**0** | yes | **first Blocker- and Major-free pass of the cycle.** 11 of 13 are the second-copy class, collected. Two were count contradictions and were repaired, so 56 is not the final pass: design §9 still said "three contradictory reminder strings" against its own enumeration of seven (my pass-55 propagation missed it), and §F item 7's rationale said "the three closing paths" while §A2 defines two cases |
-| 57 | — | — | — | — | not run | next, against the pass-56 repair commit — a clean 57 closes the cycle |
+| 57 | bb1ba03 | 13→**5** | 0→**0** | 0→**5** | yes | zero tells. All five are pass-53/55 fallout inside the hook items. **Two are a factual error of mine:** `codex-gate.test.sh` has **three** `expected_ctx` exact-match expectations (lines 1006, 1019, 1029), not one — my first grep searched only for phrases that occur in 1019. Items 12, 15 and 16 are all pinned. The other three tightened items 13 and 15, whose replacements still carried an unqualified imperative and an enumeration omitting the closing act |
+| 58 | — | — | — | — | not run | next, against the pass-57 repair commit |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -81,6 +82,32 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-57 report — zero tells, and a fact I had wrong twice
+
+**Trend:** findings 18, 13, 13, **5** across 54–57; Blockers 0, 0, 0, **0**; Majors 6, 0, 0... **5**.
+**Cluster:** product behaviour, all five inside the hook items §F gained at passes 53–55.
+**Require↔withdraw:** none. Zero tells — but note the Major count is not monotone, and the reason
+is that pass 56's repair set was small while pass 57 read the hook items against the test suite
+for the first time.
+
+**The error worth recording.** I told Daniel, and wrote into three files, that
+`plugins/dev-workflow/hooks/codex-gate.test.sh` pins **one** of the edited reminder strings with an
+exact-match expectation. It pins **three** — lines 1006, 1019 and 1029, all `expected_ctx`. My
+check had been `grep` for the three phrases I already knew were falsified, and two of the three
+expectations contain none of them. The lesson is the one AGENTS.md already states for gate claims
+and which I did not apply to a test file: **name the exact thing the check performs** — here,
+"every `expected_ctx` assignment" — rather than grepping for the strings I expected to find.
+Items 12, 15 and 16 now all carry the obligation, and the §F opening states the count once.
+
+**The other three** tightened the hook replacements pass 55 had written: item 13 still opened
+"Run the review against this commit" unqualified; item 15's replacement enumerated the ordering's
+routes and **omitted the closing act**, which would tell a clean eligible Gate-B cycle with an
+unstorable fingerprint that it had no commit route; and item 15 had left the same sentence's tail,
+"delete it and run a fresh pass", standing. The enumeration was removed rather than extended.
+
+**Reading:** 5 findings from 13, all in-set, all repaired, no new subject. The hook class is still
+closed — nothing in pass 57 named an eighth reminder.
 
 ## Pass-56 report — the first clean pass, and why it is not the final one
 
