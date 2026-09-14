@@ -13,7 +13,7 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** Gate-A plan pass 11 against `55a27c9`. The prompt is
+**Next action:** Gate-A plan pass 21 against `3111985`. The prompt is
 `.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
 
@@ -80,7 +80,17 @@ worth checking before a pass rather than after.
 | 8 | 54e793b | 13→**15** | 4→**2** | 4→**9** | yes | **MANDATORY TWO-TELL STOP** (findings rose, instrument cluster). Task 15 step 7 never re-ran the battery after a Gate-B fix; step 8 suppressed its record commit with `\|\| true`. Two more condition misclassifications: `a1` is carried inside §F item 8a's block **and the untouched span opened on that line**; `e10` is kept outside §D. `c10`–`c13` and `a18`–`a20` are moved and had only a reader walk; nine carried conditions owed preservation checks and three had them |
 | 9 | ebb371b | 15→**9** | 2→**2** | 9→**6** | yes | **MANDATORY TWO-TELL STOP** (Blockers flat, instrument cluster). The floor span ended on the line carrying both changed `a13` and kept `a14`. **Root repair: `## What each disposition owes, stated once`** — kept/carried/replaced/moved/dropped/add-only. Spans are now derived, not written out. The fragment table's cut became "exists before the edit" |
 | 10 | ba614f6 | 9→**17** | 2→**1** | 6→**14** | yes | **MANDATORY TWO-TELL STOP** (findings rose, instrument cluster). **Eleven of seventeen were one family: the tasks had not been brought into line with pass 9's table.** Root repair: **no task enumerates its condition ids** — `## How a task discharges that table` states the procedure and each task walks its passage's rows by class. A *kept* condition inside a wholly replaced passage has no span and owes a per-condition count; carried and kept preservation fragments are pre-existing and derived before the install |
-| 11 | — | — | — | — | **not run — NEXT** | against `55a27c9`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`55a27c9` and `__P__`=`11` |
+| 11 | 55a27c9 | 17→**11** | 1→**2** | 14→**7** | yes | two-tell stop. **The unit became the source block a task replaces, not the passage** — (c) is split between Tasks 4 and 7, (a) between 7 and 8. Each row runs to **its own class's** result, so no step says "a pair for every row" (a carried fragment must still be there). Five record shapes in the evidence section |
+| 12 | 1d5a892 | 11→**6** | 2→**1** | 7→**5** | yes | one tell. **`is_wip_commit` greps the whole command string**, so step 8's WIP record commit and the real closing commit in one block would classify the close as cycle-internal. Split into 8a/8b, separate invocations. Failure branch is a **mixed** reset, never `--hard` |
+| 13 | c1614ba | 6→**4** | 1→**1** | 5→**1** | yes | two-tell stop. The span derivation collected each **fragment's** line rather than each replacement **block's** extent. 8a's retry branch compares `HEAD`'s exact changed-path set |
+| 14 | 6a9cfc8 | 4→**5** | 1→**2** | 1→**2** | yes | three-tell stop. The dirty-set guard read only `??`/`A ` records, so a staged tracked change was swept in. Both 8b post-commit checks restore the tip. The Gate-B loop admits the **zero-finding pass below the floor** |
+| 15 | c6d0773 | 5→**4** | 2→**0** | 2→**2** | yes | one tell. **"changed" is not a disposition** — nine §B conditions had no observation class at all. Every step-8 rejection restores a tip. `$BASEREF` resolved once |
+| 16 | d41ff5a | 4→**5** | 0→**2** | 2→**2** | yes | three-tell stop. **"split" is not a disposition either.** The inventory defines `c9` as one clause and `a13` as **two sentences** — §H supplies one, so nothing observed the first. Every cross-block value goes to a file |
+| 17 | 67a50e0 | 5→**9** | 2→**2** | 2→**3** | yes | three-tell stop. **The fragment admission test was class-blind**: it demanded every fragment be absent from its replacement, where a *carried* one must be present in it — no correct implementation could admit its own rows. `h3` is carried, not kept |
+| 18 | 6d276fa | 9→**4** | 2→**0** | 3→**3** | yes | one tell. A **fifth record shape, `span`**; both scratch artifacts open with a `base` line; the hook ships **ten** prompt bodies, not seven |
+| 19 | 76cd2ce | 4→**3** | 0→**0** | 3→**2** | yes | one tell. Nine editing tasks record into the plan and staged only prompts — the staging rule was a stale task-number list. Task 0 step 3 selects its source by the re-entry rule |
+| 20 | 9aa1178 | 3→**4** | 0→**2** | 2→**2** | yes | three-tell stop. **F11/F12/F13 each ended just before their item's first changed word** and would have survived a correct install. Root: the test's subject is the region's **post-edit text**, not the replacement block. All twelve F rows with a declared range re-checked and go to zero; F1–F3 have no range and owe a reading check |
+| 21 | — | — | — | — | **not run — NEXT** | against `3111985`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`3111985` and `__P__`=`21` |
 
 ## Pass-1 report
 
