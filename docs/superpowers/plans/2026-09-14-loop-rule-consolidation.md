@@ -266,13 +266,15 @@ closing commit**, so a stale one is an abandoned run rather than a normal state.
 **Persist it to a file, not to a shell variable.** Each task runs in its own shell invocation, so a
 `BASE=` assignment in Task 0 is gone by Task 1 and every parent-tree count would run against an
 empty revision — which fails loudly in `git show` but quietly in a `grep -c` pipeline. Every later
-task begins with:
+task that counts anything begins by reading it back and refusing an empty value:
 
-*(Build the pair per the verification procedure; record the four values.)*
+```bash
+BASE=$(cat .context/loop-rule-base)
+test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+```
 
-**Task 0 also writes `.context/loop-rule-verify.sh`**, whose generator is given in the fragment-table
-section. It sets `$BASE` and defines `pair()`, so both arrive together and neither can be used
-without the other.
+**The guard is not decoration.** With `$BASE` empty, `git show ":$f"` reads the *index* rather than
+the recorded parent, and every parent count then describes the wrong tree without erroring.
 
 **This commit is also `baseSha` for Gate B.** It is the parent of the first WIP snapshot, and it is
 the only value that puts the whole implementation inside the reviewed range. `.context/` is ignored
@@ -425,7 +427,7 @@ Insert the three blocks before the anchor line, blank-line separated, byte-ident
 copies while every count and the parity diff still pass — the paragraphs are installed together and
 nothing else observes them.
 
-*(Build the pair per the verification procedure; record the four values.)*
+*(Count each fragment in both copies and both trees, per the verification procedure; expect worktree 1, parent 0.)*
 
 Expected: `worktree=1 parent=0` for all six. **Add the two §A2/§A3 fragments to the fragment table
 once chosen**, with the check that verified each is single-line and unique — they are the two rows
@@ -469,9 +471,13 @@ This task exists because `f1` and the (d)/(j) dispositions are falsifiable only 
 
 - [ ] **Step 1: Diff each untouched passage against the parent**
 
-*(Build the pair per the verification procedure; record the four values.)*
+Read `.context/loop-rule-untouched`, and for each recorded span **resolve its start and end anchors
+separately in each tree** — Task 1 inserts a large block, so a line number taken from one tree
+addresses different text in the other. For each span, extract it from `$BASE:<file>` and from the
+worktree file and diff the two.
 
-Expected: `unchanged` six times. Any `CHANGED` is a defect — revert that hunk before continuing.
+Expected: no output for every recorded span. Any difference is a defect — revert that hunk before
+continuing.
 
 - [ ] **Step 2: Confirm `f1` still names the right pair**
 
@@ -505,7 +511,7 @@ Rows **P2** (`b7`, the fix-set definition) and **P3** (`b12`, immediate resumpti
 table. Both are verified single-line and unique; re-confirm before editing, since earlier tasks
 have touched these files:
 
-*(Build the pair per the verification procedure; record the four values.)*
+*(Count each named OLD fragment in the copies its row claims, per the verification procedure; expect 1 in each.)*
 
 Expected: `P2=1 P3=1` for **both** files — the first draft ran these against C only while claiming a result for both.
 
@@ -572,7 +578,7 @@ git commit -m "WIP: replace passage (b) with the absorb paragraph that owns the 
 
 - [ ] **Step 1: Record the old-wording fragments**
 
-*(Build the pair per the verification procedure; record the four values.)*
+*(Count each named OLD fragment in the copies its row claims, per the verification procedure; expect 1 in each.)*
 
 Expected: `P4=1` for both files.
 
@@ -606,9 +612,8 @@ reported a pass, and `c4` had no observation at all.
 Expected for all six: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
 **`P19_OLD` and `P20_OLD` do not exist yet.** Derive each from the live passage, check it the three
-ways, **add a row to the fragment table and a line to `.context/loop-rule-verify.sh`**, then re-run
-the validation loop. Ids continue the `P` series; a row id is whatever the table and the helper agree
-on, so keep them plain.
+ways, and **add a row to the fragment table** — that table is where every fragment lives, and a row
+that is not there is a fragment stated somewhere else. Ids continue the `P` series.
 
 - [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` split, `c10`–`c14` gone from here.
 
@@ -644,7 +649,7 @@ deliberate a divergence this task chose to create.
 replacement**, so it can never be the old half — that is the trap design §7 records from four spec
 revisions. Rows **P5** (C) and **P5w** (W) instead, and they differ because W drops the pronoun:
 
-*(Build the pair per the verification procedure; record the four values.)*
+*(Count each named OLD fragment in the copies its row claims, per the verification procedure; expect 1 in each.)*
 
 Expected: `1` each.
 
@@ -778,7 +783,7 @@ contract`), `Your final pass must be clean` (wraps C 132–133), ``a literal `NO
 is clean`` (one line in C, wraps in W), `A clean pass is the single body line` (the line break falls
 after `A`), and `at minimum floor 3, severity classified without the demotion` (wraps C 155–156).
 
-*(Build the pair per the verification procedure; record the four values.)*
+*(Count each named OLD fragment in the copies its row claims, per the verification procedure; expect 1 in each.)*
 
 Expected: `1` twenty times. **Any `0` means the wording drifted since this table was verified at
 `5871d0a`** — re-derive that fragment and update the table before installing anything.
@@ -807,8 +812,8 @@ source sentence per block:
 *(Build the pair per the verification procedure; record the four values.)*
 
 **`<ID>_NEW` is set by the executor after installing that block and verifying the chosen fragment
-the same three ways** — append the assignment to `.context/loop-rule-verify.sh` and re-run the
-validation loop before the pairs.
+the same three ways** before it is counted with. A NEW fragment is not added to the table: the table
+holds OLD fragments, which exist before the edit and can be checked in advance.
 
 Expected for all twenty: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
@@ -882,9 +887,9 @@ Expected for all twenty-eight: `old/worktree=0 old/parent=1 new/worktree=1 new/p
 
 - [ ] **Step 4: Count what was installed**
 
-*(Build the pair per the verification procedure; record the four values.)*
+Total the fourteen `new/worktree` values step 3 printed, per copy.
 
-Expected: `installed=14` per copy. State the number you observed. **Do not carry a count from §F into a check** — §F states the count of falsified sentences and this task installs a subset of them; a count copied between the two is the stale-bookkeeping defect the design records at five passes running.
+Expected: `14` per copy. State the number you observed. **Do not carry a count from §F into a check** — §F states the count of falsified sentences and this task installs a subset of them; a count copied between the two is the stale-bookkeeping defect the design records at five passes running.
 
 - [ ] **Step 5: Parity** for all fourteen sites.
 
@@ -1008,9 +1013,10 @@ first time — it admitted exactly the shell keywords it existed to catch.
 
 - [ ] **Step 5: Discriminating pairs, worktree and parent**
 
-The hook has one copy and owes no parity check; **the hook suite's exact-match assertion is this edit's second observation** (design §7). Run the pair anyway:
-
-*(Build the pair per the verification procedure; record the four values.)*
+The hook has one copy and owes no parity check; **the hook suite's exact-match assertion is this
+edit's second observation** (design §7). Run a pair anyway, one per replaced message, against
+`plugins/dev-workflow/hooks/codex-gate.sh` — **seven items, and items 15 and 16 share one `STOP`
+opening, so eight observations across seven pairs.**
 
 **Three of these pairs need a second look before they are run, and the executor derives the
 fragments with the file open.** Item 11's removed text is the **clean definition** at the end of the
@@ -1326,13 +1332,17 @@ against the parent. **A later task can alter an untouched condition identically 
 every other check still passes** — the parity diff sees no difference and no pair covers text no
 task claims to change.
 
-```bash
-BASE=$(cat .context/loop-rule-base)
-while IFS=$(printf '\t') read -r s e f; do
-  echo "== $f :: $s"
-  diff <(git show "$BASE:$f" | sed -n "/$s/,/$e/p") <(sed -n "/$s/,/$e/p" "$f")
-done < .context/loop-rule-untouched
-```
+For each span in `.context/loop-rule-untouched`, resolve its start and end anchors **separately in
+the parent and in the worktree**, extract the two slices, and diff them.
+
+**Not a `sed` range with the same anchor at both ends.** `sed` does not test the end address on the
+line that matched the start, so a single-line site runs to the next match or to end of file — which
+is why the squash-carry sentence is checked with `grep -n` instead. And not line numbers carried
+from Task 0: Task 1's insertion shifts everything after it in one tree and not the other.
+
+**Plus the per-condition checks** for `a14`, `h6` and any other kept condition sharing a line with a
+changed one: count the condition's own text in the parent and in the worktree, expecting `1` both
+times.
 
 **Anchors, resolved separately in each tree** — Task 1 inserts a large block, so a line number taken
 from either tree addresses different text in the other, and an earlier draft's numeric `sed`
@@ -1471,7 +1481,21 @@ closing commit.**
 so an evidence entry written only into a WIP message is destroyed at exactly the moment the cycle
 closes — which is what step 5 would otherwise have done.
 
-*(Build the pair per the verification procedure; record the four values.)*
+```bash
+BASE=$(cat .context/loop-rule-base)
+test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+# Everything that must be IN the squashed commit has to be committed before the
+# reset: reset --soft stages only what the discarded commits already contained.
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md .context/codex-reviews/
+git commit -m "WIP: plan records and Gate-B findings files" || true
+git status --porcelain     # expect empty
+git reset --soft "$BASE"
+git commit -F .context/loop-rule-closing-msg
+rm -f .context/loop-rule-base
+```
+
+**`$BASE` is the recorded revision, not a placeholder to substitute by hand**, and the file is
+removed afterwards so a later run cannot inherit a stale one.
 
 **`reset --soft` stages committed content only.** The prompt-standards result (step 4b), the
 completeness sweep, the next-state table and the divergence list all land in this plan, and

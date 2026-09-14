@@ -211,15 +211,22 @@ told me to derive an OLD row per addition in the strict-reading block; pass 5 fi
 clauses are add-only and have no old wording to remove. **Two tells, mandatory stop**, surfaced, loop
 continued on the standing answer.
 
-**What five passes have actually been saying.** Findings 1, 3, 4, 9, 11, 13 and 16 of this pass, and
-most of passes 2, 3 and 4, are one thing: **shell written in advance for text that does not exist
+**What most of five passes have been saying.** Findings 1, 3, 4, 9, 11, 13 and 16 of this pass, and
+much of passes 2, 3 and 4, are one thing: **shell written in advance for text that does not exist
 yet.** Helpers defined in one shell and called in another; loop bodies outside their loops; `sed`
 ranges whose delimiters occur in their own data; `sed -n "/x/,/x/p"` for a single line, which runs to
 the next match instead; variables no step sets; a generated helper whose empty variable makes
-`grep -cF ""` match every line. **Every one was a defect in the apparatus and none in the change.**
+`grep -cF ""` match every line. **Those were defects in the apparatus.** **It would be wrong to say none of the five passes found a
+defect in the change itself** — pass 1 found a `baseSha` that would have put only the version bump in
+Gate B's range, and two tasks installing text contrary to the approved target. Both would have
+produced wrong behaviour, and neither is an apparatus problem. The apparatus class is the *majority*
+of the findings, not all of them.
 
-**Design §7 already said not to do this:** the plan *builds each pair against the real files and runs
-both directions there*. **There** — with the installed text open. I had been pre-writing it.
+**Design §7 requires the checks to run against the real files** — the plan *builds each pair against
+the real files and runs both directions there*. **It does not forbid pre-written shell.** Writing the
+commands at execution instead is a defensible way to meet that requirement and it removes a class of
+error this cycle kept producing; it is not a method the design had already prescribed, and claiming
+so would be reading a preference back into the text.
 
 **So the pre-written blocks are gone**, replaced by one procedure stated once: take the OLD from its
 row, install, choose a NEW from the installed text, check it the three ways, count four values,
@@ -238,3 +245,36 @@ abandoned run's value would silently put every edit outside Gate B's range; it i
 ancestor of `HEAD` with only this run's `WIP:` commits between, and removed at close. And the
 prompt-standards result was written into the plan after the last WIP commit, where neither Gate B's
 range nor `reset --soft` would reach it.
+
+
+## Pass-5 follow-up — the method change, traced through its dependencies
+
+An independent reviewer Daniel obtained found the pass-5 repair **incomplete, and partly damaging**.
+Verified and corrected at the commit below; none of it was a new requirement.
+
+**My bulk edit destroyed four blocks it should not have touched.** The script that stripped
+pre-written pair commands matched on the helper's filename as well, so it deleted **Task 2's
+untouched-range diff**, **Task 8's installed-count step**, **Task 10's hook-pair list** and — worst —
+**Task 15's git closing block**, leaving "Build the pair … record the four values" where
+`git reset --soft` and `git commit -F` had been. A fragment count does not close a cycle. All four are
+restored.
+
+**Three references to the deleted helper survived**: Task 0 still claimed to write
+`.context/loop-rule-verify.sh`, and Tasks 4 and 7 still told the executor to add lines to it and
+re-run a validation loop that no longer exists. Removed.
+
+**One shell pattern pass 5 had rejected was still standing** in Task 14 step 4b — the `sed` range
+whose behaviour with identical start and end anchors pass 5 named. Replaced with the anchor-resolved
+form plus the per-condition checks for `a14` and `h6`.
+
+**Two claims in the pass-5 report were too broad and are corrected above.** Not every finding in five
+passes was an apparatus defect — pass 1 found a `baseSha` that would have reviewed only the version
+bump, and two tasks installing text contrary to the approved target, both of which would have
+produced wrong behaviour. And design §7 requires checks against the real files; it does not forbid
+pre-written shell. The new method is a defensible implementation of that requirement, not one the
+design had already prescribed.
+
+**The honest status is narrower than "cause understood and removed":** the verification strategy is
+simplified, and **whether it is consistently applied and effective is still being reviewed.** The
+change also moves responsibility for working check commands to execution time, which removes some
+error sources and proves nothing about the checks being right.
