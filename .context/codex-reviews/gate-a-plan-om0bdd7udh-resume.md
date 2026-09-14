@@ -33,7 +33,8 @@ worth checking before a pass rather than after.
 | 1 | 5871d0a | **32** | **1** | **28** | yes | first pass. The Blocker is real: with a WIP commit per task, `baseSha = HEAD^` would have put only the version bump in Gate B's range. **The dominant class is verification fragments that count zero** — the reviewer tested them against the real files and found five of Task 7's ten locators, both of Task 3's, Task 5's and Task 7's strict-reading OLD all wrapping across lines or quoting text that does not exist. Repaired by one **verified fragment table** for the whole plan instead of guessed fragments per task |
 | 2 | 9f13a2c | 32→**32** | 1→**0** | 28→**25** | yes | one tell (findings flat, and they cluster on the plan's own checks — the instrument). **Pass 1's repair reproduced the same defect at the next condition down:** three OLD fragments are *preserved inside their own replacements*, so their old-count can never reach zero. My checker tested single-line and unique but not that third condition, though this plan states all three. Checker fixed to test against the target's **fenced blocks**; three rows replaced; the fourteen §F OLD fragments derived and committed rather than deferred |
 | 3 | b767a2a | 32→**31** | 0→**0** | 25→**23** | yes | one tell (instrument cluster). **Pass 2's three fragments came back — because I repaired the table and left the same fragments quoted inline in the task steps.** Second-copy defect, in the plan written to avoid it. Structural repair: the table is the only authored copy and Task 0 **generates** the shell variables from it, so no step can restate a fragment. 8 Minors collected |
-| 4 | — | — | — | — | not run | next, against the pass-3 repair commit |
+| 4 | 6ace06f | 31→**20** | 0→**10** | 23→**7** | yes | **MANDATORY TWO-TELL STOP** — Blockers rose 0→10, and the findings cluster on the instrument for the fourth pass running. Surfaced, standing answer applied, loop continued. **The awk generator pass 3 introduced was broken three ways**; it is deleted, not debugged — the helper is transcribed by hand and validated against the real files, with empty-string guards, because a silently unset variable makes `grep -cF ""` match every line. **A fourth fragment (F4) was preserved in its own replacement and invisible to my checker**, which compared without normalizing the block's line breaks |
+| 5 | — | — | — | — | not run | next, against the pass-4 repair commit |
 
 ## Pass-1 report
 
@@ -151,3 +152,51 @@ claiming a boundary that is not there.
 **Eight Minors collected**, per Mechanics · Severity: locator commands run against C while claiming
 a result for both copies; three parity steps with no command; commit steps not staging the plan; the
 baseline expected-divergence list omitting the recorded blank-line and wrap differences.
+
+
+## Pass-4 report — MANDATORY TWO-TELL STOP
+
+**Trend:** findings 32, 32, 31, **20**; Blockers 1, 0, 0, **10**; Majors 28, 25, 23, **7**.
+**Cluster:** the plan's verification apparatus, fourth pass running — the **instrument**.
+**Require↔withdraw:** none.
+
+**Two tells: the Blocker count rose from zero to ten, and the instrument cluster persists.** The
+stop is mandatory, not discretionary. Surfaced to Daniel; his standing answer of 2026-09-13 applies
+and the loop continued on it.
+
+**The tells are reading something real, and it is my repair strategy rather than the plan.** Pass 3's
+fix for "fragments stated twice" was a generator: Task 0 would `awk`-parse this plan's own markdown
+table into shell variables. Pass 4 found it broken three ways at once — it also matched Task 7's
+NEW-source table and overwrote nine `_OLD` variables; its sentinel test dropped every fragment
+beginning with `**`; and its id grammar could not express the rows Tasks 3, 4 and 6 add. **Its
+failure mode is the dangerous one**: an unset variable makes `grep -cF ""` match every line, so every
+pair reports a healthy-looking count against nothing.
+
+**The generator is deleted rather than debugged.** A markdown parser is the wrong instrument for
+thirty-two lines. The helper is **transcribed by hand** and **validated against the real files** —
+the validation is what makes the transcription safe, and `pair()` now refuses an empty OLD or NEW,
+which is the guard that would have caught the generator's failure had it existed.
+
+**A fourth fragment was preserved inside its own replacement**, and my checker could not see it:
+`F4`'s text is one line in `CLAUDE.md` but the target's fenced block wraps it between `you` and
+`still`, so a substring test found nothing. **Re-running the check with line breaks normalized found
+exactly that one row and no other.** Three passes, three different ways for a fragment to be wrong,
+and each time the checker learned the condition after the reviewer found it.
+
+**Four blockers were shell that cannot run** — two pair blocks still carrying the old
+`BASE=$(cat …)` prefix without sourcing the helper that defines `pair`, and two hook checks written
+as bare quoted strings after a loop rather than inside it. **Two more were state**: re-running Task 0
+would have overwritten the recorded base with the current WIP tip, putting every earlier edit outside
+Gate B's range and outside the final reset; and the plan records written after the last WIP commit
+were never staged, so `reset --soft` would have left them in the worktree and out of the closing
+commit.
+
+**Two were accounting**, the fourth and fifth in four passes: `h5`, whose Gate-B destination §F item 7
+changes, was marked kept; and one pair per §F block is a sample rather than coverage where a block
+changes four conditions.
+
+**What I would tell a reader of this record:** the product text has been stable since pass 1. Every
+finding in four passes has been about the apparatus that checks it, and each of my repairs to that
+apparatus has introduced a new defect in it. That is the signal the two tells are carrying, and the
+answer taken here is to make the apparatus smaller — no parser, no generated state, hand-written
+lines whose only guarantee is a check against the real files.
