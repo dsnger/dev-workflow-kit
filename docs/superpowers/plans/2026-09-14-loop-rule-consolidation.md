@@ -242,7 +242,7 @@ preservation fragments that an earlier draft chose afterwards.
 | a3–a12, a14 | **kept**, untouched. The floor arithmetic, the hook-ratio rules and the two comparison points are outside this change. |
 | a1 | **carried**, not kept. §F item 8a's fenced block opens with `**Both gates are a LOOP with a HARD FLOOR: a minimum number of passes per run` — `a1` itself — and reproduces it so one contiguous string installs. **Recorded as carried for the same reason as `a15`, `a21`, `a22`, `c15` and `i4`–`i8`**: a condition inside a replacement block is not untouched text, and calling it untouched would put it inside an untouched-range span that a correct implementation then fails. It owes a preservation check, not a span. |
 | a2 | **replaced.** §F item 8a rewrites the HARD FLOOR parenthetical `(Blocker/Major only)` — Task 8, row F10. The filter itself survives in the ordering, which states what a pass counting toward the floor must be; what goes is the parenthetical's claim that Blocker/Major is the *whole* of it. **Marked replaced rather than kept**, because a condition whose text the change in fact rewrites, recorded as preserved, is the dropped-condition failure `AGENTS.md` names. |
-| a13 | **replaced** — scoped to its own paragraph. §H's `a13` block. |
+| a13 | **replaced** — scoped to its own paragraph. §H's `a13` block. **The inventory defines `a13` as two sentences**, `This replaces the pass-count number and nothing else.` and `Every other rule stated here…`, and §H supplies **one** sentence for both. So the block replaces the whole condition, first sentence included, and **that first sentence owes an absence check of its own** — row P9's fragment sits in the second. §H's parenthetical line range is a locator, not the extent; installing over the second sentence alone leaves `This replaces the pass-count number` standing beside an ordering that changes more than a number, with every stated count still passing. |
 | a15 | **carried** inside §H's `a16` block, which reproduces it so one contiguous string installs. |
 | a16 | **replaced** — points at Mechanics · Severity instead of carrying an unscoped copy. §H's `a16` block. |
 | a17, a18, a19 | **moved** — the floor paragraph stops stating the clean-final-pass rule and the early exit; both are stated once in §A. §H's `a17`–`a22` block. |
@@ -265,7 +265,8 @@ preservation fragments that an earlier draft chose afterwards.
 | c4 | **replaced** — "a missing one means keep going" becomes "means only that *this* exit does not apply", the pass's actual next step being the ordering's. |
 | c5, c6, c7 | **carried word for word** inside §C's block. |
 | c8 | **replaced** — gains the re-raised-dismissal clause. |
-| c9 | **split.** The operative precedence clause moves into §A capitalized as a standalone sentence; the plateau rationale stays at this source. Not moved whole — §C says so explicitly. |
+| c9 | **moved.** The inventory defines `c9` as the operative precedence clause alone — `**a clean completion takes precedence over this exit**` — and that clause moves into §A, capitalized as a standalone sentence. So it owes the moved pair: an absence here, a condition-specific presence in §A. **It was recorded as "split", which is not one of the six dispositions** and left the procedure with no result to run. |
+| — | **the plateau rationale is not `c9`** and carries no id: it is unnumbered source text that **stays** at this site while `c9` leaves it. It owes a **preservation** observation under its own name, `parent=1 worktree=1`, and must not be recorded as part of `c9` — one condition cannot be required to vanish and to remain. |
 | c10, c11 | **moved** to §A, which states what a Blocker/Major-free pass at or above the floor does. |
 | c12, c13 | **moved** to §A, beside a19. |
 | c14 | **replaced, not moved.** The ordering splits the below-floor Minor case into suspend and continue; no copy of the live wording survives beside them. |
@@ -814,11 +815,12 @@ decided at execution.
   passage (c), and §C replaces text inside it, so the curve-reading premises owe **per-condition
   preservation counts** — `parent=1 worktree=1` in each copy — like a carried condition. Without
   them an accidental edit to the curve or coverage sentences survives every mechanical check here.
-- **`c9` is split and needs two rows, not one.** The moved precedence clause owes an **absence**
-  at this source; the plateau rationale that stays owes a **preservation count**. One row cannot
-  observe both — the clause must vanish and the rationale must not — and the rationale's own
-  sentence wraps in both copies, so its fragment has to be chosen single-line **before** step 2
-  rather than picked out of the installed text afterwards.
+- **`c9` and the plateau rationale are two subjects, not one condition with two halves.** `c9` is
+  the precedence clause and is **moved** — absence here, condition-specific presence in §A. The
+  plateau rationale carries no inventory id, **stays**, and owes a **preservation count** recorded
+  under its own name. One row cannot observe both, because one must vanish and the other must not.
+  The rationale's sentence wraps in both copies, so its fragment has to be chosen single-line
+  **before** step 2 rather than picked out of the installed text afterwards.
 
 - [ ] **Step 2: Install §C's block**
 
@@ -1134,6 +1136,11 @@ begins at, and passage (a) is shared with Task 8, which owns item 8a's block. **
 afterwards has no live wording left to check against — and that includes the **preservation
 fragments for the nine carried conditions** `a15`, `a21`, `a22`, `c15` and `i4`–`i8`, which an
 earlier draft chose from the installed text at step 4.
+
+**`a13` is two sentences and row P9 sits in the second.** §H replaces the whole condition with one
+sentence, so the first — `This replaces the pass-count number and nothing else.` — owes an
+**absence** fragment of its own, `parent=1 worktree=0` in both copies. Derive it here, from the
+live text, and install over the whole condition rather than over the sentence P9 names.
 
 **Passage (i)'s kept conditions need attention the class alone does not flag.** `i1`–`i3` and
 `i9`–`i16` are kept, no untouched span reaches them — passage (i) is not one of Task 0's five
@@ -1934,16 +1941,22 @@ what supplied a comparison it had not supplied:
 
 ```bash
 git fetch origin main
-BASEREF=$(git rev-parse origin/main)   # resolve ONCE; record this object name
-echo "$BASEREF"
+git rev-parse origin/main > .context/loop-rule-baseref   # resolve ONCE; record this object name
+cat .context/loop-rule-baseref
 ```
 
-**Pass `$BASEREF` to `check-version-bump.sh`, not `origin/main`.** A remote-tracking ref is
+**Pass that object name to `check-version-bump.sh`, not `origin/main`.** A remote-tracking ref is
 mutable: another fetch between the record and the run makes the evidence name one commit while the
 checker resolves another, and the claim that the recorded revision is the argument the check
 received would be false. The object name is the argument.
 
+**It goes to a file, not to a shell variable**, for the reason Task 0 gives about `$BASE`: each
+fenced block below runs in its own shell invocation, so a `BASEREF=` assignment here is gone by the
+time the battery runs and the checker would receive an empty argument. The battery reads it back.
+
 ```bash
+BASEREF=$(cat .context/loop-rule-baseref)
+test -n "$BASEREF" || { echo "BASEREF empty — the fetch step did not run"; exit 1; }
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && \
 shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && \
 shellcheck --shell=sh scripts/check-invariants.sh && \
@@ -2047,7 +2060,7 @@ and is the only value whose range contains the whole implementation.
 
 **Standing lens, every call:** "which existing statements does this diff falsify?" and **name what this diff changes the size, value or position of** — a list, a count, a version, an identifier, a cited line — then grep for where each is described elsewhere.
 
-- [ ] **Step 7: Loop to a clean pass at or above the derived floor**
+- [ ] **Step 7: Loop until a pass is closure-eligible — clean at or above the derived floor, or zero-finding**
 
 Floor derives from the story profile: risk `high` → 2, security `none` → 0, max 2 ≠ 0 → **floor 3**. Re-derive it at each pass from the header.
 
@@ -2183,7 +2196,13 @@ elif [ "$expected" = "$actual" ]; then
 else
   echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1
 fi
-test -z "$(git status --porcelain)" || { echo "tree not clean — aborting before 8b"; exit 1; }
+test -z "$(git status --porcelain)" || {
+  echo "tree not clean after the record commit — restoring the reviewed tip"
+  test -n "${PRE:-}" && git reset --mixed "$PRE"
+  git status --porcelain
+  echo "Inspect the paths above, re-establish every closure condition, obtain a fresh clean"
+  echo "response, then retry 8a."
+  exit 1; }
 git rev-parse HEAD > .context/loop-rule-reviewed-tip
 ```
 
@@ -2199,10 +2218,13 @@ swept the change in, the following clean-tree test passed, and 8b published cont
 `HEAD` never carried. **And the record commit's own changed-path set is checked afterwards**,
 because the guard describes the working tree while the commit is what actually lands.
 
-**That post-commit check restores the pre-record tip when it fails**, like every other rejection in
-step 8. A bare exit there would leave a rejected WIP commit at `HEAD` carrying an unreviewed path —
-and the retry branch would then refuse it, since its changed-path set is not `$FINAL`, so the
-prescribed procedure could not resume while the side effect stayed committed.
+**Both post-commit checks restore the pre-record tip when they fail**, like every other rejection in
+step 8: the changed-path test **and** the clean-tree test after it. A bare exit at either would
+leave a rejected WIP commit at `HEAD` carrying an unreviewed path, or an extra dirty path beside it
+— and the retry branch would then refuse the state, since neither the dirty set nor the changed-path
+set is `$FINAL`, so the prescribed procedure could not resume while the side effect stayed
+committed. `${PRE:-}` is guarded because the retry branch reaches the clean-tree test without
+setting it.
 
 **"`HEAD` touched some `gate-b-` file" is not that test, and would be unsafe.** Step 7 commits
 earlier passes' findings files, so `HEAD` can carry one while the *final* pass's two are missing
