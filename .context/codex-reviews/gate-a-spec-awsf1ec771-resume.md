@@ -75,7 +75,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 56 | 6b8854f | 18→**13** | 0→**0** | 6→**0** | yes | **first Blocker- and Major-free pass of the cycle.** 11 of 13 are the second-copy class, collected. Two were count contradictions and were repaired, so 56 is not the final pass: design §9 still said "three contradictory reminder strings" against its own enumeration of seven (my pass-55 propagation missed it), and §F item 7's rationale said "the three closing paths" while §A2 defines two cases |
 | 57 | bb1ba03 | 13→**5** | 0→**0** | 0→**5** | yes | zero tells. All five are pass-53/55 fallout inside the hook items. **Two are a factual error of mine:** `codex-gate.test.sh` has **three** `expected_ctx` exact-match expectations (lines 1006, 1019, 1029), not one — my first grep searched only for phrases that occur in 1019. Items 12, 15 and 16 are all pinned. The other three tightened items 13 and 15, whose replacements still carried an unqualified imperative and an enumeration omitting the closing act |
 | 58 | ebe3aa7 | 5→**6** | 0→**0** | 5→**4** | yes | one tell (findings rose 5→6). All four Majors in items 15–17, one layer deeper than pass 57 reached: both fingerprint reminders still **opened** "STOP — Codex Gate B not satisfied", a gate verdict the hook cannot reach; item 16 claimed a permitted pass "records" a usable fingerprint where the store can fail again; item 17's enumeration omitted the below-floor zero-finding closing route. Minor 6 was design §9's "one exact-match expectation" — the **second** time that bullet went stale under a propagation |
-| 59 | — | — | — | — | not run | next, against the pass-58 repair commit |
+| 59 | fecb3aa | 6→**9** | 0→**0** | 4→**5** | yes | **MANDATORY TWO-TELL STOP** — findings rose 5→6→9, and four of nine were about §F's *prose describing* its replacements rather than the replacements. Surfaced, standing answer applied, loop continued. Structural repair: items 15 and 16 now give the **complete resulting message** for both channels instead of a span plus prose about where it goes. Finding 7 is a **new behaviour question** and is open with Daniel: conflicting accept/decline on the same finding in two `full` Gate-B branch files |
+| 60 | — | — | — | — | not run | blocked on finding 7's answer; everything else from 59 is applied |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -83,6 +84,42 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-59 report — MANDATORY TWO-TELL STOP, and the span-framing was the mechanism
+
+**Trend:** findings 5, 6, **9** across 57–59; Blockers 0, 0, **0**; Majors 5, 4, **5**.
+**Cluster:** four of nine (findings 1, 2, 8, 9) are about **§F's prose describing** its own
+replacements — the span framing, the parity sentence, the item range — rather than about the
+replacement text. **Require↔withdraw:** none.
+
+**Two tells are present and the stop is mandatory, not discretionary:** the finding count rose
+(5 → 6 → 9), and findings cluster on prose about the product rather than on the product. Surfaced
+to Daniel; his standing answer of 2026-09-13 — surface in the record and continue — applies, as it
+did at pass 46. **The loop continued on that answer.**
+
+**What the tells were pointing at, which is the useful part.** §F's hook items were written as a
+**span plus a sentence saying where it goes**: "replaced span: the opening through X", "two
+non-adjacent sentences of one message". Three passes running found a new gap in that framing —
+a tail left standing behind a pointer (57, 59), a fragment that is not independently grammatical
+(59), a diagnostic that could only be preserved by inventing wording (59). The framing was
+generating the findings, not the text.
+
+**Repair: items 15 and 16 now carry the complete resulting message**, for both the
+`additionalContext` and the `systemMessage` channel, with no prose about spans. A plan installs
+what is written. This is the file's own preference — a duty or the thing itself over a description
+of where the thing goes — applied to its own §F.
+
+**Two further sites the same pass exposed**, both mechanical: the "How to read a section" parity
+rule said both prompt copies take every REPLACED section byte-identical, which is false of seven
+hook-only items; and the design opening wrote the hook items as the contiguous range 10–17, which
+swallows item 14, a prompt-copy sentence. Both corrected.
+
+**Open and blocking pass 60: finding 7.** In a `full` Gate-B pass the two branch files can carry
+the same out-of-set finding. The target makes them distinct findings for holds and answers, so two
+answers are required; §B builds one fix set from every acceptance minus every decline. An accept on
+one copy and a decline on the other puts one repair simultaneously in and out of the set, leaving
+its membership trigger, resolve duty and the pass's cleanliness undecidable. That is a behaviour
+decision this change has not been given, and it is with Daniel.
 
 ## Pass-58 report — one tell, and the shape of the hook-item lineage
 

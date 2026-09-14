@@ -7,9 +7,9 @@ copy, and a value copied here would be a remembered value.
 
 Prompt-only, in two mirrored copies — `CLAUDE.md` §5 (**C** below) and the inline template in
 `plugins/dev-workflow/commands/workflow-init.md` (**W** below) — **plus seven reminder strings in
-`plugins/dev-workflow/hooks/codex-gate.sh` and the three exact-match expectations in
-`plugins/dev-workflow/hooks/codex-gate.test.sh` that pin three of them** (target text §F items
-10–17, authorised 2026-09-13). **No hook behaviour changes**, and the hook strings have no mirror,
+`plugins/dev-workflow/hooks/codex-gate.sh` and their exact-match expectations in
+`plugins/dev-workflow/hooks/codex-gate.test.sh` — three `expected_ctx` and two `expected_msg`** (target text §F items
+10–13 and 15–17, authorised 2026-09-13). **No hook behaviour changes**, and the hook strings have no mirror,
 so they carry no parity obligation. Condition ids `a1`…`j4` are defined in
 `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md` beside this
 file: 135 conditions quoted from `7c0d475`, so a reader can check an accounting rather than

@@ -30,7 +30,9 @@ implementation diff later, and this file is not that diff.
 proposed text** — it is this file's own metadata and ships nowhere. A CARRIED passage
 is reproduced from the current state unchanged, because the block cites it and a reader has to see
 what it says; it is here to be read, not to be edited. Both prompt copies take every NEW and
-REPLACED section **byte-identical**.
+REPLACED section **byte-identical** — **except §F's hook items, whose destination is the shipped
+hook and its test**; those have one copy, no template mirror and no parity obligation, and §F says
+which they are.
 
 **What is deliberately not here:** the record-durability material (successor story), and the
 per-condition disposition, parity diff and verification fragments (the plan, against real files).
@@ -665,12 +667,15 @@ Each is a live sentence that the block makes wrong. All twenty-two are **known c
 none is deferred. **Seventeen of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
 exception to point at. **Fifteen live in the two prompt copies and cite a line in each; the last
-seven live in the shipped hook**, which has one copy and no template mirror. The hook holds eight
+seven live in the shipped hook**, which has one copy and no template mirror — so those seven are
+outside the byte-identical parity rule the section opening states. The hook holds eight
 gate reminders in all; the one this change leaves alone is the docs-only notice, which states no
 closure permission. **Three of the seven are pinned by exact-match expectations in
 `plugins/dev-workflow/hooks/codex-gate.test.sh`** — items 12, 15 and 16, at that file's three
-`expected_ctx` assignments — and each is replaced there with its complete resulting message in the
-same change. The remaining four are matched by loose patterns these repairs leave standing.
+`expected_ctx` assignments, **and items 15 and 16 also at the two `expected_msg` assignments beside
+them**, since those items replace the terse operator line as well — each replaced there with its
+complete resulting text in the same change. The remaining four are matched by loose patterns these
+repairs leave standing, **except the stale-branch assertions item 16 moves with it**.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -940,50 +945,57 @@ reporting its own threshold as an obligation at a floor of 1 — is untouched an
 scope. This one is **not** an entry point carrying an unqualified instruction; it is a false
 statement about scope, so it does not join that count.
 
-**15. The no-fingerprint reminder's opening and its next action** (the shipped hook, same file).
-Replaced span: the opening through "Run Gate B (mcp__codex__review) now;", the machinery checks
-after it untouched.
+**15. The no-fingerprint reminder, both channels** (the shipped hook, same file). **The complete
+resulting message is given, not a span**: a span plus a sentence about where it goes was found
+three times running to leave a fragment ambiguous or a tail standing.
 ```
-Codex gate state: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it — including whether the state file's deletion below is followed by a pass;
+Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-`WIP` commit attempt cleared it while the cycle itself stayed open. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint.
 ```
-*Why (pass 55 finding 3):* the live string says "Run Gate B (mcp__codex__review) now", which sends
+```
+⚠ Codex Gate B: no recorded fingerprint
+```
+*Why (pass 55 finding 3):* the live string said "Run Gate B (mcp__codex__review) now", which sends
 the author into another pass whatever the cycle's state is — including a pass that carried a
-suspension whose answers are still outstanding, which the composition rule holds the cycle on. The
-diagnostic half, and the machinery checks after it, are kept: they are what the message is for.
-*And (pass 57 findings 2 and 3):* an earlier wording enumerated the ordering's routes as a pass, a
-suspension's answer or a source block's repair, which **omits the closing act** — an absent
-fingerprint is not a closure condition and Gate B has no content condition, so a clean eligible
-cycle whose fingerprint merely could not be stored still has its commit route. The enumeration is
-removed rather than extended, per this section's own preference. The same finding's second half
-reaches the sentence's tail, "delete it and run a fresh pass": the deletion stays as a remedy, the
-pass after it does not, and the new sentence says so where a reader meets it.
-*And (pass 58 finding 1):* the opening still read "STOP — Codex Gate B not satisfied", which
-states a gate verdict the hook cannot reach — the fingerprint is advisory and is not a closure
-condition, so a clean eligible cycle whose fingerprint merely could not be stored was being told
-the gate was unsatisfied. The opening now reports the **hook's own state**, which is what it
-observes, and leaves every verdict to the ordering. This is the AGENTS.md rule about naming the
+suspension whose answers are still outstanding, which the composition rule holds the cycle on.
+*And (pass 57 findings 2 and 3, pass 59 finding 1):* the routes the ordering offers were first
+enumerated, which omitted the closing act, and then pointed at while the same sentence's tail,
+"delete it and run a fresh pass", stayed standing behind the pointer. Both are gone because the
+whole message is written out.
+*And (pass 58 finding 1):* the opening read "STOP — Codex Gate B not satisfied", a gate verdict the
+hook cannot reach — its fingerprint is advisory and is not a closure condition, so a clean eligible
+cycle whose fingerprint merely could not be stored was being told the gate was unsatisfied. It now
+reports the hook's own state, which is what it observes. That is AGENTS.md's rule about naming the
 exact comparison a mechanism performs, applied to the hook's own words.
+*And (pass 59 findings 3 and 5):* the terse `systemMessage` still read "no recorded review", which
+says a review did not happen where the hook knows only that no fingerprint is stored — an operator
+could order a review over a valid pass whose store failed. Its exact fixture moves with it. The
+cause list also omitted the one §A3 itself creates: a non-`WIP` commit attempt clears the
+fingerprint while the cycle stays open, and a reader sent to permission checks for it would be
+looking in the wrong place.
 
-**16. The stale-fingerprint reminder's opening and its two instructions** (the shipped hook, same file).
-**Two non-adjacent sentences of one message**, the diagnostic list between them untouched. The
-opening:
+**16. The stale-fingerprint reminder, both channels** (the shipped hook, same file). **The complete
+resulting message, for the reason item 15 gives.**
 ```
-Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle).
+Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per $policy you MUST re-review after every fix.
 ```
-and, in place of the two imperatives:
 ```
-A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's; where it may, that pass attempts to record a usable fingerprint — a store that fails again returns this same state, which is a fault in the machinery and not a verdict on the cycle.
+⚠ Codex Gate B: cannot confirm reviewed content
 ```
-*Why (pass 55 finding 4):* the live string carries two unqualified imperatives — "Run Gate B
+*Why (pass 55 finding 4):* the live string carried two unqualified imperatives — "Run Gate B
 (mcp__codex__review) now" and "then run one more pass to record a usable fingerprint" — in the
 branch an author reads immediately before committing. Both step past a suspension or a source
-block that the ordering says is answered first. The long diagnostic list between them is untouched.
+block that the ordering says is answered first.
 *And (pass 58 findings 2 and 3):* the opening read "STOP — Codex Gate B not satisfied" over a
 branch whose own text lists staging, a hook upgrade and a failed store — none of which violates a
-closure condition — so it takes item 15's repair, reporting the hook's state and leaving the
-verdict to the ordering. The second sentence also said a permitted pass "records a usable
-fingerprint", which no rule makes true: the store that just failed can fail again. It now says
-**attempts**, and names the loop that would otherwise send an author round again.
+closure condition — so it takes item 15's repair. The second sentence also said a permitted pass
+"records a usable fingerprint", which no rule makes true where the store just failed.
+*And (pass 59 findings 2, 4 and 6):* an earlier revision supplied one semicolon-linked sentence
+"in place of the two imperatives" while requiring the diagnostic between them to stay, which no
+plan could install without inventing wording — hence the complete message. The terse
+`systemMessage` still read "not satisfied (cannot confirm review)", the gate verdict this item
+removes from the agent-facing text, and its exact fixture and the stale-branch loose assertions
+move with it. And a failed store can leave the state file empty or unreadable, which the hook
+routes to item 15's branch, so the message no longer claims this diagnosis repeats.
 
 **17. The Gate-B below-floor reminder's instruction** (the shipped hook, same file).
 ```
