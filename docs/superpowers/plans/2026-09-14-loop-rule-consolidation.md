@@ -183,6 +183,12 @@ different passage, because each task was inventing the rule for its own conditio
 | **dropped** | an **absence check**, `parent=1 worktree=0`, **one per dropped condition**. Two dropped conditions sharing one fragment is one observation, and it goes absent when either half goes, leaving the other free to survive. |
 | **add-only** | **presence alone**, `worktree=1 parent=0`. There is no old wording whose absence could be counted. |
 
+**These six words are the only dispositions, and the tables below use no others.** A condition
+described as "changed" would name no class, so the procedure would give it no observation and a
+literal execution would skip it — §B alone accounts for nine conditions that were labelled that
+way. A condition whose sentence is given entire and differs from the parent is **replaced**,
+however small the difference and whether the edit adds a clause or rewrites the sentence.
+
 **A reader walk is never any of these.** Tasks walk their conditions as a reader's confirmation on
 top of the counts; a walk that found what the counts missed means a fragment was wrong, not that
 the walk was the check.
@@ -245,7 +251,7 @@ preservation fragments that an earlier draft chose afterwards.
 
 ### Passage (b) — what a loop absorbs → target §B (Task 3)
 
-§B states its own accounting and this table reproduces it: **Changed:** `b3`, `b7`, `b8`, `b11`, `b12`, `b13`, `b16`, `b17`, `b18`. **Added:** the closing-time change rule, and that alone — no inventoried condition carried it because none existed. **Carried:** `b1`, `b2`, `b4`, `b5`, `b6`, `b9`, `b10`, `b14`, `b15`.
+§B states its own accounting and this table reproduces it: **Replaced:** `b3`, `b7`, `b8`, `b11`, `b12`, `b13`, `b16`, `b17`, `b18`. **Added:** the closing-time change rule, and that alone — no inventoried condition carried it because none existed. **Carried:** `b1`, `b2`, `b4`, `b5`, `b6`, `b9`, `b10`, `b14`, `b15`.
 
 **Decision 6's decline semantics are not a §B addition.** `**Decline is available only at a membership stop**` is a §A sentence, and Task 1's presence checks cover it. An earlier draft listed it here as a second added rule, which would have sent Task 3 looking for a §B fragment that does not exist — and the only way to satisfy that check is to certify an unrelated decline clause.
 
@@ -258,7 +264,7 @@ preservation fragments that an earlier draft chose afterwards.
 | c1, c2, c3 | **kept** — the curve-reading sentences are untouched. |
 | c4 | **replaced** — "a missing one means keep going" becomes "means only that *this* exit does not apply", the pass's actual next step being the ordering's. |
 | c5, c6, c7 | **carried word for word** inside §C's block. |
-| c8 | **changed** — gains the re-raised-dismissal clause. |
+| c8 | **replaced** — gains the re-raised-dismissal clause. |
 | c9 | **split.** The operative precedence clause moves into §A capitalized as a standalone sentence; the plateau rationale stays at this source. Not moved whole — §C says so explicitly. |
 | c10, c11 | **moved** to §A, which states what a Blocker/Major-free pass at or above the floor does. |
 | c12, c13 | **moved** to §A, beside a19. |
@@ -280,7 +286,7 @@ preservation fragments that an earlier draft chose afterwards.
 |---|---|
 | e1–e6 | **kept** — the five tells themselves are untouched. |
 | e8 | **replaced.** The inventory records it as a parity divergence — C `you report`, W `report` — and §D's block supplies C's wording for **both** copies, so W's form goes. **Not carried**: the condition as inventoried names a difference this change removes. Task 5. |
-| e7 | **changed** — gains the read-after-clean-completion clause. The sentence is given entire in §D. |
+| e7 | **replaced** — gains the read-after-clean-completion clause. The sentence is given entire in §D. |
 | e9 | **carried** inside §D's block — `the "clearly stuck" reading above is not a precondition for it` closes the replacement sentence and is reproduced in it. Owes a preservation check, not a span. |
 | e10 | **kept**, untouched, and **outside** the replacement. `A loop can be worth stopping long before it plateaus.` is the sentence *after* §D's block; an earlier draft listed it as carried, which would have put a kept condition inside a replacement it never enters and left the real boundary of the edit unstated. |
 | e11 | **kept** — the C-only rationale paragraph is untouched and stays C-only. |
@@ -1928,8 +1934,14 @@ what supplied a comparison it had not supplied:
 
 ```bash
 git fetch origin main
-git rev-parse origin/main    # record this — and it is the argument the check below receives
+BASEREF=$(git rev-parse origin/main)   # resolve ONCE; record this object name
+echo "$BASEREF"
 ```
+
+**Pass `$BASEREF` to `check-version-bump.sh`, not `origin/main`.** A remote-tracking ref is
+mutable: another fetch between the record and the run makes the evidence name one commit while the
+checker resolves another, and the claim that the recorded revision is the argument the check
+received would be false. The object name is the argument.
 
 ```bash
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && \
@@ -1941,13 +1953,14 @@ shellcheck --shell=sh scripts/check-version-bump.test.sh && \
 HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && \
 HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && \
 sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && \
-sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh origin/main && \
+sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh "$BASEREF" && \
 claude plugin validate . --strict
 ```
 
-Expected: exit 0. **`origin/main`, not `main`** — AGENTS.md's battery row writes `main` because a
-human running it locally usually has one; here the fetched ref is the one just recorded, and the
-recorded revision must be the exact argument the successful check received.
+Expected: exit 0. **`$BASEREF`, not `main` and not `origin/main`** — AGENTS.md's battery row writes
+`main` because a human running it locally usually has one; here the base is the fetched commit,
+resolved once, so the recorded revision and the argument the successful check received are the same
+value by construction.
 
 - [ ] **Step 4b: Apply all twelve `docs/prompt-standards.md` items to the installed text, and commit the result before Gate B**
 
@@ -2156,11 +2169,17 @@ head_paths=$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)
 if [ -z "$actual" ] && [ "$head_paths" = "$expected" ]; then
   echo "final findings files already recorded by a previous attempt — continue at 8b"
 elif [ "$expected" = "$actual" ]; then
+  PRE=$(git rev-parse HEAD)          # the reviewed tip, before the record commit
   # shellcheck disable=SC2086
   git add $FINAL
   git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
-  test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" \
-    || { echo "record commit changed paths beyond the final findings files"; exit 1; }
+  test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" || {
+    echo "record commit changed paths beyond the final findings files — restoring the reviewed tip"
+    git reset --mixed "$PRE"
+    git status --porcelain
+    echo "HEAD and index restored. Inspect the paths listed above, re-establish every closure"
+    echo "condition, obtain a fresh clean response, then retry 8a."
+    exit 1; }
 else
   echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1
 fi
@@ -2179,6 +2198,11 @@ findings files was invisible: the set compared equal, `git commit` committed the
 swept the change in, the following clean-tree test passed, and 8b published content the reviewed
 `HEAD` never carried. **And the record commit's own changed-path set is checked afterwards**,
 because the guard describes the working tree while the commit is what actually lands.
+
+**That post-commit check restores the pre-record tip when it fails**, like every other rejection in
+step 8. A bare exit there would leave a rejected WIP commit at `HEAD` carrying an unreviewed path —
+and the retry branch would then refuse it, since its changed-path set is not `$FINAL`, so the
+prescribed procedure could not resume while the side effect stayed committed.
 
 **"`HEAD` touched some `gate-b-` file" is not that test, and would be unsafe.** Step 7 commits
 earlier passes' findings files, so `HEAD` can carry one while the *final* pass's two are missing
@@ -2243,8 +2267,9 @@ plan elsewhere calls an invalid close.
 
 **`|| true` is replaced by branching on what the state actually is, before committing anything.**
 "Nothing to commit" and "the commit failed" are different outcomes and only the first is fine. 8a
-decides between them with two predicates it can name: the **status-derived dirty set** (`?? ` and
-`A  ` entries, sorted) and **`HEAD`'s changed-path set**. An empty dirty set with `HEAD` equal to
+decides between them with two predicates it can name: the **status-derived dirty set** — every
+`git status --porcelain -z` record with its three-character status prefix removed, sorted — and
+**`HEAD`'s changed-path set**. An empty dirty set with `HEAD` equal to
 `$FINAL` is the harmless retry; the dirty set equal to `$FINAL` is the first run; anything else
 stops. **A `git diff --cached --quiet` test is not among them** — an earlier draft's prose claimed
 it after the block had stopped using it, which is the overclaim `AGENTS.md` names by requiring
