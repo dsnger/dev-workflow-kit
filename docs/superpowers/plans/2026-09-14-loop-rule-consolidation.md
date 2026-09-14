@@ -936,16 +936,26 @@ is add-only** — it replaces no wording — so it is checked by presence alone,
 it can be omitted from both copies while the `e7` pair, the condition walk and the parity diff all
 pass.
 
-**`e7` and `e8` are two dispositions and owe two different NEW fragments — an earlier draft gave
-both pairs the same one and observed only the second.**
+**`e7` and `e8` are two dispositions but they cannot have two OLD halves, and saying why is the
+point.** §D supplies **one** sentence for both copies, so in W there is no state where the
+read-after clause arrives and the pronoun does not: the two changes install or fail together, and
+any fragment that vanishes for one vanishes for the other. **A second OLD row would be a
+counterfactual that cannot fail independently** — the thing this plan rejects everywhere else.
 
-- **`e7`'s NEW must carry the read-after-clean-completion meaning** — the clause §D adds. That is
-  what `e7` changed. A NEW taken from `you report the tells` observes nothing about it: those words
-  are already in C, and in C they become "new" only because the line reflows.
-- **`e8`'s alignment is W's alone and owes its own observation**: `report the tells` becoming
-  `you report the tells`. P5w's OLD going to zero shows W's pronoun-less form is gone; a NEW
-  containing the pronoun shows W received C's form rather than some third wording. Without it the
-  alignment rests on Task 14's parity judgement instead of on a count.
+**So the discrimination lives in the NEW halves, and there are three of them:**
+
+| Observation | Copy | Shape | Fragment |
+|---|---|---|---|
+| `e7` pair | C | pair, OLD = **P5** | NEW from the **read-after-clean-completion clause** |
+| `e7` pair | W | pair, OLD = **P5w** | NEW from the same clause |
+| `e8` alignment | W only | **presence**, `worktree=1 parent=0` | the installed `you report the tells` |
+
+**Two pair instances and one presence check, not two pairs and a spare.** An earlier draft gave
+both pairs a NEW taken from `you report the tells`, which observes the pronoun and says nothing
+about `e7`: those words are already in C, and there they become "new" only because the line
+reflows. A later draft asked `e8` for its own OLD, which P5w already is. **`e8`'s presence check is
+what shows W received C's form rather than some third wording**, and without it the alignment rests
+on Task 14's parity judgement instead of on a count.
 
 *(Build the pair per the verification procedure; record the four values.)*
 
@@ -1643,8 +1653,9 @@ three files still answer this?"
 - [ ] **Step 2: Read every section of both prompt copies that gives an instruction about a pass, a finding, a gate or a commit**
 
 Not a grep. §5 entire, §4's work-loop line, the Gate-A and Gate-B sections, the profiles section, and
-Mechanics. **Record each section as read in `.context/loop-rule-sweep.md`**, with a line saying what
-you were looking for and what you found.
+Mechanics. **Record each section as read under `## Completeness sweep (Task 12b output)` in this
+plan**, with a line saying what you were looking for and what you found. A `.context/` scratch file
+is fine while you work, but it is ignored and cannot be committed — the plan section is the record.
 
 - [ ] **Step 3: Read both channels of all eight hook gate reminders**
 
@@ -1660,8 +1671,9 @@ find is real, the spec's Gate-A cycle reopens for it.**
 
 - [ ] **Step 5: Record the result either way**
 
-`.context/loop-rule-sweep.md` states what was read and what was found, **including "nothing"**. A
-sweep whose negative result is unrecorded cannot be told from a sweep that never ran.
+`## Completeness sweep (Task 12b output)` states what was read and what was found, **including
+"nothing"**. A sweep whose negative result is unrecorded cannot be told from a sweep that never
+ran — and one recorded only in `.context/` is unrecorded as far as the commit is concerned.
 
 - [ ] **Step 6: Commit**
 
@@ -1695,7 +1707,17 @@ next `## `.
 
 - [ ] **Step 1: Enumerate the rows**
 
-One row per (starting state, answer) pair the installed ordering admits. At minimum, and **this is a floor rather than the set**: a clean eligible pass with every condition met; a clean eligible pass with an unmet precondition; a clean pass below the floor; a zero-finding pass below the floor; a pass carrying a membership trigger, answered accept and answered decline; a pass carrying a new-question trigger, answered; a pass carrying both; a two-tell stop, answered; a clearly-stuck surface, answered; a source block raised before any pass was read; a source block raised on a pass already read; a closing act that does not complete and is repaired; a closing act that cannot be repaired; a `full` Gate-B pass with one branch clean and one not; the same complaint in both branch files under each of accept/accept, accept/decline, decline/accept and decline/decline.
+**Every row states the value of every predicate its route depends on, and is split until the
+installed ordering yields exactly one next state.** A scenario naming only some of them is not a
+row: "a clean eligible pass with an unmet precondition" can take the source-block route, a
+suspension, or the continue branch depending on predicates it never states, and "a clean pass below
+the floor" can suspend or continue on the same grounds. **A row with more than one admissible route
+tests nothing** — the executor either picks one arbitrarily or invents the missing assumption, and
+the oracle then passes on an answer the ordering never gave. Split the family until each member is
+determinate, and say in the row which predicate values made it so.
+
+The list below is **scenario families, not rows** — one row per (starting state, answer) pair the
+installed ordering admits, after splitting. At minimum, and **this is a floor rather than the set**: a clean eligible pass with every condition met; a clean eligible pass with an unmet precondition; a clean pass below the floor; a zero-finding pass below the floor; a pass carrying a membership trigger, answered accept and answered decline; a pass carrying a new-question trigger, answered; a pass carrying both; a two-tell stop, answered; a clearly-stuck surface, answered; a source block raised before any pass was read; a source block raised on a pass already read; a closing act that does not complete and is repaired; a closing act that cannot be repaired; a `full` Gate-B pass with one branch clean and one not; the same complaint in both branch files under each of accept/accept, accept/decline, decline/accept and decline/decline.
 
 - [ ] **Step 2: Walk each row against the installed §A and record the next state**
 
@@ -2082,55 +2104,71 @@ provenance line or curve has not validly closed the cycle.
 so an evidence entry written only into a WIP message is destroyed at exactly the moment the cycle
 closes — which is what step 5 would otherwise have done.
 
+**8a — record the final pass's findings files. Its own shell invocation, and that is not
+cosmetic.** `codex-gate.sh`'s `is_wip_commit` matches `-m` followed by `wip` **anywhere in the
+command string it is given**. A single block carrying this `-m "WIP: …"` and the closing
+`git commit -F` would be classified cycle-internal in its entirety, and the hook would carry this
+cycle's Gate-B count and fingerprint into the next one — a real closing commit read as a snapshot.
+**Run 8a and 8b as separate Bash calls, and keep the word out of 8b's command string.**
+
 ```bash
 BASE=$(cat .context/loop-rule-base)
 test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
-# Everything that must be IN the squashed commit has to be committed before the
-# reset: reset --soft stages only what the discarded commits already contained.
-# The ONLY thing allowed to differ from the reviewed HEAD is the final pass's own
-# findings files, which could not exist when that pass was issued. Name them
-# EXACTLY — from the slot paths the final call was told to write — and require the
-# dirty set to be those paths, added, and nothing else.
 # NONCE and P are this cycle's nonce and its final pass number — the same two the
 # final call's slot paths were built from. Set them to the values you used.
 NONCE=<this cycle's nonce>; P=<the final pass number>
 FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
 expected=$(printf '%s\n' $FINAL | sort)
 actual=$(git status --porcelain | sed -n 's/^?? //p; s/^A  //p' | sort)
-test "$expected" = "$actual" || {
-  echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1; }
 
-# shellcheck disable=SC2086
-git add $FINAL
-git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree not clean before reset — aborting"; exit 1; }
-
-# Keep the pre-reset tip: after the reset it is the ONLY way back to the reviewed
-# history if the closing commit fails.
+if [ -z "$actual" ] && git show --stat --name-only --pretty=format: HEAD | grep -q 'gate-b-'; then
+  echo "final findings files already recorded by a previous attempt — continue at 8b"
+elif [ "$expected" = "$actual" ]; then
+  # shellcheck disable=SC2086
+  git add $FINAL
+  git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
+else
+  echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1
+fi
+test -z "$(git status --porcelain)" || { echo "tree not clean — aborting before 8b"; exit 1; }
 git rev-parse HEAD > .context/loop-rule-wip-tip
+```
+
+**The first branch is the retry path.** A closing commit that fails leaves the findings files
+already committed, so on a second run the dirty set is empty — and an unconditional record commit,
+or an exact-dirty-set guard with no such branch, refuses the very state the recovery produces.
+The branch admits it only when `HEAD` is the record commit it would have made.
+
+**8b — reset and close. A separate invocation, with no `-m` and no `wip` in it.**
+
+```bash
+BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-wip-tip)
 git reset --soft "$BASE"
 git commit -F .context/loop-rule-closing-msg || {
-  echo "closing commit FAILED — restoring the reviewed tip"
-  git reset --hard "$(cat .context/loop-rule-wip-tip)"
-  echo "history restored; fix the cause, then re-run step 8. Base and tip files kept."
+  echo "closing act FAILED — restoring the reviewed tip without discarding its side effects"
+  git reset --mixed "$TIP"
+  git status --porcelain
+  echo "HEAD and index restored to the reviewed tip. Any files listed above were left by the"
+  echo "failed attempt — inspect them, then re-establish every closure condition before retrying 8a."
   exit 1; }
 
 case "$(git log -1 --pretty=%s)" in
-  WIP:*|wip:*) echo "closing commit still reads WIP — cycle NOT closed"; exit 1 ;;
+  [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — cycle NOT closed"; exit 1 ;;
 esac
 test -z "$(git status --porcelain)" || { echo "worktree dirty after close — aborting before cleanup"; exit 1; }
 rm -f .context/loop-rule-base .context/loop-rule-wip-tip
 ```
 
-**The failure branch is the point of `.context/loop-rule-wip-tip`.** A closing commit can fail on
-an unset identity, a signing key or a hook, and by then the reset has already run: `HEAD` is at
-`$BASE` with the whole implementation staged. **Re-running step 8 from that state hits its own
-dirty-tree guard and refuses**, correctly — the guard cannot tell a staged implementation from a
-record that rode along. `reset --hard` back to the recorded tip returns the repository to the
-reviewed history, with every WIP commit and the reviewed `HEAD` intact, so the executor fixes the
-cause and re-runs rather than inventing a recovery sequence at the riskiest moment.
+**`--mixed`, never `--hard`.** A closing act can fail *after* a commit hook has modified or staged
+tracked content, and `reset --hard` would delete exactly that — the delta the failure produced.
+Target §A1 requires the executor to inspect what an incomplete closing act left and to re-establish
+the closure conditions against it; a recovery that discards the evidence first makes that
+impossible and retries against a repository state the target says must be evaluated.
+`--mixed` puts `HEAD` and the index back at the reviewed tip and leaves the working tree alone, so
+`git status` above *is* the attempt's delta.
 
-**Both files are removed only after a successful close**, so a later run cannot inherit either.
+**Both scratch files are removed only after a successful close**, so a later run cannot inherit
+either, and the retry path above still has them.
 
 **Every check in that block fails the script; none of them is a comment.** An earlier draft
 suppressed the record commit with `|| true` and left the status and log lines as things to look at,
