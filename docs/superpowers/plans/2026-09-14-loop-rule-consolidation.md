@@ -438,11 +438,21 @@ gone and the aligned divergences no longer match the baseline expectation, so re
 the worktree either overwrites the evidence with a map of the partly edited tree or fails on
 differences this plan itself installed.
 
-**So:** if `.context/loop-rule-untouched` and `.context/loop-rule-baseline-diff.txt` already exist
-and the recorded base is valid, **keep them and confirm they are keyed to `$BASE`**; re-derive
-neither. If they are missing while `$BASE` has `WIP:` commits after it, **derive both from the
-`$BASE` blobs** — `git show "$BASE:<path>"` — not from the worktree. On a clean first run the two
-are the same thing, which is why this is stated once here rather than in each step.
+**Each artifact carries the base it was built from, as its first line:**
+
+```
+base<TAB><the 40-character object name>
+```
+
+Written by the step that creates it, and it is what "keyed to `$BASE`" means — without it there is
+no comparison to make and a stale map from an abandoned run is indistinguishable from this one's.
+
+**So:** if `.context/loop-rule-untouched` and `.context/loop-rule-baseline-diff.txt` already exist,
+**read their `base` line and require it to equal `.context/loop-rule-base`**; on a match keep them
+and re-derive neither, on a mismatch or a missing line delete them and rebuild. If they are absent
+while `$BASE` has `WIP:` commits after it, **derive both from the `$BASE` blobs** —
+`git show "$BASE:<path>"` — not from the worktree. On a clean first run the two sources are the
+same thing, which is why this is stated once here rather than in each step.
 
 - [ ] **Step 2: Re-read the five untouched ranges and record their current anchors**
 
@@ -515,11 +525,13 @@ and 14 consume them without a human in between. A file whose second half has no 
 its consumers skip, which is what the per-condition list exists to prevent:
 
 ```
+base<TAB><the 40-character object name this map was built from>
 span<TAB><start anchor><TAB><end anchor><TAB><file>
 cond<TAB><condition id><TAB><fragment><TAB><file><TAB><expected parent><TAB><expected worktree>
 ```
 
-Tab-separated, one record per line, the leading keyword distinguishing them. A kept condition's
+Tab-separated, one record per line, the leading keyword distinguishing them. **The `base` line is
+first and there is exactly one**, so a re-entry can tell this run's map from an abandoned run's. A kept condition's
 expected pair is `1<TAB>1`; the shape carries the values rather than assuming them, so a moved or
 dropped condition recorded here later needs no new format. **Both consumers validate every `cond`
 row**, not only the `span` rows.
@@ -2036,8 +2048,13 @@ the refreshed record. A repair made after the battery, with the battery not re-r
 defect as a Gate-B fix with no re-run.
 
 **Record the subject set once, at the top of the output section**, and make each item's result
-refer to it: the §A–§H blocks installed in C, the same in W, and the seven hook strings.
-**Twelve `PASS` lines alone cannot be told from a review that skipped a copy or the hook** — the
+refer to it: the §A–§H blocks installed in C, the same in W, and **ten hook prompt bodies, not
+seven** — the seven `additionalContext` bodies items 10–13, 15–17 replace, **plus the three
+`systemMessage` bodies** items 12, 15 and 16 replace alongside them. Those three are short
+operator-facing prompts and they ship; counting the messages rather than the bodies leaves them
+outside invariant 11's only reader gate.
+
+**Twelve `PASS` lines alone cannot be told from a review that skipped a copy or a channel** — the
 subject list is what makes the twelve lines mean something.
 
 **Commit the result before step 6.** Gate B reviews the range `$BASE..HEAD`; an edit to this plan
@@ -2184,9 +2201,14 @@ The message carries, in this order:
 
 **Items 1, 2 and 4 are owed unconditionally; item 3 is owed only where such a record exists.**
 Confirm the file carries the three, and either the applicable exception records or **the literal
-line `Human exception: none`**, which is what satisfies this check for an ordinary cycle. Without
+line `Human exceptions: none`**, which is what satisfies this check for an ordinary cycle. Without
 that line an executor reading "all four" must either invent a record or ignore the oracle, and a
 valid close stops on a record nobody owed.
+
+**Plural, and deliberately not `Human exception:`.** That singular prefix opens the fixed
+three-line record Mechanics pins, and a line carrying it without its handle, date, `Not done:` and
+`Accepted because:` is a **malformed record**, not an absence marker — every ordinary close would
+write one, and a later reader could not tell it from an exception record that lost its body.
 
 **A missing one is not recoverable after step 8** — `git commit -F` publishes whatever the file
 holds, `reset --soft` has already discarded every WIP body, and a closing commit without its
@@ -2439,7 +2461,7 @@ idempotently on re-run, touching no other. **The pre-existing fragments live in 
 never here**; this section records what each observation actually returned, and it is what Task 15
 step 5 reads to assemble the closing evidence entry.*
 
-***Four record shapes, because the classes do not return the same number of values.** Every
+***Five record shapes, because the classes do not return the same number of values.** Every
 observation this plan makes is one of them, and a shape that fits only pairs is how a required
 count gets run and then vanishes from both the plan and the closing evidence:*
 
@@ -2448,9 +2470,16 @@ pair         <condition> <fragment: OLD> <fragment: NEW> old/worktree old/parent
 presence     <what> <fragment> worktree parent <copy>          # add-only, and a moved condition's destination
 absence      <condition> <fragment> parent worktree <copy>      # dropped, and a moved condition's source
 preservation <condition> <fragment> parent worktree <copy>      # carried, and kept where no span holds it
+span         <start anchor> <end anchor> <file> <result>        # an untouched range, parent vs worktree
 ```
+
+*The **fifth shape is for ranges, not conditions**: an untouched span is two bounded extracts
+compared against each other, so it has no fragment and no counts and the four condition shapes
+cannot express it. Its `<result>` is `no difference` or the difference itself — recorded either
+way, because a span that was never run and a span that compared equal are otherwise the same
+record. Task 15 reads this shape alongside the other four.*
 
 *A **moved** condition therefore contributes two lines — one `absence` at its source, one
 `presence` at its destination — and both are required for it to count as observed. **Every one of
-the four classes goes into the closing evidence entry**; naming only pairs and presence leaves the
-absences and preservations run but unrecorded.*
+the five shapes goes into the closing evidence entry**; naming only pairs and presence leaves the
+absences, preservations and span results run but unrecorded.*
