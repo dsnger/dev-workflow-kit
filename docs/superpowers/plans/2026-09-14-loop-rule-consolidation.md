@@ -122,11 +122,24 @@
 **No task pre-assigns a row id, and none refers to a row by a number this plan does not already
 contain.** A task appending rows takes the **next free `P` id at the moment it appends**, and
 names its own rows by the condition they observe — "the `c14` row", "the resolve-duty row" — not by
-a number chosen in advance. Tasks 3, 4, 6 and 7 all append, and how many each adds is decided at
-execution against the real files, so any number written here ahead of time is a guess that the
-task running before it invalidates. An earlier draft promised Task 4 the ids `P19` and `P20` while
-Task 3 was told to continue the same series, which hands two different fragments one id and leaves
-every later reference ambiguous.
+a number chosen in advance. **Tasks 3, 4, 6, 7 and 10 all append**, and how many each adds is
+decided at execution against the real files, so any number written here ahead of time is a guess
+that the task running before it invalidates. An earlier draft promised Task 4 the ids `P19` and
+`P20` while Task 3 was told to continue the same series, which hands two different fragments one id
+and leaves every later reference ambiguous.
+
+**Task 10 appends too, and its rows are not optional.** Its eight OLD fragments come from the hook,
+whose live wording exists in exactly one file and is gone after installation. A fragment derived,
+used and never recorded leaves a partial rerun free to pick a different one, and leaves Task 15
+unable to say which counterfactual produced the counts it publishes. **The table is the one place
+every OLD fragment lives, whatever file it came from.**
+
+**Where a NEW or presence fragment goes, since it does not go here.** The table is OLD-only. Each
+task records its chosen NEW and presence fragments, with the four counts observed for each, under
+`## Fragment evidence (per-task output)` at the end of this plan — **one subsection per task,
+replaced idempotently on re-run by the same rule Tasks 13 and 14 use.** Task 15 step 5 assembles
+the closing evidence entry from that section, so a fragment recorded anywhere else is a fragment
+the closing commit cannot carry.
 
 ---
 
@@ -152,7 +165,8 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 
 | Condition | Disposition |
 |---|---|
-| a1, a3–a12, a14 | **kept**, untouched. The floor arithmetic, the hook-ratio rules and the two comparison points are outside this change. |
+| a3–a12, a14 | **kept**, untouched. The floor arithmetic, the hook-ratio rules and the two comparison points are outside this change. |
+| a1 | **carried**, not kept. §F item 8a's fenced block opens with `**Both gates are a LOOP with a HARD FLOOR: a minimum number of passes per run` — `a1` itself — and reproduces it so one contiguous string installs. **Recorded as carried for the same reason as `a15`, `a21`, `a22`, `c15` and `i4`–`i8`**: a condition inside a replacement block is not untouched text, and calling it untouched would put it inside an untouched-range span that a correct implementation then fails. It owes a preservation check, not a span. |
 | a2 | **replaced.** §F item 8a rewrites the HARD FLOOR parenthetical `(Blocker/Major only)` — Task 8, row F10. The filter itself survives in the ordering, which states what a pass counting toward the floor must be; what goes is the parenthetical's claim that Blocker/Major is the *whole* of it. **Marked replaced rather than kept**, because a condition whose text the change in fact rewrites, recorded as preserved, is the dropped-condition failure `AGENTS.md` names. |
 | a13 | **replaced** — scoped to its own paragraph. §H's `a13` block. |
 | a15 | **carried** inside §H's `a16` block, which reproduces it so one contiguous string installs. |
@@ -199,7 +213,8 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 | e1–e6 | **kept** — the five tells themselves are untouched. |
 | e8 | **replaced.** The inventory records it as a parity divergence — C `you report`, W `report` — and §D's block supplies C's wording for **both** copies, so W's form goes. **Not carried**: the condition as inventoried names a difference this change removes. Task 5. |
 | e7 | **changed** — gains the read-after-clean-completion clause. The sentence is given entire in §D. |
-| e9, e10 | **carried** inside §D's block. |
+| e9 | **carried** inside §D's block — `the "clearly stuck" reading above is not a precondition for it` closes the replacement sentence and is reproduced in it. Owes a preservation check, not a span. |
+| e10 | **kept**, untouched, and **outside** the replacement. `A loop can be worth stopping long before it plateaus.` is the sentence *after* §D's block; an earlier draft listed it as carried, which would have put a kept condition inside a replacement it never enters and left the real boundary of the edit unstated. |
 | e11 | **kept** — the C-only rationale paragraph is untouched and stays C-only. |
 | — | **added:** §D's pointer paragraph at the end of the passage. |
 
@@ -249,7 +264,12 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 - [ ] **Step 1: Confirm the approved artifacts and a clean tree**
 
 ```bash
-git log --oneline -1        # expect 6ace06f or later on loop-rule-consolidation
+git rev-parse --abbrev-ref HEAD    # expect loop-rule-consolidation
+git merge-base --is-ancestor ba15e83 HEAD || { echo "approved target text (ba15e83) is not in this history"; exit 1; }
+test -f docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md || { echo "target text missing"; exit 1; }
+test -f docs/superpowers/specs/2026-09-10-loop-rule-consolidation-design.md || { echo "design missing"; exit 1; }
+test -f docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md || { echo "inventory missing"; exit 1; }
+git log --oneline -1
 git status --porcelain      # expect empty
 if [ -s .context/loop-rule-base ]; then
   echo "base already recorded: $(cat .context/loop-rule-base) — NOT overwriting"
@@ -258,6 +278,14 @@ else
 fi
 cat .context/loop-rule-base
 ```
+
+**The branch and the approved artifacts are established, not assumed.** An earlier draft printed
+`git log --oneline -1` with the comment "expect 6ace06f or later on loop-rule-consolidation",
+which names neither a branch the command reports nor a way to tell "later" from "a different
+history". A checkout on another branch, or one whose history does not contain the approved target
+text, would be recorded as `$BASE` and every install and the final soft reset would run from the
+wrong starting tree. **A hard-coded commit is not repeated as a floor** — `ba15e83` appears once,
+as the ancestry test for the approved text, because it is the commit that approval is *of*.
 
 **Never overwrite an existing base, and never trust one you did not just write.** Re-running Task 0
 after a partial implementation would record the current WIP tip, and both Gate B's range and the
@@ -318,7 +346,7 @@ for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   grep -n 'The two rules above do not compete' "$f"                          # (f) start
   grep -n 'Findings go to a FILE' "$f"                                       # (f) end
   grep -n 'On squash-merge, copy every evidence entry' "$f"                  # (j) single line
-  grep -n 'Both gates are a LOOP with a HARD FLOOR' "$f"                     # (a) arithmetic start
+  grep -n 'Both gates are a LOOP with a HARD FLOOR' "$f"                     # (a) region marker — NOT a span start, see below
   grep -n 'Nothing here writes the floor knob' "$f"                          # (a) arithmetic end
   grep -n 'Recording a human exception' "$f"                                 # (h) start
   grep -n 'because writing it down makes it sound' "$f"                      # (h) end
@@ -337,10 +365,13 @@ end anchor in each tree at comparison time.
 implementation fails its own check — and each split must leave **every kept condition inside some
 span**, which the first draft's version did not:
 
-- **The floor arithmetic is three spans**, because `a2` sits at its head and `a13` in its middle:
-  from `Both gates are a LOOP with a HARD FLOOR` to the line before row F10's fragment; from the
-  line after F10's to the line before row P9's; and from the line after P9's to `Nothing here writes
-  the floor knob`. **The middle span is the one the first draft dropped**, and it holds `a3`–`a12`.
+- **The floor arithmetic is two spans, not three, and neither starts at `Both gates are a LOOP`**:
+  `a1` and `a2` are both inside item 8a's replacement block, which begins at that anchor, so a span
+  opening there opens on a changed line. Take the spans as: **from the line after row F10's
+  fragment** to the line before row P9's; and from the line after P9's to `Nothing here writes the
+  floor knob`. The first of them holds `a3`–`a12` — **the span an earlier draft dropped entirely**
+  — and the second holds `a14`. `a1` and `a2` are covered by their own observations, not by a span:
+  `a2` by row F10's pair, `a1` by the carried-condition preservation check.
 - **The human exception is three spans**, around rows F7 (`h4`), **F7b (`h5`)** and F4 (`h19`):
   from `Recording a human exception` to before F7's line; **from after F7b's line** to before
   F4's; and from after F4's to `because writing it down makes it sound`. **Twenty-two** of the
@@ -639,9 +670,9 @@ Expected: `P4=1` for both files.
 is **preserved in target §C's fenced replacement**, so its old-count could never reach zero. Derive
 `c4`'s OLD from the part of the sentence the replacement removes.
 
-**`c4` and `c8` have no row yet, and both are derived here rather than at step 4.** Take each from
-the live passage, check it the three ways, confirm it counts 1 in each copy, and **add a row to
-the fragment table** under the next free `P` id — that table is where every fragment lives, and a
+**`c4`, `c8`, `c9` and the four moved conditions `c10`–`c13` have no row yet, and all of them are
+derived here rather than at step 4.** Take each from the live passage, check it the three ways,
+confirm it counts 1 in each copy, and **add a row to the fragment table** under the next free `P` id — that table is where every fragment lives, and a
 row that is not there is a fragment stated somewhere else. Refer to them afterwards as **the `c4`
 row** and **the `c8` row**, never by a number picked here: Task 3 appends first and how many rows
 it adds is decided at execution. **Step 2 removes the wording they are taken from**, so a
@@ -680,13 +711,26 @@ observation at all. **A later draft reintroduced exactly that pair** by naming r
 
 Each NEW is confirmed single-line and unique in the installed file before it is counted.
 
+**Plus an absence check per moved condition — `c10`, `c11`, `c12`, `c13` — and one for `c9`'s moved
+clause.** A move removes wording here and adds it in §A, so the source removal is an **absence**:
+count the condition's own text in each copy, expecting `parent=1 worktree=0`. Task 1's §A presence
+checks are the other half. **A reader walk is not this observation** — Task 3 states the rule and
+the same reason applies: without it an old closure instruction can survive in passage (c) beside
+its §A replacement, and every pair, count and parity diff still passes. This is the
+two-instructions-that-disagree failure, and `c10`–`c13` are four chances at it.
+
+**`c9` is split, so it owes both halves:** the moved precedence clause is absent here
+(`parent=1 worktree=0`) and present in §A, while the plateau rationale stays — confirm the
+rationale still counts `1` in each copy.
+
 *(Build each pair per the verification procedure; record the four values.)*
 
-Expected for all six pair instances — three pairs in each of the two copies:
-`old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`. **All three OLD rows were derived and
-validated at step 1**; this step only runs them.
+Expected: for the three pairs, six pair instances reading
+`old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`; for the five absence checks,
+`parent=1 worktree=0` in each copy. **Every OLD row was derived and validated at step 1**; this
+step only runs them.
 
-- [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` split, `c10`–`c14` gone from here.
+- [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` split, `c10`–`c14` gone from here. **This is a reader's confirmation on top of step 4's counts, not the observation for any of them** — `c9`–`c14` are each counted there, and a walk that found what the counts missed would mean a fragment was wrong rather than that the walk was the check.
 
 - [ ] **Step 6: Commit**
 
@@ -738,14 +782,30 @@ is add-only** — it replaces no wording — so it is checked by presence alone,
 it can be omitted from both copies while the `e7` pair, the condition walk and the parity diff all
 pass.
 
+**Take both copies' NEW fragment from the clause carrying the pronoun** — the installed
+`you report the tells` — rather than from any other part of §D's sentence. P5w's OLD going to zero
+shows W's pronoun-less form is gone; only a NEW fragment containing the pronoun shows W received
+C's form rather than some third wording. **That is the `e8` alignment's own observation**, and
+without it the alignment rests on Task 14's parity judgement instead of on a count.
+
 *(Build the pair per the verification procedure; record the four values.)*
 
 Expected: both pairs `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`; both pointer checks
 `worktree=1 parent=0`.
 
-- [ ] **Step 4: Confirm `e1`–`e6` and `e9`–`e11` are untouched**, that `e11` is still C-only, and
-that **`e8` is aligned rather than untouched** — this task gives W the pronoun, so listing `e8`
-among the untouched conditions would contradict the task's own instruction.
+- [ ] **Step 4: Walk the conditions by their three different dispositions**
+
+They are not one class and the check differs per class:
+
+- **`e1`–`e6`, `e10`, `e11` are kept and outside the replacement** — confirm each is unchanged
+  against the parent, and that `e11` is still C-only. **`e10` belongs here, not with `e9`**: it is
+  the sentence after §D's block, so a check treating it as carried would look for it inside text
+  it never enters.
+- **`e9` is carried inside §D's block** — confirm `the "clearly stuck" reading above is not a
+  precondition for it` is present in each copy after the install, expecting `1`. A carried
+  condition is reproduced rather than untouched, so a span cannot protect it.
+- **`e8` is aligned rather than untouched** — this task gives W the pronoun, so listing `e8` among
+  the untouched conditions would contradict the task's own instruction.
 
 - [ ] **Step 5: Commit**
 
@@ -871,6 +931,13 @@ so a derivation afterwards has no live wording left to check against:
 
 - **The `c18`-and-surfacing block** changes `c16`, `c17`, `c19` and `c20` besides the `c18` clause
   row P8 observes — **one OLD row per condition**, four in total.
+- **The `a17`–`a22` block moves four conditions, not one.** P11 observes `a17`, the clean-final-pass
+  rule; `a18`, `a19` and `a20` are each independently dispositioned **moved** and have no
+  observation at all. **One OLD row each**, and each is an *absence* at this source —
+  `parent=1 worktree=0` — paired with the matching §A text Task 1 already installed, since a moved
+  condition leaves here and appears there. Without them the old loop-until-clean, zero-finding and
+  no-padding instructions can survive beside the ordering that replaces them while every pair and
+  both carried-condition counts still pass.
 - **§G changes two things, not one**: its membership is widened *and* it gains a semantic
   membership test a downstream reader can apply, and target §G's own closing note names the test
   as the point of the replacement. P7 observes the widened clause; **the test owes a second
@@ -925,14 +992,27 @@ semantic membership test and for every independent add-only clause in the strict
 Choose each of those NEW fragments from the installed text and verify it the three ways before
 counting it.
 
-- [ ] **Step 4: Confirm `a21`, `a22`, `a15` survived** — they are carried inside blocks that install contiguously, so a mis-scoped replacement silently drops them.
+- [ ] **Step 4: Confirm every carried condition in this task's blocks survived**
+
+They are reproduced inside blocks that install contiguously, so a mis-scoped replacement silently
+drops them — and because they are carried rather than kept, **no untouched-range span covers
+them**, which is exactly why the disposition records them as carried. **Each owes a count of its
+own text in each copy, expecting `1`.**
+
+The set is **`a15`, `a21`, `a22`, `c15`, and each of `i4`–`i8`** — nine conditions, not three. An
+earlier draft checked three and left the rest to P8 and P16, which observe the *changed* clauses
+around them and prove nothing about the reproduced words: both copies could omit the surfacing
+premise, or any interior item of the strict-reading run, and every pair, presence check and parity
+comparison would still pass.
 
 ```bash
 grep -cF 'Codex is advisory — validate before applying; dismissed finding → one-line why' CLAUDE.md
 grep -cF 'Open a TodoWrite' CLAUDE.md
 ```
 
-Expected: `1` each.
+Expected: `1` each, and `1` for each of the remaining seven — take each fragment from the
+condition's own text in the inventory, confirm it is single-line and unique, and run it in both
+copies.
 
 - [ ] **Step 5: Parity** for all ten sites, each extracted by its own bounded region rather than a fixed line window.
 
@@ -990,9 +1070,16 @@ every stated count still passed.
 Expected for all thirty pair instances — fifteen rows in each of the two copies:
 `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
-- [ ] **Step 4: Count what was installed**
+- [ ] **Step 4: Confirm `a1` survived, then count what was installed**
 
-Total the fifteen `new/worktree` values step 3 printed, per copy.
+**`a1` is carried inside item 8a's block**, which opens with it — `**Both gates are a LOOP with a
+HARD FLOOR: a minimum number of passes per run` — and reproduces it so one contiguous string
+installs. Carried, not kept: **no untouched-range span covers it**, and row F10's pair observes
+`a2`, the parenthetical, not the opening it sits in. Count `a1`'s own text in each copy, expecting
+`1`. Without it a mis-scoped item-8a replacement can drop the sentence's opening and every other
+check in this task still passes.
+
+Then total the fifteen `new/worktree` values step 3 printed, per copy.
 
 Expected: `15` per copy — **fifteen independent changed clauses, from fourteen installed items**.
 State the number you observed. **Do not carry a count from §F into a check** — §F states the count of falsified sentences and this task installs a subset of them; a count copied between the two is the stale-bookkeeping defect the design records at five passes running.
@@ -1099,7 +1186,10 @@ Step 5 runs eight pairs. **Their OLD halves come from the live `note` strings, s
 here** — after step 3 the old wording is gone from the only file that carries it, and a fragment
 reconstructed from the parent tree can no longer catch a drifted string or a half-applied re-run.
 For each, take a single-line fragment from the located `note` call, confirm it counts **1** in
-`codex-gate.sh`, and confirm it is **not preserved inside its own §F replacement**.
+`codex-gate.sh`, and confirm it is **not preserved inside its own §F replacement**. **Then append
+all eight to the fragment table** under the next free `P` ids, naming each by the item it observes.
+The hook's live wording exists in one file and is gone after step 3; a fragment used and never
+recorded cannot be re-derived and cannot be audited.
 
 **Three of the eight need a second look while the file is open.** Item 11's removed text is the
 **clean definition** at the end of the Gate-A satisfied message, not `floor met by COUNT ONLY`,
@@ -1421,15 +1511,22 @@ the human-exception edits, the WIP and finishing-cycle text, the evidence-revali
 the curve rationale — every one of which this change ships, and any of which could differ between
 the copies while a nine-window diff passes.
 
-**Drive the list from the artifact:** every section the target text marks NEW or REPLACED, and every
-item in §F whose destination is a prompt copy. For each, extract a **bounded** region — from its
-first line to the first line of the next passage, not a fixed count — and diff the two copies:
+**Drive the list from the artifact, and the unit is a destination site, not a target section.**
+One row per **fenced block whose destination is a prompt copy** — so §H contributes **nine** rows,
+one per live site it replaces, not one row for the section. Its nine blocks land at nine
+noncontiguous places in each copy and no single start/end region spans them; a section-level row
+would either be unbuildable or would sample one of the nine and leave the other eight out of the
+final parity diff. §A, §B, §C, §E and §G are contiguous and contribute one row each; §D
+contributes two; every §F item whose destination is a prompt copy contributes one.
+
+For each, extract a **bounded** region — from its first line to the first line of the next passage,
+not a fixed count — and diff the two copies:
 
 ```bash
 # .context/loop-rule-changed-sites is written by this step: one
-# start<TAB>end line per section the target marks NEW or REPLACED and per
-# §F item whose destination is a prompt copy. Build it by reading those
-# markers off the target text, then:
+# start<TAB>end line per destination site — per fenced block the target
+# marks NEW or REPLACED, and per §F item whose destination is a prompt
+# copy. Build it by reading those markers off the target text, then:
 while IFS=$(printf '\t') read -r s e; do
   echo "== $s"
   diff <(sed -n "/$s/,/$e/p" CLAUDE.md) \
@@ -1443,7 +1540,8 @@ without having diffed anything.
 
 **Fail this step where a site named by §§A–H has no region in your list** — that is the same
 completeness failure as Task 13's per-condition checks, and it is caught the same way: by reading
-the set off the artifact rather than from a list kept here.
+the set off the artifact rather than from a list kept here. **Read it block by block**, which is
+what makes §H's nine sites visible; reading it section by section is what hid eight of them.
 
 **Where it goes:** this plan, under the heading `## Divergence list (Task 14 output)` at the end of
 the document, replaced idempotently on re-run by the same rule Task 13 uses.
@@ -1547,6 +1645,19 @@ claude plugin validate . --strict
 
 Expected: exit 0.
 
+**`check-version-bump.sh main` has a precondition the rest of the battery does not**, and AGENTS.md
+states it: it compares *commits* against a base ref, so a stale local `main` compares the bump
+against a different base than the pull request will. **Fetch the base ref first and record which
+commit supplied the comparison:**
+
+```bash
+git fetch origin main
+git rev-parse origin/main    # record this — it is what the local run compared against
+```
+
+Run the battery's version-bump step against a current `main`. A green run against a stale one is
+green about the wrong comparison and defers the failure to CI.
+
 - [ ] **Step 4b: Apply all twelve `docs/prompt-standards.md` items to the installed text, and commit the result before Gate B**
 
 **Nothing mechanical does this and no other task claims it.** The battery's three narrow checks are
@@ -1582,7 +1693,11 @@ in the WIP body too if a mid-cycle reader would want it, but the file is the cop
 **human-exception record** belong beside it. **Step 7b appends all three and revalidates the
 entry** — this step opens the file, step 7b closes it, and step 8 commits it.
 
-It names: the battery run; **every pair this plan built, with its counts in each copy and each tree, and every presence check beside them**; the §6 parity diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row count. **State the §A presence checks as presence, not as pairs** — its counterfactual is absent and is claimed as absent.
+It names: the battery run; **every pair this plan built, with its counts in each copy and each tree, every presence check beside them, and every absence check with its two counts**; the §6 parity diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row count. **Read them out of `## Fragment evidence (per-task output)`**, which is where every task records them.
+
+**The absence checks belong in the entry as much as the pairs do.** `g2`, `g3` and `g4` are dropped rather than replaced, and `c9`–`c13` and `a18`–`a20` are moved, so the observation that proves each is gone is an absence — `parent=1 worktree=0` — and nothing else in the entry carries it. An entry listing only pairs and presence checks claims the verification set while omitting the half that proves obsolete instructions were removed, which is the failure the absence checks exist for.
+
+**State the §A presence checks as presence, not as pairs** — its counterfactual is absent and is claimed as absent.
 
 - [ ] **Step 6: Run Gate B**
 
@@ -1608,6 +1723,8 @@ Floor derives from the story profile: risk `high` → 2, security `none` → 0, 
 WIP tip while the repair sits in the worktree — and the final squash then publishes a fix no pass
 reviewed:
 
+**Before committing each fix, re-run what the fix could have broken**, then:
+
 ```bash
 git add -A && git commit -m "WIP: fix <finding>"
 git rev-parse HEAD          # resolve headSha fresh for the next call
@@ -1617,6 +1734,20 @@ Re-review after every fix. **Revalidate the evidence entry before every re-revie
 closing commit.**
 
 **A fix that changes specified behaviour updates the spec in the same commit.**
+
+**The battery and the reader checks are not done when step 4 passed once.** A Gate-B fix can touch
+the hook, its test, either prompt copy or the target text, and step 4's run and step 4b's
+twelve-item review both describe the tree as it was *before* that fix. Without re-running them the
+plan reaches its closing commit on a tree that never passed its own quality battery — a repo unable
+to pass CI, or an invariant-11 violation, published by a cycle that closed clean.
+
+- **After each fix, re-run the checks whose subject it changed** — the hook or its test means the
+  suite under both shells; either prompt copy means `sh scripts/check-invariants.sh`; a shell file
+  means `shellcheck`.
+- **Before the closing act, re-run the whole battery of step 4 against the current `HEAD`**, and
+  re-apply step 4b's twelve items to every artefact a fix touched, recording the fresh result in
+  the plan and committing it. **The results the closing commit carries are the ones from the final
+  tree**, not from the tree that first went green.
 
 - [ ] **Step 7b: After the clean pass, complete `.context/loop-rule-closing-msg` — this is the
   action step 5 defers to, and step 8 has no other source for these records**
@@ -1631,10 +1762,15 @@ Append to the file step 5 opened, then read the whole file back before step 8 ru
 3. any **human-exception record**, and beside it the skip reason if a cycle was skipped;
 4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it.
 
-Confirm the file now carries all four before continuing. **A missing one is not recoverable after
-step 8** — `git commit -F` publishes whatever the file holds, `reset --soft` has already discarded
-every WIP body, and a closing commit without its provenance line or curve has not validly closed
-the cycle.
+**Items 1, 2 and 4 are owed unconditionally; item 3 is owed only where such a record exists.**
+Confirm the file carries the three, and either the applicable exception records or **the literal
+line `Human exception: none`**, which is what satisfies this check for an ordinary cycle. Without
+that line an executor reading "all four" must either invent a record or ignore the oracle, and a
+valid close stops on a record nobody owed.
+
+**A missing one is not recoverable after step 8** — `git commit -F` publishes whatever the file
+holds, `reset --soft` has already discarded every WIP body, and a closing commit without its
+provenance line or curve has not validly closed the cycle.
 
 - [ ] **Step 8: Close the cycle**
 
@@ -1648,20 +1784,36 @@ test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
 # Everything that must be IN the squashed commit has to be committed before the
 # reset: reset --soft stages only what the discarded commits already contained.
 git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md .context/codex-reviews/
-git commit -m "WIP: plan records and Gate-B findings files" || true
-git status --porcelain     # expect empty
+if ! git diff --cached --quiet; then
+  git commit -m "WIP: plan records and Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
+fi
+test -z "$(git status --porcelain)" || { echo "tree not clean before reset — aborting"; exit 1; }
+
 git reset --soft "$BASE"
 git commit -F .context/loop-rule-closing-msg || { echo "closing commit FAILED — base file kept for recovery"; exit 1; }
-git log --oneline -1          # expect the closing message, not a WIP
-git status --porcelain        # expect empty
+
+case "$(git log -1 --pretty=%s)" in
+  WIP:*|wip:*) echo "closing commit still reads WIP — cycle NOT closed"; exit 1 ;;
+esac
+test -z "$(git status --porcelain)" || { echo "worktree dirty after close — aborting before cleanup"; exit 1; }
 rm -f .context/loop-rule-base
 ```
 
-**The base file is removed only after the closing commit succeeded**, and the two checks above are
-what "succeeded" means here. `git commit` can fail on a hook, a signing key or an unset identity,
-and at that point the reset has already happened: the WIP commits are gone, the whole change is a
-staged tree, and `.context/loop-rule-base` is the only record of where the cycle started. Deleting
-it unconditionally destroys the one value a rerun needs, in the single state where it is needed.
+**Every check in that block fails the script; none of them is a comment.** An earlier draft
+suppressed the record commit with `|| true` and left the status and log lines as things to look at,
+so a failed record commit, a dirty tree or a closing message still reading `WIP:` all proceeded
+through the soft reset and deleted the recovery base — producing, silently, the exact state the
+plan elsewhere calls an invalid close.
+
+**`|| true` is replaced by a test for the one harmless case it was hiding.** "Nothing to commit"
+and "the commit failed" are different outcomes and only the first is fine, so the block asks
+`git diff --cached --quiet` first and treats a real failure as a failure.
+
+**The base file is removed only in the success branch.** `git commit` can fail on a hook, a signing
+key or an unset identity, and at that point the reset has already happened: the WIP commits are
+gone, the whole change is a staged tree, and `.context/loop-rule-base` is the only record of where
+the cycle started. Deleting it unconditionally destroys the one value a rerun needs, in the single
+state where it is needed.
 
 **`$BASE` is the recorded revision, not a placeholder to substitute by hand**, and the file is
 removed afterwards so a later run cannot inherit a stale one.
@@ -1716,3 +1868,14 @@ The closing body carries: the validated evidence entry; the provenance line; the
 ## Prompt-standards result (Task 15 step 4b output)
 
 *Empty until Task 15 runs. It replaces this entire section, one line per checklist item.*
+
+---
+
+## Fragment evidence (per-task output)
+
+*Empty until the tasks run. One subsection per task — `### Task 1`, `### Task 3`, … — each holding
+that task's chosen NEW and presence fragments with the four counts observed for each, and the
+absence checks with their two. A task replaces its own subsection idempotently on re-run and
+touches no other. **The OLD fragments live in the fragment table, never here**; this section is
+where the halves that do not exist until installation are recorded, and it is what Task 15 step 5
+reads to assemble the closing evidence entry.*
