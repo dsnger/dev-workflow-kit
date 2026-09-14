@@ -32,7 +32,8 @@ worth checking before a pass rather than after.
 |---|---|---|---|---|---|---|
 | 1 | 5871d0a | **32** | **1** | **28** | yes | first pass. The Blocker is real: with a WIP commit per task, `baseSha = HEAD^` would have put only the version bump in Gate B's range. **The dominant class is verification fragments that count zero** — the reviewer tested them against the real files and found five of Task 7's ten locators, both of Task 3's, Task 5's and Task 7's strict-reading OLD all wrapping across lines or quoting text that does not exist. Repaired by one **verified fragment table** for the whole plan instead of guessed fragments per task |
 | 2 | 9f13a2c | 32→**32** | 1→**0** | 28→**25** | yes | one tell (findings flat, and they cluster on the plan's own checks — the instrument). **Pass 1's repair reproduced the same defect at the next condition down:** three OLD fragments are *preserved inside their own replacements*, so their old-count can never reach zero. My checker tested single-line and unique but not that third condition, though this plan states all three. Checker fixed to test against the target's **fenced blocks**; three rows replaced; the fourteen §F OLD fragments derived and committed rather than deferred |
-| 3 | — | — | — | — | not run | next, against the pass-2 repair commit |
+| 3 | b767a2a | 32→**31** | 0→**0** | 25→**23** | yes | one tell (instrument cluster). **Pass 2's three fragments came back — because I repaired the table and left the same fragments quoted inline in the task steps.** Second-copy defect, in the plan written to avoid it. Structural repair: the table is the only authored copy and Task 0 **generates** the shell variables from it, so no step can restate a fragment. 8 Minors collected |
+| 4 | — | — | — | — | not run | next, against the pass-3 repair commit |
 
 ## Pass-1 report
 
@@ -106,3 +107,47 @@ record, and explicitly not a mechanical guard.
 **And the closing commit would have destroyed its own evidence:** step 5 wrote the evidence entry
 into a WIP body, step 8 squashed with `git reset --soft`, which keeps the tree and discards every WIP
 message. The entry goes to a file now.
+
+
+## Pass-3 report
+
+**Trend:** findings 32, 32, **31**; Blockers 1, 0, **0**; Majors 28, 25, **23**. **Cluster:** the
+plan's own verification apparatus, for the third pass running — the **instrument**, so one tell.
+**Require↔withdraw:** none.
+
+**The finding that names the mechanism.** Pass 2 found three fragments preserved inside their own
+replacements. I repaired the three **table rows**. Pass 3 found the same three, because every task
+step also quoted its fragment **inline** — so the plan held two copies of each fragment and I had
+fixed one. That is the second-copy defect, in the document written to avoid it, at the third
+attempt.
+
+**The repair is that fragments now exist once.** The table is the only authored copy, and Task 0
+**generates** `.context/loop-rule-verify.sh` from it by reading the rows out of the plan; every
+command block sources that file and refers to `$P5_OLD`, `$F10_OLD` and so on. **No task step
+contains a fragment any more**, so the failure cannot recur in this shape. The generator's known
+limit — fragments containing backticks or single quotes — is stated with the two rows it affects,
+and a round-trip check runs before any task uses it.
+
+**Nine findings were shell that cannot run**: blocks assigning `BASE` but never sourcing the helper
+that defines `pair()`; two checks written as bare quoted strings after a loop rather than as loop
+entries; `$start`, `$end` and `$f` used as `sed` addresses with no step producing them; a
+colon-delimited site list whose own anchors contain colons, so `**Severity:**` splits at the wrong
+one. The site and range lists are tab-separated files now, written by the step that needs them.
+
+**Three were accounting.** `c15` was marked replaced while §H reproduces it verbatim — carried, and
+corrected. The floor-arithmetic split dropped `a3`–`a12` between its two spans, so most of the floor
+had no untouched check at all; it is three spans now. And the human-exception split named no anchors.
+
+**Two were duties with no home.** No task applies the twelve `prompt-standards.md` items to the
+installed text — the battery's three checks are a floor, not coverage — so Task 15 gains step 4b.
+And Task 12b's sweep record was to be committed into `.context/`, which `.gitignore` refuses; it
+goes into the plan.
+
+**One boundary claim was false and is now stated plainly:** Tasks 10 and 11 cannot be accepted and
+rejected independently, because Task 10 leaves the hook suite red until Task 11 moves the
+expectations. They are one reviewable unit with two commits, and the plan says so rather than
+claiming a boundary that is not there.
+
+**Eight Minors collected**, per Mechanics · Severity: locator commands run against C while claiming
+a result for both copies; three parity steps with no command; commit steps not staging the plan; the
+baseline expected-divergence list omitting the recorded blank-line and wrap differences.

@@ -82,31 +82,60 @@
 
 **The NEW fragment for every pair is taken from the installed line and checked the same way**, since the new wording does not exist until the task installs it. Each task's step says which sentence of its target block to take it from, and the step fails if the fragment it chooses is not single-line and unique in the installed file. **This is the one place the plan cannot pre-verify**, and it is disclosed rather than papered over.
 
-**The four-value command. Task 0 writes it to a file, and every task that uses it sources that file** — task command blocks run in separate shells, so a function defined here once would be `pair: command not found` everywhere it is called.
+**The table is the only authored copy of every fragment, and Task 0 generates the shell variables from it.** Pass 3 found the three rows pass 2 had repaired still wrong — because the task *steps* repeated the same fragments inline, and only the table had been fixed. A plan that states a fragment twice has the second-copy defect it was written to avoid, so **no task step below quotes a fragment; each names a row id.**
 
-Task 0 writes `.context/loop-rule-pair.sh`:
+Task 0 writes `.context/loop-rule-verify.sh` by extracting the rows from this file:
 
 ```bash
-cat > .context/loop-rule-pair.sh <<'SH'
-BASE=$(cat .context/loop-rule-base)
+{
+  echo 'BASE=$(cat .context/loop-rule-base)'
+  echo 'test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }'
+  # one `<ID>_OLD='<fragment>'` line per table row, read out of this plan
+  awk -F'|' '/^\| (P|F)[0-9]+[a-z]? \|/ {
+        id=$2; frag=$4;
+        gsub(/^[ \t]+|[ \t]+$/, "", id); gsub(/^[ \t]+|[ \t]+$/, "", frag);
+        sub(/^`+/, "", frag); sub(/`+$/, "", frag);
+        gsub(/^[ \t]+|[ \t]+$/, "", frag);
+        if (frag ~ /^\*/) next;                      # P1 has no fragment
+        gsub(/'\''/, "'\''\\'\'''\''", frag);
+        printf "%s_OLD='\''%s'\''\n", id, frag }' \
+      docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+  cat <<'SH'
 pair() {  # pair <OLD> <NEW> <file>
   printf '%s  old/worktree=%s old/parent=%s new/worktree=%s new/parent=%s\n' "$3" \
     "$(grep -cF "$1" "$3")" "$(git show "$BASE:$3" | grep -cF "$1")" \
     "$(grep -cF "$2" "$3")" "$(git show "$BASE:$3" | grep -cF "$2")"
 }
 SH
+} > .context/loop-rule-verify.sh
 ```
 
-and **every later command block that counts anything begins with**:
+**Every command block below that counts anything begins with `. .context/loop-rule-verify.sh`** — task blocks run in their own shells, so a function or variable set elsewhere is `command not found` here, and the sourced file carries the empty-`$BASE` guard with it.
+
+- [ ] **Confirm the generator round-trips before any task uses it**
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
+for id in P2 P3 P4 P5 P5w P6 P7 P8 P9 P10 P11 P12 P13 P14 P15 P16 P17 P18 \
+          F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14; do
+  eval "v=\$${id}_OLD"
+  printf '%-4s C=%s W=%s  %s\n' "$id" \
+    "$(grep -cF "$v" CLAUDE.md)" \
+    "$(grep -cF "$v" plugins/dev-workflow/commands/workflow-init.md)" "${v:0:40}"
+done
 ```
 
-**The `test` is not decoration.** With `$BASE` empty, `git show ":$f"` reads the *index* rather than the recorded parent and every parent count silently describes the wrong tree.
+Expected: `C=1 W=1` for every row except **P5** (`C=1 W=0`) and **P5w** (`C=0 W=1`), which are the
+per-copy `e7` rows. **A row printing `0` where its table entry claims a hit means the extraction
+mangled it — fix the generator, not the table.**
 
-**A pair passes only on `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.** All four values matter: a copy carrying the new wording **and** the old one satisfies a one-sided presence check and is exactly the two-instructions-that-disagree failure the pair exists to catch.
+**Fragments containing a backtick or a single quote are the generator's known limit**, and two rows
+have backticks inside them (F2, F8). Confirm those two round-trip by eye before trusting the loop.
+
+**The four-value rule, stated once:** a pair passes only on `old/worktree=0 old/parent=1
+new/worktree=1 new/parent=0`. All four matter — a copy carrying the new wording **and** the old one
+satisfies a one-sided presence check, which is the two-instructions-that-disagree failure the pair
+exists to catch.
 
 ---
 
@@ -159,7 +188,8 @@ Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/
 | c10, c11 | **moved** to §A, which states what a Blocker/Major-free pass at or above the floor does. |
 | c12, c13 | **moved** to §A, beside a19. |
 | c14 | **replaced, not moved.** The ordering splits the below-floor Minor case into suspend and continue; no copy of the live wording survives beside them. |
-| c15, c16 | **replaced** — §H's `c18`-and-surfacing block. The hold is now over the cycle and the new hold. |
+| c15 | **carried.** §H's block reproduces `**Surfacing does not close the cycle, and that is what makes this reachable.**` verbatim; it is reproduced because the plan installs one contiguous string, not because it changes. |
+| c16 | **replaced** — §H's block. The hold is now over the cycle and the new hold, not over the finding alone. |
 | c17 | **replaced** — the resolve rule now scopes to the assigned fix set and states what a validly dismissed recurrence owes. |
 | c18 | **replaced** — the blanket no-clean-credit goes; a pass is credited on its own findings, and a scope-stop trigger is what withholds credit. |
 | c19 | **replaced** — the one-answer resumption goes; what the answer does is the ordering's. |
@@ -236,11 +266,10 @@ empty revision — which fails loudly in `git show` but quietly in a `grep -c` p
 task begins with:
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
 ```
 
-**Task 0 also writes `.context/loop-rule-pair.sh`**, whose contents are given in the fragment-table
+**Task 0 also writes `.context/loop-rule-verify.sh`**, whose generator is given in the fragment-table
 section. It sets `$BASE` and defines `pair()`, so both arrive together and neither can be used
 without the other.
 
@@ -279,16 +308,22 @@ after the insertion point addresses different text in the parent than in the wor
 comparison using them reports CHANGED on identical content. Each check resolves its own start and
 end anchor in each tree at comparison time.
 
-**Two of the five ranges must exclude the conditions this change replaces**, or a correct
-implementation fails its own check:
+**Two ranges must be split around the conditions this change replaces**, or a correct
+implementation fails its own check — and each split must leave **every kept condition inside some
+span**, which the first draft's version did not:
 
-- **The floor arithmetic range must exclude `a2` and `a13`.** `a2` is the HARD FLOOR parenthetical
-  Task 8 replaces (row F10) and `a13` is the no-restating prohibition Task 7 replaces (row P9).
-  Record the arithmetic as **two spans** — from `Both gates are a LOOP with a HARD FLOOR` to just
-  before `(Blocker/Major only)`, and from just after `a13`'s sentence to `Nothing here writes the
-  floor knob`.
-- **The human-exception range must exclude `h4` and `h19`**, which Task 8 replaces (rows F7 and F4).
-  Record the twenty-four kept conditions as the spans **between** those two sites.
+- **The floor arithmetic is three spans**, because `a2` sits at its head and `a13` in its middle:
+  from `Both gates are a LOOP with a HARD FLOOR` to the line before row F10's fragment; from the
+  line after F10's to the line before row P9's; and from the line after P9's to `Nothing here writes
+  the floor knob`. **The middle span is the one the first draft dropped**, and it holds `a3`–`a12`.
+- **The human exception is three spans**, around rows F7 (`h4`) and F4 (`h19`): from `Recording a
+  human exception` to before F7's line; between F7's and F4's; and from after F4's to `because
+  writing it down makes it sound`. All twenty-four kept conditions lie inside them.
+
+**Record the spans as one `start<TAB>end<TAB>file` line each in `.context/loop-rule-untouched`**, the
+anchors being literal strings. Tab-separated because the anchors contain colons — the first draft
+used `:` as the delimiter, and `**Severity:**:**Tool routing:` splits at the wrong colon and yields
+an empty end anchor.
 
 - [ ] **Step 3: Confirm the parity baseline of the inventoried ranges**
 
@@ -299,22 +334,27 @@ whose expected list named it — and the truncation hid about fifty of the rough
 comparison actually emits.
 
 ```bash
-# one bounded region per site, resolved by anchor in each file, output in full
-for site in 'Both gates are a LOOP:Nothing here writes the floor knob' \
-            'What a loop absorbs:Recognizing "clearly stuck"' \
-            'Recognizing "clearly stuck":Every pass report states' \
-            'From pass 4 onward:Those three lines expose' \
-            'Those three lines expose:The two rules above' \
-            'The two rules above:Findings go to a FILE' \
-            '\*\*Severity:\*\*:\*\*Tool routing:' \
-            'Recording a human exception:because writing it down makes it sound' \
-            'On squash-merge:On squash-merge' \
-            'When these rules bind:Downstream has no shipping commit'; do
-  s=${site%%:*}; e=${site##*:}
+# Tab-separated start and end anchors: the anchors contain colons, so a
+# colon delimiter splits '**Severity:**' at the wrong place and yields an
+# empty end. A single-line site is given the same anchor twice and sed
+# returns that one line.
+printf '%s\n' \
+ 'Both gates are a LOOP\tNothing here writes the floor knob' \
+ 'What a loop absorbs\tRecognizing "clearly stuck"' \
+ 'Recognizing "clearly stuck"\tEvery pass report states' \
+ 'From pass 4 onward\tThose three lines expose' \
+ 'Those three lines expose\tThe two rules above' \
+ 'The two rules above\tFindings go to a FILE' \
+ '\*\*Severity:\*\*\t\*\*Tool routing:' \
+ 'Recording a human exception\tbecause writing it down makes it sound' \
+ 'On squash-merge\tOn squash-merge' \
+ 'When these rules bind\tDownstream has no shipping commit' \
+ > .context/loop-rule-sites
+while IFS=$(printf '\t') read -r s e; do
   echo "== $s"
   diff <(sed -n "/$s/,/$e/p" CLAUDE.md) \
        <(sed -n "/$s/,/$e/p" plugins/dev-workflow/commands/workflow-init.md)
-done | tee .context/loop-rule-baseline-diff.txt
+done < .context/loop-rule-sites | tee .context/loop-rule-baseline-diff.txt
 ```
 
 Expected: the deliberate divergences the inventory records — `b3`'s cross-reference target, passage
@@ -373,7 +413,7 @@ copies while every count and the parity diff still pass — the paragraphs are i
 nothing else observes them.
 
 ```bash
-BASE=$(cat .context/loop-rule-base)
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   for frag in 'How a cycle ends — one ordering' \
               '<a single-line fragment unique to §A2, taken from the installed file>' \
@@ -427,8 +467,8 @@ This task exists because `f1` and the (d)/(j) dispositions are falsifiable only 
 - [ ] **Step 1: Diff each untouched passage against the parent**
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
+# read the five recorded ranges rather than hard-coding three of them
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   for anchor in 'From pass 4 onward every pass report carries three lines' \
                 'The two rules above do not compete' \
@@ -475,12 +515,13 @@ table. Both are verified single-line and unique; re-confirm before editing, sinc
 have touched these files:
 
 ```bash
-BASE=$(cat .context/loop-rule-base)
-grep -cF 'scope the approved story or plan assigns to this cycle, plus repair obligations you already' CLAUDE.md
-grep -cF 'the moment the user says whether the set now includes it' CLAUDE.md
+. .context/loop-rule-verify.sh
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  printf '%s P2=%s P3=%s\n' "$f" "$(grep -cF "$P2_OLD" "$f")" "$(grep -cF "$P3_OLD" "$f")"
+done
 ```
 
-Expected: `1` each, and the same against W.
+Expected: `P2=1 P3=1` for **both** files — the first draft ran these against C only while claiming a result for both.
 
 **The first draft of this plan named `plus repair obligations you already accepted in earlier
 passes` here, which wraps across C 201–202 and W 408–409 and counts zero in a correct file.**
@@ -552,11 +593,17 @@ git commit -m "WIP: replace passage (b) with the absorb paragraph that owns the 
 - [ ] **Step 1: Record the old-wording fragments**
 
 ```bash
-grep -cF 'a Blocker/Major-free pass below the floor' CLAUDE.md
-grep -cF 'So this exit needs three things' CLAUDE.md
+. .context/loop-rule-verify.sh
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  printf '%s P4=%s\n' "$f" "$(grep -cF "$P4_OLD" "$f")"
+done
 ```
 
-Expected: `1` each, in both copies.
+Expected: `P4=1` for both files.
+
+**`So this exit needs three things` is not usable and is not a row:** it occurs once in each copy but
+is **preserved in target §C's fenced replacement**, so its old-count could never reach zero. Derive
+`c4`'s OLD from the part of the sentence the replacement removes.
 
 - [ ] **Step 2: Install §C's block**
 
@@ -575,20 +622,24 @@ Row **P4**. `NEW` is the single-line fragment `a recurrence failing them being a
 finding`, from §C's re-raised-dismissal clause — **install that clause's line unwrapped** so the
 fragment sits wholly on one line, and confirm it is unique before counting.
 
+**Three pairs, one per edit.** An earlier draft ran a single pair taking its OLD from `c14` and its
+NEW from `c8` — two different changes — so either could land while the other survived and it still
+reported a pass, and `c4` had no observation at all.
+
 ```bash
-BASE=$(cat .context/loop-rule-base)
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  pair 'a Blocker/Major-free pass below the floor' \
-       'a recurrence failing them being an ordinary fresh finding' "$f"
+  pair "$P4c4_OLD"  '<§C c4 NEW — derive, verify, add as a row>'  "$f"   # c4 replaced
+  pair "$P4c8_OLD"  'a recurrence failing them being an ordinary fresh finding' "$f"   # c8 widened
+  pair "$P4_OLD"    '<§C c14 routing NEW — derive, verify, add as a row>' "$f"   # c14 removed
 done
 ```
 
-Expected: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
+Expected for all six: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
-**One pair per edit, not one per task.** The pair above takes its OLD from `c14` and its NEW from
-`c8` — two different changes — so `c8` can land while `c14` survives, or the reverse, and it still
-reports a pass. `c4` has no observation at all. **Add a pair for `c4`'s replaced wording and one for
-`c14`'s removal against §C's conditional routing, with rows in the fragment table**, before Step 5.
+**`P4c4_OLD` and `P4c8_OLD` do not exist yet.** Derive each from the live passage, check it the three
+ways, and **add it to the fragment table** — the generator reads the table, so a row that is not
+there is not a variable.
 
 - [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` split, `c10`–`c14` gone from here.
 
@@ -625,12 +676,18 @@ replacement**, so it can never be the old half — that is the trap design §7 r
 revisions. Rows **P5** (C) and **P5w** (W) instead, and they differ because W drops the pronoun:
 
 ```bash
-grep -cF 'the tells and hand the decision to the user, and the' CLAUDE.md                          # 1
-grep -cF 'tells and hand the decision to the user, and the' plugins/dev-workflow/commands/workflow-init.md  # 1
+. .context/loop-rule-verify.sh
+printf 'P5  C=%s\n' "$(grep -cF "$P5_OLD"  CLAUDE.md)"
+printf 'P5w W=%s\n' "$(grep -cF "$P5w_OLD" plugins/dev-workflow/commands/workflow-init.md)"
 ```
 
-**The first draft named `and the "clearly stuck" reading above is not a precondition for it`, which
-wraps across C 267–268 and W 471–472 and counts zero in both correct files.**
+Expected: `1` each.
+
+**Two earlier drafts got this row wrong in two different ways.** The first named `and the "clearly
+stuck" reading above is not a precondition for it`, which wraps across C 267–268 and W 471–472. The
+second named `the tells and hand the decision to the user, and the`, which is **preserved in target
+§D's replacement** and so could never reach zero. The rows now take the clause §D actually
+removes.
 
 - [ ] **Step 2: Install §D's `e7` sentence and the pointer paragraph**
 
@@ -705,15 +762,14 @@ pair, the old unscoped resolve duty can survive, or the new repair-versus-dismis
 omitted, while everything Task 6 checks passes.
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  pair 'is not settled here, and this change does not settle it' \
-       'The demotion changes what a cycle must resolve, never what it observes' "$f"
-  pair '<the resolve-duty OLD, derived and added to the fragment table in step 1>' \
-       'for every finding in the assigned fix set as the absorb paragraph computes it' "$f"
+  pair "$P6_OLD"  'The demotion changes what a cycle must resolve, never what it observes' "$f"
+  pair "$P6r_OLD" 'for every finding in the assigned fix set as the absorb paragraph computes it' "$f"
 done
 ```
+
+**`P6r_OLD` is the resolve-duty row step 1 derives and adds to the table.**
 
 Expected for all four: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
@@ -768,18 +824,13 @@ is clean`` (one line in C, wraps in W), `A clean pass is the single body line` (
 after `A`), and `at minimum floor 3, severity classified without the demotion` (wraps C 155–156).
 
 ```bash
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   echo "== $f"
-  grep -cF 'These records are one contract' "$f"                              # P7  §G
-  grep -cF 'the resolve rule is not waived, no pass is credited as' "$f"       # P8  c18
-  grep -cF 'Every other rule stated here about how a cycle closes' "$f"        # P9  a13
-  grep -cF 'fix Blocker/Major after each' "$f"                                 # P10 a16
-  grep -cF 'final pass must be clean' "$f"                                     # P11 a17
-  grep -cF 'when a pass is clean' "$f"                                         # P12 Gate-A clean signal
-  grep -cF 'clean pass is the single body line' "$f"                           # P13 template clean sentence
-  grep -cF 'Each pass: validate, revise, re-run' "$f"                          # P14 Gate-A cadence
-  grep -cF 'The Blocker/Major filter, the file-first findings protocol' "$f"   # P15 lens list
-  grep -cF 'nonce duties at their strictest' "$f"                              # P16 strict-reading list
+  for id in P7 P8 P9 P10 P11 P12 P13 P14 P15 P16; do
+    eval "o=\$${id}_OLD"
+    printf '%-4s %s\n' "$id" "$(grep -cF "$o" "$f")"
+  done
 done
 ```
 
@@ -808,20 +859,18 @@ source sentence per block:
 | P16 | strict-reading list | `every suspension binding, since` |
 
 ```bash
-BASE=$(cat .context/loop-rule-base)
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  pair 'These records are one contract'                            '<P7 NEW>'  "$f"
-  pair 'the resolve rule is not waived, no pass is credited as'    '<P8 NEW>'  "$f"
-  pair 'Every other rule stated here about how a cycle closes'     '<P9 NEW>'  "$f"
-  pair 'fix Blocker/Major after each'                              '<P10 NEW>' "$f"
-  pair 'final pass must be clean'                                  '<P11 NEW>' "$f"
-  pair 'when a pass is clean'                                      '<P12 NEW>' "$f"
-  pair 'clean pass is the single body line'                        '<P13 NEW>' "$f"
-  pair 'Each pass: validate, revise, re-run'                       '<P14 NEW>' "$f"
-  pair 'The Blocker/Major filter, the file-first findings protocol' '<P15 NEW>' "$f"
-  pair 'nonce duties at their strictest'                           '<P16 NEW>' "$f"
+  for id in P7 P8 P9 P10 P11 P12 P13 P14 P15 P16; do
+    eval "o=\$${id}_OLD"; eval "n=\$${id}_NEW"
+    pair "$o" "$n" "$f"
+  done
 done
 ```
+
+**`<ID>_NEW` is set by the executor after installing that block and verifying the chosen fragment
+the same three ways** — append it to the generated file, or extend the table with a NEW column and
+re-run the generator.
 
 Expected for all twenty: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
@@ -884,9 +933,12 @@ per copy where the wrapping differs, as `e7` needed); unique in each; and **not 
 own replacement** — compare it against the §F block before accepting it.
 
 ```bash
-BASE=$(cat .context/loop-rule-base)
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  pair '<item OLD>' '<item NEW>' "$f"    # ×14
+  for id in F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14; do
+    eval "o=\$${id}_OLD"; eval "n=\$${id}_NEW"
+    pair "$o" "$n" "$f"
+  done
 done
 ```
 
@@ -896,7 +948,7 @@ Expected for all twenty-eight: `old/worktree=0 old/parent=1 new/worktree=1 new/p
 
 ```bash
 # Each of step 3's fourteen pairs printed new/worktree; total them per copy.
-. .context/loop-rule-pair.sh
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   n=0
   for new in '<F1 NEW>' '<F2 NEW>' '<F3 NEW>' '<F4 NEW>' '<F5 NEW>' '<F6 NEW>' '<F7 NEW>' \
@@ -947,11 +999,10 @@ Rows **P17** and **P18**. Assigning the variables is not running the check — t
 at the assignment.
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
 for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
-  pair 'Hook text is out of scope here'          'not a blanket exemption for hook text' "$f"
-  pair 'execute → tests green → Gate B → commit' 'Gate A (spec) → Gate-A closing act'    "$f"
+  pair "$P17_OLD" 'not a blanket exemption for hook text' "$f"
+  pair "$P18_OLD" 'Gate A (spec) → Gate-A closing act'    "$f"
 done
 ```
 
@@ -1083,7 +1134,15 @@ non-unique fragment pass for the five that should be exact:
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh
 ```
 
-Expected: exit 0, no output. The suite will fail at this point because the expectations still pin the old strings — that is Task 11.
+Expected: exit 0, no output.
+
+**The suite fails here, and that is a known red state between two commits.** Task 10 changes the
+hook strings and Task 11 moves the expectations that pin them; a reviewer cannot accept Task 10 and
+reject Task 11 without leaving the repo unable to pass its own battery. **They are therefore one
+reviewable unit with two commits**, and neither is offered for independent acceptance — the plan's
+task-independence claim does not extend to this pair, and saying so is cheaper than pretending to a
+boundary that is not there. **Do not run the battery between them**; Task 11 step 4 is the first
+point where green is expected.
 
 - [ ] **Step 7: Commit**
 
@@ -1201,9 +1260,15 @@ what was read, and what was found.
 
 - [ ] **Step 1: Read the installed ordering once more, and list what it now decides**
 
-Closure, eligibility, cleanliness, the hold, composition, the two scope triggers, the suspensions and
-their answers, the two gates' closing acts. **This list is the sweep's question set** — for each,
-"does any other sentence in these three files still answer this?"
+Closure, eligibility, cleanliness, the hold and what discharges it, composition, the two scope
+triggers, the suspensions and their answers, the two gates' closing acts, **the duty
+classification**, **the source-block branch and its two reread routes**, **the repeated-dismissal
+cleanliness exclusion**, and **the parked state after a closing act that cannot be repaired**.
+
+**Read the list off the installed §A rather than from here.** This enumeration is a floor and an
+earlier draft's was short by four — a closed list in a plan is the bookkeeping that goes stale, and
+the block itself is the only complete statement. For each item: "does any other sentence in these
+three files still answer this?"
 
 - [ ] **Step 2: Read every section of both prompt copies that gives an instruction about a pass, a finding, a gate or a commit**
 
@@ -1231,9 +1296,16 @@ sweep whose negative result is unrecorded cannot be told from a sweep that never
 - [ ] **Step 6: Commit**
 
 ```bash
-git add .context/loop-rule-sweep.md docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: record the completeness sweep"
 ```
+
+**The record goes in the plan, not in `.context/`.** `.gitignore` carries `.context/*` with only
+`codex-gate.on` and `codex-reviews/` exempt, so `git add .context/loop-rule-sweep.md` is refused and
+the task could not make its own commit. Write the sweep record under
+`## Completeness sweep (Task 12b output)` at the end of this plan, replaced idempotently by the same
+rule Tasks 13 and 14 use. The scratch files Task 0 writes stay in `.context/` and stay ignored —
+they are working state, not a deliverable.
 
 ---
 
@@ -1296,10 +1368,20 @@ item in §F whose destination is a prompt copy. For each, extract a **bounded** 
 first line to the first line of the next passage, not a fixed count — and diff the two copies:
 
 ```bash
-# one bounded region per changed site; $start and $end are that site's own anchors
-diff <(sed -n "/$start/,/$end/p" CLAUDE.md) \
-     <(sed -n "/$start/,/$end/p" plugins/dev-workflow/commands/workflow-init.md)
+# .context/loop-rule-changed-sites is written by this step: one
+# start<TAB>end line per section the target marks NEW or REPLACED and per
+# §F item whose destination is a prompt copy. Build it by reading those
+# markers off the target text, then:
+while IFS=$(printf '\t') read -r s e; do
+  echo "== $s"
+  diff <(sed -n "/$s/,/$e/p" CLAUDE.md) \
+       <(sed -n "/$s/,/$e/p" plugins/dev-workflow/commands/workflow-init.md)
+done < .context/loop-rule-changed-sites
 ```
+
+**The list is a step output, not an assumed input.** An earlier draft gave one generic command with
+undefined `$start` and `$end` and no step producing them, so the task could record a divergence list
+without having diffed anything.
 
 **Fail this step where a site named by §§A–H has no region in your list** — that is the same
 completeness failure as Task 13's per-condition checks, and it is caught the same way: by reading
@@ -1319,7 +1401,12 @@ gives W the pronoun; classifying that divergence as deliberate here would let th
 disagree on a sentence the approved target states once. **`b3` is not in it either** — Task 3
 aligns it, and this task verifies the alignment rather than performing it.
 
-- [ ] **Step 3: Apply W's `b3` alignment**
+- [ ] **Step 3: Verify W's `b3` alignment, which Task 3 performed**
+
+Task 3 installs §B's common span, which aligns `b3`. **This step confirms it rather than repeating
+it** — an earlier draft told this task to apply the alignment, which is either impossible or
+redundant after a correct Task 3, and contradicted the paragraph above that assigns the alignment to
+Task 3.
 
 - [ ] **Step 4: Re-run the diff** and confirm only the deliberate divergences remain.
 
@@ -1332,11 +1419,16 @@ task claims to change.
 
 ```bash
 BASE=$(cat .context/loop-rule-base)
-# for each of the five ranges recorded in .context/loop-rule-untouched, in both copies:
-diff <(git show "$BASE:$f" | sed -n "$start,$end p") <(sed -n "$start,$end p" "$f")
+while IFS=$(printf '\t') read -r s e f; do
+  echo "== $f :: $s"
+  diff <(git show "$BASE:$f" | sed -n "/$s/,/$e/p") <(sed -n "/$s/,/$e/p" "$f")
+done < .context/loop-rule-untouched
 ```
 
-Expected: no output, ten times. **This is the last check before Gate B** and it is the only one that
+**Anchors, resolved separately in each tree** — Task 1 inserts a large block, so a line number taken
+from either tree addresses different text in the other, and an earlier draft's numeric `sed`
+addresses would have reported CHANGED on identical content. Expected: no output for every recorded
+span. **This is the last check before Gate B** and it is the only one that
 would catch an identical accidental edit in both copies.
 
 - [ ] **Step 5: Commit**
@@ -1391,13 +1483,32 @@ sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main &
 claude plugin validate . --strict
 ```
 
-Expected: exit 0. **`check-invariants.sh` includes the prompt-conformance checks** — a `Target model:` line naming one recognized model, a prose checklist-count claim matching the checklist, and the finding-severity vocabulary as a closed set in both prompt copies. Those three are a floor, not coverage; invariant 11's other eleven items are judged by a reader.
+Expected: exit 0.
+
+- [ ] **Step 4b: Apply all twelve `docs/prompt-standards.md` items to the installed text**
+
+**Nothing mechanical does this and no other task claims it.** The battery's three narrow checks are
+a floor — one `Target model:` spelling, one prose count claim, one severity vocabulary — and
+invariant 11 requires all twelve items of every skill, command, hook message and scaffolded template
+this change touches. **Read the installed §A–§H text in C, in W, and the seven hook strings, against
+each of the twelve items, and record the result per item in this plan.** Items 6 (every constraint
+carries its reason in the same sentence) and 8 (token-lean) are the ones design §8 names as most at
+risk.
+
+**A reader check, deliberately** — no pattern decides whether a constraint carries its reason.
+
+**`check-invariants.sh` includes the prompt-conformance checks** — a `Target model:` line naming one recognized model, a prose checklist-count claim matching the checklist, and the finding-severity vocabulary as a closed set in both prompt copies. Those three are a floor, not coverage; invariant 11's other eleven items are judged by a reader.
 
 - [ ] **Step 5: Write the evidence entry into `.context/loop-rule-closing-msg`**
 
 **Not into a WIP commit body.** Step 8 squashes with `git reset --soft`, which keeps the tree and
 discards every WIP message; evidence written only there would be destroyed by the close. Restate it
 in the WIP body too if a mid-cycle reader would want it, but the file is the copy that survives.
+
+**The file is completed after step 7, not here.** The evidence entry can be drafted now, but the
+**per-pass curve is not known until the Gate-B loop ends**, and the **provenance line** and any
+**human-exception record** belong beside it. Step 7's last action is to append all three — this step
+opens the file, step 7 closes it, and step 8 commits it.
 
 It names: the battery run; **every pair this plan built, with its counts in each copy and each tree, and every presence check beside them**; the §6 parity diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row count. **State the §A presence checks as presence, not as pairs** — its counterfactual is absent and is claimed as absent.
 
@@ -1419,7 +1530,19 @@ and is the only value whose range contains the whole implementation.
 
 - [ ] **Step 7: Loop to a clean pass at or above the derived floor**
 
-Floor derives from the story profile: risk `high` → 2, security `none` → 0, max 2 ≠ 0 → **floor 3**. Re-derive it at each pass from the header. Fix Blocker/Major after each pass; re-review after every fix. **Revalidate the evidence entry before every re-review and before the closing amend.**
+Floor derives from the story profile: risk `high` → 2, security `none` → 0, max 2 ≠ 0 → **floor 3**. Re-derive it at each pass from the header.
+
+**Each fix is committed before the next review is issued**, or the re-review targets the unchanged
+WIP tip while the repair sits in the worktree — and the final squash then publishes a fix no pass
+reviewed:
+
+```bash
+git add -A && git commit -m "WIP: fix <finding>"
+git rev-parse HEAD          # resolve headSha fresh for the next call
+```
+
+Re-review after every fix. **Revalidate the evidence entry before every re-review and before the
+closing commit.**
 
 **A fix that changes specified behaviour updates the spec in the same commit.**
 
@@ -1430,8 +1553,7 @@ so an evidence entry written only into a WIP message is destroyed at exactly the
 closes — which is what step 5 would otherwise have done.
 
 ```bash
-. .context/loop-rule-pair.sh
-test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
+. .context/loop-rule-verify.sh
 # .context/loop-rule-closing-msg holds the revalidated evidence entry, the provenance
 # line, the per-pass curve and any human-exception record, written before this step.
 git reset --soft "$BASE"
@@ -1470,3 +1592,15 @@ The closing body carries: the validated evidence entry; the provenance line; the
 ## Divergence list (Task 14 output)
 
 *Empty until Task 14 runs. Task 14 replaces this entire section.*
+
+---
+
+## Completeness sweep (Task 12b output)
+
+*Empty until Task 12b runs. Task 12b replaces this entire section.*
+
+---
+
+## Prompt-standards result (Task 15 step 4b output)
+
+*Empty until Task 15 runs. It replaces this entire section, one line per checklist item.*
