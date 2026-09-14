@@ -76,7 +76,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 57 | bb1ba03 | 13→**5** | 0→**0** | 0→**5** | yes | zero tells. All five are pass-53/55 fallout inside the hook items. **Two are a factual error of mine:** `codex-gate.test.sh` has **three** `expected_ctx` exact-match expectations (lines 1006, 1019, 1029), not one — my first grep searched only for phrases that occur in 1019. Items 12, 15 and 16 are all pinned. The other three tightened items 13 and 15, whose replacements still carried an unqualified imperative and an enumeration omitting the closing act |
 | 58 | ebe3aa7 | 5→**6** | 0→**0** | 5→**4** | yes | one tell (findings rose 5→6). All four Majors in items 15–17, one layer deeper than pass 57 reached: both fingerprint reminders still **opened** "STOP — Codex Gate B not satisfied", a gate verdict the hook cannot reach; item 16 claimed a permitted pass "records" a usable fingerprint where the store can fail again; item 17's enumeration omitted the below-floor zero-finding closing route. Minor 6 was design §9's "one exact-match expectation" — the **second** time that bullet went stale under a propagation |
 | 59 | fecb3aa | 6→**9** | 0→**0** | 4→**5** | yes | **MANDATORY TWO-TELL STOP** — findings rose 5→6→9, and four of nine were about §F's *prose describing* its replacements rather than the replacements. Surfaced, standing answer applied, loop continued. Structural repair: items 15 and 16 now give the **complete resulting message** for both channels instead of a span plus prose about where it goes. Finding 7 is a **new behaviour question** and is open with Daniel: conflicting accept/decline on the same finding in two `full` Gate-B branch files |
-| 60 | — | — | — | — | not run | blocked on finding 7's answer; everything else from 59 is applied |
+| 60 | e911b39 | 9→**8** | 0→**0** | 5→**5** | yes | zero tells. **Finding 3 is the one that mattered:** item 15's complete message carried a backtick around `WIP`, which is command substitution inside the hook's double-quoted `note` argument — installed literally it would run `WIP`, corrupt the reminder and fail ShellCheck. Only visible because the message is now written out whole. §F now states the no-shell-active-characters constraint. Also: the standing work-loop sequence names a commit only after Gate B → item 18, §F 22 → 23; item 11 conditioned proceeding on a clean pass rather than on the cycle having closed; item 16 called an unchanged fingerprint a machinery fault while the index can move it. 3 Minors + 1 Nit **collected, not repaired** |
+| 61 | — | — | — | — | not run | next, against the pass-60 repair commit. **If 61 has zero Blockers and zero Majors the cycle closes** — Minors are collected, per Mechanics · Severity |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -84,6 +85,38 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-60 report — zero tells, and the span repair paying for itself
+
+**Trend:** findings 6, 9, **8** across 58–60; Blockers 0, 0, **0**; Majors 4, 5, **5**.
+**Cluster:** product behaviour. **Require↔withdraw:** none. **Zero tells** — the finding count fell
+and the prose-about-prose cluster that made pass 59 a two-tell stop did not return.
+
+**Finding 3 is why pass 59's repair was worth making.** Item 15's complete message contained
+`` `WIP` ``. That message is destined for a **double-quoted POSIX-shell `note` argument**, where a
+backtick is command substitution: installed literally the hook would execute `WIP`, print
+`WIP: not found`, ship a reminder with the word missing, and fail ShellCheck — and the same hazard
+would have been copied into the `expected_ctx` fixture, so the suite would have passed on the
+corruption. **This was invisible while §F carried spans and prose about where they go.** Writing
+the message out whole is what exposed it, one pass after the change. §F now carries the constraint
+so the next writer does not reintroduce it.
+
+**Item 18, and the sweep reaching a fifth kind of site.** The standing work-loop sequence —
+"spec ready → Gate A (spec) → plan ready → Gate A (plan) → execute → tests green → Gate B →
+commit" — names a commit only after Gate B, while §A2 makes a completed closing act mandatory for
+a Gate-A cycle too. A reader following it plans with the previous cycle still open. §F 22 → 23.
+
+**Two more Majors, both narrowing a permission:** item 11 let an author proceed on a clean pass
+plus the closure conditions, which still permits execution after a closing act that never
+completed; it now requires the cycle to have **closed**. And item 16 concluded that an unchanged
+fingerprint after a fresh pass is a machinery fault, while the index moving — staging included, and
+another hook can stage during the commit — changes it; the message now checks worktree and index
+first.
+
+**Three Minors and a Nit were collected and not repaired.** Stated explicitly because pass 56's
+two Minor repairs were not licensed by Mechanics · Severity and cost three passes; Daniel raised
+that and it is correct. The discipline from here: a pass with zero Blockers and zero Majors closes
+the cycle.
 
 ## Pass-59 report — MANDATORY TWO-TELL STOP, and the span-framing was the mechanism
 

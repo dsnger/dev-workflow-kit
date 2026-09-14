@@ -671,13 +671,13 @@ demotes it — the two counts are meant to differ.
 
 ---
 
-## F. The twenty-two standing sentences this change falsifies — REPLACED
+## F. The twenty-three standing sentences this change falsifies — REPLACED
 
-Each is a live sentence that the block makes wrong. All twenty-two are **known contradictions** and
-none is deferred. **Seventeen of them share one mechanism** — an entry point other than the ordering
+Each is a live sentence that the block makes wrong. All twenty-three are **known contradictions** and
+none is deferred. **Eighteen of them share one mechanism** — an entry point other than the ordering
 carrying an unqualified instruction — which is why each is **replaced** rather than given an
-exception to point at. **Fifteen live in the two prompt copies and cite a line in each; the last
-seven live in the shipped hook**, which has one copy and no template mirror — so those seven are
+exception to point at. **Sixteen live in the two prompt copies and cite a line in each; seven
+live in the shipped hook**, which has one copy and no template mirror — so those seven are
 outside the byte-identical parity rule the section opening states. The hook holds eight
 gate reminders in all; the one this change leaves alone is the docs-only notice, which states no
 closure permission. **Three of the seven are pinned by exact-match expectations in
@@ -686,6 +686,11 @@ closure permission. **Three of the seven are pinned by exact-match expectations 
 them**, since those items replace the terse operator line as well — each replaced there with its
 complete resulting text in the same change. The remaining four are matched by loose patterns these
 repairs leave standing, **except the stale-branch assertions item 16 moves with it**.
+**Every hook replacement below is destined for a double-quoted POSIX-shell `note` argument**, so
+its text carries no backtick, no `$(`, no backslash and no double quote; `$policy`, `$floor` and
+`$passes` are the intended interpolations and stay. A backtick reached one of these blocks at pass
+59 and would have run `WIP` as a command at install time, corrupting the shipped reminder and
+failing ShellCheck.
 
 **1. The `WIP:` naming warning** (Mechanics · `baseSha`).
 ```
@@ -909,13 +914,17 @@ prompt copy.
 
 **11. The Gate-A satisfied reminder's clean definition** (the shipped hook, same file).
 ```
-Proceed only if your final pass was clean and every other closure condition holds, both as $policy defines them.
+Proceed only once this Gate-A cycle has closed under $policy's closure ordering, read there entire.
 ```
 *Why (pass 53 finding 20):* the live string defines a clean final pass as "no new Blocker/Major",
 an abbreviated second copy of a definition the ordering now states in full — a pass carrying a
 scope-stop trigger is not clean under it, whatever the severity of what triggered it. Left
 standing, the hook presents such a pass as clean at exactly the moment an author is deciding
-whether to proceed. The repair **cites** the definition rather than restating it, which is also
+whether to proceed.
+*And (pass 60 finding 2):* an earlier replacement conditioned proceeding on a clean pass and the
+closure conditions, which still lets an author execute after a Gate-A closing act that was never
+attempted or did not complete — decision 5's terminal state. The condition is now **the cycle
+having closed**, which is the one fact that covers all of them. The repair **cites** the definition rather than restating it, which is also
 what keeps a later change to the definition from falsifying this string again. It is the twelfth
 sentence sharing this section's mechanism.
 
@@ -959,7 +968,7 @@ statement about scope, so it does not join that count.
 resulting message is given, not a span**: a span plus a sentence about where it goes was found
 three times running to leave a fragment ambiguous or a tail standing.
 ```
-Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-`WIP` commit attempt cleared it while the cycle itself stayed open. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint.
+Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint.
 ```
 ```
 ⚠ Codex Gate B: no recorded fingerprint
@@ -986,7 +995,7 @@ looking in the wrong place.
 **16. The stale-fingerprint reminder, both channels** (the shipped hook, same file). **The complete
 resulting message, for the reason item 15 gives.**
 ```
-Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per $policy you MUST re-review after every fix.
+Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, check the worktree and the index first — the fingerprint moves when either does, staging included, and another hook can stage during the commit attempt. Where neither changed, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per $policy you MUST re-review after every fix.
 ```
 ```
 ⚠ Codex Gate B: cannot confirm reviewed content
@@ -1019,6 +1028,19 @@ reach it; and "run more" alone ignores a suspension the ordering sends that pass
 or a repair, which **omits the closing act a zero-finding pass reaches below the floor** — the one
 closing route this branch exists to describe. Removed rather than extended, exactly as item 15's
 was.
+
+
+**18. The work-loop sequence** (the §4 goal-driven-execution section). One line in each copy:
+C 63 and W 262.
+```
+The work loop includes the review gates: **spec ready → Gate A (spec) → Gate-A closing act → plan ready → Gate A (plan) → Gate-A closing act → execute → tests green → Gate B → Gate-B closing act** (see §5, which states when each act may be performed and what it is).
+```
+*Why (pass 60 finding 1):* the live sequence moves straight from each Gate-A gate to the next
+phase and names a commit only after Gate B, while §A2 makes a completed closing act mandatory for
+a Gate-A cycle too. A reader following the live line starts planning or executing with the
+preceding cycle still open, and with neither its provenance line nor its curve written. The
+replacement names the act and cites §5 for when it may be performed, rather than restating the
+operation. It is the eighteenth sentence sharing this section's mechanism.
 
 ---
 
