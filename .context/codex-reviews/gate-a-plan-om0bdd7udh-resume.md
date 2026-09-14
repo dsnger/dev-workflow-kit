@@ -31,7 +31,8 @@ worth checking before a pass rather than after.
 | Pass | Plan rev | Findings | Blockers | Majors | Valid | Notes |
 |---|---|---|---|---|---|---|
 | 1 | 5871d0a | **32** | **1** | **28** | yes | first pass. The Blocker is real: with a WIP commit per task, `baseSha = HEAD^` would have put only the version bump in Gate B's range. **The dominant class is verification fragments that count zero** — the reviewer tested them against the real files and found five of Task 7's ten locators, both of Task 3's, Task 5's and Task 7's strict-reading OLD all wrapping across lines or quoting text that does not exist. Repaired by one **verified fragment table** for the whole plan instead of guessed fragments per task |
-| 2 | — | — | — | — | not run | next, against the pass-1 repair commit |
+| 2 | 9f13a2c | 32→**32** | 1→**0** | 28→**25** | yes | one tell (findings flat, and they cluster on the plan's own checks — the instrument). **Pass 1's repair reproduced the same defect at the next condition down:** three OLD fragments are *preserved inside their own replacements*, so their old-count can never reach zero. My checker tested single-line and unique but not that third condition, though this plan states all three. Checker fixed to test against the target's **fenced blocks**; three rows replaced; the fourteen §F OLD fragments derived and committed rather than deferred |
+| 3 | — | — | — | — | not run | next, against the pass-2 repair commit |
 
 ## Pass-1 report
 
@@ -64,3 +65,44 @@ into an edit a Major already required: the site count contradicting its own enum
 one task), `c20` recorded as carried while the change narrows its scope — the dropped-condition
 failure `AGENTS.md` names — and the two plan-mutating tasks having no stable region to replace. None
 cost a pass of its own.
+
+
+## Pass-2 report
+
+**Trend:** findings 32, **32**; Blockers 1, **0**; Majors 28, **25**. **Cluster:** the plan's own
+verification apparatus — fragments, pair commands, range checks. That is the **instrument**, so this
+is one tell; the finding count is flat rather than rising, which is not. **Require↔withdraw:** none.
+
+**The finding worth the whole pass.** Pass 1's repair introduced one verified fragment table. Pass 2
+found three of its rows **preserved inside their own replacements** — `e7` in both copies and the
+strict-reading list — so each would have returned `old/worktree=1` after a correct edit and no task
+could have reached its required result. **This plan states all three failure modes in its own
+fragment-table section**, and the checker I wrote tested only two of them.
+
+**The repair is the checker, not the three rows.** It now tests condition 3 against the target
+text's **fenced blocks** rather than the whole file — the narrower test matters, because a fragment
+quoted in an item's rationale is not preserved by its replacement, and the broad test rejected a
+usable row (P17) that the reviewer correctly left alone. Re-running it over every existing row found
+exactly the three the reviewer named and nothing else.
+
+**The second-largest class was commands that cannot run:** `pair()` defined once in a section while
+the plan says each task runs in its own shell; three steps that state an expected four-value result
+and contain no command that produces one; `$BASE` used without being reloaded, where an empty value
+makes `git show` read the index rather than the parent and every count describe the wrong tree.
+Task 0 now writes `.context/loop-rule-pair.sh`, every counting block sources it, and the source line
+is followed by a guard that fails loudly on an empty `$BASE`.
+
+**Three findings were the plan's checks being un-runnable in a way that would have passed anyway** —
+the untouched-range diffs used absolute line numbers recorded *before* Task 1's insertion, and two of
+the five ranges contained conditions this change deliberately replaces, so a correct implementation
+would have failed its own check. Ranges are anchors now, and the two contaminated ones are split
+around the sites they must exclude.
+
+**One duty had no task at all.** Design §7 and target §I assign the plan a completeness sweep for
+affected sites the spec has not found; the plan named it in a residual and gave it to "whoever
+executes", which discharges nothing. It is **Task 12b** now — a reader-led sweep with a written
+record, and explicitly not a mechanical guard.
+
+**And the closing commit would have destroyed its own evidence:** step 5 wrote the evidence entry
+into a WIP body, step 8 squashed with `git reset --soft`, which keeps the tree and discards every WIP
+message. The entry goes to a file now.
