@@ -776,9 +776,10 @@ closing act uses; a Gate-B cycle in the WIP commit, restated by the commit its c
 produces.
 ```
 *Why (pass 22 finding 3):* the live clause sends a Gate-A cycle's exception record to "the spec or
-plan commit", which is the closing commit only on the first of the three closing paths. On the
-other two the record and the closure would land in different commits. Naming the closing act
-instead keeps them together on all three without changing the record's form or force.
+plan commit", which is the closing commit only where the artifact's existing commit **is** the
+closing commit. Wherever it is not, the record and the closure would land in different commits.
+Naming the closing act instead keeps them together in every case, without changing the record's
+form or force.
 
 **8. The profile-change paragraph's pass claim** (the profiles section). It wraps across C 752–753
 and W 938–939.

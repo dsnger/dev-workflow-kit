@@ -72,7 +72,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 53 | 81fffd1 | 29→**21** | 0→**0** | 5→**4** | yes | zero tells. **Three of four Majors are the first §F sites outside the two prompt copies** — reminder strings in `codex-gate.sh`. Daniel authorised a NARROW SCOPE OPENING on 2026-09-13: the three strings plus one exact-match test expectation are in, hook behaviour stays out, the Gate-B fingerprint overclaim stays parked. §F 14 → 17. Major 1 was a genuine internal contradiction (§A1 vs §A3 + §F-5 on what a failed attempt leaves behind); both assertions deleted |
 | 54 | c73367f | 21→**13** | 0→**0** | 4→**3** | yes | zero tells. All three Majors are pass-53 fallout and all are in-set: a **fourth** falsified hook string (the WIP reminder's "make the real commit when your final pass is clean") → §F item 13, 17→18; the design opening still said "No file under `plugins/dev-workflow/hooks/` changes"; §A1's continue branch re-enumerated §B's scope triggers instead of citing them |
 | 55 | 1940181 | 13→**18** | 0→**0** | 3→**6** | yes | one tell (findings rose). **Four more hook strings**, same class as item 13 — every gate reminder that tells the agent what to do next, ignoring a suspension the ordering sends that pass to. §F 18 → 22, covering **7 of the hook's 8** gate reminders. Also: the standing Named residual still said "Hook text is out of scope here by decision", which our own scope opening falsifies → item 14. §A1's source-block branch said a repaired block rereads "that pass" where the block stood before any pass existed |
-| 56 | — | — | — | — | not run | next, against the pass-55 repair commit |
+| 56 | 6b8854f | 18→**13** | 0→**0** | 6→**0** | yes | **first Blocker- and Major-free pass of the cycle.** 11 of 13 are the second-copy class, collected. Two were count contradictions and were repaired, so 56 is not the final pass: design §9 still said "three contradictory reminder strings" against its own enumeration of seven (my pass-55 propagation missed it), and §F item 7's rationale said "the three closing paths" while §A2 defines two cases |
+| 57 | — | — | — | — | not run | next, against the pass-56 repair commit — a clean 57 closes the cycle |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -80,6 +81,35 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-56 report — the first clean pass, and why it is not the final one
+
+**Trend:** findings 21, 13, 18, **13** across 53–56; Blockers 0, 0, 0, **0**; Majors 4, 3, 6, **0**.
+**Cluster:** prose about the rules — 11 of 13 are the second-copy class. **Require↔withdraw:** none.
+**Zero tells.** The hook-string class stayed closed: pass 56 found none, which is what a swept
+class looks like.
+
+**Zero Blockers and zero Majors.** Under the standing filter that is a clean pass, and at pass 56
+the floor has long been met.
+
+**It is still not the final pass, because two of the thirteen were repaired.** Both are count
+contradictions rather than judgement calls, and a stated count disagreeing with its own
+enumeration is a mechanical failure the pass prompt asks for by name:
+
+1. **design §9 still read "three contradictory reminder strings"** while every other scope
+   statement, and the item range cited in the same sentence, said seven. **I introduced this** in
+   the pass-55 propagation — the script replaced every spelling I had thought of and this bullet
+   used another. A plan reading it would have made three of seven authorised hook edits.
+2. **§F item 7's rationale said "the first of the three closing paths"** while §A2 defines **two**
+   cases. Replaced with the condition itself rather than a count, per the file's own preference for
+   removing an enumeration over correcting it.
+
+**The other eleven are collected and not iterated**, per Mechanics · Severity. They are one
+subject: a rule stated both in §A1 and in the section that owns it. Each is a judgement about
+which site should carry the sentence, and the cycle has been converging on that class for twenty
+passes without it ever producing a Blocker.
+
+**So pass 57 runs against the repair, and a clean 57 closes the cycle.**
 
 ## Pass-55 report — one tell, and the scope opening's true size
 
