@@ -8,7 +8,7 @@ copy, and a value copied here would be a remembered value.
 Prompt-only, in two mirrored copies — `CLAUDE.md` §5 (**C** below) and the inline template in
 `plugins/dev-workflow/commands/workflow-init.md` (**W** below) — **plus seven reminder strings in
 `plugins/dev-workflow/hooks/codex-gate.sh` and their exact-match expectations in
-`plugins/dev-workflow/hooks/codex-gate.test.sh` — three `expected_ctx` and two `expected_msg`** (target text §F items
+`plugins/dev-workflow/hooks/codex-gate.test.sh` — three `expected_ctx` and three `expected_msg`** (target text §F items
 10–13 and 15–17, authorised 2026-09-13). **No hook behaviour changes**, and the hook strings have no mirror,
 so they carry no parity obligation. Condition ids `a1`…`j4` are defined in
 `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md` beside this
@@ -354,9 +354,9 @@ repo's most persistent defect. The transport that could carry it left with the r
   seven `note` **strings** (§F items 10–13 and 15–17) and nowhere else: no control flow, no counter, no
   fingerprint computation, no routing, so the POSIX-`sh` and optional-`jq` obligations are not
   reached. `plugins/dev-workflow/hooks/codex-gate.test.sh` changes in all three of its
-  `expected_ctx` exact-match expectations — the Gate-B satisfied, stale-fingerprint and
-  no-fingerprint messages, §F items 12, 16 and 15 — each replaced with the complete resulting
-  message; the remaining hook assertions match loose patterns these repairs leave standing. The §5 heading the hook greps (`Cross-Model Review`)
+  `expected_ctx` exact-match expectations and all three `expected_msg` beside them — the Gate-B
+  satisfied, stale-fingerprint and no-fingerprint messages, §F items 12, 16 and 15 — each replaced
+  with the complete resulting text; the remaining hook assertions match loose patterns these repairs leave standing. The §5 heading the hook greps (`Cross-Model Review`)
   does not move.
 
 **Every path in this spec is written repository-relative and in full** — no ellipsis shorthand

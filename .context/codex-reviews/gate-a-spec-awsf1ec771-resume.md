@@ -77,7 +77,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 58 | ebe3aa7 | 5→**6** | 0→**0** | 5→**4** | yes | one tell (findings rose 5→6). All four Majors in items 15–17, one layer deeper than pass 57 reached: both fingerprint reminders still **opened** "STOP — Codex Gate B not satisfied", a gate verdict the hook cannot reach; item 16 claimed a permitted pass "records" a usable fingerprint where the store can fail again; item 17's enumeration omitted the below-floor zero-finding closing route. Minor 6 was design §9's "one exact-match expectation" — the **second** time that bullet went stale under a propagation |
 | 59 | fecb3aa | 6→**9** | 0→**0** | 4→**5** | yes | **MANDATORY TWO-TELL STOP** — findings rose 5→6→9, and four of nine were about §F's *prose describing* its replacements rather than the replacements. Surfaced, standing answer applied, loop continued. Structural repair: items 15 and 16 now give the **complete resulting message** for both channels instead of a span plus prose about where it goes. Finding 7 is a **new behaviour question** and is open with Daniel: conflicting accept/decline on the same finding in two `full` Gate-B branch files |
 | 60 | e911b39 | 9→**8** | 0→**0** | 5→**5** | yes | zero tells. **Finding 3 is the one that mattered:** item 15's complete message carried a backtick around `WIP`, which is command substitution inside the hook's double-quoted `note` argument — installed literally it would run `WIP`, corrupt the reminder and fail ShellCheck. Only visible because the message is now written out whole. §F now states the no-shell-active-characters constraint. Also: the standing work-loop sequence names a commit only after Gate B → item 18, §F 22 → 23; item 11 conditioned proceeding on a clean pass rather than on the cycle having closed; item 16 called an unchanged fingerprint a machinery fault while the index can move it. 3 Minors + 1 Nit **collected, not repaired** |
-| 61 | — | — | — | — | not run | next, against the pass-60 repair commit. **If 61 has zero Blockers and zero Majors the cycle closes** — Minors are collected, per Mechanics · Severity |
+| 61 | 5197b0c | 8→**1** | 0→**0** | 5→**1** | yes | zero tells. **One finding.** Item 12 had only its long message repaired; the terse operator line "✓ Codex Gate B satisfied" stayed — a gate verdict the hook cannot establish, and the one systemMessage items 15 and 16 had already taught me to check. Now "hook checks passed". Its fixture moves with it: `expected_msg` scope 2 → 3 |
+| 62 | — | — | — | — | not run | next, against the pass-61 repair commit. **Zero Blockers and zero Majors closes the cycle** — Minors collected, per Mechanics · Severity |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -85,6 +86,22 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-61 report — one finding, and it was a gap I had left myself
+
+**Trend:** findings 9, 8, **1** across 59–61; Blockers 0, 0, **0**; Majors 5, 5, **1**.
+**Cluster:** product behaviour, one finding. **Require↔withdraw:** none. **Zero tells.**
+
+Items 15 and 16 replace both channels of their message — the long `additionalContext` and the
+terse `systemMessage` an operator sees. Item 12 replaced only the long one, leaving
+"✓ Codex Gate B satisfied". That is a gate verdict the hook cannot establish: Gate B has no
+hook-backed content condition, and closure turns on duties, holds, the remaining conditions and a
+completed closing act, none of which the hook observes. A green "satisfied" could stand over an
+undischarged Major. It now reads "hook checks passed" — what the hook knows — and its exact
+fixture moves with it, taking the `expected_msg` scope from two to three.
+
+**The counts in that line are kept.** `$passes/$floor cycle, $fresh on current fingerprint` are
+observations the hook does make; only the verdict was removed.
 
 ## Pass-60 report — zero tells, and the span repair paying for itself
 

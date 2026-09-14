@@ -682,8 +682,8 @@ outside the byte-identical parity rule the section opening states. The hook hold
 gate reminders in all; the one this change leaves alone is the docs-only notice, which states no
 closure permission. **Three of the seven are pinned by exact-match expectations in
 `plugins/dev-workflow/hooks/codex-gate.test.sh`** — items 12, 15 and 16, at that file's three
-`expected_ctx` assignments, **and items 15 and 16 also at the two `expected_msg` assignments beside
-them**, since those items replace the terse operator line as well — each replaced there with its
+`expected_ctx` assignments, **and items 12, 15 and 16 also at the three `expected_msg` assignments
+beside them**, since those items replace the terse operator line as well — each replaced there with its
 complete resulting text in the same change. The remaining four are matched by loose patterns these
 repairs leave standing, **except the stale-branch assertions item 16 moves with it**.
 **Every hook replacement below is destined for a double-quoted POSIX-shell `note` argument**, so
@@ -934,10 +934,20 @@ Gate-B tree-equality material, and no condition here reaches it.
 ```
 Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them.
 ```
+```
+✓ Codex Gate B hook checks passed ($passes/$floor cycle, $fresh on current fingerprint)
+```
 *Why (pass 53 finding 20):* the same abbreviated definition, in the branch an author reads
 immediately before committing, and it takes the same repair. It is the thirteenth sentence sharing
 this section's mechanism. This message is one of the three pinned by an exact-match expectation,
 replaced there with the complete resulting message as the section opening requires.
+*And (pass 61 finding 1):* the terse `systemMessage` still read "✓ Codex Gate B satisfied", a gate
+verdict the hook cannot establish — Gate B has no hook-backed content condition, and closure turns
+on duties, holds, the remaining conditions and a completed closing act, none of which the hook
+observes. An operator reading a green "satisfied" could see it over an undischarged Major or an
+unperformed act. It now names **what the hook checked**, which is the whole of what it knows. Its
+exact fixture moves with it. The counts either side of this message are kept: they are
+observations, not verdicts.
 
 **13. The WIP-commit reminder's closing permission** (the shipped hook, same file).
 ```
