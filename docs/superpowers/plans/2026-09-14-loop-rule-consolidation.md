@@ -72,9 +72,9 @@
 | F8 | 8, the profile-change pass claim | ``snapshot by amend — a non-`WIP` commit reads to the hook as the cycle closing and would`` | 752 |
 | F9 | 7a, the mid-run recovery sentence | `taken from the provenance line and the curve, which must agree. A Gate-A cycle mid-run has no` | 416 |
 | F10 | 8a, the HARD FLOOR parenthetical | `(Blocker/Major only), derived from the cited story's profile.**` | 73 |
-| F11 | 8b, the Gate-A filter clause | `intent + artifact text + which invariants it touches. Ask for **every** finding` | 561 |
-| F12 | 9a, the revalidation trigger | `and the named evidence but not the mode value**, and is **revalidated before every Gate-B` | 726 |
-| F13 | 9b, the severity-deciding fallback | `decision that act takes differently if the text is wrong. Both are required. If you` | 788 |
+| F11 | 8b, the Gate-A filter clause | `with severity and confidence — you filter to Blocker/Major downstream, Codex` | 562 |
+| F12 | 9a, the revalidation trigger | `before the cycle-closing amend` | 727 |
+| F13 | 9b, the severity-deciding fallback | `cannot name both, the finding is Minor or below: collect, never iterate.` | 789 |
 | F14 | 9, the revalidation remedy | `profile sits still. If revalidation changes the entry, the clean pass no longer covers what` | 728 |
 
 **W line numbers are deliberately not carried for F1–F14.** Each fragment was verified unique in W as well as C, but the template's numbers drift with every earlier task and a stale number here would read as source drift. Locate each in W by the fragment.
@@ -117,13 +117,22 @@ whose count must stay **one** has to be **present** in it, unchanged. Those are 
 
 | The row's class | Its fragment must be | Because its expected result is |
 |---|---|---|
-| **replaced** (OLD half), **dropped**, **moved** (source) | **absent** from the replacement block | `worktree=0` — a surviving fragment can never reach zero |
+| **replaced** (OLD half), **dropped**, **moved** (source) | **wholly inside the live text the edit removes** — which implies, but is stronger than, absent from the replacement block | `worktree=0` — a fragment the edit does not reach survives whatever the block says |
 | **carried** | **present, unchanged**, in the replacement block | `worktree=1` — the block is what preserves it, so a fragment absent from the block cannot be found afterwards |
 | **kept** sharing a line with changed text | **outside** every replacement block's extent | `worktree=1` — it is not reproduced by any block; it survives because nothing replaces it |
 
 **Applying the absent-from-its-replacement test to a carried row rejects every correct fragment**,
 so a task either stops before installing or quietly drops its carried coverage. The table's cut
 widened at pass 9 to hold these rows; this test did not widen with it.
+
+**And for the disappearing classes, "absent from the replacement block" is the wrong test — it is
+necessary and not sufficient.** A fragment sitting in the unchanged text *before* an edit passes it
+and then survives the install, because the edit never reaches it. **Three rows failed exactly that
+way** — F11 ended just before item 8b's first changed word, F12 just before item 9a's, F13 just
+before item 9b's — and each would have returned `old/worktree=1` after a **correct** installation,
+so Task 8 could not have met its own required result. **Resolve the removed span in the live file
+and require the fragment to lie wholly inside it.** The narrower test is the only one that
+distinguishes "this wording goes" from "this wording is near something that goes".
 
 **The third check compares against the target's fenced blocks with line breaks normalized.** `F4` is one line in `CLAUDE.md` but the block wraps it between `you` and `still`; a substring test finds nothing and the row looks usable. Pass 4 found it, and re-running the normalized check over every row then in the table found that one and no other.
 
@@ -358,10 +367,14 @@ test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation || { echo "w
 test -z "$(git status --porcelain)" || { echo "tree not clean"; exit 1; }
 git merge-base --is-ancestor ba15e83 HEAD || { echo "approved target text (ba15e83) is not in this history"; exit 1; }
 # The three inputs must still be the versions that were approved, not merely present.
+# Compare the RECORDED BASE, not HEAD: Task 15 step 7 permits a Gate-B fix to update
+# the spec in a committed WIP snapshot, so on re-entry HEAD legitimately differs while
+# the base does not. On a first run the two are the same commit.
+REF=$( [ -s .context/loop-rule-base ] && cat .context/loop-rule-base || git rev-parse HEAD )
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  test "$(git rev-parse "HEAD:$p")" = "$(git rev-parse "ba15e83:$p")" \
-    || { echo "$p differs from its approved version at ba15e83"; exit 1; }
+  test "$(git rev-parse "$REF:$p")" = "$(git rev-parse "ba15e83:$p")" \
+    || { echo "$p differs at $REF from its approved version at ba15e83"; exit 1; }
 done
 if [ -s .context/loop-rule-base ]; then
   echo "base already recorded: $(cat .context/loop-rule-base) — NOT overwriting"
@@ -379,7 +392,14 @@ every install and the final soft reset would run from the wrong starting tree.
 **The inputs are compared by blob, not merely found.** `ba15e83` being an ancestor says the
 approved commit is in this history; it does not say the three files still hold what was approved,
 and a later unapproved edit to the target text would supply different installation instructions to
-every task. **`ba15e83` has exactly one role here — the approval commit** — and the loop compares each input's
+every task.
+
+**They are compared at the recorded base, not at `HEAD`.** Task 15 step 7 permits a Gate-B fix that
+changes specified behaviour to update the spec in the same commit, so a valid run can reach a state
+where `HEAD`'s target text deliberately differs from `ba15e83`. Comparing `HEAD` would then reject
+the re-entry path this plan advertises, on a state the plan itself creates. **The base is what the
+tasks were derived against**, and it is the right subject; the later commits are validated
+separately, as this run's `WIP:` commits. **`ba15e83` has exactly one role here — the approval commit** — and the loop compares each input's
 object id against its version there. (It is written more than once; the claim is about its role,
 not its occurrences.)
 
@@ -448,9 +468,19 @@ base<TAB><the 40-character object name>
 Written by the step that creates it, and it is what "keyed to `$BASE`" means — without it there is
 no comparison to make and a stale map from an abandoned run is indistinguishable from this one's.
 
+**Both are written through a temporary file and renamed only after the last record is written**, so
+a run interrupted mid-write leaves no half-file. A `base` line arrives first in the finished
+artifact and would otherwise arrive first on disk too — making a partial map, with its spans
+written and its `cond` rows missing, indistinguishable from a complete one to a re-entry that
+compares only that line.
+
 **So:** if `.context/loop-rule-untouched` and `.context/loop-rule-baseline-diff.txt` already exist,
-**read their `base` line and require it to equal `.context/loop-rule-base`**; on a match keep them
-and re-derive neither, on a mismatch or a missing line delete them and rebuild. If they are absent
+**read their `base` line, require it to equal `.context/loop-rule-base`, and validate the file
+itself**: every line parses as one of the declared record shapes, and every kept condition in the
+five regions appears in exactly one `span` or one `cond` row — the same coverage assertion Task 0
+step 2 makes when it builds the map. **On any failure, delete and rebuild rather than reuse**; a
+same-base partial file is the one shape the base line cannot catch. On a full match keep them and
+re-derive neither. If they are absent
 while `$BASE` has `WIP:` commits after it, **derive both from the `$BASE` blobs** —
 `git show "$BASE:<path>"` — not from the worktree. On a clean first run the two sources are the
 same thing, which is why this is stated once here rather than in each step.
@@ -566,7 +596,14 @@ comparison actually emits.
 On a clean first run they are the same; once `$BASE..HEAD` is non-empty the worktree carries this
 plan's own edits, and comparing them would fold introduced drift into the inherited-drift record —
 after which Task 14 can no longer tell the two apart, which is the whole purpose of this baseline.
-**Set `C_SRC` and `W_SRC` first:**
+
+**Selection, the `base` line and every extraction are ONE shell block**, because each fenced block
+is its own invocation: `C_SRC` set in one block and consumed in the next is empty by the time
+`sed` and `grep` see it, and a process substitution reading an empty filename need not make `diff`
+fail — so the step would append its headings over two empty extracts and certify a parity baseline
+it never computed. **This is the same defect as `$BASE` and `$BASEREF`**, and those two are
+persisted to files for exactly this reason; here one block is simpler than a third scratch file.
+The `test -r` guard makes an unreadable source fatal rather than silent.
 
 ```bash
 BASE=$(cat .context/loop-rule-base)
@@ -577,13 +614,9 @@ if [ -n "$(git log --oneline "$BASE"..HEAD)" ]; then
 else
   C_SRC=CLAUDE.md; W_SRC=plugins/dev-workflow/commands/workflow-init.md
 fi
-printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.txt
-```
+test -r "$C_SRC" && test -r "$W_SRC" || { echo "baseline source unreadable"; exit 1; }
+printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.tmp   # renamed at the end
 
-**The `base` line is written first and by this step**, not assumed: the re-entry rule compares it,
-so a first run that omits it produces an artifact its own next run must reject.
-
-```bash
 # Tab-separated start and end anchors: the anchors contain colons, so a
 # colon delimiter splits '**Severity:**' at the wrong place and yields an
 # empty end. Every entry here spans two DIFFERENT anchors — the single-line
@@ -603,13 +636,14 @@ while IFS=$(printf '\t') read -r s e; do
   echo "== $s"
   diff <(sed -n "/$s/,/$e/p" "$C_SRC") \
        <(sed -n "/$s/,/$e/p" "$W_SRC")
-done < .context/loop-rule-sites | tee -a .context/loop-rule-baseline-diff.txt
+done < .context/loop-rule-sites | tee -a .context/loop-rule-baseline-diff.tmp
 
 # The squash-carry sentence is ONE line and must not go through the loop.
-echo "== On squash-merge" | tee -a .context/loop-rule-baseline-diff.txt
+echo "== On squash-merge" | tee -a .context/loop-rule-baseline-diff.tmp
 diff <(grep -F 'On squash-merge, copy every evidence entry' "$C_SRC") \
      <(grep -F 'On squash-merge, copy every evidence entry' "$W_SRC") \
-  | tee -a .context/loop-rule-baseline-diff.txt
+  | tee -a .context/loop-rule-baseline-diff.tmp
+mv .context/loop-rule-baseline-diff.tmp .context/loop-rule-baseline-diff.txt
 ```
 
 **The squash-carry site is extracted with `grep`, not as a range**, for the reason step 2 already
