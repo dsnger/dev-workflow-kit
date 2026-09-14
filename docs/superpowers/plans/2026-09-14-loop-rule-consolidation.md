@@ -447,12 +447,17 @@ and each makes a **correct** implementation fail its own check. **Derive them, w
 open:**
 
 1. Resolve each of the five regions' start and end anchors.
-2. **Collect every line in that region that a changed fragment sits on** — every fragment-table row
-   whose edit lands in the region, and every line an installed replacement will occupy. For the
-   floor arithmetic that is item 8a's block and row P9's line; for the human exception, rows F7,
-   F7b and F4.
-3. **The spans are the gaps between those lines.** A region with none of them is one span; a region
-   with *n* is at most *n+1*. A span of zero lines is dropped, not recorded.
+2. **Collect the full line extent of every replacement that lands in that region — not the line its
+   fragment sits on.** A fragment is one line; the block it belongs to usually spans several, and
+   the lines a replacement occupies are all changed whether or not a fragment happens to sit on
+   them. Resolve each replacement's **first and last** live line and take the whole run. In the
+   floor region that is item 8a's block, `a13`'s paragraph and `a16`'s; in the human exception,
+   items 7 and 4.
+3. **The spans are the gaps between those runs.** A region with no replacement in it is one span;
+   a region with *n* runs is at most *n+1*. A span of zero lines is dropped, not recorded.
+   **An anchor line is not exempt**: where a region's start or end anchor shares its line with
+   changed text — and `a13`'s tail sits on the same line as the floor region's end anchor — the
+   span begins or ends past it, and the kept condition on that line goes to the per-condition list.
 4. **Then assign every kept condition in that region to exactly one span, or to the per-condition
    list.** A kept condition in neither is the failure this step exists to prevent; one in both is
    an accounting error.
@@ -2105,11 +2110,17 @@ so an evidence entry written only into a WIP message is destroyed at exactly the
 closes — which is what step 5 would otherwise have done.
 
 **8a — record the final pass's findings files. Its own shell invocation, and that is not
-cosmetic.** `codex-gate.sh`'s `is_wip_commit` matches `-m` followed by `wip` **anywhere in the
-command string it is given**. A single block carrying this `-m "WIP: …"` and the closing
-`git commit -F` would be classified cycle-internal in its entirety, and the hook would carry this
-cycle's Gate-B count and fingerprint into the next one — a real closing commit read as a snapshot.
-**Run 8a and 8b as separate Bash calls, and keep the word out of 8b's command string.**
+cosmetic.** `codex-gate.sh`'s `is_wip_commit` (`hooks/codex-gate.sh:763`) tests the **whole command
+string** it is given against `-m[[:space:]]*['"]?[[:space:]]*wip`, case-insensitively: **`-m`
+immediately followed by optional whitespace, an optional quote, and `wip`.** A single block carrying
+this `-m "WIP: …"` and the closing `git commit -F` matches, and is classified cycle-internal in its
+entirety — the hook would then carry this cycle's Gate-B count and fingerprint into the next one, a
+real closing commit read as a snapshot. **So run 8a and 8b as separate Bash calls.**
+
+**What 8b must avoid is that pattern, not the letters.** `--mixed` contains `-m` and matches
+nothing, because `i` follows; a path containing `wip` matches nothing, because no `-m` precedes it.
+Saying "no `-m` and no `wip` in 8b" would outrun the check the hook performs and make a correct
+block look non-compliant. 8b carries no `-m` option at all, which is the property that matters.
 
 ```bash
 BASE=$(cat .context/loop-rule-base)
@@ -2121,7 +2132,8 @@ FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-revie
 expected=$(printf '%s\n' $FINAL | sort)
 actual=$(git status --porcelain | sed -n 's/^?? //p; s/^A  //p' | sort)
 
-if [ -z "$actual" ] && git show --stat --name-only --pretty=format: HEAD | grep -q 'gate-b-'; then
+head_paths=$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)
+if [ -z "$actual" ] && [ "$head_paths" = "$expected" ]; then
   echo "final findings files already recorded by a previous attempt — continue at 8b"
 elif [ "$expected" = "$actual" ]; then
   # shellcheck disable=SC2086
@@ -2131,18 +2143,25 @@ else
   echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1
 fi
 test -z "$(git status --porcelain)" || { echo "tree not clean — aborting before 8b"; exit 1; }
-git rev-parse HEAD > .context/loop-rule-wip-tip
+git rev-parse HEAD > .context/loop-rule-reviewed-tip
 ```
 
-**The first branch is the retry path.** A closing commit that fails leaves the findings files
-already committed, so on a second run the dirty set is empty — and an unconditional record commit,
-or an exact-dirty-set guard with no such branch, refuses the very state the recovery produces.
-The branch admits it only when `HEAD` is the record commit it would have made.
+**The first branch is the retry path, and it compares `HEAD`'s exact changed-path set.** A closing
+commit that fails leaves the findings files already committed, so on a second run the dirty set is
+empty — and an unconditional record commit, or an exact-dirty-set guard with no such branch,
+refuses the very state the recovery produces.
 
-**8b — reset and close. A separate invocation, with no `-m` and no `wip` in it.**
+**"`HEAD` touched some `gate-b-` file" is not that test, and would be unsafe.** Step 7 commits
+earlier passes' findings files, so `HEAD` can carry one while the *final* pass's two are missing
+entirely — from a mistyped `NONCE`, a wrong `P`, or a pass whose files were never written. The
+branch would then skip the record commit and let 8b close without the artifacts the closing commit
+exists to carry. **Requiring `HEAD`'s changed paths to equal `$FINAL` exactly** admits only the
+commit 8a itself would have made.
+
+**8b — reset and close. A separate invocation, carrying no `-m` option at all.**
 
 ```bash
-BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-wip-tip)
+BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-reviewed-tip)
 git reset --soft "$BASE"
 git commit -F .context/loop-rule-closing-msg || {
   echo "closing act FAILED — restoring the reviewed tip without discarding its side effects"
@@ -2156,7 +2175,7 @@ case "$(git log -1 --pretty=%s)" in
   [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — cycle NOT closed"; exit 1 ;;
 esac
 test -z "$(git status --porcelain)" || { echo "worktree dirty after close — aborting before cleanup"; exit 1; }
-rm -f .context/loop-rule-base .context/loop-rule-wip-tip
+rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip
 ```
 
 **`--mixed`, never `--hard`.** A closing act can fail *after* a commit hook has modified or staged
@@ -2176,9 +2195,14 @@ so a failed record commit, a dirty tree or a closing message still reading `WIP:
 through the soft reset and deleted the recovery base — producing, silently, the exact state the
 plan elsewhere calls an invalid close.
 
-**`|| true` is replaced by a test for the one harmless case it was hiding.** "Nothing to commit"
-and "the commit failed" are different outcomes and only the first is fine, so the block asks
-`git diff --cached --quiet` first and treats a real failure as a failure.
+**`|| true` is replaced by branching on what the state actually is, before committing anything.**
+"Nothing to commit" and "the commit failed" are different outcomes and only the first is fine. 8a
+decides between them with two predicates it can name: the **status-derived dirty set** (`?? ` and
+`A  ` entries, sorted) and **`HEAD`'s changed-path set**. An empty dirty set with `HEAD` equal to
+`$FINAL` is the harmless retry; the dirty set equal to `$FINAL` is the first run; anything else
+stops. **A `git diff --cached --quiet` test is not among them** — an earlier draft's prose claimed
+it after the block had stopped using it, which is the overclaim `AGENTS.md` names by requiring
+prose to state the exact comparison performed.
 
 **The base file is removed only in the success branch.** `git commit` can fail on a hook, a signing
 key or an unset identity, and at that point the reset has already happened: the WIP commits are
