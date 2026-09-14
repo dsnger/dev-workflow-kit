@@ -11,6 +11,24 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 - **Derived floor:** 3 (risk high → level 2; security none → 0; max 2 ≠ 0 → 3)
 - **Hook knob:** absent (no floor-knob file in `.context/`)
 
+## Resume here
+
+**Next action:** Gate-A plan pass 6 against `33cdfa8`. The prompt is
+`.context/gate-a-plan-prompt.md` — **durable and current**; substitute `__SHA__` and `__P__`,
+precheck per its header, delete the target file, confirm it is gone.
+
+**After a clean close:** implement the plan — both prompt copies, the seven hook strings and their
+test expectations, version bump 0.11.0 → 0.12.0 + CHANGELOG, the quality battery, the evidence
+entry, then Gate B with a **fresh nonce** (this cycle's is Gate-A plan only).
+
+**Standing instructions from Daniel:** no stops unless an absolute block; a mandatory two-tell stop
+is surfaced in the record and the loop continues on that standing answer. Escalate only new
+behaviour decisions and real obstacles. Reports: result, verification, decision-relevant obstacles.
+
+**Two stories still await a profile confirmation:**
+`docs/superpowers/stories/2026-09-10-record-durability-story.md` and
+`docs/superpowers/stories/2026-09-10-harness-finding-termination-story.md`.
+
 ## What the spec cycle learned, carried here so this loop does not relearn it
 
 The Gate-A **spec** cycle ran 65 passes. Four mechanisms produced almost every finding; each is
@@ -35,7 +53,7 @@ worth checking before a pass rather than after.
 | 3 | b767a2a | 32→**31** | 0→**0** | 25→**23** | yes | one tell (instrument cluster). **Pass 2's three fragments came back — because I repaired the table and left the same fragments quoted inline in the task steps.** Second-copy defect, in the plan written to avoid it. Structural repair: the table is the only authored copy and Task 0 **generates** the shell variables from it, so no step can restate a fragment. 8 Minors collected |
 | 4 | 6ace06f | 31→**20** | 0→**10** | 23→**7** | yes | **MANDATORY TWO-TELL STOP** — Blockers rose 0→10, and the findings cluster on the instrument for the fourth pass running. Surfaced, standing answer applied, loop continued. **The awk generator pass 3 introduced was broken three ways**; it is deleted, not debugged — the helper is transcribed by hand and validated against the real files, with empty-string guards, because a silently unset variable makes `grep -cF ""` match every line. **A fourth fragment (F4) was preserved in its own replacement and invisible to my checker**, which compared without normalizing the block's line breaks |
 | 5 | 58b3660 | 20→**16** | 10→**7** | 7→**7** | yes | **MANDATORY TWO-TELL STOP** — instrument cluster for the fifth pass, plus a require↔withdraw pair (pass 4 demanded OLD rows for clauses pass 5 classifies as add-only). Surfaced, standing answer applied, loop continued. **The pre-written shell is deleted.** Design §7 says the plan builds each pair *against the real files*; five passes of findings were blocks written in advance for text that does not exist yet. One stated procedure replaces them |
-| 6 | — | — | — | — | not run | next, against the pass-5 repair commit |
+| 6 | — | — | — | — | **not run — NEXT** | against `33cdfa8`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`33cdfa8` and `__P__`=`6` |
 
 ## Pass-1 report
 
