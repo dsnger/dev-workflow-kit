@@ -203,7 +203,11 @@ for the same condition, which is the fragment table's one-copy rule broken from 
 
 **Each editing task runs this, against the disposition table's rows for its own blocks:**
 
-- [ ] **Before installing** — walk every condition those blocks cover and derive the
+- [ ] **Before installing** — walk every condition those blocks cover. **Where the fragment table
+  already has a row for it, reuse that row and confirm its pre-edit count; append nothing.** The
+  table is the one authored copy, and a walk that appends a second row for `b7`, `b12` or `c14`
+  would run two observations of one edit and leave the ledger depending on whether the executor
+  silently inferred an exclusion. **Otherwise** derive the
   **pre-existing** fragment its disposition owes: the **OLD** half for a *replaced* one, the
   **absence** fragment for a *moved* or *dropped* one, the **preservation** fragment for a
   *carried* one, and, for a *kept* one, a preservation fragment **only where no untouched span can
@@ -447,12 +451,16 @@ and each makes a **correct** implementation fail its own check. **Derive them, w
 open:**
 
 1. Resolve each of the five regions' start and end anchors.
-2. **Collect the full line extent of every replacement that lands in that region — not the line its
-   fragment sits on.** A fragment is one line; the block it belongs to usually spans several, and
-   the lines a replacement occupies are all changed whether or not a fragment happens to sit on
-   them. Resolve each replacement's **first and last** live line and take the whole run. In the
-   floor region that is item 8a's block, `a13`'s paragraph and `a16`'s; in the human exception,
-   items 7 and 4.
+2. **Collect the full line extent of every replacement whose live extent intersects that region —
+   not the line its fragment sits on.** A fragment is one line; the block it belongs to usually
+   spans several, and every line a replacement occupies is changed whether or not a fragment sits
+   on it. Resolve each replacement's **first and last** live line, take the whole run, and merge
+   overlapping runs.
+   **No example list is given here, and that is deliberate.** One was written three times and was
+   wrong all three — naming a block that sits outside the region, omitting one inside it, and
+   naming a fragment's line for a block's extent. Which replacements intersect a region is decided
+   by resolving both against the file, and any list written in advance is a fourth guess. Walk the
+   target's replacement blocks, resolve each one's extent, and keep the ones that overlap.
 3. **The spans are the gaps between those runs.** A region with no replacement in it is one span;
    a region with *n* runs is at most *n+1*. A span of zero lines is dropped, not recorded.
    **An anchor line is not exempt**: where a region's start or end anchor shares its line with
@@ -2030,6 +2038,14 @@ and is the only value whose range contains the whole implementation.
 
 Floor derives from the story profile: risk `high` → 2, security `none` → 0, max 2 ≠ 0 → **floor 3**. Re-derive it at each pass from the header.
 
+**Two routes reach the closing act, and this loop must admit both**: a **clean pass at or above the
+floor**, or a **zero-finding logical pass** at any pass number — the early exit below the floor.
+Both are subject to every other closure condition. **An earlier draft named only the first**, so a
+first or second Gate-B pass whose two branch files both read `NO FINDINGS` would have been routed
+into further passes — the implementation procedure overriding the very rule §A installs, and the
+one case Task 13's table checks by name. A zero-finding pass is `NO FINDINGS` in **every** required
+branch file; one branch clean and the other not is not it.
+
 **Each fix is committed before the next review is issued**, or the re-review targets the unchanged
 WIP tip while the repair sits in the worktree — and the final squash then publishes a fix no pass
 reviewed:
@@ -2130,7 +2146,11 @@ test -n "$BASE" || { echo "BASE empty — Task 0 did not run"; exit 1; }
 NONCE=<this cycle's nonce>; P=<the final pass number>
 FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
 expected=$(printf '%s\n' $FINAL | sort)
-actual=$(git status --porcelain | sed -n 's/^?? //p; s/^A  //p' | sort)
+# EVERY porcelain record, whatever its status letters — staged modifications,
+# deletions, renames and conflicts included. A filter that reads only '??' and
+# 'A  ' declares the set exact while a staged tracked change sits beside it, and
+# `git commit` then commits the whole index.
+actual=$(git status --porcelain -z | tr '\0' '\n' | sed -n 's/^.\{3\}//p' | sed '/^$/d' | sort)
 
 head_paths=$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)
 if [ -z "$actual" ] && [ "$head_paths" = "$expected" ]; then
@@ -2139,6 +2159,8 @@ elif [ "$expected" = "$actual" ]; then
   # shellcheck disable=SC2086
   git add $FINAL
   git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED"; exit 1; }
+  test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" \
+    || { echo "record commit changed paths beyond the final findings files"; exit 1; }
 else
   echo "dirty set is not exactly the final pass's findings files:"; git status --porcelain; exit 1
 fi
@@ -2150,6 +2172,13 @@ git rev-parse HEAD > .context/loop-rule-reviewed-tip
 commit that fails leaves the findings files already committed, so on a second run the dirty set is
 empty — and an unconditional record commit, or an exact-dirty-set guard with no such branch,
 refuses the very state the recovery produces.
+
+**The dirty set is built from every porcelain record, not from two status codes.** An earlier draft
+read only `?? ` and `A  ` entries, so a **staged tracked modification** sitting beside the two
+findings files was invisible: the set compared equal, `git commit` committed the whole index and
+swept the change in, the following clean-tree test passed, and 8b published content the reviewed
+`HEAD` never carried. **And the record commit's own changed-path set is checked afterwards**,
+because the guard describes the working tree while the commit is what actually lands.
 
 **"`HEAD` touched some `gate-b-` file" is not that test, and would be unsafe.** Step 7 commits
 earlier passes' findings files, so `HEAD` can carry one while the *final* pass's two are missing
@@ -2171,12 +2200,29 @@ git commit -F .context/loop-rule-closing-msg || {
   echo "failed attempt — inspect them, then re-establish every closure condition before retrying 8a."
   exit 1; }
 
+bad=""
 case "$(git log -1 --pretty=%s)" in
-  [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — cycle NOT closed"; exit 1 ;;
+  [Ww][Ii][Pp]:*) bad="closing commit reads as a snapshot" ;;
 esac
-test -z "$(git status --porcelain)" || { echo "worktree dirty after close — aborting before cleanup"; exit 1; }
+test -z "$(git status --porcelain)" || bad="${bad:+$bad; }worktree dirty after the closing act"
+if [ -n "$bad" ]; then
+  echo "closing act REJECTED: $bad — restoring the reviewed tip without discarding side effects"
+  git reset --mixed "$TIP"
+  git status --porcelain
+  echo "HEAD and index restored. Re-establish every closure condition, obtain a fresh clean"
+  echo "response against the new HEAD, then retry 8a."
+  exit 1
+fi
+
 rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip
 ```
+
+**Both post-commit checks restore the tip as well, and an earlier draft left them as bare exits.**
+A closing act that *commits successfully* and then fails its subject or clean-tree check left
+`HEAD` at the rejected commit with no way back — and 8a could not be re-entered from there either,
+since that commit's changed-path set is the whole squash rather than `$FINAL`. The cycle was then
+unable to close through the plan and unable to return to its reviewed state, which is exactly the
+incomplete-closing-act transition target §A requires to be recoverable.
 
 **`--mixed`, never `--hard`.** A closing act can fail *after* a commit hook has modified or staged
 tracked content, and `reset --hard` would delete exactly that — the delta the failure produced.
