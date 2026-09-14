@@ -356,7 +356,9 @@ repo's most persistent defect. The transport that could carry it left with the r
   reached. `plugins/dev-workflow/hooks/codex-gate.test.sh` changes in all three of its
   `expected_ctx` exact-match expectations and all three `expected_msg` beside them — the Gate-B
   satisfied, stale-fingerprint and no-fingerprint messages, §F items 12, 16 and 15 — each replaced
-  with the complete resulting text; the remaining hook assertions match loose patterns these repairs leave standing. The §5 heading the hook greps (`Cross-Model Review`)
+  with the complete resulting text, **plus every other assertion, label or comment in that file
+  that tests or names a replaced string, which the plan finds by sweeping rather than from a list
+  here**; the remaining hook assertions match loose patterns these repairs leave standing. The §5 heading the hook greps (`Cross-Model Review`)
   does not move.
 
 **Every path in this spec is written repository-relative and in full** — no ellipsis shorthand

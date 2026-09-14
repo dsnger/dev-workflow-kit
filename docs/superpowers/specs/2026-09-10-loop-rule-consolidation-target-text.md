@@ -684,8 +684,15 @@ closure permission. **Three of the seven are pinned by exact-match expectations 
 `plugins/dev-workflow/hooks/codex-gate.test.sh`** — items 12, 15 and 16, at that file's three
 `expected_ctx` assignments, **and items 12, 15 and 16 also at the three `expected_msg` assignments
 beside them**, since those items replace the terse operator line as well — each replaced there with its
-complete resulting text in the same change. The remaining four are matched by loose patterns these
-repairs leave standing, **except the stale-branch assertions item 16 moves with it**.
+complete resulting text in the same change.
+**Which other assertions move is a duty on the plan and is not enumerated here.** The plan sweeps
+`plugins/dev-workflow/hooks/codex-gate.test.sh` for **every** assertion, label and comment that
+tests or names a string any item below replaces — the loose `grep` assertions included — and moves
+each with its item, testing the observed hook state rather than a gate verdict. **No count of them
+appears anywhere**, and the reason is evidence rather than taste: this section twice stated one and
+was twice wrong. It said one exact-match expectation where there are three (pass 57), and that the
+remaining items' assertions could be left standing where "Gate B satisfied" occurs 21 times and
+"STOP" 14 (pass 63). A count over a file this text does not survey is a claim it cannot keep.
 **Every hook replacement below is destined for a double-quoted POSIX-shell `note` argument**, so
 its text carries no backtick, no `$(`, no backslash and no double quote; `$policy`, `$floor` and
 `$passes` are the intended interpolations and stay. A backtick reached one of these blocks at pass
@@ -980,7 +987,7 @@ statement about scope, so it does not join that count.
 resulting message is given, not a span**: a span plus a sentence about where it goes was found
 three times running to leave a fragment ambiguous or a tail standing.
 ```
-Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint.
+Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint.
 ```
 ```
 ⚠ Codex Gate B: no recorded fingerprint
@@ -1003,6 +1010,11 @@ could order a review over a valid pass whose store failed. Its exact fixture mov
 cause list also omitted the one §A3 itself creates: a non-`WIP` commit attempt clears the
 fingerprint while the cycle stays open, and a reader sent to permission checks for it would be
 looking in the wrong place.
+*And (pass 63 finding 1):* the message also carried "Per $policy you MUST reach a minimum of $floor
+passes per cycle" unconditionally, which a zero-finding pass does not owe — and this branch is
+reachable after exactly such a pass, when its first store fails or a non-WIP attempt clears the
+state. A clean eligible cycle was being given a MUST the ordering does not impose. The floor now
+travels with the pointer, where its own eligibility rules are.
 
 **16. The stale-fingerprint reminder, both channels** (the shipped hook, same file). **The complete
 resulting message, for the reason item 15 gives.**
