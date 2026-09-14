@@ -940,9 +940,11 @@ reporting its own threshold as an obligation at a floor of 1 — is untouched an
 scope. This one is **not** an entry point carrying an unqualified instruction; it is a false
 statement about scope, so it does not join that count.
 
-**15. The no-fingerprint reminder's next action** (the shipped hook, same file).
+**15. The no-fingerprint reminder's opening and its next action** (the shipped hook, same file).
+Replaced span: the opening through "Run Gate B (mcp__codex__review) now;", the machinery checks
+after it untouched.
 ```
-What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it — including whether the state file's deletion below is followed by a pass.
+Codex gate state: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. What this cycle does next is $policy's closure ordering's, read there entire, and this reminder decides none of it — including whether the state file's deletion below is followed by a pass;
 ```
 *Why (pass 55 finding 3):* the live string says "Run Gate B (mcp__codex__review) now", which sends
 the author into another pass whatever the cycle's state is — including a pass that carried a
@@ -955,24 +957,46 @@ cycle whose fingerprint merely could not be stored still has its commit route. T
 removed rather than extended, per this section's own preference. The same finding's second half
 reaches the sentence's tail, "delete it and run a fresh pass": the deletion stays as a remedy, the
 pass after it does not, and the new sentence says so where a reader meets it.
+*And (pass 58 finding 1):* the opening still read "STOP — Codex Gate B not satisfied", which
+states a gate verdict the hook cannot reach — the fingerprint is advisory and is not a closure
+condition, so a clean eligible cycle whose fingerprint merely could not be stored was being told
+the gate was unsatisfied. The opening now reports the **hook's own state**, which is what it
+observes, and leaves every verdict to the ordering. This is the AGENTS.md rule about naming the
+exact comparison a mechanism performs, applied to the hook's own words.
 
-**16. The stale-fingerprint reminder's two instructions** (the shipped hook, same file).
+**16. The stale-fingerprint reminder's opening and its two instructions** (the shipped hook, same file).
+**Two non-adjacent sentences of one message**, the diagnostic list between them untouched. The
+opening:
 ```
-A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's; where it may, that pass records a usable fingerprint.
+Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle).
+```
+and, in place of the two imperatives:
+```
+A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's; where it may, that pass attempts to record a usable fingerprint — a store that fails again returns this same state, which is a fault in the machinery and not a verdict on the cycle.
 ```
 *Why (pass 55 finding 4):* the live string carries two unqualified imperatives — "Run Gate B
 (mcp__codex__review) now" and "then run one more pass to record a usable fingerprint" — in the
 branch an author reads immediately before committing. Both step past a suspension or a source
 block that the ordering says is answered first. The long diagnostic list between them is untouched.
+*And (pass 58 findings 2 and 3):* the opening read "STOP — Codex Gate B not satisfied" over a
+branch whose own text lists staging, a hook upgrade and a failed store — none of which violates a
+closure condition — so it takes item 15's repair, reporting the hook's state and leaving the
+verdict to the ordering. The second sentence also said a permitted pass "records a usable
+fingerprint", which no rule makes true: the store that just failed can fail again. It now says
+**attempts**, and names the loop that would otherwise send an author round again.
 
 **17. The Gate-B below-floor reminder's instruction** (the shipped hook, same file).
 ```
-Per $policy the review is a LOOP with a hard minimum of $floor passes, and what this cycle does next — a further pass, an answer, or a repair — is that policy's closure ordering's; $policy's skip rule decides only whether a cycle runs at all, never whether one already running may stop short.
+Per $policy the review is a LOOP with a hard minimum of $floor passes, and what this cycle does next is that policy's closure ordering's, read there entire; $policy's skip rule decides only whether a cycle runs at all, never whether one already running may stop short.
 ```
 *Why (pass 55 finding 5):* the live string says "run more … or proceed only if $policy's skip rule
 applies to this change", which offers the triviality skip as an exit from a running cycle. The
 skip runs **no** passes and is decided before the cycle starts, so a below-floor cycle cannot
 reach it; and "run more" alone ignores a suspension the ordering sends that pass to.
+*And (pass 58 finding 4):* an earlier wording enumerated the ordering's routes as a pass, an answer
+or a repair, which **omits the closing act a zero-finding pass reaches below the floor** — the one
+closing route this branch exists to describe. Removed rather than extended, exactly as item 15's
+was.
 
 ---
 

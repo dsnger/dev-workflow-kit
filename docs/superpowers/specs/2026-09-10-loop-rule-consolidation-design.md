@@ -429,8 +429,8 @@ not exist; §G names a sentence that does, and claims only what that sentence do
 - The CodeRabbit plan-metadata contradiction (`fic2` record).
 - The fixture-per-predicate question (`fic2` record; story §2).
 - Hook **behaviour** under `plugins/dev-workflow/hooks/` — control flow, counters, fingerprint
-  computation, routing, event handling. The seven contradictory reminder strings and the one
-  exact-match test expectation are in scope instead (§F items 10–13 and 15–17, story §Out of scope), and
+  computation, routing, event handling. The seven contradictory reminder strings and the three
+  exact-match test expectations are in scope instead (§F items 10–13 and 15–17, story §Out of scope), and
   the Gate-B fingerprint overclaim in the same message stays parked here.
 - `todos.md`: both-branches-misread-each-other; self-consuming-deletion (prompt-standards item
   11); the three bot findings in resolved plans.

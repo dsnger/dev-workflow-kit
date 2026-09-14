@@ -74,7 +74,8 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 55 | 1940181 | 13→**18** | 0→**0** | 3→**6** | yes | one tell (findings rose). **Four more hook strings**, same class as item 13 — every gate reminder that tells the agent what to do next, ignoring a suspension the ordering sends that pass to. §F 18 → 22, covering **7 of the hook's 8** gate reminders. Also: the standing Named residual still said "Hook text is out of scope here by decision", which our own scope opening falsifies → item 14. §A1's source-block branch said a repaired block rereads "that pass" where the block stood before any pass existed |
 | 56 | 6b8854f | 18→**13** | 0→**0** | 6→**0** | yes | **first Blocker- and Major-free pass of the cycle.** 11 of 13 are the second-copy class, collected. Two were count contradictions and were repaired, so 56 is not the final pass: design §9 still said "three contradictory reminder strings" against its own enumeration of seven (my pass-55 propagation missed it), and §F item 7's rationale said "the three closing paths" while §A2 defines two cases |
 | 57 | bb1ba03 | 13→**5** | 0→**0** | 0→**5** | yes | zero tells. All five are pass-53/55 fallout inside the hook items. **Two are a factual error of mine:** `codex-gate.test.sh` has **three** `expected_ctx` exact-match expectations (lines 1006, 1019, 1029), not one — my first grep searched only for phrases that occur in 1019. Items 12, 15 and 16 are all pinned. The other three tightened items 13 and 15, whose replacements still carried an unqualified imperative and an enumeration omitting the closing act |
-| 58 | — | — | — | — | not run | next, against the pass-57 repair commit |
+| 58 | ebe3aa7 | 5→**6** | 0→**0** | 5→**4** | yes | one tell (findings rose 5→6). All four Majors in items 15–17, one layer deeper than pass 57 reached: both fingerprint reminders still **opened** "STOP — Codex Gate B not satisfied", a gate verdict the hook cannot reach; item 16 claimed a permitted pass "records" a usable fingerprint where the store can fail again; item 17's enumeration omitted the below-floor zero-finding closing route. Minor 6 was design §9's "one exact-match expectation" — the **second** time that bullet went stale under a propagation |
+| 59 | — | — | — | — | not run | next, against the pass-58 repair commit |
 | 40 | 12cf247 | 5→**3** | 0→**0** | 4→**3** | yes | zero tells; first round with no fan-out Major after the three-site check was run BEFORE the pass |
 | 41 | d26d097 | 3→**2** | 0→**0** | 3→**2** | yes | zero tells; both Majors were compressed pointers of mine dropping a load-bearing part of a standing rule |
 | 42 | 3b61fe3 | 2→**1** | 0→**0** | 2→**1** | yes | zero tells; §F item 4 had taken back the enumeration it was repaired to avoid |
@@ -82,6 +83,34 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 | 44 | 4a44007 | 6→**7** | 0→**0** | 3→**3** | yes | one tell; branch LEADS reworded; **tenth** falsified standing sentence (Mechanics' "collect, never iterate") |
 | 45 | 1c858ac | 7→**7** | 0→**0** | 3→**1** | yes | zero tells; swept all four sites still tying classification to closing |
 | 46 | 4b713dd | 7→**9** | 0→**1** | 1→**2** | yes | **TWO TELLS — mandatory stop under §5, answered in advance by Daniel's standing "no stops without an absolute block" of 2026-09-13 17:02.** Tells surfaced here and in the commit body, findings kept open, no pass credited clean; the loop continued on that answer. **Eleventh** falsified standing sentence; session 01a09b7c-dd6b-7cb3-b83a-776599286f9b |
+
+## Pass-58 report — one tell, and the shape of the hook-item lineage
+
+**Trend:** findings 13, 5, **6** across 56–58; Blockers 0, 0, **0**; Majors 0, 5, **4**.
+**Cluster:** product behaviour, all four Majors inside §F items 15–17. **Require↔withdraw:** none —
+passes 57 and 58 each *removed* an enumeration pass 55 wrote; no pass demanded back what an earlier
+one removed. **One tell:** the finding count rose 5 → 6.
+
+**The lineage, stated plainly, because it is the thing to watch.** Passes 53–55 added seven hook
+items. Pass 57 found problems in them, pass 58 found more. Each round's fix produced the next
+finding, which is the third condition of the clearly-stuck reading.
+
+**It is not a plateau, and here is the test that distinguishes them:** each pass reached an aspect
+no earlier pass had examined, rather than re-litigating one. Pass 55 wrote the replacements; pass
+57 was the first to read them against `codex-gate.test.sh` and found three pinned expectations
+where the text claimed one; pass 58 was the first to read the *openings* of the messages rather
+than the instructions inside them, and found "STOP — Codex Gate B not satisfied" stating a verdict
+the hook cannot reach. That is coverage arriving in layers.
+
+**The clearly-stuck exit therefore does not apply**, and the reason is its second condition: I
+cannot state an affirmative judgement that coverage is sufficient while each pass is still
+reaching a first-time layer of the same seven items. When a pass reaches no new layer, that
+judgement becomes available and this reading should be taken again.
+
+**Design §9 went stale a second time.** Pass 56 caught "three contradictory reminder strings" in
+that bullet; pass 58 caught "one exact-match test expectation" in the same bullet. Both times a
+scripted propagation had updated every other site. The bullet is worth reading by hand whenever
+the hook scope moves.
 
 ## Pass-57 report — zero tells, and a fact I had wrong twice
 
