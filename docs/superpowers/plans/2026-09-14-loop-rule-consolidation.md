@@ -211,7 +211,7 @@ independent reader did.
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions, compared **at the recorded base** | **kept**, same shell — preparation |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
-| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept, and scoped**: it is the *normal pre-close* topology. The handoff leaves two more — a rejected commit above the cycle's, and `HEAD` at the base with the implementation in the index — and Resume recognises both rather than reading them as a stale base |
+| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test.** It is the *normal pre-close* topology. Three others are reachable and none makes the base stale: the handoff's rejected commit above the cycle's; `HEAD` at the base with the implementation in the index; and target §A3's accidental non-`WIP` commit or amend mid-cycle. **Staleness is decided by ancestry and by whether the history is this cycle's**, never by a commit subject |
 | 8 | `$BASE` persisted to a file; every consumer guards it non-empty | **kept**, and **repaired**: three concrete blocks read it without the guard while this row claimed otherwise — the baseline extraction, Task 10's hook diff, and the first Gate-B call. The guard is in each of them now (pass 22) |
 | 9 | The five regions are located by anchor, one hit per pattern per file | **kept**, same shell — preparation |
 | 10 | Spans are **derived** from replacement extents, never hand-written | **kept** — the rule, unchanged |
@@ -320,7 +320,10 @@ an unapproved edit to a spec that the gates already closed.
    curve, every owed evidence entry, and either the applicable human-exception records or
    `Human exceptions: none`. **This is checked here, before anything moves**, because an incomplete
    message discovered after the record commit leaves `HEAD` moved for a reason no restoration was
-   owed for.
+   owed for. **And it is re-read and revalidated at 8b, immediately before the commit consumes it**
+   — 8a runs a commit in between, hooks can rewrite anything, and the file is under `.context/`,
+   which is ignored, so no clean-tree check between the two invocations can see it change. A
+   difference or a malformed record there is a Failure handoff, not a repair.
 4. **Those files are committed** in their own invocation, and that commit **changes exactly those
    paths**. Its parent is the reviewed head. Record the resulting commit as the **closing tip**, in
    `.context/loop-rule-reviewed-tip` — **a precondition value, not a restore target**: 8b refuses to
@@ -329,8 +332,11 @@ an unapproved edit to a spec that the gates already closed.
 5. **The tree is clean**, and `HEAD` is still the closing tip, when the closing invocation begins.
 6. **After the closing commit**: its subject is not a snapshot, and the tree is clean.
 
-**How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
-tree equals the closing tip's tree, and whose parent is `$BASE`. Then, and only then, the scratch
+**How success is recognised.** A single commit at `HEAD` whose subject is the real message and whose
+parent is `$BASE`. **No tree comparison** — target §I parks a Gate-B tree-equality condition on
+Daniel's decision of 2026-09-13, and an earlier draft of this line added one anyway, which would
+have made the executor either invent an out-of-scope closure check or declare success without
+establishing its own stated predicate. Then, and only then, the scratch
 files are removed.
 
 **Two invocations, not one.** `codex-gate.sh`'s `is_wip_commit`
@@ -409,9 +415,18 @@ and records the closing commit carries are the ones a pass actually validated.
 **What is checked.** Whether the recorded base is this run's; whether the scratch artifacts belong
 to it and are complete; and how far the implementation got.
 
-- **The base**, by the preparation procedure's checks. A base that is not an ancestor, or has
-  non-`WIP:` commits after it, is **stale** — delete it deliberately, record why, and re-record from
-  the true starting commit. **Never overwrite one you did not just write.**
+- **The base**, by the preparation procedure's checks. **A base that is not an ancestor of `HEAD` is
+  stale** — delete it deliberately, record why, and re-record from the true starting commit.
+  **Never overwrite one you did not just write.**
+
+  **A non-`WIP` commit after the base does not make it stale, and inferring that from the subject
+  is wrong.** Target §A3 names an accidental non-`WIP` commit mid-cycle as a **reachable state**: it
+  resets what the hook counts, the cycle stays open until the conditions hold, and it can leave the
+  `WIP:` snapshot as an ancestor — or, as an amend, replace the tip. In both the base is still the
+  true boundary, and deleting it would drop earlier implementation out of Gate B's range and out of
+  the final reset. **Keep the base, inspect the state, and let §A3 decide what the stray commit
+  costs.** Replace a base only on evidence it belongs to **another run** — it is not an ancestor, or
+  its history has no part of this cycle in it.
 - **Each scratch artifact**, by its own `base` line **and** its own completeness predicate:
   - `.context/loop-rule-untouched` — every line parses as `base`, `span` or `cond`, and every kept
     condition in the five regions appears in exactly one `span` or one `cond`.
@@ -1613,7 +1628,7 @@ holds OLD fragments, which exist before the edit and can be checked in advance.
 
 Expected for all twenty: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
-**Then run everything step 1b added, and that is three kinds, not one:**
+**Then run everything step 1b added, and that is four kinds, not one:**
 
 - **a pair** for each of the `c18`-and-surfacing block's four further conditions — `c16`, `c17`,
   `c19`, `c20`;
@@ -2672,7 +2687,13 @@ above rather than assumed.
 BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-reviewed-tip)
 test -n "$BASE" && test -n "$TIP" || { echo "BASE or TIP missing — 8a did not complete"; exit 1; }
 test "$(git rev-parse HEAD)" = "$TIP" || { echo "HEAD has moved since 8a — NOT resetting"; exit 1; }
-git reset --soft "$BASE"
+git reset --soft "$BASE" || { echo "reset --soft FAILED — stop here and run Failure; do NOT commit"; exit 1; }
+# Re-read the closing message here: it was validated before 8a, 8a ran a commit
+# (hooks can rewrite anything), and .context is ignored, so no porcelain check
+# between the two invocations can see it change.
+test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty — stop here and run Failure"; exit 1; }
+# Revalidate its records — exactly one provenance line, exactly one curve for this
+# cycle, every owed evidence entry, and the exception records or the plural marker.
 git commit -F .context/loop-rule-closing-msg
 ```
 
@@ -2707,7 +2728,13 @@ read from. **The plan's records
 are not among these**: they live in the plan and in `.context/codex-reviews/`, both tracked, both
 already in the closing commit.
 
-**`reset --soft` stages committed content only.** The prompt-standards result, the completeness
+**`reset --soft` moves `HEAD` and leaves the index exactly as it was** — it stages nothing and
+unstages nothing, so the index still holds every `WIP:` commit's content, which is what makes the
+single closing commit carry the whole change. **Anything *staged* and uncommitted at that moment is
+in the index too and would land in the closing commit**; only *unstaged* work stays out. That is why
+the close's precondition 5 requires a clean tree before 8b runs — **an earlier draft said the reset
+"stages committed content only" and that unstaged-or-not, uncommitted content stays out, which is
+wrong about the index and hides the path §I parks.** The prompt-standards result, the completeness
 sweep, the next-state table, the divergence list, the equivalence result and the fragment evidence
 all land in this plan, and `.context/codex-reviews/` is tracked; **anything uncommitted when the
 reset runs is left in the worktree and is not in the closing commit** — and, for the plan records,
@@ -2775,7 +2802,7 @@ line per fragment-table row with its three results, and the reading result for `
 *Empty until the tasks run. One subsection per task — `### Task 1`, `### Task 3`, … — replaced
 idempotently on re-run, touching no other. **The pre-existing fragments live in the fragment table,
 never here**; this section records what each observation actually returned, and it is what Task 15
-step 5 reads to assemble the closing evidence entry.*
+step 5 reads to assemble the closing evidence entry.
 
 **Six record shapes, because the classes do not return the same number of values.** Every
 observation this plan makes is one of them, and a shape that fits only pairs is how a required
