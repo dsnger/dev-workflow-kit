@@ -427,7 +427,8 @@ requires a clean tree** — two of the three valid topologies do not have one.
 | Topology | `HEAD` | `$BASE..HEAD` | Where the work is |
 |---|---|---|---|
 | **Normal, mid-implementation** | the last `WIP:` snapshot | this run's `WIP:` commits, and possibly a §A3 stray commit or amend | committed |
-| **8a rejected** | a `WIP:` findings commit, or a stray commit, **above** the cycle's `WIP:` chain | those commits | committed |
+| **8a rejected, no commit landed** | the last `WIP:` snapshot, unchanged | this run's `WIP:` commits | committed, **plus whatever the failed attempt left in the index or worktree** |
+| **8a rejected after its commit landed** | a `WIP:` findings commit **above** the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
 | **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
 **The third row is the one every rule has to be re-read against.** `reset --soft` removes the
@@ -472,8 +473,10 @@ Each by its `base` line **and** its completeness predicate:
 **On failure the answer depends on why you are here.** Outside a handoff: delete and rebuild from
 the `$BASE` blobs — never reuse, never repair in place, because a same-base partial file is the one
 shape a `base` line alone cannot catch. **Inside a handoff, while a failed close waits on a person:
-report the invalid artifact and change nothing.** Rebuilding it would destroy the scratch state the
-handoff preserved, before anyone chose a §A route.
+report the invalid artifact and change nothing.** Rebuilding it would remove evidence before anyone
+chose a §A route. **This plan performs no cleanup after a failure — it does not claim the failed
+operation left anything intact.** Enumerate which scratch values actually survive and validate each;
+a value is trustworthy because it passed a check, never because cleanup was skipped.
 
 - [ ] **Establish how far the implementation got — against the topology, not against the log**
 
@@ -484,9 +487,15 @@ being *present in that content*, wherever the content lives.
 
 ```bash
 git log --oneline "$BASE"..HEAD     # empty in the 8b topology; that is not an empty cycle
-git diff --cached --stat "$BASE"    # the staged implementation, where reset --soft left it
+git diff --cached "$BASE"           # the staged content — the FULL diff, not --stat
+git diff                            # the unstaged content
 git status --porcelain --untracked-files=all
 ```
+
+**Read all three, in every topology.** `git status` names paths and says nothing about what is in
+them, and `--stat` counts lines. **The delta that caused an 8a handoff is precisely the one a
+path listing cannot describe** — a rewritten staged file keeps its name — so reconcile against
+`HEAD`, the index and the worktree **contents** together, whichever topology you are in.
 
 **A task whose checkbox is ticked but whose change is in neither place was not completed** — and one
 whose change is present with the box unticked is completed. **Deciding from the commit log alone
@@ -1292,7 +1301,7 @@ either could land while the other survived and it still reported a pass, and `c4
 observation at all. **A later draft reintroduced exactly that pair** by naming row P4, whose OLD is
 `c14`, and then taking its NEW from §C's re-raised-dismissal clause, which is `c8`.
 
-| Edit | OLD | NEW, taken from the installed §C block |
+| Edit | OLD | NEW, from the installed destination text — §C here, §A where the row says so |
 |---|---|---|
 | `c4`, the widened third condition | the `c4` row (step 1) | the clause §C puts in place of "a missing one means keep going" |
 | `c8`, the re-raised dismissal | the `c8` row (step 1) | `a recurrence failing them being an ordinary fresh finding` — **install that clause's line unwrapped** so the fragment sits wholly on one line |
@@ -2582,6 +2591,20 @@ git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call
 cat .context/loop-rule-reviewed-head
 ```
 
+**Committing the pass is not the same as being allowed to issue the next one.** After recording it,
+**run the pass through the ordering this change installs** — the plan must not execute a loop its own
+product forbids:
+
+- **A source block standing** — wait for the repair and reread by the route §A gives; no further pass
+  until that is done.
+- **Any suspension open** — a membership stop, a new-question stop, a two-tell stop, a clearly-stuck
+  surface. **Collect every answer, compose them, and issue another pass only when the composition
+  yields continue.**
+- **A stop answer** → **park**: open, not running, **spending no passes**, restarted only by an
+  explicit later continue. **There is no "commit and carry on" from a stop**, and acceptance
+  criterion 4 requires that parked state to be distinct.
+- **Only the clean-completion branch enters Close.**
+
 **A non-closing pass that owes no repair still commits.** A Minor-only clean pass below the floor,
 or an answered suspension that changes no artifact, leaves its findings files tracked and dirty —
 and the next pass's files pile up beside them, after which the close procedure's dirty-set check can
@@ -2703,6 +2726,9 @@ expected=$(printf '%s\n' $FINAL | sort)
 actual=$(git status --porcelain -z | tr '\0' '\n' | sed -n 's/^.\{3\}//p' | sed '/^$/d' | sort)
 test "$expected" = "$actual" || { echo "dirty set is not exactly this pass's findings files:"; git status --porcelain; exit 1; }
 
+# Pin the validated content BEFORE staging: a hook can rewrite a staged file in
+# place, leaving its pathname — and therefore the changed-path check — unchanged.
+for f in $FINAL; do git hash-object "$f"; done > .context/loop-rule-final-blobs
 # shellcheck disable=SC2086
 git add $FINAL
 # Any rejection below stops and goes through the Failure procedure, which reports
@@ -2711,6 +2737,12 @@ git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — s
 test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" \
   || { echo "record commit changed paths beyond this pass's findings files — stop here and run Failure"; exit 1; }
 test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — stop here and run Failure"; exit 1; }
+# The committed blobs, not the paths: same names can hold different bytes.
+for f in $FINAL; do git rev-parse "HEAD:$f"; done > .context/loop-rule-committed-blobs
+diff .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
+  || { echo "a findings file was rewritten between validation and commit — stop here and run Failure"; exit 1; }
+# Then re-run the findings-file structural check on the committed content, and
+# re-establish that this logical pass is still the eligible one it was judged as.
 test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — stop here and run Failure"; exit 1; }
 
 git rev-parse HEAD > .context/loop-rule-reviewed-tip   # the closing tip: 8b's precondition, NOT a reset target
@@ -2764,7 +2796,8 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-untouched .context/loop-rule-baseline-diff.txt \
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
-      .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg
+      .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg \
+      .context/loop-rule-final-blobs .context/loop-rule-committed-blobs
 if ls .context/loop-rule-* >/dev/null 2>&1; then
   echo "cycle scratch survives the close:"; ls .context/loop-rule-*; exit 1
 fi
@@ -2773,9 +2806,10 @@ fi
 **Every `loop-rule-*` scratch file goes, and the `ls` is what makes "the scratch files are removed"
 true rather than asserted.** An earlier draft deleted three of them and claimed the terminal state,
 leaving a later run to inherit a closing message, a baseref and an untouched map — each of which
-some check then has to detect or overwrite piecemeal. **This runs only on a successful close**; a
-failure leaves every one of these files exactly where it is, which is what the resume decision is
-read from. **The plan's records
+some check then has to detect or overwrite piecemeal. **This runs only on a successful close**; after a
+failure **the plan performs no cleanup at all**. That is not a promise the files are unchanged — a
+hook that failed may have rewritten any of them — so Resume enumerates what survives and validates
+it rather than trusting it. **The plan's records
 are not among these**: they live in the plan and in `.context/codex-reviews/`, both tracked, both
 already in the closing commit.
 
