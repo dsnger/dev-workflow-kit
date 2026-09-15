@@ -211,7 +211,7 @@ independent reader did.
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions, compared **at the recorded base** | **kept**, same shell — preparation |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
-| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept** as an obligation — resume; the reading is the agent's |
+| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept, and scoped**: it is the *normal pre-close* topology. The handoff leaves two more — a rejected commit above the cycle's, and `HEAD` at the base with the implementation in the index — and Resume recognises both rather than reading them as a stale base |
 | 8 | `$BASE` persisted to a file; every consumer guards it non-empty | **kept**, and **repaired**: three concrete blocks read it without the guard while this row claimed otherwise — the baseline extraction, Task 10's hook diff, and the first Gate-B call. The guard is in each of them now (pass 22) |
 | 9 | The five regions are located by anchor, one hit per pattern per file | **kept**, same shell — preparation |
 | 10 | Spans are **derived** from replacement extents, never hand-written | **kept** — the rule, unchanged |
@@ -417,8 +417,25 @@ to it and are complete; and how far the implementation got.
     condition in the five regions appears in exactly one `span` or one `cond`.
   - `.context/loop-rule-baseline-diff.txt` — every line parses as `base`, a `site` record, or diff
     output belonging to the site above it, and **every inventoried site has a `site` record**.
-- **The implementation**, by reading the `WIP:` commits between the base and `HEAD` and the plan's
-  own task checkboxes.
+- **The implementation**, by reading the commits between the base and `HEAD` and the plan's own task
+  checkboxes.
+
+**Three topologies are valid here, not one.** The `WIP:`-only shape is the normal pre-close one. The
+handoff deliberately leaves two others, and Resume must recognise them rather than call the base
+stale:
+
+- **After an 8a or 8b commit was rejected**: a non-`WIP` commit, or a `WIP:` findings commit, sits
+  at `HEAD` above the cycle's `WIP:` commits. **The base is not stale** — it is the same base, with
+  one more commit on top that a closure condition refused.
+- **After `reset --soft` ran and the closing commit failed**: `HEAD` **is** the base and the entire
+  implementation is in the **index**, so `git log "$BASE"..HEAD` is empty and the task checkboxes
+  are the only record of how far the work got. **An empty log here is not an empty cycle.**
+
+**In both, keep the original base and change nothing until a person has chosen a §A route.** Read
+`HEAD`, the index, the worktree and the cycle values together — `git status --porcelain
+--untracked-files=all`, `git diff --cached --stat`, `git log --oneline -3` — and hand that reading
+over. **The stale-base rule scopes to the normal topology**: a non-`WIP` commit means a stale base
+only where no closing act was attempted, which the handoff report says.
 
 **How success is recognised.** A base that passes preparation, artifacts whose `base` line matches
 it and whose coverage is complete, and a task list whose ticked entries match the commits present.
@@ -2387,7 +2404,8 @@ value by construction.
 **Nothing mechanical does this and no other task claims it.** The battery's three narrow checks are
 a floor — one `Target model:` spelling, one prose count claim, one severity vocabulary — and
 invariant 11 requires all twelve items of every skill, command, hook message and scaffolded template
-this change touches. **Read the installed §A–§H text in C, in W, and the seven hook strings, against
+this change touches. **Read the installed §A–§H text in C, in W, and the ten hook prompt bodies —
+seven `additionalContext` and three `systemMessage` — against
 each of the twelve items, and record the result per item in this plan.** Items 6 (every constraint
 carries its reason in the same sentence) and 8 (token-lean) are the ones design §8 names as most at
 risk.
@@ -2563,11 +2581,19 @@ to pass CI, or an invariant-11 violation, published by a cycle that closed clean
 - [ ] **Step 7b: After the clean pass, complete `.context/loop-rule-closing-msg` — this is the
   action step 5 defers to, and step 8 has no other source for these records**
 
-**Rebuild the file whole, do not append to it.** Step 5 opened it with a draft entry, and a failed
-closing act preserves it while requiring a fresh final pass whose curve and evidence supersede the
-previous candidate's. **Appending on re-entry writes a second provenance line and a second curve**,
-which breaks the one-of-each grammar Mechanics pins, or leaves a stale curve standing beside the
-current one. Write the complete message from the current records at every candidate close, then
+**Rebuild the file whole, do not append to it.** Step 5 opened it with a draft entry. **Appending on
+re-entry writes a second provenance line and a second curve**, which breaks the one-of-each grammar
+Mechanics pins, or leaves a stale curve standing beside the current one.
+
+**After a failed closing act, inspect this file before trusting it, and rebuild it from the current
+records.** The handoff changes nothing, but it **does not claim the failed operation left the file
+as it was** — a hook can rewrite anything before failing — so "the failure preserves it" is not a
+statement this plan can make.
+
+**And a failed act does not by itself owe a further pass.** §A retries the act where every closure
+condition still holds; a pass is owed only where the attempt or its repair moved something a
+condition is read from, **and that condition's own rule is what decides.** An earlier draft required
+a fresh final pass unconditionally here, which forces a review §A does not ask for. Write the complete message from the current records at every candidate close, then
 assert **exactly one** provenance line and **exactly one** curve for this cycle before step 8.
 
 The message carries, in this order:
@@ -2632,7 +2658,7 @@ test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$ex
 test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — stop here and run Failure"; exit 1; }
 test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — stop here and run Failure"; exit 1; }
 
-git rev-parse HEAD > .context/loop-rule-reviewed-tip   # the RESTORE POINT, not the reviewed head
+git rev-parse HEAD > .context/loop-rule-reviewed-tip   # the closing tip: 8b's precondition, NOT a reset target
 ```
 
 **The reviewed head and the closing tip are two values.** The first is what the pass read; the
@@ -2751,7 +2777,7 @@ idempotently on re-run, touching no other. **The pre-existing fragments live in 
 never here**; this section records what each observation actually returned, and it is what Task 15
 step 5 reads to assemble the closing evidence entry.*
 
-***Six record shapes, because the classes do not return the same number of values.** Every
+**Six record shapes, because the classes do not return the same number of values.** Every
 observation this plan makes is one of them, and a shape that fits only pairs is how a required
 count gets run and then vanishes from both the plan and the closing evidence:*
 
