@@ -330,8 +330,21 @@ an unapproved edit to a spec that the gates already closed.
    — 8a runs a commit in between, hooks can rewrite anything, and the file is under `.context/`,
    which is ignored, so no clean-tree check between the two invocations can see it change. A
    difference or a malformed record there is a Failure handoff, not a repair.
-4. **Those files are committed** in their own invocation, and that commit **changes exactly those
-   paths**. Its parent is the reviewed head. Record the resulting commit as the **closing tip**, in
+4. **Those files are committed** in their own invocation, and that commit satisfies **three things,
+   not one**:
+   - it **changes exactly those paths**, and its parent is the reviewed head;
+   - **the committed blobs are the validated ones** — the object ids recorded before staging equal
+     the ids at `HEAD` afterwards. A path check cannot see this: a hook rewriting a staged file in
+     place leaves the pathname untouched, which the plan states elsewhere and must therefore guard
+     here;
+   - **the committed findings files still satisfy the findings-file structure and still make this
+     the eligible logical pass they were judged as** — every line before the terminator a finding
+     line, the terminator exact, the count matching, both branch files present, and the
+     clean-or-zero-finding reading unchanged. Subject: the committed content. Base: the protocol in
+     §5 and the eligibility this candidate was issued on. **Any difference at any of the three is a
+     Failure handoff, not a repair.**
+
+   Record the resulting commit as the **closing tip**, in
    `.context/loop-rule-reviewed-tip` — **a precondition value, not a restore target**: 8b refuses to
    reset unless `HEAD` is still exactly it, which is how a commit landing between the two
    invocations is caught. Nothing in this plan resets *to* it.
@@ -420,9 +433,9 @@ and records the closing commit carries are the ones a pass actually validated.
 
 **Resume owns every entry after the first.** Preparation is first-entry-only and refuses when a base
 file exists, so nothing here defers to it: the checks below are Resume's own, and **none of them
-requires a clean tree** — two of the three valid topologies do not have one.
+requires a clean tree** — three of the four valid topologies need not have one.
 
-**The three topologies, and the whole procedure reads against all three.**
+**Four topologies, named rather than numbered, and the whole procedure reads against all four.**
 
 | Topology | `HEAD` | `$BASE..HEAD` | Where the work is |
 |---|---|---|---|
@@ -431,9 +444,11 @@ requires a clean tree** — two of the three valid topologies do not have one.
 | **8a rejected after its commit landed** | a `WIP:` findings commit **above** the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
 | **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
-**The third row is the one every rule has to be re-read against.** `reset --soft` removes the
-`WIP:` chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there
-means the work is staged, not absent.
+**The 8b row is the one every rule has to be re-read against.** `reset --soft` removes the `WIP:`
+chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there means
+the work is staged, not absent. **And the two 8a rows differ from each other**: before its commit
+the history is untouched and the delta is loose, after it the findings commit sits above the chain
+— pass 31 split them because they need different content reconciliation.
 
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
@@ -480,9 +495,10 @@ a value is trustworthy because it passed a check, never because cleanup was skip
 
 - [ ] **Establish how far the implementation got — against the topology, not against the log**
 
-**Read the content, not only the commits.** In the first two topologies that is the commits between
-`$BASE` and `HEAD`. **In the 8b topology it is `git diff --cached "$BASE"`** — the staged tree, plus
-the landed closing commit's tree where one exists. A ticked checkbox is confirmed by the change
+**Read the content, not only the commits.** In the normal and the two 8a topologies that is the
+commits between `$BASE` and `HEAD`, **plus whatever the failed attempt left loose**. **In the 8b
+topology it is `git diff --cached "$BASE"`** — the staged tree, plus the landed closing commit's
+tree where one exists. A ticked checkbox is confirmed by the change
 being *present in that content*, wherever the content lives.
 
 ```bash
@@ -712,7 +728,7 @@ test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "recorded 
 ```
 
 **Re-entry.** `## The four procedures` · Resume validates the existing base, the scratch artifacts
-and how far the implementation got — with its own checks, against all three topologies, and without
+and how far the implementation got — with its own checks, against all four topologies, and without
 requiring a clean tree. **Do not run Preparation on a re-entry**: it refuses as soon as it sees the
 base file, which is exactly what makes this branch reachable.
 
@@ -2579,31 +2595,40 @@ branch file; one branch clean and the other not is not it.
 WIP tip while the repair sits in the worktree — and the final squash then publishes a fix no pass
 reviewed:
 
-**Every pass that does not close ends the same way, whether or not it produced a repair.** Commit
-that pass's findings files and any refreshed records, resolve the new head, **record it**, and issue
-the next pass against exactly that value:
+**Every pass that does not close ends the same way, whether or not it produced a repair — and it
+ends in two steps, in this order.** First record the pass. Then **run it through the ordering this
+change installs, and only its continue result prepares another call.** The plan must not execute a
+loop its own product forbids.
+
+**Step one — record the pass. This commits; it does not authorize anything.**
 
 ```bash
 # Before committing a fix, re-run what the fix could have broken.
 git add -A && git commit -m "WIP: fix <finding>"        # or: "WIP: pass <n> records" where no repair was owed
+```
+
+**Step two — read the pass against the ordering, before any next call exists:**
+
+- **A source block standing** → **wait** for the repair and the reread by the route §A gives. No
+  further pass until that is done.
+- **Any suspension open** — a membership stop, a new-question stop, a two-tell stop, a clearly-stuck
+  surface — → **collect every answer and compose them.** Another pass only where the composition
+  yields **continue**.
+- **A stop answer** → **park**: open, not running, **spending no passes**, restarted only by an
+  explicit later continue. **There is no "commit and carry on" from a stop**, and acceptance
+  criterion 4 requires that parked state to be distinct. **Nothing below runs on this route.**
+- **The clean-completion branch** → **Close**, not another pass.
+- **Continue** → and only then:
+
+```bash
 rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
 git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
 cat .context/loop-rule-reviewed-head
 ```
 
-**Committing the pass is not the same as being allowed to issue the next one.** After recording it,
-**run the pass through the ordering this change installs** — the plan must not execute a loop its own
-product forbids:
-
-- **A source block standing** — wait for the repair and reread by the route §A gives; no further pass
-  until that is done.
-- **Any suspension open** — a membership stop, a new-question stop, a two-tell stop, a clearly-stuck
-  surface. **Collect every answer, compose them, and issue another pass only when the composition
-  yields continue.**
-- **A stop answer** → **park**: open, not running, **spending no passes**, restarted only by an
-  explicit later continue. **There is no "commit and carry on" from a stop**, and acceptance
-  criterion 4 requires that parked state to be distinct.
-- **Only the clean-completion branch enters Close.**
+**The reviewed-head file is written on the continue route alone**, because writing it is what makes
+a next call possible: recording it before the ordering has spoken is how a pass gets issued over a
+standing source block, an unanswered suspension or a parked cycle.
 
 **A non-closing pass that owes no repair still commits.** A Minor-only clean pass below the floor,
 or an answered suspension that changes no artifact, leaves its findings files tracked and dirty —
@@ -2741,8 +2766,11 @@ test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is 
 for f in $FINAL; do git rev-parse "HEAD:$f"; done > .context/loop-rule-committed-blobs
 diff .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
   || { echo "a findings file was rewritten between validation and commit — stop here and run Failure"; exit 1; }
-# Then re-run the findings-file structural check on the committed content, and
-# re-establish that this logical pass is still the eligible one it was judged as.
+# Then re-run the findings-file structural check on the committed content and
+# re-establish this pass's eligibility, per close condition 4's third bullet.
+# Expected: every line before the terminator is a finding line, the terminator
+# is exact, the count matches, both branch files are present, and the pass reads
+# clean-or-zero-finding exactly as it did when issued. Any difference: Failure.
 test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — stop here and run Failure"; exit 1; }
 
 git rev-parse HEAD > .context/loop-rule-reviewed-tip   # the closing tip: 8b's precondition, NOT a reset target
@@ -2759,6 +2787,11 @@ above rather than assumed.
 BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-reviewed-tip)
 test -n "$BASE" && test -n "$TIP" || { echo "BASE or TIP missing — 8a did not complete"; exit 1; }
 test "$(git rev-parse HEAD)" = "$TIP" || { echo "HEAD has moved since 8a — NOT resetting"; exit 1; }
+# Close condition 5 is BOTH: the tip AND a clean tree, checked in THIS invocation.
+# A staged edit made between 8a and 8b — a rewritten findings file included —
+# survives reset --soft, lands in the closing commit, and leaves the tree clean
+# afterwards, so every postcondition passes while unreviewed content ships.
+test -z "$(git status --porcelain)" || { echo "tree not clean at 8b — NOT resetting; stop here and run Failure"; exit 1; }
 git reset --soft "$BASE" || { echo "reset --soft FAILED — stop here and run Failure; do NOT commit"; exit 1; }
 # Re-read the closing message here: it was validated before 8a, 8a ran a commit
 # (hooks can rewrite anything), and .context is ignored, so no porcelain check
