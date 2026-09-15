@@ -13,33 +13,65 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Cycle OPEN and UNCLEAN. The plan stands at `1849164` and that is the anchor** — later commits on
+**Cycle OPEN and UNCLEAN. The plan stands at `2d79ac8` and that is the anchor** — later commits on
 this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
-rather than `HEAD`. Pass 34 reviewed `1849164` and found 1 Blocker, 1 Major, 3 Minors and 1 Nit,
-**all validated, none repaired**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-34.md` holds them.
+rather than `HEAD`. Pass 35 reviewed `2d79ac8` and found **one Major and nothing else**
+(0 Blockers). `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-35.md` holds it.
 
 **Do not start a repair round on your own.** Daniel's assignment of 2026-09-15 ended with a
-checkpoint that supersedes the standing autonomy: *"stop and report, whether clean or unclean. Do
-not begin another repair/review round or implementation."* That checkpoint is spent — it covered one
-revision and one pass, both done — so **the next move is Daniel's word, not an inference.**
+checkpoint: *"After the repairs and verification, run exactly one complete Gate-A plan pass, then
+stop and report regardless of outcome. Do not automatically repair its findings or start
+implementation."* That checkpoint is spent — it covered one bounded repair and one pass, both
+delivered — so **the next move is Daniel's word, not an inference.**
 
-### The four open findings, in the order they cost most
+### The one open finding from pass 35
 
-1. **BLOCKER — step 8a never checks Close condition 3.** It discharges 1, 2 and 4; the index claims
-   8a and 8b both check the message. On a re-entry between 7b and 8a the record commit lands before
-   the message is re-established, and 8b is the first to notice — the exact failure condition 3
-   exists to prevent.
-2. **MAJOR — the porcelain parser mangles two real pathname shapes.** `git status --porcelain -z |
-   tr '\0' '\n' | sed 's/^.\{3\}//'` turns a rename into `p.txt` and a newline-bearing path into two
-   fragments. **Verified by execution, not by reading.**
-3. **MINOR — condition 6 says the landed body is "identical"** where the corrected oracle strips
-   trailing blank lines. Introduced by the bounded revision itself.
-4. **MINOR — step 8 is titled "two invocations" and has four fenced blocks**; **MINOR** — the
-   Architecture paragraph still says every task runs a discriminating pair, which the disposition
-   table replaced; **NIT** — `loop-rule-untouched.tmp` and `loop-rule-baseline-diff.tmp` are written
-   and never removed by the cleanup.
+**MAJOR — carried condition `h3` has no observation.** Passage (h)'s disposition table says `h3` is
+carried, owes a preservation count, and that *"Task 8 derives its fragment before installing item
+7"*. **Task 8 does not.** It names `h4`, `h5` and `h19` as its conditions, derives only `a1`'s
+preservation fragment, and step 4 confirms only `a1`. Row F7 cannot stand in: its OLD spans `h3`
+into changed `h4` wording and is required to reach zero, and its NEW is unconstrained. So item 7
+could drop `an ungated change records it in that commit` from both copies with all fifteen pairs,
+the `a1` check, parity and the battery still green. **Validated against the plan, not taken on
+trust.** It is the cycle's most frequent family — a kept-or-carried condition losing its
+observation, as at passes 10, 15 and 25.
 
-### What the bounded revision did, so it is not undone by accident
+### Still collected and deliberately unrepaired (pass 34's Minors and Nit)
+
+**MINOR** — step 8 is titled "two invocations" and carries four fenced blocks, and the index calls
+the last two "8b blocks"; **MINOR** — the Architecture paragraph still says every task runs a
+discriminating pair, which the disposition table replaced; **NIT** —
+`.context/loop-rule-untouched.tmp` and `.context/loop-rule-baseline-diff.tmp` are written and never
+removed by the cleanup.
+
+### What the second bounded repair did (pass-34 findings 1, 2 and the mechanism behind 3)
+
+**Condition 3 now has a pre-move check.** 8a runs the closing message's reader check as its **last
+precondition**, so nothing has moved if it fails; 8b keeps its revalidation immediately before the
+commit consumes the file. 8a's label and the index row agree with that now.
+
+**The dirty-set check no longer parses pathnames at all.** It asks git, through an exclusion
+pathspec, which paths *outside* the expected pair are dirty, and names only this plan's own slot
+names, which carry no awkward bytes. The record commit's changed-path check uses the same form.
+**Why, observed rather than reasoned:** an untracked file named with a **leading** newline passed the
+old parser completely invisibly, and a rename's original was reported as `cked.txt`.
+
+**Condition 6 keeps byte equality and is now true as stated.** The body is read with
+`--pretty=format:%B` — the `%B` spelling appends a newline the source has none of — and the closing
+commit carries `--cleanup=verbatim`, because git's default cleanup for `-F` strips trailing
+whitespace and collapses blank runs, which would have re-created the same false rejection. The
+trailing-blank normalizer, its `awk` helper and its process substitution are gone, so **no step-8
+block needs `bash`** any more. `--cleanup=verbatim` was checked against `is_wip_commit`: it does not
+match.
+
+**Verified by extraction and execution, not by reading:** the four step-8 blocks were pulled from
+the plan verbatim and run under `sh`, `dash` and `bash` — 29 checks each, all green. The ordinary
+close plus eleven rejection cases: missing message before 8a, extra ordinary path, leading-newline
+path, staged rename, staged modification, one findings file only, `HEAD` moved between 8a and 8b,
+and hook rewrites that drop, add and change a record line. **A harness bug made the first run report
+false "ok"s** (a relative path after `cd`) — read the failure column, not the tally.
+
+### What the first bounded revision did, so it is not undone by accident
 
 Each closing condition had been stated **three times** — a Close condition, a command in Task 15
 step 8, and prose beside that command. The third copy is gone. **`### Where each operational
@@ -49,13 +81,18 @@ naming the condition it discharges; Task 0 step 1 and accounting row 7 cite rath
 
 **One correction, found by running it:** condition 6 compared bytes, and `git log --pretty=%B` adds
 one trailing newline the source file has none of — **it rejected a correct close, so the plan had no
-working success path.** Fixed and checked in four directions.
+working success path.** Its first fix normalized trailing blanks, which pass 34 caught as making the
+condition's own predicate false; the second repair replaced it with exact extraction (see above).
 
-**Verified in a disposable repo:** the whole of step 8 end to end. **Unverified:** every reader check,
-Failure and Resume — they need a real failure or a real interruption.
+**Verified in a disposable repo:** the whole of step 8 end to end, twice — after each bounded
+repair. **Unverified:** every reader check, and the Failure and Resume procedures. **They do not need
+a real incident**, though: controlled failures and interruptions in the disposable repo are enough,
+and that is the cheapest unclaimed verification left in this cycle. An earlier revision of this
+record said they needed a real failure; that was wrong.
 
-**The plan's shell needs `sh` or `bash`, never `zsh`** — `$FINAL` relies on word-splitting and the
-body comparison uses process substitution.
+**The plan's shell needs `sh`, `dash` or `bash`, never `zsh`** — `$FINAL` relies on word-splitting,
+which `zsh` does not do for unquoted parameters. **`bash` is no longer required anywhere in step 8**;
+the process substitution that once forced it is gone.
 
 ### How to run a pass, if Daniel asks for one
 
@@ -144,6 +181,8 @@ worth checking before a pass rather than after.
 | 23 | 9ced53c | 10→**5** | 5→**3** | 3→**2** | yes | **all five in Task 0 / Task 15 again.** A symbolic value in the base file; the restore target chosen by which tip file exists, which rewinds past a second candidate's repair; the failure capture covering tracked content only while the closure inputs are ignored paths; pass 22's diff-status classification written as prose and not as code; the close procedure's "check all six before moving `HEAD`" applied to two checks that run after a move |
 | — | — | — | — | — | — | **BOUNDED REVISION**, Daniel's assignment after pass 33. The third statement of every closing condition removed; `### Where each operational condition is defined` gives one home each; step 8's shell kept and annotated with the condition it discharges. Condition 6's landed-body check **corrected** — it compared bytes where `%B` adds a trailing newline, so it rejected a *correct* close. Whole close path verified end to end in a disposable repo. Commit `1849164` |
 | 34 | 1849164 | **6** | **1** | **1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** 8a discharges conditions 1, 2, 4 and never checks condition 3, while the index claims it does; the porcelain parser mangles a rename (`p.txt`) and a newline pathname (two fragments), verified by execution; condition 6 says "identical" where the corrected oracle normalizes trailing blanks; step 8 is titled "two invocations" and has four fenced blocks; the Architecture paragraph still says every task runs a discriminating pair; the two `.tmp` names are not in the cleanup list |
+| — | — | — | — | — | — | **SECOND BOUNDED REPAIR**, Daniel's assignment after pass 34, on his upstream reviewer's recommendation. Pass-34 findings 1 and 2 repaired plus the extraction mechanism behind 3; findings 4–6 left collected. Condition 3 gains a pre-move check in 8a; the dirty set is asked of git through an exclusion pathspec instead of parsed; condition 6 keeps byte equality via `--pretty=format:%B` + `--cleanup=verbatim`, and the normalizer, the `awk` helper and the process substitution are gone. Step 8 re-run end to end under `sh`, `dash` and `bash`, 29 checks each. Commit `2d79ac8` |
+| 35 | 2d79ac8 | 6→**1** | 1→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** One Major: carried `h3` owes a preservation count and passage (h) says Task 8 derives its fragment, but Task 8 owns only `h4`/`h5`/`h19` and derives only `a1`, so item 7 could drop `an ungated change records it in that commit` from both copies undetected. **Both pass-34 repairs held** — nothing re-raised against 8a, the dirty set or condition 6. One tell (instrument cluster); no mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
