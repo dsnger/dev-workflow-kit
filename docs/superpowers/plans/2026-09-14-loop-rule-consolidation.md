@@ -211,7 +211,7 @@ independent reader did.
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions | **kept, and split by entry**: Preparation compares them **at `HEAD`**, because a first entry has no recorded base; **Resume compares them at `$BASE`**, because a Gate-B fix may legitimately have changed `HEAD`'s copy in a `WIP:` snapshot. An earlier table row claimed Preparation did the base comparison, which it never could |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
-| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test.** It is the *normal pre-close* topology. Three others are reachable and none makes the base stale: the handoff's rejected commit above the cycle's; `HEAD` at the base with the implementation in the index; and target §A3's accidental non-`WIP` commit or amend mid-cycle. **Staleness is decided by ancestry and by whether the history is this cycle's**, never by a commit subject |
+| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test.** Resume's four topologies are the model: *normal* (this run's `WIP:` commits, §A3's stray commit or amend nested inside it); *8a rejected before its commit landed* (history untouched, the delta loose in index or worktree); *8a rejected after it landed* (a findings commit above the chain, plus any delta); and *8b rejected* (`HEAD` at the base with the work staged, **or** one commit parented by the base where the closing commit landed and a postcondition refused it). **None makes the base stale**, and staleness is decided by ancestry and provenance, never by a commit subject |
 | 8 | `$BASE` persisted to a file; every consumer guards it non-empty | **kept**, and **repaired**: three concrete blocks read it without the guard while this row claimed otherwise — the baseline extraction, Task 10's hook diff, and the first Gate-B call. The guard is in each of them now (pass 22) |
 | 9 | The five regions are located by anchor, one hit per pattern per file | **kept**, same shell — preparation |
 | 10 | Spans are **derived** from replacement extents, never hand-written | **kept** — the rule, unchanged |
@@ -349,10 +349,16 @@ an unapproved edit to a spec that the gates already closed.
    reset unless `HEAD` is still exactly it, which is how a commit landing between the two
    invocations is caught. Nothing in this plan resets *to* it.
 5. **The tree is clean**, and `HEAD` is still the closing tip, when the closing invocation begins.
-6. **After the closing commit**: its subject is not a snapshot, and the tree is clean.
+6. **After the closing commit**, four things: its **subject is not a snapshot**; its **parent is
+   `$BASE`**; the **tree is clean**; and its **body is identical to the revalidated closing-message
+   file**. The last is not decoration — `prepare-commit-msg` and `commit-msg` hooks rewrite git's
+   copy *after* `-F` has read it, so a validated file proves nothing about what landed, and a
+   dropped provenance line, curve, exception marker or evidence entry would pass every other check.
+   **Any of the four failing is a Failure handoff.**
 
-**How success is recognised.** A single commit at `HEAD` whose subject is the real message and whose
-parent is `$BASE`. **No tree comparison** — target §I parks a Gate-B tree-equality condition on
+**How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
+parent is `$BASE`, **whose body is identical to the revalidated closing message**, with a clean tree
+behind it. **No tree comparison** — target §I parks a Gate-B tree-equality condition on
 Daniel's decision of 2026-09-13, and an earlier draft of this line added one anyway, which would
 have made the executor either invent an out-of-scope closure check or declare success without
 establishing its own stated predicate. Then, and only then, the scratch
@@ -453,7 +459,8 @@ the history is untouched and the delta is loose, after it the findings commit si
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
 ```bash
-test -s .context/loop-rule-base || { echo "no base recorded — this is a first entry, run Preparation"; exit 1; }
+test -e .context/loop-rule-base || { echo "no base file — this is a first entry, run Preparation"; exit 1; }
+test -s .context/loop-rule-base || { echo "base file is EMPTY — inspect, delete deliberately, record why, re-record from the true starting commit"; exit 1; }
 BASE=$(cat .context/loop-rule-base)
 test "${#BASE}" -eq 40 || { echo "base is not a full 40-character object name"; exit 1; }
 case "$BASE" in *[!0-9a-f]*) echo "base is not an object name: $BASE"; exit 1 ;; esac
@@ -704,12 +711,20 @@ preservation fragments that an earlier draft chose afterwards.
 **The base file decides it, and nothing else does:**
 
 ```bash
-if [ -s .context/loop-rule-base ]; then
-  echo "base recorded — this is a RE-ENTRY: run Resume, not Preparation"
+if [ -e .context/loop-rule-base ]; then
+  echo "a base file exists — this is a RE-ENTRY: run Resume, not Preparation"
 else
-  echo "no base — this is a FIRST ENTRY: run Preparation, then record the base below"
+  echo "no base file — this is a FIRST ENTRY: run Preparation, then record the base below"
 fi
 ```
+
+**The route is decided by the path existing, not by it being non-empty.** An interruption between
+the redirection and the write leaves an **empty** file, and an `-s` test calls that a first entry
+while Preparation refuses because the path is there — a state the plan could neither initialize nor
+resume. **An empty or malformed base file is Resume's**, and Resume fails it on the shape checks; the
+transition from there is to **inspect it, delete it deliberately, record why, and re-record from the
+true starting commit** — or, where what it should have held cannot be established, to hand it over
+rather than guess.
 
 **First entry.** `## The four procedures` · Preparation holds the checks and the shell: branch,
 clean tree, no base file, `ba15e83` an ancestor, and the three approved inputs compared by blob **at
@@ -1101,10 +1116,12 @@ but the rule is the behaviour and a task that stops recording stops owing it.
 
 **A task-number list here was wrong twice** — it named Tasks 3, 4, 6, 7 and 8 while Tasks 5, 9, 10
 and 11 also record — and a stale list is the same defect as a stale count. **The cost of the
-omission is concrete:** the evidence stays dirty after the task commits, so Task 0's re-entry path,
-which requires a clean tree, cannot be used after an interruption; and if execution continues, that
-task's evidence is swept into a later unrelated commit rather than the independently reviewable
-snapshot this plan promises.
+omission is concrete:** the evidence stays out of its own task's `WIP:` snapshot, so the reviewed
+range does not hold it where the task claims, and if execution continues it is swept into a later
+unrelated commit rather than the independently reviewable snapshot this plan promises. **Not a
+clean-tree argument** — Resume requires no clean tree, and three of its four topologies do not have
+one; an earlier draft said re-entry needs one, which would have rejected the very states Resume
+exists to reconcile.
 
 Named `WIP:` because Task 15 runs Gate B over the whole change and closes it with **one
 `git reset --soft "$BASE"` and a single commit**, per the Global Constraints and Task 15 step 8 —
@@ -2709,10 +2726,13 @@ The message carries, in this order:
 3. any **human-exception record**, and beside it the skip reason if a cycle was skipped;
 4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it — and
    **if it changed, this candidate is over.** The final reviewer judged the entry it was handed
-   verbatim; a different entry in the closing commit is evidence no pass covered. Commit the change,
-   resolve and record the new head, and issue another candidate pass. **Revalidate before recording
-   the candidate head and issuing the pass**, so that in the ordinary case this branch is never
-   reached.
+   verbatim; a different entry in the closing commit is evidence no pass covered. **Commit the
+   change, then route the pass through step 7's ordering like any other non-closing pass** — a
+   standing source block, an open suspension or a stop answer binds here exactly as it does there,
+   and **only its continue result records a new reviewed head and issues another candidate.** An
+   earlier draft sent this branch straight to a new call, which is the plan's own Gate-B loop
+   stepping over the ordering it installs. **Revalidate before recording the candidate head and
+   issuing the pass**, so that in the ordinary case this branch is never reached.
 
 **Items 1, 2 and 4 are owed unconditionally; item 3 is owed only where such a record exists.**
 Confirm the file carries the three, and either the applicable exception records or **the literal
@@ -2802,12 +2822,19 @@ test -s .context/loop-rule-closing-msg || { echo "closing message missing or emp
 git commit -F .context/loop-rule-closing-msg
 ```
 
-**Then check the result. On a failed `git commit`, or on either check below failing, run
+**Then check the result. On a failed `git commit`, or on ANY of the four checks below failing, run
 `## The four procedures` · Failure** — which stops every further mutating action, reports the failed
 step and the observed state, and hands over. **It does not reset, re-commit or clean up**, and the
-`rm -f` below is therefore unreachable on that path:
+`rm -f` below is therefore unreachable on that path.
+
+**This block is its own shell invocation, so it re-reads `$BASE`.** An earlier draft compared
+`HEAD^` against a variable assigned in the previous fence, where it is empty — which made a
+**correct** closing commit fail the parent check and enter Failure every time, leaving the plan with
+no successful close path at all:
 
 ```bash
+BASE=$(cat .context/loop-rule-base)
+test -n "$BASE" || { echo "BASE empty or unreadable — cannot verify the close"; exit 1; }
 case "$(git log -1 --pretty=%s)" in
   [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — stop here and run Failure"; exit 1 ;;
 esac
@@ -2821,7 +2848,7 @@ diff .context/loop-rule-closing-msg .context/loop-rule-landed-msg \
   || { echo "the committed body differs from the validated message — stop here and run Failure"; exit 1; }
 ```
 
-**Both clean, and only then:**
+**All four pass — subject, parent, clean tree, landed body — and only then:**
 
 ```bash
 rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule-reviewed-head \
