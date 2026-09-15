@@ -282,26 +282,30 @@ of them touched this guard.
 
 ### Preparation — before any task edits a file
 
+**This procedure is for a FIRST entry, on a clean tree.** A re-entry runs **Resume** instead, which
+requires no clean tree and mutates nothing — the handoff's valid topologies include `HEAD` at the
+base with the whole implementation **staged**, and an unconditional clean-tree test would make that
+state permanently unresumable through this plan's own success path.
+
 **What is checked.** The branch; a clean tree; that `ba15e83` is an ancestor; that the three
-approved inputs still hold their approved blobs **at the recorded base**; that the recorded base, if
-one exists, is an **ancestor** of `HEAD` and belongs to this cycle. **Ancestry and provenance decide
-that, never a commit subject** — §A3's accidental non-`WIP` commit and the handoff's rejected close
-both leave the base valid, and the commits after it are a state to inspect rather than a verdict.
+approved inputs still hold their approved blobs at the revision the tasks are derived against; and
+that **no base file exists yet** — if one does, this is a re-entry and Resume owns it.
 
 ```bash
 test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation || { echo "wrong branch"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree not clean"; exit 1; }
+test -z "$(git status --porcelain)" || { echo "tree not clean — if this is a re-entry, run Resume"; exit 1; }
+test ! -e .context/loop-rule-base || { echo "a base is already recorded — this is a re-entry, run Resume"; exit 1; }
 git merge-base --is-ancestor ba15e83 HEAD || { echo "ba15e83 not in this history"; exit 1; }
-REF=$( [ -s .context/loop-rule-base ] && cat .context/loop-rule-base || git rev-parse HEAD )
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  test "$(git rev-parse "$REF:$p")" = "$(git rev-parse "ba15e83:$p")" \
-    || { echo "$p differs at $REF from its approved version"; exit 1; }
+  test "$(git rev-parse "HEAD:$p")" = "$(git rev-parse "ba15e83:$p")" \
+    || { echo "$p differs at HEAD from its approved version"; exit 1; }
 done
 ```
 
-**How success is recognised.** Every line above exits 0, and `.context/loop-rule-base` holds a
-40-character object name that is an ancestor of `HEAD`.
+**How success is recognised.** Every line above exits 0. **No claim is made here about a recorded
+base**, because on a first entry there is none — Task 0 step 1 records it immediately afterwards,
+and validating it is Resume's job on every later entry.
 
 **On deviation.** Stop. Each of these has a different fix and none of them is "retry": a wrong
 branch is a checkout, a dirty tree is a decision about uncommitted work, a differing input blob is
@@ -417,9 +421,17 @@ and records the closing commit carries are the ones a pass actually validated.
 **What is checked.** Whether the recorded base is this run's; whether the scratch artifacts belong
 to it and are complete; and how far the implementation got.
 
-- **The base**, by the preparation procedure's checks. **A base that is not an ancestor of `HEAD` is
-  stale** — delete it deliberately, record why, and re-record from the true starting commit.
-  **Never overwrite one you did not just write.**
+- **The base**, by its **own** checks, not Preparation's — Preparation is first-entry-only and
+  requires a clean tree, which the handoff's staged-index topology can never have. Read the file,
+  require a full 40-hex object name that resolves to itself as a commit, and require it to be an
+  **ancestor of `HEAD`**. **A base that is not an ancestor is stale.** **Never overwrite one you did
+  not just write.**
+
+  **"Its history contains no part of this cycle" is NOT a staleness test** — in the post-reset
+  topology `HEAD` *is* the base and every cycle commit has been squashed away into the index, so
+  that predicate is necessarily true of a perfectly valid state. **Replace a base only on
+  affirmative evidence of another run**: it is not an ancestor of `HEAD`, or the recorded value
+  names a commit this branch never contained.
 
   **A non-`WIP` commit after the base does not make it stale, and inferring that from the subject
   is wrong.** Target §A3 names an accidental non-`WIP` commit mid-cycle as a **reachable state**: it
@@ -451,15 +463,23 @@ stale:
 **In both, keep the original base and change nothing until a person has chosen a §A route.** Read
 `HEAD`, the index, the worktree and the cycle values together — `git status --porcelain
 --untracked-files=all`, `git diff --cached --stat`, `git log --oneline -3` — and hand that reading
-over. **There is no subject-based stale-base rule left**: replace the base only on evidence it
-belongs to another run — it is not an ancestor, or its history contains no part of this cycle.
+over. **There is no subject-based stale-base rule left**, and no absence-of-cycle-commits rule
+either: the index-only topology has neither. Replace the base only on the affirmative evidence
+named above.
 
 **How success is recognised.** A base that passes preparation, artifacts whose `base` line matches
 it and whose coverage is complete, and a task list whose ticked entries match the commits present.
 
-**On deviation.** An artifact that fails either test is **deleted and rebuilt from the `$BASE`
-blobs** — never reused, and never repaired in place. A same-base partial file is the one shape a
-`base` line alone cannot catch, which is why the completeness predicate exists.
+**On deviation, and the answer differs by why you are here.** An artifact that fails either test is
+**deleted and rebuilt from the `$BASE` blobs** — never reused, never repaired in place. A same-base
+partial file is the one shape a `base` line alone cannot catch, which is why the completeness
+predicate exists.
+
+**But not while a failed close is waiting on a person.** In either handoff topology the rule is
+change nothing until a §A route is chosen, and an unconditional delete-and-rebuild here would
+destroy the scratch state the handoff deliberately preserved — before anyone decided whether to
+retry, owe a pass, or park. **Report the invalid artifact and leave it.** Rebuild it once the chosen
+route authorizes continuing, and record why the old one is no longer evidence.
 
 **Steps that describe the tree at `$BASE` are validated on re-entry, not re-run against the
 worktree.** After a text task the worktree carries this plan's own edits, and rebuilding the
@@ -680,7 +700,7 @@ case "$BASE" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
 test "${#BASE}" -eq 40 || { echo "recorded base is not a full 40-character object name"; exit 1; }
 test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "recorded base does not resolve to itself as a commit"; exit 1; }
 git merge-base --is-ancestor "$BASE" HEAD || { echo "recorded base is NOT an ancestor of HEAD — stale"; exit 1; }
-git log --oneline "$BASE"..HEAD    # expect nothing, or only this run's WIP: commits
+git log --oneline "$BASE"..HEAD    # READ this; it does not decide staleness — see below
 ```
 
 **Re-running Task 0 after a partial implementation must not re-record the base.** It would capture
@@ -688,9 +708,11 @@ the current WIP tip, and both Gate B's range and the final reset would then star
 made so far — prompt and hook changes squashed into the closing commit without entering a review
 range. **A pre-existing value is validated, never trusted**: `git log "$BASE"..HEAD` does not test
 ancestry, which is how a base from an abandoned branch passes; `merge-base --is-ancestor` is the
-test the sentence names. Anything other than this run's `WIP:` commits in that log means the file is
-stale — delete it deliberately, record why, and re-record from the true starting commit. **`## The
-four procedures` · Resume** is what to do next in that case.
+test the sentence names. **What the log shows does not decide staleness** — §A3's accidental
+non-`WIP` commit and the handoff's rejected close both leave this base valid, and the post-reset
+topology shows an empty log with the whole cycle in the index. **Anything other than this run's
+`WIP:` commits is a state to read, not a verdict: hand it to `## The four procedures` · Resume**,
+which replaces a base only on affirmative evidence it belongs to another run.
 
 **Persist it to a file, not to a shell variable.** Each fenced block runs in its own shell
 invocation, so a `BASE=` assignment here is gone by the next task and every parent-tree count would
@@ -783,7 +805,7 @@ its consumers skip, which is what the per-condition list exists to prevent:
 ```
 base<TAB><the 40-character object name this map was built from>
 span<TAB><start anchor><TAB><end anchor><TAB><file>
-cond<TAB><condition id><TAB><fragment><TAB><file><TAB><expected parent><TAB><expected worktree>
+cond<TAB><condition id><TAB><P id><TAB><file><TAB><expected parent><TAB><expected worktree>
 ```
 
 Tab-separated, one record per line, the leading keyword distinguishing them. **The `base` line is
@@ -792,8 +814,11 @@ expected pair is `1<TAB>1`; the shape carries the values rather than assuming th
 dropped condition recorded here later needs no new format. **Both consumers validate every `cond`
 row**, not only the `span` rows.
 
-**And every `cond` fragment is appended to the fragment table as well**, under the next free `P` id,
-with the map's row citing that id. The table is where every pre-existing fragment lives, and Task 0
+**The fragment itself lives in the fragment table, and the map's row carries only its `P` id** —
+that is the `<P id>` field above, and both consumers resolve the text by looking the row up there.
+**The map never stores the fragment text**, because two copies of an authored fragment is the
+second-copy defect this cycle spent most of its findings on. Append the row to the table first,
+under the next free `P` id, then write the `cond` line citing it. The table is where every pre-existing fragment lives, and Task 0
 step 4's committed sweep runs the three conditions over **table rows** — a fragment that exists only
 in this ignored scratch file is outside that sweep, so a wrong one could certify a kept condition
 and be reused after an interruption on the strength of parsing and coverage alone.
@@ -2590,8 +2615,10 @@ to pass CI, or an invariant-11 violation, published by a cycle that closed clean
   **Only a clean response issued against that exact `HEAD` closes the cycle.** A pass that was
   clean against an earlier tree, plus records committed afterwards, closes on a tree no pass
   reviewed — which is the same defect as reviewing the wrong range, arrived at from the other end.
-- **One thing cannot exist before that pass: the pass's own findings file.** It is therefore the
-  **sole permitted post-review addition**, and step 8 asserts that it is the only one — every other
+- **One thing cannot exist before that pass: the pass's own findings files.** A `full` Gate-B pass
+  writes **two** — the spec and quality branch files — and the close's dirty-set check requires both,
+  so the **pair** is the sole permitted post-review addition, and step 8 asserts that it is the only
+  one — every other
   path must already be in the reviewed `HEAD`. `.context/` moves none of the hook's fingerprint
   inputs, so the file changes nothing the review looked at; what would be wrong is a *second*
   delta riding along beside it.
@@ -2706,9 +2733,11 @@ step and the observed state, and hands over. **It does not reset, re-commit or c
 `rm -f` below is therefore unreachable on that path:
 
 ```bash
-git log -1 --pretty=%s                      # expect the real message, not a snapshot
+case "$(git log -1 --pretty=%s)" in
+  [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — stop here and run Failure"; exit 1 ;;
+esac
 test "$(git rev-parse HEAD^)" = "$BASE" || { echo "closing commit's parent is not \$BASE — stop here and run Failure"; exit 1; }
-git status --porcelain                      # expect empty
+test -z "$(git status --porcelain)" || { echo "tree dirty after the close — stop here and run Failure"; exit 1; }
 # The COMMIT BODY, not the source file: prepare-commit-msg and commit-msg hooks
 # rewrite git's copy after -F has read it, so the validated file proves nothing
 # about what landed.
@@ -2726,7 +2755,9 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
       .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg
-ls .context/loop-rule-* 2>/dev/null && { echo "cycle scratch survives the close — list it above"; exit 1; }
+if ls .context/loop-rule-* >/dev/null 2>&1; then
+  echo "cycle scratch survives the close:"; ls .context/loop-rule-*; exit 1
+fi
 ```
 
 **Every `loop-rule-*` scratch file goes, and the `ls` is what makes "the scratch files are removed"
