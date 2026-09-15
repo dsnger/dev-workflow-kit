@@ -268,7 +268,7 @@ independent reader did.
 | 30 | The final pass's own findings files are the sole permitted post-review addition | **kept** — the rule, unchanged |
 | 31 | The closing message is rebuilt whole; exactly one provenance line and one curve | **kept** — the rule, unchanged |
 | 32 | Every owed record is present before the close | **kept** — the rule, unchanged |
-| 33 | The dirty set is exactly the final pass's findings files, read from every porcelain record | **kept** as the close procedure's check |
+| 33 | The dirty set is exactly the final pass's findings files, read from every porcelain record | **kept** as the close procedure's check, and **corrected**: it asks git which paths outside the expected pair are dirty instead of splitting status output into pathnames, which dropped a newline-bearing path invisibly and mangled a rename's second field (pass 34) |
 | 34 | The record commit's changed-path set equals those files | **kept** as the close procedure's check |
 | 35 | The tree is clean after the record commit | **kept** as the close procedure's check |
 | 36 | `HEAD` equals the reviewed tip before the reset | **kept** as the close procedure's check, and **corrected**: the reviewed *head* and the closing *tip* are two values, not one (pass 21). With row 40 dropped the tip is **only** this precondition — nothing resets to it |
@@ -285,8 +285,11 @@ defined. Two rationales that existed only in that prose were moved into the cond
 to: `reset --soft`'s index behaviour into condition 5, and why the dirty set can be exact into
 condition 2. **The one correction is condition 6's landed-body check**, which compared bytes where
 `git log --pretty=%B` adds a trailing newline the source file has none of — it rejected a *correct*
-close, and the comparison now strips trailing blank lines on both sides. Verified in a disposable
-repository, in both directions.
+close. **The predicate is unchanged and is now true as stated**: the body is extracted with
+`--pretty=format:%B`, which emits the stored message alone, and the closing commit is made with
+`--cleanup=verbatim`, so git stores the validated bytes rather than its own tidied copy. Verified in
+a disposable repository, in both directions. An intermediate revision normalized trailing blank
+lines on both sides instead; that made the check's own predicate false and is gone.
 
 **Two conditions are dropped, 20 and 40, and each is named as a drop rather than lost.** Condition
 20 is replaced by a stronger obligation. **Condition 40 is dropped outright** — a guard this plan
@@ -360,12 +363,17 @@ an unapproved edit to a spec that the gates already closed.
    call, in `.context/loop-rule-reviewed-head`. **That is the reviewed head.** It is not the same
    value as the **closing tip** below, and conflating them is how an unreviewed commit reaches the
    close.
-2. **The only thing dirty is the candidate pass's own findings files** — read from every porcelain
-   record, not from two status codes, because a staged tracked modification is invisible to a filter
-   that reads only `??` and `A  `. **The set can be exact because step 7 commits every record this
-   plan collects before the candidate pass is issued**; anything else uncommitted here arrived after
-   the review and no pass has seen it. A full Gate-B pass writes **two** files, so the pair is what
-   is expected.
+2. **The only thing dirty is the candidate pass's own findings files** — every record counts, not
+   two status codes, because a staged tracked modification is invisible to a filter that reads only
+   `??` and `A  `. **And the check does not split git's output into pathnames at all**: a pathname
+   may contain a newline and a rename record carries a second, prefix-less path, so a hand-rolled
+   split can mangle a name or drop a dirty path entirely — an extra file whose name begins with a
+   newline passed such a parser invisibly, observed in a disposable repository. **Ask git which
+   paths outside the expected pair are dirty**, naming only the two expected paths, which are this
+   plan's own slot names and carry no such bytes. **The set can be exact because step 7 commits
+   every record this plan collects before the candidate pass is issued**; anything else uncommitted
+   here arrived after the review and no pass has seen it. A full Gate-B pass writes **two** files,
+   so the pair is what is expected.
 3. **The closing message is complete** — rebuilt whole, exactly one provenance line, exactly one
    curve, every owed evidence entry, and either the applicable human-exception records or
    `Human exceptions: none`. **This is checked here, before anything moves**, because an incomplete
@@ -2800,7 +2808,8 @@ them, each block naming its condition; **the conditions are the obligation and t
 to run them** — where the observed state is not one it expects, read the state and pick the
 operation, rather than extending the block.
 
-**8a — record the candidate pass's findings files. Discharges conditions 1, 2 and 4.**
+**8a — record the candidate pass's findings files. Discharges conditions 1, 2, 3 (its pre-move
+check) and 4.**
 
 ```bash
 BASE=$(cat .context/loop-rule-base)
@@ -2811,21 +2820,36 @@ test -n "$BASE" && test -n "$HEADREV" || { echo "BASE or reviewed head missing";
 test "$(git rev-parse HEAD)" = "$HEADREV" || { echo "HEAD is not the head the candidate pass was issued against"; exit 1; }
 
 # Condition 2. NONCE and P are this cycle's nonce and the candidate pass number,
-# the same two the call's slot paths were built from.
+# the same two the call's slot paths were built from. The exclusion pathspec is
+# condition 2's "ask git which paths outside the expected pair are dirty".
 NONCE=<this cycle's nonce>; P=<the candidate pass number>
 FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
-expected=$(printf '%s\n' $FINAL | sort)
-actual=$(git status --porcelain -z | tr '\0' '\n' | sed -n 's/^.\{3\}//p' | sed '/^$/d' | sort)
-test "$expected" = "$actual" || { echo "dirty set is not exactly this pass's findings files:"; git status --porcelain; exit 1; }
+set --
+for f in $FINAL; do set -- "$@" ":(exclude)$f"; done
+for f in $FINAL; do
+  test -n "$(git status --porcelain --untracked-files=all -- "$f")" \
+    || { echo "this pass's findings file is not dirty: $f"; exit 1; }
+done
+test -z "$(git status --porcelain -z --untracked-files=all -- "$@")" \
+  || { echo "something outside this pass's findings files is dirty:"; git status --porcelain --untracked-files=all; exit 1; }
+
+# Condition 3, its pre-move check — the last precondition, so nothing has moved if
+# it fails. Reader check on the message's records; the expected result is
+# condition 3's. 8b revalidates it immediately before the commit consumes it.
+test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty"; exit 1; }
 
 # Condition 4, first bullet: pin the validated blobs before staging.
 for f in $FINAL; do git hash-object "$f"; done > .context/loop-rule-final-blobs
 # shellcheck disable=SC2086
 git add $FINAL
 git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — run Failure"; exit 1; }
-test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" \
-  || { echo "record commit changed paths beyond this pass's findings files — run Failure"; exit 1; }
 test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
+git diff --quiet "$HEADREV" HEAD -- "$@" \
+  || { echo "record commit changed paths beyond this pass's findings files — run Failure"; exit 1; }
+for f in $FINAL; do
+  git diff --quiet "$HEADREV" HEAD -- "$f" \
+    && { echo "record commit did not carry $f — run Failure"; exit 1; }
+done
 
 # Condition 4, second bullet.
 for f in $FINAL; do git rev-parse "HEAD:$f"; done > .context/loop-rule-committed-blobs
@@ -2841,8 +2865,8 @@ test -z "$(git status --porcelain)" || { echo "tree not clean after the record c
 git rev-parse HEAD > .context/loop-rule-reviewed-tip
 ```
 
-**8b — reset and close. A separate invocation, carrying no `-m` option at all. Discharges conditions
-3, 5 and 6.**
+**8b — reset and close. A separate invocation, carrying no `-m` option at all. Discharges condition
+3's revalidation and conditions 5 and 6.**
 
 ```bash
 BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-reviewed-tip)
@@ -2857,7 +2881,10 @@ git reset --soft "$BASE" || { echo "reset --soft FAILED — run Failure; do NOT 
 # Condition 3's revalidation: re-read the message here, immediately before it is
 # consumed. Reader check on its records; the expected result is condition 3's.
 test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty — run Failure"; exit 1; }
-git commit -F .context/loop-rule-closing-msg
+# `--cleanup=verbatim` so the stored body is the validated bytes: git's default
+# cleanup for -F strips trailing whitespace and collapses blank runs, and
+# condition 6 compares bytes. It carries no `-m`, so `is_wip_commit` still misses it.
+git commit --cleanup=verbatim -F .context/loop-rule-closing-msg
 ```
 
 **Condition 6, in its own invocation — which is why it re-reads `$BASE`.** Every fenced block here is
@@ -2871,16 +2898,13 @@ case "$(git log -1 --pretty=%s)" in
 esac
 test "$(git rev-parse HEAD^)" = "$BASE" || { echo "closing commit's parent is not \$BASE — run Failure"; exit 1; }
 test -z "$(git status --porcelain)" || { echo "tree dirty after the close — run Failure"; exit 1; }
-git log -1 --pretty=%B > .context/loop-rule-landed-msg
-# `%B` emits the body plus one trailing newline the source file does not carry,
-# so a byte-for-byte diff rejects a CORRECT close. Compare with trailing blank
-# lines stripped from both sides; a rewritten, added or dropped line still
-# differs. Verified both ways in a disposable repository.
-strip_trailing_blanks() {
-  awk '{ l[NR]=$0 } END { n=NR; while (n>0 && l[n]=="") n--; for(i=1;i<=n;i++) print l[i] }' "$1"
-}
-diff <(strip_trailing_blanks .context/loop-rule-closing-msg) \
-     <(strip_trailing_blanks .context/loop-rule-landed-msg) \
+# `--pretty=format:%B` emits the stored message alone; the `%B` spelling appends a
+# trailing newline the source file has none of, which rejected a CORRECT close.
+# 8b's `--cleanup=verbatim` is the other half — without it git stores its own
+# tidied copy. Both observed in a disposable repository, so this diff is the
+# byte equality condition 6 states, not a normalized stand-in for it.
+git log -1 --pretty=format:%B > .context/loop-rule-landed-msg
+diff .context/loop-rule-closing-msg .context/loop-rule-landed-msg \
   || { echo "the committed body differs from the validated message — run Failure"; exit 1; }
 ```
 
@@ -2889,9 +2913,9 @@ beside it rely on the unquoted variable **word-splitting into two paths** — wh
 `shellcheck disable=SC2086` is there — and `zsh` does not split unquoted parameters by default, so
 the whole string is taken as one filename and every command fails on a path that does not exist.
 **Observed, not assumed**: the first verification run of this block was made under `zsh` and failed
-exactly that way. The process substitution above also needs `bash`; `sh` on a system where it is
-`dash` has none, so use `bash` for that block or write the two normalized copies to temporary
-files first.
+exactly that way. **Nothing in step 8 needs `bash` specifically** — an earlier revision compared the
+two message copies through process substitution, which `dash` has none of; the comparison now reads
+two ordinary files.
 
 **All four pass, and only then the cleanup Close's success recognition names:**
 
