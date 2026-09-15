@@ -310,9 +310,19 @@ files are removed.
 commit must not share a command string with it, or the hook reads the close as cycle-internal and
 carries this cycle's count and fingerprint into the next.
 
-**On deviation at any of the six.** Stop **before** moving `HEAD`. Every one of these is checkable
-while the repository is still in a state the plan understands, and that is the whole reason they
-come before the reset.
+**Which of the six are preconditions and which are postconditions**, because they do not all come
+before a move and an earlier draft said they did:
+
+- **1, 2 and 5 are preconditions** — checkable while nothing has moved. **On deviation, stop; no
+  restoration is owed**, because nothing was changed.
+- **3, 4 and 6 straddle or follow a move** — 3 makes the record commit, 4 reads the state it left,
+  6 reads the state after the closing commit. **On deviation, run `## The four procedures` ·
+  Failure** against the phase's restore target: `loop-rule-reviewed-head` for a rejection at 3 or 4,
+  `loop-rule-reviewed-tip` for one at 6.
+
+**Stopping with a rejected commit at `HEAD`, or with the soft-reset index still live, is not an
+outcome this procedure allows** — that is the state a retry cannot start from, and it is exactly
+what "stop before moving `HEAD`" produced when applied to a check that runs after one.
 
 ### Failure — the closing act did not complete
 
@@ -331,20 +341,39 @@ restore point — because it rewrites the index from the target commit and leave
 is the worktree half.
 
 ```bash
-git stash create > /dev/null 2>&1 || true   # no-op on an empty delta
 git diff --cached > .context/loop-rule-failed-index.patch
 git diff          > .context/loop-rule-failed-worktree.patch
+git status --porcelain --untracked-files=all --ignored > .context/loop-rule-failed-status.txt
+for f in .context/loop-rule-closing-msg .context/loop-rule-base \
+         .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
+  test -e "$f" && cksum "$f"
+done > .context/loop-rule-failed-inputs.txt
 ```
 
-**Both patches are written even when empty**, so "nothing was left behind" is a recorded
-observation rather than an absent file. Then restore, and report from the patches rather than from
-`git status` alone.
+**All four files are written even when empty**, so "nothing was left behind" is a recorded
+observation rather than an absent file.
 
-**The restore target is whichever tip exists.** After 8a's commit that is
-`.context/loop-rule-reviewed-tip`; **before it** — a record commit that failed, or landed and then
-failed its changed-path or clean-tree check — that file does not exist yet and the target is
-`.context/loop-rule-reviewed-head`, which every Gate-B call wrote. **An 8a rejection is a rejection
-like any other and owes the same restoration**, which an earlier draft's bare exits did not give it.
+**Two empty patches do not prove nothing moved, and an earlier draft said they did.** They cover
+**tracked** content only. A hook can create or rewrite an **untracked or ignored** path — and the
+closing message, the recovery base and both tip files are ignored, and the close reads every one of
+them — so the status listing with `--untracked-files=all --ignored` and the checksums of the closure
+inputs are what make "nothing moved" a statement about the things a condition is actually read
+from. Compare them against the same four before the next attempt.
+
+**The restore target is chosen by phase, not by which file happens to exist.** After 8a's commit it
+is `.context/loop-rule-reviewed-tip`; before it — a record commit that failed, or landed and then
+failed a postcondition — it is `.context/loop-rule-reviewed-head`, which every Gate-B call wrote.
+**An 8a rejection is a rejection like any other and owes the same restoration**, which an earlier
+draft's bare exits did not give it.
+
+**"Whichever tip exists" was wrong, and the second candidate is why.** After an 8b failure whose
+repair earns another pass, the *previous* candidate's `loop-rule-reviewed-tip` is still on disk when
+the new 8a starts — so an 8a failure would select it and rewind past the newly reviewed repair and
+its evidence. **Step 7 deletes `loop-rule-reviewed-tip` when it writes a new
+`loop-rule-reviewed-head`**, so before 8a's commit the file is absent by construction rather than by
+luck; and whichever target is chosen, **assert it is an ancestor of `HEAD` and that its own
+`loop-rule-reviewed-head` matches the head this candidate was issued against** before restoring to
+it.
 
 **How success is recognised.** The repository is back at that tip, the two patch files describe what
 the attempt left, and the recovery base and reviewed-head files still exist.
@@ -610,7 +639,12 @@ else
   git rev-parse HEAD > .context/loop-rule-base
 fi
 BASE=$(cat .context/loop-rule-base)
-test -n "$BASE" || { echo "BASE empty"; exit 1; }
+# Not "non-empty": a symbolic value such as HEAD passes every check below and
+# then RESOLVES DIFFERENTLY as WIP commits accrue, moving the reviewed range,
+# the parent counts and the final reset with the branch.
+case "$BASE" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;; *) echo "recorded base is not an object name: $BASE"; exit 1 ;; esac
+test "${#BASE}" -eq 40 || { echo "recorded base is not a full 40-character object name"; exit 1; }
+test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "recorded base does not resolve to itself as a commit"; exit 1; }
 git merge-base --is-ancestor "$BASE" HEAD || { echo "recorded base is NOT an ancestor of HEAD — stale"; exit 1; }
 git log --oneline "$BASE"..HEAD    # expect nothing, or only this run's WIP: commits
 ```
@@ -836,15 +870,21 @@ while IFS=$(printf '\t') read -r s e; do
   ee=$(printf '%s' "$e" | sed 's/[][\.*^$\/]/\\&/g')
   a=$(sed -n "/$se/,/$ee/p" "$C_SRC"); b=$(sed -n "/$se/,/$ee/p" "$W_SRC")
   test -n "$a" && test -n "$b" || { echo "empty extraction for: $s"; exit 1; }
+  # diff exits 0 (same) or 1 (differs) — both are RESULTS. Above 1 is a failure
+  # to compare, and writing the site record before classifying would certify a
+  # comparison that never completed.
+  d=$(diff <(printf '%s\n' "$a") <(printf '%s\n' "$b")); st=$?
+  test $st -le 1 || { echo "diff failed (status $st) at site: $s"; exit 1; }
   printf 'site\t%s\t%s\n' "$s" "$e" >> .context/loop-rule-baseline-diff.tmp
-  diff <(printf '%s\n' "$a") <(printf '%s\n' "$b") >> .context/loop-rule-baseline-diff.tmp
+  printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp
 done < .context/loop-rule-sites || exit 1
 
 # The squash-carry sentence is ONE line and must not go through the loop.
+d=$(diff <(grep -F 'On squash-merge, copy every evidence entry' "$C_SRC") \
+         <(grep -F 'On squash-merge, copy every evidence entry' "$W_SRC")); st=$?
+test $st -le 1 || { echo "diff failed (status $st) at the squash-carry site"; exit 1; }
 printf 'site\t%s\t%s\n' 'On squash-merge' 'On squash-merge' >> .context/loop-rule-baseline-diff.tmp
-diff <(grep -F 'On squash-merge, copy every evidence entry' "$C_SRC") \
-     <(grep -F 'On squash-merge, copy every evidence entry' "$W_SRC") \
-  >> .context/loop-rule-baseline-diff.tmp
+printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp
 mv .context/loop-rule-baseline-diff.tmp .context/loop-rule-baseline-diff.txt
 cat .context/loop-rule-baseline-diff.txt      # READ IT WHOLE
 ```
@@ -2160,7 +2200,8 @@ while IFS=$(printf '\t') read -r s e; do
   test -n "$a" && test -n "$b" || { echo "empty extraction for '$s' — region not found"; exit 1; }
   printf '%s\n' "$a" > .context/loop-rule-a.txt
   printf '%s\n' "$b" > .context/loop-rule-b.txt
-  diff .context/loop-rule-a.txt .context/loop-rule-b.txt
+  diff .context/loop-rule-a.txt .context/loop-rule-b.txt; st=$?
+  test $st -le 1 || { echo "diff failed (status $st) at site: $s"; exit 1; }
 done < .context/loop-rule-changed-sites
 ```
 
@@ -2446,6 +2487,7 @@ the next pass against exactly that value:
 ```bash
 # Before committing a fix, re-run what the fix could have broken.
 git add -A && git commit -m "WIP: fix <finding>"        # or: "WIP: pass <n> records" where no repair was owed
+rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's restore point
 git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
 cat .context/loop-rule-reviewed-head
 ```
