@@ -284,7 +284,9 @@ of them touched this guard.
 
 **What is checked.** The branch; a clean tree; that `ba15e83` is an ancestor; that the three
 approved inputs still hold their approved blobs **at the recorded base**; that the recorded base, if
-one exists, is an ancestor of `HEAD` with only this run's `WIP:` commits after it.
+one exists, is an **ancestor** of `HEAD` and belongs to this cycle. **Ancestry and provenance decide
+that, never a commit subject** — §A3's accidental non-`WIP` commit and the handoff's rejected close
+both leave the base valid, and the commits after it are a state to inspect rather than a verdict.
 
 ```bash
 test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation || { echo "wrong branch"; exit 1; }
@@ -449,8 +451,8 @@ stale:
 **In both, keep the original base and change nothing until a person has chosen a §A route.** Read
 `HEAD`, the index, the worktree and the cycle values together — `git status --porcelain
 --untracked-files=all`, `git diff --cached --stat`, `git log --oneline -3` — and hand that reading
-over. **The stale-base rule scopes to the normal topology**: a non-`WIP` commit means a stale base
-only where no closing act was attempted, which the handoff report says.
+over. **There is no subject-based stale-base rule left**: replace the base only on evidence it
+belongs to another run — it is not an ancestor, or its history contains no part of this cycle.
 
 **How success is recognised.** A base that passes preparation, artifacts whose `base` line matches
 it and whose coverage is complete, and a task list whose ticked entries match the commits present.
@@ -773,7 +775,8 @@ memorise.** `a1` and `a2` sit inside item 8a's block; `a13` ends on the line `a1
 shares its line with `h6`; `h4` and `h5` are adjacent. Each is a reason a whole-line span cannot do
 this alone, which is why the derivation replaces the enumeration rather than correcting it again.
 
-**`.context/loop-rule-untouched` holds two record shapes, and both are parseable**, because Tasks 2
+**`.context/loop-rule-untouched` holds a mandatory `base` header line plus two payload shapes — three
+line forms in all, and every one parseable**, because Tasks 2
 and 14 consume them without a human in between. A file whose second half has no schema is a file
 its consumers skip, which is what the per-condition list exists to prevent:
 
@@ -2703,8 +2706,15 @@ step and the observed state, and hands over. **It does not reset, re-commit or c
 `rm -f` below is therefore unreachable on that path:
 
 ```bash
-git log -1 --pretty=%s     # expect the real message, not a snapshot
-git status --porcelain     # expect empty
+git log -1 --pretty=%s                      # expect the real message, not a snapshot
+test "$(git rev-parse HEAD^)" = "$BASE" || { echo "closing commit's parent is not \$BASE — stop here and run Failure"; exit 1; }
+git status --porcelain                      # expect empty
+# The COMMIT BODY, not the source file: prepare-commit-msg and commit-msg hooks
+# rewrite git's copy after -F has read it, so the validated file proves nothing
+# about what landed.
+git log -1 --pretty=%B > .context/loop-rule-landed-msg
+diff .context/loop-rule-closing-msg .context/loop-rule-landed-msg \
+  || { echo "the committed body differs from the validated message — stop here and run Failure"; exit 1; }
 ```
 
 **Both clean, and only then:**
@@ -2715,7 +2725,7 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-untouched .context/loop-rule-baseline-diff.txt \
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
-      .context/loop-rule-a.txt .context/loop-rule-b.txt
+      .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg
 ls .context/loop-rule-* 2>/dev/null && { echo "cycle scratch survives the close — list it above"; exit 1; }
 ```
 
@@ -2736,9 +2746,11 @@ the close's precondition 5 requires a clean tree before 8b runs — **an earlier
 "stages committed content only" and that unstaged-or-not, uncommitted content stays out, which is
 wrong about the index and hides the path §I parks.** The prompt-standards result, the completeness
 sweep, the next-state table, the divergence list, the equivalence result and the fragment evidence
-all land in this plan, and `.context/codex-reviews/` is tracked; **anything uncommitted when the
-reset runs is left in the worktree and is not in the closing commit** — and, for the plan records,
-was never in a Gate-B range either. Step 7 commits them before the candidate pass is issued, which
+all land in this plan, and `.context/codex-reviews/` is tracked. **Anything uncommitted and
+*unstaged* when the reset runs stays in the worktree and out of the closing commit; anything
+uncommitted and *staged* lands in it.** That asymmetry is what precondition 5's clean tree
+prevents; and the plan records, had they been left uncommitted,
+would never have been in a Gate-B range either. Step 7 commits them before the candidate pass is issued, which
 is what lets 8a's dirty-set check be exact.
 
 ---
@@ -2751,7 +2763,7 @@ is what lets 8a's dirty-set check be exact.
 
 **Which steps are mechanical and which are reader checks, stated rather than claimed uniformly.** Every OLD half has an exact expected result and a procedure that produces it, but **not every one is a pre-verified table row**: the rows the tables carry were checked against the real files in advance, while Tasks 3, 4, 6, 7 and 10 **derive their remaining pre-existing fragments at execution, before their install step**, against text this plan cannot quote without becoming a second copy of it. **Task 1 is not among them:** §A is add-only, row P1 records that it has no OLD half at all, and Task 1 derives presence fragments only — listing it would send an executor looking for a counterfactual that cannot exist. **The NEW halves are `<...>` until their task installs the text**, which the fragment table discloses and each step requires to be verified before counting. **And no per-task shell is pre-written at all** — the procedure is stated once and the executor writes the command in front of the files, so "a runnable command per step" is not what this plan claims. **Tasks 12, 13 and 14 step 2 are reader checks by design** — a predicate comparison, a next-state walk and a divergence classification are judgements, and giving them commands would be the false-precision this repo's invariants warn about. An earlier revision of this section claimed every verification step had a runnable command, which was not true of them.
 
-**3. Type consistency.** `$BASE` is set in Task 0 and used in Tasks 1–10. The four-value pair shape (`new/worktree`, `new/parent`, `old/worktree`, `old/parent`) is defined in Task 3 and referred to by name afterwards. Condition ids match the inventory throughout: a1–a22, b1–b18, c1–c20, d1–d7, e1–e11, f1–f7, g1–g4, h1–h26, i1–i16, j1–j4 — 135 total, every one dispositioned above.
+**3. Type consistency.** `$BASE` is set in Task 0 and used in Tasks 1–10. The four-value pair shape is **`old/worktree`, `old/parent`, `new/worktree`, `new/parent`** — the order the verification procedure, every task's expected result and the evidence schema use, and the one this section had reversed. Condition ids match the inventory throughout: a1–a22, b1–b18, c1–c20, d1–d7, e1–e11, f1–f7, g1–g4, h1–h26, i1–i16, j1–j4 — 135 total, every one dispositioned above.
 
 **One correction applied from this review:** §G was missing a task; it is now installed by Task 7, which names **ten** sites — one §G block and nine §H blocks.
 
