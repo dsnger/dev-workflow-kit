@@ -346,31 +346,65 @@ restore point — because it rewrites the index from the target commit and leave
 is the worktree half.
 
 **There is a *before* half, and it runs as part of the close, not here.** A capture with nothing to
-compare against says only what exists, never what changed. **Immediately before each closing act:**
+compare against says only what exists, never what changed. **Both halves write into
+`.context/loop-rule-capture/`, and both listings exclude that directory** — otherwise the act of
+capturing changes the thing being compared, and two listings differ over the procedure's own files
+even when the closing act moved nothing.
 
 ```bash
-git status --porcelain --untracked-files=all --ignored > .context/loop-rule-pre-status.txt
-for f in .context/loop-rule-closing-msg .context/loop-rule-base \
-         .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
-  test -e "$f" && cksum "$f"
-done > .context/loop-rule-pre-inputs.txt
+capture() {                       # $1 = phase name: pre | failed
+  d=.context/loop-rule-capture; mkdir -p "$d"
+  git status --porcelain --untracked-files=all --ignored \
+    | grep -v ' \.context/loop-rule-capture/' > "$d/$1-status.txt"
+  git diff --cached > "$d/$1-index.patch"
+  git diff          > "$d/$1-worktree.patch"
+  # Every dirty path's bytes, so a hook that rewrites a staged findings file
+  # in place — leaving its porcelain status unchanged — is still detectable.
+  : > "$d/$1-dirty.txt"
+  git status --porcelain --untracked-files=all -z | tr '\0' '\n' | sed -n 's/^.\{3\}//p' |
+    while IFS= read -r f; do
+      case "$f" in .context/loop-rule-capture/*) continue ;; esac
+      if [ -f "$f" ]; then printf '%s\t%s\n' "$f" "$(cksum < "$f")"
+      else printf '%s\tabsent-or-not-a-regular-file\n' "$f"; fi
+    done >> "$d/$1-dirty.txt"
+  # Closure inputs, each recorded present-with-checksum or absent. An absent
+  # file is a RESULT, not a failure: before 8a the reviewed tip does not exist.
+  : > "$d/$1-inputs.txt"
+  for f in .context/loop-rule-closing-msg .context/loop-rule-base \
+           .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
+    if [ -e "$f" ]; then
+      c=$(cksum < "$f") || { echo "cksum failed on $f"; return 1; }
+      printf '%s\t%s\n' "$f" "$c" >> "$d/$1-inputs.txt"
+    else
+      printf '%s\tabsent\n' "$f" >> "$d/$1-inputs.txt"
+    fi
+  done
+  return 0
+}
 ```
+
+**Immediately before each closing act:** `capture pre || exit 1`.
 
 **And after a failed act, before restoring anything:**
 
 ```bash
-git rev-parse HEAD > .context/loop-rule-failed-head.txt   # the rejected commit, if one landed
+d=.context/loop-rule-capture
+git rev-parse HEAD > "$d/failed-head.txt"      # the rejected commit, if one landed
 TGT=$(cat .context/loop-rule-reviewed-tip 2>/dev/null || cat .context/loop-rule-reviewed-head)
-git log --oneline "$TGT"..HEAD > .context/loop-rule-failed-commits.txt
-git diff "$TGT" HEAD           > .context/loop-rule-failed-landed.patch
-git diff --cached > .context/loop-rule-failed-index.patch
-git diff          > .context/loop-rule-failed-worktree.patch
-git status --porcelain --untracked-files=all --ignored > .context/loop-rule-failed-status.txt
-for f in .context/loop-rule-closing-msg .context/loop-rule-base \
-         .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
-  test -e "$f" && cksum "$f"
-done > .context/loop-rule-failed-inputs.txt
+git log --oneline "$TGT"..HEAD > "$d/failed-commits.txt"
+git diff "$TGT" HEAD           > "$d/failed-landed.patch"
+capture failed || exit 1
 ```
+
+**Three things that loop gets right and an earlier draft did not.** `test -e "$f" && cksum "$f"` as
+a loop body makes the block's status that of its **last** iteration — so before 8a, where the
+reviewed tip is deliberately absent, the whole before-capture returned 1 and a correct candidate
+could not enter the close; and a checksum that actually failed on an earlier input was masked by a
+later success. Recording `absent` explicitly makes absence a result rather than an error. And
+**checksumming every dirty path, not only the four inputs**, is what catches a hook that rewrites a
+staged findings file in place: the porcelain status is unchanged, the after-capture's index patch
+holds only the post-hook bytes, and without a before-image of those bytes the original review
+artifact is simply gone.
 
 **The landed patch is the half an earlier draft had no way to see.** After a commit lands and then
 fails a postcondition, `git diff --cached` and `git diff` are both **empty** — the content is in the
@@ -425,8 +459,9 @@ stands**, then read which route you are on.
   changed, **and its own rule decides what it costs**, a further pass included. The cycle is back in
   the ordering with that pass owed. The two patch files above are how you tell which case you are
   in — and **it is not the two tracked patches that decide it.** Compare the *after* capture against
-  the *before* one: the commit listing, the landed patch, the status listing with untracked and
-  ignored paths, and the four closure-input checksums. **An empty patch pair proves nothing**, since
+  the *before* one, file by file: the status listings, the index and worktree patches, the
+  per-dirty-path checksums, and the closure-input records. The commit listing and the landed patch
+  have no before-image by construction — a non-empty either one means the act moved `HEAD`. **An empty patch pair proves nothing**, since
   a landed commit leaves both empty and a hook rewriting an ignored closure input leaves both empty
   too.
 - **The failure cannot be repaired at all** — a signing key nobody has, a permission nobody can
@@ -1210,7 +1245,16 @@ is **preserved in target §C's fenced replacement**, so its old-count could neve
 
 **Run the pre-install half of the disposition procedure over the block this task replaces** — the
 clearly-stuck block, **ending before the Surfacing paragraph**, which is Task 7's
-`c18`-and-surfacing block and whose conditions Task 7 derives. Passage (c) is edited by two tasks;
+`c18`-and-surfacing block and whose conditions Task 7 derives.
+
+**Plus the passage's kept prefix, which belongs to no block and would otherwise belong to no task.**
+`c1`–`c3` sit before this task's replacement, passage (c) is not one of Task 0's five untouched
+regions, and Task 7's blocks start later — so the curve-reading premises fall between two boundaries
+and end up with no observation at all. **The task that opens a passage carries that passage's kept
+prefix**, and this is that task: derive one preservation fragment per condition and run it
+`parent=1 worktree=1` in each copy. **Step 5's walk is not that observation** and says so. Without
+these a mis-scoped edit can alter the curve or coverage sentences identically in both copies while
+every pair, preservation count and parity check passes. Passage (c) is edited by two tasks;
 walking the whole passage here makes this task append rows it cannot discharge after its own
 install, and makes both tasks append a row for the same condition. Derive each from the live text
 now and append it under the next free `P` id, referring to the rows afterwards by the condition
@@ -2692,9 +2736,8 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-untouched .context/loop-rule-baseline-diff.txt \
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
-      .context/loop-rule-a.txt .context/loop-rule-b.txt \
-      .context/loop-rule-pre-status.txt .context/loop-rule-pre-inputs.txt \
-      .context/loop-rule-failed-*.txt .context/loop-rule-failed-*.patch
+      .context/loop-rule-a.txt .context/loop-rule-b.txt
+rm -rf .context/loop-rule-capture
 ls .context/loop-rule-* 2>/dev/null && { echo "cycle scratch survives the close — list it above"; exit 1; }
 ```
 
@@ -2775,7 +2818,7 @@ idempotently on re-run, touching no other. **The pre-existing fragments live in 
 never here**; this section records what each observation actually returned, and it is what Task 15
 step 5 reads to assemble the closing evidence entry.*
 
-***Five record shapes, because the classes do not return the same number of values.** Every
+***Six record shapes, because the classes do not return the same number of values.** Every
 observation this plan makes is one of them, and a shape that fits only pairs is how a required
 count gets run and then vanishes from both the plan and the closing evidence:*
 
@@ -2785,6 +2828,7 @@ presence     <what> <fragment> worktree parent <copy>          # add-only, and a
 absence      <condition> <fragment> parent worktree <copy>      # dropped, and a moved condition's source
 preservation <condition> <fragment> parent worktree <copy>      # carried, and kept where no span holds it
 span         <start anchor> <end anchor> <file> <result>        # an untouched range, parent vs worktree
+sweep        <file> <line> <what it said> <what it became>      # one examined site of a reader-led sweep
 ```
 
 *The **fifth shape is for ranges, not conditions**: an untouched span is two bounded extracts
@@ -2793,7 +2837,13 @@ cannot express it. Its `<result>` is `no difference` or the difference itself �
 way, because a span that was never run and a span that compared equal are otherwise the same
 record. Task 15 reads this shape alongside the other four.*
 
+*The **sweep** shape is the one that carries no count: Task 11's sweep records **one line per site
+examined** and what each became, because §F refuses a count of these assertions anywhere and a
+number here would be the durable second authority it refuses. A complete sweep is distinguishable
+from a partial one by the sites listed, not by a total. Task 15's closing entry reads this shape
+with the other five.*
+
 *A **moved** condition therefore contributes two lines — one `absence` at its source, one
 `presence` at its destination — and both are required for it to count as observed. **Every one of
-the five shapes goes into the closing evidence entry**; naming only pairs and presence leaves the
+the six shapes goes into the closing evidence entry**; naming only pairs and presence leaves the
 absences, preservations and span results run but unrecorded.*
