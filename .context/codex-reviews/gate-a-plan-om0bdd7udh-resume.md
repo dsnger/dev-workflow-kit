@@ -13,8 +13,10 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**State: `c7f4617`, tree clean, cycle OPEN and UNCLEAN.** The plan is reviewed at `1849164`; pass 34
-found 1 Blocker, 1 Major, 3 Minors and 1 Nit, **all validated, none repaired**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-34.md` holds them.
+**Cycle OPEN and UNCLEAN. The plan stands at `1849164` and that is the anchor** — later commits on
+this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
+rather than `HEAD`. Pass 34 reviewed `1849164` and found 1 Blocker, 1 Major, 3 Minors and 1 Nit,
+**all validated, none repaired**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-34.md` holds them.
 
 **Do not start a repair round on your own.** Daniel's assignment of 2026-09-15 ended with a
 checkpoint that supersedes the standing autonomy: *"stop and report, whether clean or unclean. Do
