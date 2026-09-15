@@ -208,7 +208,7 @@ independent reader did.
 | 1 | Branch is `loop-rule-consolidation` | **kept**, same shell — preparation |
 | 2 | Tree clean before the base is recorded | **kept**, same shell — preparation |
 | 3 | `ba15e83` is an ancestor of `HEAD` | **kept**, same shell — preparation |
-| 4 | The three approved inputs' blobs equal their `ba15e83` versions, compared **at the recorded base** | **kept**, same shell — preparation |
+| 4 | The three approved inputs' blobs equal their `ba15e83` versions | **kept, and split by entry**: Preparation compares them **at `HEAD`**, because a first entry has no recorded base; **Resume compares them at `$BASE`**, because a Gate-B fix may legitimately have changed `HEAD`'s copy in a `WIP:` snapshot. An earlier table row claimed Preparation did the base comparison, which it never could |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
 | 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test.** It is the *normal pre-close* topology. Three others are reachable and none makes the base stale: the handoff's rejected commit above the cycle's; `HEAD` at the base with the implementation in the index; and target §A3's accidental non-`WIP` commit or amend mid-cycle. **Staleness is decided by ancestry and by whether the history is this cycle's**, never by a commit subject |
@@ -418,91 +418,88 @@ and records the closing commit carries are the ones a pass actually validated.
 
 ### Resume — re-entering after an interruption
 
-**What is checked.** Whether the recorded base is this run's; whether the scratch artifacts belong
-to it and are complete; and how far the implementation got.
+**Resume owns every entry after the first.** Preparation is first-entry-only and refuses when a base
+file exists, so nothing here defers to it: the checks below are Resume's own, and **none of them
+requires a clean tree** — two of the three valid topologies do not have one.
 
-- **The base**, by its **own** checks, not Preparation's — Preparation is first-entry-only and
-  requires a clean tree, which the handoff's staged-index topology can never have. Read the file,
-  require a full 40-hex object name that resolves to itself as a commit, and require it to be an
-  **ancestor of `HEAD`**. **A base that is not an ancestor is stale.** **Never overwrite one you did
-  not just write.**
+**The three topologies, and the whole procedure reads against all three.**
 
-  **"Its history contains no part of this cycle" is NOT a staleness test** — in the post-reset
-  topology `HEAD` *is* the base and every cycle commit has been squashed away into the index, so
-  that predicate is necessarily true of a perfectly valid state. **Replace a base only on
-  affirmative evidence of another run**: it is not an ancestor of `HEAD`, or the recorded value
-  names a commit this branch never contained.
+| Topology | `HEAD` | `$BASE..HEAD` | Where the work is |
+|---|---|---|---|
+| **Normal, mid-implementation** | the last `WIP:` snapshot | this run's `WIP:` commits, and possibly a §A3 stray commit or amend | committed |
+| **8a rejected** | a `WIP:` findings commit, or a stray commit, **above** the cycle's `WIP:` chain | those commits | committed |
+| **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
-  **A non-`WIP` commit after the base does not make it stale, and inferring that from the subject
-  is wrong.** Target §A3 names an accidental non-`WIP` commit mid-cycle as a **reachable state**: it
-  resets what the hook counts, the cycle stays open until the conditions hold, and it can leave the
-  `WIP:` snapshot as an ancestor — or, as an amend, replace the tip. In both the base is still the
-  true boundary, and deleting it would drop earlier implementation out of Gate B's range and out of
-  the final reset. **Keep the base, inspect the state, and let §A3 decide what the stray commit
-  costs.** Replace a base only on evidence it belongs to **another run** — it is not an ancestor, or
-  its history has no part of this cycle in it.
-- **Each scratch artifact**, by its own `base` line **and** its own completeness predicate:
-  - `.context/loop-rule-untouched` — every line parses as `base`, `span` or `cond`, and every kept
-    condition in the five regions appears in exactly one `span` or one `cond`.
-  - `.context/loop-rule-baseline-diff.txt` — every line parses as `base`, a `site` record, or diff
-    output belonging to the site above it, and **every inventoried site has a `site` record**.
-- **The implementation**, by reading the commits between the base and `HEAD` and the plan's own task
-  checkboxes.
+**The third row is the one every rule has to be re-read against.** `reset --soft` removes the
+`WIP:` chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there
+means the work is staged, not absent.
 
-**Three topologies are valid here, not one.** The `WIP:`-only shape is the normal pre-close one. The
-handoff deliberately leaves two others, and Resume must recognise them rather than call the base
-stale:
+- [ ] **Validate the base — Resume's own checks, not Preparation's**
 
-- **After an 8a or 8b commit was rejected**: a non-`WIP` commit, or a `WIP:` findings commit, sits
-  at `HEAD` above the cycle's `WIP:` commits. **The base is not stale** — it is the same base, with
-  one more commit on top that a closure condition refused.
-- **After `reset --soft` ran and the closing commit failed**: `HEAD` **is** the base and the entire
-  implementation is in the **index**, so `git log "$BASE"..HEAD` is empty and the task checkboxes
-  are the only record of how far the work got. **An empty log here is not an empty cycle.**
+```bash
+test -s .context/loop-rule-base || { echo "no base recorded — this is a first entry, run Preparation"; exit 1; }
+BASE=$(cat .context/loop-rule-base)
+test "${#BASE}" -eq 40 || { echo "base is not a full 40-character object name"; exit 1; }
+case "$BASE" in *[!0-9a-f]*) echo "base is not an object name: $BASE"; exit 1 ;; esac
+test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "base does not resolve to itself as a commit"; exit 1; }
+git merge-base --is-ancestor "$BASE" HEAD || { echo "base is NOT an ancestor of HEAD"; exit 1; }
+for f in target-text design condition-inventory; do
+  p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
+  test "$(git rev-parse "$BASE:$p")" = "$(git rev-parse "ba15e83:$p")" \
+    || { echo "$p differs at the base from its approved version"; exit 1; }
+done
+```
 
-**In both, keep the original base and change nothing until a person has chosen a §A route.** Read
-`HEAD`, the index, the worktree and the cycle values together — `git status --porcelain
---untracked-files=all`, `git diff --cached --stat`, `git log --oneline -3` — and hand that reading
-over. **There is no subject-based stale-base rule left**, and no absence-of-cycle-commits rule
-either: the index-only topology has neither. Replace the base only on the affirmative evidence
-named above.
+**The approved-input comparison is at `$BASE` here, and at `HEAD` in Preparation.** They are
+different revisions on purpose: Task 15 step 7 permits a Gate-B fix to update the spec in a `WIP:`
+snapshot, so on a re-entry `HEAD`'s copy may legitimately differ while the revision the tasks were
+derived against does not.
 
-**How success is recognised.** A base that passes preparation, artifacts whose `base` line matches
-it and whose coverage is complete, and a task list whose ticked entries match the commits present.
+**Replace a base only on affirmative evidence it belongs to another run** — it fails one of the
+checks above. **Neither a commit subject nor an absence of cycle commits is evidence**: §A3's stray
+non-`WIP` commit leaves the base valid, and the 8b topology has an empty range by construction, so
+both tests would condemn states this plan calls valid.
 
-**On deviation, and the answer differs by why you are here.** An artifact that fails either test is
-**deleted and rebuilt from the `$BASE` blobs** — never reused, never repaired in place. A same-base
-partial file is the one shape a `base` line alone cannot catch, which is why the completeness
-predicate exists.
+- [ ] **Validate the scratch artifacts**
 
-**But not while a failed close is waiting on a person.** In either handoff topology the rule is
-change nothing until a §A route is chosen, and an unconditional delete-and-rebuild here would
-destroy the scratch state the handoff deliberately preserved — before anyone decided whether to
-retry, owe a pass, or park. **Report the invalid artifact and leave it.** Rebuild it once the chosen
-route authorizes continuing, and record why the old one is no longer evidence.
+Each by its `base` line **and** its completeness predicate:
+
+- `.context/loop-rule-untouched` — every line parses as `base`, `span` or `cond`, and every kept
+  condition in the five regions appears in exactly one `span` or one `cond`.
+- `.context/loop-rule-baseline-diff.txt` — every line parses as `base`, a `site` record, or diff
+  output belonging to the site above it, and **every inventoried site has a `site` record**.
+
+**On failure the answer depends on why you are here.** Outside a handoff: delete and rebuild from
+the `$BASE` blobs — never reuse, never repair in place, because a same-base partial file is the one
+shape a `base` line alone cannot catch. **Inside a handoff, while a failed close waits on a person:
+report the invalid artifact and change nothing.** Rebuilding it would destroy the scratch state the
+handoff preserved, before anyone chose a §A route.
+
+- [ ] **Establish how far the implementation got — against the topology, not against the log**
+
+**Read the content, not only the commits.** In the first two topologies that is the commits between
+`$BASE` and `HEAD`. **In the 8b topology it is `git diff --cached "$BASE"`** — the staged tree, plus
+the landed closing commit's tree where one exists. A ticked checkbox is confirmed by the change
+being *present in that content*, wherever the content lives.
+
+```bash
+git log --oneline "$BASE"..HEAD     # empty in the 8b topology; that is not an empty cycle
+git diff --cached --stat "$BASE"    # the staged implementation, where reset --soft left it
+git status --porcelain --untracked-files=all
+```
+
+**A task whose checkbox is ticked but whose change is in neither place was not completed** — and one
+whose change is present with the box unticked is completed. **Deciding from the commit log alone
+reads the 8b topology as an untouched cycle and invites every edit to be made twice.**
+
+**How success is recognised.** The base passes Resume's own checks; the artifacts match it and are
+complete, or are reported as invalid and left alone; and the plan's task list has been reconciled
+against the content the topology actually holds.
 
 **Steps that describe the tree at `$BASE` are validated on re-entry, not re-run against the
 worktree.** After a text task the worktree carries this plan's own edits, and rebuilding the
 baseline from it would fold introduced drift into the inherited-drift record — the one distinction
 Task 14 depends on.
-
----
-
-## File Structure
-
-| File | Responsibility in this change |
-|---|---|
-| `CLAUDE.md` | canonical §5 (and one §4 line). Receives §A–§E, §G, §H and §F's sixteen prompt-copy items. |
-| `plugins/dev-workflow/commands/workflow-init.md` | the scaffolded mirror. Receives the same, byte-identical, minus the deliberate divergences the inventory records. |
-| `plugins/dev-workflow/hooks/codex-gate.sh` | seven `note` strings, both channels each (§F items 10–13, 15–17). No behaviour change. |
-| `plugins/dev-workflow/hooks/codex-gate.test.sh` | three `expected_ctx` and three `expected_msg` exact-match expectations, plus every other assertion, label or comment naming a replaced string. |
-| `plugins/dev-workflow/.claude-plugin/plugin.json` | `version` `0.11.0 → 0.12.0`. |
-| `plugins/dev-workflow/CHANGELOG.md` | the 0.12.0 entry, newest first. |
-| this plan | the 135-condition disposition (below), the next-state table (Task 13), and the verification pairs each task builds. |
-
----
-
-## The condition disposition — all 135, by passage
 
 Story acceptance criterion 5 is satisfied here. Ids are `docs/superpowers/specs/2026-09-10-loop-rule-consolidation-condition-inventory.md`, snapshot at `7c0d475`. **Where the tree and the inventory disagree, the tree wins and the accounting is what needs correcting** — check each condition against the real file before marking it done.
 
@@ -677,21 +674,25 @@ preservation fragments that an earlier draft chose afterwards.
 **Interfaces:**
 - Produces: `$BASE` (the parent commit every later task's counterfactual half runs against), and the five untouched passage ranges recorded as **anchor spans plus a per-condition fragment list** — never as absolute line numbers, for the reason step 2 gives.
 
-- [ ] **Step 1: Run the preparation procedure, then record the base**
+- [ ] **Step 1: Decide which entry this is, then run that procedure**
 
-**`## The four procedures` · Preparation** holds the checks and the shell: branch, clean tree,
-`ba15e83` an ancestor, and the three approved inputs compared by blob **at the recorded base**
-rather than at `HEAD` — Task 15 step 7 permits a Gate-B fix to update the spec in a `WIP:` snapshot,
-so on a re-entry `HEAD`'s target text legitimately differs while the base's does not.
-
-Then record the base, and **never overwrite one you did not just write**:
+**The base file decides it, and nothing else does:**
 
 ```bash
 if [ -s .context/loop-rule-base ]; then
-  echo "base already recorded: $(cat .context/loop-rule-base) — validating, not overwriting"
+  echo "base recorded — this is a RE-ENTRY: run Resume, not Preparation"
 else
-  git rev-parse HEAD > .context/loop-rule-base
+  echo "no base — this is a FIRST ENTRY: run Preparation, then record the base below"
 fi
+```
+
+**First entry.** `## The four procedures` · Preparation holds the checks and the shell: branch,
+clean tree, no base file, `ba15e83` an ancestor, and the three approved inputs compared by blob **at
+`HEAD`** — which is the revision the tasks are about to be derived against. Then record the base,
+**and never overwrite one you did not just write**:
+
+```bash
+git rev-parse HEAD > .context/loop-rule-base
 BASE=$(cat .context/loop-rule-base)
 # Not "non-empty": a symbolic value such as HEAD passes every check below and
 # then RESOLVES DIFFERENTLY as WIP commits accrue, moving the reviewed range,
@@ -699,20 +700,18 @@ BASE=$(cat .context/loop-rule-base)
 case "$BASE" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;; *) echo "recorded base is not an object name: $BASE"; exit 1 ;; esac
 test "${#BASE}" -eq 40 || { echo "recorded base is not a full 40-character object name"; exit 1; }
 test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "recorded base does not resolve to itself as a commit"; exit 1; }
-git merge-base --is-ancestor "$BASE" HEAD || { echo "recorded base is NOT an ancestor of HEAD — stale"; exit 1; }
-git log --oneline "$BASE"..HEAD    # READ this; it does not decide staleness — see below
 ```
+
+**Re-entry.** `## The four procedures` · Resume validates the existing base, the scratch artifacts
+and how far the implementation got — with its own checks, against all three topologies, and without
+requiring a clean tree. **Do not run Preparation on a re-entry**: it refuses as soon as it sees the
+base file, which is exactly what makes this branch reachable.
 
 **Re-running Task 0 after a partial implementation must not re-record the base.** It would capture
 the current WIP tip, and both Gate B's range and the final reset would then start *after* every edit
 made so far — prompt and hook changes squashed into the closing commit without entering a review
-range. **A pre-existing value is validated, never trusted**: `git log "$BASE"..HEAD` does not test
-ancestry, which is how a base from an abandoned branch passes; `merge-base --is-ancestor` is the
-test the sentence names. **What the log shows does not decide staleness** — §A3's accidental
-non-`WIP` commit and the handoff's rejected close both leave this base valid, and the post-reset
-topology shows an empty log with the whole cycle in the index. **Anything other than this run's
-`WIP:` commits is a state to read, not a verdict: hand it to `## The four procedures` · Resume**,
-which replaces a base only on affirmative evidence it belongs to another run.
+range. The branch above is what prevents it: a recorded base sends this task to Resume, which
+validates and never overwrites.
 
 **Persist it to a file, not to a shell variable.** Each fenced block runs in its own shell
 invocation, so a `BASE=` assignment here is gone by the next task and every parent-tree count would
@@ -1021,10 +1020,17 @@ Expected: exactly one hit per file.
 - [ ] **Step 2: Verify the block is absent before installing**
 
 ```bash
-grep -cF 'How a cycle ends — one ordering, stated here and referenced everywhere else' CLAUDE.md plugins/dev-workflow/commands/workflow-init.md
+for f in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+  n=$(grep -cF 'How a cycle ends — one ordering, stated here and referenced everywhere else' "$f"); st=$?
+  test $st -le 1 || { echo "grep failed (status $st) on $f"; exit 1; }
+  test "$n" = 0 || { echo "$f already carries the block ($n hits) — stop and reconcile"; exit 1; }
+done
 ```
 
-Expected: `0` for both. If either is non-zero the block is already partly installed — stop and reconcile.
+Expected: zero hits in both, and the block above says so as a **predicate**. **A bare `grep -c`
+would not**: it prints `0` and **exits 1** on no match, so the expected result would surface as a
+failed shell step. The same shape is used at Task 6 step 4 and Task 11 step 5, which are the other
+two places this plan asserts an absence.
 
 - [ ] **Step 3: Install §A1, §A2 and §A3 in both copies**
 
@@ -1518,7 +1524,9 @@ carried it, which is the divergence this task removes.
 - [ ] **Step 4: Confirm g4 is gone from C**
 
 ```bash
-grep -c '2026-08-29-loop-rule-consolidation-story.md' CLAUDE.md
+n=$(grep -c '2026-08-29-loop-rule-consolidation-story.md' CLAUDE.md); st=$?
+test $st -le 1 || { echo "grep failed (status $st)"; exit 1; }
+test "$n" = 0 || { echo "g4 still present in CLAUDE.md ($n hits)"; exit 1; }
 ```
 
 Expected: `0`. The story path may still appear in `docs/` — this check is scoped to `CLAUDE.md`.
@@ -2026,8 +2034,10 @@ Expected: exit 0 from both. **`HOOK_SH` selects the shell the hook runs under; w
 - [ ] **Step 5: Confirm no verdict vocabulary survives**
 
 ```bash
-grep -c 'Gate B satisfied\|Gate B not satisfied\|Gate A satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh
-grep -ni 'satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh
+n=$(grep -c 'Gate B satisfied\|Gate B not satisfied\|Gate A satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh); st=$?
+test $st -le 1 || { echo "grep failed (status $st)"; exit 1; }
+test "$n" = 0 || { echo "gate-verdict vocabulary survives ($n hits)"; exit 1; }
+grep -ni 'satisfied' plugins/dev-workflow/hooks/codex-gate.test.sh || true   # every hit disposed of in writing
 ```
 
 Expected: **`0` from the first**, and **every remaining hit of the second disposed of in writing** —
