@@ -13,7 +13,7 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** Gate-A plan pass 24 against `b8b433d`. The prompt is
+**Next action:** awaiting Daniel. The two-pass allowance (24, 25) is spent and the cycle did not close. Pass 25's repairs are applied at `f795bd2` and no pass has read them. The prompt is
 `.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
 
@@ -94,7 +94,9 @@ worth checking before a pass rather than after.
 | — | — | — | — | — | — | **METHOD CHANGE**, approved by Daniel. Task 0 and Task 15's guarded shell replaced by `## The four procedures` — preparation, close, failure, resume — plus an accounting table classifying all 41 prior guard conditions. **Not a reduction:** one condition deliberately dropped (Task 0 committing nothing), six corrected against pass-21 findings. Commit `1d2f9db` |
 | 22 | 1d2f9db | **10** | **5** | **3** | yes | **targeted pass**, charged with: did anything get silently dropped, and are pass 21's five closed. **Three accounting rows were false when written** — 8, 15 and 40 claimed "kept, same shell" for obligations not present everywhere. Also `printf %b` storing `\*` in the site anchors; `--mixed` destroying an index-only change; an 8a rejection with no tip to restore to; §A1's failure transition having **three** routes where one was stated; the `kept` disposition having no route for a passage no span reaches |
 | 23 | 9ced53c | 10→**5** | 5→**3** | 3→**2** | yes | **all five in Task 0 / Task 15 again.** A symbolic value in the base file; the restore target chosen by which tip file exists, which rewinds past a second candidate's repair; the failure capture covering tracked content only while the closure inputs are ignored paths; pass 22's diff-status classification written as prose and not as code; the close procedure's "check all six before moving `HEAD`" applied to two checks that run after a move |
-| 24 | — | — | — | — | **not run — NEXT** | against `b8b433d`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`b8b433d` and `__P__`=`24` |
+| 24 | b8b433d | 5→**8** | 3→**2** | 2→**5** | yes | close listed "message complete" *after* the record commit while calling it a precondition; the route said "an empty pair means nothing moved" three paragraphs after the same procedure said the opposite, and the checksums had no pre-act baseline; **after a commit lands and then fails a postcondition both tracked patches are empty** and nothing recorded the rejected `HEAD`; Task 0's `cond` fragments lived only in the ignored map, outside step 4's sweep; step 5 still said 7b "appends"; Task 11 recorded a count §F refuses |
+| 25 | 892301e | 8→**5** | 2→**2** | 5→**2** | yes | `test -e && cksum` in a loop makes the block's status its *last* iteration, so the pre-act capture returned 1 before 8a and a correct candidate could not enter the close; the captures wrote into the worktree they compared; the pre-act capture held no **bytes**, so a hook rewriting a staged findings file in place was undetectable; **kept `c1`–`c3` lost their observation again** — pass 10 fixed it with a per-task note, pass 22 deleted that note with the other id lists, and no task's walk reaches them; Task 11's sweep record had no shape |
+| — | — | — | — | — | — | **CHECKPOINT.** Daniel's allowance of two passes (24, 25) is spent. Pass 25's five repairs are **applied and not yet reviewed**. Next action is his call, not another pass |
 
 ## Pass-1 report
 
