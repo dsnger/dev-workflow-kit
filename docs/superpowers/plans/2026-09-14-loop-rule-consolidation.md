@@ -291,13 +291,15 @@ an unapproved edit to a spec that the gates already closed.
 2. **The only thing dirty is the candidate pass's own findings files** — read from every porcelain
    record, not from two status codes. Nothing else may be uncommitted: every record this plan
    collects was committed before the pass was issued.
-3. **Those files are committed** in their own invocation, and that commit **changes exactly those
+3. **The closing message is complete** — rebuilt whole, exactly one provenance line, exactly one
+   curve, every owed evidence entry, and either the applicable human-exception records or
+   `Human exceptions: none`. **This is checked here, before anything moves**, because an incomplete
+   message discovered after the record commit leaves `HEAD` moved for a reason no restoration was
+   owed for.
+4. **Those files are committed** in their own invocation, and that commit **changes exactly those
    paths**. Its parent is the reviewed head. Record the resulting commit as the **restore point**,
    in `.context/loop-rule-reviewed-tip`.
-4. **The tree is clean**, and `HEAD` is still the restore point, when the closing invocation begins.
-5. **The closing message is complete** — rebuilt whole, exactly one provenance line, exactly one
-   curve, every owed evidence entry, and either the applicable human-exception records or
-   `Human exceptions: none`.
+5. **The tree is clean**, and `HEAD` is still the restore point, when the closing invocation begins.
 6. **After the closing commit**: its subject is not a snapshot, and the tree is clean.
 
 **How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
@@ -313,11 +315,14 @@ carries this cycle's count and fingerprint into the next.
 **Which of the six are preconditions and which are postconditions**, because they do not all come
 before a move and an earlier draft said they did:
 
-- **1, 2 and 5 are preconditions** — checkable while nothing has moved. **On deviation, stop; no
-  restoration is owed**, because nothing was changed.
-- **3, 4 and 6 straddle or follow a move** — 3 makes the record commit, 4 reads the state it left,
+- **1, 2 and 3 are preconditions** — checkable while nothing has moved. **On deviation, stop; no
+  restoration is owed**, because nothing was changed. **The message check is among them
+  deliberately**: an earlier draft classified it as a precondition while listing it *after* the
+  record commit, so a literal executor could find an incomplete message with `HEAD` already moved
+  and then stop without restoring.
+- **4, 5 and 6 straddle or follow a move** — 4 makes the record commit, 5 reads the state it left,
   6 reads the state after the closing commit. **On deviation, run `## The four procedures` ·
-  Failure** against the phase's restore target: `loop-rule-reviewed-head` for a rejection at 3 or 4,
+  Failure** against the phase's restore target: `loop-rule-reviewed-head` for a rejection at 4 or 5,
   `loop-rule-reviewed-tip` for one at 6.
 
 **Stopping with a rejected commit at `HEAD`, or with the soft-reset index still live, is not an
@@ -340,7 +345,24 @@ restore point — because it rewrites the index from the target commit and leave
 `git status` to report. Saying "`--mixed` preserves the delta" was an overclaim; what it preserves
 is the worktree half.
 
+**There is a *before* half, and it runs as part of the close, not here.** A capture with nothing to
+compare against says only what exists, never what changed. **Immediately before each closing act:**
+
 ```bash
+git status --porcelain --untracked-files=all --ignored > .context/loop-rule-pre-status.txt
+for f in .context/loop-rule-closing-msg .context/loop-rule-base \
+         .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
+  test -e "$f" && cksum "$f"
+done > .context/loop-rule-pre-inputs.txt
+```
+
+**And after a failed act, before restoring anything:**
+
+```bash
+git rev-parse HEAD > .context/loop-rule-failed-head.txt   # the rejected commit, if one landed
+TGT=$(cat .context/loop-rule-reviewed-tip 2>/dev/null || cat .context/loop-rule-reviewed-head)
+git log --oneline "$TGT"..HEAD > .context/loop-rule-failed-commits.txt
+git diff "$TGT" HEAD           > .context/loop-rule-failed-landed.patch
 git diff --cached > .context/loop-rule-failed-index.patch
 git diff          > .context/loop-rule-failed-worktree.patch
 git status --porcelain --untracked-files=all --ignored > .context/loop-rule-failed-status.txt
@@ -350,7 +372,13 @@ for f in .context/loop-rule-closing-msg .context/loop-rule-base \
 done > .context/loop-rule-failed-inputs.txt
 ```
 
-**All four files are written even when empty**, so "nothing was left behind" is a recorded
+**The landed patch is the half an earlier draft had no way to see.** After a commit lands and then
+fails a postcondition, `git diff --cached` and `git diff` are both **empty** — the content is in the
+commit — so the two tracked patches describe nothing while `HEAD` has moved and published different
+content or a different message. `restore-target..HEAD` is what records it, and after the mixed
+restore that record is the only account of what the attempt actually did.
+
+**Every one of these files is written even when empty**, so "nothing was left behind" is a recorded
 observation rather than an absent file.
 
 **Two empty patches do not prove nothing moved, and an earlier draft said they did.** They cover
@@ -375,8 +403,10 @@ luck; and whichever target is chosen, **assert it is an ancestor of `HEAD` and t
 `loop-rule-reviewed-head` matches the head this candidate was issued against** before restoring to
 it.
 
-**How success is recognised.** The repository is back at that tip, the two patch files describe what
-the attempt left, and the recovery base and reviewed-head files still exist.
+**How success is recognised.** The repository is back at that tip; the captured set — commit
+listing, landed patch, index and worktree patches, status listing and input checksums — describes
+what the attempt left, **each compared against the pre-act capture**; and the recovery base and
+reviewed-head files still exist.
 
 **On deviation.** If the delta cannot be explained, stop and hand it to a person. **Do not retry a
 close against a state you cannot account for** — the second attempt would carry whatever the first
@@ -394,7 +424,11 @@ stands**, then read which route you are on.
 - **The attempt or its repair moved something a condition is read from** → that condition has
   changed, **and its own rule decides what it costs**, a further pass included. The cycle is back in
   the ordering with that pass owed. The two patch files above are how you tell which case you are
-  in: an empty pair means nothing moved.
+  in — and **it is not the two tracked patches that decide it.** Compare the *after* capture against
+  the *before* one: the commit listing, the landed patch, the status listing with untracked and
+  ignored paths, and the four closure-input checksums. **An empty patch pair proves nothing**, since
+  a landed commit leaves both empty and a hook rewriting an ignored closure input leaves both empty
+  too.
 - **The failure cannot be repaired at all** — a signing key nobody has, a permission nobody can
   grant — → **surface it and leave the cycle parked**: open, not running, spending no passes,
   restarted by an explicit later continue. **This route was missing entirely**, and without it a
@@ -756,6 +790,12 @@ first and there is exactly one**, so a re-entry can tell this run's map from an 
 expected pair is `1<TAB>1`; the shape carries the values rather than assuming them, so a moved or
 dropped condition recorded here later needs no new format. **Both consumers validate every `cond`
 row**, not only the `span` rows.
+
+**And every `cond` fragment is appended to the fragment table as well**, under the next free `P` id,
+with the map's row citing that id. The table is where every pre-existing fragment lives, and Task 0
+step 4's committed sweep runs the three conditions over **table rows** — a fragment that exists only
+in this ignored scratch file is outside that sweep, so a wrong one could certify a kept condition
+and be reused after an interruption on the strength of parsing and coverage alone.
 
 **Build the map under `.context/loop-rule-untouched.tmp` and rename it only after the coverage
 assertion passes.** The baseline artifact is written that way and accounting row 15 claims both are;
@@ -1929,7 +1969,7 @@ sees three of them. **Read and update every hit of the bare word by the hook sta
 reports**, exactly as step 3 requires — and do not turn the observed hit count into a target, for
 the reason this task's opening gives.
 
-**Record the counts you observe.** They will not match the numbers above if the file has changed; the numbers above are evidence for why no list is kept, not a target.
+**Read what you observe; do not record a count.** The numbers above are evidence for why no list is kept, not a target — and §F states no count of these assertions **anywhere**, having twice named one and been wrong. This task stages the plan like every other recording task, so a count written into its evidence would be exactly the second numeric authority the approved design rejects: durable, and false the next time the file grows an assertion. **Record the sites examined and what each became**, which stays true however many there are.
 
 - [ ] **Step 2: Update the three `expected_ctx` and three `expected_msg` assignments**
 
@@ -2417,8 +2457,12 @@ in the WIP body too if a mid-cycle reader would want it, but the file is the cop
 
 **The file is completed at step 7b, not here.** The evidence entry can be drafted now, but the
 **per-pass curve is not known until the Gate-B loop ends**, and the **provenance line** and any
-**human-exception record** belong beside it. **Step 7b appends all three and revalidates the
-entry** — this step opens the file, step 7b closes it, and step 8 commits it.
+**human-exception record** belong beside it. **Step 7b rebuilds the complete message whole** —
+provenance line, curve, any human-exception record or `Human exceptions: none`, and the revalidated
+evidence entry — **and does not append to this draft.** This step opens the file, step 7b replaces
+it, and step 8 commits it. **"Appends" was the earlier wording and it is the opposite of what 7b
+requires**: on a second candidate close, appending writes a second provenance line and a second
+curve, which the one-of-each grammar refuses.
 
 It names: the battery run; **every pair this plan built, with its counts in each copy and each tree, every presence check beside them, and every absence check with its two counts**; the §6 parity diff and the `b11`/`b13` equivalence result; and the next-state table's location plus its row count.
 
@@ -2559,7 +2603,12 @@ The message carries, in this order:
    Blockers … Majors …`, which is why this cannot be written at step 5: the counts do not exist
    until the loop ends;
 3. any **human-exception record**, and beside it the skip reason if a cycle was skipped;
-4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it.
+4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it — and
+   **if it changed, this candidate is over.** The final reviewer judged the entry it was handed
+   verbatim; a different entry in the closing commit is evidence no pass covered. Commit the change,
+   resolve and record the new head, and issue another candidate pass. **Revalidate before recording
+   the candidate head and issuing the pass**, so that in the ordinary case this branch is never
+   reached.
 
 **Items 1, 2 and 4 are owed unconditionally; item 3 is owed only where such a record exists.**
 Confirm the file carries the three, and either the applicable exception records or **the literal
@@ -2638,8 +2687,23 @@ git status --porcelain     # expect empty
 **Both clean, and only then:**
 
 ```bash
-rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule-reviewed-head
+rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule-reviewed-head \
+      .context/loop-rule-baseref .context/loop-rule-closing-msg \
+      .context/loop-rule-untouched .context/loop-rule-baseline-diff.txt \
+      .context/loop-rule-sites .context/loop-rule-changed-sites \
+      .context/loop-rule-c.src .context/loop-rule-w.src \
+      .context/loop-rule-a.txt .context/loop-rule-b.txt \
+      .context/loop-rule-pre-status.txt .context/loop-rule-pre-inputs.txt \
+      .context/loop-rule-failed-*.txt .context/loop-rule-failed-*.patch
+ls .context/loop-rule-* 2>/dev/null && { echo "cycle scratch survives the close — list it above"; exit 1; }
 ```
+
+**Every `loop-rule-*` scratch file goes, and the `ls` is what makes "the scratch files are removed"
+true rather than asserted.** An earlier draft deleted three of them and claimed the terminal state,
+leaving a later run to inherit a closing message, a baseref, an untouched map and any failure
+snapshots — each of which some check then has to detect or overwrite piecemeal. **The plan's records
+are not among these**: they live in the plan and in `.context/codex-reviews/`, both tracked, both
+already in the closing commit.
 
 **`reset --soft` stages committed content only.** The prompt-standards result, the completeness
 sweep, the next-state table, the divergence list, the equivalence result and the fragment evidence
