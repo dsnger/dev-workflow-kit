@@ -13,7 +13,7 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** Gate-A plan pass 21 against `3111985`. The prompt is
+**Next action:** Gate-A plan pass 24 against `b8b433d`. The prompt is
 `.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
 precheck per its header, delete the target file, confirm it is gone.
 
@@ -90,7 +90,11 @@ worth checking before a pass rather than after.
 | 18 | 6d276fa | 9→**4** | 2→**0** | 3→**3** | yes | one tell. A **fifth record shape, `span`**; both scratch artifacts open with a `base` line; the hook ships **ten** prompt bodies, not seven |
 | 19 | 76cd2ce | 4→**3** | 0→**0** | 3→**2** | yes | one tell. Nine editing tasks record into the plan and staged only prompts — the staging rule was a stale task-number list. Task 0 step 3 selects its source by the re-entry rule |
 | 20 | 9aa1178 | 3→**4** | 0→**2** | 2→**2** | yes | three-tell stop. **F11/F12/F13 each ended just before their item's first changed word** and would have survived a correct install. Root: the test's subject is the region's **post-edit text**, not the replacement block. All twelve F rows with a declared range re-checked and go to zero; F1–F3 have no range and owe a reading check |
-| 21 | — | — | — | — | **not run — NEXT** | against `3111985`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`3111985` and `__P__`=`21` |
+| 21 | 3111985 | 4→**5** | 2→**2** | 2→**3** | yes | three-tell stop. All five in Task 0 / Task 15. **This is where the loop was surfaced to Daniel**: 39 of the previous 49 findings sat in the two tasks carrying real shell, four of five being repairs to guards earlier passes had added |
+| — | — | — | — | — | — | **METHOD CHANGE**, approved by Daniel. Task 0 and Task 15's guarded shell replaced by `## The four procedures` — preparation, close, failure, resume — plus an accounting table classifying all 41 prior guard conditions. **Not a reduction:** one condition deliberately dropped (Task 0 committing nothing), six corrected against pass-21 findings. Commit `1d2f9db` |
+| 22 | 1d2f9db | **10** | **5** | **3** | yes | **targeted pass**, charged with: did anything get silently dropped, and are pass 21's five closed. **Three accounting rows were false when written** — 8, 15 and 40 claimed "kept, same shell" for obligations not present everywhere. Also `printf %b` storing `\*` in the site anchors; `--mixed` destroying an index-only change; an 8a rejection with no tip to restore to; §A1's failure transition having **three** routes where one was stated; the `kept` disposition having no route for a passage no span reaches |
+| 23 | 9ced53c | 10→**5** | 5→**3** | 3→**2** | yes | **all five in Task 0 / Task 15 again.** A symbolic value in the base file; the restore target chosen by which tip file exists, which rewinds past a second candidate's repair; the failure capture covering tracked content only while the closure inputs are ignored paths; pass 22's diff-status classification written as prose and not as code; the close procedure's "check all six before moving `HEAD`" applied to two checks that run after a move |
+| 24 | — | — | — | — | **not run — NEXT** | against `b8b433d`. Prompt: `.context/gate-a-plan-prompt.md`, substitute `__SHA__`=`b8b433d` and `__P__`=`24` |
 
 ## Pass-1 report
 
