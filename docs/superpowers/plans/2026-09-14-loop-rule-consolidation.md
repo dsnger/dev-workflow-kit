@@ -240,20 +240,45 @@ independent reader did.
 | 33 | The dirty set is exactly the final pass's findings files, read from every porcelain record | **kept** as the close procedure's check |
 | 34 | The record commit's changed-path set equals those files | **kept** as the close procedure's check |
 | 35 | The tree is clean after the record commit | **kept** as the close procedure's check |
-| 36 | `HEAD` equals the reviewed tip before the reset | **kept** as the close procedure's check, and **corrected**: the reviewed *head* and the restore *point* are two values, not one (pass 21) |
+| 36 | `HEAD` equals the reviewed tip before the reset | **kept** as the close procedure's check, and **corrected**: the reviewed *head* and the closing *tip* are two values, not one (pass 21). With row 40 dropped the tip is **only** this precondition — nothing resets to it |
 | 37 | The closing commit's subject is not a snapshot | **kept** as the close procedure's check |
 | 38 | The tree is clean after the close | **kept** as the close procedure's check |
 | 39 | 8a and 8b are separate invocations; no `-m` in the closing one | **kept**, and it is why the close procedure names two invocations |
-| 40 | Every rejection restores a tip by **mixed** reset, never `--hard` | **re-expressed** as the failure procedure, and **corrected twice**: restoring `HEAD` is not the whole duty — index and working tree are inspected and captured to patch files first, because **`--mixed` destroys an index-only change** and claiming it preserves the delta was an overclaim; and an 8a rejection restores to the reviewed *head*, the reviewed *tip* not existing yet (pass 22) |
+| 40 | Every rejection restores a tip by **mixed** reset, never `--hard` | **DELIBERATELY DROPPED**, by Daniel's decision, and the second of two deletions this table records. **It was never a requirement of the approved spec** — §A says *"re-establish every closure condition against the repository as it now stands"*, which reads the state rather than rewinding it, and a rejected commit at `HEAD` is a legitimate starting point for that reading. It was this plan's own implementation choice, and it had grown restore targets, phase selection, pre- and post-act captures and their own error handling, which four consecutive passes then found defects in. **What replaces it is a bounded handoff**: stop every further mutating action, report the failed step and the observed state, change nothing else. **The obligations §A does impose are unchanged** — surface the failure, re-establish every closure condition against the state as it stands, and take one of its three routes. **Not replaced by a generic backup mechanism**, which would be the same growth under another name |
 | 41 | The scratch files are removed only after a successful close | **kept** as the close procedure's last step |
 
-**Nothing in that table is dropped except condition 20, and that one is dropped by being replaced
-with a stronger obligation.** Six conditions are corrected or extended against pass-21 findings, and
+**Two conditions are dropped, 20 and 40, and each is named as a drop rather than lost.** Condition
+20 is replaced by a stronger obligation. **Condition 40 is dropped outright** — a guard this plan
+introduced itself, which the approved spec never asked for, removed by an explicit decision after
+it became the largest single source of findings in the cycle. **A guard the plan invented does not
+have to survive on the strength of existing**; what it may not do is take a governing obligation
+with it, and §A's three routes, the closure conditions and every evidence duty stand exactly as
+before. Six conditions are corrected or extended against pass-21 findings, and
 **three rows were themselves wrong when first written** — 8, 15 and 40 claimed "kept, same shell"
 for obligations that were not in fact present everywhere. Pass 22 was aimed at exactly that question
 and found them; they are repaired rather than re-worded, and the fact that an accounting table can
 itself be wrong is why the check was worth running. The rest keep their force; what changes is that a person reads the state and picks the
 operation, instead of one block trying to branch through every state in advance.
+
+### The findings the dropped guard carried, reassessed one by one
+
+**Removing a mechanism does not settle the findings raised against it**, so each is judged on
+whether it described a duty that survives the removal or only a defect in the removed machinery.
+
+| Finding | Was it about the guard? | Standing |
+|---|---|---|
+| **23-2** — the restore target was chosen by which tip file existed, rewinding past a second candidate's repair | yes, entirely | **moot.** Nothing restores. The tip survives as 8b's precondition value, and step 7 still clears it between candidates |
+| **23-3** — the failure capture covered tracked content only, while the closure inputs are ignored paths | the capture, yes; **the duty, no** | **carried.** The report must name which cycle values still exist rather than assume them, and it says so by listing them |
+| **24-2** — "an empty pair means nothing moved", and the checksums had no pre-act baseline | yes, entirely | **moot**, and the underlying error is answered differently: the procedure now refuses to claim anything was preserved at all |
+| **24-3** — after a commit lands and then fails, both tracked patches are empty and nothing recorded the rejected `HEAD` | the capture, yes; **the duty, no** | **carried.** The report states whether a commit landed, with `git rev-parse HEAD` and the log, because that is the first thing the resume decision needs |
+| **25-1** — `test -e && cksum` in a loop makes the block's status its last iteration | yes, entirely | **moot.** The loop is gone |
+| **25-2** — the pre-act capture held no bytes, so a hook rewriting a staged file in place was undetectable | yes as stated; **the honesty duty survives** | **carried, and answered by admission rather than by machinery**: the procedure states plainly that stopping is no guarantee the failed operation destroyed nothing, and forbids reporting that nothing was lost |
+| **25-3** — the captures wrote into the worktree they compared | yes, entirely | **moot.** There is nothing to compare |
+
+**Everything else these passes found stands and is owed** — the close-condition ordering, `c1`–`c3`'s
+missing observation, Task 0's `cond` fragments bypassing the table, Task 11's count and its sweep
+shape, step 5's stale "appends", the evidence-entry revalidation branch, and the cleanup list. None
+of them touched this guard.
 
 ### Preparation — before any task edits a file
 
@@ -286,7 +311,7 @@ an unapproved edit to a spec that the gates already closed.
 
 1. **`HEAD` equals the head the candidate pass was issued against** — the value recorded before that
    call, in `.context/loop-rule-reviewed-head`. **That is the reviewed head.** It is not the same
-   value as the restore point below, and conflating them is how an unreviewed commit reaches the
+   value as the **closing tip** below, and conflating them is how an unreviewed commit reaches the
    close.
 2. **The only thing dirty is the candidate pass's own findings files** — read from every porcelain
    record, not from two status codes. Nothing else may be uncommitted: every record this plan
@@ -297,13 +322,15 @@ an unapproved edit to a spec that the gates already closed.
    message discovered after the record commit leaves `HEAD` moved for a reason no restoration was
    owed for.
 4. **Those files are committed** in their own invocation, and that commit **changes exactly those
-   paths**. Its parent is the reviewed head. Record the resulting commit as the **restore point**,
-   in `.context/loop-rule-reviewed-tip`.
-5. **The tree is clean**, and `HEAD` is still the restore point, when the closing invocation begins.
+   paths**. Its parent is the reviewed head. Record the resulting commit as the **closing tip**, in
+   `.context/loop-rule-reviewed-tip` — **a precondition value, not a restore target**: 8b refuses to
+   reset unless `HEAD` is still exactly it, which is how a commit landing between the two
+   invocations is caught. Nothing in this plan resets *to* it.
+5. **The tree is clean**, and `HEAD` is still the closing tip, when the closing invocation begins.
 6. **After the closing commit**: its subject is not a snapshot, and the tree is clean.
 
 **How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
-tree equals the restore point's tree, and whose parent is `$BASE`. Then, and only then, the scratch
+tree equals the closing tip's tree, and whose parent is `$BASE`. Then, and only then, the scratch
 files are removed.
 
 **Two invocations, not one.** `codex-gate.sh`'s `is_wip_commit`
@@ -322,156 +349,60 @@ before a move and an earlier draft said they did:
   and then stop without restoring.
 - **4, 5 and 6 straddle or follow a move** — 4 makes the record commit, 5 reads the state it left,
   6 reads the state after the closing commit. **On deviation, run `## The four procedures` ·
-  Failure** against the phase's restore target: `loop-rule-reviewed-head` for a rejection at 4 or 5,
-  `loop-rule-reviewed-tip` for one at 6.
+  Failure**, which stops, reports the state and hands over.
 
-**Stopping with a rejected commit at `HEAD`, or with the soft-reset index still live, is not an
-outcome this procedure allows** — that is the state a retry cannot start from, and it is exactly
-what "stop before moving `HEAD`" produced when applied to a check that runs after one.
+**A rejected commit left at `HEAD`, or a live soft-reset index, is a state this plan stops in and
+reports** — it is not an error condition the procedure has to undo. §A re-establishes the closure
+conditions **against the repository as it now stands**, so that state is a legitimate starting
+point for the resume decision, and an earlier draft's claim that "a retry cannot start from it" was
+wrong about the approved text.
 
 ### Failure — the closing act did not complete
 
-**The approved §A requires the state a failed closing act leaves to be inspected**, and that is more
-than `HEAD`. **Look at three things and say what each holds, before moving anything:**
+**This procedure stops and hands over. It does not restore, retry or clean up.** That is a decision
+about *this* plan, recorded in the accounting table as a deliberate drop, and the reason is that the
+approved §A does not ask for automatic restoration: it says **"re-establish every closure condition
+against the repository as it now stands"** — read the state, not rewind it. A one-off implementation
+plan does not need to grow a general git-recovery mechanism to satisfy that.
 
-- **`HEAD`** — did the commit land? A failed `git commit` leaves it where it was; a hook that
-  rejected after committing does not.
-- **The index** — a commit hook can stage content. `git diff --cached` names it.
-- **The working tree** — the same hook can modify files without staging them. `git diff` names it.
+**On a failed closing operation, or a failed postcondition after one: stop every further mutating
+action.** No reset. No second `git commit`. No deletion of recovery inputs, scratch values or review
+artifacts. **Whatever the repository holds is what the resume decision is made from**, and moving it
+first is what destroys the evidence that decision needs.
 
-**Capture the delta before restoring, because no reset preserves all of it.** `--hard` destroys
-both. **`--mixed` destroys an index-only change** — one whose worktree copy still equals the
-restore point — because it rewrites the index from the target commit and leaves nothing for
-`git status` to report. Saying "`--mixed` preserves the delta" was an overclaim; what it preserves
-is the worktree half.
+**Then report, and report the state rather than a conclusion about it:**
 
-**There is a *before* half, and it runs as part of the close, not here.** A capture with nothing to
-compare against says only what exists, never what changed. **Both halves write into
-`.context/loop-rule-capture/`, and both listings exclude that directory** — otherwise the act of
-capturing changes the thing being compared, and two listings differ over the procedure's own files
-even when the closing act moved nothing.
+- **which step failed**, and the concrete command failure — the exit status and the message, quoted;
+- **whether a commit landed**: `git rev-parse HEAD`, `git log --oneline -3`, and where a `reset
+  --soft` had already run, say so, because the index then holds the whole change;
+- **what the tree holds**: `git status --porcelain --untracked-files=all`, `git diff --cached
+  --stat`, `git diff --stat`;
+- **which cycle values still exist** — the recovery base, the reviewed head, the reviewed tip, the
+  closing message — by listing them, not by assuming.
 
-```bash
-capture() {                       # $1 = phase name: pre | failed
-  d=.context/loop-rule-capture; mkdir -p "$d"
-  git status --porcelain --untracked-files=all --ignored \
-    | grep -v ' \.context/loop-rule-capture/' > "$d/$1-status.txt"
-  git diff --cached > "$d/$1-index.patch"
-  git diff          > "$d/$1-worktree.patch"
-  # Every dirty path's bytes, so a hook that rewrites a staged findings file
-  # in place — leaving its porcelain status unchanged — is still detectable.
-  : > "$d/$1-dirty.txt"
-  git status --porcelain --untracked-files=all -z | tr '\0' '\n' | sed -n 's/^.\{3\}//p' |
-    while IFS= read -r f; do
-      case "$f" in .context/loop-rule-capture/*) continue ;; esac
-      if [ -f "$f" ]; then printf '%s\t%s\n' "$f" "$(cksum < "$f")"
-      else printf '%s\tabsent-or-not-a-regular-file\n' "$f"; fi
-    done >> "$d/$1-dirty.txt"
-  # Closure inputs, each recorded present-with-checksum or absent. An absent
-  # file is a RESULT, not a failure: before 8a the reviewed tip does not exist.
-  : > "$d/$1-inputs.txt"
-  for f in .context/loop-rule-closing-msg .context/loop-rule-base \
-           .context/loop-rule-reviewed-head .context/loop-rule-reviewed-tip; do
-    if [ -e "$f" ]; then
-      c=$(cksum < "$f") || { echo "cksum failed on $f"; return 1; }
-      printf '%s\t%s\n' "$f" "$c" >> "$d/$1-inputs.txt"
-    else
-      printf '%s\tabsent\n' "$f" >> "$d/$1-inputs.txt"
-    fi
-  done
-  return 0
-}
-```
+**What stopping does not do, said plainly.** It prevents *further* change; it is **no guarantee that
+the failed operation itself destroyed nothing.** A hook that rejected after rewriting a staged file
+has already done that, and this procedure cannot undo it or prove it did not happen. **Do not report
+"nothing was lost".** Report what is there.
 
-**Immediately before each closing act:** `capture pre || exit 1`.
+**How success is recognised.** The failure is surfaced with the four observations above, nothing
+further has been changed, and the cycle is waiting on a person.
 
-**And after a failed act, before restoring anything:**
+**Resuming is a decision about the actual state**, taken with that report in hand, and then §A's
+rules apply unchanged:
 
-```bash
-d=.context/loop-rule-capture
-git rev-parse HEAD > "$d/failed-head.txt"      # the rejected commit, if one landed
-TGT=$(cat .context/loop-rule-reviewed-tip 2>/dev/null || cat .context/loop-rule-reviewed-head)
-git log --oneline "$TGT"..HEAD > "$d/failed-commits.txt"
-git diff "$TGT" HEAD           > "$d/failed-landed.patch"
-capture failed || exit 1
-```
+- **Every closure condition is re-established against the repository as it now stands.** Where they
+  all still hold, **perform the act again**.
+- **Where the attempt or its repair moved anything a condition is read from**, that condition has
+  changed and **its own rule decides what it costs**, a further pass included, and the cycle is back
+  in the ordering with that pass owed.
+- **Where the failure cannot be repaired at all** — a signing key nobody has, a permission nobody
+  can grant — **surface it and leave the cycle parked**: open, not running, spending no passes,
+  restarted by an explicit later continue.
 
-**Three things that loop gets right and an earlier draft did not.** `test -e "$f" && cksum "$f"` as
-a loop body makes the block's status that of its **last** iteration — so before 8a, where the
-reviewed tip is deliberately absent, the whole before-capture returned 1 and a correct candidate
-could not enter the close; and a checksum that actually failed on an earlier input was masked by a
-later success. Recording `absent` explicitly makes absence a result rather than an error. And
-**checksumming every dirty path, not only the four inputs**, is what catches a hook that rewrites a
-staged findings file in place: the porcelain status is unchanged, the after-capture's index patch
-holds only the post-hook bytes, and without a before-image of those bytes the original review
-artifact is simply gone.
-
-**The landed patch is the half an earlier draft had no way to see.** After a commit lands and then
-fails a postcondition, `git diff --cached` and `git diff` are both **empty** — the content is in the
-commit — so the two tracked patches describe nothing while `HEAD` has moved and published different
-content or a different message. `restore-target..HEAD` is what records it, and after the mixed
-restore that record is the only account of what the attempt actually did.
-
-**Every one of these files is written even when empty**, so "nothing was left behind" is a recorded
-observation rather than an absent file.
-
-**Two empty patches do not prove nothing moved, and an earlier draft said they did.** They cover
-**tracked** content only. A hook can create or rewrite an **untracked or ignored** path — and the
-closing message, the recovery base and both tip files are ignored, and the close reads every one of
-them — so the status listing with `--untracked-files=all --ignored` and the checksums of the closure
-inputs are what make "nothing moved" a statement about the things a condition is actually read
-from. Compare them against the same four before the next attempt.
-
-**The restore target is chosen by phase, not by which file happens to exist.** After 8a's commit it
-is `.context/loop-rule-reviewed-tip`; before it — a record commit that failed, or landed and then
-failed a postcondition — it is `.context/loop-rule-reviewed-head`, which every Gate-B call wrote.
-**An 8a rejection is a rejection like any other and owes the same restoration**, which an earlier
-draft's bare exits did not give it.
-
-**"Whichever tip exists" was wrong, and the second candidate is why.** After an 8b failure whose
-repair earns another pass, the *previous* candidate's `loop-rule-reviewed-tip` is still on disk when
-the new 8a starts — so an 8a failure would select it and rewind past the newly reviewed repair and
-its evidence. **Step 7 deletes `loop-rule-reviewed-tip` when it writes a new
-`loop-rule-reviewed-head`**, so before 8a's commit the file is absent by construction rather than by
-luck; and whichever target is chosen, **assert it is an ancestor of `HEAD` and that its own
-`loop-rule-reviewed-head` matches the head this candidate was issued against** before restoring to
-it.
-
-**How success is recognised.** The repository is back at that tip; the captured set — commit
-listing, landed patch, index and worktree patches, status listing and input checksums — describes
-what the attempt left, **each compared against the pre-act capture**; and the recovery base and
-reviewed-head files still exist.
-
-**On deviation.** If the delta cannot be explained, stop and hand it to a person. **Do not retry a
-close against a state you cannot account for** — the second attempt would carry whatever the first
-one left.
-
-**What happens next is §A's, and it has three routes, not one.** A failed act **returns to the
-closure step it failed in**, not to the branches — this cycle's pass already took the
-clean-completion branch. So: **re-establish every closure condition against the repository as it now
-stands**, then read which route you are on.
-
-- **Every condition still holds** → **perform the act again.** No further pass is owed. An earlier
-  draft demanded a fresh clean response here unconditionally, which routes a transient identity or
-  signing failure — one that moved nothing any condition reads — through a whole extra pass the
-  approved text does not ask for.
-- **The attempt or its repair moved something a condition is read from** → that condition has
-  changed, **and its own rule decides what it costs**, a further pass included. The cycle is back in
-  the ordering with that pass owed. The two patch files above are how you tell which case you are
-  in — and **it is not the two tracked patches that decide it.** Compare the *after* capture against
-  the *before* one, file by file: the status listings, the index and worktree patches, the
-  per-dirty-path checksums, and the closure-input records. The commit listing and the landed patch
-  have no before-image by construction — a non-empty either one means the act moved `HEAD`. **An empty patch pair proves nothing**, since
-  a landed commit leaves both empty and a hook rewriting an ignored closure input leaves both empty
-  too.
-- **The failure cannot be repaired at all** — a signing key nobody has, a permission nobody can
-  grant — → **surface it and leave the cycle parked**: open, not running, spending no passes,
-  restarted by an explicit later continue. **This route was missing entirely**, and without it a
-  cycle that can neither close nor be parked is exactly the outcome §A names.
-
-**What this procedure does not promise.** It does not transact any of that. It restores a known
-state and records what the attempt left; **the route is a reading**, and trying to automate the
-reading is what grew the block this section replaces.
+**A person's help replaces neither the review nor the evidence.** Whatever route resume takes, no
+closing act happens until every prescribed condition is established again, and the evidence entry
+and records the closing commit carries are the ones a pass actually validated.
 
 ### Resume — re-entering after an interruption
 
@@ -2575,7 +2506,7 @@ the next pass against exactly that value:
 ```bash
 # Before committing a fix, re-run what the fix could have broken.
 git add -A && git commit -m "WIP: fix <finding>"        # or: "WIP: pass <n> records" where no repair was owed
-rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's restore point
+rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
 git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
 cat .context/loop-rule-reviewed-head
 ```
@@ -2693,18 +2624,18 @@ test "$expected" = "$actual" || { echo "dirty set is not exactly this pass's fin
 
 # shellcheck disable=SC2086
 git add $FINAL
-# Any rejection below goes through the Failure procedure, restoring to $HEADREV —
-# the reviewed-tip file does not exist yet at this point.
-git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — run Failure against $HEADREV"; exit 1; }
+# Any rejection below stops and goes through the Failure procedure, which reports
+# the state and hands over. Nothing here resets, retries or deletes.
+git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — stop here and run Failure"; exit 1; }
 test "$(git show --name-only --pretty=format: HEAD | sed '/^$/d' | sort)" = "$expected" \
-  || { echo "record commit changed paths beyond this pass's findings files — run Failure against $HEADREV"; exit 1; }
-test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure against $HEADREV"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — run Failure against $HEADREV"; exit 1; }
+  || { echo "record commit changed paths beyond this pass's findings files — stop here and run Failure"; exit 1; }
+test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — stop here and run Failure"; exit 1; }
+test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — stop here and run Failure"; exit 1; }
 
 git rev-parse HEAD > .context/loop-rule-reviewed-tip   # the RESTORE POINT, not the reviewed head
 ```
 
-**The reviewed head and the restore point are two values.** The first is what the pass read; the
+**The reviewed head and the closing tip are two values.** The first is what the pass read; the
 second is that plus the findings files. **A single value cannot be both**, and treating it as one is
 how a commit that landed after the response reaches the close — which is why `HEAD^` is compared
 above rather than assumed.
@@ -2719,9 +2650,10 @@ git reset --soft "$BASE"
 git commit -F .context/loop-rule-closing-msg
 ```
 
-**Then check the result, and on any failure run `## The four procedures` · Failure** — which
-inspects `HEAD`, the index **and** the working tree, preserves whatever the attempt left, and
-restores by **mixed** reset to `$TIP`:
+**Then check the result. On a failed `git commit`, or on either check below failing, run
+`## The four procedures` · Failure** — which stops every further mutating action, reports the failed
+step and the observed state, and hands over. **It does not reset, re-commit or clean up**, and the
+`rm -f` below is therefore unreachable on that path:
 
 ```bash
 git log -1 --pretty=%s     # expect the real message, not a snapshot
@@ -2737,14 +2669,15 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
       .context/loop-rule-a.txt .context/loop-rule-b.txt
-rm -rf .context/loop-rule-capture
 ls .context/loop-rule-* 2>/dev/null && { echo "cycle scratch survives the close — list it above"; exit 1; }
 ```
 
 **Every `loop-rule-*` scratch file goes, and the `ls` is what makes "the scratch files are removed"
 true rather than asserted.** An earlier draft deleted three of them and claimed the terminal state,
-leaving a later run to inherit a closing message, a baseref, an untouched map and any failure
-snapshots — each of which some check then has to detect or overwrite piecemeal. **The plan's records
+leaving a later run to inherit a closing message, a baseref and an untouched map — each of which
+some check then has to detect or overwrite piecemeal. **This runs only on a successful close**; a
+failure leaves every one of these files exactly where it is, which is what the resume decision is
+read from. **The plan's records
 are not among these**: they live in the plan and in `.context/codex-reviews/`, both tracked, both
 already in the closing commit.
 
