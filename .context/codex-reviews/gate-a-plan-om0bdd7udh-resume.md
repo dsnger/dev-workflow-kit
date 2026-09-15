@@ -13,39 +13,85 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Next action:** awaiting Daniel. The bounded revision is at `1849164`; pass 34 reviewed it and is **unclean** — 1 Blocker, 1 Major, 3 Minors, 1 Nit, all validated, none repaired. The assignment's checkpoint forbids another repair/review round without his word. The prompt is
-`.context/gate-a-plan-prompt.md`; substitute `__SHA__` and `__P__`,
-precheck per its header, delete the target file, confirm it is gone.
+**State: `c7f4617`, tree clean, cycle OPEN and UNCLEAN.** The plan is reviewed at `1849164`; pass 34
+found 1 Blocker, 1 Major, 3 Minors and 1 Nit, **all validated, none repaired**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-34.md` holds them.
 
-**The rules passes 6–10 installed, every one of which had been contradicted in two or three places
-at once when found.** Check them every pass:
+**Do not start a repair round on your own.** Daniel's assignment of 2026-09-15 ended with a
+checkpoint that supersedes the standing autonomy: *"stop and report, whether clean or unclean. Do
+not begin another repair/review round or implementation."* That checkpoint is spent — it covered one
+revision and one pass, both done — so **the next move is Daniel's word, not an inference.**
 
-- `## What each disposition owes, stated once` fixes the observation per class; `## How a task
-  discharges that table` is the per-task procedure. **No task enumerates its condition ids.**
-- Every **pre-existing** fragment is derived **before** its task's install step — OLD halves,
-  absence fragments, and carried/kept preservation fragments alike. Only post-install fragments
-  go to `## Fragment evidence (per-task output)`.
-- **No task pre-assigns a fragment id.** Tasks 3, 4, 6, 7 and 10 append.
-- Untouched **spans are derived, not written out**. `.context/loop-rule-untouched` carries `span`
-  and `cond` records, both parseable, both consumed by Tasks 2 and 14.
-- **Destination blocks, not target sections**, are the unit for the parity site list.
-- Task 15 re-runs every affected check — mechanical *and* reader — after each Gate-B fix, and the
-  complete set before the candidate final pass; only a clean response against that exact `HEAD`
-  closes, and the final pass's own findings file is the sole permitted post-review addition.
+### The four open findings, in the order they cost most
+
+1. **BLOCKER — step 8a never checks Close condition 3.** It discharges 1, 2 and 4; the index claims
+   8a and 8b both check the message. On a re-entry between 7b and 8a the record commit lands before
+   the message is re-established, and 8b is the first to notice — the exact failure condition 3
+   exists to prevent.
+2. **MAJOR — the porcelain parser mangles two real pathname shapes.** `git status --porcelain -z |
+   tr '\0' '\n' | sed 's/^.\{3\}//'` turns a rename into `p.txt` and a newline-bearing path into two
+   fragments. **Verified by execution, not by reading.**
+3. **MINOR — condition 6 says the landed body is "identical"** where the corrected oracle strips
+   trailing blank lines. Introduced by the bounded revision itself.
+4. **MINOR — step 8 is titled "two invocations" and has four fenced blocks**; **MINOR** — the
+   Architecture paragraph still says every task runs a discriminating pair, which the disposition
+   table replaced; **NIT** — `loop-rule-untouched.tmp` and `loop-rule-baseline-diff.tmp` are written
+   and never removed by the cleanup.
+
+### What the bounded revision did, so it is not undone by accident
+
+Each closing condition had been stated **three times** — a Close condition, a command in Task 15
+step 8, and prose beside that command. The third copy is gone. **`### Where each operational
+condition is defined` is the index**: one home per condition, a lookup with no commands and no
+expected results. Close defines the six closing conditions; step 8 keeps the shell with each block
+naming the condition it discharges; Task 0 step 1 and accounting row 7 cite rather than re-describe.
+
+**One correction, found by running it:** condition 6 compared bytes, and `git log --pretty=%B` adds
+one trailing newline the source file has none of — **it rejected a correct close, so the plan had no
+working success path.** Fixed and checked in four directions.
+
+**Verified in a disposable repo:** the whole of step 8 end to end. **Unverified:** every reader check,
+Failure and Resume — they need a real failure or a real interruption.
+
+**The plan's shell needs `sh` or `bash`, never `zsh`** — `$FINAL` relies on word-splitting and the
+body comparison uses process substitution.
+
+### How to run a pass, if Daniel asks for one
+
+Prompt: `.context/gate-a-plan-prompt.md`. Substitute `__SHA__` and `__P__`, precheck per its header,
+delete the target file and confirm it is gone. Codex reads the prompt from a file — write the
+substituted text to a scratch path and tell it to read that path in full and follow it exactly.
 
 **That prompt file is untracked.** `.gitignore` carries `.context/*` with only `codex-gate.on` and
 `codex-reviews/` exempt, so it survives a context clear but not a `.context/` cleanup. **If it is
-gone, rebuild it from this record** — the pass history below, the settled-and-not-open blocks and the
-collected list are what it carries, and `.context/gate-a-spec-prompt.md` is the same shape for the
-spec cycle.
+gone, rebuild it from this record** — the pass history below and the settled-and-not-open blocks are
+what it carries; `.context/gate-a-spec-prompt.md` is the same shape for the spec cycle.
+
+### Rules earlier passes installed — check each, every pass
+
+- `## What each disposition owes, stated once` fixes the observation per class; `## How a task
+  discharges that table` is the per-task procedure. **No task enumerates its condition ids**, and
+  the unit is the **source block a task replaces**, not the passage.
+- Six disposition words and no others. Two non-dispositions were found this way (`changed`, `split`).
+- A condition is checked against **the inventory's own definition of it** — `a13` is two sentences,
+  `c9` is one clause.
+- The fragment test's third condition is **class-specific**: a disappearing fragment must be absent
+  from the region's **post-edit text**, a carried one **present** in the block.
+- Every **pre-existing** fragment is derived **before** its task's install step. **No task
+  pre-assigns an id.** Every value crossing a fenced block goes to a file.
+- Untouched **spans are derived, not written out**; `.context/loop-rule-untouched` carries `base`,
+  `span` and `cond` records, consumed by Tasks 2 and 14.
+- **Destination blocks, not target sections**, are the parity site list's unit.
+- **Resume's four topologies** are the model for every state-reading rule.
+- **The plan must not execute a loop its own product forbids** — step 7 routes a non-closing pass
+  through the installed ordering before any next call exists.
+
+**The most reliable defect in this cycle: a repair reaching one site of several.** Passes 26–33 each
+found the previous pass's fix applied in one place and missing in two. **When a rule changes, grep
+for every statement of it before claiming the repair.**
 
 **After a clean close:** implement the plan — both prompt copies, the seven hook strings and their
 test expectations, version bump 0.11.0 → 0.12.0 + CHANGELOG, the quality battery, the evidence
 entry, then Gate B with a **fresh nonce** (this cycle's is Gate-A plan only).
-
-**Standing instructions from Daniel:** no stops unless an absolute block; a mandatory two-tell stop
-is surfaced in the record and the loop continues on that standing answer. Escalate only new
-behaviour decisions and real obstacles. Reports: result, verification, decision-relevant obstacles.
 
 **Two stories still await a profile confirmation:**
 `docs/superpowers/stories/2026-09-10-record-durability-story.md` and
