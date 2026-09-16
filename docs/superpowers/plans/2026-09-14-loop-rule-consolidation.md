@@ -211,7 +211,7 @@ live in the home named. Where a task, a shell comment or an error string needs a
 |---|---|---|
 | Branch, clean tree, no base file yet, `ba15e83` ancestral, approved inputs unchanged at `HEAD` | **Preparation** | Task 0 step 1, first-entry branch |
 | Base file shape, self-resolving commit, ancestral; approved inputs unchanged at `$BASE`; scratch-artifact validity; how far the implementation got | **Resume** | Task 0 step 1, re-entry branch |
-| The repository topologies a re-entry can meet | **Resume**, its table | accounting row 7; every state-reading rule |
+| What a re-entry reads, and that no rule depends on the state fitting a named shape | **Resume** — its table is illustration, not a classification | accounting row 7; every state-reading rule |
 | `HEAD` equals the reviewed head | **Close**, condition 1 | step 8a |
 | The dirty set is exactly the candidate pass's findings files | **Close**, condition 2 | step 8a |
 | The closing message is complete, and revalidated before it is consumed | **Close**, condition 3 | step 7b writes it; steps 8a and 8b check it |
@@ -242,7 +242,7 @@ independent reader did.
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions | **kept, and split by entry**: Preparation compares them **at `HEAD`**, because a first entry has no recorded base; **Resume compares them at `$BASE`**, because a Gate-B fix may legitimately have changed `HEAD`'s copy in a `WIP:` snapshot. An earlier table row claimed Preparation did the base comparison, which it never could |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
-| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test.** The model is **Resume's topology table**, which is where the four shapes are defined — re-listing them here is the third copy this revision removes. **None of them makes the base stale**, and staleness is decided by ancestry and provenance, never by a commit subject |
+| 7 | Only this run's `WIP:` commits lie between base and `HEAD` | **kept as an observation, dropped as a staleness test**, and **a second requirement is dropped here by decision**: Resume no longer has to fit the repository to a named shape before it may proceed. That demand was this plan's own — the approved §A re-establishes the conditions *against the repository as it now stands* — and it failed twice in two passes, once on a state no row described and once on a row describing one shape of several. Resume's table stays as **illustration, deliberately not exhaustive**, and no permission, base conclusion or recovery operation turns on it. **This drop is a requirement, not one of the forty-one conditions** — rows 20 and 40 are still the only *conditions* this table deletes, and row 40's count is about those. **Staleness is still decided by ancestry and provenance, never by a commit subject and never by an unfamiliar shape** |
 | 8 | `$BASE` persisted to a file; every consumer guards it non-empty | **kept**, and **repaired**: three concrete blocks read it without the guard while this row claimed otherwise — the baseline extraction, Task 10's hook diff, and the first Gate-B call. The guard is in each of them now (pass 22) |
 | 9 | The five regions are located by anchor, one hit per pattern per file | **kept**, same shell — preparation |
 | 10 | Spans are **derived** from replacement extents, never hand-written | **kept** — the rule, unchanged |
@@ -327,7 +327,7 @@ of them touched this guard.
 ### Preparation — before any task edits a file
 
 **This procedure is for a FIRST entry, on a clean tree.** A re-entry runs **Resume** instead, which
-requires no clean tree and mutates nothing — the handoff's valid topologies include `HEAD` at the
+requires no clean tree and mutates nothing — a handoff can leave `HEAD` at the
 base with the whole implementation **staged**, and an unconditional clean-tree test would make that
 state permanently unresumable through this plan's own success path.
 
@@ -498,37 +498,53 @@ and records the closing commit carries are the ones a pass actually validated.
 
 **Resume owns every entry after the first.** Preparation is first-entry-only and refuses when a base
 file exists, so nothing here defers to it: the checks below are Resume's own, and **none of them
-requires a clean tree** — every topology below can legitimately lack one. **No count of them is
-stated here**: one was, and adding the moved-`HEAD` row below falsified it.
+requires a clean tree** — a re-entry can legitimately arrive with the work staged, with it loose, or
+with both, and an unconditional clean-tree test would refuse the very states Resume exists to
+reconcile.
 
-**The topologies, named rather than numbered, and the whole procedure reads against all of them.**
+**Resume reads the repository; it does not classify it first.** Every check below runs against the
+**actual** `HEAD`, index, worktree and surviving cycle records, and **none of them is gated on the
+state matching a named shape.** The approved §A is what this follows — *"re-establish every closure
+condition against the repository as it now stands"* — and it asks for the conditions to be read,
+never for the history to be catalogued. **The table below is illustration and is explicitly not
+exhaustive**: no permission, no base-validity conclusion, no recovery operation and no continuation
+route may depend on the state fitting a row, and **a state that fits none is an ordinary input to
+Resume, not an error**.
 
-| Topology | `HEAD` | `$BASE..HEAD` | Where the work is |
+**This is a requirement being dropped, and it is named rather than lost.** Earlier revisions said
+the whole procedure reads *against the rows*, which made a complete classification of git histories
+a precondition for resuming at all. **That was this plan's invention, never §A's**, and it failed
+twice in two passes in the same way: pass 36 found a reachable state no row described, and pass 37
+found the row added for it describing only one shape of the several that reach it. **What survives
+unchanged is every governing duty** — the conditions, their object-id equality checks, the
+precondition/handoff distinction, the scratch rules, the bounded handoff, and §A's three routes.
+
+| Illustration, not a classification | `HEAD` | `$BASE..HEAD` | Where the work is |
 |---|---|---|---|
 | **Normal, mid-implementation** | the last `WIP:` snapshot | this run's `WIP:` commits, and possibly a §A3 stray commit or amend | committed |
 | **8a rejected, no commit landed** | the last `WIP:` snapshot, unchanged | this run's `WIP:` commits | committed, **plus whatever the failed attempt left in the index or worktree** |
-| **8a rejected after its commit landed** | a `WIP:` findings commit **above** the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
-| **A closure condition rejected because `HEAD` moved** — no reset has run | a commit **above** the value the condition expected: above the **reviewed head** at condition 1, or above **8a's findings commit** at condition 5 | this run's commits **plus that extra commit** | committed, **plus whatever is loose** — and the extra commit's content is **present but unreviewed** |
+| **8a rejected after its commit landed** | a `WIP:` findings commit above the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
+| **A closure condition rejected on `HEAD`** — no reset has run | **not the object id the condition expected** — the reviewed head at condition 1, 8a's findings commit at condition 5. **The direction is not part of the test**: a further commit, an amend, a rebase and a move backwards all fail the same equality | whatever the actual history holds | wherever the actual content is — and **anything the mismatch introduced is present but unreviewed** |
 | **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
-**The 8b row is the one every rule has to be re-read against.** `reset --soft` removes the `WIP:`
-chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there means
-the work is staged, not absent. **And the two 8a rows differ from each other**: before its commit
-the history is untouched and the delta is loose, after it the findings commit sits above the chain
-— pass 31 split them because they need different content reconciliation.
+**The 8b illustration is the one worth reading before any rule below.** `reset --soft` removes the
+`WIP:` chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there
+means the work is staged, not absent. **And the two 8a illustrations differ from each other**:
+before its commit the history is untouched and the delta is loose, after it the findings commit sits
+above the chain — pass 31 separated them because they need different content reconciliation.
 
-**The moved-`HEAD` row is the one that reads as ordinary progress and is not.** Its shape — a commit
-above the chain — *is* the normal row's shape, which is why pass 36 found the state described by no
-row at all and classifiable only as normal. **What separates them is why the commit is there**:
-condition 1 or condition 5 rejected *on it*, so it arrived after the head the candidate pass was
-issued against and **no pass has seen it**. Row 1's "possibly a §A3 stray commit" is the same object
-without that signal.
+**Conditions 1 and 5 are equality tests and stay that way.** `test "$(git rev-parse HEAD)" =
+"$HEADREV"` and the same against `$TIP` ask one question — is `HEAD` the object the cycle recorded —
+and **any answer of no stops the closing sequence**, whatever git operation produced it. **Do not
+rewrite the recorded value to make the test pass**: those files are what make "the head the
+candidate pass was issued against" a fact rather than a claim, and editing one turns an unreviewed
+tree into a closable one with nothing left to notice.
 
-**The two rejections that reach this row differ in one way the rules below turn on.** Condition 1 is
-a **precondition**, so nothing this plan does has moved: that is a plain stop, and no handoff is in
-progress. **Condition 5 rejects after 8a's record commit has landed**, so the Failure handoff *is*
-in progress — which is what selects the `inside a handoff` branch of the scratch-artifact rule
-below, report and change nothing, rather than delete and rebuild.
+**The two rejections differ in one way the rules below turn on.** Condition 1 is a **precondition**,
+so nothing this plan does has moved: that is a plain stop, and no handoff is in progress. **Condition
+5 rejects after 8a's record commit has landed**, so the Failure handoff *is* in progress — which is
+what selects the `inside a handoff` branch of the scratch-artifact rule below, report and change
+nothing, rather than delete and rebuild.
 
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
@@ -554,11 +570,13 @@ derived against does not.
 
 **Replace a base only on affirmative evidence it belongs to another run** — it fails one of the
 checks above. **Neither a commit subject nor an absence of cycle commits is evidence**: §A3's stray
-non-`WIP` commit leaves the base valid, and the 8b topology has an empty range by construction, so
-both tests would condemn states this plan calls valid. **Nor is an extra commit above the reviewed
-head**: it sits *above* the base, so ancestry still holds and the approved inputs at `$BASE` are
-untouched — the moved-`HEAD` topology leaves the base valid, and what that commit costs is Close
-condition 1's to decide, not the base checks'.
+non-`WIP` commit leaves the base valid, and after a `reset --soft` the range is empty by
+construction, so both tests would condemn states this plan calls valid. **Nor is a `HEAD` mismatch, in any direction**:
+base validity is **established by the checks above and never inferred** — from a mismatch, from a
+shape, or from the state not resembling anything named here. Run them and read the answer. A
+mismatch costs whatever Close condition 1 says it costs, which is not the base checks' question, and
+where the base does fail one of them the rule is the one already stated: **affirmative evidence, then
+replace — never because a re-entry looked unfamiliar.**
 
 - [ ] **Validate the scratch artifacts**
 
@@ -577,44 +595,46 @@ chose a §A route. **This plan performs no cleanup after a failure — it does n
 operation left anything intact.** Enumerate which scratch values actually survive and validate each;
 a value is trustworthy because it passed a check, never because cleanup was skipped.
 
-- [ ] **Establish how far the implementation got — against the topology, not against the log**
+- [ ] **Establish how far the implementation got — from the content, not from the log**
 
-**Read the content, not only the commits.** In the normal, the two 8a and the moved-`HEAD`
-topologies that is the commits between `$BASE` and `HEAD`, **plus whatever the failed attempt left
-loose**. **In the 8b topology it is `git diff --cached "$BASE"`** — the staged tree, plus the landed
-closing commit's tree where one exists. A ticked checkbox is confirmed by the change
-being *present in that content*, wherever the content lives.
+**Read all four sources, every time, and do not decide first which of them matters.** Which one
+holds the work varies — after `reset --soft` it is the index and `$BASE..HEAD` is empty; after an 8a
+handoff part of it is loose — and **routing on a guessed shape is how a source gets skipped**. So
+read them all and reconcile against what they actually contain:
 
 ```bash
-git log --oneline "$BASE"..HEAD     # empty in the 8b topology; that is not an empty cycle
+git log --oneline "$BASE"..HEAD     # can legitimately be empty; that is not an empty cycle
 git diff --cached "$BASE"           # the staged content — the FULL diff, not --stat
 git diff                            # the unstaged content
 git status --porcelain --untracked-files=all
 ```
 
-**Read all three, in every topology.** `git status` names paths and says nothing about what is in
-them, and `--stat` counts lines. **The delta that caused an 8a handoff is precisely the one a
-path listing cannot describe** — a rewritten staged file keeps its name — so reconcile against
-`HEAD`, the index and the worktree **contents** together, whichever topology you are in.
+A ticked checkbox is confirmed by the change being *present in that content*, wherever it lives.
+`git status` names paths and says nothing about what is in them, and `--stat` counts lines. **The
+delta that caused an 8a handoff is precisely the one a path listing cannot describe** — a rewritten
+staged file keeps its name — so reconcile against `HEAD`, the index and the worktree **contents**
+together.
 
-**A task whose checkbox is ticked but whose change is in neither place was not completed** — and one
+**A task whose checkbox is ticked but whose change is in none of them was not completed** — and one
 whose change is present with the box unticked is completed. **Deciding from the commit log alone
-reads the 8b topology as an untouched cycle and invites every edit to be made twice.**
+reads a post-reset repository as an untouched cycle and invites every edit to be made twice.**
 
-**Present is not reviewed, and the moved-`HEAD` topology is where the two come apart.** Reconciling
-the task list tells you what the repository *holds*; it says nothing about what a pass has *seen*.
-Content in a commit above the reviewed head arrived after the candidate pass was issued, so **no
-pass has reviewed it**, and a ticked checkbox does not make it reviewed. **Do not adopt it** —
-carrying it into a close is the defect Close condition 1 exists to stop, and that condition's own
-rule is what decides the cost: only a clean response issued against that exact `HEAD` closes the
-cycle. **And do not remove it** — this plan restores nothing, and a commit deleted here is evidence
-a person has not yet chosen a §A route on. **Report it as present and unreviewed**, name it in the
-Failure report's "whether a commit landed" line, and leave the three routes in `## The four
-procedures` · Failure to decide.
+**Present is not reviewed, and a `HEAD` mismatch is where the two come apart.** Reconciling the task
+list tells you what the repository *holds*; it says nothing about what a pass has *seen*. Whenever
+`HEAD` is not the object id the cycle recorded, **something reached this repository that no pass
+reviewed** — a further commit, an amended one, a rebased one, or a tree the history moved back to —
+and a ticked checkbox does not make any of it reviewed. **Do not adopt it**: carrying it into a
+close is the defect Close condition 1 exists to stop, and that condition's own rule decides the
+cost — only a clean response issued against that exact `HEAD` closes the cycle. **Do not remove it**:
+this plan restores nothing, and what you delete here is evidence a person has not yet chosen a §A
+route on. **And do not rewrite `.context/loop-rule-reviewed-head` or `-reviewed-tip` to match**,
+which would make the equality pass by discarding the only record of what was reviewed. **Report the
+mismatch and the state**, name it in the Failure report's "whether a commit landed" line, and leave
+`## The four procedures` · Failure and §A's three routes to decide.
 
 **How success is recognised.** The base passes Resume's own checks; the artifacts match it and are
 complete, or are reported as invalid and left alone; and the plan's task list has been reconciled
-against the content the topology actually holds.
+against the content the four sources actually hold. **Fitting a named shape is not among them.**
 
 **Steps that describe the tree at `$BASE` are validated on re-entry, not re-run against the
 worktree.** After a text task the worktree carries this plan's own edits, and rebuilding the
@@ -1199,8 +1219,7 @@ and 11 also record — and a stale list is the same defect as a stale count. **T
 omission is concrete:** the evidence stays out of its own task's `WIP:` snapshot, so the reviewed
 range does not hold it where the task claims, and if execution continues it is swept into a later
 unrelated commit rather than the independently reviewable snapshot this plan promises. **Not a
-clean-tree argument** — Resume requires no clean tree, and none of its topologies is required to have
-one; an earlier draft said re-entry needs one, which would have rejected the very states Resume
+clean-tree argument** — Resume requires no clean tree in any state it can meet; an earlier draft said re-entry needs one, which would have rejected the very states Resume
 exists to reconcile.
 
 Named `WIP:` because Task 15 runs Gate B over the whole change and closes it with **one
