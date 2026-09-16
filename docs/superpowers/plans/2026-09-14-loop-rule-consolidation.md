@@ -28,6 +28,7 @@ It adds no task, prerequisite or closure condition to this plan.
 - **Invariant 11:** every prompt change passes all 12 items of `docs/prompt-standards.md`. Most at risk: item 6 (every constraint carries its reason in the same sentence) and item 8 (token-lean).
 - **Invariant 4 / the hook:** no control flow, counter, fingerprint computation, routing or event handling changes. Only `note` strings and their expectations.
 - **Gate-B cycle discipline:** snapshot commits are named `WIP: …`, and a non-`WIP` commit mid-cycle resets the hook's counters. **This change closes with `git reset --soft "$BASE"` followed by one commit, not with `--amend`** — Mechanics prescribes the reset shape wherever several WIP snapshots piled up, and this plan makes one per task. Task 15 step 8 is the operation.
+- **Every `git add` in this plan is guarded, and a guard is where most of them stop.** A failed staging otherwise falls through to the `git commit` on the next line, which **can still succeed on whatever the index already held** — this plan states in Task 15 step 7 that the index may carry foreign staged content, and Resume deliberately admits a live staged index — so the block reports a snapshot it did not take. **A content comparison after the commit is added only where a later step reads that commit rather than the worktree**, and that is three places: step 7's step one, whose record step two then reads; step 7's step three and step 4b, whose commits bound the range the next Gate-B call reviews. The per-task snapshots have no such consumer — every check this plan runs afterwards reads the worktree, and Gate B reads the accumulated `$BASE..HEAD` range rather than any one commit — so they are guarded and not pinned. **8a is the exception that needs no addition**: Close condition 4 already pins its blobs before staging and compares them against the committed tree.
 
 ---
 
@@ -1150,7 +1151,8 @@ row, and the reading result for `F1`, `F2` and `F3`, whose §F notes give no lin
 region cannot be built mechanically.
 
 ```bash
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: fragment sweep at the recorded base"
 ```
 
@@ -1237,7 +1239,8 @@ Expected: no output.
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: install the closure ordering into both §5 copies"
 ```
 
@@ -1388,7 +1391,8 @@ as inherited drift. **Any difference other than the parenthetical is a failure o
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: replace passage (b) with the absorb paragraph that owns the fix set"
 ```
 
@@ -1532,7 +1536,8 @@ here; `c10`–`c14` gone from here.
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: widen the clearly-stuck third condition and split its precedence sentence"
 ```
 
@@ -1635,7 +1640,8 @@ the class alone does not tell you:
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: read the two-tell threshold after the clean-completion branch"
 ```
 
@@ -1733,7 +1739,8 @@ Expected: no output. This passage should now be byte-identical, `g4` having been
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: answer the demotion question and scope the resolve duty to the fix set"
 ```
 
@@ -1897,7 +1904,8 @@ Expected: `1` each in the worktree, and `parent=1 worktree=1` in each copy for e
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: install the one-contract paragraph and the remaining prompt-copy replacements"
 ```
 
@@ -2001,7 +2009,8 @@ State the number you observed. **Do not carry a count from §F into a check** �
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: replace the fourteen falsified sentences in the two prompt copies"
 ```
 
@@ -2047,7 +2056,8 @@ The hook reporting its own threshold as an obligation at a floor of 1 is **not**
 
 ```bash
 git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: correct the Named residual's blanket exemption and the work-loop sequence"
 ```
 
@@ -2189,7 +2199,8 @@ point where green is expected.
 
 ```bash
 git add plugins/dev-workflow/hooks/codex-gate.sh \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: replace the seven gate reminders the ordering falsifies"
 ```
 
@@ -2275,7 +2286,8 @@ Expected: exit 0. **The `--exclude=SC2015` is a single-code exclusion**, not a b
 
 ```bash
 git add plugins/dev-workflow/hooks/codex-gate.test.sh \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: move every hook assertion that names a replaced reminder string"
 ```
 
@@ -2320,7 +2332,8 @@ fix changes either predicate, and reaches the closing commit as an assertion tha
 happened.
 
 ```bash
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: record the b11/b13 equivalence result"
 ```
 
@@ -2382,7 +2395,8 @@ ran — and one recorded only in `.context/` is unrecorded as far as the commit 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: record the completeness sweep"
 ```
 
@@ -2438,7 +2452,8 @@ Two, per design §7: that a logical pass was validated across every required bra
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: next-state table and per-condition closure checks"
 ```
 
@@ -2586,7 +2601,8 @@ would catch an identical accidental edit in both copies.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git add CLAUDE.md plugins/dev-workflow/commands/workflow-init.md docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: align the two copies and record the divergence list"
 ```
 
@@ -2614,7 +2630,8 @@ grep -n '"version"' plugins/dev-workflow/.claude-plugin/plugin.json
 - [ ] **Step 3: Commit the bump into the WIP snapshot**
 
 ```bash
-git add plugins/dev-workflow/.claude-plugin/plugin.json plugins/dev-workflow/CHANGELOG.md
+git add plugins/dev-workflow/.claude-plugin/plugin.json plugins/dev-workflow/CHANGELOG.md \
+  || { echo "staging FAILED — nothing is committed here; stop and fix the staging"; exit 1; }
 git commit -m "WIP: bump dev-workflow to 0.12.0"
 ```
 
@@ -2630,9 +2647,14 @@ comparison. **Fetch, then pass the fetched ref to the checker itself** — an ea
 what supplied a comparison it had not supplied:
 
 ```bash
-git fetch origin main
-git rev-parse origin/main > .context/loop-rule-baseref   # resolve ONCE; record this object name
-cat .context/loop-rule-baseref
+# Both guarded, and no `cat`. A failed fetch leaves whatever an earlier one wrote in
+# `origin/main`, and `git rev-parse` resolves that stale ref happily — the block would
+# exit 0 having recorded a base the pull request does not have. A failed write is the
+# same shape: the `cat` after it printed the older recorded value.
+git fetch origin main \
+  || { echo "fetch FAILED — origin/main is whatever an earlier fetch left; do not run the battery"; exit 1; }
+git rev-parse origin/main > .context/loop-rule-baseref \
+  || { echo "recording the base ref FAILED — do not run the battery"; exit 1; }
 ```
 
 **Pass that object name to `check-version-bump.sh`, not `origin/main`.** A remote-tracking ref is
@@ -3127,7 +3149,8 @@ test -s .context/loop-rule-closing-msg || { echo "closing message missing or emp
 # Condition 4, first bullet: pin the validated blobs before staging.
 for f in $FINAL; do git hash-object "$f"; done > .context/loop-rule-final-blobs
 # shellcheck disable=SC2086
-git add $FINAL
+git add $FINAL \
+  || { echo "staging FAILED — run Failure; do NOT commit"; exit 1; }
 git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — run Failure"; exit 1; }
 test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
 git diff --quiet "$HEADREV" HEAD -- "$@" \
@@ -3171,7 +3194,13 @@ test -s .context/loop-rule-closing-msg || { echo "closing message missing or emp
 # oracle must not be the same mutable path the commit reads: a `commit-msg` hook
 # that rewrites git's copy AND this ignored source file would otherwise make the
 # post-close comparison pass on a body nobody validated.
-cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg
+# Remove any pin an earlier attempt left BEFORE writing this one, so a failed refresh
+# leaves condition 6 with no oracle rather than a stale one its `test -s` would accept
+# — and guard the copy, because the commit is the very next command and a failed pin
+# must not fall through into it.
+rm -f .context/loop-rule-validated-msg
+cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg \
+  || { echo "pinning the validated closing message FAILED — run Failure; do NOT commit"; exit 1; }
 # `--cleanup=verbatim` so the stored body is the validated bytes: git's default
 # cleanup for -F strips trailing whitespace and collapses blank runs, and
 # condition 6 compares bytes. It carries no `-m`, so `is_wip_commit` still misses it.
@@ -3195,7 +3224,13 @@ test -z "$(git status --porcelain)" || { echo "tree dirty after the close — ru
 # tidied copy. Both observed in a disposable repository, so this diff is the
 # byte equality condition 6 states, not a normalized stand-in for it.
 test -s .context/loop-rule-validated-msg || { echo "no pinned message — 8b did not complete; run Failure"; exit 1; }
-git log -1 --pretty=format:%B > .context/loop-rule-landed-msg
+# Same shape as 8b's pin: remove the previous extraction first, then guard this one.
+# A failed redirect otherwise leaves an earlier body at the path and the `diff` below
+# masks the failure — it can even pass, when the earlier body was the same validated
+# message, so the close is accepted on bytes nobody read out of THIS commit.
+rm -f .context/loop-rule-landed-msg
+git log -1 --pretty=format:%B > .context/loop-rule-landed-msg \
+  || { echo "extracting the committed body FAILED — run Failure; the comparison has no input"; exit 1; }
 diff .context/loop-rule-validated-msg .context/loop-rule-landed-msg \
   || { echo "the committed body differs from the validated message — run Failure"; exit 1; }
 ```
