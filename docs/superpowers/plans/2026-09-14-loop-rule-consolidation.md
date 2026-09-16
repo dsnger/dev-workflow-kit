@@ -604,7 +604,7 @@ different passage, because each task was inventing the rule for its own conditio
 | Disposition | The observation it owes |
 |---|---|
 | **kept** | **exactly one of three routes**, never two and never none: inside an untouched span; **or** its own per-condition count, `parent=1 worktree=1` in each copy, where it shares a line with changed text; **or** that same per-condition count where **no untouched span reaches its passage at all** — Task 0 maps five regions, and passages (b), (c), (e) and (i) are not among them, so every kept condition there takes this third route. |
-| **carried** | a **preservation count** after installation, `1` in each copy, from the condition's own text. **No untouched span covers a carried condition** — it sits inside a replacement block, which is the whole reason it is not recorded as kept. |
+| **carried** | a **preservation count** after installation, `parent=1 worktree=1` in each copy, from the condition's own text — the same two values the *kept* route above owes, and stated the same way here because an earlier wording said `1` and left which count ambiguous. **No untouched span covers a carried condition** — it sits inside a replacement block, which is the whole reason it is not recorded as kept. |
 | **replaced** | a **discriminating pair**, `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`, **both halves from the same edit**. |
 | **moved** | **two** observations: an **absence** at the source, `parent=1 worktree=0`, and a **condition-specific presence** at the destination, `worktree=1 parent=0`. A presence check on the destination *paragraph* is not the second half — it passes while any one moved predicate is missing from it. |
 | **dropped** | an **absence check**, `parent=1 worktree=0`, **one per dropped condition**. Two dropped conditions sharing one fragment is one observation, and it goes absent when either half goes, leaving the other free to survive. |
@@ -1766,8 +1766,9 @@ Expected for all twenty: `old/worktree=0 old/parent=1 new/worktree=1 new/parent=
   parent=0` there. **An earlier draft derived these rows at step 1b and then never ran them**, so
   the old clean-final-pass, loop-until-clean, zero-finding and no-padding instructions could each
   survive at their source with nothing observing it;
-- **a preservation count** of `1` in each copy for each of the nine carried conditions and each
-  kept condition in passage (i), from the fragments step 1b appended;
+- **a preservation count** to `parent=1 worktree=1` in each copy for each of the nine carried
+  conditions and each kept condition in passage (i), from the fragments step 1b appended — the
+  result the disposition table owes, which an earlier wording gave here as `1` alone;
 - **a presence check** — `new/worktree=1 new/parent=0` in each copy — for §G's semantic membership
   test and for every independent add-only clause in the strict-reading tail.
 
@@ -1816,7 +1817,13 @@ git commit -m "WIP: install the one-contract paragraph and the remaining prompt-
 - Modify: `docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md` — the rows this task appends and its fragment evidence
 **The bytes:** target §F items 1, 2, 3, 4, 5, 6, 7, 8, 7a, 8a, 8b, 9a, 9b and 9 — fourteen items, each with its own fenced replacement and its `C nnn` / `W nnn` citation. **Re-read every citation against the current file**: §F's own collected list records that items 4, 5 and 8 have line citations one off, and the numbers drifted further as this cycle edited the copies.
 
-**`h4`, `h5` and `h19` are the human-exception conditions these items discharge** — item 7 is both destinations, `h4`'s and `h5`'s, item 4 the scope sentence.
+**Which conditions this task discharges is decided by `## How a task discharges that table`, run
+against the disposition rows for the blocks these fourteen items replace — not by a list here.**
+This line carried one: it named `h4`, `h5` and `h19` and silently omitted **carried `h3` and carried
+`a1`**, and that is how `h3` reached pass 35 with no observation at all. An enumeration inside a
+task is the second copy of the disposition table, which this plan forbids two sections up and has
+now been bitten by from inside the section that forbids it. As orientation, not as the set owed:
+item 7 carries both the `h4` and `h5` destinations, and item 4 the `h19` scope sentence.
 
 - [ ] **Step 1: Re-derive every item's real location**
 
@@ -1834,12 +1841,27 @@ pre-edit count of 1 can no longer be observed at all. A row that no longer count
 since the table was verified — repair the row against the live line and update the table before
 installing anything.
 
-**And derive `a1`'s preservation fragment here too.** `a1` is **carried** inside item 8a's block,
-which reproduces it — so it is pre-existing text and the fragment-table cut puts it in the table,
-before the install, like every other pre-existing fragment. An earlier draft chose it at step 4,
-after item 8a had already replaced the block: at that point a drifted or half-installed HARD FLOOR
-opening cannot be told from the intended carried text, and no authored fragment exists for Task 15
-to audit.
+**And derive the preservation fragment of every carried condition these blocks cover, here** — they
+are pre-existing text, so the fragment-table cut puts them in the table before the install like
+every other pre-existing fragment, under the next free `P` id. `## How a task discharges that
+table` is what says which conditions those are. **Two of them are invisible without the block open,
+and both have been missed:**
+
+- **`a1`**, carried inside item 8a's block, which opens with it — `**Both gates are a LOOP with a
+  HARD FLOOR: a minimum number of passes per run`. Row F10's pair observes `a2`, the parenthetical,
+  not the opening it sits in.
+- **`h3`**, carried inside item 7's block, which reproduces `an ungated change records it in that
+  commit` verbatim because the item replaces the whole `**Which commit:**` sentence and only the
+  Gate-A clause changes. **Neither F7 nor F7b can stand in for it:** both are OLD halves required to
+  reach **zero**, F7 runs from `h3`'s own wording into the changed `h4` wording, and item 7's NEW
+  text is not constrained to carry `h3` at all. So item 7 could drop that clause from both copies
+  with all fifteen pairs, the parity diff and the battery still green — pass 35, and the fourth time
+  in this cycle a carried or kept condition lost its only observation.
+
+An earlier draft chose `a1`'s fragment at step 4, after item 8a had already replaced the block: at
+that point a drifted or half-installed HARD FLOOR opening cannot be told from the intended carried
+text, and no authored fragment exists for Task 15 to audit. **The same applies to `h3` and to every
+other fragment on this list** — derive before installing, never after.
 
 - [ ] **Step 2: Install all fourteen replacements**
 
@@ -1861,14 +1883,19 @@ every stated count still passed.
 Expected for all thirty pair instances — fifteen rows in each of the two copies:
 `old/worktree=0 old/parent=1 new/worktree=1 new/parent=0`.
 
-- [ ] **Step 4: Confirm `a1` survived, then count what was installed**
+- [ ] **Step 4: Confirm the carried conditions survived, then count what was installed**
 
-**`a1` is carried inside item 8a's block**, which opens with it — `**Both gates are a LOOP with a
-HARD FLOOR: a minimum number of passes per run` — and reproduces it so one contiguous string
-installs. Carried, not kept: **no untouched-range span covers it**, and row F10's pair observes
-`a2`, the parenthetical, not the opening it sits in. **Count the fragment step 1 appended**, in
-each copy, expecting `1`. Without it a mis-scoped item-8a replacement can drop the sentence's
-opening and every other check in this task still passes.
+**Count every preservation fragment step 1 appended** — in each copy, to the result its class owes:
+`parent=1 worktree=1`, per `## What each disposition owes, stated once`. **Both values matter.** The
+worktree half is what proves the block preserved the condition; the parent half is what proves the
+fragment was ever in the file it claims to observe, so a mistyped one reports `parent=0 worktree=0`
+instead of a healthy-looking `1`. Record each as a `preservation` line in this task's fragment
+evidence — which is what carries it into Task 15's re-run set and the closing evidence entry.
+
+**No untouched-range span covers any of them**, which is why each owes its own count. Without these
+counts a mis-scoped replacement passes every other check in this task: item 8a can drop the HARD
+FLOOR sentence's opening, and item 7 can drop `an ungated change records it in that commit`, while
+all fifteen pairs, the parity diff and the battery stay green.
 
 Then total the fifteen `new/worktree` values step 3 printed, per copy.
 
