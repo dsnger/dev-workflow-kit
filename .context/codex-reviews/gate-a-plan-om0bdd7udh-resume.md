@@ -13,10 +13,29 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Cycle OPEN and UNCLEAN. The plan stands at `0bb1d5d` and that is the anchor** — later commits on
+**Cycle OPEN and UNCLEAN. The plan stands at `8361f0a` and that is the anchor** — later commits on
 this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
-rather than `HEAD`. Pass 42 reviewed `0bb1d5d` and found **two Blockers and one Major**.
-`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-42.md` holds them.
+rather than `HEAD`. Pass 43 reviewed `8361f0a` and found **two Blockers, two Majors and one Minor**.
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-43.md` holds them.
+
+**Nothing pass 43 raised is inside the assigned fix set, and that is the whole finding.** The tenth
+revision repaired pass 42's three findings in the four blocks they name, and **pass 43 re-raised none
+of them**. Its two Blockers and two Majors are the *same class* — an unguarded command whose status a
+following command masks — at **other** locations: 8b's `cp` pinning the validated message, condition
+6's `git log … > file` followed by `diff`, step 4's `git fetch`, and every remaining `git add`
+before a `git commit` across Tasks 0–14 and step 8a. Its one in-set finding is a **Minor**: the new
+blob check accepts a symlink, since git stores one as a blob with mode `120000`.
+
+**So the loop stops here rather than absorbing them.** §5: the fix set was fixed before this pass —
+pass 42's three findings and the four named blocks — and a finding whose repair leaves that set stops
+the loop even when it opens no new question. Finding 4 is explicitly the plan-wide sweep Daniel's
+assignment excluded. **Three tells** also make the stop mandatory: findings rose 3 → 5, Blockers are
+flat at 2, and the findings cluster on the instrument for the tenth pass running.
+
+**The open question is one Daniel decides, not a repair to start:** whether to widen the fix set to
+the same class plan-wide — which is finding 4, and is the audit the last four assignments each
+declined — or to close only the in-set Minor, or to leave the class where it is. The Minor alone does
+not iterate.
 
 **One unrelated commit sits in this history and is NOT part of this cycle.** `d4a87c6` records an
 OpenWolf assessment — a separate task authorized 2026-09-16 — as `docs/openwolf-assessment.md`, a
@@ -69,6 +88,10 @@ count here.
    whose recorded input was wrong. **Pre-existing at step 6; the same shape at step three.**
 
 ### Still collected and deliberately unrepaired (pass 34's Minors and Nit)
+
+**MINOR (pass 43, the only in-set finding)** — step one's new blob check accepts a **symlink**: git
+stores one as a blob with mode `120000`, so the check would have to read the indexed mode and admit
+regular-file modes only. Collected, not iterated, per Mechanics · Severity.
 
 **MINOR** — step 8 is titled "two invocations" and carries four fenced blocks, and the index calls
 the last two "8b blocks"; **MINOR** — the Architecture paragraph still says every task runs a
@@ -264,6 +287,8 @@ worth checking before a pass rather than after.
 | 41 | 4c9ed3c | 2→**1** | 1→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened. Best pass since 35, first zero-Blocker pass since 37.** MAJOR, **this round's own repair**: step 7 step three's `git commit` is unguarded and the head is written unconditionally after it, so a failed commit records the **old** head and the next call reviews a tree without the repair — demonstrated with a rejecting `pre-commit` hook. 8a guards its commit exactly this way; step one has the same shape with a smaller blast radius. **Only one tell** (instrument cluster) — the stop is instructed, not mandated |
 | — | — | — | — | — | — | **NINTH BOUNDED REVISION**, Daniel's assignment after pass 41: guard step three's repair commit (exiting **before** the tip is touched), and guard step one's records commit as a **separate** bounded repair of a different shape — its commit is already terminal, so the guard exists because what follows is *prose*. **Inspection, scoped to commit-containing blocks and reported with that limit:** 21 of 54 fenced blocks commit; 18 end with the commit; 8a is guarded; 8b is terminal and condition 6 re-establishes it independently; step three was the only masking sequence. 21 checks × 3 shells. Commit `0bb1d5d` |
 | 42 | 0bb1d5d | 1→**3** | 0→**2** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **BLOCKER: step one stages the plan** while forbidding a premature repair, so a post-review plan edit is committed before the ordering is read — pass 39's violation through another file. **BLOCKER: every `git add` before the new guards is unguarded**, so a failed staging falls through to a commit that succeeds on already-staged content. MAJOR: both reviewed-head writes are unchecked and `cat` masks a failed write — **demonstrated**, the block exits 0 on a stale value. **Two are mine** (the narrowing dropped the original `&&` and kept the plan in the list); **step 6's Major and step 4b's add are pre-existing**, and step 6 lay outside my inspection's declared limit. Three tells → mandatory stop |
+| — | — | — | — | — | — | **TENTH BOUNDED REVISION**, Daniel's assignment after pass 42, narrowed by his reviewer to the three findings and the four blocks they name — **no plan-wide search**. Step one drops the plan from its staging list and requires it unchanged first (HEAD↔index, then index↔worktree), since `git commit` commits the index. Every `git add` guarded; each commit checked against a `git write-tree` pin. **Step one additionally requires both slot paths to be blobs in the pin** — `git add` stages a *removal* as readily as a change, so a tracked findings file deleted before staging is staged as gone and pin and commit then agree without it; an existence test alone would also accept a directory at the path. Steps three and 4b take no presence check: an authorized repair may delete a file. Both reviewed-head writes guarded, both `cat`s gone. 20 checks × 3 shells in a disposable repo, all green; **three failures in the first run were all harness bugs** and are recorded as such. Commit `8361f0a` |
+| 43 | 8361f0a | 3→**5** | 2→**2** | 1→**2** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **All three pass-42 repairs held; nothing was re-raised against the four repaired blocks.** Every Blocker and Major is the **same class at another location**: 8b's unguarded `cp` of the validated message, condition 6's unguarded `git log … > file` masked by the following `diff`, step 4's unguarded `git fetch`, and every remaining unguarded `git add` across Tasks 0–14 and 8a — **that last one is the plan-wide sweep the assignment excluded**. The only in-set finding is a MINOR: the new blob check accepts a **symlink** (blob, mode `120000`), so the indexed mode would have to be checked too. Three tells → mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
