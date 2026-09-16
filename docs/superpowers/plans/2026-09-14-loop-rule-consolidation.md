@@ -3003,6 +3003,25 @@ test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
 staged before this step runs is carried in, and no check in this plan catches it** — the close's
 dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixes that.
 
+**Step two reads the COMMITTED findings, not the worktree copies** — `git show "HEAD:$SPEC"` and
+`git show "HEAD:$QUAL"`, with `SPEC` and `QUAL` as step one spelled them. Target §A requires every
+finding-derived predicate to read the **validated** findings file, and the worktree copy is the one
+thing that can still change after validation: a `commit-msg` or `pre-commit` hook that rewrites only
+the worktree leaves step one's checks entirely satisfied — the staged index, the pin and the commit
+tree all agree — while the file a reader would open no longer holds what the pass was accepted on.
+Reading `HEAD` closes that, because the commit is immutable once step one's tree comparison has
+passed.
+
+**What this does not establish, disclosed rather than guarded.** It does not prove those committed
+bytes are the ones **pass acceptance** validated. Step one pins what is on disk when step one runs;
+an edit between accepting the result and staging it is pinned as staged and passes every check here,
+which this plan already says of its pin. Closing *that* gap would mean carrying the accepted blob
+ids out of the acceptance step in a file, and **no such duty exists in the approved spec or in §5** —
+it is named here as the residual it is, not repaired. **The reviewer's further demand — re-running
+the structural and branch-eligibility checks on the committed content — is declined for the same
+reason**: object identity is what step one can establish, and Close condition 4's third bullet is a
+*closing*-commit duty the approved text does not place on a non-closing record commit.
+
 **Step two — read the pass against the ordering, before any next call exists:**
 
 - **A source block standing** → **the source rule decides what must be repaired or answered, and its
