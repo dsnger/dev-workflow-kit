@@ -13,56 +13,60 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Cycle OPEN and UNCLEAN. The plan stands at `4c9ed3c` and that is the anchor** — later commits on
+**Cycle OPEN and UNCLEAN. The plan stands at `0bb1d5d` and that is the anchor** — later commits on
 this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
-rather than `HEAD`. Pass 41 reviewed `4c9ed3c` and found **one Major and nothing else — 0 Blockers**.
-`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-41.md` holds it.
+rather than `HEAD`. Pass 42 reviewed `0bb1d5d` and found **two Blockers and one Major**.
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-42.md` holds them.
 
 **One unrelated commit sits in this history and is NOT part of this cycle.** `d4a87c6` records an
 OpenWolf assessment — a separate task authorized 2026-09-16 — as `docs/openwolf-assessment.md`, a
-parked `todos.md` entry, and **four informational lines near the top of this plan** which state in
-their own text that they add no task, prerequisite or closure condition. It was committed on its own
-so it stays identifiable, and pass 40 onward reviewed the plan including those lines. **Its gate
-classification is settled and I had overstated the doubt:** CLAUDE.md's prose enumeration does not
-name `todos.md`, but the **implemented** classification does — `is_docs_only` in
-`plugins/dev-workflow/hooks/codex-gate.sh` accepts any `*.md` outside the prompt paths, and a
-shipped test at `codex-gate.test.sh:446` pins a root-level `NOTES.md` as docs. Run on the three real
-commit paths it returns **`is_docs_only: yes`**. Reproduced here. That is not a claim that a gate
-ran; it is why no Gate-B round is owed for that filing on the strength of the filename alone.
+parked `todos.md` entry, and four informational lines near the top of this plan which state in their
+own text that they add no task, prerequisite or closure condition. Its gate classification is
+settled: `is_docs_only` in `plugins/dev-workflow/hooks/codex-gate.sh` returns **yes** for the three
+real commit paths, and a shipped test pins a root-level `.md` as docs. Not a claim that a gate ran.
 
 **Do not start a repair round on your own.** Daniel's assignment of 2026-09-16 ended with a
-checkpoint: *"genau ein vollständiger Gate-A-Pass und Bericht. Keine automatische Folgerunde, keine
-Produktimplementierung und keine OpenWolf-Evaluation."* Spent — one bounded repair, one scoped
-search, one pass, all delivered — so **the next move is Daniel's word, not an inference.**
+checkpoint: *"Validate and report that pass, then stop regardless of its outcome. No automatic repair
+round, product implementation, or OpenWolf evaluation."* Spent — one bounded revision, one scoped
+inspection, one pass, all delivered.
 
-**Only ONE tell this time — the instrument cluster, eighth pass running.** Findings fell 2 → 1,
-**Blockers fell 1 → 0**, Majors flat at 1. **So this stop is instructed, not mandated** — the first
-time in six passes that the tells alone would not have required it.
+**Three tells, so this stop is mandatory as well as instructed**: findings rose 1 → 3, **Blockers
+rose 0 → 2**, and the findings cluster on the instrument for the ninth pass running.
 
-**Where this stands after 41 passes.** Findings 3 → 3 → 2 → 2 → **1**; Blockers 0 → 1 → 1 → 1 → **0**;
-Majors 1 → 2 → 1 → 1 → **1**. **Pass 41 is the best since pass 35** and the first zero-Blocker pass
-since 37. Two things kept in view rather than glossed:
+**Two of the three are mine, and the record says which.** The distinction matters more than the
+count here.
 
-**One: the repair still tends to produce the next finding** — passes 37, 40 and 41 each found a
-defect in the previous round's own fix. **But the class is narrowing.** Pass 37's was a design
-inversion, pass 40's a wrong pathspec, pass 41's a missing `||` guard — mechanical and local.
+- **Newly introduced, by the eighth revision (mine).** Blocker 1 and half of Blocker 2. When I
+  replaced `git add -A` with named paths I **kept the plan in step one's list**, and I **split
+  `git add … && git commit` onto separate lines**, dropping the `&&` that had guarded the staging.
+  The original shape was safer in both respects than the narrowing I put in its place.
+- **Newly discovered, pre-existing.** The Major at **step 6**, and step 4b's unguarded `git add`.
+  **My inspection could not have found step 6's**: the assignment scoped it to *commit-containing*
+  blocks, step 6's block contains none, and I declared that limit. The limit was real and this
+  finding walked straight through it.
 
-**Two: the last three Blockers each sat in an area no earlier pass had flagged** (Resume's branch
-check, Task 15 step 7, Task 0 step 3), and pass 41 found none. That is what these passes did; it
-predicts nothing about what remains.
+### The three open findings from pass 42
 
-### The one open finding from pass 41
-
-**MAJOR — step 7 step three's repair commit is unguarded, and the head is recorded anyway.** The
-block runs `git commit -m "WIP: fix <finding>"` and then, unconditionally, deletes the prior tip and
-writes `.context/loop-rule-reviewed-head` from `git rev-parse HEAD`. **A failed commit is masked by
-the succeeding `rev-parse`**: the next Gate-B call is issued against the *old* head while the repair
-sits staged or loose, the review never sees it, and the cycle stops later on the close's dirty-set
-check. **Demonstrated by execution** — with a rejecting `pre-commit` hook the commit does not land,
-the recorded head equals the old head, and the repair stays staged. **This is this round's own
-repair**, and 8a two hundred lines away guards its commit exactly this way, so the fix is that
-spelling. **Step one has the same unguarded shape** with a smaller blast radius — it is followed by
-no head write — and is worth carrying with it.
+1. **BLOCKER — step one stages this plan, while forbidding any premature repair.** The block says
+   "record the pass, and nothing else" and "do not apply the repair yet — not in the worktree
+   either", then stages
+   `docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`. **Step one produces no plan
+   output** — the re-run records are written at step three — so anything dirty in the plan is a
+   post-review edit, and it is committed **before** step two reads the ordering. A membership,
+   source-block or stop answer then arrives after the change is already in history, which is the
+   pass-39 violation reopened through a different file. **Introduced by me.**
+2. **BLOCKER — the new guards cover `git commit` only; every `git add` before them is unguarded.**
+   A failed staging falls through to a commit that can still succeed on content the index already
+   held — and this plan **expressly discloses** that the index may hold foreign staged content. Step
+   one then records a pass without its findings files; step three records a new reviewed head with
+   no repair in it; step 4b puts Gate B over a range missing its repair. **Step one and step three
+   are mine** — the original `&&` guarded the add. **Step 4b's is pre-existing.**
+3. **MAJOR — both reviewed-head writes are unchecked, and `cat` masks the failure.** Step 6 (line
+   2767) and step 7 step three (2883) both run `git rev-parse HEAD > .context/loop-rule-reviewed-head`
+   followed by `cat`. **Demonstrated by execution**: with the target unwritable the redirect fails,
+   `cat` prints the **stale** earlier value, and the block exits **0** — so a Gate-B call is issued
+   against a head that is not `HEAD`, and the close's exact-head condition later rejects a review
+   whose recorded input was wrong. **Pre-existing at step 6; the same shape at step three.**
 
 ### Still collected and deliberately unrepaired (pass 34's Minors and Nit)
 
@@ -157,6 +161,12 @@ what it carries; `.context/gate-a-spec-prompt.md` is the same shape for the spec
   passage's rows — but a matching id is a search hit, not a defect.** Tasks 3, 5 and 7 already read
   their sets off the table; Task 7's lists and Task 4 step 4's move list are complete and were left
   alone deliberately. Replacing them blind would remove requirements.
+- **Guard the staging too, not only the commit.** Pass 42: `git add` on its own line can fail while
+  the following guarded `git commit` still succeeds on content the index already held. **The original
+  `git add … && git commit` was safer than the named-path rewrite that replaced it** — when you
+  narrow a command, carry its guarantees across.
+- **A narrowing is a change, and it can lose something.** Two of pass 42's three findings came from
+  the eighth revision's own narrowing, not from the text it replaced.
 - **Guard every commit, then act on its result.** Pass 41: step three committed unguarded and wrote
   the reviewed head from `git rev-parse HEAD` regardless, so a failed commit recorded the old head.
   **8a already had the right spelling** — `|| { echo …; exit 1; }` — two hundred lines away. **When a
@@ -252,6 +262,8 @@ worth checking before a pass rather than after.
 | 40 | c5d39be | 2→**2** | 1→**1** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **BLOCKER: Task 0 step 3 infers "first entry" from an empty `$BASE..HEAD`** — after an 8b rejection that range is empty while the implementation is staged, so the baseline records the *implemented* copies as inherited drift and the cycle can close on false parity evidence. **Same claim Resume states correctly three times and passes 29–30 repaired there; never swept for here.** MAJOR: **this round's own repair** — `git add .context/codex-reviews/` is a directory pathspec, not "by name", and sweeps another cycle's findings files in; my verification tested only outside that directory. Two tells (Blockers flat at 1 for a third pass, instrument cluster) → mandatory stop |
 | — | — | — | — | — | — | **EIGHTH BOUNDED REVISION**, Daniel's assignment after pass 40, bounded by his reviewer to the two findings **plus a scoped search for the one proven fallacy** — not a Task-15-wide audit. Task 0 step 3 reads the `$BASE` blobs unconditionally (Resume already required it; no entry-mode flag). Step one names the two slot paths; step three names the repaired files and the plan. **Search question, his wording, narrower than mine:** which places infer *worktree/index content, progress, or a baseline's source* from a range being empty or non-empty — **two hits, both in Task 0 step 3**, Resume's correct statements left alone. One residual disclosed, not guarded: `git commit` still commits an already-staged foreign path. 15 checks × 3 shells. Commit `4c9ed3c` |
 | 41 | 4c9ed3c | 2→**1** | 1→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened. Best pass since 35, first zero-Blocker pass since 37.** MAJOR, **this round's own repair**: step 7 step three's `git commit` is unguarded and the head is written unconditionally after it, so a failed commit records the **old** head and the next call reviews a tree without the repair — demonstrated with a rejecting `pre-commit` hook. 8a guards its commit exactly this way; step one has the same shape with a smaller blast radius. **Only one tell** (instrument cluster) — the stop is instructed, not mandated |
+| — | — | — | — | — | — | **NINTH BOUNDED REVISION**, Daniel's assignment after pass 41: guard step three's repair commit (exiting **before** the tip is touched), and guard step one's records commit as a **separate** bounded repair of a different shape — its commit is already terminal, so the guard exists because what follows is *prose*. **Inspection, scoped to commit-containing blocks and reported with that limit:** 21 of 54 fenced blocks commit; 18 end with the commit; 8a is guarded; 8b is terminal and condition 6 re-establishes it independently; step three was the only masking sequence. 21 checks × 3 shells. Commit `0bb1d5d` |
+| 42 | 0bb1d5d | 1→**3** | 0→**2** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **BLOCKER: step one stages the plan** while forbidding a premature repair, so a post-review plan edit is committed before the ordering is read — pass 39's violation through another file. **BLOCKER: every `git add` before the new guards is unguarded**, so a failed staging falls through to a commit that succeeds on already-staged content. MAJOR: both reviewed-head writes are unchecked and `cat` masks a failed write — **demonstrated**, the block exits 0 on a stale value. **Two are mine** (the narrowing dropped the original `&&` and kept the plan in the list); **step 6's Major and step 4b's add are pre-existing**, and step 6 lay outside my inspection's declared limit. Three tells → mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
