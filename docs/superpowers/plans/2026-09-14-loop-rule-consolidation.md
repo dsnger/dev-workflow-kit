@@ -2710,12 +2710,25 @@ installed text this step judges: the two prompt copies, the hook and its test. *
 repair actually touched go in**, together with this plan's refreshed record — and the re-run records
 must describe *that* commit, which is why the re-runs above come first.
 
+**Staging and commit are both guarded, and the commit is checked against what it was given**, because
+step 6 issues Gate B over the range this commit ends: a failed `git add` otherwise falls through to a
+commit that can still succeed on content the index already held, and the review then runs over a range
+missing its repair. The pin is the same as step 7 step three's — **the whole index, unrelated paths
+included**, demanding no presence, since a repair here may delete a file too.
+
 ```bash
 # add only what the repair touched, from: CLAUDE.md,
 # plugins/dev-workflow/commands/workflow-init.md,
 # plugins/dev-workflow/hooks/codex-gate.sh, plugins/dev-workflow/hooks/codex-gate.test.sh
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md <the repaired files, if any>
-git commit -m "WIP: plan records"      # or: "WIP: prompt-standards repair + plan records"
+# Where a repair was made, the message is: "WIP: prompt-standards repair + plan records"
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md <the repaired files, if any> \
+  || { echo "staging FAILED — step 6 must not issue Gate B over this range"; exit 1; }
+ITREE=$(git write-tree) \
+  || { echo "cannot pin the staged index; do not proceed to step 6"; exit 1; }
+git commit -m "WIP: plan records" \
+  || { echo "commit FAILED — step 6 must not issue Gate B over this range"; exit 1; }
+test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
+  || { echo "the commit's tree is not the index that was pinned; do not proceed to step 6"; exit 1; }
 ```
 
 **The same applies to every record this plan collects** — the sweep, the next-state table, the
@@ -2764,8 +2777,10 @@ an enumeration here** — an id list in this step was already stale once, naming
 ```bash
 BASE=$(cat .context/loop-rule-base)                     # the parent of the FIRST WIP, from Task 0
 test -n "$BASE" || { echo "BASE empty or unreadable — Task 0 did not run"; exit 1; }
-git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head THIS call is issued against
-cat .context/loop-rule-reviewed-head
+# The head THIS call is issued against. Guarded, and no `cat`: the redirect can fail
+# while a following `cat` prints a STALE value and the block still exits 0.
+git rev-parse HEAD > .context/loop-rule-reviewed-head \
+  || { echo "recording the reviewed head FAILED — no call may be issued"; exit 1; }
 ```
 
 **Every Gate-B call records the head it is issued against, this first one included**, and step 7
@@ -2809,11 +2824,35 @@ its own product forbids.
 nothing: this plan restores nothing, so an edit made before its route authorized it is just as
 unauthorized, and a later decline has nothing that removes it.
 
-**A failed records commit stops here; step two does not run.** This block *does* end with its
-commit, so its exit status is the block's — unlike step three, it has no following command to mask
-one. The guard is there because **what follows is prose, not a command**: a reader who saw the
-failure scroll past can still walk into step two, and the ordering must not be read over a pass that
-was never recorded.
+**A failed precondition, staging, commit or content check stops here; step two does not run.** No
+command in this block is the last thing that happens — the commit is followed by a tree comparison,
+and that by prose. A reader who saw a failure scroll past can still walk into step two, and the
+ordering must not be read over a pass that was never recorded, nor over one whose findings files the
+commit does not carry.
+
+**The plan is not staged here, and must be unchanged before this commit.** Step one produces no plan
+output — the re-run records are written at step three — so a dirty plan here is a post-review edit,
+and committing it puts a change in history before step two has read the ordering. Removing the path
+from `git add` does not settle it: **`git commit` commits the index**, so an edit already staged
+rides in regardless. The check therefore asks HEAD against the index first, then the index against
+the worktree; a difference and a failed comparison both stop, and neither says what caused it, so
+the answer to both is to **report the concrete state** — what is in the worktree, what is committed,
+and which route had not yet spoken. This plan restores nothing and invents no rollback. The check
+covers **this one path**; the residual below is unchanged.
+
+**A successful `git add` does not establish presence.** It stages a removal as readily as a content
+change, so a tracked findings file that is absent from the worktree is staged as *gone* — and the
+pinned index and the resulting commit then agree, both without it. **Tree equality preserves
+presence only where presence was established in the pin**, which is why the two paths are checked
+there, and checked as **blobs**: an existence test alone accepts a directory standing at the path,
+one of the causes §5 already tells a reader to diagnose separately. Step one deletes nothing; an
+authorized repair may, which is why step three and step 4b carry no such check.
+
+**What the pin is, and what it is not.** It is the index **as staged at that moment**, taken after
+`git add` and before `git commit` — not the content the pass acceptance validated. Nothing between
+that reading and this staging observes a change, so a findings file rewritten in between is pinned
+as staged and passes here. Close condition 4 re-runs the structural check on committed content for
+8a's record commit; **step one has no such re-run and this check does not stand in for one.**
 
 **Stage the two slot paths this pass was called with, spelled out.** Not `git add -A`, which sweeps
 exactly the edit this step exists to keep out — and **not the review directory either**: `git add
@@ -2825,11 +2864,40 @@ two the call's slot paths were built from.
 
 ```bash
 NONCE=<this cycle's nonce>; P=<this pass's number>
-git add ".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md" \
-        ".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md" \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+SPEC=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md"
+QUAL=".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
+PLAN=docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+
+# The plan is not staged here and must be unchanged: HEAD against the index (what the
+# commit takes), then the index against the worktree. A difference and a failed
+# comparison both stop, and neither says what caused it — report the state.
+git diff --quiet --cached HEAD -- "$PLAN" \
+  || { echo "plan is not identical between HEAD and the index, or the comparison failed — stop and report the state"; exit 1; }
+git diff --quiet -- "$PLAN" \
+  || { echo "plan is not identical between the index and the worktree, or the comparison failed — stop and report the state"; exit 1; }
+
+git add "$SPEC" "$QUAL" \
+  || { echo "staging FAILED — the pass is not recorded; step two does not run"; exit 1; }
+
+# Pinned after staging, before the commit: the WHOLE index as staged at that moment,
+# unrelated paths included.
+ITREE=$(git write-tree) \
+  || { echo "cannot pin the staged index; step two does not run"; exit 1; }
+
+# A successful add does not mean these paths are present — it stages a removal too.
+# Require a blob at each: an existence test would accept a directory at the path.
+test "$(git cat-file -t "$ITREE:$SPEC" 2>/dev/null)" = blob \
+  || { echo "$SPEC is not a blob in the staged index; the pass is not recorded, step two does not run"; exit 1; }
+test "$(git cat-file -t "$ITREE:$QUAL" 2>/dev/null)" = blob \
+  || { echo "$QUAL is not a blob in the staged index; the pass is not recorded, step two does not run"; exit 1; }
+
 git commit -m "WIP: pass $P records" \
   || { echo "records commit FAILED — stop here; step two does not run"; exit 1; }
+
+# Any divergence between the pinned index and the resulting commit tree stops here,
+# whatever produced it.
+test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
+  || { echo "the commit's tree is not the index that was pinned; step two does not run"; exit 1; }
 ```
 
 **What this does not cover, disclosed rather than guarded:** naming the paths controls what this step
@@ -2861,27 +2929,48 @@ dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixe
 post-answer pass**, which is §A's rule and not this plan's. So on this route: apply the repair now,
 re-run every check it invalidated, commit both, and only then record the head.
 
-**The commit is guarded because this block does not end with it.** Three commands follow, and the
-first thing they do is read `HEAD` — so an unguarded failure is masked by the `rev-parse` after it,
-the *old* head is recorded, and the next call is issued against a tree the repair never reached. **On
-a failed commit nothing moves**: the previous candidate's tip stays, the reviewed head stays, and no
-call is issued. **8a guards its record commit the same way**, and for the same reason.
+**The commit is guarded because this block does not end with it.** Commands follow, and among the
+first things they do is read `HEAD` — so an unguarded failure is masked by the `rev-parse` after it,
+the *old* head is recorded, and the next call is issued against a tree the repair never reached. **A
+failed commit stops the commands below it**: the previous candidate's tip is not removed, the
+reviewed head is not rewritten, and no call is issued. It is **not** a claim that the failed attempt
+left the tree as it was — a hook can rewrite anything before failing, which this plan already says of
+the closing message file. **8a guards its record commit the same way**, and for the same reason.
+
+**The staging is guarded too, and the commit is checked against what it was given.** A failed `git
+add` otherwise falls through to a commit that can still succeed on content the index already held.
+The pin is `git write-tree` — **the whole index, unrelated paths included**, so any divergence between
+it and the resulting commit tree stops this step, whatever produced it. That is broader than this
+step's obligation and deliberately fail-closed. It is **not** a foreign-index check: content staged
+before this step stands on both sides and passes. And it demands no presence, which is what step one
+needs and this step must not have — **an authorized repair may delete a file**, and a staged deletion
+is in the pin and in the commit alike.
 
 ```bash
 # The repaired files, spelled out, plus this plan — which carries the refreshed
 # re-run records. The findings files went in at step one and are not re-staged.
 # Neither `git add -A` nor the review directory: both carry in work no pass asked for.
 git add <the files this repair touched> \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
+  || { echo "staging FAILED — nothing committed, no call may be issued"; exit 1; }
+
+# Pinned after staging, before the commit: the whole index as staged at that moment.
+ITREE=$(git write-tree) \
+  || { echo "cannot pin the staged index; no call may be issued"; exit 1; }
+
 # Guard the commit. Everything below derives from HEAD, so an unguarded failure
 # is masked by the `git rev-parse` that follows it: the old head gets recorded,
 # the repair stays staged, and the next call reviews a tree it is not in.
 git commit -m "WIP: fix <finding>" \
   || { echo "repair commit FAILED — tip and reviewed head left as they are; no call may be issued"; exit 1; }
+test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
+  || { echo "the commit's tree is not the index that was pinned; no call may be issued"; exit 1; }
 
 rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
-git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
-cat .context/loop-rule-reviewed-head
+# The head the NEXT call is issued against. Guarded, and no `cat`: the redirect can
+# fail while a following `cat` prints the STALE value and the block exits 0.
+git rev-parse HEAD > .context/loop-rule-reviewed-head \
+  || { echo "recording the reviewed head FAILED — no call may be issued"; exit 1; }
 ```
 
 **The reviewed-head file is written on this route alone, and after the repair commit**, because
