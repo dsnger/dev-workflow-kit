@@ -342,12 +342,22 @@ that **no base file exists yet** — if one does, this is a re-entry and Resume 
 
 ```bash
 test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation || { echo "wrong branch"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree not clean — if this is a re-entry, run Resume"; exit 1; }
+# Two steps, because a FAILED `git status` prints nothing and `test -z ""` would read
+# that as a clean tree. The predicate is unchanged; only its establishment is.
+TREESTATE=$(git status --porcelain) \
+  || { echo "reading the tree state FAILED — cleanliness is unestablished; stop"; exit 1; }
+test -z "$TREESTATE" || { echo "tree not clean — if this is a re-entry, run Resume"; exit 1; }
 test ! -e .context/loop-rule-base || { echo "a base is already recorded — this is a re-entry, run Resume"; exit 1; }
 git merge-base --is-ancestor ba15e83 HEAD || { echo "ba15e83 not in this history"; exit 1; }
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  test "$(git rev-parse "HEAD:$p")" = "$(git rev-parse "ba15e83:$p")" \
+  # Resolved separately: with both substitutions inline, a path that resolves at
+  # NEITHER revision gives "" = "" and the comparison PASSES on two failed lookups.
+  HEAD_ID=$(git rev-parse "HEAD:$p") \
+    || { echo "$p does not resolve at HEAD — the comparison is unestablished; stop"; exit 1; }
+  APPROVED_ID=$(git rev-parse "ba15e83:$p") \
+    || { echo "$p does not resolve at ba15e83 — the comparison is unestablished; stop"; exit 1; }
+  test "$HEAD_ID" = "$APPROVED_ID" \
     || { echo "$p differs at HEAD from its approved version"; exit 1; }
 done
 ```
@@ -575,7 +585,13 @@ test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "base does
 git merge-base --is-ancestor "$BASE" HEAD || { echo "base is NOT an ancestor of HEAD"; exit 1; }
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  test "$(git rev-parse "$BASE:$p")" = "$(git rev-parse "ba15e83:$p")" \
+  # Resolved separately, for the reason Preparation's copy gives: two inline
+  # substitutions that both fail compare equal and the check passes on nothing.
+  BASE_ID=$(git rev-parse "$BASE:$p") \
+    || { echo "$p does not resolve at \$BASE — the comparison is unestablished; stop"; exit 1; }
+  APPROVED_ID=$(git rev-parse "ba15e83:$p") \
+    || { echo "$p does not resolve at ba15e83 — the comparison is unestablished; stop"; exit 1; }
+  test "$BASE_ID" = "$APPROVED_ID" \
     || { echo "$p differs at the base from its approved version"; exit 1; }
 done
 ```
@@ -620,10 +636,17 @@ handoff part of it is loose — and **routing on a guessed shape is how a source
 read them all and reconcile against what they actually contain:
 
 ```bash
-git log --oneline "$BASE"..HEAD     # can legitimately be empty; that is not an empty cycle
-git diff --cached "$BASE"           # the staged content — the FULL diff, not --stat
-git diff                            # the unstaged content
-git status --porcelain --untracked-files=all
+# Guarded one by one, because this step's rule is that all four ARE read: unguarded,
+# a failed read is indistinguishable from a source that holds nothing, and the next
+# command's success carries the block to an exit 0 on an incomplete view.
+git log --oneline "$BASE"..HEAD \
+  || { echo "reading the commit range FAILED — the reconciliation is incomplete; stop"; exit 1; }
+git diff --cached "$BASE" \
+  || { echo "reading the staged content FAILED — the reconciliation is incomplete; stop"; exit 1; }
+git diff \
+  || { echo "reading the unstaged content FAILED — the reconciliation is incomplete; stop"; exit 1; }
+git status --porcelain --untracked-files=all \
+  || { echo "reading the path listing FAILED — the reconciliation is incomplete; stop"; exit 1; }
 ```
 
 A ticked checkbox is confirmed by the change being *present in that content*, wherever it lives.
@@ -1063,7 +1086,10 @@ git show "$BASE:plugins/dev-workflow/commands/workflow-init.md" > .context/loop-
   || { echo "cannot read workflow-init.md at $BASE"; exit 1; }
 C_SRC=.context/loop-rule-c.src; W_SRC=.context/loop-rule-w.src
 test -s "$C_SRC" && test -s "$W_SRC" || { echo "baseline source empty"; exit 1; }
-printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.tmp   # renamed at the end
+# Renamed at the end. Every write to this artifact is guarded: an unguarded one lets
+# the block build a partial baseline and still reach the rename.
+printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.tmp \
+  || { echo "cannot start the baseline artifact"; exit 1; }
 
 # Tab-separated start and end anchors, written as LITERAL text — the escaping
 # for sed happens later, on $se and $ee. Emitting '\*\*Severity:\*\*' here would
@@ -1073,9 +1099,10 @@ printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.tmp   # renamed a
 # contain colons, so a colon delimiter would split '**Severity:**' at the
 # wrong one. Every entry spans two DIFFERENT anchors — the single-line
 # squash-carry site is handled below, not in this loop.
-: > .context/loop-rule-sites
+: > .context/loop-rule-sites || { echo "cannot create the site list"; exit 1; }
 while IFS= read -r s && IFS= read -r e; do
-  printf '%s\t%s\n' "$s" "$e" >> .context/loop-rule-sites
+  printf '%s\t%s\n' "$s" "$e" >> .context/loop-rule-sites \
+    || { echo "cannot append the site list"; exit 1; }
 done <<'SITES'
 Both gates are a LOOP
 Nothing here writes the floor knob
@@ -1114,17 +1141,36 @@ while IFS=$(printf '\t') read -r s e; do
   # comparison that never completed.
   d=$(diff <(printf '%s\n' "$a") <(printf '%s\n' "$b")); st=$?
   test $st -le 1 || { echo "diff failed (status $st) at site: $s"; exit 1; }
-  printf 'site\t%s\t%s\n' "$s" "$e" >> .context/loop-rule-baseline-diff.tmp
-  printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp
+  printf 'site\t%s\t%s\n' "$s" "$e" >> .context/loop-rule-baseline-diff.tmp \
+    || { echo "cannot record the site header for: $s"; exit 1; }
+  printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp \
+    || { echo "cannot record the site diff for: $s"; exit 1; }
 done < .context/loop-rule-sites || exit 1
 
 # The squash-carry sentence is ONE line and must not go through the loop.
-d=$(diff <(grep -F 'On squash-merge, copy every evidence entry' "$C_SRC") \
-         <(grep -F 'On squash-merge, copy every evidence entry' "$W_SRC")); st=$?
+# It owes the SAME checks the loop applies, and accounting row 19 promises them for
+# every site: unguarded, a missing anchor in both copies yields two empty extractions
+# that diff equal, and the site record certifies a line sed never found. Duplicate
+# hits would pass the same way.
+SQ='On squash-merge, copy every evidence entry'
+for f in "$C_SRC" "$W_SRC"; do
+  n=$(grep -cF "$SQ" "$f"); st=$?
+  test $st -le 1 || { echo "grep failed (status $st) at the squash-carry site in $f"; exit 1; }
+  test "$n" = 1 || { echo "squash-carry anchor is not unique in $f ($n hits)"; exit 1; }
+done
+ca=$(grep -F "$SQ" "$C_SRC") || { echo "cannot extract the squash-carry line from $C_SRC"; exit 1; }
+cb=$(grep -F "$SQ" "$W_SRC") || { echo "cannot extract the squash-carry line from $W_SRC"; exit 1; }
+test -n "$ca" && test -n "$cb" || { echo "empty extraction at the squash-carry site"; exit 1; }
+d=$(diff <(printf '%s\n' "$ca") <(printf '%s\n' "$cb")); st=$?
 test $st -le 1 || { echo "diff failed (status $st) at the squash-carry site"; exit 1; }
-printf 'site\t%s\t%s\n' 'On squash-merge' 'On squash-merge' >> .context/loop-rule-baseline-diff.tmp
-printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp
-mv .context/loop-rule-baseline-diff.tmp .context/loop-rule-baseline-diff.txt
+printf 'site\t%s\t%s\n' 'On squash-merge' 'On squash-merge' >> .context/loop-rule-baseline-diff.tmp \
+  || { echo "cannot record the squash-carry site header"; exit 1; }
+printf '%s\n' "$d" >> .context/loop-rule-baseline-diff.tmp \
+  || { echo "cannot record the squash-carry site diff"; exit 1; }
+# Guarded, because the `cat` below would otherwise display a PREVIOUS run's .txt as
+# though this sweep had produced it.
+mv .context/loop-rule-baseline-diff.tmp .context/loop-rule-baseline-diff.txt \
+  || { echo "rename FAILED — the baseline was NOT updated; stop"; exit 1; }
 cat .context/loop-rule-baseline-diff.txt      # READ IT WHOLE
 ```
 
@@ -1229,8 +1275,14 @@ and these three exist only once this task installs them.
 - [ ] **Step 5: Check parity of the installed block**
 
 ```bash
-diff <(sed -n '/^\*\*How a cycle ends/,/^\*\*What a loop absorbs/p' CLAUDE.md) \
-     <(sed -n '/^\*\*How a cycle ends/,/^\*\*What a loop absorbs/p' plugins/dev-workflow/commands/workflow-init.md)
+# Extract first and require both non-empty. This step's success signal is NO output,
+# and two anchors that match nothing also produce no output — so an unchecked pair
+# reads a parity check that never ran as parity confirmed. Task 0 step 3 applies the
+# same rule to its sites.
+a=$(sed -n '/^\*\*How a cycle ends/,/^\*\*What a loop absorbs/p' CLAUDE.md)
+b=$(sed -n '/^\*\*How a cycle ends/,/^\*\*What a loop absorbs/p' plugins/dev-workflow/commands/workflow-init.md)
+test -n "$a" && test -n "$b" || { echo "empty extraction — the installed §A block was not found in both copies"; exit 1; }
+diff <(printf '%s\n' "$a") <(printf '%s\n' "$b")
 ```
 
 Expected: no output.
@@ -1729,8 +1781,12 @@ check to the Severity bullet alone lets the long answer paragraph differ between
 the pair and the stated parity check pass.
 
 ```bash
-diff <(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' CLAUDE.md) \
-     <(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' plugins/dev-workflow/commands/workflow-init.md)
+# Same rule as the §A parity check: no output is this step's success signal, so two
+# anchors that match nothing would read as byte-identical.
+a=$(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' CLAUDE.md)
+b=$(sed -n '/^- \*\*Severity:\*\*/,/^- \*\*Tool routing:/p' plugins/dev-workflow/commands/workflow-init.md)
+test -n "$a" && test -n "$b" || { echo "empty extraction — the Severity passage was not found in both copies"; exit 1; }
+diff <(printf '%s\n' "$a") <(printf '%s\n' "$b")
 ```
 
 Expected: no output. This passage should now be byte-identical, `g4` having been removed and `g2`/`g3` having gone from both copies.
@@ -2140,8 +2196,13 @@ unique to it.
 ```bash
 BASE=$(cat .context/loop-rule-base)
 test -n "$BASE" || { echo "BASE empty or unreadable — Task 0 did not run"; exit 1; }
-git diff -U0 "$BASE" -- plugins/dev-workflow/hooks/codex-gate.sh \
-  | grep -E '^@@' | sed -E 's/^@@ -([0-9]+).*/\1/'
+# The diff is captured before it is filtered. In a pipeline the status is the LAST
+# element's, and `sed` succeeds on empty input, so a failed `git diff` would print an
+# empty list of changed lines — indistinguishable from a hook nobody edited.
+# `pipefail` is not available here: these blocks run under sh and dash too.
+DIFFOUT=$(git diff -U0 "$BASE" -- plugins/dev-workflow/hooks/codex-gate.sh) \
+  || { echo "git diff FAILED — the changed-line list is unestablished; stop"; exit 1; }
+printf '%s\n' "$DIFFOUT" | grep -E '^@@' | sed -E 's/^@@ -([0-9]+).*/\1/'
 grep -n 'note "' plugins/dev-workflow/hooks/codex-gate.sh
 ```
 
@@ -2511,8 +2572,13 @@ while IFS=$(printf '\t') read -r s e; do
   a=$(sed -n "/$se/,/$ee/p" CLAUDE.md)
   b=$(sed -n "/$se/,/$ee/p" plugins/dev-workflow/commands/workflow-init.md)
   test -n "$a" && test -n "$b" || { echo "empty extraction for '$s' — region not found"; exit 1; }
-  printf '%s\n' "$a" > .context/loop-rule-a.txt
-  printf '%s\n' "$b" > .context/loop-rule-b.txt
+  # Guarded: these two paths are REUSED on every iteration, so a failed write leaves
+  # the previous site's text standing and the diff below classifies bytes this
+  # iteration never extracted.
+  printf '%s\n' "$a" > .context/loop-rule-a.txt \
+    || { echo "cannot write the C-side extract for: $s"; exit 1; }
+  printf '%s\n' "$b" > .context/loop-rule-b.txt \
+    || { echo "cannot write the W-side extract for: $s"; exit 1; }
   diff .context/loop-rule-a.txt .context/loop-rule-b.txt; st=$?
   test $st -le 1 || { echo "diff failed (status $st) at site: $s"; exit 1; }
 done < .context/loop-rule-changed-sites
@@ -2988,7 +3054,11 @@ git commit -m "WIP: fix <finding>" \
 test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
   || { echo "the commit's tree is not the index that was pinned; no call may be issued"; exit 1; }
 
-rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
+# The previous candidate's closing tip. Guarded: where the path cannot be removed the
+# stale tip survives, and 8b's condition 5 would compare `HEAD` against a value this
+# run never produced.
+rm -f .context/loop-rule-reviewed-tip \
+  || { echo "removing the previous candidate's tip FAILED — it survives; no call may be issued"; exit 1; }
 # The head the NEXT call is issued against. Guarded, and no `cat`: the redirect can
 # fail while a following `cat` prints the STALE value and the block exits 0.
 git rev-parse HEAD > .context/loop-rule-reviewed-head \
@@ -3138,7 +3208,12 @@ for f in $FINAL; do
   test -n "$(git status --porcelain --untracked-files=all -- "$f")" \
     || { echo "this pass's findings file is not dirty: $f"; exit 1; }
 done
-test -z "$(git status --porcelain -z --untracked-files=all -- "$@")" \
+# Two steps: a FAILED `git status` prints nothing, and inline this reads as "nothing
+# outside the findings files is dirty" — condition 2 satisfied by a comparison that
+# never ran, and it is the only check between a foreign delta and the closing squash.
+OUTSIDE=$(git status --porcelain -z --untracked-files=all -- "$@") \
+  || { echo "reading the dirty set outside this pass's findings files FAILED"; exit 1; }
+test -z "$OUTSIDE" \
   || { echo "something outside this pass's findings files is dirty:"; git status --porcelain --untracked-files=all; exit 1; }
 
 # Condition 3, its pre-move check — the last precondition, so nothing has moved if
@@ -3147,7 +3222,15 @@ test -z "$(git status --porcelain -z --untracked-files=all -- "$@")" \
 test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty"; exit 1; }
 
 # Condition 4, first bullet: pin the validated blobs before staging.
-for f in $FINAL; do git hash-object "$f"; done > .context/loop-rule-final-blobs
+# Guarded per iteration AND on the redirect. Only the last iteration's status survives
+# a bare loop, and a failed redirect leaves an EARLIER attempt's pin standing — which,
+# paired with the same failure below, makes the comparison compare two stale files and
+# pass. The `>&2` matters: this compound's stdout IS the pin file.
+for f in $FINAL; do
+  git hash-object "$f" \
+    || { echo "pinning the validated blob for $f FAILED — nothing is staged" >&2; exit 1; }
+done > .context/loop-rule-final-blobs \
+  || { echo "writing the validated-blob pin FAILED — nothing is staged"; exit 1; }
 # shellcheck disable=SC2086
 git add $FINAL \
   || { echo "staging FAILED — run Failure; do NOT commit"; exit 1; }
@@ -3155,23 +3238,45 @@ git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — r
 test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
 git diff --quiet "$HEADREV" HEAD -- "$@" \
   || { echo "record commit changed paths beyond this pass's findings files — run Failure"; exit 1; }
+# The polarity is inverted here: exit 0 means "no difference", i.e. NOT carried. With
+# `&&` an execution error (status 2 or above) takes the same path as "carried" and the
+# close proceeds on a comparison that could not run. Status 1 — a real difference — is
+# the legitimate result this check wants.
 for f in $FINAL; do
-  git diff --quiet "$HEADREV" HEAD -- "$f" \
-    && { echo "record commit did not carry $f — run Failure"; exit 1; }
+  git diff --quiet "$HEADREV" HEAD -- "$f"
+  case $? in
+    0) echo "record commit did not carry $f — run Failure"; exit 1 ;;
+    1) : ;;
+    *) echo "comparing $f between the reviewed head and the record commit FAILED — run Failure"; exit 1 ;;
+  esac
 done
 
 # Condition 4, second bullet.
-for f in $FINAL; do git rev-parse "HEAD:$f"; done > .context/loop-rule-committed-blobs
+# Guarded the same way as the pin above, and for the same paired-stale reason. Note
+# that on an unresolvable rev `git rev-parse` echoes its argument to stdout and exits
+# 128, so without the guard this file can hold a junk line and the loop's status is gone.
+for f in $FINAL; do
+  git rev-parse "HEAD:$f" \
+    || { echo "reading the committed blob for $f FAILED — run Failure" >&2; exit 1; }
+done > .context/loop-rule-committed-blobs \
+  || { echo "writing the committed-blob list FAILED — run Failure"; exit 1; }
 diff .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
   || { echo "a findings file was rewritten between validation and commit — run Failure"; exit 1; }
 
 # Condition 4, third bullet: re-run the findings-file structural check on the
 # COMMITTED content and re-establish this pass's eligibility. Reader check; the
 # expected result is condition 4's.
-test -z "$(git status --porcelain)" || { echo "tree not clean after the record commit — run Failure"; exit 1; }
+TREESTATE=$(git status --porcelain) \
+  || { echo "reading the tree state after the record commit FAILED — run Failure"; exit 1; }
+test -z "$TREESTATE" || { echo "tree not clean after the record commit — run Failure"; exit 1; }
 
 # Condition 4's tail: the closing tip.
-git rev-parse HEAD > .context/loop-rule-reviewed-tip
+# Guarded even though it ends the block: a failed redirect leaves whatever an earlier
+# attempt wrote, and 8b's condition 5 compares HEAD against that. (A failed rev-parse
+# after a successful truncate leaves the file empty, which 8b's `test -n "$TIP"` does
+# catch — the redirect failure is the half it cannot.)
+git rev-parse HEAD > .context/loop-rule-reviewed-tip \
+  || { echo "recording the closing tip FAILED — run Failure; 8b must not run"; exit 1; }
 ```
 
 **8b — reset and close. A separate invocation, carrying no `-m` option at all. Discharges condition
@@ -3183,7 +3288,12 @@ test -n "$BASE" && test -n "$TIP" || { echo "BASE or TIP missing — 8a did not 
 
 # Condition 5: the tip AND a clean tree, both read in THIS invocation.
 test "$(git rev-parse HEAD)" = "$TIP" || { echo "HEAD has moved since 8a — NOT resetting"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree not clean at 8b — NOT resetting; run Failure"; exit 1; }
+# Two steps, and this is the most expensive instance: the next command is the
+# `reset --soft`. Both branches keep both markers — "NOT resetting", because nothing
+# has moved in this invocation, and "run Failure", because 8a's record commit has.
+TREESTATE=$(git status --porcelain) \
+  || { echo "reading the tree state at 8b FAILED — NOT resetting; run Failure"; exit 1; }
+test -z "$TREESTATE" || { echo "tree not clean at 8b — NOT resetting; run Failure"; exit 1; }
 
 git reset --soft "$BASE" || { echo "reset --soft FAILED — run Failure; do NOT commit"; exit 1; }
 
@@ -3194,10 +3304,12 @@ test -s .context/loop-rule-closing-msg || { echo "closing message missing or emp
 # oracle must not be the same mutable path the commit reads: a `commit-msg` hook
 # that rewrites git's copy AND this ignored source file would otherwise make the
 # post-close comparison pass on a body nobody validated.
-# Remove any pin an earlier attempt left BEFORE writing this one, so a failed refresh
-# leaves condition 6 with no oracle rather than a stale one its `test -s` would accept
-# — and guard the copy, because the commit is the very next command and a failed pin
-# must not fall through into it.
+# Remove any pin an earlier attempt left, then copy under a guard — but the GUARD is
+# what does the work. It stops before the commit, so nothing closes against a pin this
+# invocation did not write. The `rm -f` promises no cleanup: where `.context/` is
+# unwritable it fails too and the earlier pin survives, non-empty enough for condition
+# 6's `test -s`. It is simply never reached, because the guard exits first and leaves
+# both files on disk to be read. Observed in a disposable repository, not reasoned.
 rm -f .context/loop-rule-validated-msg
 cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg \
   || { echo "pinning the validated closing message FAILED — run Failure; do NOT commit"; exit 1; }
@@ -3213,11 +3325,19 @@ a separate shell, so a variable assigned in 8b is empty in this one:
 ```bash
 BASE=$(cat .context/loop-rule-base)
 test -n "$BASE" || { echo "BASE empty or unreadable — cannot verify the close"; exit 1; }
-case "$(git log -1 --pretty=%s)" in
+# Read under a guard: a failed `git log` yields an empty subject, which matches no
+# pattern, so the WIP arm never fires and the check is satisfied by a command that
+# failed. No `test -n` is added — a genuinely empty subject read successfully passes
+# today, and requiring one would be a new condition rather than a repair to this one.
+SUBJECT=$(git log -1 --pretty=%s) \
+  || { echo "reading the closing commit's subject FAILED — run Failure"; exit 1; }
+case "$SUBJECT" in
   [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — run Failure"; exit 1 ;;
 esac
 test "$(git rev-parse HEAD^)" = "$BASE" || { echo "closing commit's parent is not \$BASE — run Failure"; exit 1; }
-test -z "$(git status --porcelain)" || { echo "tree dirty after the close — run Failure"; exit 1; }
+TREESTATE=$(git status --porcelain) \
+  || { echo "reading the tree state after the close FAILED — run Failure"; exit 1; }
+test -z "$TREESTATE" || { echo "tree dirty after the close — run Failure"; exit 1; }
 # `--pretty=format:%B` emits the stored message alone; the `%B` spelling appends a
 # trailing newline the source file has none of, which rejected a CORRECT close.
 # 8b's `--cleanup=verbatim` is the other half — without it git stores its own
