@@ -13,47 +13,58 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Cycle OPEN and UNCLEAN. The plan stands at `d7f2af8` and that is the anchor** — later commits on
+**Cycle OPEN and UNCLEAN. The plan stands at `b283250` and that is the anchor** — later commits on
 this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
-rather than `HEAD`. Pass 37 reviewed `d7f2af8` and found **one Major, one Minor and one Nit,
-0 Blockers**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-37.md` holds them.
+rather than `HEAD`. Pass 38 reviewed `b283250` and found **one Blocker and two Majors**.
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-38.md` holds them.
 
 **Do not start a repair round on your own.** Daniel's assignment of 2026-09-16 ended with a
-checkpoint: *"Run exactly one complete Gate-A plan pass after the bounded revision and verification,
-then stop and report regardless of outcome. Do not begin another repair round or implementation."*
-That checkpoint is spent — it covered one bounded repair and one pass, both delivered — so **the
-next move is Daniel's word, not an inference.**
+checkpoint: *"After this bounded revision and verification, run exactly one complete Gate-A plan
+pass and report back. Do not begin another repair round or implementation."* That checkpoint is
+spent — one revision, one pass, both delivered — so **the next move is Daniel's word, not an
+inference.**
 
-**Two tells present, so this stop is mandatory as well as instructed**: findings rose 1 → 2 → 3,
-three passes running, and they cluster on the instrument. The Blocker count "failed to fall" at
-0 → 0 is the literal third test and nonsense at zero; **that reading is still not settled here and
-nothing turns on it.**
+**Two tells, so this stop is mandatory as well as instructed**: the **Blocker count rose** 0 → 1
+after four passes at zero, and the findings cluster on the instrument for the fifth pass running.
+Findings are flat at 3, which is neither rising nor falling and is not counted as a tell here.
 
-**Read this before deciding the next round — the regeneration signature is now visible.** Findings
-6 → 1 → 2 → 3; Blockers 1 → 0 → 0 → 0; **Majors exactly 1 in each of the last four passes**. And
-pass 37's Major is **descended from pass 36's fix**: the moved-`HEAD` row was keyed on the *shape*
-of the state ("a commit above the expected head") where both guards test **object-id inequality**,
-so a rewrite that trips the same guard matches no row. That is one established lineage, a genuine
-repair producing the next finding. **It is not yet the "clearly stuck" exit**, which needs three
-things together — a plateau across roughly six passes, an affirmative coverage judgement, and
-Blocker/Majors regenerating across repairs. We have the third and a quarter of the first.
+**Read this before deciding the next round. Two things, and the second is the more serious.**
 
-### The three open findings from pass 37
+**One: the repair keeps producing the next finding — three rounds in a row now.** Pass 36's fix
+produced pass 37's Major; pass 37's fix produced pass 38's first Major, which is a **regression
+introduced by this round's own generalisation**. Findings 6 → 1 → 2 → 3 → 3; Blockers 1 → 0 → 0 → 0
+→ **1**; Majors 1 → 1 → 1 → 1 → **2**.
 
-1. **MAJOR — the moved-`HEAD` topology covers one shape of several.** Conditions 1 and 5 are plain
-   inequalities (`test "$(git rev-parse HEAD)" = "$HEADREV"`, and the same against `$TIP`). The new
-   row describes only **a descendant commit above** the expected head. An **amend**, a **rebase**,
-   or a **reset to an earlier commit still above `$BASE`** trips the identical guard and matches
-   neither the row's `HEAD`/range description nor its "extra commit" reconciliation — so a rejected,
-   rewritten, unreviewed state can still read as normal progress. **The row has to be defined from
-   the predicate, not from a shape**, and split where the operation differs. Validated against the
-   plan.
-2. **MINOR — accounting row 7 still says Resume's table defines "four shapes".** It now has five
-   rows. **Created by the previous repair**: the sweep for stale counts keyed on the word
-   *topologies* and this site says *shapes*. One-word fix; collected per the Minor rule.
-3. **NIT — Self-Review's reader-check sentence names Tasks 12, 13 and 14 step 2**, omitting Task
-   12b's reader-led sweep and Task 15 step 4b's prompt-standards review. The gate prompt's own
-   settled block lists all five. Pre-existing, not caused by this round. Collected.
+**Two: pass 38 found a Blocker in an area thirty-seven passes never looked at.** The branch
+condition has been in the accounting table since the beginning, assigned to Preparation, and nobody
+noticed Resume never inherited it. **That is the coverage signal, not the convergence signal** —
+`CLAUDE.md` says plainly that a low Blocker count can sit beside an entirely unreviewed subsystem,
+and this is what that looks like from the inside. **No affirmative coverage judgement can be given
+for this artifact right now**, which is one of the three things the "clearly stuck" exit needs, so
+that exit is unavailable — and it is not a waiting period either: the two-tell stop is already
+enough to decide on, and the six-pass figure is a field observation, not a threshold to sit out.
+
+### The three open findings from pass 38
+
+1. **BLOCKER — Resume never checks the branch.** Preparation checks it and is **first-entry-only**;
+   the operational index and accounting row 1 both assign the condition to Preparation alone, and
+   Resume's own block checks base shape, self-resolution, ancestry and approved inputs — **and not
+   the branch**. `.context/loop-rule-base` is ignored, so it survives a checkout: another branch
+   descended from `$BASE` passes every Resume check. Then the WIP commits, the soft reset and the
+   closing commit all land on the wrong branch while the plan reports a valid re-entry. Real,
+   reachable, and **pre-existing** — not caused by this round.
+2. **MAJOR — this round's own regression.** "Present is not reviewed" ends by sending **every**
+   mismatch to the Failure report and §A's routes, four paragraphs after the governing text says
+   condition 1 is a **plain precondition stop with no handoff** and only condition 5 starts one.
+   A condition-1 mismatch read as an active handoff selects the `inside a handoff` scratch branch
+   and suppresses a rebuild that was owed. **Route by the check that rejected**; keep no-adopt,
+   no-remove and no-rewrite for both.
+3. **MAJOR — condition 6's oracle is the mutable file it is supposed to audit.** 8b commits with
+   `-F .context/loop-rule-closing-msg` and the post-close block diffs the landed body against **that
+   same path**, read after the hooks have run. The plan itself states that hooks can rewrite
+   anything and that the file is ignored, so no clean-tree check sees it change — so a hook editing
+   both git's copy and the source file makes the postcondition pass on a body nobody validated.
+   **Pin the bytes or a digest before `git commit`** and compare against that.
 
 ### Still collected and deliberately unrepaired (pass 34's Minors and Nit)
 
@@ -148,6 +159,10 @@ what it carries; `.context/gate-a-spec-prompt.md` is the same shape for the spec
   passage's rows — but a matching id is a search hit, not a defect.** Tasks 3, 5 and 7 already read
   their sets off the table; Task 7's lists and Task 4 step 4's move list are complete and were left
   alone deliberately. Replacing them blind would remove requirements.
+- **Preparation is first-entry-only, so every condition it owns is one Resume may not have.** The
+  branch check was assigned to Preparation alone and Resume never inherited it — thirty-seven passes
+  missed it (pass 38, BLOCKER). **Walk Preparation's conditions against Resume's, one by one**, and
+  do not assume the split is deliberate because it is written down.
 - **When you state a rule in one place, grep for the CLAIM, not the word you used.** Two sweeps in
   two rounds each reached most sites and missed the rest, both times because the missed site used a
   synonym: `1` instead of `preservation count`, `four shapes` instead of `four topologies`. This is
@@ -217,6 +232,8 @@ worth checking before a pass rather than after.
 | 36 | 518121a | 1→**2** | 0→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **The h3 repair held**; nothing re-raised against Task 8. MAJOR: Resume's topology table claims four exhaustive topologies and has **no row for the state condition 5 exists to catch** — `HEAD` above the 8a findings commit after a between-invocations commit; the condition-1 rejection reads as row 1, "normal". MINOR: Task 4 step 5's reader walk omits `c4` — the **same family** as pass 35's Major, a task enumerating its own conditions. Two tells (findings rose, instrument cluster) → mandatory stop, which the checkpoint already required |
 | — | — | — | — | — | — | **FOURTH BOUNDED REPAIR**, Daniel's assignment after pass 36, on his reviewer's narrowed recommendation: repair the Major and Task 4's `c4`, plus a **bounded** search for the same coverage-list defect — **not** a blanket replacement of every id list, because a grep finds ids and cannot tell a constraining list from an orientation note. Resume gains one moved-`HEAD` row; the progress reconciliation gains *present is not reviewed*; Task 4 step 5 walks the table. Search result: Tasks 3, 5, 7 already cite the table, Task 7's and Task 4 step 4's lists checked complete and left alone. Four bare-`1` results and two stale counts corrected as disclosed misses of the previous sweep. Commit `d7f2af8` |
 | 37 | d7f2af8 | 2→**3** | 0→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** MAJOR: the new moved-`HEAD` row was keyed on the **shape** of the state where both guards test **object-id inequality**, so an amend, rebase or reset still above `$BASE` matches no row — **pass 36's fix produced it**, one established regeneration lineage. MINOR: accounting row 7 still says "four shapes", falsified by the fifth row — the stale-count sweep keyed on *topologies*, this site says *shapes*. NIT: Self-Review's reader-check sentence omits Task 12b and Task 15 step 4b. Two tells (findings rose a third pass, instrument cluster) → mandatory stop |
+| — | — | — | — | — | — | **FIFTH BOUNDED REVISION — a DECISION, not another description.** Daniel: **the plan does not classify the repository.** §A re-establishes the conditions *against the repository as it now stands*; the demand that Resume fit the state to a named shape was plan-invented and is **dropped**, recorded in accounting row 7 as a *requirement* (so row 40's count of dropped *conditions* stays true). The table is explicitly non-exhaustive illustration; nothing depends on fitting a row. Preserved: both equality checks, the precondition/handoff split, the scratch rules, the bounded handoff, base validity checked not inferred, §A's three routes. Strengthened: all four sources read every time, and no rewriting the recorded head or tip to make equality pass. 64 checks × 3 shells — descendant, amended, rebased, backward, each before and after 8a. Commit `b283250` |
+| 38 | b283250 | 3→**3** | 0→**1** | 1→**2** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **BLOCKER: Resume never checks the branch** — Preparation does and is first-entry-only, the ignored base file survives a checkout, and another branch descended from `$BASE` passes everything; pre-existing, and **thirty-seven passes never looked**. MAJOR: this round's own regression — "present is not reviewed" routes *every* mismatch to Failure, contradicting the precondition/handoff split four paragraphs earlier. MAJOR: condition 6 diffs the landed body against the **same mutable file** the commit read, after hooks ran. Two tells (Blockers rose, instrument cluster) → mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
