@@ -2996,6 +2996,14 @@ git commit -m "WIP: pass $P records" \
 # whatever produced it.
 test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
   || { echo "the commit's tree is not the index that was pinned; step two does not run"; exit 1; }
+
+# Persist THIS commit's object id, because step two must read the two slots from this
+# exact commit. `HEAD` is a movable ref: a commit, amend, reset, rebase or checkout
+# between here and there redirects both reads, and a move BETWEEN step two's two reads
+# can take the branch files from different commits. The commit object is immutable;
+# `HEAD` is not, and only the object id carries that.
+git rev-parse HEAD > .context/loop-rule-records-commit \
+  || { echo "recording the records commit's object id FAILED; step two does not run"; exit 1; }
 ```
 
 **What this does not cover, disclosed rather than guarded:** naming the paths controls what this step
@@ -3003,14 +3011,34 @@ test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
 staged before this step runs is carried in, and no check in this plan catches it** — the close's
 dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixes that.
 
-**Step two reads the COMMITTED findings, not the worktree copies** — `git show "HEAD:$SPEC"` and
-`git show "HEAD:$QUAL"`, with `SPEC` and `QUAL` as step one spelled them. Target §A requires every
-finding-derived predicate to read the **validated** findings file, and the worktree copy is the one
-thing that can still change after validation: a `commit-msg` or `pre-commit` hook that rewrites only
-the worktree leaves step one's checks entirely satisfied — the staged index, the pin and the commit
-tree all agree — while the file a reader would open no longer holds what the pass was accepted on.
-Reading `HEAD` closes that, because the commit is immutable once step one's tree comparison has
-passed.
+**Step two reads the findings out of step one's RECORD COMMIT, by object id — not the worktree
+copies, and not through `HEAD`.** Target §A requires every finding-derived predicate to read the
+**validated** findings file, and the worktree copy is the one thing that can still change after
+validation: a `commit-msg` or `pre-commit` hook that rewrites only the worktree leaves step one's
+checks entirely satisfied — the staged index, the pin and the commit tree all agree — while the file
+a reader would open no longer holds what the pass was accepted on. **A commit object is immutable;
+`HEAD` is a movable ref and is not**, so reading `HEAD:` would be redirected by any commit, amend,
+reset, rebase or checkout in between, and a move between the two reads could take the two branch
+files from different commits. The object id step one persisted is what makes the source one commit:
+
+```bash
+NONCE=<this cycle's nonce>; P=<this pass's number>
+SPEC=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md"
+QUAL=".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
+RECORDS=$(cat .context/loop-rule-records-commit) \
+  || { echo "cannot read the records commit id — step one did not complete"; exit 1; }
+test "${#RECORDS}" -eq 40 || { echo "records commit id is not a full object name"; exit 1; }
+# Both reads come from this one object, so neither can be redirected and the two
+# branch files cannot come from different commits.
+git show "$RECORDS:$SPEC" \
+  || { echo "cannot read the committed spec findings from the records commit"; exit 1; }
+git show "$RECORDS:$QUAL" \
+  || { echo "cannot read the committed quality findings from the records commit"; exit 1; }
+# `HEAD` having moved is not a reason to re-resolve the files — it is a reason to stop
+# and report, because something reached this repository between the record and the read.
+test "$(git rev-parse HEAD)" = "$RECORDS" \
+  || { echo "HEAD moved after the records commit — stop and report the concrete state"; exit 1; }
+```
 
 **What this does not establish, disclosed rather than guarded.** It does not prove those committed
 bytes are the ones **pass acceptance** validated. Step one pins what is on disk when step one runs;
@@ -3334,15 +3362,26 @@ test -s .context/loop-rule-closing-msg || { echo "closing message missing or emp
 # oracle must not be the same mutable path the commit reads: a `commit-msg` hook
 # that rewrites git's copy AND this ignored source file would otherwise make the
 # post-close comparison pass on a body nobody validated.
-# Remove any pin an earlier attempt left, then copy under a guard — but the GUARD is
-# what does the work. It stops before the commit, so nothing closes against a pin this
-# invocation did not write. The `rm -f` promises no cleanup: where `.context/` is
-# unwritable it fails too and the earlier pin survives, non-empty enough for condition
-# 6's `test -s`. It is simply never reached, because the guard exits first and leaves
-# both files on disk to be read. Observed in a disposable repository, not reasoned.
-rm -f .context/loop-rule-validated-msg
+# Guarding the REMOVAL is what closes the demonstrated case. Unguarded, a DIRECTORY at
+# this path let the block reach the commit: `rm -f` fails on a directory, `cp source
+# dir` then succeeds by writing beneath it, both commands report success and condition
+# 6 only finds the missing oracle after history has moved. Observed under sh, dash and
+# bash — the old shape printed REACHED THE COMMIT with the path still a directory.
+# The copy is guarded because it is the write, and a surviving earlier pin would be
+# non-empty enough for condition 6's `test -s`. The `test -f` after them is a residual
+# check on the destination's shape; no demonstrated path reaches it, since the removal
+# guard fires first. None of this promises cleanup — a failed step leaves whatever is
+# on disk and stops before the commit, which is the whole of what it guarantees.
+rm -f .context/loop-rule-validated-msg \
+  || { echo "removing the previous pin FAILED — run Failure; do NOT commit"; exit 1; }
 cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg \
   || { echo "pinning the validated closing message FAILED — run Failure; do NOT commit"; exit 1; }
+# A guarded `cp` is not enough on its own: where a DIRECTORY sits at the destination,
+# `rm -f` fails and `cp source dir` succeeds by writing beneath it, so both commands
+# report success, the commit runs, and condition 6 only discovers the missing oracle
+# after history has moved. Require the destination to be the regular file just written.
+test -f .context/loop-rule-validated-msg \
+  || { echo "the pin path is not a regular file — run Failure; do NOT commit"; exit 1; }
 # `--cleanup=verbatim` so the stored body is the validated bytes: git's default
 # cleanup for -F strips trailing whitespace and collapses blank runs, and
 # condition 6 compares bytes. It carries no `-m`, so `is_wip_commit` still misses it.
@@ -3404,7 +3443,8 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-c.src .context/loop-rule-w.src \
       .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg \
       .context/loop-rule-validated-msg \
-      .context/loop-rule-final-blobs .context/loop-rule-committed-blobs
+      .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
+      .context/loop-rule-records-commit
 if ls .context/loop-rule-* >/dev/null 2>&1; then
   echo "cycle scratch survives the close:"; ls .context/loop-rule-*; exit 1
 fi
