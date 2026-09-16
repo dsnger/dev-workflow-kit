@@ -13,38 +13,47 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
-**Cycle OPEN and UNCLEAN. The plan stands at `518121a` and that is the anchor** — later commits on
+**Cycle OPEN and UNCLEAN. The plan stands at `d7f2af8` and that is the anchor** — later commits on
 this branch are records, not plan edits, so check `git log --oneline -1 -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
-rather than `HEAD`. Pass 36 reviewed `518121a` and found **one Major and one Minor, 0 Blockers**.
-`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-36.md` holds them.
+rather than `HEAD`. Pass 37 reviewed `d7f2af8` and found **one Major, one Minor and one Nit,
+0 Blockers**. `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-37.md` holds them.
 
 **Do not start a repair round on your own.** Daniel's assignment of 2026-09-16 ended with a
-checkpoint: *"After the repair and focused verification, run exactly one complete Gate-A plan
-review, then stop and report. Do not automatically begin another repair round or implementation."*
+checkpoint: *"Run exactly one complete Gate-A plan pass after the bounded revision and verification,
+then stop and report regardless of outcome. Do not begin another repair round or implementation."*
 That checkpoint is spent — it covered one bounded repair and one pass, both delivered — so **the
 next move is Daniel's word, not an inference.**
 
-**Two tells present, so this stop is mandatory as well as instructed**: findings rose 1 → 2, and the
-findings cluster on the instrument for the third pass running. A third reading is arguable — the
-Blocker count "failed to fall" at 0 → 0, which is the literal test and nonsense at zero. **That
-reading is not settled here and nothing turns on it**: the stop happens either way.
+**Two tells present, so this stop is mandatory as well as instructed**: findings rose 1 → 2 → 3,
+three passes running, and they cluster on the instrument. The Blocker count "failed to fall" at
+0 → 0 is the literal third test and nonsense at zero; **that reading is still not settled here and
+nothing turns on it.**
 
-### The two open findings from pass 36
+**Read this before deciding the next round — the regeneration signature is now visible.** Findings
+6 → 1 → 2 → 3; Blockers 1 → 0 → 0 → 0; **Majors exactly 1 in each of the last four passes**. And
+pass 37's Major is **descended from pass 36's fix**: the moved-`HEAD` row was keyed on the *shape*
+of the state ("a commit above the expected head") where both guards test **object-id inequality**,
+so a rewrite that trips the same guard matches no row. That is one established lineage, a genuine
+repair producing the next finding. **It is not yet the "clearly stuck" exit**, which needs three
+things together — a plateau across roughly six passes, an affirmative coverage judgement, and
+Blocker/Majors regenerating across repairs. We have the third and a quarter of the first.
 
-1. **MAJOR — Resume's topology table is not exhaustive, and claims to be.** It names four
-   topologies and says *"the whole procedure reads against all four"*; the working record calls them
-   *"the model for every state-reading rule"*. But Close condition 5 exists precisely to catch **a
-   commit landing between 8a and 8b**, and in that rejected state `HEAD` sits **above** the 8a
-   findings commit — which is not the last `WIP:` snapshot, not the findings commit itself, and not
-   `$BASE` or its child after the reset. **No row describes it.** The condition-1 rejection has a
-   milder version of the same problem: a stray commit above the reviewed head reads as row 1,
-   "Normal, mid-implementation", which is how an unreviewed commit gets treated as ordinary cycle
-   progress. **Validated against the plan, not taken on trust.**
-2. **MINOR — Task 4 step 5's reader walk omits `c4`.** It walks `c1`–`c3`, `c5`–`c7`, `c8`, `c9`,
-   `c10`–`c14`; passage (c) carries a `c4` row and `c4` is **replaced**. The mechanical pair still
-   covers it; the semantic confirmation never reads it. **Same defect family as pass 35's Major, in
-   a different task** — a task enumerating its own conditions and dropping one. Collected per the
-   Minor rule, not repaired.
+### The three open findings from pass 37
+
+1. **MAJOR — the moved-`HEAD` topology covers one shape of several.** Conditions 1 and 5 are plain
+   inequalities (`test "$(git rev-parse HEAD)" = "$HEADREV"`, and the same against `$TIP`). The new
+   row describes only **a descendant commit above** the expected head. An **amend**, a **rebase**,
+   or a **reset to an earlier commit still above `$BASE`** trips the identical guard and matches
+   neither the row's `HEAD`/range description nor its "extra commit" reconciliation — so a rejected,
+   rewritten, unreviewed state can still read as normal progress. **The row has to be defined from
+   the predicate, not from a shape**, and split where the operation differs. Validated against the
+   plan.
+2. **MINOR — accounting row 7 still says Resume's table defines "four shapes".** It now has five
+   rows. **Created by the previous repair**: the sweep for stale counts keyed on the word
+   *topologies* and this site says *shapes*. One-word fix; collected per the Minor rule.
+3. **NIT — Self-Review's reader-check sentence names Tasks 12, 13 and 14 step 2**, omitting Task
+   12b's reader-led sweep and Task 15 step 4b's prompt-standards review. The gate prompt's own
+   settled block lists all five. Pre-existing, not caused by this round. Collected.
 
 ### Still collected and deliberately unrepaired (pass 34's Minors and Nit)
 
@@ -135,9 +144,15 @@ what it carries; `.context/gate-a-spec-prompt.md` is the same shape for the spec
   through the installed ordering before any next call exists.
 - **A task that enumerates its own conditions is the second copy of the disposition table**, and it
   goes stale silently. Task 8's list dropped carried `h3` (pass 35, MAJOR); Task 4 step 5's reader
-  walk drops `c4` (pass 36, MINOR). **Grep every task for id lists and check each against its
-  passage's rows** — it has now produced a finding in two consecutive passes, and the rule against
-  it is already written in `## How a task discharges that table`.
+  walk dropped `c4` (pass 36, MINOR). Both repaired. **Check each remaining task list against its
+  passage's rows — but a matching id is a search hit, not a defect.** Tasks 3, 5 and 7 already read
+  their sets off the table; Task 7's lists and Task 4 step 4's move list are complete and were left
+  alone deliberately. Replacing them blind would remove requirements.
+- **When you state a rule in one place, grep for the CLAIM, not the word you used.** Two sweeps in
+  two rounds each reached most sites and missed the rest, both times because the missed site used a
+  synonym: `1` instead of `preservation count`, `four shapes` instead of `four topologies`. This is
+  `AGENTS.md`'s "search for the claim" rule, and the cycle keeps re-learning it. **A count anywhere
+  near a table you changed is the first thing to check.**
 
 **The most reliable defect in this cycle: a repair reaching one site of several.** Passes 26–33 each
 found the previous pass's fix applied in one place and missing in two. **When a rule changes, grep
@@ -200,6 +215,8 @@ worth checking before a pass rather than after.
 | 35 | 2d79ac8 | 6→**1** | 1→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** One Major: carried `h3` owes a preservation count and passage (h) says Task 8 derives its fragment, but Task 8 owns only `h4`/`h5`/`h19` and derives only `a1`, so item 7 could drop `an ungated change records it in that commit` from both copies undetected. **Both pass-34 repairs held** — nothing re-raised against 8a, the dirty set or condition 6. One tell (instrument cluster); no mandatory stop |
 | — | — | — | — | — | — | **THIRD BOUNDED REPAIR**, Daniel's assignment after pass 35, scoped to that Major alone. **The fix was to stop enumerating, not to extend the enumeration**: Task 8's top line cited `## How a task discharges that table` instead of naming `h4`/`h5`/`h19`, step 1 derives the preservation fragment of every carried condition its blocks cover, step 4 counts each to `parent=1 worktree=1` and records a `preservation` line. Two directly affected references pinned to the same result — the disposition table's carried row and Task 7's step, both of which said `1` alone. Verified on temporary copies: the `h3` count passes on the intended install and fails on `h3` removed from C alone, W alone and both, and F7's OLD reaches 0 either way. Commit `518121a` |
 | 36 | 518121a | 1→**2** | 0→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** **The h3 repair held**; nothing re-raised against Task 8. MAJOR: Resume's topology table claims four exhaustive topologies and has **no row for the state condition 5 exists to catch** — `HEAD` above the 8a findings commit after a between-invocations commit; the condition-1 rejection reads as row 1, "normal". MINOR: Task 4 step 5's reader walk omits `c4` — the **same family** as pass 35's Major, a task enumerating its own conditions. Two tells (findings rose, instrument cluster) → mandatory stop, which the checkpoint already required |
+| — | — | — | — | — | — | **FOURTH BOUNDED REPAIR**, Daniel's assignment after pass 36, on his reviewer's narrowed recommendation: repair the Major and Task 4's `c4`, plus a **bounded** search for the same coverage-list defect — **not** a blanket replacement of every id list, because a grep finds ids and cannot tell a constraining list from an orientation note. Resume gains one moved-`HEAD` row; the progress reconciliation gains *present is not reviewed*; Task 4 step 5 walks the table. Search result: Tasks 3, 5, 7 already cite the table, Task 7's and Task 4 step 4's lists checked complete and left alone. Four bare-`1` results and two stale counts corrected as disclosed misses of the previous sweep. Commit `d7f2af8` |
+| 37 | d7f2af8 | 2→**3** | 0→**0** | 1→**1** | yes | **UNCLEAN — reported to Daniel, no repair round opened.** MAJOR: the new moved-`HEAD` row was keyed on the **shape** of the state where both guards test **object-id inequality**, so an amend, rebase or reset still above `$BASE` matches no row — **pass 36's fix produced it**, one established regeneration lineage. MINOR: accounting row 7 still says "four shapes", falsified by the fifth row — the stale-count sweep keyed on *topologies*, this site says *shapes*. NIT: Self-Review's reader-check sentence omits Task 12b and Task 15 step 4b. Two tells (findings rose a third pass, instrument cluster) → mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
