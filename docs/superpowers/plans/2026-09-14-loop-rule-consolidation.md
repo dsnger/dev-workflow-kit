@@ -12,6 +12,10 @@
 
 **Story:** `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md` — read the profile from its header at every gate call; it is the only writable copy. Six acceptance criteria; §4 holds settled decisions D1–D8.
 
+**Related assessment (informational):** [OpenWolf context and memory assessment](../../openwolf-assessment.md)
+records the advisor's evidence and trade-offs for a possible future evaluation requiring Daniel's separate authorization.
+It adds no task, prerequisite or closure condition to this plan.
+
 ---
 
 ## Global Constraints

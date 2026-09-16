@@ -24,6 +24,13 @@ driven by recurrence rather than by enthusiasm.
 
 ### Parked (trigger-gated)
 
+- [ ] **OpenWolf: possible bounded context/memory evaluation.** The
+      [assessment](docs/openwolf-assessment.md) records the evidence, alternatives,
+      trade-offs and proposed evaluation criteria. Documentation authorized by
+      Daniel on 2026-09-16; installation, pilot and integration remain undecided.
+      *Trigger: Daniel explicitly authorizes a bounded evaluation. Completion of
+      loop-rule-consolidation alone does not activate it.* Existing Finding A,
+      record-durability and P8 scopes and triggers remain unchanged.
 - [ ] **Locator: TWO quadratic paths — `skipval`'s container walk and the record accumulator.** `substr(s,i,1)` is
       O(len) per call in BWK awk, so a large VALID sibling container before `tool_response`
       is quadratic: 3.2 s at 200 KB, 11.5 s at 400 KB, in one synchronous hook invocation.
