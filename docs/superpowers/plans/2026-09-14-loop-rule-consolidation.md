@@ -243,7 +243,7 @@ independent reader did.
 |---|---|---|
 | 1 | Branch is `loop-rule-consolidation` | **kept**, and **split by entry, like row 4**: Preparation checks it at a first entry and **Resume checks it again**, first, before anything reads or writes cycle state. An earlier revision assigned it to Preparation alone, which is first-entry-only — and `.context/` is ignored, so the base file survives a checkout and another branch descended from `$BASE` passed every re-entry check (pass 38, Blocker) |
 | 2 | Tree clean before the base is recorded | **kept**, same shell — preparation |
-| 3 | `ba15e83` is an ancestor of `HEAD` | **kept**, same shell — preparation |
+| 3 | `ba15e83` is an ancestor of the cycle's starting revision | **kept, and split by entry, like row 4**: Preparation checks it at `HEAD`, because a first entry has no recorded base; **Resume checks it at `$BASE`**, because that is the persisted starting revision Gate B diffs from and the close resets to. An earlier revision assigned it to Preparation alone, which is first-entry-only — so a base **below** `ba15e83` passed Resume wherever the three approved-input blobs happened to match, and in this repository `ba15e83^` carries all three identically (pass 45, Blocker) |
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions | **kept, and split by entry**: Preparation compares them **at `HEAD`**, because a first entry has no recorded base; **Resume compares them at `$BASE`**, because a Gate-B fix may legitimately have changed `HEAD`'s copy in a `WIP:` snapshot. An earlier table row claimed Preparation did the base comparison, which it never could |
 | 5 | Never overwrite an existing base file | **kept** as an obligation; the shell branch becomes one line of the resume procedure |
 | 6 | A pre-existing base is an ancestor of `HEAD` (`merge-base --is-ancestor`) | **kept**, same shell — resume |
@@ -351,8 +351,11 @@ test ! -e .context/loop-rule-base || { echo "a base is already recorded — this
 git merge-base --is-ancestor ba15e83 HEAD || { echo "ba15e83 not in this history"; exit 1; }
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  # Resolved separately: with both substitutions inline, a path that resolves at
-  # NEITHER revision gives "" = "" and the comparison PASSES on two failed lookups.
+  # Resolve separately and check each status. `git rev-parse` without `--verify`
+  # prints its UNRESOLVED argument and exits 128, so two failed lookups compare equal
+  # exactly when the two revision expressions are equal — and either way the result
+  # says nothing, because success must depend on both exit statuses. (Observed:
+  # `git rev-parse HEAD:missing` prints `HEAD:missing`, status 128.)
   HEAD_ID=$(git rev-parse "HEAD:$p") \
     || { echo "$p does not resolve at HEAD — the comparison is unestablished; stop"; exit 1; }
   APPROVED_ID=$(git rev-parse "ba15e83:$p") \
@@ -582,11 +585,17 @@ BASE=$(cat .context/loop-rule-base)
 test "${#BASE}" -eq 40 || { echo "base is not a full 40-character object name"; exit 1; }
 case "$BASE" in *[!0-9a-f]*) echo "base is not an object name: $BASE"; exit 1 ;; esac
 test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "base does not resolve to itself as a commit"; exit 1; }
+# Row 3 at `$BASE`, the way row 4 is already split by entry. Preparation checks this
+# against `HEAD` and is first-entry-only, so nothing established it for a base that
+# arrived with the ignored base file — and a commit BELOW `ba15e83` can carry the same
+# three approved-input blobs and pass every other check here. Observed in this
+# repository: `ba15e83^` has identical blobs for all three.
+git merge-base --is-ancestor ba15e83 "$BASE" || { echo "ba15e83 is NOT an ancestor of the base"; exit 1; }
 git merge-base --is-ancestor "$BASE" HEAD || { echo "base is NOT an ancestor of HEAD"; exit 1; }
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
-  # Resolved separately, for the reason Preparation's copy gives: two inline
-  # substitutions that both fail compare equal and the check passes on nothing.
+  # Resolve separately, for the reason Preparation's copy gives: a failed lookup can
+  # still print its unresolved argument, so equality alone does not establish success.
   BASE_ID=$(git rev-parse "$BASE:$p") \
     || { echo "$p does not resolve at \$BASE — the comparison is unestablished; stop"; exit 1; }
   APPROVED_ID=$(git rev-parse "ba15e83:$p") \
@@ -2202,6 +2211,7 @@ test -n "$BASE" || { echo "BASE empty or unreadable — Task 0 did not run"; exi
 # `pipefail` is not available here: these blocks run under sh and dash too.
 DIFFOUT=$(git diff -U0 "$BASE" -- plugins/dev-workflow/hooks/codex-gate.sh) \
   || { echo "git diff FAILED — the changed-line list is unestablished; stop"; exit 1; }
+printf '%s\n' "$DIFFOUT"                         # READ EVERY REMOVED AND ADDED LINE
 printf '%s\n' "$DIFFOUT" | grep -E '^@@' | sed -E 's/^@@ -([0-9]+).*/\1/'
 grep -n 'note "' plugins/dev-workflow/hooks/codex-gate.sh
 ```
@@ -3054,9 +3064,10 @@ git commit -m "WIP: fix <finding>" \
 test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
   || { echo "the commit's tree is not the index that was pinned; no call may be issued"; exit 1; }
 
-# The previous candidate's closing tip. Guarded: where the path cannot be removed the
-# stale tip survives, and 8b's condition 5 would compare `HEAD` against a value this
-# run never produced.
+# The previous candidate's closing tip. Guarded: without the guard a failed removal
+# leaves the stale tip standing beside the next candidate's reviewed head, so the next
+# call is issued with two candidates' markers present. (It is NOT the value condition 5
+# reads in a correct sequence — 8a rewrites the tip before 8b runs.)
 rm -f .context/loop-rule-reviewed-tip \
   || { echo "removing the previous candidate's tip FAILED — it survives; no call may be issued"; exit 1; }
 # The head the NEXT call is issued against. Guarded, and no `cat`: the redirect can
