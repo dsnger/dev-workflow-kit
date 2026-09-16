@@ -2809,6 +2809,12 @@ its own product forbids.
 nothing: this plan restores nothing, so an edit made before its route authorized it is just as
 unauthorized, and a later decline has nothing that removes it.
 
+**A failed records commit stops here; step two does not run.** This block *does* end with its
+commit, so its exit status is the block's — unlike step three, it has no following command to mask
+one. The guard is there because **what follows is prose, not a command**: a reader who saw the
+failure scroll past can still walk into step two, and the ordering must not be read over a pass that
+was never recorded.
+
 **Stage the two slot paths this pass was called with, spelled out.** Not `git add -A`, which sweeps
 exactly the edit this step exists to keep out — and **not the review directory either**: `git add
 .context/codex-reviews/` is a directory pathspec that stages every changed or untracked file beneath
@@ -2822,7 +2828,8 @@ NONCE=<this cycle's nonce>; P=<this pass's number>
 git add ".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md" \
         ".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md" \
         docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
-git commit -m "WIP: pass $P records"
+git commit -m "WIP: pass $P records" \
+  || { echo "records commit FAILED — stop here; step two does not run"; exit 1; }
 ```
 
 **What this does not cover, disclosed rather than guarded:** naming the paths controls what this step
@@ -2854,13 +2861,23 @@ dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixe
 post-answer pass**, which is §A's rule and not this plan's. So on this route: apply the repair now,
 re-run every check it invalidated, commit both, and only then record the head.
 
+**The commit is guarded because this block does not end with it.** Three commands follow, and the
+first thing they do is read `HEAD` — so an unguarded failure is masked by the `rev-parse` after it,
+the *old* head is recorded, and the next call is issued against a tree the repair never reached. **On
+a failed commit nothing moves**: the previous candidate's tip stays, the reviewed head stays, and no
+call is issued. **8a guards its record commit the same way**, and for the same reason.
+
 ```bash
 # The repaired files, spelled out, plus this plan — which carries the refreshed
 # re-run records. The findings files went in at step one and are not re-staged.
 # Neither `git add -A` nor the review directory: both carry in work no pass asked for.
 git add <the files this repair touched> \
         docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
-git commit -m "WIP: fix <finding>"
+# Guard the commit. Everything below derives from HEAD, so an unguarded failure
+# is masked by the `git rev-parse` that follows it: the old head gets recorded,
+# the repair stays staged, and the next call reviews a tree it is not in.
+git commit -m "WIP: fix <finding>" \
+  || { echo "repair commit FAILED — tip and reviewed head left as they are; no call may be issued"; exit 1; }
 
 rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
 git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
