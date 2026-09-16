@@ -1019,10 +1019,17 @@ none of passages (g), (h) or (j) — so `g4`, which sits at C 815 / W 997, could
 whose expected list named it — and the truncation hid about fifty of the roughly ninety lines the
 comparison actually emits.
 
-**Read both copies from the source the re-entry rule selects, not from the worktree unconditionally.**
-On a clean first run they are the same; once `$BASE..HEAD` is non-empty the worktree carries this
-plan's own edits, and comparing them would fold introduced drift into the inherited-drift record —
-after which Task 14 can no longer tell the two apart, which is the whole purpose of this baseline.
+**Read both copies from the recorded `$BASE`, always — never from the worktree.** The worktree can
+carry this plan's own edits, and folding those into the inherited-drift record leaves Task 14 unable
+to tell introduced drift from inherited, which is the whole purpose of this baseline. **An earlier
+revision selected the source by whether `$BASE..HEAD` was empty**, reading the worktree when it was.
+That inference is unsound and this plan says so three times elsewhere: after a `reset --soft` the
+range is empty **while the entire implementation sits staged in the index and present in the
+worktree** — a state Resume names as valid — so the baseline would have recorded the *implemented*
+copies as the original. **A commit range says which commits are reachable; it says nothing about
+uncommitted content.** Resume already required the rebuild to read the `$BASE` blobs, so this is the
+two sites agreeing rather than a new rule. **No entry-mode flag is needed either**: a first entry
+recorded a clean `HEAD` as `$BASE`, so `$BASE` is the right source on every entry.
 
 **Selection, the `base` line and every extraction are ONE shell block**, because each fenced block
 is its own invocation: `C_SRC` set in one block and consumed in the next is empty by the time
@@ -1046,14 +1053,15 @@ exits on failure; the rename is the last statement.
 ```bash
 BASE=$(cat .context/loop-rule-base)
 test -n "$BASE" || { echo "BASE empty or unreadable — Task 0 did not run"; exit 1; }
-if [ -n "$(git log --oneline "$BASE"..HEAD)" ]; then
-  git show "$BASE:CLAUDE.md" > .context/loop-rule-c.src
-  git show "$BASE:plugins/dev-workflow/commands/workflow-init.md" > .context/loop-rule-w.src
-  C_SRC=.context/loop-rule-c.src; W_SRC=.context/loop-rule-w.src
-else
-  C_SRC=CLAUDE.md; W_SRC=plugins/dev-workflow/commands/workflow-init.md
-fi
-test -r "$C_SRC" && test -r "$W_SRC" || { echo "baseline source unreadable"; exit 1; }
+# Always the $BASE blobs. Never the worktree, and never a branch on the commit
+# range: after a reset --soft that range is empty while the implementation is
+# staged, so "empty range" would select the implemented copies as the original.
+git show "$BASE:CLAUDE.md" > .context/loop-rule-c.src \
+  || { echo "cannot read CLAUDE.md at $BASE"; exit 1; }
+git show "$BASE:plugins/dev-workflow/commands/workflow-init.md" > .context/loop-rule-w.src \
+  || { echo "cannot read workflow-init.md at $BASE"; exit 1; }
+C_SRC=.context/loop-rule-c.src; W_SRC=.context/loop-rule-w.src
+test -s "$C_SRC" && test -s "$W_SRC" || { echo "baseline source empty"; exit 1; }
 printf 'base\t%s\n' "$BASE" > .context/loop-rule-baseline-diff.tmp   # renamed at the end
 
 # Tab-separated start and end anchors, written as LITERAL text — the escaping
@@ -2799,14 +2807,28 @@ its own product forbids.
 
 **Do not apply the repair yet — not in the worktree either.** Deferring only the *commit* changes
 nothing: this plan restores nothing, so an edit made before its route authorized it is just as
-unauthorized, and a later decline has nothing that removes it. **Stage the records by name**; `git
-add -A` here would sweep exactly the edit this step exists to keep out, along with any unrelated
-work in the tree.
+unauthorized, and a later decline has nothing that removes it.
+
+**Stage the two slot paths this pass was called with, spelled out.** Not `git add -A`, which sweeps
+exactly the edit this step exists to keep out — and **not the review directory either**: `git add
+.context/codex-reviews/` is a directory pathspec that stages every changed or untracked file beneath
+it, so another cycle's findings, or an earlier pass's, ride into this commit and then into the
+closing squash, where the exact-dirty-set guard can no longer see them because they were committed
+before the next call. **`NONCE` and `P` are this cycle's nonce and this pass's number** — the same
+two the call's slot paths were built from.
 
 ```bash
-git add .context/codex-reviews/ docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
-git commit -m "WIP: pass <n> records"
+NONCE=<this cycle's nonce>; P=<this pass's number>
+git add ".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md" \
+        ".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md" \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git commit -m "WIP: pass $P records"
 ```
+
+**What this does not cover, disclosed rather than guarded:** naming the paths controls what this step
+*adds* to the index; `git commit` still commits whatever the index already held. **A foreign path
+staged before this step runs is carried in, and no check in this plan catches it** — the close's
+dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixes that.
 
 **Step two — read the pass against the ordering, before any next call exists:**
 
@@ -2833,9 +2855,10 @@ post-answer pass**, which is §A's rule and not this plan's. So on this route: a
 re-run every check it invalidated, commit both, and only then record the head.
 
 ```bash
-# Stage the repaired artifacts BY NAME, plus the refreshed records. Not `git add -A`:
-# it would carry unrelated work in the tree into a range a pass is about to review.
-git add <the files this repair touched> .context/codex-reviews/ \
+# The repaired files, spelled out, plus this plan — which carries the refreshed
+# re-run records. The findings files went in at step one and are not re-staged.
+# Neither `git add -A` nor the review directory: both carry in work no pass asked for.
+git add <the files this repair touched> \
         docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
 git commit -m "WIP: fix <finding>"
 
