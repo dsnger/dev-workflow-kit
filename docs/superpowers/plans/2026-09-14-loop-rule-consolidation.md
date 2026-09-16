@@ -211,7 +211,7 @@ live in the home named. Where a task, a shell comment or an error string needs a
 |---|---|---|
 | Branch, clean tree, no base file yet, `ba15e83` ancestral, approved inputs unchanged at `HEAD` | **Preparation** | Task 0 step 1, first-entry branch |
 | Base file shape, self-resolving commit, ancestral; approved inputs unchanged at `$BASE`; scratch-artifact validity; how far the implementation got | **Resume** | Task 0 step 1, re-entry branch |
-| The four repository topologies a re-entry can meet | **Resume**, its table | accounting row 7; every state-reading rule |
+| The repository topologies a re-entry can meet | **Resume**, its table | accounting row 7; every state-reading rule |
 | `HEAD` equals the reviewed head | **Close**, condition 1 | step 8a |
 | The dirty set is exactly the candidate pass's findings files | **Close**, condition 2 | step 8a |
 | The closing message is complete, and revalidated before it is consumed | **Close**, condition 3 | step 7b writes it; steps 8a and 8b check it |
@@ -498,15 +498,17 @@ and records the closing commit carries are the ones a pass actually validated.
 
 **Resume owns every entry after the first.** Preparation is first-entry-only and refuses when a base
 file exists, so nothing here defers to it: the checks below are Resume's own, and **none of them
-requires a clean tree** — three of the four valid topologies need not have one.
+requires a clean tree** — every topology below can legitimately lack one. **No count of them is
+stated here**: one was, and adding the moved-`HEAD` row below falsified it.
 
-**Four topologies, named rather than numbered, and the whole procedure reads against all four.**
+**The topologies, named rather than numbered, and the whole procedure reads against all of them.**
 
 | Topology | `HEAD` | `$BASE..HEAD` | Where the work is |
 |---|---|---|---|
 | **Normal, mid-implementation** | the last `WIP:` snapshot | this run's `WIP:` commits, and possibly a §A3 stray commit or amend | committed |
 | **8a rejected, no commit landed** | the last `WIP:` snapshot, unchanged | this run's `WIP:` commits | committed, **plus whatever the failed attempt left in the index or worktree** |
 | **8a rejected after its commit landed** | a `WIP:` findings commit **above** the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
+| **A closure condition rejected because `HEAD` moved** — no reset has run | a commit **above** the value the condition expected: above the **reviewed head** at condition 1, or above **8a's findings commit** at condition 5 | this run's commits **plus that extra commit** | committed, **plus whatever is loose** — and the extra commit's content is **present but unreviewed** |
 | **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
 **The 8b row is the one every rule has to be re-read against.** `reset --soft` removes the `WIP:`
@@ -514,6 +516,19 @@ chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE.
 the work is staged, not absent. **And the two 8a rows differ from each other**: before its commit
 the history is untouched and the delta is loose, after it the findings commit sits above the chain
 — pass 31 split them because they need different content reconciliation.
+
+**The moved-`HEAD` row is the one that reads as ordinary progress and is not.** Its shape — a commit
+above the chain — *is* the normal row's shape, which is why pass 36 found the state described by no
+row at all and classifiable only as normal. **What separates them is why the commit is there**:
+condition 1 or condition 5 rejected *on it*, so it arrived after the head the candidate pass was
+issued against and **no pass has seen it**. Row 1's "possibly a §A3 stray commit" is the same object
+without that signal.
+
+**The two rejections that reach this row differ in one way the rules below turn on.** Condition 1 is
+a **precondition**, so nothing this plan does has moved: that is a plain stop, and no handoff is in
+progress. **Condition 5 rejects after 8a's record commit has landed**, so the Failure handoff *is*
+in progress — which is what selects the `inside a handoff` branch of the scratch-artifact rule
+below, report and change nothing, rather than delete and rebuild.
 
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
@@ -540,7 +555,10 @@ derived against does not.
 **Replace a base only on affirmative evidence it belongs to another run** — it fails one of the
 checks above. **Neither a commit subject nor an absence of cycle commits is evidence**: §A3's stray
 non-`WIP` commit leaves the base valid, and the 8b topology has an empty range by construction, so
-both tests would condemn states this plan calls valid.
+both tests would condemn states this plan calls valid. **Nor is an extra commit above the reviewed
+head**: it sits *above* the base, so ancestry still holds and the approved inputs at `$BASE` are
+untouched — the moved-`HEAD` topology leaves the base valid, and what that commit costs is Close
+condition 1's to decide, not the base checks'.
 
 - [ ] **Validate the scratch artifacts**
 
@@ -561,10 +579,10 @@ a value is trustworthy because it passed a check, never because cleanup was skip
 
 - [ ] **Establish how far the implementation got — against the topology, not against the log**
 
-**Read the content, not only the commits.** In the normal and the two 8a topologies that is the
-commits between `$BASE` and `HEAD`, **plus whatever the failed attempt left loose**. **In the 8b
-topology it is `git diff --cached "$BASE"`** — the staged tree, plus the landed closing commit's
-tree where one exists. A ticked checkbox is confirmed by the change
+**Read the content, not only the commits.** In the normal, the two 8a and the moved-`HEAD`
+topologies that is the commits between `$BASE` and `HEAD`, **plus whatever the failed attempt left
+loose**. **In the 8b topology it is `git diff --cached "$BASE"`** — the staged tree, plus the landed
+closing commit's tree where one exists. A ticked checkbox is confirmed by the change
 being *present in that content*, wherever the content lives.
 
 ```bash
@@ -582,6 +600,17 @@ path listing cannot describe** — a rewritten staged file keeps its name — so
 **A task whose checkbox is ticked but whose change is in neither place was not completed** — and one
 whose change is present with the box unticked is completed. **Deciding from the commit log alone
 reads the 8b topology as an untouched cycle and invites every edit to be made twice.**
+
+**Present is not reviewed, and the moved-`HEAD` topology is where the two come apart.** Reconciling
+the task list tells you what the repository *holds*; it says nothing about what a pass has *seen*.
+Content in a commit above the reviewed head arrived after the candidate pass was issued, so **no
+pass has reviewed it**, and a ticked checkbox does not make it reviewed. **Do not adopt it** —
+carrying it into a close is the defect Close condition 1 exists to stop, and that condition's own
+rule is what decides the cost: only a clean response issued against that exact `HEAD` closes the
+cycle. **And do not remove it** — this plan restores nothing, and a commit deleted here is evidence
+a person has not yet chosen a §A route on. **Report it as present and unreviewed**, name it in the
+Failure report's "whether a commit landed" line, and leave the three routes in `## The four
+procedures` · Failure to decide.
 
 **How success is recognised.** The base passes Resume's own checks; the artifacts match it and are
 complete, or are reported as invalid and left alone; and the plan's task list has been reconciled
@@ -1170,7 +1199,7 @@ and 11 also record — and a stale list is the same defect as a stale count. **T
 omission is concrete:** the evidence stays out of its own task's `WIP:` snapshot, so the reviewed
 range does not hold it where the task claims, and if execution continues it is swept into a later
 unrelated commit rather than the independently reviewable snapshot this plan promises. **Not a
-clean-tree argument** — Resume requires no clean tree, and three of its four topologies do not have
+clean-tree argument** — Resume requires no clean tree, and none of its topologies is required to have
 one; an earlier draft said re-entry needs one, which would have rejected the very states Resume
 exists to reconcile.
 
@@ -1425,7 +1454,7 @@ while the plateau rationale beside it carries no inventory id, **stays**, and is
 own name. Calling `c9` "split" names a seventh disposition and invites an executor to attach the
 staying rationale to a condition required to vanish. So: the moved precedence clause is absent here
 (`parent=1 worktree=0`) and present in §A, while the plateau rationale stays — confirm the
-rationale still counts `1` in each copy.
+rationale still counts `parent=1 worktree=1` in each copy.
 
 *(Build each pair per the verification procedure; record the four values.)*
 
@@ -1434,7 +1463,18 @@ Expected: for the three pairs, six pair instances reading
 `parent=1 worktree=0` in each copy. **Every OLD row was derived and validated at step 1**; this
 step only runs them.
 
-- [ ] **Step 5: Walk the conditions** — `c1`–`c3` present unchanged, `c5`–`c7` word for word, `c8` carrying the new clause, `c9` moved out and the plateau rationale still here, `c10`–`c14` gone from here. **This is a reader's confirmation on top of step 4's counts, not the observation for any of them** — `c9`–`c14` are each counted there, and a walk that found what the counts missed would mean a fragment was wrong rather than that the walk was the check.
+- [ ] **Step 5: Walk the conditions** — **every disposition row this task's block covers, read off
+  the table the way step 4b already says to**, not off a list here. The list this step used to carry
+  omitted `c4`, which has a pair at step 4 and was therefore counted and never read (pass 36); a
+  closed list in a task is the second copy of the disposition table, and this is the second one it
+  has cost this cycle. **This is a reader's confirmation on top of step 4's counts, not the
+  observation for any of them** — each of these is counted there, and a walk that found what the
+  counts missed would mean a fragment was wrong rather than that the walk was the check.
+
+For orientation, and not as the set owed: `c1`–`c3` present unchanged; **`c4` carrying the narrowed
+reading** — a missing condition now means only that *this* exit does not apply; `c5`–`c7` word for
+word; `c8` carrying the re-raised-dismissal clause; `c9` moved out with the plateau rationale still
+here; `c10`–`c14` gone from here.
 
 - [ ] **Step 6: Commit**
 
@@ -1534,7 +1574,7 @@ the class alone does not tell you:
 
 - **`e10` is kept and belongs with `e1`–`e6`, not with `e9`** — it is the sentence *after* §D's
   block, so a check treating it as carried would look for it inside text it never enters.
-- **`e9` is carried** — its count is `1` in each copy after the install, from the single-line
+- **`e9` is carried** — its count is `parent=1 worktree=1` in each copy after the install, from the single-line
   fragment step 1 appended rather than from the whole wrapped clause.
 - **`e8` is aligned rather than untouched** — this task gives W the pronoun, so listing `e8` among
   the untouched conditions would contradict the task's own instruction.
@@ -1780,7 +1820,8 @@ it, and record all of them in this task's fragment evidence.
 They are reproduced inside blocks that install contiguously, so a mis-scoped replacement silently
 drops them — and because they are carried rather than kept, **no untouched-range span covers
 them**, which is exactly why the disposition records them as carried. **Each owes a count of its
-own text in each copy, expecting `1`.**
+own text in each copy, to `parent=1 worktree=1`** — the result the disposition table owes a
+carried condition.
 
 **The set is every condition the disposition table marks *carried* inside this task's ten blocks**,
 and it is read from there rather than listed here. An earlier draft named three of them and left
@@ -1796,7 +1837,7 @@ grep -cF 'Codex is advisory — validate before applying; dismissed finding → 
 grep -cF 'Open a TodoWrite' CLAUDE.md
 ```
 
-Expected: `1` each, and `1` in each copy for every one of the nine.
+Expected: `1` each in the worktree, and `parent=1 worktree=1` in each copy for every one of the nine.
 
 - [ ] **Step 5: Parity** for all ten sites, each extracted by its own bounded region rather than a fixed line window.
 
