@@ -2688,15 +2688,30 @@ outside invariant 11's only reader gate.
 **Twelve `PASS` lines alone cannot be told from a review that skipped a copy or a channel** — the
 subject list is what makes the twelve lines mean something.
 
-**Commit the result before step 6.** Gate B reviews the range `$BASE..HEAD`; an edit to this plan
-left in the worktree is in neither that range nor the final `reset --soft`, which stages only what
-the discarded commits contained. The same applies to every record this plan collects — the sweep, the
-next-state table, the divergence list:
+**Commit the result before step 6 — and on a failure, commit the repaired files with it.** Gate B
+reviews the range `$BASE..HEAD`; an edit left in the worktree is in neither that range nor the final
+`reset --soft`, which stages only what the discarded commits contained. **An earlier revision staged
+only this plan**, so a repair made under the failure branch above stayed in the worktree: Gate B
+never saw it, and the close's exact-dirty-set check then refuses a dirty prompt copy, so the cycle
+dead-ends. Staging it *after* the review instead breaks the reviewed-head condition — there is no
+later moment that works.
+
+**Stage the repaired artifacts by name, and only those.** `git add -A` would carry unrelated work in
+the tree into a range a reviewer is about to read as this change. The repairable set here is the
+installed text this step judges: the two prompt copies, the hook and its test. **Only the ones the
+repair actually touched go in**, together with this plan's refreshed record — and the re-run records
+must describe *that* commit, which is why the re-runs above come first.
 
 ```bash
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
-git commit -m "WIP: plan records"
+# add only what the repair touched, from: CLAUDE.md,
+# plugins/dev-workflow/commands/workflow-init.md,
+# plugins/dev-workflow/hooks/codex-gate.sh, plugins/dev-workflow/hooks/codex-gate.test.sh
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md <the repaired files, if any>
+git commit -m "WIP: plan records"      # or: "WIP: prompt-standards repair + plan records"
 ```
+
+**The same applies to every record this plan collects** — the sweep, the next-state table, the
+divergence list.
 
 **`check-invariants.sh` includes the prompt-conformance checks** — a `Target model:` line naming one recognized model, a prose checklist-count claim matching the checklist, and the finding-severity vocabulary as a closed set in both prompt copies. Those three are a floor, not coverage; invariant 11's other eleven items are judged by a reader.
 
@@ -2776,39 +2791,68 @@ WIP tip while the repair sits in the worktree — and the final squash then publ
 reviewed:
 
 **Every pass that does not close ends the same way, whether or not it produced a repair — and it
-ends in two steps, in this order.** First record the pass. Then **run it through the ordering this
-change installs, and only its continue result prepares another call.** The plan must not execute a
-loop its own product forbids.
+ends in three steps, in this order.** Record the pass. Read it through the ordering this change
+installs. **Then, and only on a route that authorizes it, repair.** The plan must not execute a loop
+its own product forbids.
 
-**Step one — record the pass. This commits; it does not authorize anything.**
+**Step one — record the pass, and nothing else. This commits; it does not authorize anything.**
+
+**Do not apply the repair yet — not in the worktree either.** Deferring only the *commit* changes
+nothing: this plan restores nothing, so an edit made before its route authorized it is just as
+unauthorized, and a later decline has nothing that removes it. **Stage the records by name**; `git
+add -A` here would sweep exactly the edit this step exists to keep out, along with any unrelated
+work in the tree.
 
 ```bash
-# Before committing a fix, re-run what the fix could have broken.
-git add -A && git commit -m "WIP: fix <finding>"        # or: "WIP: pass <n> records" where no repair was owed
+git add .context/codex-reviews/ docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git commit -m "WIP: pass <n> records"
 ```
 
 **Step two — read the pass against the ordering, before any next call exists:**
 
-- **A source block standing** → **wait** for the repair and the reread by the route §A gives. No
-  further pass until that is done.
+- **A source block standing** → **the source rule decides what must be repaired or answered, and its
+  repair happens on that route** — §A sends the reader to the source and does not hold that repair
+  behind a continue. Then §A's release rule decides whether this pass is read again. **No further
+  pass while the block stands.**
 - **Any suspension open** — a membership stop, a new-question stop, a two-tell stop, a clearly-stuck
-  surface — → **collect every answer and compose them.** Another pass only where the composition
-  yields **continue**.
+  surface — → **collect every answer and compose them.** **No repair to a finding whose membership
+  is unanswered**: §A answers membership against the fix set *as it stood for the pass that raised
+  the question*, so repairing first decides the question the stop exists to ask. Another pass only
+  where the composition yields **continue**.
 - **A stop answer** → **park**: open, not running, **spending no passes**, restarted only by an
   explicit later continue. **There is no "commit and carry on" from a stop**, and acceptance
   criterion 4 requires that parked state to be distinct. **Nothing below runs on this route.**
+  **Parking is not a retroactive revocation**: §A defines stop as parking the open cycle and
+  prescribes no rollback, so a repair some earlier route had already authorized stays where it is.
 - **The clean-completion branch** → **Close**, not another pass.
-- **Continue** → and only then:
+- **Continue** → step three.
+
+**Step three — repair where the route authorized one, then prepare the call.** Continue permits an
+**unrevised** artifact only where no repair is owed; **where one is owed it comes before the
+post-answer pass**, which is §A's rule and not this plan's. So on this route: apply the repair now,
+re-run every check it invalidated, commit both, and only then record the head.
 
 ```bash
+# Stage the repaired artifacts BY NAME, plus the refreshed records. Not `git add -A`:
+# it would carry unrelated work in the tree into a range a pass is about to review.
+git add <the files this repair touched> .context/codex-reviews/ \
+        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+git commit -m "WIP: fix <finding>"
+
 rm -f .context/loop-rule-reviewed-tip                   # the previous candidate's closing tip
 git rev-parse HEAD > .context/loop-rule-reviewed-head   # the head the NEXT call is issued against
 cat .context/loop-rule-reviewed-head
 ```
 
-**The reviewed-head file is written on the continue route alone**, because writing it is what makes
-a next call possible: recording it before the ordering has spoken is how a pass gets issued over a
-standing source block, an unanswered suspension or a parked cycle.
+**The reviewed-head file is written on this route alone, and after the repair commit**, because
+writing it is what makes a next call possible: recording it before the ordering has spoken is how a
+pass gets issued over a standing source block, an unanswered suspension or a parked cycle — and
+recording it before the repair lands would aim that call at a tree the repair is not in.
+
+**If a repair was already applied before its route authorized it, stop and report the concrete
+state.** Do not design a way to take it back: this plan restores nothing, §A prescribes no rollback,
+and inventing one here would be a new rule nobody approved. Report what is in the worktree, what is
+committed, and which route had not yet spoken.
 
 **A non-closing pass that owes no repair still commits.** A Minor-only clean pass below the floor,
 or an answered suspension that changes no artifact, leaves its findings files tracked and dirty —
@@ -2889,8 +2933,9 @@ The message carries, in this order:
 3. any **human-exception record**, and beside it the skip reason if a cycle was skipped;
 4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it — and
    **if it changed, this candidate is over.** The final reviewer judged the entry it was handed
-   verbatim; a different entry in the closing commit is evidence no pass covered. **Commit the
-   change, then route the pass through step 7's ordering like any other non-closing pass** — a
+   verbatim; a different entry in the closing commit is evidence no pass covered. **Take this pass
+   through step 7's three steps like any other non-closing pass** — record it, read it against the
+   ordering, and repair only on a route that authorizes one; a
    standing source block, an open suspension or a stop answer binds here exactly as it does there,
    and **only its continue result records a new reviewed head and issues another candidate.** An
    earlier draft sent this branch straight to a new call, which is the plan's own Gate-B loop
