@@ -210,7 +210,7 @@ live in the home named. Where a task, a shell comment or an error string needs a
 | Operational condition | Defined in | Discharged by |
 |---|---|---|
 | Branch, clean tree, no base file yet, `ba15e83` ancestral, approved inputs unchanged at `HEAD` | **Preparation** | Task 0 step 1, first-entry branch |
-| Base file shape, self-resolving commit, ancestral; approved inputs unchanged at `$BASE`; scratch-artifact validity; how far the implementation got | **Resume** | Task 0 step 1, re-entry branch |
+| Branch; base file shape, self-resolving commit, ancestral; approved inputs unchanged at `$BASE`; scratch-artifact validity; how far the implementation got | **Resume** | Task 0 step 1, re-entry branch |
 | What a re-entry reads, and that no rule depends on the state fitting a named shape | **Resume** — its table is illustration, not a classification | accounting row 7; every state-reading rule |
 | `HEAD` equals the reviewed head | **Close**, condition 1 | step 8a |
 | The dirty set is exactly the candidate pass's findings files | **Close**, condition 2 | step 8a |
@@ -236,7 +236,7 @@ independent reader did.
 
 | # | Condition | Disposition |
 |---|---|---|
-| 1 | Branch is `loop-rule-consolidation` | **kept**, same shell — preparation |
+| 1 | Branch is `loop-rule-consolidation` | **kept**, and **split by entry, like row 4**: Preparation checks it at a first entry and **Resume checks it again**, first, before anything reads or writes cycle state. An earlier revision assigned it to Preparation alone, which is first-entry-only — and `.context/` is ignored, so the base file survives a checkout and another branch descended from `$BASE` passed every re-entry check (pass 38, Blocker) |
 | 2 | Tree clean before the base is recorded | **kept**, same shell — preparation |
 | 3 | `ba15e83` is an ancestor of `HEAD` | **kept**, same shell — preparation |
 | 4 | The three approved inputs' blobs equal their `ba15e83` versions | **kept, and split by entry**: Preparation compares them **at `HEAD`**, because a first entry has no recorded base; **Resume compares them at `$BASE`**, because a Gate-B fix may legitimately have changed `HEAD`'s copy in a `WIP:` snapshot. An earlier table row claimed Preparation did the base comparison, which it never could |
@@ -409,14 +409,18 @@ an unapproved edit to a spec that the gates already closed.
    without it a staged edit made between the two invocations, a rewritten findings file included,
    ships unreviewed and leaves a clean tree behind it.
 6. **After the closing commit**, four things: its **subject is not a snapshot**; its **parent is
-   `$BASE`**; the **tree is clean**; and its **body is identical to the revalidated closing-message
-   file**. The last is not decoration — `prepare-commit-msg` and `commit-msg` hooks rewrite git's
-   copy *after* `-F` has read it, so a validated file proves nothing about what landed, and a
-   dropped provenance line, curve, exception marker or evidence entry would pass every other check.
-   **Any of the four failing is a Failure handoff.**
+   `$BASE`**; the **tree is clean**; and its **body is identical to the bytes 8b pinned when it
+   revalidated them** — **not to the source file, which is the wrong oracle**: the same hooks that
+   rewrite git's copy *after* `-F` has read it can rewrite that ignored file too, and a comparison
+   against it would then pass on a body nobody validated. The check is not decoration either way —
+   a dropped provenance line, curve, exception marker or evidence entry would pass every other one.
+   **What this does not close**, stated rather than left to be found: a hook that also rewrites the
+   pinned copy defeats it, and nothing here detects that. What it closes is the ordinary case, where
+   the oracle was the very file the commit read. **Any of the four failing is a Failure handoff.**
 
 **How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
-parent is `$BASE`, **whose body is identical to the revalidated closing message**, with a clean tree
+parent is `$BASE`, **whose body is identical to the pinned bytes of the revalidated closing
+message**, with a clean tree
 behind it. **No tree comparison** — target §I parks a Gate-B tree-equality condition on
 Daniel's decision of 2026-09-13, and an earlier draft of this line added one anyway, which would
 have made the executor either invent an out-of-scope closure check or declare success without
@@ -549,6 +553,14 @@ nothing, rather than delete and rebuild.
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
 ```bash
+# The branch, FIRST and before anything reads or writes cycle state. `.context/` is
+# ignored, so the base file survives a checkout: on another branch descended from
+# $BASE every check below passes and the WIP commits, the soft reset and the closing
+# commit all land on the wrong branch. A detached HEAD prints `HEAD` and is refused
+# for the same reason.
+test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation \
+  || { echo "not on loop-rule-consolidation (on: $(git rev-parse --abbrev-ref HEAD)) — refusing to re-enter"; exit 1; }
+
 test -e .context/loop-rule-base || { echo "no base file — this is a first entry, run Preparation"; exit 1; }
 test -s .context/loop-rule-base || { echo "base file is EMPTY — inspect, delete deliberately, record why, re-record from the true starting commit"; exit 1; }
 BASE=$(cat .context/loop-rule-base)
@@ -628,9 +640,18 @@ close is the defect Close condition 1 exists to stop, and that condition's own r
 cost — only a clean response issued against that exact `HEAD` closes the cycle. **Do not remove it**:
 this plan restores nothing, and what you delete here is evidence a person has not yet chosen a §A
 route on. **And do not rewrite `.context/loop-rule-reviewed-head` or `-reviewed-tip` to match**,
-which would make the equality pass by discarding the only record of what was reviewed. **Report the
-mismatch and the state**, name it in the Failure report's "whether a commit landed" line, and leave
-`## The four procedures` · Failure and §A's three routes to decide.
+which would make the equality pass by discarding the only record of what was reviewed.
+
+**Route the mismatch by the check that rejected it, not by the fact that it was a mismatch.** The
+no-adopt, no-remove and no-rewrite rules above hold for both; **where they go does not.** A
+**condition 1** mismatch is a precondition rejection — nothing this plan did has moved, so it is a
+**plain stop**: report the mismatch and the state, and **no handoff is in progress**, which is what
+lets the scratch-artifact rule above take its ordinary *delete and rebuild* branch. A **condition 5**
+mismatch rejects after 8a's record commit has landed, so it goes to `## The four procedures` ·
+Failure, is named in that report's "whether a commit landed" line, and **is** inside a handoff — so
+the scratch rule's *report and change nothing* branch applies. Either way §A's three routes decide
+what happens next. **An earlier revision sent every mismatch to Failure**, which would have put a
+condition-1 stop inside a handoff it is not in and suppressed a rebuild that was owed.
 
 **How success is recognised.** The base passes Resume's own checks; the artifacts match it and are
 complete, or are reported as invalid and left alone; and the plan's task list has been reconciled
@@ -2968,6 +2989,11 @@ git reset --soft "$BASE" || { echo "reset --soft FAILED — run Failure; do NOT 
 # Condition 3's revalidation: re-read the message here, immediately before it is
 # consumed. Reader check on its records; the expected result is condition 3's.
 test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty — run Failure"; exit 1; }
+# Pin the bytes this invocation validated, BEFORE the commit runs. Condition 6's
+# oracle must not be the same mutable path the commit reads: a `commit-msg` hook
+# that rewrites git's copy AND this ignored source file would otherwise make the
+# post-close comparison pass on a body nobody validated.
+cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg
 # `--cleanup=verbatim` so the stored body is the validated bytes: git's default
 # cleanup for -F strips trailing whitespace and collapses blank runs, and
 # condition 6 compares bytes. It carries no `-m`, so `is_wip_commit` still misses it.
@@ -2990,8 +3016,9 @@ test -z "$(git status --porcelain)" || { echo "tree dirty after the close — ru
 # 8b's `--cleanup=verbatim` is the other half — without it git stores its own
 # tidied copy. Both observed in a disposable repository, so this diff is the
 # byte equality condition 6 states, not a normalized stand-in for it.
+test -s .context/loop-rule-validated-msg || { echo "no pinned message — 8b did not complete; run Failure"; exit 1; }
 git log -1 --pretty=format:%B > .context/loop-rule-landed-msg
-diff .context/loop-rule-closing-msg .context/loop-rule-landed-msg \
+diff .context/loop-rule-validated-msg .context/loop-rule-landed-msg \
   || { echo "the committed body differs from the validated message — run Failure"; exit 1; }
 ```
 
@@ -3013,6 +3040,7 @@ rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
       .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg \
+      .context/loop-rule-validated-msg \
       .context/loop-rule-final-blobs .context/loop-rule-committed-blobs
 if ls .context/loop-rule-* >/dev/null 2>&1; then
   echo "cycle scratch survives the close:"; ls .context/loop-rule-*; exit 1
