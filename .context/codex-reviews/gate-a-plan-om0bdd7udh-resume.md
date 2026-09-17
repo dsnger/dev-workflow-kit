@@ -13,6 +13,53 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
+## HANDOFF — 2026-09-17, written for a session that has just lost its context
+
+**State.** Plan anchor `1ba45be`; cycle `om0bdd7udh` **OPEN and UNCLEAN at pass 48**. The plan's
+sixteenth revision repaired all three of pass 48's Blockers. **Nothing is implemented yet** —
+`CLAUDE.md`, `plugins/dev-workflow/commands/workflow-init.md` and the hook are untouched.
+
+**Not yours to touch:** `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`, `todos.md` and
+`docs/field-reports/2026-09-17-sfx-review-loop-economics.md` are Daniel's own edits in flight. Leave
+them dirty; do not commit, revert or review them.
+
+**The open decision, and it is one word from Daniel.** Three tells stand at pass 48 (findings 2 → 3,
+Blockers 1 → 3, instrument cluster), so the surface is mandatory. The choice he was given:
+
+- **"fokussiert weiter"** → run pass 49 with the prompt narrowed to the four areas that can reach a
+  shipped product (below);
+- **"voll weiter"** → run pass 49 over the whole plan, as passes 1–48 did.
+
+**Why that choice exists — the efficiency finding, counted rather than felt.** Of roughly 25 findings
+across passes 42–48, **about 4 or 5 had a payer outside this repository**; the rest cost the one
+person executing the plan a bad session. **That is ~80% bookkeeping** — but the other 20% are
+serious: unreviewed content published through `reset --soft`, a plugin shipping without its version
+bump, a hook change slipping past the invariant-4 review. The loop is **misallocated, not worthless**.
+Of the plan's **54 shell blocks**, only four areas decide what is published: **8a/8b** (the closing
+commit), **steps 3–4** (version bump and battery, invariant 12), **step 6** (the Gate-B range), and
+**Tasks 10/11** (the hook change and its invariant-4 review).
+
+**Standing orders now in force** (also in the session memory):
+- **Subagents, parallel, by default.** Fan out read-only inspection; keep writing serial — one writer.
+- **Model per job**: haiku for mechanical scans, sonnet for ordinary judgement, opus only where a
+  wrong call is expensive (the close, closure conditions, anything a gate depends on).
+- **A stop goes through a gate, never into a menu for Daniel.** Take the report's own output, make it
+  the gate question, put it to Codex, validate the answer, follow it. Only a decision the rules
+  reserve for a human reaches him — and then as one decision with the gate's reasoning attached.
+- **Codex is the sparring partner**: he proposes with evidence, I validate, I apply what holds and say
+  what I rejected.
+- **The utility test on every finding**: name the payoff — **bugfix, security-fix or performance** —
+  and name **who pays** if it is left: a user of the shipped product, or the executor at a terminal.
+  No nameable payoff → collect, never iterate. **It waives no floor, no mandatory tell and no closure
+  condition** — `todos.md` "Review-loop usefulness" (Dark Factory vision §§4/7/11) is the formal
+  version and activates no thresholds.
+
+**After a clean close**, the real work starts: both prompt copies, the seven hook strings and their
+test expectations, version bump 0.11.0 → 0.12.0 + CHANGELOG, the quality battery, the evidence entry,
+then **Gate B with a fresh nonce** — this cycle's is Gate-A plan only.
+
+---
+
 **STOPPED AT PASS 47 ON A MANDATORY TWO-TELL SURFACE, AND THE STOP WAS DECIDED THROUGH A GATE, NOT BY
 INSTINCT.** The question "run pass 48 or stop" was put to Codex with the pass data and the governing
 §5 text; its assessment is `.context/codex-reviews/gate-loop-health-pass47.md`. **Three tells are
@@ -337,6 +384,8 @@ worth checking before a pass rather than after.
 | — | — | — | — | — | — | **FOURTEENTH BOUNDED REVISION.** **The scope question was put to two independent readings and they DISAGREED** — both quoting the same §A sentence (`target-text.md:85-89`). A subagent read it as "validate once, before the predicate reads" → new obligation; Codex read it as an **input invariant** on what the predicate actually reads → repair, and ran fixtures showing the worktree-rewrite hole is real. **Codex's reading was taken**, because the subagent's supporting claim — that findings files are gitignored so nothing finding-derived is committed — is **false in this repo**: `.gitignore` exempts `.context/codex-reviews/` and this cycle commits its findings files. **Repair taken:** step two reads `git show "HEAD:$SPEC"` / `HEAD:$QUAL`. **Declined with reason:** re-running the structural and eligibility checks on committed content — that is Close condition 4's *closing*-commit duty and the approved text does not place it on a record commit. **Residual named, not repaired:** nothing establishes that the committed bytes are the ones *pass acceptance* validated; an edit between acceptance and staging is pinned as staged. Closing that needs the accepted blob ids carried out of the acceptance step in a file, a duty **no approved text carries**. Demonstrated under `sh`: with a worktree-only rewriting hook, step one exits 0, `HEAD` holds the validated line and the worktree holds `REWRITTEN IN WORKTREE ONLY` |
 | 47 | 221819c | 1→**2** | 1→**1** | 0→**1** | yes | **One finding descends from the revision immediately before it, the other does not — an earlier row here claimed both did and was wrong.** `git log -S'rm -f .context/loop-rule-validated-msg'` names `4752a35` as the commit that introduced the Major's line, and `221819c` does not touch it at all. Both demonstrated. **BLOCKER — my own overclaim**: step two read `git show "HEAD:<slot>"` and the prose called the source immutable. That is true of the **commit object** and false of **`HEAD`**, a movable ref — any commit, amend, reset, rebase or checkout in between redirects both reads, and a move *between* the two reads can take the branch files from different commits. **MAJOR**: 8b's unguarded `rm -f` let a **directory** at the pin path reach the closing commit — `rm -f` fails on a directory, `cp source dir` then succeeds by writing beneath it. Observed under all three shells: the old shape printed `REACHED THE COMMIT` with the path still a directory |
 | — | — | — | — | — | — | **FIFTEENTH BOUNDED REVISION.** Step one persists the record commit's object id to `.context/loop-rule-records-commit` (added to the cleanup list); **step two reads both slots from that exact object**, and a moved `HEAD` is a reason to **stop and report**, never to re-resolve. 8b's removal is guarded — **that is the line that closes the demonstrated case**, and the prose credits it rather than the `test -f` after it, which **no demonstrated path reaches**. Commit `c2e4932` |
+| 48 | c2e4932 | 2→**3** | 1→**3** | 1→**0** | yes | **All three Blockers are ONE defect**: the plan resolved `HEAD` a second time as the identity of a commit whose properties it had already checked. Step 7 step one (tree checked on one commit, id persisted from another); **8a — the one with a shipped payer**: a moved commit could become the closing tip having satisfied **none** of condition 4's checks, and `reset --soft` folds it into the closing commit, publishing content no pass reviewed; and the `.context/loop-rule-records-commit` marker added one revision earlier with **no Resume rule**, which this plan requires of every state file |
+| — | — | — | — | — | — | **SIXTEENTH BOUNDED REVISION.** **Swept rather than patched per site** — repairing one of several sites is this cycle's most reliable defect. Each site now resolves the commit **once**, immediately after it lands, and uses that object id for every check and every record; 8a's whole condition-4 chain runs against it and writes it as the tip. **A third site the reviewer did not report** was found and fixed: step 7 step three checked the repair commit's tree and then re-resolved `HEAD` for the reviewed head. **Checked and deliberately unchanged:** step 4b resolves `HEAD` once and persists no identity, so a move makes its comparison fail rather than pass; conditions 1, 5 and 6 read `HEAD` on purpose, to detect a move. Resume now validates the marker and reports a recorded pass as **unrouted** unless the reconciliation shows step two's outcome — a precondition stop, no mutation, no call. Commit `1ba45be` |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
