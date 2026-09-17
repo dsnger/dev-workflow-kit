@@ -628,6 +628,22 @@ Each by its `base` line **and** its completeness predicate:
   condition in the five regions appears in exactly one `span` or one `cond`.
 - `.context/loop-rule-baseline-diff.txt` — every line parses as `base`, a `site` record, or diff
   output belonging to the site above it, and **every inventoried site has a `site` record**.
+- `.context/loop-rule-records-commit` — **present means a pass was recorded and step two may not
+  have read it.** Step 7 step one writes it, step two consumes it, and nothing else touches it, so on
+  re-entry it is the one artifact that says *a pass is recorded and the ordering may not have
+  spoken*. Validate it: a full 40-character object name, resolving to a commit, with `ba15e83` as an
+  ancestor and the commit itself an ancestor of `HEAD`; and its two slot paths present as blobs
+  **in that commit**, not in the worktree. **This step establishes the marker; it decides nothing.**
+
+**A valid marker is a finding of the reconciliation, not an instruction.** It says the recorded pass
+exists and reports it as **unrouted unless the reconciliation below shows step two's outcome in the
+content** — a repair committed on an authorizing route, a park, a stop answer. **Where it cannot be
+shown, this is a precondition stop: report the marker, the commit it names and what the four sources
+hold, and take no mutation and issue no call.** Rerunning step two over a recorded pass is the
+ordinary continuation and needs nothing new; **what must not happen is a repair or a next call while
+the ordering has not spoken**, which is the loop §A forbids and the one this plan must not itself
+execute. The marker is **retired by the close's cleanup**, with the other scratch values, and by
+nothing else — an interrupted cycle keeps it precisely so this check can find it.
 
 **On failure the answer depends on why you are here.** Outside a handoff: delete and rebuild from
 the `$BASE` blobs — never reuse, never repair in place, because a same-base partial file is the one
@@ -2992,17 +3008,24 @@ test "$(git cat-file -t "$ITREE:$QUAL" 2>/dev/null)" = blob \
 git commit -m "WIP: pass $P records" \
   || { echo "records commit FAILED — stop here; step two does not run"; exit 1; }
 
-# Any divergence between the pinned index and the resulting commit tree stops here,
-# whatever produced it.
-test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
+# Resolve the record commit ONCE, immediately after it lands, and use that object id for
+# everything below. `HEAD` is a movable ref: resolving it a second time — for the tree
+# check, and again to persist the identity — lets a commit, amend, reset, rebase or
+# checkout in between hand those two commands DIFFERENT commits, which recreates the
+# very defect this records the object id to close. The commit object is immutable;
+# `HEAD` is not, and only the captured id carries that.
+RECORD=$(git rev-parse HEAD) \
+  || { echo "cannot resolve the records commit; step two does not run"; exit 1; }
+
+# Any divergence between the pinned index and THAT commit's tree stops here, whatever
+# produced it.
+test "$(git rev-parse "$RECORD^{tree}")" = "$ITREE" \
   || { echo "the commit's tree is not the index that was pinned; step two does not run"; exit 1; }
 
-# Persist THIS commit's object id, because step two must read the two slots from this
-# exact commit. `HEAD` is a movable ref: a commit, amend, reset, rebase or checkout
-# between here and there redirects both reads, and a move BETWEEN step two's two reads
-# can take the branch files from different commits. The commit object is immutable;
-# `HEAD` is not, and only the object id carries that.
-git rev-parse HEAD > .context/loop-rule-records-commit \
+# Persist the same id, because step two must read both slots from this exact commit —
+# and a move between its two reads could otherwise take the branch files from different
+# commits.
+printf '%s\n' "$RECORD" > .context/loop-rule-records-commit \
   || { echo "recording the records commit's object id FAILED; step two does not run"; exit 1; }
 ```
 
@@ -3108,7 +3131,13 @@ ITREE=$(git write-tree) \
 # the repair stays staged, and the next call reviews a tree it is not in.
 git commit -m "WIP: fix <finding>" \
   || { echo "repair commit FAILED — tip and reviewed head left as they are; no call may be issued"; exit 1; }
-test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
+# Resolve the repair commit ONCE and use that id for both the tree check and the head
+# record. Resolving `HEAD` twice lets a move in between check one commit's tree and
+# record another as the head the next call is issued against — the same defect step one
+# records an object id to close, and not one the reviewer named here.
+REPAIR=$(git rev-parse HEAD) \
+  || { echo "cannot resolve the repair commit; no call may be issued"; exit 1; }
+test "$(git rev-parse "$REPAIR^{tree}")" = "$ITREE" \
   || { echo "the commit's tree is not the index that was pinned; no call may be issued"; exit 1; }
 
 # The previous candidate's closing tip. Guarded: without the guard a failed removal
@@ -3117,9 +3146,10 @@ test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
 # reads in a correct sequence — 8a rewrites the tip before 8b runs.)
 rm -f .context/loop-rule-reviewed-tip \
   || { echo "removing the previous candidate's tip FAILED — it survives; no call may be issued"; exit 1; }
-# The head the NEXT call is issued against. Guarded, and no `cat`: the redirect can
-# fail while a following `cat` prints the STALE value and the block exits 0.
-git rev-parse HEAD > .context/loop-rule-reviewed-head \
+# The head the NEXT call is issued against — the SAME id whose tree was checked above,
+# never a fresh resolution. Guarded, and no `cat`: the redirect can fail while a
+# following `cat` prints the STALE value and the block exits 0.
+printf '%s\n' "$REPAIR" > .context/loop-rule-reviewed-head \
   || { echo "recording the reviewed head FAILED — no call may be issued"; exit 1; }
 ```
 
@@ -3293,15 +3323,22 @@ done > .context/loop-rule-final-blobs \
 git add $FINAL \
   || { echo "staging FAILED — run Failure; do NOT commit"; exit 1; }
 git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — run Failure"; exit 1; }
-test "$(git rev-parse HEAD^)" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
-git diff --quiet "$HEADREV" HEAD -- "$@" \
+# Resolve the record commit ONCE, here, and run every condition-4 check against that
+# object id. `HEAD` is a movable ref: re-resolving it at each check — and again at the
+# tail, where the tip is written — lets a move land a commit as the closing tip that
+# satisfied none of the parent, path, blob-identity or eligibility checks. Condition 5
+# would then accept it, `reset --soft` would fold it into the closing commit, and the
+# only later content check is the one this plan deliberately parks.
+REC=$(git rev-parse HEAD) || { echo "cannot resolve the record commit — run Failure"; exit 1; }
+test "$(git rev-parse "$REC^")" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
+git diff --quiet "$HEADREV" "$REC" -- "$@" \
   || { echo "record commit changed paths beyond this pass's findings files — run Failure"; exit 1; }
 # The polarity is inverted here: exit 0 means "no difference", i.e. NOT carried. With
 # `&&` an execution error (status 2 or above) takes the same path as "carried" and the
 # close proceeds on a comparison that could not run. Status 1 — a real difference — is
 # the legitimate result this check wants.
 for f in $FINAL; do
-  git diff --quiet "$HEADREV" HEAD -- "$f"
+  git diff --quiet "$HEADREV" "$REC" -- "$f"
   case $? in
     0) echo "record commit did not carry $f — run Failure"; exit 1 ;;
     1) : ;;
@@ -3314,7 +3351,7 @@ done
 # that on an unresolvable rev `git rev-parse` echoes its argument to stdout and exits
 # 128, so without the guard this file can hold a junk line and the loop's status is gone.
 for f in $FINAL; do
-  git rev-parse "HEAD:$f" \
+  git rev-parse "$REC:$f" \
     || { echo "reading the committed blob for $f FAILED — run Failure" >&2; exit 1; }
 done > .context/loop-rule-committed-blobs \
   || { echo "writing the committed-blob list FAILED — run Failure"; exit 1; }
@@ -3328,12 +3365,13 @@ TREESTATE=$(git status --porcelain) \
   || { echo "reading the tree state after the record commit FAILED — run Failure"; exit 1; }
 test -z "$TREESTATE" || { echo "tree not clean after the record commit — run Failure"; exit 1; }
 
-# Condition 4's tail: the closing tip.
-# Guarded even though it ends the block: a failed redirect leaves whatever an earlier
-# attempt wrote, and 8b's condition 5 compares HEAD against that. (A failed rev-parse
+# Condition 4's tail: the closing tip — the SAME object every check above ran against,
+# never a fresh resolution, so a `HEAD` that moved after those checks cannot become the
+# tip. Guarded even though it ends the block: a failed redirect leaves whatever an
+# earlier attempt wrote, and 8b's condition 5 compares against that. (A failed write
 # after a successful truncate leaves the file empty, which 8b's `test -n "$TIP"` does
 # catch — the redirect failure is the half it cannot.)
-git rev-parse HEAD > .context/loop-rule-reviewed-tip \
+printf '%s\n' "$REC" > .context/loop-rule-reviewed-tip \
   || { echo "recording the closing tip FAILED — run Failure; 8b must not run"; exit 1; }
 ```
 
