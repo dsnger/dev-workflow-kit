@@ -22,6 +22,26 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.12.0
+
+- **New command `/dev-workflow:claude-init`** writes one `CLAUDE.md` of general working rules
+  into a project and nothing else — no review gates, no marker, no `AGENTS.md`, no commit, no git
+  repository required. The lighter entry point beside `/dev-workflow:workflow-init`, never an exit
+  from it: gates already present in a project's `CLAUDE.md` stay untouched.
+  - It classifies the path before reading content and stops on a symlink (working or dangling), a
+    directory or other non-regular file, or an unreadable file, reporting which one it saw.
+  - It never writes over an existing `CLAUDE.md`. Equivalent rules report `unchanged`; different or
+    overlapping rules get a focused proposed diff, and the command stops whether or not the proposal
+    is approved.
+  - It creates the file only through an exclusive open (`O_CREAT | O_EXCL`, mode `0o644`), which
+    refuses any existing destination. That needs an already-installed Python 3; without one it stops
+    instead of writing some weaker way. A failed or partial write is reported as such, never as
+    `written`.
+- **`Don't guess`**, a new rule at the end of section 1, now ships in `/dev-workflow:workflow-init`'s
+  `CLAUDE.md` template as well as in `claude-init`'s: leave gaps visible, separate evidence from
+  inference, keep decisions distinct from facts, and report an action as done only when its result
+  was observed.
+
 ## 0.11.0
 
 - **The mandatory pass floor is now a function of the cited story's profile**, not the constant 3.
