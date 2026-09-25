@@ -1,13 +1,19 @@
 # `/dev-workflow:claude-init` — general working rules without the review workflow — Story
 
 **Date:** 2026-09-17 · **Size:** story
-**Risk:** standard · **Security:** none · **Validation:** battery+check
+**Risk:** standard · **Security:** standard · **Validation:** battery+check
 
 **Profile log:**
 - 2026-09-17 · adoption · proposed at intake as `standard` / `none` / `battery+check`; **confirmed by
   Daniel on 2026-09-17, exactly as proposed.** Gates read this header, which is the only writable
   copy. Derived floor **3** — max(risk `standard` = 1, security `none` = 0) = 1, and only 0 gives a
   floor of 1.
+- 2026-09-25 · axis change · security `none` → `standard`, after PR #27's review found that the
+  project name could break out of the create command's shell here-document (Greptile, thread
+  4091660211). Complete header: `standard` / `standard` / `battery+check`; no prior override to void.
+  Proposed by the coding agent and the sparring reviewer; **confirmed by Daniel on 2026-09-25 by
+  releasing the repair brief that names this header.** Floor stays **3** — max(1, 1) = 1; the security
+  lens set now applies.
 
 ## 1. Problem statement
 
@@ -104,7 +110,7 @@ the lighter entry point, never a downgrade path.
 Items 1–3 were settled on 2026-09-17, items 4 and 5 on 2026-09-21.
 
 1. **The profile is confirmed** as `standard` / `none` / `battery+check`, exactly as proposed, and is
-   recorded in the profile log above. The reasoning it was accepted on: the command writes over a
+   recorded in the profile log above (security raised to `standard` on 2026-09-25 — see that log). The reasoning it was accepted on: the command writes over a
    file a project may have authored by hand, so the failure mode is **content loss** rather than
    inconvenience, and `trivial` would read that write path as harmless — the lenient direction on the
    one axis that matters here.

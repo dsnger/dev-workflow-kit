@@ -76,14 +76,33 @@ describe the proposal as applied, and never write it through any other tool.
 
 ## Writing — the create branch only
 
-1. **Fill in `<project>`** in the template's first line with the current directory's name, unless the
-   user named the project.
-2. **Re-run step one immediately before creating.** If anything is now at the path, report what
-   appeared as `stopped: create refused` and stop. This gives a better report; it is not the guard.
-3. **Check for Python 3:** `command -v python3 && python3 --version`. No `python3`, or a version
+1. **Check for Python 3:** `command -v python3 && python3 --version`. No `python3`, or a version
    below 3 → report `stopped: no qualifying create operation` and stop. Do not fall back to a shell
    redirect or your file-writing tool: neither refuses an existing destination of every kind, and a
    `set -C` redirect can hang on a FIFO.
+2. **Settle the project name, then fill in `<project>`** in the template's first line. The name is
+   the current directory's name, unless the user named the project. It goes into shell source — the
+   here-document below — so it must be **one line with no control character**: no line feed, no
+   carriage return (alone or as CRLF), no tab, and nothing else in Unicode category `Cc`
+   (U+0000–U+001F, U+007F–U+009F). A line break in the name could end the here-document early and
+   turn the rest of the name and the template into shell commands. Spaces, punctuation and non-ASCII
+   letters are fine; keep every character exactly as given. Get and check a directory-derived name
+   with one command:
+
+   ```sh
+   python3 -c 'import os, unicodedata; n = os.path.basename(os.getcwd()); print("name ok: " + n if n and not any(unicodedata.category(c) == "Cc" for c in n) else "name invalid: %r" % n)'
+   ```
+
+   On `name ok:`, the project name is exactly the text after `name ok: ` — fill in that value and
+   no other. It is the directory's physical name, which differs from `$PWD` or what the prompt shows
+   when you arrived through a symlink; checking one name and filling in another would leave the
+   filled one unchecked. Check a name the user gave by reading it: it must be a single line with no
+   control character. If
+   the name is invalid, or you cannot tell, **stop before the create command**: say which character
+   is not allowed and ask the user for a project name. Check the answer by the same rule; ask again
+   until a name passes. This rule is followed by you — the create script does not check the name.
+3. **Re-run step one immediately before creating.** If anything is now at the path, report what
+   appeared as `stopped: create refused` and stop. This gives a better report; it is not the guard.
 4. **Create through an exclusive open**, with the command below.
 5. **Report only what the script printed and what `ls -ld CLAUDE.md` shows afterwards.** A partial
    file is left as it is — do not delete it and do not retry into it. If the command fails before the
@@ -165,12 +184,16 @@ If the path's state afterwards cannot be inspected, say so in the report rather 
 - Before writing anything, if the user wants more than the general rules — gates, an `AGENTS.md`,
   or a merge into an existing file. Point them to `/dev-workflow:workflow-init` for gates.
 - After a proposal: always, whatever the answer.
+- Before creating, when the project name fails the name rule in *Writing*. This question is not a
+  report state: once a valid name exists the create branch continues and ends in one of the states in
+  *Report*. If the user ends the run at this question, nothing was written, no report state is printed,
+  and the run is not done in the sense of *Done means*.
 - On every `stopped:` and `failed:` state: report and stop; the fix is the user's.
 
 ## The template
 
-The complete file content. `<project>` is filled in at write time; everything else is written as it
-stands.
+The complete file content. `<project>` is filled in at write time, under the name rule in
+*Writing*; everything else is written as it stands.
 
 > **Prompt-standards item 1 for the written `CLAUDE.md`: n/a, and why.** The file this
 > template writes is model-agnostic by design — its executing model is whatever the reader of

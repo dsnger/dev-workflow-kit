@@ -237,6 +237,12 @@ reader can judge whether it still holds.
   its most frequent site. Before any rename or delete:
   `grep -rn "<old name/anchor>"` across the repo *and* the inline templates. The same
   applies to adding files: the layout tree above is part of the surface that drifts.
+- **Never splice data into shell source a prompt tells the agent to run without bounding it.**
+  A value filled into a command or here-document — a directory name, a user's answer — is shell
+  text once it is there, and a quoted here-document delimiter stops expansion but not a line that
+  ends the document. State the rule the value must meet, the check, and what happens when it fails.
+  `claude-init`'s project name did not, and one containing a line break could run the rest of the
+  template as commands (PR #27). Nothing mechanical finds this; it is a reading check.
 - **No dependency-freshness policy applies by ecosystem here** — this repo has no
   package manager and no runtime dependencies. Invariant 5 (exact pinning) is its
   equivalent, and it covers the tools CI installs.

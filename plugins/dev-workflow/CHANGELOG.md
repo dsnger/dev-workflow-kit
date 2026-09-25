@@ -37,6 +37,9 @@ AGENTS.md invariant 12 carries the complete list.
     refuses any existing destination. That needs an already-installed Python 3; without one it stops
     instead of writing some weaker way. A failed or partial write is reported as such, never as
     `written`.
+  - The project name travels to that open through a shell here-document, so before creating it
+    must be one line with no control character; otherwise the command asks for a name rather than
+    running the create. The agent follows this rule; the create script does not check the name.
 - **`Don't guess`**, a new rule at the end of section 1, now ships in `/dev-workflow:workflow-init`'s
   `CLAUDE.md` template as well as in `claude-init`'s: leave gaps visible, separate evidence from
   inference, keep decisions distinct from facts, and report an action as done only when its result

@@ -143,6 +143,26 @@ refuses the target outright. What the re-read buys is a better report: the comma
 appeared, instead of only relaying an `EEXIST` from the attempt. **It narrows a window; it does not
 close one.**
 
+**The project name must be one line with no control character before it reaches the create
+command.** Added after PR #27's review (Greptile, thread 4091660211). The filled-in template travels
+to the create operation as a shell here-document with a fixed, quoted delimiter; a name containing a
+line break can put the delimiter on a line of its own, end the here-document early, and make the
+rest of the name and the template shell commands. The name is substituted only into `# <project>`,
+so a one-line name always starts its line with `# ` and cannot form the delimiter line. The rule
+applies to every source of the name — the directory's name, a name the user gives, and a
+replacement answer — and rejects line feed, carriage return (alone or in CRLF), tab and every other
+Unicode `Cc` character (U+0000–U+001F, U+007F–U+009F). Nothing is trimmed, replaced or stripped;
+spaces, punctuation and non-ASCII letters stay valid. An invalid name stops the create branch
+**before** the create command and asks for a name; this question is not a report state, so the eight
+states stay as they are, and a run the user ends there has written nothing and printed no state.
+**This is an instruction the executing agent follows, not a technical guard:** the directory name
+comes from a one-line Python check that prints the physical directory name it checked, and that
+printed value is the one the agent is told to fill in, so the checked name and the filled name are
+one value even where a symlink makes the logical directory name differ (Gate-B cycle 7vnga7znhk,
+pass 1). Python is already required on this branch, so the Python check moves ahead of the name. A
+user-given name is checked by reading, and the create script itself does not validate the name and
+could not undo a shell breakout that happened before it started.
+
 **The create branch has one admission rule, and it admits no exceptions.** Between the final
 absence check and the write, another writer can create something at that path. **A write that
 overwrites it and discloses the overwrite afterwards is not preservation** — the file it destroyed
@@ -297,7 +317,8 @@ First`, separated by one blank line.
 
 **The complete content the command writes.** In the command file this is wrapped in a ````markdown
 fence (four backticks), because the block below contains a three-backtick fence of its own.
-`<project>` is the target directory's name unless the user says otherwise.
+`<project>` is the target directory's name unless the user says otherwise, and in either case one
+line with no control character (§2, *Writing*).
 
 ````
 # <project>
@@ -543,6 +564,17 @@ purpose.
 | Row 4b check: expect exactly the three omission hunks | **Dropped**, replaced by exact equality against a mechanically transformed source — the shape 4a already uses. A hunk count is a property of the renderer, not of the change, and the measured count for this pair is not three. Pass 2's Major 3. |
 | Row 4b: no `Don't guess` hunk, no §6 hunk | **Kept as statements about the transformation** — no insertion, no §6 removal — rather than as expectations about a rendered diff. |
 | Row 4b has no counterfactual | **Kept**, unchanged; exact equality does not give it one. |
+
+### Accounting — what the PR #27 name rule kept, moved and changed
+
+| Prior condition | Now |
+|---|---|
+| `<project>` is the directory's name unless the user says otherwise | **Kept**; every source of the name now passes the one-line rule (§2, *Writing*). |
+| Python 3 is required only on the create branch | **Kept.** The directory-name check runs on that branch only; reading and proposing still need no Python. |
+| The Python check came after the re-read | **Moved** ahead of the name check, so the name can be checked with the runtime already required; the re-read still runs immediately before the create. |
+| Eight terminal report states | **Kept.** The name question is not a state; no ninth state was added. |
+| *Done means*: exactly one report state printed | **Kept**; a run ended at the name question is stated as not done, with nothing written. |
+| The exclusive create, the quoted delimiter, the inline template and every path and error branch | **Kept** unchanged. |
 
 ## §8 Deliberately out of scope
 
