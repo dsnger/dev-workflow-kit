@@ -23,6 +23,7 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
 | `dev-workflow:finding-triage` | agent — read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
 | `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. |
+| `/dev-workflow:claude-init` | command — writes one `CLAUDE.md` of general working rules and nothing else: no review gates, no other files. An existing `CLAUDE.md` is never overwritten; you get a proposal instead. Creating the file needs an already-installed Python 3. |
 | codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and verify a Gate-B review against a fingerprint of the effective index plus the included worktree content, as of the hook's invocation — a deliberate superset of any one commit's payload, so the gate errs toward firing. Always exits 0. |
 
 ## Setup
