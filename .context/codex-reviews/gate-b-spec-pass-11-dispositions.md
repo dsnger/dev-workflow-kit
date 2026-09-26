@@ -1,0 +1,7 @@
+# Gate B — spec branch — pass 11 dispositions
+
+2 findings (1 Major, 1 Minor). Both accepted.
+
+1  MAJOR the hook's below-floor reminder still says "proceed only if this change is trivial" — ACCEPT, and it tripped the story's scope guard (no hook changes), so it was surfaced to the human rather than decided here. Waiver granted, with the reasoning recorded in the plan's decision record: the edit REMOVES a rule statement from the hook and defers to the policy file, so the hook reads no profile and gains no machinery — the inverse of what the guard protects. Shipping a reminder that asserts a now-false rule at the decision moment would be the unverified-enforcement-claim class in its most harmful position, and §5's skip rule changing means its echo in the hook changes in the same commit.
+   Constraint honoured: the replacement points at the policy without paraphrasing the rule, so no second sync surface is created. Codex's suggestion to "adjust its existing test expectation" was checked and dismissed — no test asserts that clause; the two hook tests match only `below floor|floor NOT met`.
+2  MINOR process-pr-review leaves the no-story and all-stories cases implicit — ACCEPT; the quality branch raised the same as a Major. Three explicit branches now: no story cited (§5's unprofiled judgement rule), one cited story, and several cited stories where a skip needs every one individually eligible.

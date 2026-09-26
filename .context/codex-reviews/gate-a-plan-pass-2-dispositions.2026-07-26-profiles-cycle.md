@@ -1,0 +1,11 @@
+# Gate A — plan — pass 2 dispositions
+
+7 findings, 2 Blockers. All accepted. 12 -> 7.
+
+1  BLOCKER the evidence entry cites a SHA that the amend then invalidates — ACCEPT. A commit body cannot name its own SHA; every amend produces a new one, so "battery green at <SNAPSHOT>" is stale by construction. Fixed by removing the SHA entirely: the entry names the battery and its result, and the tested state IS the tree this commit records, because revalidation is required before the close. Non-circular and checkable.
+2  BLOCKER fixes are not amended into the WIP snapshot before the battery and re-review — ACCEPT. Uncommitted fixes sit outside `baseSha..HEAD`, so Gate B could return clean on the pre-fix diff while the closing commit carries unreviewed changes. Every fix now stages and amends the active `WIP:` snapshot (preserving the evidence body) BEFORE the battery re-run and the re-review.
+3  MAJOR the agreement check guards only one of four extractions — ACCEPT. Missing anchors on both sides diff clean. All four captures are asserted non-empty before the two diffs.
+4  MAJOR shipped §5 text omits the spec's multi-story aggregation — ACCEPT. The Profiles subsection only said every cited story must be skip-eligible; it now carries the whole rule (battery once per cycle, per-story mode and suffix with its own evidence entry, lens sets unioned) in both copies and inside the agreement check.
+5  MAJOR any historical override excuses a mode/axes mismatch — ACCEPT, and sharp: an axis change VOIDS prior overrides, so a stale one must not resolve a mismatch. Resolution is now ordered — only the latest `mode override` after the latest `axis change`, with a compatible direction, explains a mismatch; anything else stops. Applied to the spec too, so the two agree.
+6  MAJOR the plan states this story's concrete profile values — ACCEPT. Third violation of my own single-copy constraint in this artifact. Values removed; the plan cites the story path and instructs a fresh header read, noting that this story predates profiles and therefore runs unprofiled unless adopted through §6's procedure.
+7  MINOR getting-started teaches only half the feature — ACCEPT. The paragraph now says the axes select review lenses AND the derived mode sets the evidence required before Gate B.

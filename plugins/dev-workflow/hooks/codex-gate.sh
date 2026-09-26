@@ -905,7 +905,7 @@ case "$event" in
         cmd=$(input_field command)
         if is_commit "$cmd"; then
           if is_wip_commit "$cmd"; then
-            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here and your pass counters are preserved. Run the review against this commit, then make the real commit when your final pass is clean." "ℹ WIP commit (Codex cycle preserved)"
+            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here and your pass counters are preserved. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle preserved)"
           else
           # Docs-only commits (spec/plan .md files) carry no code diff,
           # so Gate B (mcp__codex__review reviews a code diff) cannot apply — emit a
@@ -930,7 +930,7 @@ case "$event" in
               # preserves the older, now-stale fingerprint, which reaches the STALE
               # branch below, not this one. The message names the absent FINGERPRINT,
               # not an absent review.
-              note "STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per $policy you MUST reach a minimum of $floor passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass." "⚠ Codex Gate B: no recorded review"
+              note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.
             elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
@@ -942,9 +942,9 @@ case "$event" in
               # that the tree changed — under a repeated computation failure nothing
               # changed, and under a failed state write the content may be exactly what
               # was reviewed.
-              note "STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B not satisfied (cannot confirm review)"
+              note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, check the worktree and the index first — the fingerprint moves when either does, staging included, and another hook can stage during the commit attempt. Where neither changed, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
             elif [ "$passes" -lt "$floor" ]; then
-              note "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes — run more (the ONLY early exit is a pass that returned zero findings), or proceed only if $policy's skip rule applies to this change — if you cannot locate and check that rule, run the remaining passes." "⚠ Codex Gate B below floor ($passes/$floor)"
+              note "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes, and what this cycle does next is that policy's closure ordering's, read there entire; $policy's skip rule decides only whether a cycle runs at all, never whether one already running may stop short." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.
@@ -953,7 +953,7 @@ case "$event" in
               # establish that Codex read these bytes (spec §7, and the review-range row
               # in todos.md). The stronger phrasing was here and was removed; do not
               # restore it as a clarity improvement.
-              note "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate B satisfied ($passes/$floor cycle, $fresh on current fingerprint)"
+              note "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them." "✓ Codex Gate B hook checks passed ($passes/$floor cycle, $fresh on current fingerprint)"
             fi
           fi
           fi
@@ -964,13 +964,13 @@ case "$event" in
           superpowers:executing-plans | superpowers:subagent-driven-development)
             passesA=$(read_count "$countA_file")
             if [ "$passesA" -lt "$floor" ]; then
-              note "Codex Gate A floor NOT met: only $passesA/$floor mcp__codex__exec pass(es) on this spec/plan. Per $policy Gate A is a LOOP with a hard minimum of $floor passes (start each instruction with the superpowers:brainstorming directive; the ONLY early exit is a pass that returned zero findings). Gate A has no content check behind it — this floor is the only thing keeping the spec review honest. Run more passes before executing." "⚠ Codex Gate A below floor ($passesA/$floor)"
+              note "Codex Gate A floor NOT met: only $passesA/$floor mcp__codex__exec pass(es) on this spec/plan. Per $policy Gate A is a LOOP with a hard minimum of $floor passes (start each instruction with the superpowers:brainstorming directive; the ONLY early exit is a pass that returned zero findings). Gate A has no content check in this hook; what the gate itself requires of the reviewed artifact is stated in $policy and is instruction-backed. What this cycle does next is that policy's closure ordering's, a further pass being one of its answers and not the only one." "⚠ Codex Gate A below floor ($passesA/$floor)"
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
               # mcp__codex__exec CALLS, bound to no artifact. Hashing the artifact would
               # be wrong — a spec is SUPPOSED to change between passes — so the hook
               # cannot verify what was reviewed, and must not imply that it did.
-              note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan — floor met by COUNT ONLY. The hook counts calls; it cannot verify what was reviewed or that findings were addressed. Proceed only if your final pass was clean — no new Blocker/Major." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
+              note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan — floor met by COUNT ONLY. The hook counts calls; it cannot verify what was reviewed or that findings were addressed. Proceed only once this Gate-A cycle has closed under $policy's closure ordering, read there entire." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
             fi
             ;;
         esac

@@ -170,23 +170,23 @@ rev
 [ -s "$state" ] && pass "state holds a tree hash (non-empty)" || fail "state holds a tree hash (non-empty)"
 [ "$(cat "$count" 2>/dev/null)" = 1 ] && pass "review bumps pass count to 1" || fail "review bumps pass count to 1"
 
-# 2. Below floor (1/3) -> NOT satisfied yet; reaching floor (3/3) -> satisfied
+# 2. Below floor (1/3) -> below-floor reminder; reaching floor (3/3) -> hook checks passed
 out=$(commitpre)
 printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 passes -> below floor" || fail "1/3 passes -> below floor"
 printf '%s' "$out" | grep -q 'hookSpecificOutput' && pass "emits JSON additionalContext" || fail "emits JSON additionalContext"
 rev; rev  # reach the floor: 3 passes total, tree unchanged
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "3/3 passes, unchanged tree -> satisfied" || fail "3/3 passes, unchanged tree -> satisfied"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "3/3 passes, unchanged tree -> hook checks passed" || fail "3/3 passes, unchanged tree -> hook checks passed"
 
 # 3. FINDING 1 — content-based invalidation.
 #    (Replaces the old event-based assertion `[ ! -f state ]` after an Edit. The state
 #    file now legitimately SURVIVES a change — it holds the reviewed hash — so the
-#    intent "a change means Gate B is not satisfied" is asserted at the BEHAVIOR level.)
+#    intent "a change means the hook cannot confirm the reviewed content" is asserted at the BEHAVIOR level.)
 # 3a. Edit-tool change -> stale
 printf 'v2\n' >> app.ts
 run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_path":"app.ts"}}' >/dev/null
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' && pass "Edit-tool change -> not satisfied" || fail "Edit-tool change -> not satisfied"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "Edit-tool change -> gate-state reminder" || fail "Edit-tool change -> gate-state reminder"
 printf '%s' "$out" | grep -q 'cannot confirm' && pass "Edit-tool change -> reported as unconfirmed" || fail "Edit-tool change -> reported as unconfirmed"
 
 # 3b. THE MAJOR: a file changed through BASH (no Edit/Write event at all) -> stale.
@@ -194,36 +194,36 @@ printf '%s' "$out" | grep -q 'cannot confirm' && pass "Edit-tool change -> repor
 reset_all
 rev; rev; rev                       # 3 clean passes on the current tree
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "setup: satisfied before bash edit" || fail "setup: satisfied before bash edit"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed before bash edit" || fail "setup: hook checks passed before bash edit"
 printf 'sed-style in-place edit\n' >> app.ts   # NO hook event fires for this
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' && pass "bash-modified file after review -> NOT satisfied (Finding 1)" || fail "bash-modified file after review -> NOT satisfied (Finding 1)"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "bash-modified file after review -> gate-state reminder (Finding 1)" || fail "bash-modified file after review -> gate-state reminder (Finding 1)"
 
 # 3c. Untracked new file after review -> stale
 git checkout -- app.ts >/dev/null 2>&1
 reset_all
 rev; rev; rev
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setup: satisfied on clean tree"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on clean tree" || fail "setup: hook checks passed on clean tree"
 printf 'new\n' > brand-new.ts
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' && pass "untracked new file after review -> NOT satisfied" || fail "untracked new file after review -> NOT satisfied"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "untracked new file after review -> gate-state reminder" || fail "untracked new file after review -> gate-state reminder"
 
 # 3c-bis. Untracked CONTENT counts, not just the name. `git add f && git commit` is one
 # Bash call, so the hook sees `f` still untracked — a name-only hash would hand that
 # commit a stale ✓ on edited content (invariant 3).
 reset_all; rev; rev; rev   # re-review with brand-new.ts present, so its name is known
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with untracked file present" || fail "setup: satisfied with untracked file present"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed with untracked file present" || fail "setup: hook checks passed with untracked file present"
 printf 'edited\n' > brand-new.ts   # same name, different content
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited untracked file -> NOT satisfied" || fail "edited untracked file -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited untracked file -> gate-state reminder" || fail "edited untracked file -> gate-state reminder"
 
 # ...and a file inside a NEW untracked directory too: porcelain would collapse that to
 # a single `dir/` entry and never hash what is in it.
 reset_all; rev; rev; rev
 mkdir -p newdir && printf 'a\n' > newdir/f.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked dir -> NOT satisfied" || fail "new untracked dir -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new untracked dir -> gate-state reminder" || fail "new untracked dir -> gate-state reminder"
 reset_all; rev; rev; rev
 printf 'b\n' > newdir/f.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited file in untracked dir -> NOT satisfied" || fail "edited file in untracked dir -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited file in untracked dir -> gate-state reminder" || fail "edited file in untracked dir -> gate-state reminder"
 rm -rf newdir
 
 # ...and paths git does not print literally. It C-quotes non-ASCII and control
@@ -232,10 +232,10 @@ rm -rf newdir
 for name in "café ñ.ts" "$(printf 'tab\tnewline\nname.ts')"; do
   reset_all; rev; rev; rev
   printf 'a\n' > "$name"
-  printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new exotic-path untracked file -> NOT satisfied" || fail "new exotic-path untracked file -> NOT satisfied"
+  printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new exotic-path untracked file -> gate-state reminder" || fail "new exotic-path untracked file -> gate-state reminder"
   reset_all; rev; rev; rev
   printf 'b\n' > "$name"
-  printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited exotic-path untracked file -> NOT satisfied" || fail "edited exotic-path untracked file -> NOT satisfied"
+  printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited exotic-path untracked file -> gate-state reminder" || fail "edited exotic-path untracked file -> gate-state reminder"
   rm -f "$name"
 done
 
@@ -244,10 +244,10 @@ done
 # referents, or block forever on a link to a FIFO.
 reset_all; rev; rev; rev
 ln -s absent-a link.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked symlink -> NOT satisfied" || fail "new untracked symlink -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new untracked symlink -> gate-state reminder" || fail "new untracked symlink -> gate-state reminder"
 reset_all; rev; rev; rev
 rm -f link.ts; ln -s absent-b link.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "retargeted untracked symlink -> NOT satisfied" || fail "retargeted untracked symlink -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "retargeted untracked symlink -> gate-state reminder" || fail "retargeted untracked symlink -> gate-state reminder"
 rm -f link.ts
 
 # NOTE: sections 24-25 cover the "could not be computed" guard for checksum, seed-copy,
@@ -276,26 +276,26 @@ fi
 rm -f brand-new.ts
 reset_all; rev; rev; rev
 
-# 3d. Reverting the tree back to the reviewed content -> satisfied again
+# 3d. Reverting the tree back to the reviewed content -> hook checks pass again
 #     (content-based, so an edit-then-undo is correctly NOT stale)
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "revert to reviewed tree -> satisfied again" || fail "revert to reviewed tree -> satisfied again"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "revert to reviewed tree -> hook checks pass again" || fail "revert to reviewed tree -> hook checks pass again"
 
 # 3e. The hook's own .context/ churn must NOT change the hash (else it never matches itself)
 rev  # writes state files
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass ".context/ churn does not invalidate the hash" || fail ".context/ churn does not invalidate the hash"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass ".context/ churn does not invalidate the hash" || fail ".context/ churn does not invalidate the hash"
 
 # 3e-bis. ...including when .context/ is COMMITTED. Filtering only the untracked list
 # leaves tracked state in `git diff HEAD`, where the hook's own writes invalidate the
-# review it just recorded -> a permanent stale STOP. The adoption marker is meant to be
+# review it just recorded -> a permanent stale-fingerprint reminder. The adoption marker is meant to be
 # shared, so a tracked .context/ is the normal case.
 git add -f .context >/dev/null 2>&1; git commit -qm "track .context" >/dev/null 2>&1
 reset_all
 rev; rev; rev
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ state does not invalidate the hash" || fail "tracked .context/ state does not invalidate the hash"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "tracked .context/ state does not invalidate the hash" || fail "tracked .context/ state does not invalidate the hash"
 rev  # more churn against the committed state
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ churn stays satisfied" || fail "tracked .context/ churn stays satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "tracked .context/ churn still passes the hook checks" || fail "tracked .context/ churn still passes the hook checks"
 
 # 3e-ter. GAP 1 — the INDEX-tree component must exclude .context/ too, not just the
 # diff-HEAD and worktree-tree components (each guarded by its own `:(exclude)`
@@ -309,11 +309,11 @@ printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .contex
 # be the thing that (in)validates — only the .context staging can.
 printf 'side\n' > sidefile.ts; git add sidefile.ts >/dev/null 2>&1
 rev; rev; rev
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with sidefile.ts staged" || fail "setup: satisfied with sidefile.ts staged"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed with sidefile.ts staged" || fail "setup: hook checks passed with sidefile.ts staged"
 rev                                       # hook writes fresh state into .context/
 git add -f .context >/dev/null 2>&1       # stage the hook's own churn (sidefile.ts untouched)
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' \
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' \
   && pass "staged .context churn does not invalidate (index-tree .context exclusion)" \
   || fail "staged .context churn does not invalidate (index-tree .context exclusion)"
 git rm -q --cached sidefile.ts >/dev/null 2>&1; rm -f sidefile.ts
@@ -321,7 +321,7 @@ git reset -q -- .context >/dev/null 2>&1  # unstage; real index back to HEAD for
 
 # ...while a real code change is still caught
 printf 'code change\n' >> app.ts
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "tracked .context/: real code change still invalidates" || fail "tracked .context/: real code change still invalidates"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "tracked .context/: real code change still invalidates" || fail "tracked .context/: real code change still invalidates"
 git checkout -- app.ts >/dev/null 2>&1
 git rm -rq --cached .context >/dev/null 2>&1; git commit -qm "untrack .context" >/dev/null 2>&1
 reset_all; rev; rev; rev
@@ -330,24 +330,24 @@ reset_all; rev; rev; rev
 #     already-reviewed content DOES invalidate. The hash covers the index tree, and
 #     `git add` changes it. The bytes that would be committed are unchanged, so this is
 #     a false invalidation — accepted under invariant 2 ("loose in the firing
-#     direction"), and the STOP message explains that staging alone can cause it.
+#     direction"), and the stale-fingerprint message explains that staging alone can cause it.
 #     This test previously asserted the OPPOSITE as though it were a principle; the
 #     behaviour was never decided, it fell out of an implementation choice.
 reset_all
 printf 'reviewed change\n' >> app.ts
 rev; rev; rev                       # 3 passes covering the modified (unstaged) tree
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on unstaged change" || fail "setup: satisfied on unstaged change"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on unstaged change" || fail "setup: hook checks passed on unstaged change"
 git add app.ts >/dev/null 2>&1      # staging only — no content change
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
-  && pass "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)" \
-  || fail "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)"
-# The old trailing assertion ("untracked file on a staged tree -> not satisfied") is
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' \
+  && pass "staging a reviewed tracked file -> gate-state reminder (spec §2 decision)" \
+  || fail "staging a reviewed tracked file -> gate-state reminder (spec §2 decision)"
+# The old trailing assertion ("untracked file on a staged tree -> gate-state reminder") is
 # GONE on purpose: once staging alone invalidates, it passes regardless of the untracked
 # file and tests nothing. Test 3c already covers untracked content.
 git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
 reset_all; rev; rev; rev
 
-# 4. Gate A exec must NOT satisfy Gate B (separate state)
+# 4. Gate A exec must NOT count toward Gate B (separate state)
 reset_all
 execp
 [ ! -f "$state" ] && pass "exec does not set Gate B" || fail "exec does not set Gate B"
@@ -435,7 +435,7 @@ rm -f "$off"  # re-enable
 reset_all
 rev; rev; rev
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "re-enable sees same counting semantics as gate-on, not evidence of review" || fail "re-enable sees same counting semantics as gate-on, not evidence of review"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "re-enable sees same counting semantics as gate-on, not evidence of review" || fail "re-enable sees same counting semantics as gate-on, not evidence of review"
 
 # 14. Below-floor reminder shows N/floor
 reset_all
@@ -444,13 +444,13 @@ out=$(commitpre)
 printf '%s' "$out" | grep -q '2/3' && pass "below-floor reminder shows N/3" || fail "below-floor reminder shows N/3"
 
 # 14b. Docs-only commit -> gentle N/A note; mixed and undeterminable commits still fire.
-reset_all   # state ABSENT -> would normally STOP on a code commit
+reset_all   # state ABSENT -> would normally emit the no-fingerprint reminder on a code commit
 mkdir -p docs
 printf 'spec\n' > docs/plan.md; printf 'readme\n' > NOTES.md
 git add docs/plan.md NOTES.md >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'docs-only commit' && pass "docs-only staged -> N/A note" || fail "docs-only staged -> N/A note"
-printf '%s' "$out" | grep -q 'STOP' && fail "docs-only must not STOP" || pass "docs-only does not STOP"
+printf '%s' "$out" | grep -q 'Codex gate state:' && fail "docs-only must not emit the gate-state reminder" || pass "docs-only does not emit the gate-state reminder"
 printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B' && pass "mixed staged -> Gate B fires" || fail "mixed staged -> Gate B fires"
@@ -501,9 +501,9 @@ printf '%s' "$out" | grep -qE 'below floor|floor NOT met' && pass "1/3 exec -> G
 execp
 execp
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
-printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A satisfied" || fail "3/3 exec -> Gate A satisfied"
-# FINDING 12: the Gate-A satisfied wording must NOT overstate — it counts calls only.
-printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)" || fail "Gate A satisfied says 'count only' (Finding 12)"
+printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A floor met" || fail "3/3 exec -> Gate A floor met"
+# FINDING 12: the Gate-A floor-met wording must NOT overstate — it counts calls only.
+printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A floor-met message says 'count only' (Finding 12)" || fail "Gate A floor-met message says 'count only' (Finding 12)"
 run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
 [ ! -f "$countA" ] && pass "plan execution resets Gate A count" || fail "plan execution resets Gate A count"
 
@@ -520,8 +520,8 @@ reset_all
 printf '1' > "$floorf"
 rev
 out=$(commitpre)
-printf '%s' "$out" | grep -q '1/1' && pass "floor override 1 -> satisfied at 1 pass" || fail "floor override 1 -> satisfied at 1 pass"
-printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "floor override 1 -> reports satisfied" || fail "floor override 1 -> reports satisfied"
+printf '%s' "$out" | grep -q '1/1' && pass "floor override 1 -> hook checks pass at 1 pass" || fail "floor override 1 -> hook checks pass at 1 pass"
+printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "floor override 1 -> reports hook checks passed" || fail "floor override 1 -> reports hook checks passed"
 reset_all
 printf '5' > "$floorf"
 rev; rev; rev
@@ -537,7 +537,7 @@ for bad in 0 -2 three ""; do
 done
 rm -f "$floorf"
 
-# 18. FINDING 9 — satisfied message distinguishes fresh passes from cycle passes
+# 18. FINDING 9 — hook-checks-passed message distinguishes fresh passes from cycle passes
 reset_all
 rev; rev; rev            # 3 passes on the current tree
 printf 'post-review rewrite\n' >> app.ts   # big change AFTER the passes
@@ -553,12 +553,12 @@ printf '%s' "$out" | grep -qF 'of which 1 cover the CURRENT content fingerprint'
 git checkout -- app.ts >/dev/null 2>&1
 reset_all
 
-# 19. FINDING 11 — WIP commit is cycle-internal: gentle note, no STOP, no reset
+# 19. FINDING 11 — WIP commit is cycle-internal: gentle note, no gate-state reminder, no reset
 reset_all
 rev; rev                                   # 2 passes accumulated
 wip() { run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$1\"}}"; }
 out=$(wip "git commit -m 'wip: pre-review snapshot'")
-printf '%s' "$out" | grep -q 'STOP' && fail "WIP commit must not STOP" || pass "WIP commit does not STOP"
+printf '%s' "$out" | grep -q 'Codex gate state:' && fail "WIP commit must not emit the gate-state reminder" || pass "WIP commit does not emit the gate-state reminder"
 printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP commit -> gentle note" || fail "WIP commit -> gentle note"
 out=$(wip "git commit -m 'WIP: caps variant'")
 printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP matcher is case-insensitive" || fail "WIP matcher is case-insensitive"
@@ -630,7 +630,7 @@ rm -f "$on"
 rev; rev; rev
 [ -z "$(commitpre)" ] && pass "non-adopted repo: commit -> silent" || fail "non-adopted repo: commit -> silent"
 reset_all
-[ -z "$(commitpre)" ] && pass "non-adopted repo: unreviewed commit -> no STOP" || fail "non-adopted repo: unreviewed commit -> no STOP"
+[ -z "$(commitpre)" ] && pass "non-adopted repo: unreviewed commit -> no reminder" || fail "non-adopted repo: unreviewed commit -> no reminder"
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
 [ -z "$out" ] && pass "non-adopted repo: Gate A -> silent" || fail "non-adopted repo: Gate A -> silent"
 [ -z "$(codextool mcp__codex__codex)" ] && pass "non-adopted repo: unknown-tool note -> silent" || fail "non-adopted repo: unknown-tool note -> silent"
@@ -649,7 +649,7 @@ rm -rf "$sub"
 
 # 22b. Either adoption marker is enough, and it takes effect without a restart.
 #      (Each CLAUDE.md write is itself a tree change, so the passes are re-run after
-#      one — otherwise a stale-tree STOP would masquerade as non-adoption.)
+#      one — otherwise a stale-fingerprint reminder would masquerade as non-adoption.)
 reset_all
 printf '# p\n\n## 5. Something else entirely\n' > CLAUDE.md      # a CLAUDE.md without the gates
 rm -f "$on"
@@ -657,12 +657,12 @@ rev; rev; rev                                                    # inert: these 
 [ -z "$(commitpre)" ] && pass "unrelated CLAUDE.md -> not adopted" || fail "unrelated CLAUDE.md -> not adopted"
 : > "$on"                                                        # the explicit marker
 rev; rev; rev                                                    # passes only count once adopted
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass ".on marker alone -> adopted" || fail ".on marker alone -> adopted"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass ".on marker alone -> adopted" || fail ".on marker alone -> adopted"
 rm -f "$on"
 [ -z "$(commitpre)" ] && pass "removing the marker -> silent again" || fail "removing the marker -> silent again"
 printf '# p\n\n## 5. Cross-Model Review (Codex)\n' > CLAUDE.md   # the committed, team-wide signal
 rev; rev; rev
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "CLAUDE.md gate heading -> adopted" || fail "CLAUDE.md gate heading -> adopted"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "CLAUDE.md gate heading -> adopted" || fail "CLAUDE.md gate heading -> adopted"
 
 # 22bis. Adoption needs the gate SECTION, not the words. A substring grep adopts a
 #        project on a passing mention — including one that says the opposite.
@@ -710,7 +710,7 @@ rm -f CLAUDE.md; reset_all
 reset_all
 rm -f CLAUDE.md "$on"; : > "$on"      # marker-only adoption, no CLAUDE.md at all
 out=$(commitpre)
-printf '%s' "$out" | grep -q 'STOP' && pass "marker-only: still STOPs" || fail "marker-only: still STOPs"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "marker-only: still emits the gate-state reminder" || fail "marker-only: still emits the gate-state reminder"
 printf '%s' "$out" | grep -q 'CLAUDE.md' && fail "marker-only must not cite CLAUDE.md" || pass "marker-only: cites no CLAUDE.md"
 printf '%s' "$out" | grep -q "this project's review policy" && pass "marker-only: cites the project's policy generically" || fail "marker-only: cites the project's policy generically"
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
@@ -729,7 +729,7 @@ rm -f CLAUDE.md
 git checkout -- . >/dev/null 2>&1
 reset_all
 
-# 24. Failure contract: an uncomputable hash must never satisfy, and repeated failures
+# 24. Failure contract: an uncomputable hash must never pass the hook checks, and repeated failures
 #     must never match each other. Spec §3 "The nonce goes away".
 #     Each fault spans BOTH the stored and the recomputed fingerprint — with the fault
 #     applied only at commit time, a mismatch proves nothing about the handling.
@@ -750,7 +750,7 @@ for t in shasum sha1sum cksum; do
 done
 ( PATH="$stub_dir:$PATH" rev )
 out=$(PATH="$stub_dir:$PATH" commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' && pass "silent checksum -> not satisfied" || fail "silent checksum -> not satisfied"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "silent checksum -> gate-state reminder" || fail "silent checksum -> gate-state reminder"
 # Absence is asserted by inverting the RESULT, not with `grep -v` — `grep -qv` means
 # "some line lacks the pattern", which is a different question and was observed to
 # return 1 regardless on the dev machine.
@@ -765,7 +765,7 @@ done
 reset_all; printf '1' > "$floorf"
 ( PATH="$stub_dir:$PATH" rev )
 out=$(PATH="$stub_dir:$PATH" commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "checksum prints then fails -> not satisfied"
+printf '%s' "$out" | grep -q 'Codex gate state:' && pass "checksum prints then fails -> gate-state reminder" || fail "checksum prints then fails -> gate-state reminder"
 [ "$(cat "$fresh" 2>/dev/null || echo 0)" = 0 ] && pass "unhashable pass leaves freshCount 0" || fail "unhashable pass leaves freshCount 0"
 
 # 24b-bis. GAP 2 — a SECOND consecutive unhashable pass must not be treated as a
@@ -783,8 +783,8 @@ printf '#!/bin/sh\nexit 1\n' > "$stub_dir/cp"; chmod +x "$stub_dir/cp"
 rm -f "$stub_dir/shasum" "$stub_dir/sha1sum" "$stub_dir/cksum"
 reset_all; printf '1' > "$floorf"
 ( PATH="$stub_dir:$PATH" rev )
-printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
-  && pass "seed-copy failure -> not satisfied" || fail "seed-copy failure -> not satisfied"
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \
+  && pass "seed-copy failure -> gate-state reminder" || fail "seed-copy failure -> gate-state reminder"
 rm -f "$stub_dir/cp"
 
 # 24d. a selective git wrapper that fails ONLY `diff`
@@ -797,8 +797,8 @@ chmod +x "$stub_dir/git"
 REAL_GIT=$(command -v git); export REAL_GIT
 reset_all; printf '1' > "$floorf"
 ( PATH="$stub_dir:$PATH" rev )
-printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
-  && pass "git diff failure -> not satisfied" || fail "git diff failure -> not satisfied"
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \
+  && pass "git diff failure -> gate-state reminder" || fail "git diff failure -> gate-state reminder"
 
 # 24e. a selective git wrapper that fails ONLY `rev-parse --absolute-git-dir`
 cat > "$stub_dir/git" <<'STUB'
@@ -809,8 +809,8 @@ STUB
 chmod +x "$stub_dir/git"
 reset_all; printf '1' > "$floorf"
 ( PATH="$stub_dir:$PATH" rev )
-printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \
-  && pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"
+printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \
+  && pass "unresolvable git-dir -> gate-state reminder" || fail "unresolvable git-dir -> gate-state reminder"
 rm -f "$stub_dir/git"
 rm -rf "$stub_dir"   # GAP 3 — stub_dir (mktemp -d) outlives its own guard otherwise
 unset REAL_GIT       # GAP 3 — exported at 24d, never unset otherwise
@@ -833,7 +833,7 @@ reset_all; rev; rev; rev
 [ ! -d "$stub_dir" ] && pass "stub_dir removed after section 24" || fail "stub_dir removed after section 24"
 
 # 25. Unborn repo: no commits and no .git/index must still hash and self-match, or the
-#     first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a
+#     first commit in a fresh repo gets the gate-state reminder forever. Spec §3 "But an absent index is not a
 #     failed copy".
 unborn=$(mktemp -d)
 (
@@ -848,13 +848,13 @@ unborn=$(mktemp -d)
   printf '%s' "$R" | "$HOOK_SH_BIN" "$HOOK" >/dev/null
   h2=$(cat .context/codex-gate.gateB 2>/dev/null)
   [ -n "$h1" ] && [ "$h1" != unavailable ] && [ "$h1" = "$h2" ] || exit 1
-  # ...and the FIRST commit must actually be able to reach satisfied. Hashing and
-  # self-matching is not enough: a consumer-side regression could still STOP every
+  # ...and the FIRST commit must actually be able to reach hook checks passed. Hashing and
+  # self-matching is not enough: a consumer-side regression could still remind on every
   # first commit forever, which is the failure this fixture exists to catch.
   out=$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --allow-empty -m init"}}' | "$HOOK_SH_BIN" "$HOOK")
-  printf '%s' "$out" | grep -q 'Gate B satisfied' || exit 1
-) && pass "unborn repo hashes, self-matches, and can reach satisfied" \
-  || fail "unborn repo hashes, self-matches, and can reach satisfied"
+  printf '%s' "$out" | grep -q 'Gate B hook checks passed' || exit 1
+) && pass "unborn repo hashes, self-matches, and can reach hook checks passed" \
+  || fail "unborn repo hashes, self-matches, and can reach hook checks passed"
 rm -rf "$unborn"
 
 # 26. THE DEFECT (spec §1): staged content diverging from the worktree.
@@ -863,16 +863,16 @@ rm -rf "$unborn"
 #     the divergence, making this test pass against the unfixed hook.
 reset_all
 rev; rev; rev
-printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setup: satisfied on clean tree"
+printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on clean tree" || fail "setup: hook checks passed on clean tree"
 printf 'v2\n' > app.ts; git add app.ts >/dev/null 2>&1   # index: v2
 printf 'v1\n' > app.ts                                   # worktree: back to HEAD bytes
-printf '%s' "$(commitpre)" | grep -q 'not satisfied' \
-  && pass "staged-vs-worktree divergence -> NOT satisfied" \
-  || fail "staged-vs-worktree divergence -> NOT satisfied"
+printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' \
+  && pass "staged-vs-worktree divergence -> gate-state reminder" \
+  || fail "staged-vs-worktree divergence -> gate-state reminder"
 git reset -q >/dev/null 2>&1; git checkout -- app.ts >/dev/null 2>&1
 
-# 27. Ambient alternate index. Three shapes: a negative-only test would be satisfied by
-#     an implementation that fires whenever GIT_INDEX_FILE is set — a permanent STOP.
+# 27. Ambient alternate index. Three shapes: a negative-only test would be passed by
+#     an implementation that fires whenever GIT_INDEX_FILE is set — a permanent gate-state reminder.
 alt_dir=$(mktemp -d)
 # 27a. divergent: fingerprint recorded WITHOUT the alternate index, alternate enabled
 #      only for the commit check.
@@ -881,10 +881,10 @@ rev
 cp .git/index "$alt_dir/alt"
 printf 'SNEAKY\n' > app.ts; GIT_INDEX_FILE="$alt_dir/alt" git add app.ts >/dev/null 2>&1
 printf 'v1\n' > app.ts
-printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'not satisfied' \
-  && pass "ambient divergent alternate index -> NOT satisfied" \
-  || fail "ambient divergent alternate index -> NOT satisfied"
-# 27b. stable: same unchanged alternate index across review AND commit -> satisfied,
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Codex gate state:' \
+  && pass "ambient divergent alternate index -> gate-state reminder" \
+  || fail "ambient divergent alternate index -> gate-state reminder"
+# 27b. stable: same unchanged alternate index across review AND commit -> hook checks passed,
 #      with each index file byte-identical to its OWN pre-hook snapshot.
 cp .git/index "$alt_dir/default.before"; cp "$alt_dir/alt" "$alt_dir/alt.before"
 reset_all; printf '1' > "$floorf"
@@ -893,9 +893,9 @@ reset_all; printf '1' > "$floorf"
 # prefix on an external command. Without containment, GIT_INDEX_FILE leaks out of
 # section 27 and corrupts every later section's fixtures (notably section 28).
 ( GIT_INDEX_FILE="$alt_dir/alt" rev )
-printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B satisfied' \
-  && pass "ambient stable alternate index -> satisfied" \
-  || fail "ambient stable alternate index -> satisfied"
+printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B hook checks passed' \
+  && pass "ambient stable alternate index -> hook checks passed" \
+  || fail "ambient stable alternate index -> hook checks passed"
 cmp -s .git/index "$alt_dir/default.before" && pass "default index untouched" || fail "default index untouched"
 cmp -s "$alt_dir/alt" "$alt_dir/alt.before" && pass "alternate index untouched" || fail "alternate index untouched"
 # 27c. missing path: git treats a nonexistent GIT_INDEX_FILE as an EMPTY index, so the
@@ -925,7 +925,7 @@ reset_all; rev; rev; rev
 #      from. Run BOTH the review pass and the commit check from a SUBDIRECTORY with a
 #      relative alt index that actually lives at the repo root: an unnormalized hook
 #      can't find it either time, takes the same absent-index carve-out both times, and
-#      the two constant empty-tree hashes MATCH — a false "satisfied" even though the
+#      the two constant empty-tree hashes MATCH — a false "hook checks passed" even though the
 #      alt index stages content the worktree does not have.
 #      The alt index file lives under `.context/` — excluded from the diff-HEAD and
 #      worktree-tree components by their own `:(exclude).context` pathspec — so it is
@@ -940,9 +940,9 @@ printf 'SNEAKY\n' > app.ts
 GIT_INDEX_FILE="$work/.context/rel-idx" git add app.ts >/dev/null 2>&1   # stage into the ALT index only
 printf 'v1\n' > app.ts                          # worktree stays at the reviewed bytes
 out=$(cd sub && GIT_INDEX_FILE=.context/rel-idx commitpre)
-printf '%s' "$out" | grep -q 'not satisfied' \
-  && pass "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)" \
-  || fail "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)"
+printf '%s' "$out" | grep -q 'Codex gate state:' \
+  && pass "relative ambient GIT_INDEX_FILE from a subdirectory -> gate-state reminder (Finding 1)" \
+  || fail "relative ambient GIT_INDEX_FILE from a subdirectory -> gate-state reminder (Finding 1)"
 rm -f "$work/.context/rel-idx"; rm -rf sub
 git checkout -- app.ts >/dev/null 2>&1; git reset -q >/dev/null 2>&1
 reset_all; rev; rev; rev
@@ -1003,31 +1003,31 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Edit","tool_input":{"file_pat
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw (1 recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. Run Gate B (mcp__codex__review) now — one clean pass is the complete remedy for the staging and post-upgrade cases too. If a fresh pass leaves this unchanged with nothing edited in between, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — then run one more pass to record a usable fingerprint. Per this project's review policy you MUST re-review after every fix."
-expected_msg="⚠ Codex Gate B not satisfied (cannot confirm review)"
+expected_ctx="Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw (1 recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is this project's review policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, check the worktree and the index first — the fingerprint moves when either does, staging included, and another hook can stage during the commit attempt. Where neither changed, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per this project's review policy you MUST re-review after every fix."
+expected_msg="⚠ Codex Gate B: cannot confirm reviewed content"
 [ "$ctx" = "$expected_ctx" ] && pass "stale additionalContext matches exactly" || fail "stale additionalContext matches exactly"
 [ "$msg" = "$expected_msg" ] && pass "stale systemMessage matches exactly" || fail "stale systemMessage matches exactly"
 git checkout -- app.ts >/dev/null 2>&1
 
-# 29b. SATISFIED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook
+# 29b. HOOK-CHECKS-PASSED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook
 #      fingerprints disk; mcp__codex__review reads a git range (spec §7) — the exact
 #      fixture below is what pins that the message never claims Codex read the bytes.
 reset_all; rev; rev; rev
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean — no new Blocker/Major."
-expected_msg="✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)"
-[ "$ctx" = "$expected_ctx" ] && pass "satisfied additionalContext matches exactly" || fail "satisfied additionalContext matches exactly"
-[ "$msg" = "$expected_msg" ] && pass "satisfied systemMessage matches exactly" || fail "satisfied systemMessage matches exactly"
+expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them."
+expected_msg="✓ Codex Gate B hook checks passed (3/3 cycle, 3 on current fingerprint)"
+[ "$ctx" = "$expected_ctx" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-checks-passed additionalContext matches exactly"
+[ "$msg" = "$expected_msg" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-passed systemMessage matches exactly"
 
 # 29c. EMPTY-STATE branch: no fingerprint recorded this cycle, default floor 3.
 reset_all
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__codex__review has run, or the last one's fingerprint could not be written or read back. Per this project's review policy you MUST reach a minimum of 3 passes per cycle. Run Gate B (mcp__codex__review) now; if this repeats, check that .context/ and the state file inside it are readable and writable, and if the file exists but is unreadable or empty, delete it and run a fresh pass."
-expected_msg="⚠ Codex Gate B: no recorded review"
+expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint."
+expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 [ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
 [ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
 reset_all; rev; rev; rev
@@ -1173,9 +1173,9 @@ git checkout -- app.ts >/dev/null 2>&1
 # 6/9 below the Gate-B floor
 reset_all; rev
 one_doc "Gate B below floor" "$(commitpre)"
-# 7/9 Gate B satisfied
+# 7/9 Gate B hook checks passed
 reset_all; rev; rev; rev
-one_doc "Gate B satisfied" "$(commitpre)"
+one_doc "Gate B hook checks passed" "$(commitpre)"
 # 8/9 Gate A below floor
 reset_all
 one_doc "Gate A below floor" "$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')"

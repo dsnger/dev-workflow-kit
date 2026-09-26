@@ -24,6 +24,13 @@ driven by recurrence rather than by enthusiasm.
 
 ### Parked (trigger-gated)
 
+- [ ] **OpenWolf: possible bounded context/memory evaluation.** The
+      [assessment](docs/openwolf-assessment.md) records the evidence, alternatives,
+      trade-offs and proposed evaluation criteria. Documentation authorized by
+      Daniel on 2026-09-16; installation, pilot and integration remain undecided.
+      *Trigger: Daniel explicitly authorizes a bounded evaluation. Completion of
+      loop-rule-consolidation alone does not activate it.* Existing Finding A,
+      record-durability and P8 scopes and triggers remain unchanged.
 - [ ] **Locator: TWO quadratic paths — `skipval`'s container walk and the record accumulator.** `substr(s,i,1)` is
       O(len) per call in BWK awk, so a large VALID sibling container before `tool_response`
       is quadratic: 3.2 s at 200 KB, 11.5 s at 400 KB, in one synchronous hook invocation.
@@ -341,6 +348,39 @@ driven by recurrence rather than by enthusiasm.
       is still the shape recurring; excluding it would tune the count to who was watching.
       Four occurrences of the timing gap now, three of them benign; the dangerous `tree_hash`
       consumer above is still the one that decides this row's priority.
+- [ ] **Hook repository context can differ from the operation's target worktree.** A **distinct
+      cause from the timing row above**, and that row's occurrence count is deliberately left
+      unchanged: timing is "the staged set was empty because `git add` had not run yet",
+      this is "the staged set was read in the wrong repository". **Reported observation
+      (2026-09-21):** a docs-only commit of two `docs/**.md` paths in the linked worktree
+      `dwk-claude-init` received the Gate-B STOP **although `git add` had run in a separate
+      Bash call**, which is the control the timing row's `29da026` data point relies on. The
+      index readings behind that account are reported, not re-reproduced here.
+      **Verified mechanism, read from the source:** the hook derives its root from **its own
+      Git process context** — `repo_root=$(git rev-parse --show-toplevel)`
+      (`plugins/dev-workflow/hooks/codex-gate.sh:42`) — and uses that root both for the state
+      paths (`state_dir="$repo_root/.context"`, `:43`, holding `codex-gate.gateB`,
+      `.passCount`, `.freshCount`, `.passCountA`) and for the staged-file inspection
+      (`files=$(git -C "$repo_root" diff --cached --name-only)`, `:914`). **Do not state this
+      as "it always uses the original session worktree"** — what is established is that the
+      root comes from the hook's own context, which need not be the operation's target.
+      **Two consequences derived from the code and NOT reproduced.** First, a **false
+      docs-only exemption**: where the foreign root's staged list is non-empty and passes
+      `is_docs_only` — which also requires clearing its `is_prompt_path` exclusions, so
+      arbitrary Markdown is not enough — the hook can report "Gate B N/A" while the actual
+      commit carries product files. That is the dangerous direction, so **invariant 2 is not a
+      blanket answer for this row**, even though the observed instance was a benign false
+      alarm. Second, a **foreign state reset**: the non-WIP commit branch runs
+      `rm -f "$state_file" "$count_file" "$fresh_file"` (`:886-888`) under the same
+      `$repo_root`, so it can clear another worktree's Gate-B fingerprint and counters.
+      **Operational precaution, not a repair:** starting a session directly in the intended
+      worktree keeps the two contexts aligned; a `cd` **inside** a Bash call does not, because
+      the hook runs before that command. **Implementation deliberately undecided** — the
+      payload's cwd, the hook process's cwd and an operation's explicit target must not be
+      assumed equivalent, and picking one is the design question, not a detail. **Trigger:**
+      Daniel explicitly selects a bounded reproduction-and-design task. That task should
+      separate the reported false alarm, the possible false exemption and the possible foreign
+      reset, and establish each before a repair is proposed. This entry starts none of them.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
@@ -563,6 +603,47 @@ backlog.
       because it is followed. *Trigger: 3–5 real stories completed in a product project*
       — fewer than that and the state machine would be modelled on this repo's own
       atypical usage.
+- [ ] **Generated status HTML — task, progress and KPI views.** Direction agreed
+      with Daniel on 2026-09-17: keep Markdown as the authored source and generate
+      HTML views, with source links, revision and freshness visible. Define item
+      identity and explicit status; parked, rejected and completed work must not
+      be reduced to a raw checkbox completion percentage. A labelled static
+      snapshot may precede live telemetry. Owner/scope is the dashboard leaf to
+      be defined in `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`
+      §§4/11; this does not activate P1 or decide the future pool's storage.
+      *Trigger: Daniel explicitly selects the dashboard story for design.*
+      Recording this direction does not authorize implementation.
+      **SFX field input (2026-09-17):** expose installed/observed-loaded workflow
+      versions and local rule revision; bind status and evidence to their own
+      revisions instead of treating an older handover as current verification.
+- [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
+      Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
+      presented in the dashboard. Define confirmed distinct finding yield,
+      recurrence/repair effects, effort and coverage evidence; start with
+      separate indicators and an explained traffic light. Before implementation,
+      specify data sources, deduplication, comparison windows, missing-data
+      handling, thresholds and any composite weights, and evaluate them against
+      recorded cycles. **Priority principle agreed 2026-09-17:** the more indirect
+      the evidenced product impact, the earlier further review effort must be
+      reassessed. Define lower warning/escalation thresholds for repeated plan
+      instrument work with unsubstantiated marginal benefit, not lower severity
+      by file type. Track instrument time/rounds, evidenced benefit and observable
+      delay to product work. Include §4's calibration cases; preserve the severity
+      of defects that invalidate product verification. This does not activate the
+      experimental one-round cap parked above.
+      **SFX field input (2026-09-17):** separate finding origin, consequence and
+      effort; record optional Minor/Nit repair scope and attribution confidence.
+      Instrument classification follows actual effects on product files/state.
+      Counts independently recounted; causal attribution and test outcomes remain
+      reported. Evidence and calibration limits:
+      `docs/field-reports/2026-09-17-sfx-review-loop-economics.md`.
+      Unknown evidence must remain visible. Recommendations
+      may support continuing, changing method or stopping to surface; they do
+      not waive floors, mandatory tells or closure conditions. P8 remains passive
+      and supplies only the evidence it has. Details and unresolved decisions:
+      `docs/superpowers/specs/2026-08-30-dark-factory-vision.md` §§4/7/11.
+      *Trigger: step 2c is explicitly picked up for design.* No thresholds are
+      activated by this entry; automatic actions require separate authorization.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the
@@ -631,8 +712,11 @@ backlog.
       surviving prior file is indistinguishable from a fresh one. The consequence is that a
       second cycle in the same repo silently erases the first cycle's findings artifacts.
       **Observed, not theorised:** the result-classification cycle's pass-1 call deleted the
-      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` is git-ignored,
-      so it is unrecoverable. §5 anticipates *concurrent* calls racing on one slot and says
+      2026-07-26 profiles cycle's 11 KB `gate-a-spec-pass-1.md`. `.context/` was git-ignored,
+      so that file is unrecoverable. **Partly mitigated 2026-09-10:** `.context/codex-reviews/`
+      is tracked in this repo, so a slot overwritten after a commit is now recoverable from git
+      — the destroy-before-delete window between two commits is not, and target projects still
+      ignore the path, so the row stands. §5 anticipates *concurrent* calls racing on one slot and says
       so; it does not cover *sequential cycles* reusing them. Note the dispositions and
       resume-note companions have the same property. Any fix has to keep the pre-call delete
       — that check is load-bearing — so it is about naming (a cycle component in the slot) or
@@ -672,8 +756,10 @@ backlog.
 - [ ] **A recording mechanism for severity normalization.** Rider (b) normalizes an
       unrecognized severity token to `MAJOR` and records nothing. The drift is visible to the
       reader at the moment the pass is validated — the findings file carries the original token
-      on the finding line — but nothing is durable: `.context/` is git-ignored and slot
-      collisions have destroyed findings here (row above). A companion record was designed and
+      on the finding line — but nothing is durable *in a target project*: `.context/` is
+      git-ignored there and slot collisions have destroyed findings here (row above). In this
+      repo `.context/codex-reviews/` is tracked from 2026-09-10, which makes the original token
+      recoverable here and nowhere else. A companion record was designed and
       **cut**, at a measured cost: it needed a token-identity rule, a bijection audit, a
       logical-pass/attempt/credited-count identity model, edits to four shipped hook reminder
       strings, and a `docs/hardening-log.md` supersession row.

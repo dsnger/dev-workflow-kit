@@ -1,12 +1,10 @@
 # §5 loop-rule consolidation: exits, duties, and the decline — Story
 
 **Date:** 2026-08-29 · **Size:** story
-**Risk:** *(proposed)* high · **Security:** *(proposed)* none · **Validation:** *(proposed)* battery+check+verification
+**Risk:** high · **Security:** none · **Validation:** battery+check+verification
 
-> **DRAFT — the profile above is proposed, not confirmed.** Per §5 a profile is confirmed by the
-> human, and until it is this story is not executable. Nothing depends on it yet: the work it
-> describes is split out of a cycle that is still running, and the successor starts when someone
-> picks it up. The proposal's reasons are in §5.
+**Profile log:**
+- 2026-09-10 · adoption · proposed 2026-08-29 at the split from the parent cycle, confirmed by Daniel as proposed after the parent shipped (PR #26) · gates now read this header
 
 ## 1. Problem statement
 
@@ -45,9 +43,36 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
 - **The pass floor and severity semantics** — the parent story ships those, and this story treats
   them as given rather than adjusting them.
 - **Reopening any decision in §4.** They are settled and paid for; the design starts from them.
-- **Hook code** (anything under `plugins/dev-workflow/hooks/`), unchanged from the parent.
+- **Hook behaviour** (anything under `plugins/dev-workflow/hooks/` that decides what the hook
+  does): its control flow, counters, fingerprint computation, routing and event handling, all
+  unchanged from the parent. **One narrow exception, authorised 2026-09-13:** the seven reminder
+  **strings** this change makes contradictory, and the three exact-match expectations in
+  `plugins/dev-workflow/hooks/codex-gate.test.sh` that pin three of them, are in scope — listed as
+  items 10–13 and 15–17 of the target text's §F. Prompt-standards item 7 requires a superseded instruction
+  to be corrected in the same change, and a hook reminder is prompt text the agent acts on. The
+  Gate-B fingerprint overclaim in the same message stays parked.
 - **The pass-counter anomaly**, the CodeRabbit plan-metadata contradiction, and the
   fixture-per-predicate question — all still parked.
+
+**One expansion, authorised 2026-09-10 and then split out again on the same day.** Gate-A spec
+pass 4 raised, as a scope stop, that an accepted repair obligation lives only in the running
+session. Daniel accepted it into scope, and the change grew a second record label, `Accepted:`,
+beside the decline record. Six passes later the loop had not converged and the evidence said why:
+of pass 10's twenty findings, nine belonged to **one subject this story never set out to
+answer** — whether a record survives a session, a commit amend, a squash, a rollback or a moved
+checkout. The closure ordering itself had converged, its remaining findings small.
+
+**Split 2026-09-10 on Daniel's decision. Deferred to
+`docs/superpowers/stories/2026-09-10-record-durability-story.md`**, whose subject is exactly that
+one: the `Accepted:`/`Declined:` record and its transport (settled decisions 9, 9b and 9c), the
+unavailable-history report (settled decision 10), the checkout-root condition that report grew,
+the rollback reading, and the slot-discriminator dissolution. **Those decisions stay settled** —
+they are not reopened, they are implemented there. Criterion 7 moves with them.
+
+**What this story keeps** is what its problem statement asked for: the ordering, the duty
+classification, and the severity/loop-health answer handed to it by the parent. The rule covering
+both directions of a user's answer stays here, because it is a rule about the loop; only the
+record that transports it moves.
 
 ## 3. Acceptance criteria
 
@@ -76,6 +101,10 @@ which are preconditions; and what a user's answer on a surfaced finding does in 
       Don't. A requirement neither kept nor explicitly dropped is a dropped condition.
 - [ ] **The two copies stay in parity** on every rule this story changes, deliberate wording
       differences stated as such.
+*(Criterion 7 — that a user's answer putting work into the fix set leaves a record on the same
+terms as one keeping work out — was added 2026-09-10 and moved the same day to
+`docs/superpowers/stories/2026-09-10-record-durability-story.md` with the split recorded in §2.
+It is not withdrawn, and it is not this story's to satisfy.)*
 
 ## 4. Settled inputs — decided, paid for, and not to be reopened
 
@@ -147,6 +176,7 @@ ceiling.
   cycle. **No named `high` trigger matches literally**, so this is a judgement call under intake's
   "surfaces, not words", and the human decides it. The parent's experience is evidence for rather
   than against: eleven passes and three mandatory stops on this material.
+  *(Resolved 2026-09-10: confirmed as proposed — see the profile log.)*
 - **How much of the ordering is new text versus reference.** §5 already contains the two sentences
   from which "only clean completion closes" follows; whether the ordering is stated fresh or
   assembled from what is there changes the old-conditions accounting and the parity surface.
