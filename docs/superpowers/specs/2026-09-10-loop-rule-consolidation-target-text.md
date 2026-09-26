@@ -252,8 +252,8 @@ Nits **and which carries no scope-stop trigger** — those are collected and nev
 leave nothing to revise, while a Minor or Nit **carrying a scope-stop trigger as the absorb
 passage defines one** carries it like any other finding, is not clean, and has already been taken
 by the suspension branch — **severity does not raise a trigger and does not suppress one**, and
-which findings raise one is that passage's entire, an already-declined finding and an
-already-answered question raising none. It is a branch and
+which findings raise one is that passage's entire, an already-declined finding raising no
+membership trigger and an already-answered question no question trigger. It is a branch and
 not an inference, because "does not close" read alone says nothing about whether to run again.
 
 **The four standing duties, classified.** The **derived floor** is a **precondition on closure**:
@@ -760,7 +760,7 @@ W 1011–1012.
 ordering's, stated there entire**; this section gives only the operation. Close it with
 `git commit --amend -m "<real message>"`, which replaces the WIP commit; **where a `WIP:` snapshot
 would survive the amend** — several piled up, or a stray non-amending commit made one an
-ancestor — **reset to the parent of the first and commit once instead**. This section is the only
+ancestor — **`git reset --soft <parent-of-first-WIP>`, then commit once instead**. This section is the only
 place either shape is defined. **The hook treats any
 non-`WIP` commit *attempt* as a Gate-B boundary and clears its state even where the command
 fails**, so a failed closing act leaves that counter cleared — a fact about the

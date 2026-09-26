@@ -61,6 +61,91 @@ It adds no task, prerequisite or closure condition to this plan.
 | P16 | strict-reading list | `and the nonce duties at their strictest — the cycle` | 157 | 364 |
 | P17 | §F item 14, Named residual | `Hook text is out of scope here` | 139 | 346 |
 | P18 | §F item 18, work-loop line | `execute → tests green → Gate B → commit` | 63 | 262 |
+| P19 | `a12`, kept, shares its line with `a13` (Task 0 preservation) | `where the cycle's own closure rules are satisfied.` | 148 | 355 |
+| P20 | `a14`, kept, shares its line with `a13` (Task 0 preservation) | `Nothing here writes the floor knob: it stays the user's, never written, never` | 151 | 358 |
+| P21 | `h6`, kept, shares its line with `h5` (Task 0 preservation) | `Several records` | 1009 | 1193 |
+| P22 | `h18`, kept, shares its line with item 4's block (Task 0 preservation) | ``nothing that any mandatory rule in this file or in `AGENTS.md` requires.**`` | 1033 | 1217 |
+| P23 | `b3`, replaced (Task 3 OLD) | `Blocker/Major resolve, Minor/Nit collect` | 608 | 815 |
+| P24 | `b8`, replaced (Task 3 OLD) | `A finding is in-set when repairing it stays inside that scope` | 612 | 819 |
+| P25 | `b11`, replaced (Task 3 OLD) | `like any other out-of-scope finding**, even when it opens no new question at all` | 616 | 823 |
+| P26 | `b13`, replaced (Task 3 OLD) | `**new structural or contract question** stops the loop and goes to the user` | 619 | 826 |
+| P27 | `b16`, replaced (Task 3 OLD) | `without anyone choosing it. Stopping this way is` | 626 | 833 |
+| P28 | `b17`, replaced (Task 3 OLD) | `**not an exit from the gate**: the floor, the` | 626 | 833 |
+| P29 | `b18`, replaced (Task 3 OLD) | `revised artifact once the question is answered` | 628 | 835 |
+| P30 | `b1`, carried (Task 3 preservation) | `that corrects the correction you just made **and stays inside the assigned fix set** is` | 606 | 813 |
+| P31 | `b2`, carried (Task 3 preservation) | `keep it here rather than handing it back` | 607 | 814 |
+| P32 | `b4`, carried (Task 3 preservation) | `Ancestry decides where a finding belongs; it` | 609 | 816 |
+| P33 | `b5`, carried (Task 3 preservation) | `it grants no Minor or Nit a repair round it would not` | 610 | 817 |
+| P34 | `b6`, carried (Task 3 preservation) | `The assigned fix set is fixed before the pass you are answering` | 610 | 817 |
+| P35 | `b9`, carried (Task 3 preservation) | `never merely because it arrived in the current pass` | 613 | 820 |
+| P36 | `b10`, carried (Task 3 preservation) | `treat the finding as **outside**, which costs a question and never a silent` | 615 | 822 |
+| P37 | `b14`, carried (Task 3 preservation) | `**size is not the test, novelty of the question is**` | 620 | 827 |
+| P38 | `b15`, carried (Task 3 preservation) | `does not — provided that correction, too, stays inside the set` | 622 | 829 |
+| P39 | `c1`, kept, passage (c) prefix (Task 4 preservation) | `**Blocker curve across passes**, not any single pass's total` | 664 | 868 |
+| P40 | `c2`, kept, passage (c) prefix (Task 4 preservation) | `signals, the total says less than it looks like, and one low count is a snapshot rather` | 665 | 869 |
+| P41 | `c3`, kept, passage (c) prefix (Task 4 preservation) | `**Neither curve measures coverage:** a low Blocker count can sit beside an` | 666 | 870 |
+| P42 | `c4`, replaced (Task 4 OLD) | `one means keep going` | 668 | 872 |
+| P43 | `c5`, carried (Task 4 preservation) | `visible across passes (six or more is where the field saw` | 668 | 872 |
+| P44 | `c6`, carried (Task 4 preservation) | `coverage is sufficient**, stated` | 669 | 873 |
+| P45 | `c7`, carried (Task 4 preservation) | `unreviewed area forbids this exit outright` | 670 | 874 |
+| P46 | `c8`, replaced (Task 4 OLD) | `round's fix producing the next. That` | 672 | 876 |
+| P47 | `c9`, moved to §A (Task 4 source absence) | `finish, and it is why **a clean completion takes precedence over this exit**` | 673 | 877 |
+| P48 | `plateau rationale`, no id, stays (Task 4 preservation) | `That third condition is what makes a plateau rather than a` | 672 | 876 |
+| P49 | `c10`, moved to §A (Task 4 source absence) | `Blocker/Major-free pass **at or above the floor** has satisfied the clean-final-pass rule —` | 674 | 878 |
+| P50 | `c11`, moved to §A (Task 4 source absence) | `collect the Minors and Nits and close — and reporting` | 675 | 879 |
+| P51 | `c12`, moved to §A (Task 4 source absence) | `**Below the floor nothing closes**` | 676 | 880 |
+| P52 | `c13`, moved to §A (Task 4 source absence) | `the only exception, exactly as above;` | 677 | 881 |
+| P53 | `e1`, kept, passage (e) (Task 5 preservation) | `Those three lines expose **five tells**` | 701 | 906 |
+| P54 | `e2`, kept (Task 5 preservation) | `the finding count rising rather than falling` | 701 | 906 |
+| P55 | `e3`, kept (Task 5 preservation) | `Blocker count failing to fall` | 702 | 907 |
+| P56 | `e4`, kept (Task 5 preservation) | `findings clustering on the **instrument** rather than on` | 702 | 907 |
+| P57 | `e5`, kept (Task 5 preservation) | `findings clustering on **prose about** either` | 703 | 908 |
+| P58 | `e6`, kept (Task 5 preservation) | `either; and a require↔withdraw` | 703 | 908 |
+| P59 | `e9`, carried (Task 5 preservation) | `hand the decision to the user, and the "clearly stuck"` | 705 | 910 |
+| P60 | `e10`, kept, outside §D's block (Task 5 preservation) | `A loop can be worth stopping long before it plateaus.` | 706 | 911 |
+| P61 | `e11`, kept, C only (Task 5 preservation) | `reporting obligation with a mandatory threshold and not another heuristic to weigh.` | 711 | — |
+| P62 | `Severity resolve duty`, replaced (Task 6 OLD) | `rework) → both must resolve. Minor · Nit → collect, never iterate.` | 1226 | 1414 |
+| P63 | `g2`, dropped (Task 6 absence) | `Until it is, a pass whose outcome would turn on that question reports the question and` | 1254 | 1442 |
+| P64 | `g3`, dropped (Task 6 absence) | `the same answer any unresolved gate question gets` | 1255 | 1443 |
+| P65 | `g4`, dropped, C only (Task 6 absence) | `That question is owned by the loop-rule consolidation work in` | 1256 | — |
+| P66 | `c15`, carried (Task 7 preservation) | `**Surfacing does not close the cycle, and that is what makes this reachable.**` | 680 | 884 |
+| P67 | `c16`, replaced (Task 7 OLD) | `*with the finding still open*` | 681 | 885 |
+| P68 | `c17`, replaced (Task 7 OLD) | `the resolve rule is not waived` | 681 | 885 |
+| P69 | `c19`, replaced (Task 7 OLD) | `the loop resumes on whatever the user decides` | 682 | 886 |
+| P70 | `c20`, replaced (Task 7 OLD) | `with the rule that every Blocker and Major` | 683 | 887 |
+| P71 | `a13, first sentence`, replaced; first sentence's own absence (Task 7) | `This replaces the pass-count number` | 148 | 355 |
+| P72 | `a15`, carried (Task 7 preservation) | `Open a TodoWrite "Codex pass N" per pass;` | 152 | 359 |
+| P73 | `a18`, moved to §A (Task 7 source absence) | `if the pass at the floor still finds Blocker/Major, keep going until` | 153 | 360 |
+| P74 | `a19`, moved to §A (Task 7 source absence) | `The only early exit` | 154 | 361 |
+| P75 | `a20`, moved to §A (Task 7 source absence) | `don't manufacture findings to pad` | 155 | 362 |
+| P76 | `a21`, carried (Task 7 preservation) | `advisory — validate before applying` | 156 | 363 |
+| P77 | `a22`, carried (Task 7 preservation) | `dismissed finding → one-line why` | 156 | 363 |
+| P78 | `i4`, carried (Task 7 preservation) | `touches — at minimum` | 175 | 382 |
+| P79 | `i5`, carried (Task 7 preservation) | `severity classified without the demotion` | 176 | 383 |
+| P80 | `i6`, carried (Task 7 preservation) | `the provenance-line duty owed` | 176 | 383 |
+| P81 | `i7`, carried (Task 7 preservation) | `owed, the curve` | 176 | 383 |
+| P82 | `i8`, carried (Task 7 preservation) | `the nonce duties at their strictest` | 177 | 384 |
+| P83 | `i1`, kept, passage (i) (Task 7 preservation) | `From the commit that ships them` | 173 | 380 |
+| P84 | `i2`, kept (Task 7 preservation) | `finishes under the rules it started with.` | 174 | 381 |
+| P85 | `i3`, kept, shares its sentence with the list (Task 7 preservation) | `established it takes the stricter reading of every part this change touches` | 175 | 382 |
+| P86 | `i9`, kept (Task 7 preservation) | `the cycle is treated as post-rule, so it` | 177 | 384 |
+| P87 | `i10`, kept (Task 7 preservation) | `the working record stays optional and a skipped cycle still writes no findings slots` | 180 | 387 |
+| P88 | `i11`, kept (Task 7 preservation) | `` cannot recover a nonce it starts a new cycle rather than claiming `none (pre-rule)`, that reserved `` | 181 | 388 |
+| P89 | `i12`, kept, discharged (Task 7 preservation) | `Each further rule this change ships adds its own strict` | 182 | 389 |
+| P90 | `i13`, kept (Task 7 preservation) | `cycle a floor of 1 and skip passes on the strength of not knowing when it started` | 184 | 391 |
+| P91 | `i14`, kept (Task 7 preservation) | `knob set above 3 is not lowered by this fallback` | 185 | 392 |
+| P92 | `i15`, kept (Task 7 preservation) | `A revert is itself a shipping commit for` | 185 | 392 |
+| P93 | `i16`, kept (Task 7 preservation) | `the old rules, and the activation rule wins wherever the start is determinable; the` | 186 | 393 |
+| P94 | `a1`, carried inside item 8a (Task 8 preservation) | `**Both gates are a LOOP with a HARD FLOOR: a minimum number of passes per run` | 92 | 299 |
+| P95 | `h3`, carried inside item 7 (Task 8 preservation) | `an ungated change records it in that commit` | 1499 | 1688 |
+| P96 | `§F item 10`, hook only, the honesty claim (Task 10 OLD; `codex-gate.sh` line 967) | `this floor is the only thing keeping the spec review honest` | — | — |
+| P97 | `§F item 10`, hook only, the tail (Task 10 OLD; `codex-gate.sh` line 967) | `Run more passes before executing` | — | — |
+| P98 | `§F item 11`, hook only, the Gate-A clean definition (Task 10 OLD; line 973) | `Proceed only if your final pass was clean` | — | — |
+| P99 | `§F item 12`, hook only, the Gate-B clean definition (Task 10 OLD; line 956) | `commit only if your final pass was clean — no new Blocker/Major.` | — | — |
+| P100 | `§F item 13`, hook only, the WIP reminder (Task 10 OLD; line 908) | `then make the real commit when your final pass is clean` | — | — |
+| P101 | `§F item 15`, hook only, the no-fingerprint reminder (Task 10 OLD; line 933) | `Run Gate B (mcp__codex__review) now; if this repeats` | — | — |
+| P102 | `§F item 16`, hook only, the stale-fingerprint reminder (Task 10 OLD; line 945) | `one clean pass is the complete remedy for the staging and post-upgrade cases too` | — | — |
+| P103 | `§F item 17`, hook only, the below-floor instruction (Task 10 OLD; line 947) | `or proceed only if $policy's skip rule applies to this change` | — | — |
 
 **The fourteen §F prompt-copy items (Task 8) — fifteen rows, because item 7 changes two clauses on two lines — derived from each item's cited lines and checked the same three ways.** Pass 2 found these deferred to the executor as `<item OLD>` placeholders, which put fourteen meaning-changing checks outside Gate A's reach; they are concrete now. The NEW halves stay deferred, for the reason the paragraph below gives.
 
@@ -3710,39 +3795,411 @@ this plan and in `.context/codex-reviews/`, both tracked, both already inside th
 
 ## b11/b13 equivalence (Task 12 output)
 
-*Empty until Task 12 runs. Task 12 replaces this entire section, carrying both predicates in full
-as extracted and the result in both directions, per copy.*
+**Subject.** The installed §A (`**How a cycle ends`) and the installed passage (b)
+(`**What a loop absorbs`), read in C; W carries the same bytes over both (Task 1 and Task 3 parity:
+§A no difference, §B's common span no difference), so the result is the same per copy.
+
+**What the ordering attributes to the absorb paragraph (step 1), in full:**
+1. Clean predicate: a clean pass carries **no scope-stop trigger** — "the two the absorb paragraph
+   defines, read there and not redefined here, each already carrying the qualification **an answer
+   given before that pass ran** puts on it."
+2. Suspension branch: the scope stop is "raised by either trigger above — a **membership stop** by
+   the first, a **question stop** by the second."
+3. Continue branch: "which findings raise one is that passage's entire, **an already-declined finding
+   raising no membership trigger and an already-answered question no question trigger**." (Repaired
+   at Gate-B pass 1, cycle `t57gp3hwu1`, in both copies and in the target text: the earlier wording,
+   "an already-declined finding and an already-answered question raising none", also read as "a
+   declined finding raises no trigger at all", which `b11` rejects.)
+4. Answers: "an out-of-set finding that opened one is a membership stop as well"; "**Decline is
+   available only at a membership stop**".
+
+**What the absorb paragraph states (step 2), in full:**
+- `b11`: "A correction that leaves that set stops the loop like any other out-of-scope finding —
+  except one this cycle has already declined, which is outside the set by that decision and
+  **raises no membership trigger on that account**, its membership being the one question already
+  answered — even when it opens no new question at all, and the membership answer ends that
+  finding's membership hold; what the pass does next is the closure ordering's …"
+- `b13`: "A finding that opens a **new structural or contract question** — new meaning not already
+  answered in this cycle, so an answered question raised again stops nothing — stops the loop and
+  goes to the user …", with "Novelty overrides ancestry and nothing else: where the finding is also
+  out of set, both triggers hold and both answers are owed."
+
+**Comparison (step 3).**
+- **Block → source** (a condition the ordering attributes that the paragraph lacks): none. Items 1,
+  2 and 4 match `b11`/`b13` term for term, and item 3 now scopes each exemption to its own trigger —
+  exactly `b11`'s "raises no membership trigger on that account" and `b13`'s already-answered
+  qualification. Before the repair, item 3 admitted the wider reading Gate-B pass 1 raised.
+- **Source → block** (a condition the paragraph states that the ordering does not read): none.
+  `b11`'s "even when it opens no new question at all" and `b13`'s "size is not the test" are
+  trigger-internal and the ordering reads the triggers "there"; the both-triggers rule is item 4.
+
+**Result: equivalent in both directions, per copy (C and W).** The copies were not changed.
 
 ---
 
 ## Next-state table (Task 13 output)
 
-*Empty until Task 13 runs. Task 13 replaces this entire section.*
+**Read against the installed §A in `CLAUDE.md`** (W is byte-identical over §A). Predicates per row:
+**SB** a source block stands · **CL** the pass is clean (no in-set Blocker/Major at effective
+severity, no scope-stop trigger) · **EL** eligible (clean at or above the floor, or zero findings) ·
+**K** every closure condition of the cycle other than eligibility and the source block holds (the floor is read in EL, the source block in SB; a reread row gives K as it stands after the repair) · **SUS** which suspensions apply (M membership, Q
+question, S clearly-stuck, T two-tell, — none). Next states: **CLOSED** (closing act performed and
+completed) · **CONT** (continue branch: next pass on the current artifact, repaired only where a
+repair is owed) · **SUSP** (suspended awaiting answers) · **PARKED** (open, not running, no passes,
+restarted only by an explicit continue) · **BLOCKED** (source rule's stop; no pass runs). **Oracle:**
+a row fails if its answer does not produce a distinct resumable or closed state — the same stop
+returning with its reading unconsumed — or if it closes on anything but the stated route.
+
+| # | Starting state (SB · CL · EL · K · SUS) | Answer / event | Next state (route in §A) | Oracle |
+|---|---|---|---|---|
+| 1 | no · yes · yes · yes · — | — | CLOSED — clean-completion branch; conditions established first, then the act | pass |
+| 2 | no · yes · yes · **no** (a repair owed from an earlier pass) · — | — | CONT, repair first — "an eligible pass with an unmet closure condition lands here" | pass |
+| 3 | no · yes · yes · no (repair owed) · T | continue | CONT, repair first — the reading is consumed; a new one needs a post-answer pass | pass |
+| 4 | no · yes · yes · no (repair owed) · T | stop | PARKED — "stop parks the cycle" | pass |
+| 5 | **yes**, on this read pass (unresolvable profile) · yes · yes · yes once repaired · — | source repaired | the pass is read again → CLOSED (clean, eligible, every condition holds) | pass |
+| 6 | **yes**, on this read pass · yes · yes · no (a non-source repair also owed) · — | source repaired | the pass is read again → CONT, repair first | pass |
+| 7 | no · yes · **no** (below floor, only a Minor, no trigger) · yes · — | — | CONT, unrevised allowed — "a below-floor clean pass lands here" | pass |
+| 8 | no · yes · no (below floor) · yes · T | continue | CONT — the suspension branch takes a below-floor clean pass; its answer continues | pass |
+| 9 | no · yes · no (below floor) · yes · T | stop | PARKED | pass |
+| 10 | no · yes · yes (**zero findings**, below floor) · yes · — | — | CLOSED — zero-finding eligibility; no suspension can co-occur | pass |
+| 11 | no · yes · yes (zero findings) · **no** (an earlier in-set Major undischarged) · — | — | CONT, repair first — the pass-2-clean/Major-open case §A states | pass |
+| 12 | no · **no** (an out-of-set finding) · no · — · M | accept | CONT — the finding enters the set; the set change costs a further pass; repair owed only if it is a Blocker/Major | pass |
+| 13 | no · no (out-of-set) · no · — · M | decline | CONT — hold discharged; the finding stays outside for the cycle; this pass stays unclean | pass |
+| 14 | no · no (a new-question finding) · no · — · Q | the user's decision | CONT on the artifact revised per the decision; membership unchanged | pass |
+| 15 | no · no (out-of-set and new question) · no · — · M+Q | only one of the two answers given | SUSP — "resumes only when every answer resumes it" | pass |
+| 16 | no · no (out-of-set and new question) · no · — · M+Q | both answers given | CONT | pass |
+| 17 | no · no (an in-set Major, repair owed) · no · — · T | continue | CONT, repair first | pass |
+| 18 | no · no (in-set Major) · no · — · T | stop | PARKED | pass |
+| 19 | no · no (regenerating in-set Majors) · no · — · S | continue | CONT — the surfaced findings' clearly-stuck holds are discharged by the answer; repair first | pass |
+| 20 | no · no (regenerating in-set Majors) · no · — · S | stop | PARKED | pass |
+| 21 | no · no · no · — · S+T | one answer, continue, carrying every reason | CONT, repair first — one question between the two health readings | pass |
+| 22 | no · no · no · — · S+T | one answer, stop | PARKED | pass |
+| 23 | PARKED, a membership answer outstanding | explicit continue | SUSP — "that continue … never skips an answer" | pass |
+| 24 | PARKED, nothing outstanding | explicit continue | CONT | pass |
+| 25 | **yes**, raised before any pass was read | source repaired | CONT — the next pass runs; there is no pass to read again | pass |
+| 26 | **yes**, on a read pass · yes · yes · yes · — | source repaired | read again → CLOSED | pass |
+| 27 | **yes**, on a read pass · yes · yes · no (repair owed) · — | source repaired | read again → CONT, repair first | pass |
+| 28 | **yes**, on a read pass · yes · no (below floor) · yes · — | source repaired | read again → CONT | pass |
+| 29 | **yes**, on a read pass · no (in-set Major) · no · — · — | source repaired | read again → CONT, repair first | pass |
+| 30 | **yes**, on a read pass that also carried T · yes · yes · yes · T | T answered continue, then source repaired | CONT — the suspension's route runs first; its continue needs a post-answer pass, so the pass is not closed on | pass |
+| 31 | **yes**, on a read pass that also carried T · yes · yes · yes · T | T answered stop | PARKED — no reread while the suspension's stop stands | pass |
+| 32 | row 1, closing act fails, nothing a condition reads moved | repaired | the act is performed again → CLOSED | pass |
+| 33 | row 1, closing act fails; the repair changed the assigned fix set | repaired | the set change costs a further pass (the absorb paragraph) → CONT | pass |
+| 33b | row 1 (Gate A), closing act fails; the repair edited the artifact and restored it byte for byte, every condition holding again | repaired | Gate A's condition is current equality, so it holds; the act is performed again → CLOSED | pass |
+| 34 | row 1, closing act fails and cannot be repaired | — | PARKED — "surface it and leave the cycle parked" | pass |
+| 35 | no · yes · yes · yes · — — Gate-B `full`: spec branch `NO FINDINGS`, quality branch a Minor, no trigger | — | CLOSED — the logical pass is the concatenation, and it is clean | pass |
+| 36 | no · no · no · — · — — Gate-B `full`: one branch `NO FINDINGS`, the other an in-set Major | — | CONT, repair first — one branch's clean file never makes a clean pass | pass |
+| 37 | no · no · no · — · M — the same out-of-set complaint in both branch files | accept / accept | CONT — both lines in the set | pass |
+| 38 | no · no · no · — · M — same | accept / decline | CONT — the accepted line in, the declined line out; the accepted repair obligation stands | pass |
+| 39 | no · no · no · — · M — same | decline / accept | CONT — mirror of the row above | pass |
+| 40 | no · no · no · — · M — same | decline / decline | CONT — both lines out for the cycle; the pass stays unclean | pass |
+| 41 | no · no · no · — · M — same | one line answered, the other not | SUSP — each line owes its own explicit answer | pass |
+| 42 | no · yes · yes · yes · — — a finding this cycle declined recurs, no new question, nothing else found | — | CLOSED — b11: it raises no membership trigger; it is outside the set, so not an in-set Blocker/Major | pass |
+| 43 | no · no · no · — · Q — a finding this cycle declined recurs and opens a new question | the user's decision | CONT — b11's exception is the membership trigger only; the question trigger reaches it | pass |
+| 44 | no · yes · yes · **no** (the assigned fix set changed after it was fixed for this pass and was changed back) · — | — | CONT — the change costs a further pass even though undone; equal endpoints do not discharge it | pass |
+
+**45 rows, each with one next state; every row passes the oracle.** Revised at Gate-B pass 1 (cycle `t57gp3hwu1`): rows that combined alternative answers are split, the reread rows state every predicate, and three cases are added — a declined finding recurring without and with a new question, and a fix-set change undone before the act. Revised again at pass 2: K excludes eligibility (the floor is read in EL), and the failed-act row is split by which condition input the repair changed. Claim width, as the plan fixes it: the table covers
+answer-state transitions **once the predicates producing them are established**; it does not show
+how each predicate was derived, nor that these rows cover every reachable combination.
+
+### Per-condition closure checks (step 4) — one per condition §A states for closure (13)
+
+| Check | Condition, as §A states it | What is observed |
+|---|---|---|
+| `close-eligible` | the pass is eligible: clean at or above the derived floor, or zero findings | the pass's validated findings, its effective severities, the derived floor, the pass number |
+| `close-floor` | the derived floor, a precondition, discharged by valid logical passes reaching it with the last clean, or by the zero-finding exit | count of valid logical passes; the last one's cleanliness |
+| `close-resolve` | every in-set Blocker/Major discharged per finding (repair or validated dismissal), tracked across the cycle, never inferred from a later pass | the per-finding disposition record for every in-set Blocker/Major the cycle raised |
+| `close-no-hold` | no hold standing — every surfaced finding's answers given | the answers recorded against every surfaced finding |
+| `close-no-question` | every suspension question answered (composition), including a two-tell continue-or-stop | the suspension record of the cycle |
+| `close-no-source-block` | no source block stands | each source rule's stop condition (profile resolvable, headers agree, `Story:` readable, counterfactual observable, …) |
+| `close-header-during-pass` | a governing `**Story:**` header, or a cited story's profile header, changed **during** the final pass makes it not final — including a change restored before the pass ends | **Observation, not proof:** the named procedure `observe-header-changes` below, run over the pass's own interval — from building its review request to accepting its findings file(s), **not** to the act. It reports `change observed` (the pass is not final), `no change observed`, or `source unreadable` (treated like a change: not final). `no change observed` names what it read and what it cannot see: an edit made and undone without a commit, or by an actor outside the branch's ref moves, leaves no trace. |
+| `close-cited-set-at-act` | the final clean pass runs against the **current** cited set | the set named by the governing `**Story:**` headers read at the act, against the set recorded in the final pass's request; unequal → not final. A header changed and restored **after** acceptance does not fail this row or the one above; a profile or fix-set change in that time is `close-profile-fixset`'s. |
+| `close-profile-fixset` | a change to a cited story's profile or to the assigned fix set costs a further pass, in either direction and **even when undone**, from the moment the set is fixed for the final pass to the act | **Observation, not proof,** over that longer window, from every input the set definition reads: (a) profile headers — `observe-header-changes` on the cited stories; (b) the scope each governing story or plan assigns — every diff to those files in the window, read for a change to the scope they assign (other edits, such as appended verification records, are not scope changes); (c) membership answers — the cycle's recorded dispositions. Reports `change observed` (a further pass is owed), `no change observed`, or `source unreadable`. **Blind to** an approval given with no file change and no recorded answer, and to uncommitted edits. |
+| `close-evidence-revalidated` | each owed evidence entry is revalidated before the commit the closing act produces; a changed entry owes a re-review on it, and the pass that follows closes only on the entry revalidated for it | the entry handed verbatim to the final pass against the entry revalidated at the act; equal, or else a further pass |
+| `close-gate-content` | Gate A: the artifact equals the text in the final pass's review request; Gate B: no content condition | Gate A: byte comparison artifact ↔ request text; Gate B: none, stated |
+| `close-order` | every condition established first, only then the act | the order of checks and act in the closing record |
+| `close-act` | the gate's closing act performed and completed, carrying the records the cycle owes (provenance line, curve, human-exception records in the commit the act uses; Gate A: the reviewed text at the artifact path) | the closing commit and its body |
+
+
+**What these checks are, stated once** (Daniel's decision, 2026-09-26): each row names **what is
+observed and from which source**; where a row reports an observation it reports `change observed`,
+`no change observed` or `source unreadable`, **never "held"** — silence in a source is not proof that
+nothing changed. The checks are **defined and demonstrated in disposable repositories; none is
+applied to a real closing act in this change**, because this change's own cycle closes under §5 as at
+its base (option 1), not under the ordering it installs.
+
+**`observe-header-changes`** — the named procedure the header rows use (POSIX `sh`; shellcheck clean):
+
+```sh
+# observe-header-changes <branch> <start-unix> <end-unix> <file>...
+# Reports whether any governing header line changed on <branch> between two moments.
+# Source 1: the branch's first-parent line between the heads it held at those moments,
+#           merges read against their first parent.
+# Source 2: every move of the branch ref in that window (its reflog), each old->new pair compared.
+# Prints: "change observed (<source>)" or "no change observed" or "source unreadable".
+obs() {
+  br=$1; t0=$2; t1=$3; shift 3
+  pat='^[-+]\*\*(Story|Risk|Security|Validation):\*\*'
+  moves=$(git reflog show --date=unix --format='%H %gd' "$br" 2>/dev/null) || { echo "source unreadable (reflog)"; return; }
+  # heads at t0 and t1: newest reflog entry at or before each moment
+  h0=$(printf '%s\n' "$moves" | awk -v t="$t0" '{split($2,a,"[{}]"); if (a[2]<=t) {print $1; exit}}')
+  h1=$(printf '%s\n' "$moves" | awk -v t="$t1" '{split($2,a,"[{}]"); if (a[2]<=t) {print $1; exit}}')
+  [ -n "$h0" ] && [ -n "$h1" ] || { echo "source unreadable (no reflog entry for a moment)"; return; }
+  if git log --first-parent --diff-merges=first-parent -p "$h0..$h1" -- "$@" | grep -Eq "$pat"; then
+    echo "change observed (first-parent history)"; return; fi
+  # every ref move inside (t0, t1], oldest first, as consecutive pairs
+  prev=$h0
+  for h in $(printf '%s\n' "$moves" | awk -v a="$t0" -v b="$t1" '{split($2,x,"[{}]"); if (x[2]>a && x[2]<=b) print NR, $1}' | sort -rn | cut -d' ' -f2); do
+    if git diff "$prev" "$h" -- "$@" | grep -Eq "$pat"; then echo "change observed (reflog move)"; return; fi
+    prev=$h
+  done
+  echo "no change observed"
+}
+```
+
+**Demonstrated** (Gate-B pass-5 preparation; each case a fresh disposable repository, run under
+`sh` and under `dash` with identical results):
+
+```
+a control, nothing changed                                  no change observed
+b A->B->A in two commits                                    change observed (first-parent history)
+c A->B->A carried only by merges into main                  change observed (first-parent history)
+d side branch did A->B->A before; main's header never moved no change observed
+e B committed, then amended away                            change observed (reflog move)
+f main reset to an existing commit with B, then back        change observed (reflog move)
+g A->B->A after the window ends (acceptance)                no change observed
+h edited and restored, never committed                      no change observed   <- the stated blind spot
+```
+
+### Separate named checks (step 5)
+
+| Check | What it establishes |
+|---|---|
+| `logical-pass-validated` | a logical pass was validated across **every** required branch file — both for a `full` Gate-B pass, each file separately against *Accept a pass only when* — before any finding-derived predicate read it |
+| `conditions-held-at-act` | every closure condition above held at the moment the closing act was performed, re-established after any failed attempt against the repository as it then stood |
 
 ---
 
 ## Divergence list (Task 14 output)
 
-*Empty until Task 14 runs. Task 14 replaces this entire section.*
+**Sites compared, C against W** — one row per destination block, read off the target's markers
+(§A three, §B one, §C one, §D two, §E two, §F sixteen prompt-copy items with 9a and 9 extracted as
+one adjacent region, §G one, §H nine). Each region runs from the block's first installed line to its
+last, both extracts non-empty, anchors unique in each copy.
+
+| Site | Parity |
+|---|---|
+| §A1 | no difference |
+| §A2 | no difference |
+| §A3 | no difference |
+| §B | differs — see below |
+| §C | no difference |
+| §D e7 | no difference |
+| §D pointer | no difference |
+| §E Severity | no difference |
+| §E answer | no difference |
+| §F 1 | no difference |
+| §F 2 | no difference |
+| §F 3 | no difference |
+| §F 4 | no difference |
+| §F 5 | no difference |
+| §F 6 | no difference |
+| §F 7 | no difference |
+| §F 8 | no difference |
+| §F 7a | no difference |
+| §F 8a | no difference |
+| §F 8b | differs — see below |
+| §F 9a+9 | no difference |
+| §F 9b | no difference |
+| §F 14 | no difference |
+| §F 18 | no difference |
+| §G | no difference |
+| §H c18 | no difference |
+| §H a13 | no difference |
+| §H a16 | no difference |
+| §H a17–a22 | no difference |
+| §H clean signal | no difference |
+| §H template | no difference |
+| §H cadence | differs — see below |
+| §H lens | no difference |
+| §H strict list | no difference |
+
+**Every difference, classified (step 2):**
+
+| Difference | Bucket | Reason |
+|---|---|---|
+| §B: C's field-mint parenthetical after the common span | deliberate, stays | inventory passage (b) difference 3; §B stops short of it by design |
+| §F 8b: C's kept `` (`docs/prompt-standards.md`, "coverage first, filter later") `` after the block | deliberate, stays | pre-existing C-only citation of a repo-local doc the scaffolded template cannot assume; outside the block |
+| §H cadence: the kept remainder of the block's last line wraps differently (`what` / `what the`) | inherited, stays | pre-existing wrap difference in untouched Gate-A text; same words |
+| passage (e): C's `e11` rationale paragraph | deliberate, stays | inventory passage (e) difference 2 |
+| passage (f): `f5`–`f7` evidence framing | deliberate, stays | inventory passage (f) |
+| passage (d): the three-lines sentence wraps differently | inherited, stays | same words; passage (d) is untouched by design, and a diff touching it is a defect |
+| `**Findings go to a FILE` opening (`In the field, long finding` / `Long finding lists come back`) | inherited, stays | outside every inventoried and changed site |
+| C had no blank line between the Surfacing paragraph and `**Every pass report states`; W had one | **not deliberate — aligned in this task** | C now carries the blank line; the region `**Recognizing "clearly stuck"` … `**Every pass report states` is byte-identical |
+
+**Not in the deliberate bucket:** `e8` (Task 5 gave W the pronoun; the passage-(e) extract now differs
+only by `e11`) and `b3` (step 3: W reads `severity exactly as Mechanics · Severity says`, count 1;
+Task 3's pair recorded it). `g4` is gone from C (Task 6), so passage (g) is byte-identical.
+
+**Step 4, re-run after the alignment:** the same three block-adjacent differences and nothing else.
 
 ---
 
 ## Completeness sweep (Task 12b output)
 
-*Empty until Task 12b runs. Task 12b replaces this entire section.*
+**What was looked for:** any live sentence outside §A that still answers a question the installed
+ordering now decides — closure, eligibility, cleanliness, the hold and what discharges it,
+composition, the two scope triggers, the suspensions and their answers, the two gates' closing
+acts, the duty classification, the source-block branch and its reread routes, the
+repeated-dismissal exclusion, and the parked state (the list read off the installed §A, which is
+the complete statement). **How:** a grep for closure vocabulary (`final pass`, `clean pass`, `keep
+going`, `never iterate`, `resumes`, `close it`, `closes the cycle`, `run more`, `exit the loop`,
+`only early exit`, `until clean`, `make the real commit`) over both copies outside §A, then each hit
+and its paragraph read; plus reading the sections below whole.
+
+Sections read, per copy (C; W by the same grep and by parity with C):
+
+```
+sweep CLAUDE.md §4 work-loop line — closing acts named, §5 cited (item 18 installed) → nothing further
+sweep CLAUDE.md §5 HARD FLOOR paragraph — floor arithmetic, set comparison before a clean pass is final → a condition §A cites, not a competing rule
+sweep CLAUDE.md §5 derived-floor paragraph — a13/a16/a17 pointers installed → nothing further
+sweep CLAUDE.md §5 Named residual, gate-off surface, When these rules bind, Downstream → nothing that answers closure
+sweep CLAUDE.md §5 absorb paragraph, clearly-stuck, surfacing, pass-report duties, five tells, two-rules → installed text; resumption points at §A
+sweep CLAUDE.md §5 findings-file protocol, Accept a pass only when, Reader, Recovery, What this does not do → validity and recovery rules; "Spent and still incomplete → STOP and surface" is a source-rule stop §A's source-block branch reads
+sweep CLAUDE.md Gate A / Gate B sections — broad prompt, clean signal, cadence, coverage instruction installed; "Re-review after every fix" and "A fix that changes specified behaviour updates the spec" are duties, not closure permissions → nothing further
+sweep CLAUDE.md Profiles — "That further pass must itself be clean and every other closure duty must be satisfied … not a licence to close on the next one" and "the final clean pass runs against the current set" → conditions §A cites; consistent
+sweep CLAUDE.md Mechanics · Severity, baseSha / Finishing the cycle, provenance line, curve, human exception, Timeout → installed text or record rules; no closure permission left
+sweep codex-gate.sh eight gate reminders, both channels — seven replaced by §F; the docs-only notice (line 918) says Gate B does not apply to a docs-only commit and points at Gate A → states no closure permission; exclusion confirmed
+```
+
+**Found: nothing.** No live sentence in `CLAUDE.md`, `plugins/dev-workflow/commands/workflow-init.md`
+or `plugins/dev-workflow/hooks/codex-gate.sh` was found still answering a question the ordering
+decides, beyond the sites §F replaces. The sweep is a reader's judgement and nothing checks its
+coverage.
 
 ---
 
 ## Prompt-standards result (Task 15 step 4b output)
 
-*Empty until Task 15 runs. It replaces this entire section, one line per checklist item.*
+**Subject set, read once and referred to by every line below:** (1) the §A–§H blocks as installed in
+`CLAUDE.md`; (2) the same blocks as installed in `plugins/dev-workflow/commands/workflow-init.md`
+(byte-identical to (1) except the classified divergences in the Task 14 list); (3) ten hook prompt
+bodies in `plugins/dev-workflow/hooks/codex-gate.sh` — the seven `additionalContext` bodies items
+10–13 and 15–17 replace (lines 908, 933, 945, 947, 956, 967, 973) and the three `systemMessage`
+bodies items 12, 15 and 16 replace (`✓ Codex Gate B hook checks passed (…)`, `⚠ Codex Gate B: no
+recorded fingerprint`, `⚠ Codex Gate B: cannot confirm reviewed content`). Checked against
+`docs/prompt-standards.md` as it stands at this commit; a reader check, as the plan says.
+
+1. **Target model named — PASS.** (2) sits under W's `Target model: Claude via Claude Code` line;
+   (3) sits under the hook's `# Target model:` comments (lines 348, 862); (1) is this repository's
+   own `CLAUDE.md`, read by Claude via Claude Code, and adds no second, conflicting model claim.
+2. **Success criteria explicit — PASS.** §A states closure as a checkable conjunction — eligibility
+   (clean at or above the floor, or zero findings) plus every closure condition plus a completed
+   closing act — and each hook body names the observed state (`hook checks passed`, `no fingerprint
+   is recorded`, `cannot confirm`).
+3. **Stop conditions defined — PASS.** §A's source-block branch, the three suspensions, the parked
+   state and the unrepairable-act route; §B's two scope triggers; the hook bodies defer every next
+   step to the policy's closure ordering rather than issuing one.
+4. **Output format with an example — PASS.** The changed text adds no new output format; the
+   findings-file format and its example block (`MAJOR | high | …`, `NO FINDINGS`) are unchanged
+   and the template's clean sentence still names the exact body line and terminator.
+5. **Structured sections — PASS.** §A is three bolded-lead paragraphs placed as a unit before the
+   absorb paragraph; each §B–§H replacement stays inside the section and paragraph it replaced.
+6. **Rules carry their why — PASS.** Each constraint in §A carries its reason clause (e.g. the
+   read-once rule, "so a pass that reached the act has already been classified"; zero-finding
+   eligibility, "because a floor buys further looks at an artifact that keeps yielding findings");
+   §E states "Two reasons for the split"; each hook body states why it defers ("this reminder
+   decides none of it", "which restores no passes").
+7. **No contradictions with CLAUDE.md / AGENTS.md — PASS.** Superseded sentences are replaced in
+   the same change (§F, 23 sites), and Task 12b's completeness sweep found no remaining sentence
+   answering what the ordering decides.
+8. **Token-lean — PASS, with the observation stated.** §A1 is long; it restates no rule owned
+   elsewhere — the scope triggers, fix set, severity rules and closure preconditions are cited
+   ("read there and not redefined here"), and every replaced entry point now points at the
+   ordering instead of carrying a copy. The hook bodies replace enumerations with a pointer.
+9. **Positive instructions — PASS.** Instructions are phrased as what to do (answer, repair,
+   continue, park, perform the act); the prohibitions that remain ("no pass is credited…",
+   "nothing here turns one answer into another") draw a boundary that a positive restatement would
+   lose, the exception the item names.
+10. **Diagnostic states name their causes — PASS.** The no-fingerprint body lists its three causes
+    (no review ran, the fingerprint could not be written or read back, a non-`WIP` commit attempt
+    cleared it) with the check and fix for the storage cause; the stale-fingerprint body lists
+    worktree/index change, staging only, upgraded format and failed compute/store, each with its
+    remedy and the machinery checks.
+11. **Enforcement claims name their mechanism — PASS.** §G says it is "not a checker" and bounds
+    what a reader can detect; §A3 states "no rule in this section reaches it" for content the
+    final review request did not select; the Gate-B hook body says what the hook checked and no
+    more (`hook checks passed`), and the terse channel dropped `satisfied`.
+12. **Calibrated emphasis — PASS.** The changed text adds no new MUST/CRITICAL; the one `MUST`
+    kept in the stale-fingerprint body ("MUST re-review after every fix") is the pre-existing §5
+    gate language the item names as a deliberate exception.
+
+**Result: all twelve pass. No repair was made.**
 
 ---
 
 ## Fragment sweep (Task 0 output)
 
-*Empty until Task 0 runs. Task 0 replaces this entire section: the revision the sweep ran at, one
-line per fragment-table row with its three results, and the reading result for `F1`, `F2` and `F3`.*
+**Ran at:** base `d26de4b40655a18c44c5cb3a3d8fd362943c8495` — both prompt copies equal to the base;
+only this plan's table had gained rows P19–P22. **Mechanical checks:** the count in each copy the
+row claims (a `grep -F` hit is one line, so a count of 1 is single-line and unique), and absence from
+every fenced block of the target text with whitespace normalized. **Post-edit-region check** — an
+OLD row must overlap wording its item removes; a kept row (P19–P22) must lie outside every
+replacement: done by reading each row's live line against its item's block. Every OLD row runs into
+wording its block changes; P19–P22 sit wholly in kept text beside a replacement.
+
+- `P1 no fragment (P1 by design)  *(none — counterfactual ABSENT, presence only)*` — 
+- `P2   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `scope the approved story or plan assigns to this cycle, plus repair ob…`
+- `P3   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `the moment the user says whether the set now includes it…`
+- `P4   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `a Blocker/Major-free pass below the floor…`
+- `P5   C=1 W=0 claims=C single-line+unique=ok in-replacement-block=no` — `not discretionary** — you report…`
+- `P5w  C=0 W=1 claims=W single-line+unique=ok in-replacement-block=no` — `not discretionary** — report the…`
+- `P6   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `is not settled here, and this change does not settle it…`
+- `P7   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `These records are one contract…`
+- `P8   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `the resolve rule is not waived, no pass is credited as…`
+- `P9   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `Every other rule stated here about how a cycle closes…`
+- `P10  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `fix Blocker/Major after each…`
+- `P11  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `final pass must be clean…`
+- `P12  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `when a pass is clean…`
+- `P13  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `clean pass is the single body line…`
+- `P14  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `Each pass: validate, revise, re-run…`
+- `P15  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `The Blocker/Major filter, the file-first findings protocol…`
+- `P16  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `and the nonce duties at their strictest — the cycle…`
+- `P17  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `Hook text is out of scope here…`
+- `P18  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `execute → tests green → Gate B → commit…`
+- `P19  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `where the cycle's own closure rules are satisfied.…`
+- `P20  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `Nothing here writes the floor knob: it stays the user's, never written…`
+- `P21  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `Several records…`
+- `P22  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `` nothing that any mandatory rule in this file or in `AGENTS.md` require… ``
+- `F1   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `nor resets your pass counters. A pre-review snapshot named anything el…`
+- `F2   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `` `NO FINDINGS` if clean" in `additionalContext`, with the same one-line… ``
+- `F3   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `**Majors are recorded as well as Findings and Blockers**, because the…`
+- `F4   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `neither a human's assent nor this record…`
+- `F5   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `**Finishing the cycle:** after the final clean pass, close it with…`
+- `F6   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `reviews the TEXT you pass, not the git tree). Use ONE broad prompt, re…`
+- `F7   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `**Which commit:** an ungated change records it in that commit; a Gate-…`
+- `F7b  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `restated by the closing amend…`
+- `F8   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `` snapshot by amend — a non-`WIP` commit reads to the hook as the cycle… ``
+- `F9   C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `taken from the provenance line and the curve, which must agree. A Gate…`
+- `F10  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `(Blocker/Major only), derived from the cited story's profile.**…`
+- `F11  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `with severity and confidence — you filter to Blocker/Major downstream,…`
+- `F12  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `before the cycle-closing amend…`
+- `F13  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `cannot name both, the finding is Minor or below: collect, never iterat…`
+- `F14  C=1 W=1 claims=CW single-line+unique=ok in-replacement-block=no` — `profile sits still. If revalidation changes the entry, the clean pass…`
+
+**Reading result for F1, F2, F3** (no §F line range, so checked by reading): F1 runs from the kept
+`nor resets your pass counters.` into `reads as a`, which item 1 rewrites to `reads to the hook as` —
+gone after install. F2 lies inside the sentence item 2 replaces whole. F3 runs into `because the
+severity rule moves the`, which item 3 rewrites — gone after install. All three usable.
+
+**Rows added by Task 0:** P19 (`a12`), P20 (`a14`), P21 (`h6`), P22 (`h18`) — kept conditions that
+share a line with changed text, recorded as `cond` rows in `.context/loop-rule-untouched`.
+
+**Inherited drift found by step 3, beyond the inventory's expected divergences** — recorded here and
+carried to Task 14; no edit of this change is aimed at it: (1) passage (d)'s three-lines sentence
+wraps differently in C and W, same words; (2) C has no blank line between the Surfacing paragraph and
+`**Every pass report states`, W has one; (3) the opening of the `**Findings go to a FILE` paragraph
+differs (`In the field, long finding` in C, `Long finding lists come back` in W).
 
 ---
 
@@ -3782,3 +4239,483 @@ with the other five.*
 `presence` at its destination — and both are required for it to count as observed. **Every one of
 the six shapes goes into the closing evidence entry**; naming only pairs and presence leaves the
 absences, preservations and span results run but unrecorded.*
+
+### Task 1
+
+§A is add-only: row P1, no OLD half. Three presence fragments, one per paragraph, each a single line
+and unique in each copy:
+
+```
+presence §A1 `How a cycle ends — one ordering, stated here and referenced everywhere else` worktree=1 parent=0 C
+presence §A1 `How a cycle ends — one ordering, stated here and referenced everywhere else` worktree=1 parent=0 W
+presence §A2 `**Gate A's content condition, and its closing act.** These are what Gate A adds to the conditions` worktree=1 parent=0 C
+presence §A2 `**Gate A's content condition, and its closing act.** These are what Gate A adds to the conditions` worktree=1 parent=0 W
+presence §A3 `**Gate B's content condition, and its closing act.** These are what Gate B adds to the conditions` worktree=1 parent=0 C
+presence §A3 `**Gate B's content condition, and its closing act.** These are what Gate B adds to the conditions` worktree=1 parent=0 W
+```
+
+Parity: the `**How a cycle ends` … `**What a loop absorbs` region extracted from both copies, both
+non-empty, `diff` empty. The blocks were installed with the target's own line breaks, identical in
+both copies.
+
+### Task 3
+
+Passage (b) replaced whole by §B's common span, installed with the target's line breaks in both
+copies; C keeps its field-mint parenthetical after the span. Step 1: P2 and P3 counted 1 in both
+copies before the install. Step 1b appended P23–P38 (seven replaced OLD halves, nine carried
+preservation fragments).
+
+```
+pair b3  `Blocker/Major resolve, Minor/Nit collect` (P23) `severity exactly as Mechanics · Severity says. Ancestry decides` 0 1 1 0 C
+pair b3  (same) 0 1 1 0 W
+pair b7  P2 `union of the scope every approved story or plan governing this change assigns to this cycle,` 0 1 1 0 C
+pair b7  (same) 0 1 1 0 W
+pair b8  P24 `A finding is in-set when repairing it stays inside **the assigned fix set as` 0 1 1 0 C
+pair b8  (same) 0 1 1 0 W
+pair b11 P25 `finding** — except one this cycle has already declined, which is outside the set by that` 0 1 1 0 C
+pair b11 (same) 0 1 1 0 W
+pair b12 P3 `which resumes only when every answer outstanding on that surface has been given.` 0 1 1 0 C
+pair b12 (same) 0 1 1 0 W
+pair b13 P26 `new meaning not already` 0 1 1 0 C
+pair b13 (same) 0 1 1 0 W
+pair b16 P27 `**Novelty overrides ancestry and nothing else:` 0 1 1 0 C
+pair b16 (same) 0 1 1 0 W
+pair b17 P28 `it is a **suspension**` 0 1 1 0 C
+pair b17 (same) 0 1 1 0 W
+pair b18 P29 `rule all stand, and what the answer does is stated there` 0 1 1 0 C
+pair b18 (same) 0 1 1 0 W
+presence closing-time set-change rule `**A change to this set costs the cycle at least one further pass.**` 1 0 C
+presence closing-time set-change rule (same) 1 0 W
+preservation b1  P30 1 1 C · 1 1 W
+preservation b2  P31 1 1 C · 1 1 W
+preservation b4  P32 1 1 C · 1 1 W
+preservation b5  P33 1 1 C · 1 1 W
+preservation b6  P34 1 1 C · 1 1 W
+preservation b9  P35 1 1 C · 1 1 W
+preservation b10 P36 1 1 C · 1 1 W
+preservation b14 P37 1 1 C · 1 1 W
+preservation b15 P38 1 1 C · 1 1 W
+```
+
+Pair columns are old/worktree old/parent new/worktree new/parent; preservation columns are parent
+worktree. Parity (`**What a loop absorbs` … `**Recognizing "clearly stuck"`): the only difference is
+C's field-mint parenthetical. Walk: the installed passage is §B's block verbatim; `b3` now reads
+`Mechanics · Severity` in both copies, so W's old `the severity rule` is gone.
+
+### Task 4
+
+§C's block installed over `So this exit needs three things` … `keeps looping.` in both copies, with
+the target's line breaks; the kept prefix (`c1`–`c3`) and the Surfacing paragraph (Task 7's) are
+untouched. Step 1 re-confirmed P4 at 1 in both copies and appended P39–P52. The precedence clause
+counts exactly 1 per copy, inside §A (C 529, W 736). Pair columns old/worktree old/parent
+new/worktree new/parent; the others worktree parent. Every line holds for C and for W.
+
+```
+pair c4 P42 `a missing one means only that *this* exit does not apply` 0 1 1 0 C,W
+pair c8 P46 `a recurrence failing them being an ordinary fresh finding` 0 1 1 0 C,W
+pair c14 (suspend) P4 `floor the pass **suspends**, the clean pass having failed eligibility.` 0 1 1 0 C,W
+presence c14 (continue, add-only) `A below-floor clean pass lands here on the same` 1 0 C,W
+absence c9 P47 0 1 C,W · presence §A `**A clean completion takes precedence over this exit**` 1 0 C,W
+absence c10 P49 0 1 C,W · presence §A `pass **at or above the floor** has satisfied the clean-final-pass rule — collect the Minors and` 1 0 C,W
+absence c11 P50 0 1 C,W · presence §A `Nits and close — and reporting "will not converge" on a converged loop is a false report. Below the` 1 0 C,W
+absence c12 P51 0 1 C,W · presence §A `**Eligibility is exactly this and nothing more: a clean pass at or above the derived floor, or a` 1 0 C,W
+absence c13 P52 0 1 C,W · presence §A `zero-finding pass.** It is a property of the pass.` 1 0 C,W
+preservation c1 P39 · c2 P40 · c3 P41 (kept prefix) 1 1 C,W
+preservation c5 P43 · c6 P44 · c7 P45 (carried) 1 1 C,W
+preservation plateau rationale P48 (stays, no id) 1 1 C,W
+```
+
+Parity over `**Recognizing "clearly stuck"` … `**Surfacing does not`: no difference.
+
+### Task 5
+
+§D's `e7` sentence installed over the live threshold sentence in both copies — W now carries C's
+`you report the tells`, so the `e8` divergence is gone. §D's pointer paragraph added at the end of
+passage (e): in C after the C-only `e11` paragraph, in W after `e10`, each followed by a blank line
+before `**The two rules above`. Step 1 re-confirmed P5 (C) and P5w (W) at 1 and appended P53–P61.
+
+```
+pair e7 P5 `clean-completion branch of the closure ordering, which outranks it **by taking the pass to the` 0 1 1 0 C
+pair e7 P5w (same NEW) 0 1 1 0 W
+presence e8 alignment `you report the tells` 1 0 W
+presence §D pointer `**What the answer does** is the closure ordering's, which is where this stop's place among the` 1 0 C,W
+preservation e1 P53 · e2 P54 · e3 P55 · e4 P56 · e5 P57 · e6 P58 (kept) 1 1 C,W
+preservation e9 P59 (carried) 1 1 C,W
+preservation e10 P60 (kept, after the block) 1 1 C,W
+preservation e11 P61 (kept, C only) 1 1 C · 0 0 W
+```
+
+Parity over `Those three lines expose` … `**The two rules above`: the only difference is C's `e11`
+paragraph.
+
+### Task 6
+
+§E's two blocks installed in both copies: the Severity bullet's first sentence, and the answer
+paragraph in place of `**How this demotion bears…` — in C together with the `g4` ownership
+sentence. Step 1 observed C `g1/g2: 1  g4: 1`, W `g1/g2: 1  g4: 0`, and appended P62–P65.
+
+```
+pair Severity resolve duty P62 `must resolve, **for every finding in the assigned fix set as the absorb paragraph computes it**.` 0 1 1 0 C,W
+pair g1 P6 `**The demotion changes what a cycle must resolve, never what it observes.**` 0 1 1 0 C,W
+absence g2 P63 1 0 C,W
+absence g3 P64 1 0 C,W
+absence g4 P65 1 0 C · 0 0 W (W never carried it)
+```
+
+Absence columns are parent worktree. Step 4: the story path counts 0 in `CLAUDE.md`. Step 5: parity
+over `- **Severity:**` … `- **Tool routing:` — no difference.
+
+### Task 7
+
+§G's block and §H's nine blocks installed in both copies, one site at a time; step 1 re-confirmed
+P7–P16 at 1 in each copy (20 counts) and step 1b appended P66–P93. Blocks inside an indented list
+take the host's two-space indent (§G, the Gate-A clean signal, the Gate-A cadence); the template
+sentence takes the host's `> ` prefix. The lens paragraph is replaced whole, its first sentence
+being restated by §H's block. The strict-reading block's first two lines are joined at
+`owed, the curve duty owed,` so the carried `i7` fragment sits on one line (words unchanged).
+
+```
+pair §G P7 `**These rules and records are one contract, and a partial adoption breaks it.**` 0 1 1 0 C,W
+pair c18 P8 `**A pass is credited clean or not on its own findings**` 0 1 1 0 C,W
+pair a13 P9 `Every other rule stated **in this paragraph**` 0 1 1 0 C,W
+pair a16 P10 `resolve Blocker/Major after each as` 0 1 1 0 C,W
+pair a17–a22 pointer P11 `What a clean final pass and the zero-finding early exit mean for closing` 0 1 1 0 C,W
+pair Gate-A clean signal P12 `and no scope-stop trigger** is clean too` 0 1 1 0 C,W
+pair template clean sentence P13 `A **clean findings file** is the single body line` 0 1 1 0 C,W
+pair Gate-A cadence P14 `revise **where a repair is required**` 0 1 1 0 C,W
+pair lens unchanged-list P15 `**the lens sets** leave every other` 0 1 1 0 C,W
+pair strict-reading list P16 `every suspension binding, since` 0 1 1 0 C,W
+pair c16 P67 `the cycle and the new hold still open*` 0 1 1 0 C,W
+pair c17 P68 `the resolve rule stands over the finding exactly as` 0 1 1 0 C,W
+pair c19 P69 `its answers are given, and **what the answer does is the closure ordering's**.` 0 1 1 0 C,W
+pair c20 P70 `exit in competition with the rule that every **in-set** Blocker and Major resolves, and then` 0 1 1 0 C,W
+absence a13 first sentence P71 1 0 C,W
+absence a17 P11 1 0 C,W · presence §A `discharged by the count of valid logical passes reaching it with the last of them` 1 0 C,W
+absence a18 P73 1 0 C,W · presence §A `runs another pass on the **current** artifact, revised where the severity and scope rules require a` 1 0 C,W
+absence a19 P74 1 0 C,W · presence §A `A pass with **zero** findings is clean` 1 0 C,W
+absence a20 P75 1 0 C,W · presence §A `has already given what those looks were for; don't manufacture findings to` 1 0 C,W
+presence §G membership test (add-only) `**Membership is decided by a test a reader can apply to the text in front of them, with` 1 0 C,W
+presence strict tail 1 `starting rules that cannot be established cannot be read as having waived an open hold` 1 0 C,W
+presence strict tail 2 `repeated-dismissal cleanliness exclusion unavailable` 1 0 C,W
+presence strict tail 3 `the parked state binding after a closing act that cannot` 1 0 C,W
+presence strict tail 4 `pass-cost rule this change ships owed rather than waived` 1 0 C,W
+preservation carried c15 P66 · a15 P72 · a21 P76 · a22 P77 · i4 P78 · i5 P79 · i6 P80 · i7 P81 · i8 P82 1 1 C,W
+preservation kept, passage (i) i1 P83 · i2 P84 · i3 P85 · i9 P86 · i10 P87 · i11 P88 · i12 P89 · i13 P90 · i14 P91 · i15 P92 · i16 P93 1 1 C,W
+```
+
+Pair columns old/worktree old/parent new/worktree new/parent; the rest parent worktree for absence
+and preservation, worktree parent for presence. Parity per site (first installed line to last): §G,
+c18/surfacing, a13+a16+a17, clean signal, template sentence, lens, strict list — no difference.
+Cadence: the block is identical; the only difference is the kept remainder of its last line
+(`settle mechanically what` in C, `what the` in W), an inherited wrap difference.
+
+### Task 8
+
+§F items 1–9, 7a, 8a, 8b, 9a, 9b installed in both copies. Step 1: every quoted live sentence located
+by its fragment row; F1–F14 and F7b counted 1 in each copy before the install; P94 (`a1`) and P95
+(`h3`) appended. Live sentences that wrap across lines, so a whole-sentence `grep -F` finds nothing:
+all fourteen. Items 1, 4, 6, 7a, 8, 8b, 9a, 9 and 9b start mid-line and are joined to the kept text
+before them; items 2, 3, 5, 7 and 8a start on their own line. W's item-2 sentence had no
+`You filter to Blocker/Major, Codex never does.` line; the replacement covers both copies' forms.
+
+Pair columns old/worktree old/parent new/worktree new/parent; every line holds for C and for W.
+
+```
+pair F1 0 1 1 0 C
+pair F1 0 1 1 0 W
+pair F2 0 1 1 0 C
+pair F2 0 1 1 0 W
+pair F3 0 1 1 0 C
+pair F3 0 1 1 0 W
+pair F4 0 1 1 0 C
+pair F4 0 1 1 0 W
+pair F5 0 1 1 0 C
+pair F5 0 1 1 0 W
+pair F6 0 1 1 0 C
+pair F6 0 1 1 0 W
+pair F7 0 1 1 0 C
+pair F7 0 1 1 0 W
+pair F7b 0 1 1 0 C
+pair F7b 0 1 1 0 W
+pair F8 0 1 1 0 C
+pair F8 0 1 1 0 W
+pair F9 0 1 1 0 C
+pair F9 0 1 1 0 W
+pair F10 0 1 1 0 C
+pair F10 0 1 1 0 W
+pair F11 0 1 1 0 C
+pair F11 0 1 1 0 W
+pair F12 0 1 1 0 C
+pair F12 0 1 1 0 W
+pair F13 0 1 1 0 C
+pair F13 0 1 1 0 W
+pair F14 0 1 1 0 C
+pair F14 0 1 1 0 W
+```
+
+NEW fragments: F1 `reads to the hook as a real commit: the hook treats the` · F2 `` `NO FINDINGS` only when
+the branch found none `` · F3 `because the three series are read` · F4 `**neither a human's general
+assent nor this record**` · F5 `**when a Gate-B cycle's closing act is performed is the closure` · F6
+`Use ONE broad prompt: **its review question stays the same every pass` · F7 `a Gate-A cycle in the
+commit its` · F7b `restated by the commit its closing act` · F8 `the edit must end up **in the content
+the next review reads**` · F9 `A Gate-A cycle has such a commit only once its own closing commit
+exists` · F10 `passes per run (a clean final pass` · F11 `**you filter to Blocker/Major for what must be
+repaired and read` · F12 `before the commit its closing act` · F13 `the finding is Minor or below:
+collect; **its severity buys no` · F14 `the pass was read against an entry that no longer stands`.
+
+```
+preservation a1 P94 1 1 C,W
+preservation h3 P95 1 1 C,W
+```
+
+New/worktree total: 15 in C, 15 in W — fifteen changed clauses from fourteen items. Parity per item,
+first installed line to last: thirteen sites equal; item 8b's block is identical and its last line
+differs only in C's kept parenthetical (`` (`docs/prompt-standards.md`, "coverage first, filter
+later") ``), an inherited C-only divergence.
+
+### Task 9
+
+§F items 14 and 18 installed in both copies. Item 14's live sentence wraps after `here`; the block
+replaces `Hook text is out of scope here by decision;`, and the kept clause after the semicolon
+becomes its own sentence (`What makes that tolerable is the precedence rule above plus the hook
+exiting 0 on every branch, …`). Item 18 replaces the whole one-line work-loop sentence.
+
+```
+pair item 14 P17 `it is not a blanket exemption for hook text**` 0 1 1 0 C,W
+pair item 18 P18 `Gate B → Gate-B closing act**` 0 1 1 0 C,W
+```
+
+Step 4: the residual still stands — the paragraph's first sentence still says the hook's messages
+state its own threshold as an obligation at a floor of 1, and the new sentence names that
+overstatement as out of scope by decision. Parity: both sites equal.
+
+### Task 10
+
+Hazard probe: every §F block for items 10–13 and 15–17 (both channels for 12, 15, 16) printed
+`clean`, read as data from the spec. `note "` hits: thirteen; the seven gate reminders are lines
+908, 933, 945, 947, 956, 967, 973, and the docs-only notice (918) is untouched. Step 2b appended
+P96–P103 from the live strings before the install. Step 4: seven zero-context hunks, one per
+reminder line; every removed and added line read, and each is inside its `note` string — no
+control flow, counter, fingerprint or routing change. `shellcheck --shell=sh` exit 0.
+
+```
+pair item 10 honesty claim P96 `Gate A has no content check in this hook; what the gate itself requires` 0 1 1 0 H
+pair item 10 tail P97 `a further pass being one of its answers and not the only one` 0 1 1 0 H
+pair item 11 P98 `Proceed only once this Gate-A cycle has closed under` 0 1 1 0 H
+pair item 12 P99 `commit only if your final pass was clean and every other closure condition holds` 0 1 1 0 H
+pair item 13 P100 `Use this commit as the review range; whether this cycle runs a review now` 0 1 1 0 H
+pair item 15 P101 `Codex gate state: no fingerprint is recorded for this cycle` 0 1 1 0 H
+pair item 16 P102 `A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too` 0 1 1 0 H
+pair item 17 P103 `skip rule decides only whether a cycle runs at all` 0 1 1 0 H
+```
+
+H = `plugins/dev-workflow/hooks/codex-gate.sh`. The suite is red between this commit and Task 11's,
+as the plan states; the battery is not run here.
+
+### Task 11
+
+Swept `plugins/dev-workflow/hooks/codex-gate.test.sh` with the three step-1 locators. Mapping used,
+so each assertion tests the same hook state as before: `grep -q 'not satisfied'` matched exactly the
+two old STOP messages and now reads `grep -q 'Codex gate state:'`, which matches exactly the two new
+ones (items 15, 16); `grep -q 'Gate B satisfied'` now reads `grep -q 'Gate B hook checks passed'`
+(item 12's terse channel); positive and negative `grep -q 'STOP'` checks now read
+`'Codex gate state:'`. The three `expected_ctx` and three `expected_msg` assignments take items 16,
+12 and 15 whole, with `$policy` rendered as `this project's review policy` and the counters the
+fixture sets. Labels and comments now name the observed hook state.
+
+Suite: `HOOK_SH=sh sh …test.sh` exit 0 and `HOOK_SH=dash dash …test.sh` exit 0, both `all passed`.
+`shellcheck --shell=sh --exclude=SC2015` exit 0. Step 5: `Gate B satisfied|Gate B not
+satisfied|Gate A satisfied` counts 0. Remaining case-insensitive `satisfied` hits, disposed of: line
+1352 and line 1536 are comments using the plain English verb about test rows, not a gate verdict;
+line 1971 is the fixture for the hook's unknown-tool note (`… satisfied count as covering them`),
+a message this change does not replace.
+
+Sites examined and what each became:
+
+```
+sweep codex-gate.test.sh 173 `# 2. Below floor (1/3) -> NOT satisfied yet; reaching floor (3/3) -> satisfied` → `# 2. Below floor (1/3) -> below-floor reminder; reaching floor (3/3) -> hook checks passed`
+sweep codex-gate.test.sh 179 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "3/3 passes, unchanged tree -> satisfied" || fail "3/3` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "3/3 passes, unchanged tree -> hook checks pa`
+sweep codex-gate.test.sh 184 `# intent "a change means Gate B is not satisfied" is asserted at the BEHAVIOR level.)` → `# intent "a change means the hook cannot confirm the reviewed content" is asserted at the BEHAVIOR level.)`
+sweep codex-gate.test.sh 189 `printf '%s' "$out" | grep -q 'not satisfied' && pass "Edit-tool change -> not satisfied" || fail "Edit-tool ch` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "Edit-tool change -> gate-state reminder" || fail "Ed`
+sweep codex-gate.test.sh 197 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "setup: satisfied before bash edit" || fail "setup: sa` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed before bash edit" `
+sweep codex-gate.test.sh 200 `printf '%s' "$out" | grep -q 'not satisfied' && pass "bash-modified file after review -> NOT satisfied (Findin` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "bash-modified file after review -> gate-state remind`
+sweep codex-gate.test.sh 206 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setu` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on clean t`
+sweep codex-gate.test.sh 209 `printf '%s' "$out" | grep -q 'not satisfied' && pass "untracked new file after review -> NOT satisfied" || fai` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "untracked new file after review -> gate-state remind`
+sweep codex-gate.test.sh 215 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with untracked file present"` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed with untra`
+sweep codex-gate.test.sh 217 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited untracked file -> NOT satisfied" || fail ` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited untracked file -> gate-state reminder`
+sweep codex-gate.test.sh 223 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked dir -> NOT satisfied" || fail "new` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new untracked dir -> gate-state reminder" ||`
+sweep codex-gate.test.sh 226 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited file in untracked dir -> NOT satisfied" |` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited file in untracked dir -> gate-state r`
+sweep codex-gate.test.sh 235 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new exotic-path untracked file -> NOT satisfied"` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new exotic-path untracked file -> gate-state`
+sweep codex-gate.test.sh 238 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "edited exotic-path untracked file -> NOT satisfi` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "edited exotic-path untracked file -> gate-st`
+sweep codex-gate.test.sh 247 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "new untracked symlink -> NOT satisfied" || fail ` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "new untracked symlink -> gate-state reminder`
+sweep codex-gate.test.sh 250 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "retargeted untracked symlink -> NOT satisfied" |` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "retargeted untracked symlink -> gate-state r`
+sweep codex-gate.test.sh 279 `# 3d. Reverting the tree back to the reviewed content -> satisfied again` → `# 3d. Reverting the tree back to the reviewed content -> hook checks pass again`
+sweep codex-gate.test.sh 282 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "revert to reviewed tree -> satisfied again" || fail "` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "revert to reviewed tree -> hook checks pass `
+sweep codex-gate.test.sh 287 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass ".context/ churn does not invalidate the hash" || fail` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass ".context/ churn does not invalidate the hash`
+sweep codex-gate.test.sh 291 `# review it just recorded -> a permanent stale STOP. The adoption marker is meant to be` → `# review it just recorded -> a permanent stale-fingerprint reminder. The adoption marker is meant to be`
+sweep codex-gate.test.sh 296 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ state does not invalidate t` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "tracked .context/ state does not inv`
+sweep codex-gate.test.sh 298 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "tracked .context/ churn stays satisfied" || f` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "tracked .context/ churn still passes`
+sweep codex-gate.test.sh 312 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied with sidefile.ts staged" || ` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed with sidef`
+sweep codex-gate.test.sh 316 `printf '%s' "$out" | grep -q 'Gate B satisfied' \` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' \`
+sweep codex-gate.test.sh 324 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' && pass "tracked .context/: real code change still invali` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' && pass "tracked .context/: real code change still in`
+sweep codex-gate.test.sh 333 `# direction"), and the STOP message explains that staging alone can cause it.` → `# direction"), and the stale-fingerprint message explains that staging alone can cause it.`
+sweep codex-gate.test.sh 339 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on unstaged change" || fail ` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on unstage`
+sweep codex-gate.test.sh 341 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 341 `&& pass "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)" \` → `&& pass "staging a reviewed tracked file -> gate-state reminder (spec §2 decision)" \`
+sweep codex-gate.test.sh 341 `|| fail "staging a reviewed tracked file -> NOT satisfied (spec §2 decision)"` → `|| fail "staging a reviewed tracked file -> gate-state reminder (spec §2 decision)"`
+sweep codex-gate.test.sh 341 `# The old trailing assertion ("untracked file on a staged tree -> not satisfied") is` → `# The old trailing assertion ("untracked file on a staged tree -> gate-state reminder") is`
+sweep codex-gate.test.sh 350 `# 4. Gate A exec must NOT satisfy Gate B (separate state)` → `# 4. Gate A exec must NOT count toward Gate B (separate state)`
+sweep codex-gate.test.sh 438 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "re-enable sees same counting semantics as gate-on, no` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "re-enable sees same counting semantics as ga`
+sweep codex-gate.test.sh 447 `reset_all # state ABSENT -> would normally STOP on a code commit` → `reset_all # state ABSENT -> would normally emit the no-fingerprint reminder on a code commit`
+sweep codex-gate.test.sh 453 `printf '%s' "$out" | grep -q 'STOP' && fail "docs-only must not STOP" || pass "docs-only does not STOP"` → `printf '%s' "$out" | grep -q 'Codex gate state:' && fail "docs-only must not emit the gate-state reminder" || `
+sweep codex-gate.test.sh 504 `printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A satisfied" || fail "3/3 exec -> Gate A sa` → `printf '%s' "$out" | grep -q 'floor met' && pass "3/3 exec -> Gate A floor met" || fail "3/3 exec -> Gate A fl`
+sweep codex-gate.test.sh 504 `# FINDING 12: the Gate-A satisfied wording must NOT overstate — it counts calls only.` → `# FINDING 12: the Gate-A floor-met wording must NOT overstate — it counts calls only.`
+sweep codex-gate.test.sh 504 `printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A satisfied says 'count only' (Finding 12)` → `printf '%s' "$out" | grep -qE 'count only|COUNT ONLY' && pass "Gate A floor-met message says 'count only' (Fin`
+sweep codex-gate.test.sh 523 `printf '%s' "$out" | grep -q '1/1' && pass "floor override 1 -> satisfied at 1 pass" || fail "floor override 1` → `printf '%s' "$out" | grep -q '1/1' && pass "floor override 1 -> hook checks pass at 1 pass" || fail "floor ove`
+sweep codex-gate.test.sh 523 `printf '%s' "$out" | grep -q 'Gate B satisfied' && pass "floor override 1 -> reports satisfied" || fail "floor` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' && pass "floor override 1 -> reports hook checks pass`
+sweep codex-gate.test.sh 540 `# 18. FINDING 9 — satisfied message distinguishes fresh passes from cycle passes` → `# 18. FINDING 9 — hook-checks-passed message distinguishes fresh passes from cycle passes`
+sweep codex-gate.test.sh 556 `# 19. FINDING 11 — WIP commit is cycle-internal: gentle note, no STOP, no reset` → `# 19. FINDING 11 — WIP commit is cycle-internal: gentle note, no gate-state reminder, no reset`
+sweep codex-gate.test.sh 561 `printf '%s' "$out" | grep -q 'STOP' && fail "WIP commit must not STOP" || pass "WIP commit does not STOP"` → `printf '%s' "$out" | grep -q 'Codex gate state:' && fail "WIP commit must not emit the gate-state reminder" ||`
+sweep codex-gate.test.sh 633 `[ -z "$(commitpre)" ] && pass "non-adopted repo: unreviewed commit -> no STOP" || fail "non-adopted repo: unre` → `[ -z "$(commitpre)" ] && pass "non-adopted repo: unreviewed commit -> no reminder" || fail "non-adopted repo: `
+sweep codex-gate.test.sh 652 `# one — otherwise a stale-tree STOP would masquerade as non-adoption.)` → `# one — otherwise a stale-fingerprint reminder would masquerade as non-adoption.)`
+sweep codex-gate.test.sh 660 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass ".on marker alone -> adopted" || fail ".on mar` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass ".on marker alone -> adopted" || fail`
+sweep codex-gate.test.sh 665 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "CLAUDE.md gate heading -> adopted" || fail "C` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "CLAUDE.md gate heading -> adopted" |`
+sweep codex-gate.test.sh 713 `printf '%s' "$out" | grep -q 'STOP' && pass "marker-only: still STOPs" || fail "marker-only: still STOPs"` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "marker-only: still emits the gate-state reminder" ||`
+sweep codex-gate.test.sh 732 `# 24. Failure contract: an uncomputable hash must never satisfy, and repeated failures` → `# 24. Failure contract: an uncomputable hash must never pass the hook checks, and repeated failures`
+sweep codex-gate.test.sh 753 `printf '%s' "$out" | grep -q 'not satisfied' && pass "silent checksum -> not satisfied" || fail "silent checks` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "silent checksum -> gate-state reminder" || fail "sil`
+sweep codex-gate.test.sh 768 `printf '%s' "$out" | grep -q 'not satisfied' && pass "checksum prints then fails -> not satisfied" || fail "ch` → `printf '%s' "$out" | grep -q 'Codex gate state:' && pass "checksum prints then fails -> gate-state reminder" |`
+sweep codex-gate.test.sh 786 `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 786 `&& pass "seed-copy failure -> not satisfied" || fail "seed-copy failure -> not satisfied"` → `&& pass "seed-copy failure -> gate-state reminder" || fail "seed-copy failure -> gate-state reminder"`
+sweep codex-gate.test.sh 800 `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 800 `&& pass "git diff failure -> not satisfied" || fail "git diff failure -> not satisfied"` → `&& pass "git diff failure -> gate-state reminder" || fail "git diff failure -> gate-state reminder"`
+sweep codex-gate.test.sh 812 `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(PATH="$stub_dir:$PATH" commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 812 `&& pass "unresolvable git-dir -> not satisfied" || fail "unresolvable git-dir -> not satisfied"` → `&& pass "unresolvable git-dir -> gate-state reminder" || fail "unresolvable git-dir -> gate-state reminder"`
+sweep codex-gate.test.sh 836 `# first commit in a fresh repo STOPs forever. Spec §3 "But an absent index is not a` → `# first commit in a fresh repo gets the gate-state reminder forever. Spec §3 "But an absent index is not a`
+sweep codex-gate.test.sh 851 `# ...and the FIRST commit must actually be able to reach satisfied. Hashing and` → `# ...and the FIRST commit must actually be able to reach hook checks passed. Hashing and`
+sweep codex-gate.test.sh 851 `# self-matching is not enough: a consumer-side regression could still STOP every` → `# self-matching is not enough: a consumer-side regression could still remind on every`
+sweep codex-gate.test.sh 855 `printf '%s' "$out" | grep -q 'Gate B satisfied' || exit 1` → `printf '%s' "$out" | grep -q 'Gate B hook checks passed' || exit 1`
+sweep codex-gate.test.sh 855 `) && pass "unborn repo hashes, self-matches, and can reach satisfied" \` → `) && pass "unborn repo hashes, self-matches, and can reach hook checks passed" \`
+sweep codex-gate.test.sh 855 `|| fail "unborn repo hashes, self-matches, and can reach satisfied"` → `|| fail "unborn repo hashes, self-matches, and can reach hook checks passed"`
+sweep codex-gate.test.sh 866 `printf '%s' "$(commitpre)" | grep -q 'Gate B satisfied' && pass "setup: satisfied on clean tree" || fail "setu` → `printf '%s' "$(commitpre)" | grep -q 'Gate B hook checks passed' && pass "setup: hook checks passed on clean t`
+sweep codex-gate.test.sh 869 `printf '%s' "$(commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 869 `&& pass "staged-vs-worktree divergence -> NOT satisfied" \` → `&& pass "staged-vs-worktree divergence -> gate-state reminder" \`
+sweep codex-gate.test.sh 869 `|| fail "staged-vs-worktree divergence -> NOT satisfied"` → `|| fail "staged-vs-worktree divergence -> gate-state reminder"`
+sweep codex-gate.test.sh 874 `# 27. Ambient alternate index. Three shapes: a negative-only test would be satisfied by` → `# 27. Ambient alternate index. Three shapes: a negative-only test would be passed by`
+sweep codex-gate.test.sh 874 `# an implementation that fires whenever GIT_INDEX_FILE is set — a permanent STOP.` → `# an implementation that fires whenever GIT_INDEX_FILE is set — a permanent gate-state reminder.`
+sweep codex-gate.test.sh 884 `printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'not satisfied' \` → `printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 884 `&& pass "ambient divergent alternate index -> NOT satisfied" \` → `&& pass "ambient divergent alternate index -> gate-state reminder" \`
+sweep codex-gate.test.sh 884 `|| fail "ambient divergent alternate index -> NOT satisfied"` → `|| fail "ambient divergent alternate index -> gate-state reminder"`
+sweep codex-gate.test.sh 884 `# 27b. stable: same unchanged alternate index across review AND commit -> satisfied,` → `# 27b. stable: same unchanged alternate index across review AND commit -> hook checks passed,`
+sweep codex-gate.test.sh 896 `printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B satisfied' \` → `printf '%s' "$(GIT_INDEX_FILE="$alt_dir/alt" commitpre)" | grep -q 'Gate B hook checks passed' \`
+sweep codex-gate.test.sh 896 `&& pass "ambient stable alternate index -> satisfied" \` → `&& pass "ambient stable alternate index -> hook checks passed" \`
+sweep codex-gate.test.sh 896 `|| fail "ambient stable alternate index -> satisfied"` → `|| fail "ambient stable alternate index -> hook checks passed"`
+sweep codex-gate.test.sh 928 `# the two constant empty-tree hashes MATCH — a false "satisfied" even though the` → `# the two constant empty-tree hashes MATCH — a false "hook checks passed" even though the`
+sweep codex-gate.test.sh 943 `printf '%s' "$out" | grep -q 'not satisfied' \` → `printf '%s' "$out" | grep -q 'Codex gate state:' \`
+sweep codex-gate.test.sh 943 `&& pass "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)" \` → `&& pass "relative ambient GIT_INDEX_FILE from a subdirectory -> gate-state reminder (Finding 1)" \`
+sweep codex-gate.test.sh 943 `|| fail "relative ambient GIT_INDEX_FILE from a subdirectory -> NOT satisfied (Finding 1)"` → `|| fail "relative ambient GIT_INDEX_FILE from a subdirectory -> gate-state reminder (Finding 1)"`
+sweep codex-gate.test.sh 1006 `expected_ctx="STOP — Codex Gate B not satisfied: the hook cannot confirm that the content you are about to com` → `expected_ctx="Codex gate state: the hook cannot confirm that the content you are about to commit is the conten`
+sweep codex-gate.test.sh 1006 `expected_msg="⚠ Codex Gate B not satisfied (cannot confirm review)"` → `expected_msg="⚠ Codex Gate B: cannot confirm reviewed content"`
+sweep codex-gate.test.sh 1012 `# 29b. SATISFIED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook` → `# 29b. HOOK-CHECKS-PASSED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook`
+sweep codex-gate.test.sh 1019 `expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchang` → `expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchang`
+sweep codex-gate.test.sh 1019 `expected_msg="✓ Codex Gate B satisfied (3/3 cycle, 3 on current fingerprint)"` → `expected_msg="✓ Codex Gate B hook checks passed (3/3 cycle, 3 on current fingerprint)"`
+sweep codex-gate.test.sh 1019 `[ "$ctx" = "$expected_ctx" ] && pass "satisfied additionalContext matches exactly" || fail "satisfied addition` → `[ "$ctx" = "$expected_ctx" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-chec`
+sweep codex-gate.test.sh 1019 `[ "$msg" = "$expected_msg" ] && pass "satisfied systemMessage matches exactly" || fail "satisfied systemMessag` → `[ "$msg" = "$expected_msg" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-p`
+sweep codex-gate.test.sh 1029 `expected_ctx="STOP — Codex Gate B not satisfied: no fingerprint is recorded for this cycle — either no mcp__co` → `expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__`
+sweep codex-gate.test.sh 1029 `expected_msg="⚠ Codex Gate B: no recorded review"` → `expected_msg="⚠ Codex Gate B: no recorded fingerprint"`
+sweep codex-gate.test.sh 1176 `# 7/9 Gate B satisfied` → `# 7/9 Gate B hook checks passed`
+sweep codex-gate.test.sh 1178 `one_doc "Gate B satisfied" "$(commitpre)"` → `one_doc "Gate B hook checks passed" "$(commitpre)"`
+```
+
+### Task 14
+
+Step 4b, after the last text edit — every `span` and `cond` row of `.context/loop-rule-untouched`, parent against worktree, anchors resolved separately in each tree:
+
+```
+span	The derivation is max(risk, security)	clean review, and a below-threshold remi	CLAUDE.md	no difference
+span	From pass 4 onward every pass report car	Those three lines expose	CLAUDE.md	no difference
+span	The two rules above do not compete	Findings go to a FILE	CLAUDE.md	no difference
+span	On squash-merge, copy every evidence ent	On squash-merge, copy every evidence ent	CLAUDE.md	no difference
+span	Recording a human exception	Accepted because: <one line>	CLAUDE.md	no difference
+span	accumulate; order means nothing.	obligation, or a profile-derived evidenc	CLAUDE.md	no difference
+span	**"Mandatory" is not limited to this fil	because writing it down makes it sound	CLAUDE.md	no difference
+preservation	a12	P19	parent=1 worktree=1	CLAUDE.md	ok
+preservation	a14	P20	parent=1 worktree=1	CLAUDE.md	ok
+preservation	h6	P21	parent=1 worktree=1	CLAUDE.md	ok
+preservation	h18	P22	parent=1 worktree=1	CLAUDE.md	ok
+span	The derivation is max(risk, security)	clean review, and a below-threshold remi	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	From pass 4 onward every pass report car	Those three lines expose	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	The two rules above do not compete	Findings go to a FILE	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	On squash-merge, copy every evidence ent	On squash-merge, copy every evidence ent	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	Recording a human exception	Accepted because: <one line>	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	accumulate; order means nothing.	obligation, or a profile-derived evidenc	plugins/dev-workflow/commands/workflow-init.md	no difference
+span	**"Mandatory" is not limited to this fil	because writing it down makes it sound	plugins/dev-workflow/commands/workflow-init.md	no difference
+preservation	a12	P19	parent=1 worktree=1	plugins/dev-workflow/commands/workflow-init.md	ok
+preservation	a14	P20	parent=1 worktree=1	plugins/dev-workflow/commands/workflow-init.md	ok
+preservation	h6	P21	parent=1 worktree=1	plugins/dev-workflow/commands/workflow-init.md	ok
+preservation	h18	P22	parent=1 worktree=1	plugins/dev-workflow/commands/workflow-init.md	ok
+```
+
+Failures: 0.
+
+### Re-run before Gate-B pass 2
+
+Before Gate-B pass 2 (cycle `t57gp3hwu1`), after the pass-1 repairs (§A continue-branch gloss in C,
+W and the target text; CHANGELOG Gate-A sentence; Task 12 and Task 13 records): every fragment-table
+row P2–P103, F1–F14, F7b re-counted in the copies it claims, to its class's result (OLD, absence →
+worktree 0 parent 1; preservation → 1 1), and every recorded NEW / presence fragment → worktree 1
+parent 0: 320 observations, 0 failures. The 18 moved-condition §A presences: 0 failures. The 14
+untouched spans and 8 `cond` rows: 0 failures. Parity over the 34 site regions: the same three
+classified differences, nothing new. The prompt-standards items were re-read for the one changed §A
+clause: all twelve still pass.
+
+### Re-run before Gate-B pass 3
+
+Before Gate-B pass 3: the pass-2 amendments touched only this plan's Task 13 section (K defined without eligibility, the failed-act row split, three closure checks where one stood). Re-run of every fragment-table row and every recorded NEW/presence fragment: 320 observations, 0 failures; untouched spans and cond rows: 0 failures; parity: the same three classified differences.
+
+### Gate-B provenance and deviation (cycle t57gp3hwu1)
+
+**Process deviation, recorded:** the pass-1 repair round (commit `0382219`) and the pass-2 records
+refresh (`f56fd50`) were made without Daniel's go, which the session handoff required for repair
+rounds. Daniel kept them as the starting point on 2026-09-26 (the reviewer's recommendation he
+forwarded); this is not a retroactive authorization. Pass 4 is released as one bounded pass.
+
+**Review provenance, from the original Codex session transcripts** (`~/.codex/sessions/2026/09/26/`,
+the last write to each slot; times UTC):
+
+```
+pass 1  base d26de4b… head 8436f17…  spec session 01a0dccf-4b26  quality session 01a0dccf-4b27
+  08:26:02 quality slot  written by 01a0dccf-fbcd (subagent of the quality session)   3 lines  — final
+  08:26:39 spec slot     written by 01a0dccf-cbdf (subagent of the QUALITY session)   3 lines  — overwritten
+  08:28:09 spec slot     written by 01a0dccf-4b26 (the spec session itself)          7 lines  — final
+pass 2  base d26de4b… head 0382219…  08:42:06 quality 01a0dcdc-1eb4 4 lines · 08:42:09 spec 01a0dcdc-1ec7 6 lines — one write each
+pass 3  base d26de4b… head f56fd50…  08:53:58 spec 01a0dce7-01a2 7 lines · 08:55:06 quality 01a0dce7-017e 6 lines — one write each
+```
+
+Pass 1's overwritten spec write carried three MAJOR findings — the §A decline gloss, the unsplit
+next-state rows, the endpoint-only fix-set check — and the spec session's final seven-line file
+carries all three as its first three lines, so no finding was lost; every final file is its own
+branch's. Passes 1–3 each count toward the floor. Pass 4 runs the two branches as two sequential
+calls with identical full base and head ids, each told its one slot.
+
+### Re-run before Gate-B pass 4
+
+Before Gate-B pass 4: close-cited-set corrected (every governing-header commit in the window, demonstrated on A -> B -> A), K defined without eligibility and the source block, Oracle cells added to rows 33 and 33b, provenance and deviation recorded. Re-run: 320 fragment observations, 0 failures; untouched spans and cond rows, 0 failures; parity, the same three classified differences.
+
+### Re-run before Gate-B pass 5
+
+Released by Daniel on 2026-09-26: the `--soft` repair, the observation-labelled checks, the design §7
+note, one pass 5.
+
+```
+pair §F item 5 `--soft` — OLD `reset to the parent of the first and commit once instead`: 1 at 8e620db, 0 now, C and W;
+  NEW `` `git reset --soft <parent-of-first-WIP>`, then commit once instead ``: 1 now, 0 at the base, C and W
+parity of the Finishing-the-cycle block: no difference
+```
+
+The OLD half is counted against the previous candidate, not the base: the base carried a different
+wording (`` `git reset --soft <parent-of-first-WIP>` first, then commit once ``) and never this one.
+Reset behaviour observed in a disposable repository: two WIP commits, the second adding a new file;
+`git reset <base>` leaves 0 paths staged and the commit fails; `git reset --soft <base>` keeps both
+staged and one commit has parent = base and tree = the last WIP tree. Re-run of the whole record
+set: 320 fragment observations, 0 failures; untouched spans and `cond` rows, 0 failures; parity,
+the same three classified differences.

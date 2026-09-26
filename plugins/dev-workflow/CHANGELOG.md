@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.13.0
+
+- **One closure ordering for §5**, installed in `CLAUDE.md`'s gate section and in
+  `/dev-workflow:workflow-init`'s template: a pass is read once, in a fixed order — source block,
+  clean completion, suspension, continue — and a cycle closes only on an eligible pass (clean at or
+  above the floor, or zero findings) with every closure condition holding and the gate's closing act
+  performed. It names the four standing duties, what a surfaced finding's hold is and what ends it,
+  how several suspensions compose, and what a failed closing act leads to (repair and retry, a
+  further pass, or a parked cycle). Gate A gains a content condition — the artifact equals the text
+  sent in the final pass's review request, which says nothing about what the reviewer read — and a
+  closing act; Gate B's closing act stays the one `Finishing the
+  cycle` defines.
+- **The absorb paragraph owns the assigned fix set**: the union of every governing story's or plan's
+  scope plus findings accepted at a membership stop, minus findings declined; a change to the set
+  costs a further pass. A decline binds for the cycle.
+- **Mechanics · Severity answers the question it had handed over**: the ceiling changes what a cycle
+  must resolve, never what the loop-health readings observe. The resolve duty is scoped to the fix
+  set, and a validated dismissal resolves a finding.
+- **Twenty-three standing sentences the ordering falsified are replaced** — sixteen in the two
+  prompt copies, among them the `Finishing the cycle` lead-in, the Gate-A and Gate-B coverage
+  instructions, the HARD FLOOR parenthetical, the human-exception destination and scope sentence,
+  the Named residual's blanket exemption and the work-loop line — and **seven in the hook's gate
+  reminders**. The hook now reports what it checked (`hook checks passed`, `no recorded
+  fingerprint`, `cannot confirm reviewed content`, `Codex gate state: …`) instead of a gate
+  verdict, and points at the policy's closure ordering for what happens next. No hook logic,
+  counter, fingerprint or routing changed; `codex-gate.test.sh` moves its expectations with the
+  strings.
+- **The one-contract paragraph** now includes the closure ordering and every rule it reads, with a
+  membership test a reader can apply sentence by sentence.
+
 ## 0.12.0
 
 - **New command `/dev-workflow:claude-init`** writes one `CLAUDE.md` of general working rules

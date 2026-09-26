@@ -276,6 +276,15 @@ set off the block and writes one check per condition**, and fails where the bloc
 condition the plan has no check for. **No fixture per predicate is built**; that question is parked
 in the story's §2 and is not reopened.
 
+**How that duty is discharged in this change — Daniel's decision of 2026-09-26, at Gate-B pass 4.**
+This change's own cycle closes under §5 as it stood before the change, so **no closing act under the
+installed ordering happens here**, and "held at the closing act" cannot be shown for one. The duty is
+discharged by **defining each check and demonstrating it in disposable repositories**, and the
+evidence entry says so. A check that reads history **reports what it observed** — change observed,
+no change observed, or source unreadable — **never that a condition held**: no source available to
+it can show that nobody made and undid an edit outside its view, and a check that claimed so would
+certify its own blind spot.
+
 **That list is not exhaustive, and reading it as exhaustive is how the evidence entry would
 overclaim.** Two further things the table does not establish, named because they are the ones a
 reader would otherwise assume it covers: **how each predicate was derived** — the table takes a
