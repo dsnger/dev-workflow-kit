@@ -5,7 +5,7 @@ assumed — see the README if not.
 
 Up front: you don't operate the workflow like a machine. You talk to Claude
 normally; the skills and gates structure *how Claude works*, and the hook reminds
-both of you when a gate isn't satisfied. Your job is the decision points —
+both of you what it has and has not seen of the gates. Your job is the decision points —
 answering questions, approving drafts, judging findings.
 
 **1. Capture the idea.** Say "users want to export their invoices as CSV" (or paste
@@ -30,15 +30,19 @@ settled decisions with rationale, not a wish list.
 
 **3. Gate A on the spec.** Claude sends the spec text to Codex
 (`mcp__codex__exec`) — a different model family, so it doesn't share Claude's blind
-spots. Blocker/Major findings get fixed, the review reruns on the revised spec:
-the floor its profile derives, final pass clean — the one early exit is a pass that
-comes back with zero findings. Hook messages like `⚠ Codex Gate A below floor (1/3)` are
+spots. Blocker/Major findings get fixed and the review reruns — on the revised spec where a
+repair was owed, on the same text where none was. When the cycle may close is `CLAUDE.md`
+§5's closure ordering, not a rule of thumb: an eligible pass (clean at or above the floor
+its profile derives, or a pass with zero findings) with every other closure condition
+holding, then the **Gate-A closing act** — the reviewed spec committed with the cycle's
+records. Planning starts after that act, not after the last clean pass. Hook messages like `⚠ Codex Gate A below floor (1/3)` are
 the counter, not an error. Your job: arbitrate disputed findings — Codex is
 advisory, and a dismissed finding needs a one-line reason.
 
 **4. Plan, and Gate A again.** `superpowers:writing-plans` turns the spec into a
 task-by-task plan (each task starts with a failing test); the same loop runs at the derived floor
-on the plan. A flaw caught here never reaches code.
+on the plan and ends with its own Gate-A closing act before execution starts. A flaw caught
+here never reaches code.
 
 **5. Implement.** `superpowers:executing-plans` works through the plan, test-first,
 progress claims backed by test runs. If the hook's own threshold wasn't met, it says
@@ -52,13 +56,15 @@ skipping locally only postpones the red.
 range to read; the hook knows WIP doesn't end the cycle), then loops
 `mcp__codex__review` the same way: the derived floor, final clean. Invalidation is by
 **content** — any change to included content present when the hook runs, even from a
-formatter, flips it back to unsatisfied. What that proves is bounded, and the hook's own
+formatter, makes the hook report that it cannot confirm the reviewed content. What that proves is bounded, and the hook's own
 source says so: the current fingerprint matches the one recorded on a counted call, which
 is not evidence that Codex read those bytes; `.context/` and untracked ignored paths are
 excluded, and staging counts, because the fingerprint covers the index and that is what
 a commit carries. On
-`✓ Codex Gate B satisfied (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the calls the hook counted this cycle, the hook's own reminder threshold, and the **consecutive** counted calls on the current fingerprint since it last changed. The first is not the calls you made: the hook withholds the count for a recognized failure envelope, the backgrounding notice, and a result it can get no text from. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges — the real commit replaces
-the WIP via `git commit --amend`.
+`✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the calls the hook counted this cycle, the hook's own reminder threshold, and the **consecutive** counted calls on the current fingerprint since it last changed. The first is not the calls you made: the hook withholds the count for a recognized failure envelope, the backgrounding notice, and a result it can get no text from. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges, and the message is what the hook checked, not
+permission to close: §5's closure ordering says when the Gate-B cycle may close, and its
+*Finishing the cycle* operation says how — amend the WIP commit, or, where several `WIP:`
+snapshots piled up, `git reset --soft` to the parent of the first and commit once.
 
 **8. PR and bots.** Open the PR as usual; once the bots have commented, run
 `/dev-workflow:process-pr-review`. Every comment is validated against code and

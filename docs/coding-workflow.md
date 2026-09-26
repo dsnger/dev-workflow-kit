@@ -93,10 +93,13 @@ a wish list.
 author — reads the spec text and checks it for contradictions and internal
 inconsistencies, missing requirements, unhandled state/edge/error/empty/concurrent
 paths, and risks to the project's core invariants. It is run as a **loop with a
-hard floor**: a minimum number of passes, re-running one broad review prompt over
-the *revised* artifact each time (new findings surface precisely because the
-artifact changed between passes). Only design-breaking findings — the serious
-tiers — force another iteration; the final pass must come back clean. Catching a
+hard floor**: a minimum number of passes, re-running one broad review prompt each
+time — over the revised artifact where a finding required a repair, over the unchanged
+one where none did. A finding's severity decides what must be repaired, not on its own
+whether another pass is owed: the review policy's closure ordering decides that. A cycle
+closes on an eligible pass — clean at or above the floor, or one with zero findings — only
+when every other closure condition holds, and accepting even a minor finding into the
+assigned work costs a further pass. Catching a
 flaw in the spec is far cheaper than catching it after it has been baked into the
 plan and the code.
 
@@ -107,7 +110,9 @@ are restated at the top so they aren't lost mid-build. A plan at this resolution
 makes execution mechanical and the resulting diff traceable back to a requirement.
 
 **5. Gate A on the plan.** The same independent review, now applied to the plan —
-so a plan-level flaw is caught before implementation, not during it.
+so a plan-level flaw is caught before implementation, not during it. Each Gate-A cycle
+ends with its own closing act — the reviewed artifact committed with the cycle's
+records — before the next stage starts.
 
 **6. Execution.** The plan is implemented task by task, followed literally.
 Bounded subtasks can be delegated to cheaper models or subagents. Discipline
@@ -124,7 +129,8 @@ checks is not enforcement.
 **8. Gate B on the code.** Before the change is committed, the independent
 reviewer reads the actual *diff* and checks it against the invariants file. It is
 re-run after every fix, because each fix changes the diff and invalidates the
-prior review. Trivial changes may skip it, on terms that depend on the story: an
+prior review, and it closes when the review policy's closure ordering says so — never
+on a clean pass alone. Trivial changes may skip it, on terms that depend on the story: an
 unprofiled one keeps the judgement call, while a profiled one qualifies only at
 effective level 0 — trivial risk *and* no security relevance — so a trivial-looking
 change on security-relevant surface is not eligible. A skip removes the review, never
