@@ -28,7 +28,7 @@ It adds no task, prerequisite or closure condition to this plan.
 - **Invariant 11:** every prompt change passes all 12 items of `docs/prompt-standards.md`. Most at risk: item 6 (every constraint carries its reason in the same sentence) and item 8 (token-lean).
 - **Invariant 4 / the hook:** no control flow, counter, fingerprint computation, routing or event handling changes. Only `note` strings and their expectations.
 - **Gate-B cycle discipline:** snapshot commits are named `WIP: …`, and a non-`WIP` commit mid-cycle resets the hook's counters. **This change closes with `git reset --soft "$BASE"` followed by one commit, not with `--amend`** — Mechanics prescribes the reset shape wherever several WIP snapshots piled up, and this plan makes one per task. Task 15 step 8 is the operation.
-- **Every `git add` in this plan is guarded, and a guard is where most of them stop.** A failed staging otherwise falls through to the `git commit` on the next line, which **can still succeed on whatever the index already held** — this plan states in Task 15 step 7 that the index may carry foreign staged content, and Resume deliberately admits a live staged index — so the block reports a snapshot it did not take. **A content comparison after the commit is added only where a later step reads that commit rather than the worktree**, and that is three places: step 7's step one, whose record step two then reads; step 7's step three and step 4b, whose commits bound the range the next Gate-B call reviews. The per-task snapshots have no such consumer — every check this plan runs afterwards reads the worktree, and Gate B reads the accumulated `$BASE..HEAD` range rather than any one commit — so they are guarded and not pinned. **8a is the exception that needs no addition**: Close condition 4 already pins its blobs before staging and compares them against the committed tree.
+- **Every `git add` in this plan is guarded, and a guard is where most of them stop.** A failed staging otherwise falls through to the `git commit` on the next line, which **can still succeed on whatever the index already held** — this plan states in Task 15 step 7 that the index may carry foreign staged content, and Resume deliberately admits a live staged index — so the block reports a snapshot it did not take. **A content comparison after the commit is added only where a later step reads that commit rather than the worktree**, and that is one place: the step-4b commit block, which every Gate-B candidate uses, first pass and repairs alike, and whose commit bounds the range the next call reviews. The per-task snapshots have no such consumer — every check this plan runs afterwards reads the worktree or the step-4b candidate, and Gate B reads the accumulated `$BASE..HEAD` range rather than any one commit — so they are guarded and not pinned. **The closing commit is the other one**: Close condition 4 compares it against pins taken before staging.
 
 ---
 
@@ -217,15 +217,13 @@ live in the home named. Where a task, a shell comment or an error string needs a
 | Branch, clean tree, no base file yet, `ba15e83` ancestral, approved inputs unchanged at `HEAD` | **Preparation** | Task 0 step 1, first-entry branch |
 | Branch; base file shape, self-resolving commit, ancestral; approved inputs unchanged at `$BASE`; scratch-artifact validity; how far the implementation got | **Resume** | Task 0 step 1, re-entry branch |
 | What a re-entry reads, and that no rule depends on the state fitting a named shape | **Resume** — its table is illustration, not a classification | accounting row 7; every state-reading rule |
-| `HEAD` equals the reviewed head | **Close**, condition 1 | step 8a |
-| The dirty set is exactly the candidate pass's findings files | **Close**, condition 2 | step 8a |
-| The closing message is complete, and revalidated before it is consumed | **Close**, condition 3 | step 7b writes it; steps 8a and 8b check it |
-| The record commit's paths, parent, blob identity, and the findings files' structure and eligibility | **Close**, condition 4 | step 8a |
-| Clean tree and the closing tip when the closing invocation begins | **Close**, condition 5 | step 8b |
-| After the closing commit: subject, parent, clean tree, landed body | **Close**, condition 6 | step 8b's post-close block |
-| Two invocations, and why the hook requires them | **Close** | steps 8a and 8b |
-| What happens on a failed closing operation or postcondition | **Failure** | every rejection in steps 8a and 8b |
-| What a successful close removes | **Close**, its success recognition | step 8b's cleanup block |
+| `HEAD` equals the reviewed head | **Close**, condition 1 | step 8, closing block |
+| The dirty set is exactly this cycle's findings files | **Close**, condition 2 | step 8, closing block |
+| The closing message is complete, and revalidated before it is consumed | **Close**, condition 3 | step 7b writes it; step 8's closing block checks and pins it |
+| After the closing commit: subject, parent, clean tree, landed body, committed findings blobs | **Close**, condition 4 | step 8, postcondition block |
+| One closing command with no `-m`, and why | **Close** | step 8, closing block |
+| What happens on a failed closing operation or postcondition | **Failure** | every rejection after the reset in step 8 |
+| What a successful close removes | **Close**, its success recognition | step 8's postcondition block |
 
 **Straight-line commands stay where the work happens.** Task 15 step 8 keeps the shell that runs
 these checks — it is verified and it is what an executor types — and each block names the condition
@@ -262,24 +260,24 @@ independent reader did.
 | 19 | The baseline covers every inventoried site and is read whole | **kept**, and **strengthened**: per-site literal-uniqueness, escaped anchors and non-empty extraction, as Task 14 already requires (pass 21) |
 | 20 | Task 0 commits nothing | **proposed for deletion, and deleted.** It now commits one record — the fragment sweep (pass 21). A validation whose result is not committed cannot be told from one that never ran, and every other reader check in this plan already commits its record |
 | 21 | `baseSha` is `$BASE`, never `HEAD^` | **kept** — the rule, unchanged |
-| 22 | `headSha` resolved to the full object name at that moment, kept with each branch's result | **kept**, and **extended**: it is persisted, because 8a needs it (pass 21) |
+| 22 | `headSha` resolved to the full object name at that moment, kept with each branch's result | **kept**, and **extended**: it is persisted, because the close needs it (pass 21); its consumer is Close condition 1 |
 | 23 | A fresh nonce for the Gate-B cycle | **kept** — the rule, unchanged |
-| 24 | Each fix is committed before the next review | **kept**, and **widened**: every non-closing pass commits, repair or not (pass 21) |
+| 24 | Each fix is committed before the next review | **kept.** The pass-21 widening — every non-closing pass commits its findings, repair or not — is **DELIBERATELY DROPPED by Daniel's decision D1 of 2026-09-25**: findings files are committed once, at the close. Consequence stated at Close, *D1* |
 | 25 | Every affected check re-runs after each fix, mechanical and reader | **kept** — the rule, unchanged |
 | 26 | Re-run records are committed before the re-review | **kept** — the rule, unchanged |
-| 27 | The complete set re-runs before the candidate final pass | **kept** — the rule, unchanged |
+| 27 | The complete set re-runs before the candidate final pass | **kept, and made explicit** (pass 54): before every call, since any call can be final. Records that come out unchanged are not recommitted; records that change enter a records-only candidate before final verification |
 | 28 | Only a clean response against that exact `HEAD` closes | **kept**, and **made checkable**: the reviewed head is recorded, so "that exact `HEAD`" has a value to compare against (pass 21) |
 | 29 | Closure-eligible = clean at or above the floor **or** zero-finding | **kept** — the rule, unchanged |
-| 30 | The final pass's own findings files are the sole permitted post-review addition | **kept** — the rule, unchanged |
+| 30 | The final pass's own findings files are the sole permitted post-review addition | **changed by D1**: this cycle's findings files, every pass's, are the sole permitted addition at the close |
 | 31 | The closing message is rebuilt whole; exactly one provenance line and one curve | **kept** — the rule, unchanged |
 | 32 | Every owed record is present before the close | **kept** — the rule, unchanged |
-| 33 | The dirty set is exactly the final pass's findings files, read from every porcelain record | **kept** as the close procedure's check, and **corrected**: it asks git which paths outside the expected pair are dirty instead of splitting status output into pathnames, which dropped a newline-bearing path invisibly and mangled a rename's second field (pass 34) |
-| 34 | The record commit's changed-path set equals those files | **kept** as the close procedure's check |
-| 35 | The tree is clean after the record commit | **kept** as the close procedure's check |
-| 36 | `HEAD` equals the reviewed tip before the reset | **kept** as the close procedure's check, and **corrected**: the reviewed *head* and the closing *tip* are two values, not one (pass 21). With row 40 dropped the tip is **only** this precondition — nothing resets to it |
+| 33 | The dirty set is exactly this cycle's findings files (changed by D1 from the final pair), read from every porcelain record | **kept** as the close procedure's check, and **corrected**: it asks git which paths outside the expected pair are dirty instead of splitting status output into pathnames, which dropped a newline-bearing path invisibly and mangled a rename's second field (pass 34) |
+| 34 | The record commit's changed-path set equals those files | **dropped with its subject** (D1): there is no record commit. What it guarded — only findings files enter beside the reviewed tree — is Close condition 2 plus condition 4's blob check |
+| 35 | The tree is clean after the record commit | **dropped with its subject** (D1): there is no record commit |
+| 36 | `HEAD` equals the reviewed tip before the reset | **merged into Close condition 1** (D1): with no record commit the closing tip and the reviewed head are the same object, and condition 1 is read in the same block as the reset |
 | 37 | The closing commit's subject is not a snapshot | **kept** as the close procedure's check |
 | 38 | The tree is clean after the close | **kept** as the close procedure's check |
-| 39 | 8a and 8b are separate invocations; no `-m` in the closing one | **kept**, and it is why the close procedure names two invocations |
+| 39 | 8a and 8b are separate invocations; no `-m` in the closing one | **kept in part** (D1): no `-m` in the closing command. The split is dropped, because no `WIP:` commit shares a command string with the close any more |
 | 40 | Every rejection restores a tip by **mixed** reset, never `--hard` | **DELIBERATELY DROPPED**, by Daniel's decision, and the second of two deletions this table records. **It was never a requirement of the approved spec** — §A says *"re-establish every closure condition against the repository as it now stands"*, which reads the state rather than rewinding it, and a rejected commit at `HEAD` is a legitimate starting point for that reading. It was this plan's own implementation choice, and it had grown restore targets, phase selection, pre- and post-act captures and their own error handling, which four consecutive passes then found defects in. **What replaces it is a bounded handoff**: stop every further mutating action, report the failed step and the observed state, change nothing else. **The obligations §A does impose are unchanged** — surface the failure, re-establish every closure condition against the state as it stands, and take one of its three routes. **Not replaced by a generic backup mechanism**, which would be the same growth under another name |
 | 41 | The scratch files are removed only after a successful close | **kept** as the close procedure's last step |
 
@@ -287,8 +285,8 @@ independent reader did.
 has exactly one home, named in the index above; what went is the **third copy**, the prose beside
 Task 15 step 8's shell that repeated in words what the block already ran and the condition already
 defined. Two rationales that existed only in that prose were moved into the conditions they belong
-to: `reset --soft`'s index behaviour into condition 5, and why the dirty set can be exact into
-condition 2. **The one correction is condition 6's landed-body check**, which compared bytes where
+to: `reset --soft`'s index behaviour into the then condition 5, and why the dirty set can be exact into
+condition 2. **The one correction is the landed-body check (then condition 6, now 4)**, which compared bytes where
 `git log --pretty=%B` adds a trailing newline the source file has none of — it rejected a *correct*
 close. **The predicate is unchanged and is now true as stated**: the body is extracted with
 `--pretty=format:%B`, which emits the stored message alone, and the closing commit is made with
@@ -296,7 +294,7 @@ close. **The predicate is unchanged and is now true as stated**: the body is ext
 a disposable repository, in both directions. An intermediate revision normalized trailing blank
 lines on both sides instead; that made the check's own predicate false and is gone.
 
-**Two conditions are dropped, 20 and 40, and each is named as a drop rather than lost.** Condition
+**Rows 34 and 35 left with their subject, and row 24's pass-21 widening was dropped, by Daniel's decision D1 of 2026-09-25** (Close, *D1*). **Before that, two conditions were dropped, 20 and 40, and each is named as a drop rather than lost.** Condition
 20 is replaced by a stronger obligation. **Condition 40 is dropped outright** — a guard this plan
 introduced itself, which the approved spec never asked for, removed by an explicit decision after
 it became the largest single source of findings in the cycle. **A guard the plan invented does not
@@ -340,15 +338,35 @@ state permanently unresumable through this plan's own success path.
 approved inputs still hold their approved blobs at the revision the tasks are derived against; and
 that **no base file exists yet** — if one does, this is a re-entry and Resume owns it.
 
+**Every one of those predicates takes the same captured revision as its subject**, and Preparation
+records it to `.context/loop-rule-start`. That file is the whole point: without it the checks here
+and the base Task 0 step 1 records are statements about **different resolutions of a movable ref**,
+and nothing binds the revision that was approved to the revision the work proceeds from.
+
 ```bash
+# Resolve the starting revision ONCE and make it the subject of every predicate below.
+# `HEAD` is a movable ref: checking the branch, the ancestry and the three approved
+# blobs through separate live resolutions and then recording the base from yet another
+# one binds the recorded base to NO commit whose properties were checked. Each fenced
+# block is its own shell, so this value is written to a file for Task 0 step 1 rather
+# than carried in a variable.
+START=$(git rev-parse HEAD) \
+  || { echo "cannot resolve the starting revision; stop"; exit 1; }
+test "${#START}" -eq 40 || { echo "starting revision is not a full object name: $START"; exit 1; }
+test "$(git rev-parse --verify "$START^{commit}")" = "$START" \
+  || { echo "starting revision does not resolve to itself as a commit"; exit 1; }
+# The symbolic check catches a detached HEAD, which prints `HEAD`; the ref check binds
+# that branch to the captured object. Both, because neither implies the other.
 test "$(git rev-parse --abbrev-ref HEAD)" = loop-rule-consolidation || { echo "wrong branch"; exit 1; }
+test "$(git rev-parse --verify refs/heads/loop-rule-consolidation)" = "$START" \
+  || { echo "the branch is not at the starting revision"; exit 1; }
 # Two steps, because a FAILED `git status` prints nothing and `test -z ""` would read
 # that as a clean tree. The predicate is unchanged; only its establishment is.
 TREESTATE=$(git status --porcelain) \
   || { echo "reading the tree state FAILED — cleanliness is unestablished; stop"; exit 1; }
 test -z "$TREESTATE" || { echo "tree not clean — if this is a re-entry, run Resume"; exit 1; }
 test ! -e .context/loop-rule-base || { echo "a base is already recorded — this is a re-entry, run Resume"; exit 1; }
-git merge-base --is-ancestor ba15e83 HEAD || { echo "ba15e83 not in this history"; exit 1; }
+git merge-base --is-ancestor ba15e83 "$START" || { echo "ba15e83 not in this history"; exit 1; }
 for f in target-text design condition-inventory; do
   p="docs/superpowers/specs/2026-09-10-loop-rule-consolidation-$f.md"
   # Resolve separately and check each status. `git rev-parse` without `--verify`
@@ -356,13 +374,17 @@ for f in target-text design condition-inventory; do
   # exactly when the two revision expressions are equal — and either way the result
   # says nothing, because success must depend on both exit statuses. (Observed:
   # `git rev-parse HEAD:missing` prints `HEAD:missing`, status 128.)
-  HEAD_ID=$(git rev-parse "HEAD:$p") \
-    || { echo "$p does not resolve at HEAD — the comparison is unestablished; stop"; exit 1; }
+  START_ID=$(git rev-parse "$START:$p") \
+    || { echo "$p does not resolve at the starting revision — the comparison is unestablished; stop"; exit 1; }
   APPROVED_ID=$(git rev-parse "ba15e83:$p") \
     || { echo "$p does not resolve at ba15e83 — the comparison is unestablished; stop"; exit 1; }
-  test "$HEAD_ID" = "$APPROVED_ID" \
-    || { echo "$p differs at HEAD from its approved version"; exit 1; }
+  test "$START_ID" = "$APPROVED_ID" \
+    || { echo "$p differs at the starting revision from its approved version"; exit 1; }
 done
+# Hand the checked revision to Task 0 step 1. Guarded, and no `cat` afterwards: a failed
+# redirect with a following `cat` prints a STALE value and the block still exits 0.
+printf '%s\n' "$START" > .context/loop-rule-start \
+  || { echo "recording the starting revision FAILED — Task 0 step 1 has nothing to record"; exit 1; }
 ```
 
 **How success is recognised.** Every line above exits 0. **No claim is made here about a recorded
@@ -375,99 +397,102 @@ an unapproved edit to a spec that the gates already closed.
 
 ### Close — after a closure-eligible pass
 
+**Which rules govern this close.** This change's Gate-B cycle starts at the first `WIP:` commit and
+ends at the closing commit, which is the commit that ships the new §5. `CLAUDE.md` "When these rules
+bind" says a running cycle finishes under the rules it started with, so this cycle runs under **§5 as
+it stands at `$BASE`** — read it with `git show "$BASE:CLAUDE.md"`, because the tasks rewrite the
+working copy. That text owns the closing shape (`reset --soft` to the parent of the first `WIP:`, then
+one commit), the provenance line, the curve and the evidence entry. What follows are this plan's own
+conditions around that act. (The Gate-A plan cycle `om0bdd7udh` reviewing this plan is a different
+cycle and keeps the rules it started under.)
+
 **What is checked**, in this order, and these are the conditions rather than a script:
 
-1. **`HEAD` equals the head the candidate pass was issued against** — the value recorded before that
-   call, in `.context/loop-rule-reviewed-head`. **That is the reviewed head.** It is not the same
-   value as the **closing tip** below, and conflating them is how an unreviewed commit reaches the
-   close.
-2. **The only thing dirty is the candidate pass's own findings files** — every record counts, not
-   two status codes, because a staged tracked modification is invisible to a filter that reads only
-   `??` and `A  `. **And the check does not split git's output into pathnames at all**: a pathname
-   may contain a newline and a rename record carries a second, prefix-less path, so a hand-rolled
-   split can mangle a name or drop a dirty path entirely — an extra file whose name begins with a
-   newline passed such a parser invisibly, observed in a disposable repository. **Ask git which
-   paths outside the expected pair are dirty**, naming only the two expected paths, which are this
-   plan's own slot names and carry no such bytes. **The set can be exact because step 7 commits
-   every record this plan collects before the candidate pass is issued**; anything else uncommitted
-   here arrived after the review and no pass has seen it. A full Gate-B pass writes **two** files,
-   so the pair is what is expected.
+1. **`HEAD` equals `.context/loop-rule-reviewed-head`** — the head the candidate pass was issued
+   against. **That is the reviewed head.** Nothing is committed between that call and this check,
+   because findings files are not committed during the loop (*D1* below), so the reviewed head is
+   still `HEAD` unless something reached the repository no pass has seen.
+2. **Nothing is dirty except this cycle's Gate-B findings files.** The set is the **exact slot
+   paths** `.context/codex-reviews/gate-b-spec-<nonce>-pass-<p>.md` and
+   `gate-b-quality-<nonce>-pass-<p>.md` for every pass number `p` the cycle issued, built from the
+   nonce and the pass numbers the cycle already holds — **never from a glob**, which would also take a
+   dispositions note for a findings file. The final pass's pair must exist; any other missing slot
+   must belong to a pass recorded as INCOMPLETE. **Advisory companions are not in the set.** A
+   dispositions note still in the tree stops the close here — §5 lets it be deleted. **The cycle's
+   working record, `.context/codex-reviews/gate-b-<nonce>-resume.md`, is the one exact path left out
+   of the check**: it stays untracked through the close, because §5 makes it the recovery source
+   while the cycle is open, and it is retired only after condition 4 has passed (pass 54, finding 4).
+   No other path is exempt. **Staged or not makes no
+   difference to a selected file**: every one is pinned, staged and committed. **Anything else dirty
+   stops the close — tracked, staged or untracked, under `.context/` included.** Ignored scratch
+   files do not appear in git's status at all, so no exemption is written for them. **Ask git which
+   paths outside the set are dirty**, naming only the set, which are this plan's own slot names and
+   carry no newline or rename field; a hand-rolled split of git's output can mangle a name or drop a
+   dirty path, observed in a disposable repository. **The set can be exact because findings files
+   are committed only here.**
 3. **The closing message is complete** — rebuilt whole, exactly one provenance line, exactly one
    curve, every owed evidence entry, and either the applicable human-exception records or
-   `Human exceptions: none`. **This is checked here, before anything moves**, because an incomplete
-   message discovered after the record commit leaves `HEAD` moved for a reason no restoration was
-   owed for. **And it is re-read and revalidated at 8b, immediately before the commit consumes it**
-   — 8a runs a commit in between, hooks can rewrite anything, and the file is under `.context/`,
-   which is ignored, so no clean-tree check between the two invocations can see it change. A
-   difference or a malformed record there is a Failure handoff, not a repair.
-4. **Those files are committed** in their own invocation, and that commit satisfies **three things,
-   not one**:
-   - it **changes exactly those paths**, and its parent is the reviewed head;
-   - **the committed blobs are the validated ones** — the object ids recorded before staging equal
-     the ids at `HEAD` afterwards. A path check cannot see this: a hook rewriting a staged file in
-     place leaves the pathname untouched, which the plan states elsewhere and must therefore guard
-     here;
-   - **the committed findings files still satisfy the findings-file structure and still make this
-     the eligible logical pass they were judged as** — every line before the terminator a finding
-     line, the terminator exact, the count matching, both branch files present, and the
-     clean-or-zero-finding reading unchanged. Subject: the committed content. Base: the protocol in
-     §5 and the eligibility this candidate was issued on. **Any difference at any of the three is a
-     Failure handoff, not a repair.**
-
-   Record the resulting commit as the **closing tip**, in
-   `.context/loop-rule-reviewed-tip` — **a precondition value, not a restore target**: 8b refuses to
-   reset unless `HEAD` is still exactly it, which is how a commit landing between the two
-   invocations is caught. Nothing in this plan resets *to* it.
-5. **The tree is clean**, and `HEAD` is still the closing tip, when the closing invocation begins —
-   **both read in that invocation**, not carried from the previous one. **`git reset --soft` moves
-   `HEAD` and leaves the index exactly as it was**: it stages nothing and unstages nothing, so the
-   index still holds every `WIP:` commit's content, which is what makes one closing commit carry the
-   whole change. **Anything staged and uncommitted at that moment is in the index too and lands in
-   the closing commit; only unstaged work stays out.** This condition is what closes that asymmetry —
-   without it a staged edit made between the two invocations, a rewritten findings file included,
-   ships unreviewed and leaves a clean tree behind it.
-6. **After the closing commit**, four things: its **subject is not a snapshot**; its **parent is
-   `$BASE`**; the **tree is clean**; and its **body is identical to the bytes 8b pinned when it
-   revalidated them** — **not to the source file, which is the wrong oracle**: the same hooks that
-   rewrite git's copy *after* `-F` has read it can rewrite that ignored file too, and a comparison
-   against it would then pass on a body nobody validated. The check is not decoration either way —
-   a dropped provenance line, curve, exception marker or evidence entry would pass every other one.
-   **What this does not close**, stated rather than left to be found: a hook that also rewrites the
-   pinned copy defeats it, and nothing here detects that. What it closes is the ordinary case, where
-   the oracle was the very file the commit read. **Any of the four failing is a Failure handoff.**
+   `Human exceptions: none`. It is checked **in the closing block, immediately before the commit
+   consumes it**, and its bytes are pinned there as condition 4's oracle — the file is under
+   `.context/`, which is ignored, so no tree check can see it change.
+4. **After the closing commit**, five things, all read from one resolved commit `$CLOSED`: its
+   **subject is not a snapshot**; its **parent is `$BASE`**; the **tree is clean** except the
+   working record's one exact path; its **body is identical to the pinned validated bytes** — **not to the source file, which is the wrong
+   oracle**: the same hooks that rewrite git's copy *after* `-F` has read it can rewrite that ignored
+   file too; and **each selected findings file's committed blob equals the blob pinned immediately
+   before staging**, with the final pass's pair re-read from `$CLOSED` against §5's *Accept a pass
+   only when* and the clean-or-zero-finding reading it was judged on. **What the blob check
+   compares, stated exactly:** bytes at pin time against bytes committed. It catches a change between
+   the pin and the commit — a staging hook, a concurrent writer — and **nothing earlier**: a findings
+   file edited between the pass's acceptance and the pin is pinned as edited and passes. **What the
+   body check does not close**: a hook that also rewrites the pinned copy defeats it. **Any of the
+   five failing is a Failure handoff.**
 
 **How success is recognised.** A single commit at `HEAD` whose subject is the real message, whose
-parent is `$BASE`, **whose body is identical to the pinned bytes of the revalidated closing
-message**, with a clean tree
-behind it. **No tree comparison** — target §I parks a Gate-B tree-equality condition on
-Daniel's decision of 2026-09-13, and an earlier draft of this line added one anyway, which would
-have made the executor either invent an out-of-scope closure check or declare success without
-establishing its own stated predicate. Then, and only then, the scratch
-files are removed.
+parent is `$BASE`, whose body is identical to the pinned bytes of the revalidated closing message,
+which carries this cycle's findings files as pinned, with a clean tree behind it. **No tree
+comparison** — target §I parks a Gate-B tree-equality condition on Daniel's decision of 2026-09-13.
+Then, and only then, the scratch files and the working record are removed, and the tree is clean
+without exception.
 
-**Two invocations, not one.** `codex-gate.sh`'s `is_wip_commit`
+**One closing command, with no `-m`.** `codex-gate.sh`'s `is_wip_commit`
 (`plugins/dev-workflow/hooks/codex-gate.sh:763`) tests the **whole command string** against
-`-m[[:space:]]*['"]?[[:space:]]*wip`. The findings-file commit carries that pattern; the closing
-commit must not share a command string with it, or the hook reads the close as cycle-internal and
-carries this cycle's count and fingerprint into the next.
+`-m[[:space:]]*['"]?[[:space:]]*wip`. The closing block makes no `WIP:` commit and its commit carries
+`-F`, not `-m`, so the hook cannot read the close as cycle-internal. **That is why one invocation is
+enough**; the earlier two-invocation split existed only because a `WIP:` record commit shared the
+close.
 
-**Which of the six are preconditions and which are postconditions**, because they do not all come
-before a move and an earlier draft said they did:
+**Which conditions are preconditions.** **1, 2 and 3 are preconditions** — checkable while nothing
+has moved; on deviation stop, and no restoration is owed. **A failed `git add` inside the block is
+not yet a move of `HEAD`, but the index may then hold part of the set** — stop and report it; do not
+reset. **4 follows the move**; on deviation run `## The four procedures` · Failure.
 
-- **1, 2 and 3 are preconditions** — checkable while nothing has moved. **On deviation, stop; no
-  restoration is owed**, because nothing was changed. **The message check is among them
-  deliberately**: an earlier draft classified it as a precondition while listing it *after* the
-  record commit, so a literal executor could find an incomplete message with `HEAD` already moved
-  and then stop without restoring.
-- **4, 5 and 6 straddle or follow a move** — 4 makes the record commit, 5 reads the state it left,
-  6 reads the state after the closing commit. **On deviation, run `## The four procedures` ·
-  Failure**, which stops, reports the state and hands over.
+**What this does NOT close, stated rather than left to be found.** The block reads `HEAD` and the tree
+before `git reset --soft` a few lines later and claims nothing about the span between. A second writer
+mutating the branch inside that span — another agent session, a background hook, an editor running
+git — could put different content into the index after the checks, and **no later check would catch
+it**: condition 4 compares subject, parent, cleanliness, body and the findings blobs, never the rest of
+the content, and the content comparison that would have caught it is the Gate-B tree-equality
+condition target §I **parks** (`docs/superpowers/specs/2026-09-10-loop-rule-consolidation-target-text.md`,
+§I). **The width of that span is not measured**, and no claim of negligibility is made. **It is not
+guarded**: what a fix would demand is an atomicity guarantee against a concurrently writing second
+actor, which nothing in the approved text agrees to — **a scope question for the user, not a defect
+in this disclosure.** Anything committed or staged **before** the block runs fails condition 1 or 2.
 
 **A rejected commit left at `HEAD`, or a live soft-reset index, is a state this plan stops in and
-reports** — it is not an error condition the procedure has to undo. §A re-establishes the closure
-conditions **against the repository as it now stands**, so that state is a legitimate starting
-point for the resume decision, and an earlier draft's claim that "a retry cannot start from it" was
-wrong about the approved text.
+reports** — it is not an error condition the procedure has to undo. Failure's resume rule
+re-establishes the closure conditions **against the repository as it now stands**, so that state is a legitimate starting
+point for the resume decision.
+
+**D1 — findings files are not committed during the loop. Daniel's decision, 2026-09-25.** Each
+pass's findings files are saved on disk under this cycle's nonce and committed **together, at the
+close**. Until then they are **not Git-durable**: a parked cycle has no bounded duration, and a
+`.context/` clear can remove them together with the working record. **Counts that survive elsewhere,
+and a curve's `?`, do not establish what a lost file said or that its findings were resolved.** If it
+happens, §5's existing rules apply unchanged — a pass whose file is gone before it was validated is
+INCOMPLETE, and a finding whose resolution can no longer be shown is not resolved: **stop and
+surface**. No backup, copy or recovery mechanism is added. **What D1 buys:** no commit lands between a
+review and the reading of its result, so the reviewed head stays `HEAD` until a repair is committed.
 
 ### Failure — the closing act did not complete
 
@@ -489,8 +514,8 @@ first is what destroys the evidence that decision needs.
   --soft` had already run, say so, because the index then holds the whole change;
 - **what the tree holds**: `git status --porcelain --untracked-files=all`, `git diff --cached
   --stat`, `git diff --stat`;
-- **which cycle values still exist** — the recovery base, the reviewed head, the reviewed tip, the
-  closing message — by listing them, not by assuming.
+- **which cycle values still exist** — the recovery base, the reviewed head, the findings list and
+  its blob pin, the closing message, the working record — by listing them, not by assuming.
 
 **What stopping does not do, said plainly.** It prevents *further* change; it is **no guarantee that
 the failed operation itself destroyed nothing.** A hook that rejected after rewriting a staged file
@@ -500,14 +525,15 @@ has already done that, and this procedure cannot undo it or prove it did not hap
 **How success is recognised.** The failure is surfaced with the four observations above, nothing
 further has been changed, and the cycle is waiting on a person.
 
-**Resuming is a decision about the actual state**, taken with that report in hand, and then §A's
-rules apply unchanged:
+**Resuming is a decision about the actual state**, taken with that report in hand, and then these
+rules apply. **They are this plan's own procedure, worded after target §A**; §5 at `$BASE` says nothing
+about a failed closing act, so they add to it without contradicting it:
 
 - **Every closure condition is re-established against the repository as it now stands.** Where they
   all still hold, **perform the act again**.
 - **Where the attempt or its repair moved anything a condition is read from**, that condition has
   changed and **its own rule decides what it costs**, a further pass included, and the cycle is back
-  in the ordering with that pass owed.
+  in step 7 with that pass owed.
 - **Where the failure cannot be repaired at all** — a signing key nobody has, a permission nobody
   can grant — **surface it and leave the cycle parked**: open, not running, spending no passes,
   restarted by an explicit later continue.
@@ -526,9 +552,10 @@ reconcile.
 
 **Resume reads the repository; it does not classify it first.** Every check below runs against the
 **actual** `HEAD`, index, worktree and surviving cycle records, and **none of them is gated on the
-state matching a named shape.** The approved §A is what this follows — *"re-establish every closure
-condition against the repository as it now stands"* — and it asks for the conditions to be read,
-never for the history to be catalogued. **The table below is illustration and is explicitly not
+state matching a named shape.** Its wording follows target §A — *"re-establish every closure
+condition against the repository as it now stands"* — as a plan procedure, not as a rule governing
+this cycle; §5 at `$BASE` says nothing about re-entry. It asks for the conditions to be read, never
+for the history to be catalogued. **The table below is illustration and is explicitly not
 exhaustive**: no permission, no base-validity conclusion, no recovery operation and no continuation
 route may depend on the state fitting a row, and **a state that fits none is an ordinary input to
 Resume, not an error**.
@@ -539,34 +566,26 @@ a precondition for resuming at all. **That was this plan's invention, never §A'
 twice in two passes in the same way: pass 36 found a reachable state no row described, and pass 37
 found the row added for it describing only one shape of the several that reach it. **What survives
 unchanged is every governing duty** — the conditions, their object-id equality checks, the
-precondition/handoff distinction, the scratch rules, the bounded handoff, and §A's three routes.
+precondition/handoff distinction, the scratch rules, the bounded handoff, and Failure's three routes.
 
 | Illustration, not a classification | `HEAD` | `$BASE..HEAD` | Where the work is |
 |---|---|---|---|
 | **Normal, mid-implementation** | the last `WIP:` snapshot | this run's `WIP:` commits, and possibly a §A3 stray commit or amend | committed |
-| **8a rejected, no commit landed** | the last `WIP:` snapshot, unchanged | this run's `WIP:` commits | committed, **plus whatever the failed attempt left in the index or worktree** |
-| **8a rejected after its commit landed** | a `WIP:` findings commit above the cycle's `WIP:` chain | those commits | committed, **plus any delta the post-commit clean-tree check found** |
-| **A closure condition rejected on `HEAD`** — no reset has run | **not the object id the condition expected** — the reviewed head at condition 1, 8a's findings commit at condition 5. **The direction is not part of the test**: a further commit, an amend, a rebase and a move backwards all fail the same equality | whatever the actual history holds | wherever the actual content is — and **anything the mismatch introduced is present but unreviewed** |
-| **8b rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
+| **Close condition 1 rejected** — no reset has run | **not the reviewed head**. **The direction is not part of the test**: a further commit, an amend, a rebase and a move backwards all fail the same equality | whatever the actual history holds | wherever the actual content is — and **anything the mismatch introduced is present but unreviewed** |
+| **The closing act rejected** | either `$BASE` itself, if the closing commit never landed, **or one commit parented by `$BASE`**, if it landed and a postcondition refused it | **empty**, or that one commit — the `WIP:` chain is gone either way, squashed by `reset --soft` | the **index**, or that one commit's tree |
 
-**The 8b illustration is the one worth reading before any rule below.** `reset --soft` removes the
-`WIP:` chain from the ancestry, so after 8b there is no chain to find; an empty `$BASE..HEAD` there
-means the work is staged, not absent. **And the two 8a illustrations differ from each other**:
-before its commit the history is untouched and the delta is loose, after it the findings commit sits
-above the chain — pass 31 separated them because they need different content reconciliation.
+**The closing-act illustration is the one worth reading before any rule below.** `reset --soft`
+removes the `WIP:` chain from the ancestry, so after it there is no chain to find; an empty
+`$BASE..HEAD` there means the work is staged, not absent. **In every state, this cycle's findings
+files are uncommitted until the close (D1)** — they are part of what the four sources show.
 
-**Conditions 1 and 5 are equality tests and stay that way.** `test "$(git rev-parse HEAD)" =
-"$HEADREV"` and the same against `$TIP` ask one question — is `HEAD` the object the cycle recorded —
-and **any answer of no stops the closing sequence**, whatever git operation produced it. **Do not
-rewrite the recorded value to make the test pass**: those files are what make "the head the
-candidate pass was issued against" a fact rather than a claim, and editing one turns an unreviewed
-tree into a closable one with nothing left to notice.
-
-**The two rejections differ in one way the rules below turn on.** Condition 1 is a **precondition**,
-so nothing this plan does has moved: that is a plain stop, and no handoff is in progress. **Condition
-5 rejects after 8a's record commit has landed**, so the Failure handoff *is* in progress — which is
-what selects the `inside a handoff` branch of the scratch-artifact rule below, report and change
-nothing, rather than delete and rebuild.
+**Condition 1 is an equality test and stays that way.** `test "$(git rev-parse HEAD)" = "$HEADREV"`
+asks one question — is `HEAD` the object the cycle recorded — and **any answer of no stops the
+closing sequence**, whatever git operation produced it. **Do not rewrite the recorded value to make
+the test pass**: that file is what makes "the head the candidate pass was issued against" a fact
+rather than a claim, and editing it turns an unreviewed tree into a closable one with nothing left to
+notice. **A condition-1 rejection is a precondition stop**: nothing this plan did has moved, and no
+handoff is in progress. A failure **after** `reset --soft` is a Failure handoff.
 
 - [ ] **Validate the base — Resume's own checks, not Preparation's**
 
@@ -628,39 +647,41 @@ Each by its `base` line **and** its completeness predicate:
   condition in the five regions appears in exactly one `span` or one `cond`.
 - `.context/loop-rule-baseline-diff.txt` — every line parses as `base`, a `site` record, or diff
   output belonging to the site above it, and **every inventoried site has a `site` record**.
-- `.context/loop-rule-records-commit` — **present means a pass was recorded and step two may not
-  have read it.** Step 7 step one writes it, step two consumes it, and nothing else touches it, so on
-  re-entry it is the one artifact that says *a pass is recorded and the ordering may not have
-  spoken*. Validate it: a full 40-character object name, resolving to a commit, with `ba15e83` as an
-  ancestor and the commit itself an ancestor of `HEAD`; and its two slot paths present as blobs
-  **in that commit**, not in the worktree. **This step establishes the marker; it decides nothing.**
-
-**A valid marker is a finding of the reconciliation, not an instruction.** It says the recorded pass
-exists and reports it as **unrouted unless the reconciliation below shows step two's outcome in the
-content** — a repair committed on an authorizing route, a park, a stop answer. **Where it cannot be
-shown, this is a precondition stop: report the marker, the commit it names and what the four sources
-hold, and take no mutation and issue no call.** Rerunning step two over a recorded pass is the
-ordinary continuation and needs nothing new; **what must not happen is a repair or a next call while
-the ordering has not spoken**, which is the loop §A forbids and the one this plan must not itself
-execute. The marker is **retired by the close's cleanup**, with the other scratch values, and by
-nothing else — an interrupted cycle keeps it precisely so this check can find it.
+- `.context/loop-rule-start` — **written by Preparation, consumed and removed by Task 0 step 1, and
+  never present once a base exists.** It carries the revision Preparation's predicates were about.
+  Its recovery rule ships with it, because a cycle state file introduced without one is the defect
+  pass 48 found in the revision before this: **a surviving `loop-rule-start` with no
+  `.context/loop-rule-base` is an interrupted first entry** — Preparation completed, Task 0 step 1
+  did not. That is a **precondition stop**: report the recorded revision and where `HEAD` now is, and
+  take no mutation. **Do not rebuild it and do not resume from it**, because the tree may have moved
+  since Preparation checked it and nothing here re-establishes those predicates; re-running
+  Preparation from a clean tree is the ordinary continuation, and it overwrites this file. **Both
+  present is not a conflict** — it is Task 0 step 1 interrupted between its redirect and its `rm`, and
+  the base is the authority; remove the start file and carry on. **Neither present** is an ordinary
+  first entry.
 
 **On failure the answer depends on why you are here.** Outside a handoff: delete and rebuild from
 the `$BASE` blobs — never reuse, never repair in place, because a same-base partial file is the one
 shape a `base` line alone cannot catch. **Inside a handoff, while a failed close waits on a person:
-report the invalid artifact and change nothing.** Rebuilding it would remove evidence before anyone
-chose a §A route. **This plan performs no cleanup after a failure — it does not claim the failed
-operation left anything intact.** Enumerate which scratch values actually survive and validate each;
+report the invalid artifact and change nothing.**
+
+**This plan performs no cleanup after a failure — it does not claim the failed operation left
+anything intact.** Enumerate which scratch values actually survive and validate each;
 a value is trustworthy because it passed a check, never because cleanup was skipped.
 
 - [ ] **Establish how far the implementation got — from the content, not from the log**
 
 **Read all four sources, every time, and do not decide first which of them matters.** Which one
-holds the work varies — after `reset --soft` it is the index and `$BASE..HEAD` is empty; after an 8a
-handoff part of it is loose — and **routing on a guessed shape is how a source gets skipped**. So
+holds the work varies — after `reset --soft` it is the index and `$BASE..HEAD` is empty; after a failed
+close part of it may be loose, and this cycle's findings files are always uncommitted until the close — and **routing on a guessed shape is how a source gets skipped**. So
 read them all and reconcile against what they actually contain:
 
 ```bash
+# $BASE is read HERE: each fenced block is its own shell, so an assignment in an
+# earlier block is gone (pass 53, finding 3).
+BASE=$(cat .context/loop-rule-base) \
+  || { echo "cannot read the base — the reconciliation cannot start; stop"; exit 1; }
+test -n "$BASE" || { echo "base empty — the reconciliation cannot start; stop"; exit 1; }
 # Guarded one by one, because this step's rule is that all four ARE read: unguarded,
 # a failed read is indistinguishable from a source that holds nothing, and the next
 # command's success carries the block to an exit 0 on an incomplete view.
@@ -676,7 +697,7 @@ git status --porcelain --untracked-files=all \
 
 A ticked checkbox is confirmed by the change being *present in that content*, wherever it lives.
 `git status` names paths and says nothing about what is in them, and `--stat` counts lines. **The
-delta that caused an 8a handoff is precisely the one a path listing cannot describe** — a rewritten
+delta that caused a failed close is precisely the one a path listing cannot describe** — a rewritten
 staged file keeps its name — so reconcile against `HEAD`, the index and the worktree **contents**
 together.
 
@@ -691,20 +712,18 @@ reviewed** — a further commit, an amended one, a rebased one, or a tree the hi
 and a ticked checkbox does not make any of it reviewed. **Do not adopt it**: carrying it into a
 close is the defect Close condition 1 exists to stop, and that condition's own rule decides the
 cost — only a clean response issued against that exact `HEAD` closes the cycle. **Do not remove it**:
-this plan restores nothing, and what you delete here is evidence a person has not yet chosen a §A
-route on. **And do not rewrite `.context/loop-rule-reviewed-head` or `-reviewed-tip` to match**,
+this plan restores nothing, and what you delete here is evidence a person has not yet chosen a Failure
+route on. **And do not rewrite `.context/loop-rule-reviewed-head` to match**,
 which would make the equality pass by discarding the only record of what was reviewed.
 
-**Route the mismatch by the check that rejected it, not by the fact that it was a mismatch.** The
-no-adopt, no-remove and no-rewrite rules above hold for both; **where they go does not.** A
-**condition 1** mismatch is a precondition rejection — nothing this plan did has moved, so it is a
-**plain stop**: report the mismatch and the state, and **no handoff is in progress**, which is what
-lets the scratch-artifact rule above take its ordinary *delete and rebuild* branch. A **condition 5**
-mismatch rejects after 8a's record commit has landed, so it goes to `## The four procedures` ·
-Failure, is named in that report's "whether a commit landed" line, and **is** inside a handoff — so
-the scratch rule's *report and change nothing* branch applies. Either way §A's three routes decide
-what happens next. **An earlier revision sent every mismatch to Failure**, which would have put a
-condition-1 stop inside a handoff it is not in and suppressed a rebuild that was owed.
+**Route by where the close stopped.** A **condition-1** mismatch is a precondition rejection:
+nothing this plan did has moved, so it is a **plain stop** — report the mismatch and the state, no
+handoff is in progress, and the scratch-artifact rule above takes its ordinary *delete and rebuild*
+branch. A failure **after `reset --soft`** goes to `## The four procedures` · Failure and **is**
+inside a handoff, so the scratch rule's *report and change nothing* branch applies. Either way Failure's
+three routes decide what happens next. **A pass that was validated but not yet routed** is found like
+any other state: its findings files sit uncommitted in the four sources, and routing it through step
+7 is the ordinary continuation.
 
 **How success is recognised.** The base passes Resume's own checks; the artifacts match it and are
 complete, or are reported as invalid and left alone; and the plan's task list has been reconciled
@@ -890,13 +909,29 @@ preservation fragments that an earlier draft chose afterwards.
 
 - [ ] **Step 1: Decide which entry this is, then run that procedure**
 
-**The base file decides it, and nothing else does:**
+**Two files decide it, and there are three outcomes — not two.** The base file alone is not enough:
+Preparation writes `.context/loop-rule-start` and Task 0 step 1 consumes it, so **a start file
+surviving with no base is an interrupted first entry**, and Resume defines that state as a
+precondition stop. Routing on the base alone sends it into Preparation, **which does not refuse an
+existing start file and overwrites it** — destroying the only record of the revision the earlier
+Preparation validated, and making that recovery rule unreachable. The route must test the file the
+rule is about.
 
 ```bash
 if [ -e .context/loop-rule-base ]; then
   echo "a base file exists — this is a RE-ENTRY: run Resume, not Preparation"
+elif [ -e .context/loop-rule-start ]; then
+  # Reachable exactly because it is tested BEFORE Preparation, which would overwrite it.
+  echo "a start file exists with no base — Preparation completed and Task 0 step 1 did not."
+  echo "This is a PRECONDITION STOP. Report, and take no mutation:"
+  echo "  recorded starting revision: $(cat .context/loop-rule-start 2>/dev/null)"
+  echo "  HEAD is now:                $(git rev-parse HEAD 2>/dev/null)"
+  echo "Do NOT rebuild it and do NOT resume from it — the tree may have moved since those"
+  echo "predicates were established. Re-running Preparation from a clean tree is the"
+  echo "ordinary continuation, and it replaces this file."
+  exit 1
 else
-  echo "no base file — this is a FIRST ENTRY: run Preparation, then record the base below"
+  echo "no base and no start file — this is a FIRST ENTRY: run Preparation, then record the base below"
 fi
 ```
 
@@ -909,15 +944,32 @@ or malformed base file is Resume's**, which fails it on its shape checks and sta
 overwrite one you did not just write:**
 
 ```bash
-git rev-parse HEAD > .context/loop-rule-base
-BASE=$(cat .context/loop-rule-base)
+# The base is the revision PREPARATION CHECKED, never a fresh resolution of HEAD.
+# Preparation ran the branch, ancestry and approved-blob predicates against this exact
+# object and wrote it here; re-resolving `HEAD` would record a revision nothing checked.
+test -e .context/loop-rule-start \
+  || { echo "no starting revision recorded — Preparation did not complete; run it"; exit 1; }
+BASE=$(cat .context/loop-rule-start) \
+  || { echo "cannot read the starting revision; stop"; exit 1; }
 # Not "non-empty": a symbolic value such as HEAD passes every check below and
 # then RESOLVES DIFFERENTLY as WIP commits accrue, moving the reviewed range,
 # the parent counts and the final reset with the branch.
 case "$BASE" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;; *) echo "recorded base is not an object name: $BASE"; exit 1 ;; esac
 test "${#BASE}" -eq 40 || { echo "recorded base is not a full 40-character object name"; exit 1; }
 test "$(git rev-parse --verify "$BASE^{commit}")" = "$BASE" || { echo "recorded base does not resolve to itself as a commit"; exit 1; }
+# The last moment before the first mutation. Preparation's checks are only about this
+# repository if nothing has moved since; a move here is a stop, not something to record.
+test "$(git rev-parse HEAD)" = "$BASE" \
+  || { echo "HEAD moved between Preparation and recording the base — stop and report; do NOT record"; exit 1; }
+printf '%s\n' "$BASE" > .context/loop-rule-base \
+  || { echo "recording the base FAILED; stop"; exit 1; }
+rm -f .context/loop-rule-start
 ```
+
+**The re-assert narrows the window; it does not remove it**, and saying otherwise would be the
+overclaim `AGENTS.md` names. A move landing between that test and the redirect is still recorded. What
+the change buys is that the base is now the object Preparation's predicates were **about**, which it
+previously was not at all.
 
 **Re-entry — run `## The four procedures` · Resume.** It owns the existing base, the scratch
 artifacts and how far the implementation got.
@@ -1973,11 +2025,19 @@ strict-reading run, and every pair, presence check and parity comparison would s
 installed over it. Two of them, for orientation:
 
 ```bash
-grep -cF 'Codex is advisory — validate before applying; dismissed finding → one-line why' CLAUDE.md
+grep -cF 'advisory — validate before applying; dismissed finding → one-line why' CLAUDE.md
 grep -cF 'Open a TodoWrite' CLAUDE.md
 ```
 
 Expected: `1` each in the worktree, and `parent=1 worktree=1` in each copy for every one of the nine.
+
+**A fragment is line-local by construction, and that is established by running its `grep -cF` before
+it is written down, never after.** The first example above began as `Codex is advisory — validate
+before applying; …` and counted **zero in both copies**: the sentence wraps between `Codex is` and
+`advisory`, so the literal never occurs. A *correct* source text failed its own preservation check.
+That is the second time in this cycle a hand-written fragment crossed a line break — carried `e9`'s
+clause was the first, at pass 10 — so the rule is stated here rather than left to the next author's
+care.
 
 - [ ] **Step 5: Parity** for all ten sites, each extracted by its own bounded region rather than a fixed line window.
 
@@ -2729,6 +2789,118 @@ git commit -m "WIP: bump dev-workflow to 0.12.0"
 
 `scripts/check-version-bump.sh` compares **commits**, so the bump must be committed before the battery runs.
 
+- [ ] **Step 4b: Apply all twelve `docs/prompt-standards.md` items to the installed text, and commit the result before Gate B**
+
+**It keeps the letter `4b` and runs BEFORE step 4 — execute this file in reading order, not in
+alphabetical order.** The name is unchanged because six places elsewhere cite "step 4b" and a rename
+would have to reach every one of them. **The position is what changed, and it is the repair:** this
+is the **last step that may alter content**, and until it has committed there is no candidate to
+verify. It previously sat after the battery and after step 4c, so both of them certified a head that
+4b's own commit then replaced — and a 4b repair to a shipped prompt or hook was absent from
+everything that had already run.
+
+**Nothing mechanical does this and no other task claims it.** The battery's three narrow checks are
+a floor — one `Target model:` spelling, one prose count claim, one severity vocabulary — and
+invariant 11 requires all twelve items of every skill, command, hook message and scaffolded template
+this change touches. **Read the installed §A–§H text in C, in W, and the ten hook prompt bodies —
+seven `additionalContext` and three `systemMessage` — against
+each of the twelve items, and record the result per item in this plan.** Items 6 (every constraint
+carries its reason in the same sentence) and 8 (token-lean) are the ones design §8 names as most at
+risk.
+
+**A reader check, deliberately** — no pattern decides whether a constraint carries its reason.
+
+**Expected result: all twelve pass. A failure stops this step.** Invariant 11 is not "record the
+score"; recording a failure and continuing ships a prompt change that violates it, which is the one
+outcome this step exists to prevent. **On any failure: repair the text, then re-run every
+record-producing check the repair invalidated** — the affected pairs, presence, absence and
+preservation counts, the parity and untouched checks over the blocks touched — and commit the repair
+with the refreshed record in the block below. **The battery is not among them here**: it runs on the
+committed candidate, which does not exist until that block has run, and step 4 runs it right after
+(pass 53, finding 1).
+
+**Record the subject set once, at the top of the output section**, and make each item's result
+refer to it: the §A–§H blocks installed in C, the same in W, and **ten hook prompt bodies, not
+seven** — the seven `additionalContext` bodies items 10–13, 15–17 replace, **plus the three
+`systemMessage` bodies** items 12, 15 and 16 replace alongside them. Those three are short
+operator-facing prompts and they ship; counting the messages rather than the bodies leaves them
+outside invariant 11's only reader gate.
+
+**Twelve `PASS` lines alone cannot be told from a review that skipped a copy or a channel** — the
+subject list is what makes the twelve lines mean something.
+
+**Commit the result before step 6 — and on a failure, commit the repaired files with it.** Gate B
+reviews the range `$BASE..HEAD`; an edit left in the worktree is in neither that range nor the final
+`reset --soft`, which stages only what the discarded commits contained. **An earlier revision staged
+only this plan**, so a repair made under the failure branch above stayed in the worktree: Gate B
+never saw it, and the close's exact-dirty-set check then refuses a dirty prompt copy, so the cycle
+dead-ends. Staging it *after* the review instead breaks the reviewed-head condition — there is no
+later moment that works.
+
+**Stage the repaired artifacts by name, and only those.** `git add -A` would carry unrelated work in
+the tree into a range a reviewer is about to read as this change. On the first pass the repairable set is
+the installed text this step judges: the two prompt copies, the hook and its test. **A step-7 repair
+through this block names its own set** — which can include the spec or target text, since a fix that
+changes specified behaviour updates the spec in the same commit, and `plugin.json` and
+`CHANGELOG.md` where 4c's repair owes them (pass 54, finding 3). **Only the files the repair actually
+touched go in**, together with this plan's refreshed record — and the re-run records
+must describe *that* commit, which is why the re-runs above come first.
+
+**Staging and commit are both guarded, and the commit is checked against what it was given**, because
+step 6 issues Gate B over the range this commit ends: a failed `git add` otherwise falls through to a
+commit that can still succeed on content the index already held, and the review then runs over a range
+missing its repair. The pin is **the whole index, unrelated paths included**, demanding no presence,
+since a repair here may delete a file too.
+
+```bash
+# Stage this plan plus exactly the files the authorized repair touched, each named — never
+# `-A`. First pass: from CLAUDE.md, plugins/dev-workflow/commands/workflow-init.md,
+# plugins/dev-workflow/hooks/codex-gate.sh, plugins/dev-workflow/hooks/codex-gate.test.sh.
+# A step-7 repair also names the spec or target text where the fix changes specified
+# behaviour, and plugin.json / CHANGELOG.md where 4c's repair owes them.
+# Step 7 runs this block with its own LITERAL message — "WIP: fix <finding>" or
+# "WIP: refreshed records" — written into the command itself, never through a variable:
+# the gate hook reads the command string for `-m … wip`.
+git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md <the repaired files, if any> \
+  || { echo "staging FAILED — step 6 must not issue Gate B over this range"; exit 1; }
+ITREE=$(git write-tree) \
+  || { echo "cannot pin the staged index; do not proceed to step 6"; exit 1; }
+git commit -m "WIP: plan records" \
+  || { echo "commit FAILED — step 6 must not issue Gate B over this range"; exit 1; }
+# Resolve the new commit ONCE, and use that one id for the tree check AND the candidate
+# record. Every candidate commit — this first one and every repair — uses this block. Checking `HEAD^{tree}` and then
+# resolving `HEAD` again in a later block let the recorded candidate differ from the
+# commit whose tree was checked (pass 52, Blocker 1).
+CAND=$(git rev-parse --verify "HEAD^{commit}") \
+  || { echo "cannot resolve the new commit — do not proceed to step 6"; exit 1; }
+test "$(git rev-parse "$CAND^{tree}")" = "$ITREE" \
+  || { echo "the commit's tree is not the index that was pinned; do not proceed to step 6"; exit 1; }
+# No `cat` after the redirect: a failed write with a following `cat` prints a stale value
+# and the block still exits 0.
+printf '%s\n' "$CAND" > .context/loop-rule-reviewed-head \
+  || { echo "recording the candidate head FAILED — no verification and no call may run"; exit 1; }
+```
+
+**The same applies to every record this plan collects** — the sweep, the next-state table, the
+divergence list.
+
+**`check-invariants.sh` includes the prompt-conformance checks** — a `Target model:` line naming one recognized model, a prose checklist-count claim matching the checklist, and the finding-severity vocabulary as a closed set in both prompt copies. Those three are a floor, not coverage; invariant 11's other eleven items are judged by a reader.
+
+**The commit block above also fixes the candidate, once — this is the only place a candidate
+identity is created on the first pass.** It records the **same object id** whose tree it just
+compared with the pinned index, in the same invocation; a separate block that resolved `HEAD` again
+could record a different commit from the one checked (pass 52, Blocker 1). The consumers that take
+an **object id** read it from this file and never resolve a ref again to obtain it: **step 4's
+battery**, **step 4c**, **Gate B's `headSha`** and **Close condition 1** are four consumers of one
+value rather than independent resolutions of a movable ref — the defect passes 47–49 kept finding
+and pass 51 found again between 4c and step 6.
+
+**The file is `.context/loop-rule-reviewed-head`, which already exists and already means this.** It
+needs no new recovery rule, no new cleanup entry and no new state: Close condition 1 already reads
+it, this same block rewrites it for every repaired candidate in step 7, and the close removes it.
+**Writing it at 4b rather than at step 6** is what keeps one candidate from being verified as one
+object and reviewed as another — step 6 used to resolve `HEAD` itself.
+
 - [ ] **Step 4: Run the full quality battery**
 
 **First fetch the base ref, because one step in the battery has a precondition the others do not.**
@@ -2759,8 +2931,26 @@ fenced block below runs in its own shell invocation, so a `BASEREF=` assignment 
 time the battery runs and the checker would receive an empty argument. The battery reads it back.
 
 ```bash
-BASEREF=$(cat .context/loop-rule-baseref)
-test -n "$BASEREF" || { echo "BASEREF empty — the fetch step did not run"; exit 1; }
+HEADID=$(cat .context/loop-rule-reviewed-head) \
+  || { echo "battery UNRESOLVED: no candidate head recorded — step 4b did not complete"; exit 2; }
+test "${#HEADID}" -eq 40 || { echo "battery UNRESOLVED: candidate head is not a full object name"; exit 2; }
+BASEREF=$(cat .context/loop-rule-baseref) \
+  || { echo "battery UNRESOLVED: no recorded base ref — the fetch step did not run"; exit 2; }
+test -n "$BASEREF" || { echo "battery UNRESOLVED: recorded base ref is empty"; exit 2; }
+
+BT=$(mktemp -d) || { echo "battery UNRESOLVED: cannot create the disposable repository"; exit 2; }
+# The same disposable-clone shape as step 4c: --shared borrows objects and writes nothing
+# back, so the work repo, its index, its worktree and its branches are untouched.
+git clone -q --shared --no-checkout . "$BT/r" || { echo "battery UNRESOLVED: clone failed"; exit 2; }
+cd "$BT/r" || { echo "battery UNRESOLVED: cannot enter the clone"; exit 2; }
+git checkout -q --detach "$HEADID" \
+  || { echo "battery UNRESOLVED: the candidate does not resolve in the clone"; exit 2; }
+test "$(git rev-parse HEAD)" = "$HEADID" \
+  || { echo "battery UNRESOLVED: the clone is not at the candidate"; exit 2; }
+ST=$(git status --porcelain) || { echo "battery UNRESOLVED: cannot read the clone's status"; exit 2; }
+test -z "$ST" || { echo "battery UNRESOLVED: the fresh checkout is not clean"; exit 2; }
+
+printf 'battery candidate=%s base=%s\n' "$HEADID" "$BASEREF"
 shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && \
 shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && \
 shellcheck --shell=sh scripts/check-invariants.sh && \
@@ -2771,7 +2961,9 @@ HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && \
 HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && \
 sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && \
 sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh "$BASEREF" && \
-claude plugin validate . --strict
+claude plugin validate . --strict \
+  || { echo "battery FAILED on candidate $HEADID"; exit 1; }
+echo "battery PASSED on candidate $HEADID"
 ```
 
 Expected: exit 0. **`$BASEREF`, not `main` and not `origin/main`** — AGENTS.md's battery row writes
@@ -2779,76 +2971,183 @@ Expected: exit 0. **`$BASEREF`, not `main` and not `origin/main`** — AGENTS.md
 resolved once, so the recorded revision and the argument the successful check received are the same
 value by construction.
 
-- [ ] **Step 4b: Apply all twelve `docs/prompt-standards.md` items to the installed text, and commit the result before Gate B**
+**The battery runs on the candidate, not on the working tree** (pass 52, Blocker 2; scope decided by
+Daniel on 2026-09-25 as option B). It reads the candidate id from `.context/loop-rule-reviewed-head`
+and runs in a fresh disposable clone checked out at that id — the same `--shared` clone shape step 4c
+already uses — so uncommitted changes in the work repository cannot supply its inputs. **Three
+outcomes:** `0` passed on the named candidate; `1` failed on it; `2` unresolved — the check could not
+be set up, which is **neither a pass nor a failure** and, like a failure, stops here. The first
+printed line names the candidate and the base it ran against; that line belongs to the evidence.
 
-**Nothing mechanical does this and no other task claims it.** The battery's three narrow checks are
-a floor — one `Target model:` spelling, one prose count claim, one severity vocabulary — and
-invariant 11 requires all twelve items of every skill, command, hook message and scaffolded template
-this change touches. **Read the installed §A–§H text in C, in W, and the ten hook prompt bodies —
-seven `additionalContext` and three `systemMessage` — against
-each of the twelve items, and record the result per item in this plan.** Items 6 (every constraint
-carries its reason in the same sentence) and 8 (token-lean) are the ones design §8 names as most at
-risk.
+**What this does not do.** A clone is not an immutable runtime: a test can still change files inside
+its own clone while it runs. It checks the **candidate commit**, not the merge result CI builds —
+that is step 4c's separate observation, with its own revision named — and a later CI run does not
+replace it. The clone is left in a temporary directory and not cleaned up here.
 
-**A reader check, deliberately** — no pattern decides whether a constraint carries its reason.
+**Old conditions, accounted.** Kept: the fetch-and-record of the base ref, the base passed as an
+object id, the full battery in AGENTS.md order, exit 0 as the pass, and the rule that a failure stops
+before step 5. Changed deliberately: the subject — from "the working tree as it stands when it runs"
+to the recorded candidate — and the disclosed limit "nothing enforces that the worktree stays
+unmodified", which no longer applies to the battery's inputs. Added: exit `2` for a setup failure,
+matching step 4c.
 
-**Expected result: all twelve pass. A failure stops this step.** Invariant 11 is not "record the
-score"; recording a failure and continuing ships a prompt change that violates it, which is the one
-outcome this step exists to prevent. **On any failure: repair the text, then re-run every check the
-repair invalidated** — the affected pairs, presence, absence and preservation counts, the parity
-and untouched checks over the blocks touched, and the whole step-4 battery — and only then commit
-the refreshed record. A repair made after the battery, with the battery not re-run, is the same
-defect as a Gate-B fix with no re-run.
+- [ ] **Step 4c: Check the version requirement against the MERGE RESULT, not only the branch head**
 
-**Record the subject set once, at the top of the output section**, and make each item's result
-refer to it: the §A–§H blocks installed in C, the same in W, and **ten hook prompt bodies, not
-seven** — the seven `additionalContext` bodies items 10–13, 15–17 replace, **plus the three
-`systemMessage` bodies** items 12, 15 and 16 replace alongside them. Those three are short
-operator-facing prompts and they ship; counting the messages rather than the bodies leaves them
-outside invariant 11's only reader gate.
+**Why this exists, stated as the comparison each side actually performs.** Step 4 runs
+`check-version-bump.sh` against the **local branch head**. `.github/workflows/ci.yml` passes no
+`ref:` to `actions/checkout`, so a `pull_request` job evaluates the **merge commit** instead. Those
+are different objects, and **refreshing the base ref does not make them the same one** — which is why
+step 4's fetch is a precision fix and not the repair for this. Demonstrated with the unchanged
+checker: a branch that bumps to a version `main` has meanwhile reached **on its own**, while carrying
+further plugin changes, **passes against the stale base and is rejected against the current one**.
 
-**Twelve `PASS` lines alone cannot be told from a review that skipped a copy or a channel** — the
-subject list is what makes the twelve lines mean something.
-
-**Commit the result before step 6 — and on a failure, commit the repaired files with it.** Gate B
-reviews the range `$BASE..HEAD`; an edit left in the worktree is in neither that range nor the final
-`reset --soft`, which stages only what the discarded commits contained. **An earlier revision staged
-only this plan**, so a repair made under the failure branch above stayed in the worktree: Gate B
-never saw it, and the close's exact-dirty-set check then refuses a dirty prompt copy, so the cycle
-dead-ends. Staging it *after* the review instead breaks the reviewed-head condition — there is no
-later moment that works.
-
-**Stage the repaired artifacts by name, and only those.** `git add -A` would carry unrelated work in
-the tree into a range a reviewer is about to read as this change. The repairable set here is the
-installed text this step judges: the two prompt copies, the hook and its test. **Only the ones the
-repair actually touched go in**, together with this plan's refreshed record — and the re-run records
-must describe *that* commit, which is why the re-runs above come first.
-
-**Staging and commit are both guarded, and the commit is checked against what it was given**, because
-step 6 issues Gate B over the range this commit ends: a failed `git add` otherwise falls through to a
-commit that can still succeed on content the index already held, and the review then runs over a range
-missing its repair. The pin is the same as step 7 step three's — **the whole index, unrelated paths
-included**, demanding no presence, since a repair here may delete a file too.
+**This step does not change step 4's battery or the Gate-B review range.** It is an additional,
+isolated observation; both existing checks keep their inputs and their meaning.
 
 ```bash
-# add only what the repair touched, from: CLAUDE.md,
-# plugins/dev-workflow/commands/workflow-init.md,
-# plugins/dev-workflow/hooks/codex-gate.sh, plugins/dev-workflow/hooks/codex-gate.test.sh
-# Where a repair was made, the message is: "WIP: prompt-standards repair + plan records"
-git add docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md <the repaired files, if any> \
-  || { echo "staging FAILED — step 6 must not issue Gate B over this range"; exit 1; }
-ITREE=$(git write-tree) \
-  || { echo "cannot pin the staged index; do not proceed to step 6"; exit 1; }
-git commit -m "WIP: plan records" \
-  || { echo "commit FAILED — step 6 must not issue Gate B over this range"; exit 1; }
-test "$(git rev-parse "HEAD^{tree}")" = "$ITREE" \
-  || { echo "the commit's tree is not the index that was pinned; do not proceed to step 6"; exit 1; }
+# The candidate identity comes from the file step 4b wrote — NEVER from a placeholder and
+# never from a fresh resolution. This is the same value the battery ran against, the same
+# value step 6 passes as `headSha`, and the same value Close condition 1 authenticates.
+HEADID=$(cat .context/loop-rule-reviewed-head) \
+  || { echo "4c UNRESOLVED: no candidate head recorded — step 4b did not complete"; exit 2; }
+test "${#HEADID}" -eq 40 || { echo "4c UNRESOLVED: candidate head is not a full object name"; exit 2; }
+BASEID=$(cat .context/loop-rule-baseref)   # the base object name step 4 already recorded
+test -n "$BASEID" || { echo "4c: no recorded base ref — step 4 did not run"; exit 2; }
+
+WT=$(mktemp -d) || { echo "4c UNRESOLVED: cannot create the disposable repository"; exit 2; }
+# --shared borrows objects and writes nothing back: the work repo, its index and its
+# branches are untouched by everything below.
+git clone -q --shared --no-checkout . "$WT/r" || { echo "4c UNRESOLVED: clone failed"; exit 2; }
+cd "$WT/r" || { echo "4c UNRESOLVED: cannot enter the clone"; exit 2; }
+
+# Pin the INTENDED checker FROM THE CANDIDATE — the one step 4's battery ran with — before
+# anything is merged. Read it by object id, not from a worktree: a worktree may sit on the
+# base side and already carry the very edit this check exists to catch, in which case the
+# comparison is against itself and always agrees.
+git show "$HEADID:scripts/check-version-bump.sh" > "$WT/intended-checker" \
+  || { echo "4c UNRESOLVED: cannot read the checker at the candidate head"; exit 2; }
+
+# DIRECTION: check out the BASE and merge the CANDIDATE into it. That is the order
+# `refs/pull/N/merge` is built in, and it is what `actions/checkout` hands a
+# `pull_request` job. The reverse order produces the same tree for an ordinary merge but
+# not necessarily under direction-sensitive behaviour — merge drivers and `.gitattributes`
+# among them — so the cheap way to be about CI's object is to build it the way CI does.
+git checkout -q --detach "$BASEID" 2>/dev/null \
+  || { echo "4c UNRESOLVED: recorded base does not resolve here"; exit 2; }
+
+# A conflict is an UNRESOLVED check, never a verdict. No merge strategy option, no manual
+# resolution, no retry: resolving it here would invent a merge result nobody reviewed.
+git -c user.email=v@v -c user.name=v merge --no-edit -m "4c merge result" "$HEADID" >/dev/null 2>&1 \
+  || { git merge --abort >/dev/null 2>&1
+       echo "4c UNRESOLVED: merging the candidate into the base conflicts — report and stop"; exit 2; }
+R=$(git rev-parse HEAD) || { echo "4c UNRESOLVED: cannot resolve the merge result"; exit 2; }
+
+# THE BYTE CHECK BELONGS HERE, AFTER THE MERGE — these are the bytes that will actually
+# run. Comparing before the merge establishes nothing about them: the base side can carry
+# a different checker, and a merge that takes it succeeds without conflict. The checker
+# must also run INSIDE this clone: its line 58 is `cd "$(dirname "$0")/.."`, so an
+# ABSOLUTE-PATH invocation from elsewhere silently runs it against its own source tree
+# and answers about the wrong repository — which is how an earlier attempt at this check
+# produced a confident wrong negative. The relative call below is what binds it here.
+cmp -s scripts/check-version-bump.sh "$WT/intended-checker" \
+  || { echo "4c UNRESOLVED: the checker in the MERGE RESULT differs from the one at the pinned head"; exit 2; }
+
+# The record. Every id is a full object name; the diff and the status are observations.
+printf '4c head=%s\n4c base=%s\n4c merge-result=%s\n' "$HEADID" "$BASEID" "$R"
+printf '4c plugin diff base..R: %s\n' "$(git diff --name-only "$BASEID" "$R" -- plugins/ | tr '\n' ' ')"
+
+# Preserve the output and the RAW status. `check-version-bump.sh` exits 1 from BOTH
+# `fail()` (a policy violation) and `die()` (an operational failure such as an
+# unresolvable ref or a git call that errored), so a bare 1 does not establish which
+# happened. Nonzero is therefore recorded as NOT VERIFIED with its cause undetermined;
+# a person reads the preserved output to establish it. No parser is built here, and the
+# checker's interface is not touched.
+out=$(sh scripts/check-version-bump.sh "$BASEID" 2>&1); st=$?
+printf '%s\n' "$out"
+printf '4c raw checker exit=%s\n' "$st"
+if [ "$st" -eq 0 ]; then
+  echo "4c VERIFIED: the version rule holds on the merge result"; exit 0
+fi
+echo "4c NOT VERIFIED: the checker exited $st — cause UNDETERMINED from the status alone."
+echo "4c   exit 1 is BOTH a policy violation (fail) and an operational failure (die)."
+echo "4c   Read the preserved output above to establish which, before calling it either."
+exit 1
 ```
 
-**The same applies to every record this plan collects** — the sweep, the next-state table, the
-divergence list.
+**Three outcomes, and what each one does and does not assert.** `0` — **verified**: the version rule
+holds on this merge result. `1` — **not verified**: the checker exited nonzero, and **that is all the
+status establishes**. `2` — **unresolved**: the check could not be carried out at all.
 
-**`check-invariants.sh` includes the prompt-conformance checks** — a `Target model:` line naming one recognized model, a prose checklist-count claim matching the checklist, and the finding-severity vocabulary as a closed set in both prompt copies. Those three are a floor, not coverage; invariant 11's other eleven items are judged by a reader.
+**Non-zero is never reported as "the version is wrong" on the strength of the exit code.**
+`scripts/check-version-bump.sh` exits `1` from `fail()` for a policy violation **and** from `die()`
+for an operational failure — an unresolvable ref, a git call that errored, an unparseable manifest.
+The two are indistinguishable by status, so 4c preserves the **output** and the **raw status** and
+requires the cause to be established from that output before anyone describes it as a version
+violation. **Both cases stop progression**, so nothing depends on guessing. **Unresolved is neither a
+pass nor a failure**, and a single non-zero code would have made a merge conflict indistinguishable
+from a checker verdict.
+
+**When it runs, and why it binds BEFORE Gate B.** 4c runs **after step 4b has fixed the candidate and
+the battery has passed, and before step 5 writes the evidence entry** — on the first pass and on
+every rerun, the same sequence. **A non-zero or unresolved 4c stops here**: no evidence entry is
+written on it, and no Gate-B call is issued.
+
+**It cannot bind at 7b instead, and that was a real error in an earlier proposal.** Step 6 must hand
+the reviewer **the evidence entry quoted verbatim**, and 7b states that if revalidation changes that
+entry **the candidate is over**. A binding 4c result appearing first at 7b would therefore change the
+entry the final reviewer had judged and force another candidate — the exact round this step exists to
+avoid.
+
+**Where the result is carried, using a file that already exists.** Into
+`.context/loop-rule-closing-msg`, which step 5 opens **before** Gate B and step 8 commits. **It is
+gitignored, so writing it creates no commit** — which is what breaks the
+record-commit/reverification cycle without any new state file, parser or recovery subsystem. 7b
+rebuilds that message whole and **preserves this entry unchanged** unless revalidation genuinely
+changes it, in which case the existing re-review rule applies untouched.
+
+**What the evidence covers, as an identity.** One pinned pair: the **candidate head** in
+`.context/loop-rule-reviewed-head` and the **base object name** in `.context/loop-rule-baseref`. The
+record names both, plus the merge result. **Re-run 4c whenever either side of that pair changes** —
+a repair commit through the step-4b block writes a new candidate head, a fetch may move the recorded base — and whenever the
+checker or a plugin manifest changes. **No commit is made between 4c and the call it precedes**, so
+nothing can move the head it just certified.
+
+**The evidence boundary, stated rather than implied.** This verifies **the merge of one pinned pair
+of commits**. It says nothing about a `main` that advances afterwards — that merge result does not
+exist yet and cannot be checked here — and it is **not a check of CI as a whole**: it runs one script
+against one merge result, while a CI run does more. `design.md` §7 requires the battery green at the
+Gate-B WIP commit and **promises nothing about a later merge commit**; this step narrows that gap for
+one pinned pair and does not close it.
+
+**Verified by execution of this block as extracted from this plan, with the unchanged
+`scripts/check-version-bump.sh` inside each fixture repository** — eight cases, expected against
+observed:
+
+| case | want | got |
+|---|---|---|
+| valid version bump | 0 verified | **0** |
+| same version both sides + plugin diff | 1 not verified | **1**, and the policy cause is present in the preserved output |
+| **operational failure inside the checker** (a plugin directory name outside its grammar → `die`) | 1 not verified | **1**, and **not** described as a version violation |
+| **conflict-free merge that changes the checker's bytes** | 2 unresolved | **2**, refused **before** the checker ran |
+| merge conflict | 2 unresolved | **2** |
+| unresolvable pinned head | 2 unresolved | **2** |
+| no recorded base ref | 2 unresolved | **2** |
+| the source repository afterwards | unchanged | **branch unchanged, 0 staged, 0 dirty** |
+| an unresolvable **candidate head** read from the file | 2 unresolved | **2** |
+
+**Re-run after the direction change and the identity change**, with the candidate read from
+`.context/loop-rule-reviewed-head` and the merge built base-first: all of the above still hold, and
+the stale-base control still reproduces the false green. The direction change moved no verdict in
+these fixtures — which is expected, since none of them uses a merge driver — so it is adopted
+**because it matches how CI builds the object**, not because a fixture showed a difference.
+
+**Two of those cases exist because earlier drafts of this step failed them.** The operational-failure
+case is why non-zero is no longer read as a verdict. The byte-change case is why the comparison
+happens **after** the merge and against the checker **at the pinned head** — an earlier draft compared
+against the source repository's *worktree*, which can already sit on the base side and carry the very
+edit the check exists to catch, so the comparison agreed with itself and the modified checker ran.
+**A green result from a check that cannot go red is not evidence**, which is the rule this step is
+built to respect.
 
 - [ ] **Step 5: Write the evidence entry into `.context/loop-rule-closing-msg`**
 
@@ -2876,6 +3175,13 @@ It names: the battery run; **every pair this plan built, with its counts in each
 for those two reader records. **An entry assembled from one section would silently drop whatever
 the other five hold.**
 
+**And the step-4c result, which is the one item read from this run rather than from a section.**
+Record its three ids — candidate head, base, merge result — its plugin diff line and its raw checker
+status. **It is written here because Gate B is handed this entry verbatim**: a merge-result check
+whose result appears only after the review would change the entry the reviewer judged, and 7b says a
+changed entry ends the candidate. **4c has already stopped the step if it was not verified**, so the
+only status this entry can carry is a verified one.
+
 **Every record shape belongs in the entry, not only pairs and presence.** A **dropped**
 condition's absence and a **moved** condition's absence are what prove an obsolete instruction was
 removed; a **carried** or span-less **kept** condition's preservation count is what proves
@@ -2891,23 +3197,40 @@ an enumeration here** — an id list in this step was already stale once, naming
 ```bash
 BASE=$(cat .context/loop-rule-base)                     # the parent of the FIRST WIP, from Task 0
 test -n "$BASE" || { echo "BASE empty or unreadable — Task 0 did not run"; exit 1; }
-# The head THIS call is issued against. Guarded, and no `cat`: the redirect can fail
-# while a following `cat` prints a STALE value and the block still exits 0.
-git rev-parse HEAD > .context/loop-rule-reviewed-head \
-  || { echo "recording the reviewed head FAILED — no call may be issued"; exit 1; }
+# This step RESOLVES NOTHING. The candidate was fixed by step 4b and verified under that
+# identity by the battery and step 4c; resolving `HEAD` again here is how the verified
+# object and the reviewed object came apart.
+HEADREV=$(cat .context/loop-rule-reviewed-head) \
+  || { echo "no candidate head recorded — step 4b did not complete; no call may be issued"; exit 1; }
+test "${#HEADREV}" -eq 40 || { echo "candidate head is not a full object name"; exit 1; }
+# A move since the candidate was fixed is a STOP, never something to record over: the
+# verification above describes $HEADREV and nothing else.
+test "$(git rev-parse HEAD)" = "$HEADREV" \
+  || { echo "HEAD has moved since the candidate was fixed — re-run 4b onward; no call may be issued"; exit 1; }
 ```
 
-**Every Gate-B call records the head it is issued against, this first one included**, and step 7
-rewrites the file before each later call. It is what makes "a clean response against that exact
-`HEAD`" a comparison rather than a claim: without it the close procedure has nothing to hold `HEAD`
-up against, and a commit landing after the response is indistinguishable from the reviewed state.
+**The head is written by the step-4b commit block and read here.** A repair in step 7 runs that
+same block — it is the only writer. It is what makes "a clean response against that
+exact `HEAD`" a comparison rather than a claim: without it the close procedure has nothing to hold
+`HEAD` up against, and a commit landing after the response is indistinguishable from the reviewed
+state. **An earlier revision resolved `HEAD` here instead**, which gave the same candidate two
+identities — the one 4c certified and the one Gate B reviewed — with nothing comparing them.
 
 **`baseSha` is `$BASE`, never `HEAD^`.** This plan makes a WIP commit per task, so `HEAD^` is the
 parent of the *last* one and the review range would hold the version bump alone — Gate B would
 close having reviewed none of the prompt or hook changes. `$BASE` is the parent of the first WIP
 and is the only value whose range contains the whole implementation.
 
-`mcp__codex__review` with `reviewType: full`, `baseSha` = `$BASE`, `headSha` = the full 40-character object name `HEAD` resolves to **at that moment**, resolved once and kept with each branch's result. Carry the story path and the evidence entry quoted verbatim. Write findings to `.context/codex-reviews/gate-b-<spec|quality>-<nonce>-pass-<p>.md` — **draw a fresh nonce for this cycle**; it is a different cycle from `awsf1ec771`.
+`mcp__codex__review` with `reviewType: full`, `baseSha` = `$BASE`, `headSha` = **the exact content of `.context/loop-rule-reviewed-head`**, read at the moment the call is built and passed as a literal value — **never a fresh resolution of `HEAD`, and never the symbolic `HEAD`**. The file is the identity; the call quotes it, and the same value is kept with each branch's result. **If you cannot show that the value you passed and the file's content are the same string, the call has not been issued** and the reviewed head is unestablished. Carry the story path and the evidence entry quoted verbatim.
+
+**Not guarded, and stated rather than implied.** Nothing mechanically compares the argument actually
+sent to the reviewer against this file: the call is not shell, so there is no command to guard, and
+`mcp__codex__review` reports no reviewed revision to read back. Close condition 1 therefore
+authenticates **the file**, and the file is trustworthy only because the step above wrote it under a
+guard and no other step touches it. A second resolution of `HEAD` here would break that chain
+silently — Gate B would review one commit while the close authenticates another, and the content that
+then closes includes this change's edits to `plugins/dev-workflow/commands/workflow-init.md` and
+`codex-gate.sh`, **which ship inside the plugin package**. Write findings to `.context/codex-reviews/gate-b-<spec|quality>-<nonce>-pass-<p>.md` — **draw a fresh nonce for this cycle**; it is a different cycle from `awsf1ec771`.
 
 **Standing lens, every call:** "which existing statements does this diff falsify?" and **name what this diff changes the size, value or position of** — a list, a count, a version, an identifier, a cited line — then grep for where each is described elsewhere.
 
@@ -2919,270 +3242,123 @@ Floor derives from the story profile: risk `high` → 2, security `none` → 0, 
 floor**, or a **zero-finding logical pass** at any pass number — the early exit below the floor.
 Both are subject to every other closure condition. **An earlier draft named only the first**, so a
 first or second Gate-B pass whose two branch files both read `NO FINDINGS` would have been routed
-into further passes — the implementation procedure overriding the very rule §A installs, and the
-one case Task 13's table checks by name. A zero-finding pass is `NO FINDINGS` in **every** required
+into further passes — overriding §5's own early exit (§5 at `$BASE`: *"The only early exit below
+the floor is a pass with **zero** findings"*), which Task 13's table also checks by name in the
+installed text. A zero-finding pass is `NO FINDINGS` in **every** required
 branch file; one branch clean and the other not is not it.
 
-**Each fix is committed before the next review is issued**, or the re-review targets the unchanged
-WIP tip while the repair sits in the worktree — and the final squash then publishes a fix no pass
-reviewed:
+**Each pass is issued, validated and read as §5 at `$BASE` says** — *Accept a pass only when*,
+*Recovery: one attempt per pass*, *Severity*, re-review after every fix, and the evidence entry
+revalidated before every re-review and before the closing commit. **Nothing here restates those.**
+What this plan adds is where its records go and how a pass is routed.
 
-**Every pass that does not close ends the same way, whether or not it produced a repair — and it
-ends in three steps, in this order.** Record the pass. Read it through the ordering this change
-installs. **Then, and only on a route that authorizes it, repair.** The plan must not execute a loop
-its own product forbids.
+**Findings files are not committed during the loop (Close, *D1*).** They stay in
+`.context/codex-reviews/` under this cycle's nonce and are committed once, all passes together, by
+step 8. **No commit lands between a review and the reading of its result**, so the reviewed head
+stays `HEAD` until a repair is committed.
 
-**Step one — record the pass, and nothing else. This commits; it does not authorize anything.**
+**After every valid pass, route it by §5 at `$BASE` — the rules this cycle started under**
+(`CLAUDE.md` "When these rules bind"; Daniel's decision of 2026-09-25, option 1). **The ordering this
+change installs does not steer this cycle.** It is the product under review, and Task 13 and design
+§7 test it; applying it here as well would give this cycle two rule sets that disagree (pass 54,
+finding 1). The routes, each with its §5 source:
 
-**Do not apply the repair yet — not in the worktree either.** Deferring only the *commit* changes
-nothing: this plan restores nothing, so an edit made before its route authorized it is just as
-unauthorized, and a later decline has nothing that removes it.
+- **A new structural or contract question, or a correction outside the assigned fix set** → stop and
+  surface to Daniel (§5, *What a loop absorbs, and what stops it*). Nothing is repaired and no call is
+  issued until he answers; the loop resumes on the revised artifact.
+- **From pass 4 on, two or more of the five tells** → stop and surface (§5: *"Any two present makes
+  stop-and-surface mandatory"*). **This holds for an otherwise closure-eligible pass too.** The
+  installed text's rule that tells never block a closing pass does not govern this cycle.
+- **Clearly stuck**, all three of §5's conjuncts → stop and surface.
+- **Blocker or Major findings inside the assigned fix set** → repair them (§5, *Severity*): the
+  candidate sequence below, repair branch.
+- **Clean at or above the floor, or zero findings, no stop owed, but a re-review is owed** — the
+  evidence entry changed when 7b revalidated it (§5 at `$BASE`: the entry is revalidated before
+  every re-review and before the closing commit, and a changed entry is not covered by the pass that
+  judged the old one), or Failure's resume rule says a condition the failed attempt moved costs a
+  pass → **the candidate sequence below**, making only the change that rule requires: a changed
+  entry or refreshed records need no product change and take the no-repair branch; a moved closure
+  input takes the repair its own rule names. Then battery, 4c, evidence, call — a new review. This
+  pass does **not** close (pass 55, finding 2).
+- **Clean at or above the floor, or zero findings, no stop owed and no re-review owed** → Close:
+  step 7b, then step 8 (§5: the final pass must be clean; the zero-finding early exit).
+- **Free of Blocker and Major but below the floor** → collect the Minors and Nits and continue
+  without a product repair (§5: *"Minor · Nit → collect, never iterate"*, *"Below the floor nothing
+  closes"*): the candidate sequence below, no-repair branch.
+- **Daniel's answer to a stop** decides what follows. Where he stops the cycle it waits, open and
+  spending no passes, until he says to continue; nothing closes it (§5: *"Surfacing does not close
+  the cycle"*).
 
-**A failed precondition, staging, commit or content check stops here; step two does not run.** No
-command in this block is the last thing that happens — the commit is followed by a tree comparison,
-and that by prose. A reader who saw a failure scroll past can still walk into step two, and the
-ordering must not be read over a pass that was never recorded, nor over one whose findings files the
-commit does not carry.
+**What option 1 removed from this cycle's routing, accounted:**
 
-**The plan is not staged here, and must be unchanged before this commit.** Step one produces no plan
-output — the re-run records are written at step three — so a dirty plan here is a post-review edit,
-and committing it puts a change in history before step two has read the ordering. Removing the path
-from `git add` does not settle it: **`git commit` commits the index**, so an edit already staged
-rides in regardless. The check therefore asks HEAD against the index first, then the index against
-the worktree; a difference and a failed comparison both stop, and neither says what caused it, so
-the answer to both is to **report the concrete state** — what is in the worktree, what is committed,
-and which route had not yet spoken. This plan restores nothing and invents no rollback. The check
-covers **this one path**; the residual below is unchanged.
+| Rule the plan applied to this cycle from the installed ordering | Now |
+|---|---|
+| Source-block route (release rule, re-read) | **deliberately removed for this cycle**: §5 at `$BASE` has no source-block concept. It stays product text, tested by Task 13 |
+| Collect every suspension answer and compose them | **replaced by §5's form**: each stop is surfaced and answered |
+| No repair to a finding whose membership is unanswered | **kept by §5**: an out-of-set or new-question finding stops before any repair |
+| Stop answer → park, restarted only by an explicit continue | **kept in substance by §5**: surfacing does not close the cycle; it waits for Daniel |
+| Clean completion takes precedence over tells | **deliberately removed for this cycle**: §5 at `$BASE` stops on two tells. It stays product text, tested by Task 13 |
+| Continue → next pass | **kept**: the candidate sequence below |
 
-**A successful `git add` does not establish presence.** It stages a removal as readily as a content
-change, so a tracked findings file that is absent from the worktree is staged as *gone* — and the
-pinned index and the resulting commit then agree, both without it. **Tree equality preserves
-presence only where presence was established in the pin**, which is why the two paths are checked
-there, and checked as **blobs**: an existence test alone accepts a directory standing at the path,
-one of the causes §5 already tells a reader to diagnose separately. Step one deletes nothing; an
-authorized repair may, which is why step three and step 4b carry no such check.
+**Repair or continue → the candidate sequence.** It is the first pass's sequence — 4b's commit block, step 4,
+step 4c, step 5, step 6 — with one branch, and the branch is on the **route's obligation**, never on
+what the tree looks like:
 
-**What the pin is, and what it is not.** It is the index **as staged at that moment**, taken after
-`git add` and before `git commit` — not the content the pass acceptance validated. Nothing between
-that reading and this staging observes a change, so a findings file rewritten in between is pinned
-as staged and passes here. Close condition 4 re-runs the structural check on committed content for
-8a's record commit; **step one has no such re-run and this check does not stand in for one.**
+1. **A repair is owed on the route** → apply it, re-run every record-producing check it invalidated
+   (below), and commit the repair with the refreshed records **through the step-4b commit block**,
+   message `WIP: fix <finding>`. That block resolves the new commit once and writes it to
+   `.context/loop-rule-reviewed-head`. **No repair is owed** → no product file changes, but **the complete set
+   still runs before the call** (below). Where its records come out **identical** to the committed
+   ones — `git diff --quiet HEAD -- docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md`
+   succeeds — **commit nothing**; there is no empty commit. `HEAD` must then still equal
+   `.context/loop-rule-reviewed-head`; if it does not, something reached the repository between the
+   call and now — stop and report the concrete state, and never record over it (pass 53, finding 2).
+   Where the refreshed records **differ**, commit this plan alone through the step-4b commit block,
+   message `WIP: refreshed records` — a records-only candidate, and the only change this branch may
+   commit. **Anything else dirty is not an authorized record change**: stop and report it
+   (pass 54, finding 2). **"Else" is exact, not "everything but this plan"**: under D1 this cycle's
+   findings files are uncommitted throughout the loop, and its working record must survive for
+   recovery, so both are expected here and neither is committed (pass 55, finding 1). The check,
+   run before the records decision:
 
-**Stage the two slot paths this pass was called with, spelled out.** Not `git add -A`, which sweeps
-exactly the edit this step exists to keep out — and **not the review directory either**: `git add
-.context/codex-reviews/` is a directory pathspec that stages every changed or untracked file beneath
-it, so another cycle's findings, or an earlier pass's, ride into this commit and then into the
-closing squash, where the exact-dirty-set guard can no longer see them because they were committed
-before the next call. **`NONCE` and `P` are this cycle's nonce and this pass's number** — the same
-two the call's slot paths were built from.
+   ```bash
+   # NONCE and LASTP: this cycle's nonce and the pass just routed. Only this plan, this
+   # cycle's findings slots, its per-slot dispositions notes (§5's `<slot>-dispositions.md`)
+   # and its working record may be dirty. Exact paths, never a glob.
+   NONCE=<this cycle's nonce>; LASTP=<the pass just routed>
+   PLAN=docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+   set -- ":(exclude)$PLAN" ":(exclude).context/codex-reviews/gate-b-$NONCE-resume.md"
+   p=1
+   while [ "$p" -le "$LASTP" ]; do
+     for b in spec quality; do
+       set -- "$@" ":(exclude).context/codex-reviews/gate-b-$b-$NONCE-pass-$p.md" \
+                   ":(exclude).context/codex-reviews/gate-b-$b-$NONCE-pass-$p-dispositions.md"
+     done
+     p=$((p + 1))
+   done
+   # Two steps: a FAILED status prints nothing and would read as clean.
+   OUT=$(git status --porcelain -z --untracked-files=all -- . "$@") \
+     || { echo "reading the dirty set FAILED — no call may be issued"; exit 1; }
+   test -z "$OUT" \
+     || { echo "a path outside this plan and this cycle's own records is dirty — stop and report"; git status --porcelain --untracked-files=all; exit 1; }
+   ```
 
-```bash
-NONCE=<this cycle's nonce>; P=<this pass's number>
-SPEC=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md"
-QUAL=".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
-PLAN=docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md
+   **Dispositions notes are allowed here and not at the close**: they are advisory, may sit beside
+   the findings during the loop, and step 8 asks for them to be removed first.
+2. **Final verification on the candidate**: step 4's fetch and battery, then step 4c. Both read the
+   candidate from `.context/loop-rule-reviewed-head`. A non-zero or unresolved result stops here.
+3. **Revalidate and write the evidence entry** (step 5).
+4. **Issue the call** (step 6).
 
-# The plan is not staged here and must be unchanged: HEAD against the index (what the
-# commit takes), then the index against the worktree. A difference and a failed
-# comparison both stop, and neither says what caused it — report the state.
-git diff --quiet --cached HEAD -- "$PLAN" \
-  || { echo "plan is not identical between HEAD and the index, or the comparison failed — stop and report the state"; exit 1; }
-git diff --quiet -- "$PLAN" \
-  || { echo "plan is not identical between the index and the worktree, or the comparison failed — stop and report the state"; exit 1; }
-
-git add "$SPEC" "$QUAL" \
-  || { echo "staging FAILED — the pass is not recorded; step two does not run"; exit 1; }
-
-# Pinned after staging, before the commit: the WHOLE index as staged at that moment,
-# unrelated paths included.
-ITREE=$(git write-tree) \
-  || { echo "cannot pin the staged index; step two does not run"; exit 1; }
-
-# A successful add does not mean these paths are present — it stages a removal too.
-# Require a blob at each: an existence test would accept a directory at the path.
-test "$(git cat-file -t "$ITREE:$SPEC" 2>/dev/null)" = blob \
-  || { echo "$SPEC is not a blob in the staged index; the pass is not recorded, step two does not run"; exit 1; }
-test "$(git cat-file -t "$ITREE:$QUAL" 2>/dev/null)" = blob \
-  || { echo "$QUAL is not a blob in the staged index; the pass is not recorded, step two does not run"; exit 1; }
-
-git commit -m "WIP: pass $P records" \
-  || { echo "records commit FAILED — stop here; step two does not run"; exit 1; }
-
-# Resolve the record commit ONCE, immediately after it lands, and use that object id for
-# everything below. `HEAD` is a movable ref: resolving it a second time — for the tree
-# check, and again to persist the identity — lets a commit, amend, reset, rebase or
-# checkout in between hand those two commands DIFFERENT commits, which recreates the
-# very defect this records the object id to close. The commit object is immutable;
-# `HEAD` is not, and only the captured id carries that.
-RECORD=$(git rev-parse HEAD) \
-  || { echo "cannot resolve the records commit; step two does not run"; exit 1; }
-
-# Any divergence between the pinned index and THAT commit's tree stops here, whatever
-# produced it.
-test "$(git rev-parse "$RECORD^{tree}")" = "$ITREE" \
-  || { echo "the commit's tree is not the index that was pinned; step two does not run"; exit 1; }
-
-# Persist the same id, because step two must read both slots from this exact commit —
-# and a move between its two reads could otherwise take the branch files from different
-# commits.
-printf '%s\n' "$RECORD" > .context/loop-rule-records-commit \
-  || { echo "recording the records commit's object id FAILED; step two does not run"; exit 1; }
-```
-
-**What this does not cover, disclosed rather than guarded:** naming the paths controls what this step
-*adds* to the index; `git commit` still commits whatever the index already held. **A foreign path
-staged before this step runs is carried in, and no check in this plan catches it** — the close's
-dirty-set and changed-path checks read 8a's commit, not these. Nothing here fixes that.
-
-**Step two reads the findings out of step one's RECORD COMMIT, by object id — not the worktree
-copies, and not through `HEAD`.** Target §A requires every finding-derived predicate to read the
-**validated** findings file, and the worktree copy is the one thing that can still change after
-validation: a `commit-msg` or `pre-commit` hook that rewrites only the worktree leaves step one's
-checks entirely satisfied — the staged index, the pin and the commit tree all agree — while the file
-a reader would open no longer holds what the pass was accepted on. **A commit object is immutable;
-`HEAD` is a movable ref and is not**, so reading `HEAD:` would be redirected by any commit, amend,
-reset, rebase or checkout in between, and a move between the two reads could take the two branch
-files from different commits. The object id step one persisted is what makes the source one commit:
-
-```bash
-NONCE=<this cycle's nonce>; P=<this pass's number>
-SPEC=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md"
-QUAL=".context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
-RECORDS=$(cat .context/loop-rule-records-commit) \
-  || { echo "cannot read the records commit id — step one did not complete"; exit 1; }
-test "${#RECORDS}" -eq 40 || { echo "records commit id is not a full object name"; exit 1; }
-# Both reads come from this one object, so neither can be redirected and the two
-# branch files cannot come from different commits.
-git show "$RECORDS:$SPEC" \
-  || { echo "cannot read the committed spec findings from the records commit"; exit 1; }
-git show "$RECORDS:$QUAL" \
-  || { echo "cannot read the committed quality findings from the records commit"; exit 1; }
-# `HEAD` having moved is not a reason to re-resolve the files — it is a reason to stop
-# and report, because something reached this repository between the record and the read.
-test "$(git rev-parse HEAD)" = "$RECORDS" \
-  || { echo "HEAD moved after the records commit — stop and report the concrete state"; exit 1; }
-```
-
-**What this does not establish, disclosed rather than guarded.** It does not prove those committed
-bytes are the ones **pass acceptance** validated. Step one pins what is on disk when step one runs;
-an edit between accepting the result and staging it is pinned as staged and passes every check here,
-which this plan already says of its pin. Closing *that* gap would mean carrying the accepted blob
-ids out of the acceptance step in a file, and **no such duty exists in the approved spec or in §5** —
-it is named here as the residual it is, not repaired. **The reviewer's further demand — re-running
-the structural and branch-eligibility checks on the committed content — is declined for the same
-reason**: object identity is what step one can establish, and Close condition 4's third bullet is a
-*closing*-commit duty the approved text does not place on a non-closing record commit.
-
-**Step two — read the pass against the ordering, before any next call exists:**
-
-- **A source block standing** → **the source rule decides what must be repaired or answered, and its
-  repair happens on that route** — §A sends the reader to the source and does not hold that repair
-  behind a continue. Then §A's release rule decides whether this pass is read again. **No further
-  pass while the block stands.**
-- **Any suspension open** — a membership stop, a new-question stop, a two-tell stop, a clearly-stuck
-  surface — → **collect every answer and compose them.** **No repair to a finding whose membership
-  is unanswered**: §A answers membership against the fix set *as it stood for the pass that raised
-  the question*, so repairing first decides the question the stop exists to ask. Another pass only
-  where the composition yields **continue**.
-- **A stop answer** → **park**: open, not running, **spending no passes**, restarted only by an
-  explicit later continue. **There is no "commit and carry on" from a stop**, and acceptance
-  criterion 4 requires that parked state to be distinct. **Nothing below runs on this route.**
-  **Parking is not a retroactive revocation**: §A defines stop as parking the open cycle and
-  prescribes no rollback, so a repair some earlier route had already authorized stays where it is.
-- **The clean-completion branch** → **Close**, not another pass.
-- **Continue** → step three.
-
-**Step three — repair where the route authorized one, then prepare the call.** Continue permits an
-**unrevised** artifact only where no repair is owed; **where one is owed it comes before the
-post-answer pass**, which is §A's rule and not this plan's. So on this route: apply the repair now,
-re-run every check it invalidated, commit both, and only then record the head.
-
-**The commit is guarded because this block does not end with it.** Commands follow, and among the
-first things they do is read `HEAD` — so an unguarded failure is masked by the `rev-parse` after it,
-the *old* head is recorded, and the next call is issued against a tree the repair never reached. **A
-failed commit stops the commands below it**: the previous candidate's tip is not removed, the
-reviewed head is not rewritten, and no call is issued. It is **not** a claim that the failed attempt
-left the tree as it was — a hook can rewrite anything before failing, which this plan already says of
-the closing message file. **8a guards its record commit the same way**, and for the same reason.
-
-**The staging is guarded too, and the commit is checked against what it was given.** A failed `git
-add` otherwise falls through to a commit that can still succeed on content the index already held.
-The pin is `git write-tree` — **the whole index, unrelated paths included**, so any divergence between
-it and the resulting commit tree stops this step, whatever produced it. That is broader than this
-step's obligation and deliberately fail-closed. It is **not** a foreign-index check: content staged
-before this step stands on both sides and passes. And it demands no presence, which is what step one
-needs and this step must not have — **an authorized repair may delete a file**, and a staged deletion
-is in the pin and in the commit alike.
-
-```bash
-# The repaired files, spelled out, plus this plan — which carries the refreshed
-# re-run records. The findings files went in at step one and are not re-staged.
-# Neither `git add -A` nor the review directory: both carry in work no pass asked for.
-git add <the files this repair touched> \
-        docs/superpowers/plans/2026-09-14-loop-rule-consolidation.md \
-  || { echo "staging FAILED — nothing committed, no call may be issued"; exit 1; }
-
-# Pinned after staging, before the commit: the whole index as staged at that moment.
-ITREE=$(git write-tree) \
-  || { echo "cannot pin the staged index; no call may be issued"; exit 1; }
-
-# Guard the commit. Everything below derives from HEAD, so an unguarded failure
-# is masked by the `git rev-parse` that follows it: the old head gets recorded,
-# the repair stays staged, and the next call reviews a tree it is not in.
-git commit -m "WIP: fix <finding>" \
-  || { echo "repair commit FAILED — tip and reviewed head left as they are; no call may be issued"; exit 1; }
-# Resolve the repair commit ONCE and use that id for both the tree check and the head
-# record. Resolving `HEAD` twice lets a move in between check one commit's tree and
-# record another as the head the next call is issued against — the same defect step one
-# records an object id to close, and not one the reviewer named here.
-REPAIR=$(git rev-parse HEAD) \
-  || { echo "cannot resolve the repair commit; no call may be issued"; exit 1; }
-test "$(git rev-parse "$REPAIR^{tree}")" = "$ITREE" \
-  || { echo "the commit's tree is not the index that was pinned; no call may be issued"; exit 1; }
-
-# The previous candidate's closing tip. Guarded: without the guard a failed removal
-# leaves the stale tip standing beside the next candidate's reviewed head, so the next
-# call is issued with two candidates' markers present. (It is NOT the value condition 5
-# reads in a correct sequence — 8a rewrites the tip before 8b runs.)
-rm -f .context/loop-rule-reviewed-tip \
-  || { echo "removing the previous candidate's tip FAILED — it survives; no call may be issued"; exit 1; }
-# The head the NEXT call is issued against — the SAME id whose tree was checked above,
-# never a fresh resolution. Guarded, and no `cat`: the redirect can fail while a
-# following `cat` prints the STALE value and the block exits 0.
-printf '%s\n' "$REPAIR" > .context/loop-rule-reviewed-head \
-  || { echo "recording the reviewed head FAILED — no call may be issued"; exit 1; }
-```
-
-**The reviewed-head file is written on this route alone, and after the repair commit**, because
-writing it is what makes a next call possible: recording it before the ordering has spoken is how a
-pass gets issued over a standing source block, an unanswered suspension or a parked cycle — and
-recording it before the repair lands would aim that call at a tree the repair is not in.
-
-**If a repair was already applied before its route authorized it, stop and report the concrete
-state.** Do not design a way to take it back: this plan restores nothing, §A prescribes no rollback,
-and inventing one here would be a new rule nobody approved. Report what is in the worktree, what is
-committed, and which route had not yet spoken.
-
-**A non-closing pass that owes no repair still commits.** A Minor-only clean pass below the floor,
-or an answered suspension that changes no artifact, leaves its findings files tracked and dirty —
-and the next pass's files pile up beside them, after which the close procedure's dirty-set check can
-never equal one pass's two files and a route the installed ordering requires cannot close through
-this plan. **There is no "nothing to commit" branch here**: the findings files are always something.
-
-**The recorded head is what makes "a clean response against that exact `HEAD`" checkable.** Resolved
-and written before the call, it is the value the close procedure compares against — without it,
-a commit landing after the response is indistinguishable from the reviewed state.
-
-Re-review after every fix. **Revalidate the evidence entry before every re-review and before the
-closing commit.**
+**No commit is made between 1 and 4**, which keeps the verified object and the reviewed object the
+same one. **If a repair was already applied before its route authorized it, stop and report the
+concrete state** — this plan restores nothing, and §5 prescribes no rollback.
 
 **A fix that changes specified behaviour updates the spec in the same commit.**
 
 **The battery and the reader checks are not done when step 4 passed once.** A Gate-B fix can touch
 the hook, its test, either prompt copy or the target text, and step 4's run and step 4b's
-twelve-item review both describe the tree as it was *before* that fix. Without re-running them the
-plan reaches its closing commit on a tree that never passed its own quality battery — a repo unable
-to pass CI, or an invariant-11 violation, published by a cycle that closed clean.
+twelve-item review both describe the tree as it was *before* that fix.
 
 - **After each fix, re-run every check whose subject it changed — mechanical and reader alike.**
   The hook or its test means the suite under both shells; a shell file means `shellcheck`; either
@@ -3192,27 +3368,69 @@ to pass CI, or an invariant-11 violation, published by a cycle that closed clean
   a hook message changed, Task 13's transitions and closure checks where §A changed, Task 14's
   parity and untouched checks wherever text moved at all. **Naming only the mechanical ones let a
   fix invalidate a reader record that then reached the closing commit unchanged.**
-- **Persist every re-run record and commit it before the re-review**, so the reviewed range holds
-  it. A refreshed record left in the worktree is in neither the Gate-B range nor `reset --soft`.
-- **Before the candidate final pass, re-run the complete set, and "complete" means mechanical as
-  well as reader.** The whole step-4 battery against the current `HEAD`; step 4b's twelve items;
-  every reader check above; **and every mechanical observation this plan built** — each
-  discriminating pair, each add-only presence check, each moved and dropped absence, each carried
-  and kept preservation count — re-run and re-recorded in `## Fragment evidence (per-task output)`.
-  **An earlier draft named only the battery and the reader checks**, so the clean pass could close
-  on a `HEAD` whose fragment evidence had never been re-established as a set, and the plan's
-  design §7 claim would rest on counts taken from an older tree.
-- **Commit those records, resolve the new `HEAD`, and only then issue the candidate final pass.**
-  **Only a clean response issued against that exact `HEAD` closes the cycle.** A pass that was
-  clean against an earlier tree, plus records committed afterwards, closes on a tree no pass
-  reviewed — which is the same defect as reviewing the wrong range, arrived at from the other end.
-- **One thing cannot exist before that pass: the pass's own findings files.** A `full` Gate-B pass
-  writes **two** — the spec and quality branch files — and the close's dirty-set check requires both,
-  so the **pair** is the sole permitted post-review addition, and step 8 asserts that it is the only
-  one — every other
-  path must already be in the reviewed `HEAD`. `.context/` moves none of the hook's fingerprint
-  inputs, so the file changes nothing the review looked at; what would be wrong is a *second*
-  delta riding along beside it.
+- **Persist every re-run record and commit it before the re-review**, through the step-4b block, so
+  the reviewed range holds it.
+- **Before every call, re-run the complete set, and "complete" means mechanical as well as
+  reader.** Every call can be the final one, because a zero-finding pass closes at any pass number;
+  on the first call Tasks 0–15 have just produced the set. The whole step-4 battery; step 4b's twelve items; every reader check above;
+  **and every mechanical observation this plan built** — each discriminating pair, each add-only
+  presence check, each moved and dropped absence, each carried and kept preservation count — re-run
+  and re-recorded in `## Fragment evidence (per-task output)`. **An earlier draft named only the
+  battery and the reader checks**, so the clean pass could close on a `HEAD` whose fragment evidence
+  had never been re-established as a set, and the plan's design §7 claim would rest on counts taken
+  from an older tree.
+
+  **That set splits in two, and the split is what orders the candidate sequence above.** **Record-producing work**
+  writes into this plan and therefore **must be committed**: the repair itself, step 4b's twelve-item
+  result, every mechanical observation, and any other record a task owes. **Final verification**
+  writes **no** committed record: step 4's battery, whose outcome is named in the evidence entry
+  rather than in a plan section, and step 4c, whose result goes to `.context/loop-rule-closing-msg`.
+  **All record-producing work is finished and committed first, through the step-4b block, which
+  captures the candidate; only then does final verification run.** Reading it the other way is what left a rerun
+  requiring a commit after the candidate had already been fixed.
+
+  **"The whole step-4 battery" includes step 4's guarded `git fetch` and its recording of the base
+  ref object id** — the battery is re-run end to end, not from the object id the first run happened
+  to persist.
+
+  **A stale base really can turn a rejection into a pass, and it was demonstrated with the real
+  checker.** Topology, with the ids from the run: common ancestor `47c6193` carrying version
+  `0.11.0`; `main` advancing on its own to `c0df286` at `0.12.0`; a branch that also reaches `0.12.0`
+  **and carries further plugin changes**; and `R` = `44a2698`, the **merge commit**, which is what CI
+  checks out — `.github/workflows/ci.yml` passes no `ref:` to `actions/checkout`, so a
+  `pull_request` job checks the merge commit rather than the branch head. The plugin diff between
+  `main` and `R` is `plugins/dev-workflow/extra.md` and `plugins/dev-workflow/file.md`. Results:
+
+  - `check-version-bump.sh old-A` → merge-base `47c6193`, base version `0.11.0` ≠ `0.12.0` →
+    **`ok`, exit 0**;
+  - `check-version-bump.sh main` → merge-base `c0df286`, base version `0.12.0` = `0.12.0` with the
+    plugin changed → **rejected, exit 1**.
+
+  **An earlier attempt at this test concluded the opposite and was wrong.** The checker's line 58 is
+  `cd "$(dirname "$0")/.."`, so invoking it by absolute path from a disposable repository silently
+  ran it **against its own repository instead** — the checker under test never saw the fixture. That
+  is the "wired so it could not fail" defect this plan warns about, and it produced a confident
+  `could not be reproduced` that was an artefact of the harness. The run above copies the checker
+  **into** the fixture repository.
+
+  **Re-fetching does not by itself close this**, and naming the fetch here is precision rather than
+  the repair: the battery runs against the **local branch head**, while CI evaluates the **merge
+  commit**, and no amount of refreshing the base ref makes those the same object. **The repair is
+  step 4c**, which checks the merge result of the pinned candidate head and the recorded base with
+  the unchanged checker. An earlier draft of this paragraph said checking the merge result was "a
+  scope question and not a change this plan makes" — **that is no longer true and was never a
+  conclusion the evidence supported**: a different checking mechanism is not by itself a new
+  requirement.
+
+- **What "the battery is bound to the candidate" does and does not mean.** The battery block reads
+  `.context/loop-rule-reviewed-head` and `.context/loop-rule-baseref`, and runs **shellcheck, the
+  hook suites, the invariant checkers and `claude plugin validate` in a disposable clone checked out
+  at that candidate id** (step 4). Its subject is the **committed candidate**, so a dirty work
+  repository cannot supply its inputs. It does **not** make the clone immutable while tests run, and
+  it does **not** check the merge result — step 4c does that, naming its own revision. Step 6 still
+  asserts that `HEAD` has not moved, which is what keeps the reviewed object the captured one.
+- **Only a clean response issued against the recorded head closes the cycle** (Close condition 1).
+  This cycle's findings files are the sole permitted addition at the close (Close condition 2).
 
 - [ ] **Step 7b: After the clean pass, complete `.context/loop-rule-closing-msg` — this is the
   action step 5 defers to, and step 8 has no other source for these records**
@@ -3226,10 +3444,10 @@ records.** The handoff changes nothing, but it **does not claim the failed opera
 as it was** — a hook can rewrite anything before failing — so "the failure preserves it" is not a
 statement this plan can make.
 
-**And a failed act does not by itself owe a further pass.** §A retries the act where every closure
+**And a failed act does not by itself owe a further pass.** Failure's resume rule retries the act where every closure
 condition still holds; a pass is owed only where the attempt or its repair moved something a
 condition is read from, **and that condition's own rule is what decides.** An earlier draft required
-a fresh final pass unconditionally here, which forces a review §A does not ask for. Write the complete message from the current records at every candidate close, then
+a fresh final pass unconditionally here, which forces a review neither §5 nor Failure asks for. Write the complete message from the current records at every candidate close, then
 assert **exactly one** provenance line and **exactly one** curve for this cycle before step 8.
 
 The message carries, in this order:
@@ -3241,14 +3459,24 @@ The message carries, in this order:
    until the loop ends;
 3. any **human-exception record**, and beside it the skip reason if a cycle was skipped;
 4. the **revalidated evidence entry**, replacing step 5's draft if revalidation changed it — and
-   **if it changed, this candidate is over.** The final reviewer judged the entry it was handed
+   **if it changed, this candidate is over.**
+
+   **"Rebuild from the current records" does not say how this item survives a rebuild, and that
+   gap is closed here.** Before writing anything, **read the existing entry out of
+   `.context/loop-rule-closing-msg` and keep that text**; it is the entry the final reviewer was
+   handed verbatim, and it carries the step-4c result, which is read from a run rather than from a
+   section and so cannot be regenerated by re-reading the record sections. Items 1, 2 and 3 are
+   rebuilt; **item 4 is carried across unless revalidation changes it.** Where the file is missing
+   or holds no entry, that is **not** a rebuild case: the candidate cannot be closed on an entry
+   nobody can produce — **stop and report**. Revalidation compares the carried text against the
+   current records; **equal means carry it, different means the candidate is over** and the existing
+   re-review rule below applies unchanged. The final reviewer judged the entry it was handed
    verbatim; a different entry in the closing commit is evidence no pass covered. **Take this pass
-   through step 7's three steps like any other non-closing pass** — record it, read it against the
-   ordering, and repair only on a route that authorizes one; a
-   standing source block, an open suspension or a stop answer binds here exactly as it does there,
-   and **only its continue result records a new reviewed head and issues another candidate.** An
-   earlier draft sent this branch straight to a new call, which is the plan's own Gate-B loop
-   stepping over the ordering it installs. **Revalidate before recording the candidate head and
+   through step 7 like any other non-closing pass** — route it, and repair only on a route that
+   authorizes one; a stop binds here exactly as it does there, and **only a repair, continue or
+   re-review route runs the candidate sequence and issues another call** — a changed entry takes the
+   re-review route. An earlier draft sent this branch straight
+   to a new call, which stepped over step 7's routing. **Revalidate before recording the candidate head and
    issuing the pass**, so that in the ordinary case this branch is never reached.
 
 **Items 1, 2 and 4 are owed unconditionally; item 3 is owed only where such a record exists.**
@@ -3266,227 +3494,197 @@ write one, and a later reader could not tell it from an exception record that lo
 holds, `reset --soft` has already discarded every WIP body, and a closing commit without its
 provenance line or curve has not validly closed the cycle.
 
-- [ ] **Step 8: Close the cycle — the close procedure, in two invocations**
+- [ ] **Step 8: Close the cycle — one closing block, then the postcondition block**
 
-**`## The four procedures` · Close states the six conditions, what success looks like, and why the
-two invocations are separate.** Nothing here restates them. What follows is the shell that discharges
-them, each block naming its condition; **the conditions are the obligation and this shell is one way
+**`## The four procedures` · Close states the four conditions, what success looks like, and why one
+closing command is enough.** Nothing here restates them. What follows is the shell that discharges
+them, each part naming its condition; **the conditions are the obligation and this shell is one way
 to run them** — where the observed state is not one it expects, read the state and pick the
 operation, rather than extending the block.
 
-**8a — record the candidate pass's findings files. Discharges conditions 1, 2, 3 (its pre-move
-check) and 4.**
+**Before it runs:** remove this cycle's dispositions notes from `.context/codex-reviews/` — §5 lets
+them be deleted — or condition 2 stops the close on them. **Keep the working record**: the close
+retires it last, after condition 4 has passed.
+
+**The closing block — conditions 1, 2 and 3, then the act.**
 
 ```bash
-BASE=$(cat .context/loop-rule-base)
-HEADREV=$(cat .context/loop-rule-reviewed-head)
-test -n "$BASE" && test -n "$HEADREV" || { echo "BASE or reviewed head missing"; exit 1; }
+BASE=$(cat .context/loop-rule-base) \
+  || { echo "cannot read the base — NOT closing"; exit 1; }
+HEADREV=$(cat .context/loop-rule-reviewed-head) \
+  || { echo "cannot read the reviewed head — NOT closing"; exit 1; }
+test -n "$BASE" && test -n "$HEADREV" || { echo "base or reviewed head empty — NOT closing"; exit 1; }
+# NONCE and LASTP are this cycle's nonce and the candidate pass number — the values the
+# calls' slot paths were built from. INCOMPLETE lists the pass numbers recorded as
+# INCOMPLETE (space-separated, or empty); only their slots may be missing.
+NONCE=<this cycle's nonce>; LASTP=<the candidate pass number>
+INCOMPLETE="<incomplete pass numbers, or empty>"
+# The working record: the one exact path left out of condition 2, never staged.
+WR=".context/codex-reviews/gate-b-$NONCE-resume.md"
 
 # Condition 1.
-test "$(git rev-parse HEAD)" = "$HEADREV" || { echo "HEAD is not the head the candidate pass was issued against"; exit 1; }
+test "$(git rev-parse HEAD)" = "$HEADREV" \
+  || { echo "HEAD is not the head the candidate pass was issued against — NOT closing"; exit 1; }
 
-# Condition 2. NONCE and P are this cycle's nonce and the candidate pass number,
-# the same two the call's slot paths were built from. The exclusion pathspec is
-# condition 2's "ask git which paths outside the expected pair are dirty".
-NONCE=<this cycle's nonce>; P=<the candidate pass number>
-FINAL=".context/codex-reviews/gate-b-spec-$NONCE-pass-$P.md .context/codex-reviews/gate-b-quality-$NONCE-pass-$P.md"
+# Condition 2, the set: the EXACT findings slots of passes 1..LASTP, never a glob, so a
+# dispositions note or the working record is never taken for a findings file.
+: > .context/loop-rule-final-paths || { echo "cannot write the findings list — NOT closing"; exit 1; }
+p=1
+while [ "$p" -le "$LASTP" ]; do
+  for b in spec quality; do
+    f=".context/codex-reviews/gate-b-$b-$NONCE-pass-$p.md"
+    if [ -f "$f" ]; then
+      printf '%s\n' "$f" >> .context/loop-rule-final-paths \
+        || { echo "cannot write the findings list — NOT closing"; exit 1; }
+    else
+      case " $INCOMPLETE " in
+        *" $p "*) test "$p" -ne "$LASTP" \
+                     || { echo "the candidate pass cannot be INCOMPLETE — NOT closing"; exit 1; } ;;
+        *) echo "missing findings file for a pass not recorded as INCOMPLETE: $f — NOT closing"; exit 1 ;;
+      esac
+    fi
+  done
+  p=$((p + 1))
+done
+
+# Condition 2, the check: anything dirty OUTSIDE that set stops the close — tracked,
+# staged or untracked. Ignored scratch never appears in status, so nothing else is exempt.
+# Two steps: a FAILED status prints nothing and would read as clean.
 set --
-for f in $FINAL; do set -- "$@" ":(exclude)$f"; done
-for f in $FINAL; do
-  test -n "$(git status --porcelain --untracked-files=all -- "$f")" \
-    || { echo "this pass's findings file is not dirty: $f"; exit 1; }
-done
-# Two steps: a FAILED `git status` prints nothing, and inline this reads as "nothing
-# outside the findings files is dirty" — condition 2 satisfied by a comparison that
-# never ran, and it is the only check between a foreign delta and the closing squash.
-OUTSIDE=$(git status --porcelain -z --untracked-files=all -- "$@") \
-  || { echo "reading the dirty set outside this pass's findings files FAILED"; exit 1; }
-test -z "$OUTSIDE" \
-  || { echo "something outside this pass's findings files is dirty:"; git status --porcelain --untracked-files=all; exit 1; }
+while IFS= read -r f; do set -- "$@" ":(exclude)$f"; done < .context/loop-rule-final-paths
+OUT=$(git status --porcelain -z --untracked-files=all -- . "$@" ":(exclude)$WR") \
+  || { echo "reading the dirty set FAILED — NOT closing"; exit 1; }
+test -z "$OUT" \
+  || { echo "something outside this cycle's findings files is dirty — NOT closing"; git status --porcelain --untracked-files=all; exit 1; }
 
-# Condition 3, its pre-move check — the last precondition, so nothing has moved if
-# it fails. Reader check on the message's records; the expected result is
-# condition 3's. 8b revalidates it immediately before the commit consumes it.
-test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty"; exit 1; }
-
-# Condition 4, first bullet: pin the validated blobs before staging.
-# Guarded per iteration AND on the redirect. Only the last iteration's status survives
-# a bare loop, and a failed redirect leaves an EARLIER attempt's pin standing — which,
-# paired with the same failure below, makes the comparison compare two stale files and
-# pass. The `>&2` matters: this compound's stdout IS the pin file.
-for f in $FINAL; do
-  git hash-object "$f" \
-    || { echo "pinning the validated blob for $f FAILED — nothing is staged" >&2; exit 1; }
-done > .context/loop-rule-final-blobs \
-  || { echo "writing the validated-blob pin FAILED — nothing is staged"; exit 1; }
-# shellcheck disable=SC2086
-git add $FINAL \
-  || { echo "staging FAILED — run Failure; do NOT commit"; exit 1; }
-git commit -m "WIP: Gate-B findings files" || { echo "record commit FAILED — run Failure"; exit 1; }
-# Resolve the record commit ONCE, here, and run every condition-4 check against that
-# object id. `HEAD` is a movable ref: re-resolving it at each check — and again at the
-# tail, where the tip is written — lets a move land a commit as the closing tip that
-# satisfied none of the parent, path, blob-identity or eligibility checks. Condition 5
-# would then accept it, `reset --soft` would fold it into the closing commit, and the
-# only later content check is the one this plan deliberately parks.
-REC=$(git rev-parse HEAD) || { echo "cannot resolve the record commit — run Failure"; exit 1; }
-test "$(git rev-parse "$REC^")" = "$HEADREV" || { echo "record commit's parent is not the reviewed head — run Failure"; exit 1; }
-git diff --quiet "$HEADREV" "$REC" -- "$@" \
-  || { echo "record commit changed paths beyond this pass's findings files — run Failure"; exit 1; }
-# The polarity is inverted here: exit 0 means "no difference", i.e. NOT carried. With
-# `&&` an execution error (status 2 or above) takes the same path as "carried" and the
-# close proceeds on a comparison that could not run. Status 1 — a real difference — is
-# the legitimate result this check wants.
-for f in $FINAL; do
-  git diff --quiet "$HEADREV" "$REC" -- "$f"
-  case $? in
-    0) echo "record commit did not carry $f — run Failure"; exit 1 ;;
-    1) : ;;
-    *) echo "comparing $f between the reviewed head and the record commit FAILED — run Failure"; exit 1 ;;
-  esac
-done
-
-# Condition 4, second bullet.
-# Guarded the same way as the pin above, and for the same paired-stale reason. Note
-# that on an unresolvable rev `git rev-parse` echoes its argument to stdout and exits
-# 128, so without the guard this file can hold a junk line and the loop's status is gone.
-for f in $FINAL; do
-  git rev-parse "$REC:$f" \
-    || { echo "reading the committed blob for $f FAILED — run Failure" >&2; exit 1; }
-done > .context/loop-rule-committed-blobs \
-  || { echo "writing the committed-blob list FAILED — run Failure"; exit 1; }
-diff .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
-  || { echo "a findings file was rewritten between validation and commit — run Failure"; exit 1; }
-
-# Condition 4, third bullet: re-run the findings-file structural check on the
-# COMMITTED content and re-establish this pass's eligibility. Reader check; the
-# expected result is condition 4's.
-TREESTATE=$(git status --porcelain) \
-  || { echo "reading the tree state after the record commit FAILED — run Failure"; exit 1; }
-test -z "$TREESTATE" || { echo "tree not clean after the record commit — run Failure"; exit 1; }
-
-# Condition 4's tail: the closing tip — the SAME object every check above ran against,
-# never a fresh resolution, so a `HEAD` that moved after those checks cannot become the
-# tip. Guarded even though it ends the block: a failed redirect leaves whatever an
-# earlier attempt wrote, and 8b's condition 5 compares against that. (A failed write
-# after a successful truncate leaves the file empty, which 8b's `test -n "$TIP"` does
-# catch — the redirect failure is the half it cannot.)
-printf '%s\n' "$REC" > .context/loop-rule-reviewed-tip \
-  || { echo "recording the closing tip FAILED — run Failure; 8b must not run"; exit 1; }
-```
-
-**8b — reset and close. A separate invocation, carrying no `-m` option at all. Discharges condition
-3's revalidation and conditions 5 and 6.**
-
-```bash
-BASE=$(cat .context/loop-rule-base); TIP=$(cat .context/loop-rule-reviewed-tip)
-test -n "$BASE" && test -n "$TIP" || { echo "BASE or TIP missing — 8a did not complete"; exit 1; }
-
-# Condition 5: the tip AND a clean tree, both read in THIS invocation.
-test "$(git rev-parse HEAD)" = "$TIP" || { echo "HEAD has moved since 8a — NOT resetting"; exit 1; }
-# Two steps, and this is the most expensive instance: the next command is the
-# `reset --soft`. Both branches keep both markers — "NOT resetting", because nothing
-# has moved in this invocation, and "run Failure", because 8a's record commit has.
-TREESTATE=$(git status --porcelain) \
-  || { echo "reading the tree state at 8b FAILED — NOT resetting; run Failure"; exit 1; }
-test -z "$TREESTATE" || { echo "tree not clean at 8b — NOT resetting; run Failure"; exit 1; }
-
-git reset --soft "$BASE" || { echo "reset --soft FAILED — run Failure; do NOT commit"; exit 1; }
-
-# Condition 3's revalidation: re-read the message here, immediately before it is
-# consumed. Reader check on its records; the expected result is condition 3's.
-test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty — run Failure"; exit 1; }
-# Pin the bytes this invocation validated, BEFORE the commit runs. Condition 6's
-# oracle must not be the same mutable path the commit reads: a `commit-msg` hook
-# that rewrites git's copy AND this ignored source file would otherwise make the
-# post-close comparison pass on a body nobody validated.
-# Guarding the REMOVAL is what closes the demonstrated case. Unguarded, a DIRECTORY at
-# this path let the block reach the commit: `rm -f` fails on a directory, `cp source
-# dir` then succeeds by writing beneath it, both commands report success and condition
-# 6 only finds the missing oracle after history has moved. Observed under sh, dash and
-# bash — the old shape printed REACHED THE COMMIT with the path still a directory.
-# The copy is guarded because it is the write, and a surviving earlier pin would be
-# non-empty enough for condition 6's `test -s`. The `test -f` after them is a residual
-# check on the destination's shape; no demonstrated path reaches it, since the removal
-# guard fires first. None of this promises cleanup — a failed step leaves whatever is
-# on disk and stops before the commit, which is the whole of what it guarantees.
+# Condition 3, immediately before the commit consumes it. Reader check on its records;
+# the expected result is condition 3's. Then pin the validated bytes as condition 4's oracle.
+test -s .context/loop-rule-closing-msg || { echo "closing message missing or empty — NOT closing"; exit 1; }
 rm -f .context/loop-rule-validated-msg \
-  || { echo "removing the previous pin FAILED — run Failure; do NOT commit"; exit 1; }
+  || { echo "removing the previous message pin FAILED — NOT closing"; exit 1; }
 cp .context/loop-rule-closing-msg .context/loop-rule-validated-msg \
-  || { echo "pinning the validated closing message FAILED — run Failure; do NOT commit"; exit 1; }
-# A guarded `cp` is not enough on its own: where a DIRECTORY sits at the destination,
-# `rm -f` fails and `cp source dir` succeeds by writing beneath it, so both commands
-# report success, the commit runs, and condition 6 only discovers the missing oracle
-# after history has moved. Require the destination to be the regular file just written.
+  || { echo "pinning the validated closing message FAILED — NOT closing"; exit 1; }
 test -f .context/loop-rule-validated-msg \
-  || { echo "the pin path is not a regular file — run Failure; do NOT commit"; exit 1; }
-# `--cleanup=verbatim` so the stored body is the validated bytes: git's default
-# cleanup for -F strips trailing whitespace and collapses blank runs, and
-# condition 6 compares bytes. It carries no `-m`, so `is_wip_commit` still misses it.
-git commit --cleanup=verbatim -F .context/loop-rule-closing-msg
+  || { echo "the message pin path is not a regular file — NOT closing"; exit 1; }
+
+# Pin every selected findings file's bytes, staged or not: `git add` below stages exactly
+# these worktree bytes, and condition 4 compares the commit with this pin.
+while IFS= read -r f; do
+  b=$(git hash-object -- "$f") || { echo "pinning $f FAILED — NOT closing" >&2; exit 1; }
+  printf '%s\t%s\n' "$f" "$b"
+done < .context/loop-rule-final-paths > .context/loop-rule-final-blobs \
+  || { echo "writing the findings-blob pin FAILED — NOT closing"; exit 1; }
+
+# The act. A failed add has not moved HEAD, but the index may hold part of the set.
+while IFS= read -r f; do
+  git add -- "$f" || { echo "staging $f FAILED — the index may hold part of the set; stop, do NOT reset" >&2; exit 1; }
+done < .context/loop-rule-final-paths || exit 1
+git reset --soft "$BASE" || { echo "reset --soft FAILED — run Failure; do NOT commit"; exit 1; }
+# `--cleanup=verbatim` so the stored body is the validated bytes; `-F`, never `-m`, so
+# `is_wip_commit` cannot read the close as cycle-internal.
+git commit --cleanup=verbatim -F .context/loop-rule-closing-msg \
+  || { echo "closing commit FAILED — run Failure"; exit 1; }
 ```
 
-**Condition 6, in its own invocation — which is why it re-reads `$BASE`.** Every fenced block here is
-a separate shell, so a variable assigned in 8b is empty in this one:
+**The postcondition block — condition 4, in its own invocation, which is why it re-reads `$BASE`.**
+Every fenced block here is a separate shell, so a variable assigned in the closing block is empty in
+this one:
 
 ```bash
 BASE=$(cat .context/loop-rule-base)
 test -n "$BASE" || { echo "BASE empty or unreadable — cannot verify the close"; exit 1; }
+NONCE=<this cycle's nonce>
+WR=".context/codex-reviews/gate-b-$NONCE-resume.md"   # retired last, below
+# Resolve the closing commit ONCE and make it the subject of every predicate below.
+# Condition 4 is not one test but five — subject, parent, tree, body, findings blobs — and reading
+# `HEAD` separately for each lets a move or an amend in between hand them DIFFERENT
+# commits while all five still pass. Condition 1 may read `HEAD` live because it
+# compares ONE read against ONE recorded baseline; condition 4 has no baseline
+# and composes, which is why the same licence does not extend to it.
+CLOSED=$(git rev-parse HEAD) \
+  || { echo "cannot resolve the closing commit — run Failure"; exit 1; }
 # Read under a guard: a failed `git log` yields an empty subject, which matches no
 # pattern, so the WIP arm never fires and the check is satisfied by a command that
 # failed. No `test -n` is added — a genuinely empty subject read successfully passes
 # today, and requiring one would be a new condition rather than a repair to this one.
-SUBJECT=$(git log -1 --pretty=%s) \
+SUBJECT=$(git log -1 --pretty=%s "$CLOSED") \
   || { echo "reading the closing commit's subject FAILED — run Failure"; exit 1; }
 case "$SUBJECT" in
   [Ww][Ii][Pp]:*) echo "closing commit still reads as a snapshot — run Failure"; exit 1 ;;
 esac
-test "$(git rev-parse HEAD^)" = "$BASE" || { echo "closing commit's parent is not \$BASE — run Failure"; exit 1; }
-TREESTATE=$(git status --porcelain) \
+test "$(git rev-parse "$CLOSED^")" = "$BASE" || { echo "closing commit's parent is not \$BASE — run Failure"; exit 1; }
+TREESTATE=$(git status --porcelain -- . ":(exclude)$WR") \
   || { echo "reading the tree state after the close FAILED — run Failure"; exit 1; }
 test -z "$TREESTATE" || { echo "tree dirty after the close — run Failure"; exit 1; }
 # `--pretty=format:%B` emits the stored message alone; the `%B` spelling appends a
 # trailing newline the source file has none of, which rejected a CORRECT close.
-# 8b's `--cleanup=verbatim` is the other half — without it git stores its own
+# The closing block's `--cleanup=verbatim` is the other half — without it git stores its own
 # tidied copy. Both observed in a disposable repository, so this diff is the
-# byte equality condition 6 states, not a normalized stand-in for it.
-test -s .context/loop-rule-validated-msg || { echo "no pinned message — 8b did not complete; run Failure"; exit 1; }
-# Same shape as 8b's pin: remove the previous extraction first, then guard this one.
+# byte equality condition 4 states, not a normalized stand-in for it.
+test -s .context/loop-rule-validated-msg || { echo "no pinned message — the closing block did not complete; run Failure"; exit 1; }
+# Same shape as the closing block's pin: remove the previous extraction first, then guard this one.
 # A failed redirect otherwise leaves an earlier body at the path and the `diff` below
 # masks the failure — it can even pass, when the earlier body was the same validated
 # message, so the close is accepted on bytes nobody read out of THIS commit.
 rm -f .context/loop-rule-landed-msg
-git log -1 --pretty=format:%B > .context/loop-rule-landed-msg \
+git log -1 --pretty=format:%B "$CLOSED" > .context/loop-rule-landed-msg \
   || { echo "extracting the committed body FAILED — run Failure; the comparison has no input"; exit 1; }
 diff .context/loop-rule-validated-msg .context/loop-rule-landed-msg \
   || { echo "the committed body differs from the validated message — run Failure"; exit 1; }
-```
 
-**Run step 8's blocks under `sh` or `bash`, not `zsh`.** `for f in $FINAL` and the `git add $FINAL`
-beside it rely on the unquoted variable **word-splitting into two paths** — which is why the
-`shellcheck disable=SC2086` is there — and `zsh` does not split unquoted parameters by default, so
-the whole string is taken as one filename and every command fails on a path that does not exist.
-**Observed, not assumed**: the first verification run of this block was made under `zsh` and failed
-exactly that way. **Nothing in step 8 needs `bash` specifically** — an earlier revision compared the
-two message copies through process substitution, which `dash` has none of; the comparison now reads
-two ordinary files.
+# Condition 4, the findings blobs: every selected file, committed exactly as pinned just
+# before staging. This compares pin-time bytes with committed bytes and nothing earlier.
+while IFS="$(printf '\t')" read -r f b; do
+  test "$(git rev-parse "$CLOSED:$f" 2>/dev/null)" = "$b" \
+    || { echo "committed findings file differs from its pin, or is missing: $f — run Failure"; exit 1; }
+done < .context/loop-rule-final-blobs \
+  || { echo "reading the findings-blob pin FAILED — run Failure"; exit 1; }
+# The final pass's pair, re-read from $CLOSED against §5's "Accept a pass only when" and
+# the clean-or-zero-finding reading it was judged on: reader check, expected result
+# condition 4's.
 
-**All four pass, and only then the cleanup Close's success recognition names:**
+# The cleanup gate, as a COMMAND rather than a sentence. Everything above describes
+# $CLOSED; the cleanup is about the repository as it stands now, so this is where the
+# capture is re-asserted. A move between the close and this point must not be followed
+# by deleting the recovery state, which is the only evidence of what was closed.
+test "$(git rev-parse HEAD)" = "$CLOSED" \
+  || { echo "HEAD moved during the close verification — run Failure; do NOT clean up"; exit 1; }
 
-```bash
-rm -f .context/loop-rule-base .context/loop-rule-reviewed-tip .context/loop-rule-reviewed-head \
+rm -f .context/loop-rule-base .context/loop-rule-reviewed-head \
       .context/loop-rule-baseref .context/loop-rule-closing-msg \
       .context/loop-rule-untouched .context/loop-rule-baseline-diff.txt \
       .context/loop-rule-sites .context/loop-rule-changed-sites \
       .context/loop-rule-c.src .context/loop-rule-w.src \
       .context/loop-rule-a.txt .context/loop-rule-b.txt .context/loop-rule-landed-msg \
       .context/loop-rule-validated-msg \
-      .context/loop-rule-final-blobs .context/loop-rule-committed-blobs \
-      .context/loop-rule-records-commit
+      .context/loop-rule-final-blobs .context/loop-rule-final-paths \
+      .context/loop-rule-start
 if ls .context/loop-rule-* >/dev/null 2>&1; then
   echo "cycle scratch survives the close:"; ls .context/loop-rule-*; exit 1
 fi
+# Retire the working record LAST — only now is the cycle's own commit its recovery source
+# (§5) — and then require a clean tree with no exception.
+rm -f "$WR" || { echo "retiring the working record FAILED — it survives; report it"; exit 1; }
+TREESTATE=$(git status --porcelain) \
+  || { echo "reading the tree state after retiring the working record FAILED"; exit 1; }
+test -z "$TREESTATE" || { echo "tree not clean after the close's cleanup:"; git status --porcelain; exit 1; }
 ```
+
+**What the capture buys, and what it does not.** All four predicates now describe **one object**,
+which is the defect it repairs. It does **not** establish that the object is the commit the closing block created:
+a substituted commit would still have to be parented at `$BASE` and carry the validated body
+byte-for-byte, which is much narrower but is not nothing. The re-assert before the cleanup closes the
+window inside this block; it says nothing about the window between the closing commit and this block's first
+line.
+
+**Run step 8's blocks under `sh`, `dash` or `bash`, not `zsh`.** The closing block builds its
+exclusion list with `set --` inside a redirected `while` loop, which relies on POSIX shell
+behaviour. **Nothing in step 8 needs `bash` specifically.**
+
+**The cleanup Close's success recognition names is the tail of the condition-6 block above**, not a
+block of its own. It used to be separate, gated only by the sentence *"all four pass, and only
+then"* — a prose gate in a different shell, which asserts an ordering rather than checking one. It
+now runs after the `HEAD = $CLOSED` re-assert, so the gate is a command.
 
 **The `ls` is what makes the removal checked rather than asserted**, and the list is every
 `loop-rule-*` name this plan writes. **The plan's own records are not among them** — they live in

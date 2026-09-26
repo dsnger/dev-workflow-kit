@@ -13,31 +13,317 @@ Nothing depends on it; the pass files and the repo are authoritative where this 
 
 ## Resume here
 
+### PASS 56 — RUN, VALID, CLEAN (0 findings). Closure-eligible. NOT closed: the closing commit is not authorized.
+
+Blob `79649d37e89ebd07b60e53d6be5f44a4ccb1cbb5`, HEAD `5fb3b94`, session
+`01a0dc89-184b-7d10-86d4-d0d659130526`. The file is exactly `NO FINDINGS` / `END OF FINDINGS (0 total)`.
+Floor 3; pass 56 is above it. **Next: Daniel decides the Gate-A closing act.** Per §5 as this cycle
+started, that is committing the reviewed plan unchanged together with its provenance line and its
+passes 1–56 curve. The curve still has to be assembled from the findings files.
+
+### 2026-09-26 — revision 27 applied, pass 56 authorized (one pass only)
+
+**Release.** Daniel released the sparring brief `.context/sparring/2026-09-26-loop-pass55-prompt.md`:
+repair the two pass-55 Majors, verify, run exactly one pass 56, then stop.
+
+**Revision 27** (blob `f34d032…` → `79649d37e89ebd07b60e53d6be5f44a4ccb1cbb5`, 3784 lines):
+- a step-7 re-review route for a clean or zero-finding pass whose evidence changed, or which Failure
+  charges; Close now requires that no re-review is owed;
+- 7b points at that route;
+- the no-repair branch's dirty check is an exact-path block admitting only this plan, this cycle's
+  findings slots, their per-slot dispositions notes and the working record.
+
+**Executed:** the new block under sh and dash, 5 cases, as expected; the 12 close cases still hold.
+**Walkthrough only:** the re-review and Failure-charged routes. The pass-55 Minor stays collected.
+
+### PASS 55 — RUN, VALID, UNCLEAN (0 Blockers, 2 Majors, 1 Minor). Cycle OPEN. No pass 56 authorized.
+
+Blob `f34d032…`, session `01a0da21-a62f-7d83-bb43-d0a00cecad82`. Major 1: the no-repair branch's
+"anything else dirty" stop catches the cycle's own uncommitted findings files. Major 2: step 7 has no
+route for a clean pass that owes re-review because evidence changed. Both came from revision 26, both
+are in-set and small. The Minor (Task 7 checklist) is collected. One tell. Details:
+`gate-a-plan-om0bdd7udh-pass-55-dispositions.md`. Next move is Daniel's.
+
+### 2026-09-25 late — option 1 decided, revision 26 applied, pass 55 authorized (one pass only)
+
+**Decision.** Daniel sent the sparring assessment and brief `2026-09-25-194705-loop-pass54-*`. Both
+the agent and the reviewer recommended **option 1**: this change's Gate-B cycle follows **§5 at
+`$BASE`** (`CLAUDE.md:153`); the installed ordering does not steer it and stays the product under test.
+Daniel's message was taken as the release.
+
+**Revision 26** (blob `2d7eeff…` → `f34d03267b9a4387b8121b76b773c6eb7281d71a`, 3747 lines):
+- step 7 routing rewritten to §5-at-`$BASE` routes, with an accounting table;
+- Failure, Resume, Close and 7b relabelled as the plan's own procedures;
+- the no-repair branch reconciled with the complete set (row 27);
+- the step-4b block names repair files, including spec and version files;
+- the working record is kept until the close has succeeded, and retired last.
+
+**Pass-54 Majors:** 1 → option 1 applied; 2, 3, 4 → fixed. Minor and Nits stay collected.
+**Executed:** close composition test, 12 cases under sh and dash; the step-4b block with a spec repair
+and with a records-only change. Prechecks: 54 fences, sh -n 7 / dash -n 8, same classes.
+
+### PASS 54 — RUN, VALID, UNCLEAN (0 Blockers, 4 Majors). Cycle OPEN. Stop: finding 1 is a contract question.
+
+Blob `2d7eeff…`, session `01a0d9e6-2fca-73a3-b15f-a58682ac11a8`. 7 findings: 0 Blockers, 4 Majors,
+1 Minor, 2 Nits. Majors 2–4 are in-set corrections of revision 25; Major 1 asks which rule set
+governs this change's Gate-B cycle (§5 at `$BASE` versus the installed ordering, which disagree on
+tells at a closing pass). Details: `gate-a-plan-om0bdd7udh-pass-54-dispositions.md`. Next move is
+Daniel's.
+
+### 2026-09-25 evening — D1 accepted, revision 25 applied, pass 54 authorized (one pass only)
+
+**Decision.** Pass 53's mandatory stop (tells 1, 2, 3) was surfaced. Daniel released the sparring
+brief `.context/sparring/2026-09-25-183846-loop-d1-prompt.md`, accepting **D1**: Gate-B findings
+files are committed once, at the close, not per pass. The durability loss before the close is
+accepted and stated in the plan (Close, *D1*). Proposal:
+`.context/loop-rule-task15-simplification-proposal-2026-09-25.md`, with the reviewer's three
+corrections: no `.context/loop-rule-*` exemption; staged findings files are pinned too; exact slot
+paths instead of a glob, so a dispositions note is not taken as findings.
+
+**Revision 25:** plan blob `769fbc6…` → `2d7eeff004758108222f9f921c78f72c4dacdd28` (3706 lines, 457
+fewer). Step 7, Close, step 8, Resume, the index, the accounting rows and line 31 were changed; 4b's
+failure route was changed too. Details are in `.context/gate-a-plan-pass-54-instruction.md`, section
+"REVISION TWENTY-FIVE".
+
+**Pass-53 findings → dispositions:** 1 → fixed (4b failure route); 2 → fixed (one sequence,
+explicit no-repair branch); 3 → fixed (`$BASE` loaded in the block); 4 → dissolved (no records
+commit, so `HEAD` stays the reviewed head). Minors and Nit stay collected.
+
+**Executed:** step 8's blocks, extracted from the plan, run under sh+dash in disposable repos, 10
+cases, all as expected (`scratchpad/close-compose-test.py`). Prechecks: 54 fences balanced, sh -n 7 /
+dash -n 8, same classes. **Not executed:** the plan, and the reader re-check.
+
+### PASS 53 — RUN, VALID, UNCLEAN. Cycle OPEN. Mandatory stop (tells 1, 2, 3). No repair, no pass 54.
+
+Blob `769fbc61553fcc8b1d6069c3343282d78028e35c`, HEAD `5fb3b94`, session
+`01a0d94e-ecfb-7390-8f8d-b299712092dc`. 7 findings: 2 Blockers, 2 Majors, 2 Minors, 1 Nit. Blocker 1
+(4b failure route runs the candidate battery before the candidate exists) was **created by revision
+24**; Blocker 2 and both Majors are pre-existing. Details and loop health:
+`gate-a-plan-om0bdd7udh-pass-53-dispositions.md`. Next move is Daniel's.
+
+### 2026-09-25 — Daniel decided pass 52's scope question: option B, bounded. Revision 24 made. Pass 53 authorized (one pass only).
+
+**Decision.** Daniel released the sparring reviewer's bounded brief
+(`.context/sparring/2026-09-25-154933-loop-pass52-decision-prompt.md`) after the coding agent first
+proposed option A (bind via CI). The reviewer showed A wrong on three verified points:
+`process-pr-review.md:183` requires the local battery AND CI; `CLAUDE.md:708` owes the battery before
+Gate B; `ci.yml` checks out the PR merge result, not the branch head. **B: the battery runs on the
+recorded candidate in a disposable clone.** The mandatory stop from pass 52's tells was surfaced to
+Daniel and answered by this decision; it is not a waiver, and no gate duty changed.
+
+**Revision 24** (plan blob `15a9b1c…` → `769fbc61553fcc8b1d6069c3343282d78028e35c`):
+- Blocker 1: 4b's commit block resolves the commit once (`CAND`), checks `$CAND^{tree}`, writes `$CAND`
+  to `.context/loop-rule-reviewed-head`; the separate capture block is deleted.
+- Blocker 2: step 4's battery runs in a `--shared` clone detached at the recorded candidate; exit
+  0/1/2; limits and old-condition accounting written after the block; step 7's "battery is bound"
+  bullet and the line-31 constraint aligned.
+- Evidence (scratchpad, disposable): Blocker 1 old shape recorded a different commit after an
+  intervening commit, new shape recorded the checked id. Blocker 2 control passed (exit 0) on
+  `5fb3b94`; defective candidate + worktree-only revert: old worktree shellcheck exit 0, new block exit 1.
+  Plan-extracted battery block byte-equal to the tested block; both blocks `sh -n`/`dash -n` clean.
+  Plan: 59 fences balanced, `sh -n` 8 / `dash -n` 9 failures — same classes as before.
+- Minor and Nit from pass 52 stay collected.
+
+**Scope of the release:** at most pass 53, then report and stop. No pass 54, no automatic repair, no
+commit/push/rebase. Instruction: `.context/gate-a-plan-pass-53-instruction.md`.
+
+### PASS 52 — RUN, VALID, UNCLEAN. Cycle stays OPEN. No repair authorized, none made.
+
+Reviewed the repaired worktree plan: blob **`15a9b1c2ff4beb3c6dfa6ae21e00550210d4b969`**, `HEAD`
+`5fb3b942f1907f5d6dd25b32d15b497f855e05f8`, branch `loop-rule-consolidation`, diff +675/−134 against
+`HEAD`. **Identity checked before and after the call — the blob did not move.** Tool:
+`mcp__codex__exec`, session `01a0b0ac-5d48-75d1-86b8-e196edda1f40`. The pass reviewed the
+**twenty-second and twenty-third revisions**, which pass 51 had not seen.
+
+**Result VALID** — terminator `END OF FINDINGS (4 total)` exact, 4 body lines, every line a finding
+line, 6 fields each, no blanks, count matches. **4 findings: 2 Blockers, 0 Majors, 1 Minor, 1 Nit.**
+Per-finding verdicts in `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-52-dispositions.md`;
+**both Blockers confirmed against the plan text, the Nit confirmed by direct read, the Minor confirmed
+in kind with its named sites unverified.**
+
+**Floor 3**, read fresh from the story header at this pass: **Risk `high`** (level 2) · **Security
+`none`** (0) · max 2 ≠ 0 → 3. One cited story, from the plan's `**Story:**` header. Floor long
+satisfied; what is missing remains a **clean** pass.
+
+**Method change, declared.** The instruction was delivered by pointing Codex at
+`.context/gate-a-plan-pass-52-instruction.md` (1006 lines) instead of inlining 100 KB in the tool
+argument — reproducing that verbatim into a parameter risks silent drift, the file on disk does not.
+The findings-protocol contract was restated inline. **That Codex read the file in full is not
+established**; the reply and the findings are consistent with it, which is evidence and not proof.
+
+**The two Blockers, in one line each.** Step 4b's commit block pins `$ITREE` and checks
+`HEAD^{tree}` against it in one fenced block (plan 2954–2967), then a **separate** block (2987–2993)
+resolves `HEAD` **again** to write `.context/loop-rule-reviewed-head` — and the plan itself states at
+line 3027 that each fenced block is its own shell invocation, so nothing binds the recorded candidate
+to the commit that was checked. **That is the resolve-once class of passes 47–49, reintroduced by the
+twenty-second revision's own new capture block.** And step 4's battery runs over the **mutable working
+tree** while step 6 checks only that `HEAD` has not moved, so a dirty helper change can make the
+battery green for bytes absent from the candidate.
+
+**The second Blocker is the blocking decision and it is NOT the loop's to absorb.** The plan
+**already discloses** that window in its own text (2977–2985) as "a limit rather than guarded".
+Disclosure does not discharge a Blocker — this cycle settled that at the twentieth revision. But the
+proposed fix is a **new mechanism** (a detached disposable checkout for the battery, or an
+index+worktree equality re-check on both sides of it), and this cycle holds **two live rulings that
+point opposite ways**: it declined new preconditions at pass 44 and at pass 49's finding 3, and it
+ruled at revisions twenty and twenty-one that "a different checking mechanism is not by itself a new
+requirement" — which is the ruling that put step 4c in the plan. **A new structural question stops
+the loop and goes to Daniel** (§5: novelty wins over ancestry). Finding 1, by contrast, sits inside
+the assigned fix set and is an ordinary repair once authorized.
+
+**Loop health: at least two of five tells, so stop-and-surface is mandatory** — independently of the
+instruction to stop. Findings 42–52: **3, 5, 9, 2, 1, 2, 3, 6, 4, 6, 4**; Blockers **2, 2, 2, 1, 1,
+1, 3, 5, 2, 2, 2**; Majors **1, 2, 7, 1, 0, 1, 0, 1, 1, 2, 0**. (1) Finding count **falling**, 6 → 4
+— not present. (2) Blocker count **flat at 2 for the third pass — failing to fall**. (3) **Instrument
+cluster, total**: all four are the plan's own execution machinery; zero touch the §5 target text.
+(4) A **partial prose cluster** — findings 3 and 4 are both prose promising what the command beside it
+does not do; reported, not resolved, and it changes nothing. (5) **No require↔withdraw pair**.
+
+**The "clearly stuck" exit is still NOT available.** No plateau at six or more — the Blocker curve
+over the last six is 1, 3, 5, 2, 2, 2. **No affirmative coverage judgement is possible** — finding 1
+is a defect the twenty-second revision itself created. Regeneration is present; that is one conjunct
+of three, and one is not the exit.
+
+**Mechanical prechecks on this blob, new this session and not comparable to earlier reported
+baselines** (different extractor): **60 fenced blocks, all balanced, none unclosed**; `sh -n` fails on
+**8**, `dash -n` on **9**, every one an intended `<…>` placeholder or `bash`-only process
+substitution — **no new syntax regression**; every cited repo path resolves; `loop-rule-baseline-diff`
+`.tmp`→`.txt` is an atomic rename, not an inconsistency.
+
+**Nothing was committed and nothing was repaired.** `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`,
+`todos.md` and `docs/field-reports/2026-09-17-sfx-review-loop-economics.md` remain Daniel's edits in
+flight — untouched.
+
+**Next:** pass 53 is **not** authorized. The next step is Daniel's decision on finding 2's scope
+question. `.context/gate-a-plan-prompt.md` now carries pass 52's history entry, the twenty-second and
+twenty-third revision descriptions, the updated collected list and the identity-not-cleanliness
+precondition; substitute `__SHA__`/`__P__` to build the next instruction file.
+
 ## HANDOFF — 2026-09-17, written for a session that has just lost its context
 
-**State.** Plan anchor `1ba45be`; cycle `om0bdd7udh` **OPEN and UNCLEAN at pass 48**. The plan's
-sixteenth revision repaired all three of pass 48's Blockers. **Nothing is implemented yet** —
-`CLAUDE.md`, `plugins/dev-workflow/commands/workflow-init.md` and the hook are untouched.
+**State.** Plan anchor `1ba45be`; cycle `om0bdd7udh` **OPEN and UNCLEAN at pass 49**. The plan's
+sixteenth revision repaired all three of pass 48's Blockers; **pass 49 found six more — 5 Blockers
+and 1 Major — and none is repaired.** **Nothing is implemented yet** — `CLAUDE.md`,
+`plugins/dev-workflow/commands/workflow-init.md` and the hook are untouched.
+
+**Pass 49 ran full, on Daniel's reviewer's written authorization of 2026-09-17** (exactly one full
+Gate-A plan pass, four areas prioritized, no part of the artifact excluded; no repair round, no
+implementation, no pass 50). Reviewed revision: the plan at `1ba45be`, blob
+`bc685751b971c6708fc7abf133d4e73e530ec9a5`, **identical at `1ba45be`, at `HEAD` `5fb3b94` and in the
+worktree** — the intervening commit touches only this record. Repo read at `HEAD` `5fb3b94`. Result
+**VALID** under the findings protocol: terminator `END OF FINDINGS (6 total)` exact, 6 body lines,
+every line a finding line, 6 fields each, no blanks. File
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-49.md` (untracked on disk, not committed).
+
+**All six were validated against the plan text before being reported** — five read-only subagents,
+one per Blocker, plus execution for the Major. Verdicts: findings 1, 2, 4 **confirmed**; findings 3
+and 5 **partially confirmed**; finding 6 **confirmed by execution**. Details in the pass-49 rows
+below.
+
+**The one structural fact pass 49 establishes: the resolve-once sweep is not complete.** Five of the
+six are the same defect class the sixteenth revision swept — a movable ref re-resolved as the
+*identity* of an object whose properties were already checked — at five sites that sweep did not
+reach. Two were simply missed (Preparation/Task 0 step 1; step 6's call issuance, which is prose
+describing an MCP parameter and therefore **structurally invisible** to a shellcheck-verified sweep).
+One was **explicitly excluded with a rationale that does not hold for it**: `1ba45be` wrote
+"conditions 1, 5 and 6 read `HEAD` on purpose, to detect a move, and stay as they are" — true of 1
+and 5, which each compare one read against one recorded baseline, but condition 6 has **no baseline
+at all** and composes subject, parent, tree and body from four separate reads.
 
 **Not yours to touch:** `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`, `todos.md` and
 `docs/field-reports/2026-09-17-sfx-review-loop-economics.md` are Daniel's own edits in flight. Leave
 them dirty; do not commit, revert or review them.
 
-**The open decision, and it is one word from Daniel.** Three tells stand at pass 48 (findings 2 → 3,
-Blockers 1 → 3, instrument cluster), so the surface is mandatory. The choice he was given:
+**That decision is spent: Daniel chose "voll", pass 49 ran full, and its authorization is exhausted.**
+No repair round, no pass 50, no implementation is authorized by it.
 
-- **"fokussiert weiter"** → run pass 49 with the prompt narrowed to the four areas that can reach a
-  shipped product (below);
-- **"voll weiter"** → run pass 49 over the whole plan, as passes 1–48 did.
+**The six open findings, with the validation verdict on each.** All must resolve before this cycle
+can close — §5's Blocker/Major rule is not waived by the utility test.
 
-**Why that choice exists — the efficiency finding, counted rather than felt.** Of roughly 25 findings
-across passes 42–48, **about 4 or 5 had a payer outside this repository**; the rest cost the one
-person executing the plan a bad session. **That is ~80% bookkeeping** — but the other 20% are
-serious: unreviewed content published through `reset --soft`, a plugin shipping without its version
-bump, a hook change slipping past the invariant-4 review. The loop is **misallocated, not worthless**.
-Of the plan's **54 shell blocks**, only four areas decide what is published: **8a/8b** (the closing
+1. **BLOCKER — Preparation and Task 0 step 1. CONFIRMED.** Preparation checks branch, ancestry and
+   the three approved-input blobs through six separate live `HEAD` resolutions; Task 0 step 1 then
+   writes `.context/loop-rule-base` from a **seventh**, independent one, so the recorded base is
+   bound to no commit whose properties were checked. Each fenced block is its own shell invocation,
+   so the two can be arbitrarily far apart. **Not in either of `1ba45be`'s lists** — neither repaired
+   nor deliberately left; simply missed. No existing guard, no disclosure.
+2. **BLOCKER — Task 15 step 6, call issuance. CONFIRMED.** Step 6 records the reviewed head to
+   `.context/loop-rule-reviewed-head`, then the call's `headSha` is specified in **prose** as "the
+   full 40-character object name `HEAD` resolves to at that moment" — never wired to the file just
+   written. Close condition 1 later compares `HEAD` against the **file**, never against what was
+   actually sent, and the review tool reports no reviewed revision, so the divergence is capturable
+   nowhere. **CLAUDE.md's own `headSha` rule is satisfied**; the stronger demand comes from the
+   plan's own logic (self-review item 28). **The sweep could not have caught this** — it is not shell.
+3. **BLOCKER — Task 15 step 8b, Close condition 5. PARTIALLY CONFIRMED, and the weakest of the six.**
+   Condition 5 already closes the **wide** window: anything committed between 8a and 8b fails the
+   `HEAD == TIP` check, anything merely staged fails the clean-tree check. What remains is a
+   **sub-second TOCTOU inside 8b's own script**, between its own checks and its own `reset --soft`,
+   requiring a **second concurrent actor** on a normally sequential single-operator session. Git
+   offers no expected-old-object guard on `reset`; `update-ref` appears nowhere in the plan. "Silently
+   publish" is true of the script but **not** of the documentation: target text §I names this gap
+   loudly as parked on Daniel's decision of 2026-09-13.
+4. **BLOCKER — Task 15 step 8, Close condition 6 and cleanup. CONFIRMED.** After the closing commit
+   lands, subject, parent, tree state and body are read through **four** independent live `HEAD`
+   resolutions with **no captured commit id**; the parent check asserts only `HEAD^ == $BASE`, true of
+   *any* commit parented by the base. Cleanup then deletes every recovery artifact. **Explicitly
+   excluded by `1ba45be` on a rationale valid for conditions 1 and 5 and not for 6** — those compare
+   one read against one recorded baseline; condition 6 has none and composes four properties.
+5. **BLOCKER — the records-commit marker's recovery rule. PARTIALLY CONFIRMED, two halves.**
+   *Confirmed:* the five checks `1ba45be` added (40-char id · resolves to a commit · `ba15e83` an
+   ancestor · itself an ancestor of `HEAD` · both slot paths blobs **in that commit**) are satisfied
+   **trivially by any earlier already-routed records commit** on a linear branch — nothing pins "the
+   current pass", and no scan for a later competing records commit exists. Also confirmed: the generic
+   "delete and rebuild from the `$BASE` blobs" rule is a **category mismatch** — this marker is not a
+   function of `$BASE`'s content. *Blunted:* for the case the plan **does** name — valid marker, outcome
+   not shown — there is a real executable precondition stop (report, no mutation, no call). The
+   scenario nobody checks for is a stale-but-valid marker coexisting with a later unmarked records
+   commit at `HEAD`.
+6. **MAJOR — Task 7, the worked carried-fragment example. CONFIRMED BY EXECUTION.** The plan runs
+   `grep -cF 'Codex is advisory — validate before applying; dismissed finding → one-line why'` and
+   states "Expected: `1` each in the worktree, and `parent=1 worktree=1` in each copy". In **both**
+   prompt copies the text wraps between `Codex is` and `advisory` (`CLAUDE.md:135-136`,
+   `plugins/dev-workflow/commands/workflow-init.md:342-343`), so the literal count is **0**. A
+   **correct** source text fails its own preservation check — a false red, which the severity
+   procedure's symmetric instrument carve-out keeps at Major.
+
+**The 80/20 claim is withdrawn as evidence.** Daniel's reviewer ruled it **unverified classification,
+not a measurement**, and it **must not determine exclusions or severity**. What *is* counted, from the
+pass files rather than from memory: passes 42–48 hold **exactly 25 findings — 12 Blockers, 12 Majors,
+1 Minor** (`grep -cE '^(BLOCKER|MAJOR|MINOR|NIT) \|'` per file). The payer split is a judgement made
+per finding under the utility test, and for **all six of pass 49's the payer is the one person
+executing this plan at a terminal** — no user of the shipped plugin hits any of them. The closest to
+a shipped consequence is finding 2: if it fires, *this change's own* edits to `CLAUDE.md`,
+`workflow-init.md` and the hook could land without full Gate-B coverage. **The utility test waives no
+floor, no mandatory tell and no closure condition**, so none of this makes the cycle closable.
+
+**Of the plan's 54 shell blocks, four areas decide what is published** — **8a/8b** (the closing
 commit), **steps 3–4** (version bump and battery, invariant 12), **step 6** (the Gate-B range), and
-**Tasks 10/11** (the hook change and its invariant-4 review).
+**Tasks 10/11** (the hook change and its invariant-4 review). Pass 49 was prioritized on these and
+excluded nothing; five of its six findings landed inside them.
+
+**Loop health at pass 49 — three of the five tells stand, so the stop is mandatory, not
+discretionary.** Trend across passes 42–49: findings **3, 5, 9, 2, 1, 2, 3, 6**; Blockers **2, 2, 2,
+1, 1, 1, 3, 5**; Majors **1, 2, 7, 1, 0, 1, 0, 1**. (1) Finding count **rising**, 3 → 6. (2) Blocker
+count **failing to fall**, 3 → 5. (3) **Instrument cluster** for the twelfth pass — all six are the
+plan's own execution machinery; **zero** touch the §5 target text the change installs, and zero are
+prose about either. Not present: a prose cluster, and **no require↔withdraw pair** — the near-miss
+worth naming is that `1ba45be` declared conditions 1/5/6 "stay as they are" and pass 49 demands 6
+change, which is a pass challenging a stated **non-change**, not a demand for something an earlier
+pass removed.
+
+**The "clearly stuck" exit is NOT available, and all three conjuncts fail.** No plateau — the Blocker
+curve is **rising**, not flat. No affirmative coverage judgement is possible: the sixteenth revision's
+sweep was explicitly bounded, and pass 49 finding five more sites of the same class is **direct
+evidence that coverage is insufficient**. And the findings are **newly discovered at previously
+unswept sites**, not regenerated from the repairs — pass 49 re-raised **nothing** against the three
+blocks `1ba45be` actually repaired.
+
+**The severity procedure's unsettled question does not bite here, and this was checked rather than
+assumed.** All six name an operational consumer (the executor acting on the plan) and a decision that
+changes (which commit becomes base, reviewed head, or closing tip). The instrument carve-out is
+symmetric, so findings 1/2/4 keep severity as **false greens** on a gate and finding 6 as a **false
+red**. Nothing is demoted, so the per-pass counts and clusters above are unaffected by the open
+question in `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md`'s sibling
+consolidation work.
 
 **Standing orders now in force** (also in the session memory):
 - **Subagents, parallel, by default.** Fan out read-only inspection; keep writing serial — one writer.
@@ -53,6 +339,565 @@ commit), **steps 3–4** (version bump and battery, invariant 12), **step 6** (t
   No nameable payoff → collect, never iterate. **It waives no floor, no mandatory tell and no closure
   condition** — `todos.md` "Review-loop usefulness" (Dark Factory vision §§4/7/11) is the formal
   version and activates no thresholds.
+
+**WHERE THE SCOPE NOW STANDS — 2026-09-17, after Daniel's reviewer assessed pass 49.** The stop was
+upheld; a blanket "repair all six, then pass 50" was **declined**. Two artifacts carry the result:
+
+- `.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-49-dispositions.md` — verdict + reason per
+  finding, and the three corrections to my pass-49 status report.
+- `.context/plan-drafts/pass-49-repair-draft.md` — the coherent draft for findings **1, 2, 4, 5**
+  along the four axes (check subject · stored identity · consumer · recovery), finding **6** as a
+  separate one-line fix, and finding **3** dispositioned rather than repaired. **Applied: nothing.**
+
+**Three corrections to the pass-49 report, all validated before acceptance — do not re-adopt the
+originals.** (1) "All six are paid for by the executor alone" is **wrong**: the standard is the
+causal chain, and `workflow-init.md`, `codex-gate.sh` and `codex-gate.test.sh` ship inside the plugin
+package, so findings 1, 2 and 4 can put unreviewed content into shipped files. (2) "No regeneration
+from the repairs" is **too sweeping**: `1ba45be` has seven hunks across **four** regions, not three,
+and the first is Resume's marker validation — the very thing finding 5 attacks, so finding 5 **is**
+regeneration. The "clearly stuck" exit stays unavailable all the same: Blockers are rising and no
+coverage judgement is possible. (3) The claim that the utility test was missing from the instruction
+file is **false** — it is at line 572. The other half of that correction is right and is **my
+defect**: the four priority areas appear **nowhere** in the instruction file, and my wrapper asserted
+the prompt named them when it did not. **Pass 49 is therefore not a usable test of the sharpened
+approach**, and any pass 50 must carry the four priorities in the prompt file itself.
+
+**A SEVENTEENTH BOUNDED REVISION was made on 2026-09-17 and all six findings are repaired in the
+worktree. Nothing is committed; the plan is dirty.** Daniel released the scope with "weiter" and
+instructed that questions like finding 3's go **through a gate, not to him as a menu**.
+
+- **Finding 1** — Preparation captures the starting revision **once**, runs branch, ancestry and the
+  three approved-blob predicates against that captured object, and records it to a new file
+  `.context/loop-rule-start`. Task 0 step 1 reads that file, **re-asserts `HEAD` still equals it
+  immediately before the first mutation**, records it as the base and retires the start file. The new
+  state file **ships with its recovery rule in the same change** — surviving start with no base is an
+  interrupted first entry and a precondition stop, never rebuilt, never resumed from — because a
+  state file introduced without one is precisely the defect pass 48 found in the revision before.
+- **Finding 2** — the call's `headSha` is now **the exact content of `.context/loop-rule-reviewed-head`**,
+  quoted as a literal, never a fresh resolution. The repair is prose because **there is no command to
+  guard** — the value goes into an MCP argument — so the residual is stated: nothing mechanically
+  compares the argument sent against the file, and Close condition 1 authenticates the file.
+- **Finding 3** — settled **through a Codex gate**. Verdict **NOT OWED**: condition 5 scopes its claim
+  to "when the closing invocation begins", nothing stated is violated, the wide window is already
+  closed, and an atomic guard means replacing `reset --soft` with `update-ref` plus separate index
+  handling — a different close mechanism, hence a new precondition, which this plan declines on the
+  same ground as pass 44's three escalations. Implemented as a **disclosed residual on condition 5**,
+  which names the unguarded span, says its width is unmeasured, and states that no later check would
+  catch it because the content comparison is the parked tree-equality condition.
+- **Finding 4** — condition 6 captures **one object** and addresses subject, parent and body to it;
+  the tree check and the **cleanup are gated on a `HEAD = $CLOSED` re-assert**, so the cleanup gate is
+  a command instead of the sentence "all four pass, and only then". The cleanup block is merged into
+  condition 6's block; `1ba45be`'s claim that conditions 1, 5 and 6 alike "read `HEAD` on purpose" is
+  corrected in the same change. **Say what this is, not more: the four predicates now describe ONE
+  commit — it is not established that this commit is the one 8b created.** The plan discloses that
+  limit in its own text, and a summary reading "captures the closing commit" would hide it.
+- **Finding 5** — the marker must now be **the newest records commit reachable from `HEAD`**, which is
+  what separates a stale-but-valid marker from the current pass; three outcomes are named separately
+  (ordinary · stale marker · marker absent with a records commit present), and `$NEWEST` empty with
+  status 0 is read as a real result. The marker is **carved out of the generic "rebuild from the
+  `$BASE` blobs" rule by name** — it is not a function of `$BASE`'s content and cannot be rebuilt at
+  all. **Simpler than the draft proposed**: no record format change, so step two's consumer is untouched.
+- **Finding 6** — the fragment drops its leading `Codex is `, measured at 1/1 in both copies, and the
+  plan now states that a fragment is line-local by construction and is verified **before** it is
+  written down.
+
+**Finding 5 was corrected a second time, on Daniel's reviewer's report, and the defect was
+reproduced before it was repaired.** The first repair asked
+`git rev-list -n 1 --grep='^WIP: pass [0-9][0-9]* records$' HEAD` — **unbounded**: it searched the
+whole reachable history for a generic subject, so a records commit from **another cycle** could be
+taken for this cycle's newest and make a **perfectly valid marker read as stale**. Reproduced in a
+disposable repository. The shipped check is now bounded **twice**, and **both bounds are needed** —
+measured, not assumed: `$BASE..HEAD` alone still lets a foreign commit inside the range win; it is
+the **nonce-scoped slot pathspec** that makes the answer this cycle's.
+
+**Verified by execution: 21 fixtures × `sh`/`dash`/`bash`, all green** — 10 for finding 1, 6 for
+finding 4, 5 for finding 5 — blocks extracted verbatim, each finding carrying a control that
+reproduces the old defect, including a foreign-cycle counter-case. `sh -n`/`dash -n` failures are
+**6 and 7, identical to the pre-repair baseline**. **Three first-run fixture failures were all harness
+bugs** (no `.gitignore` in the disposable repo; one miscalculated control assertion), recorded in the
+dispositions file.
+
+**Two corrections to my own verification, both found by running it rather than reading it.**
+(1) **"Fenced blocks 55 → 54" was wrong.** My extractor only matched fences at column 0, so it never
+saw the new **indented** marker block — which also means that block went unchecked in the first
+round. With the corrected extractor the count is **55 before and 55 after** (one top-level block
+merged away, one indented block added), and the new block parses under all three shells.
+(2) **The fixture results are self-reported.** Daniel's reviewer has not executed them and says so;
+they are evidence about the cases they cover and **no claim of completeness**.
+
+**What is NOT established.** No sweep was run for a **seventh** site of the resolve-once class —
+pass 49 found five after a sweep that believed itself complete, and nothing here rules out another.
+The repairs are verified against fixtures, not reviewed. Resume's new marker branches and the
+`loop-rule-start` recovery rule are **reader text, asserted as text and not executed**.
+
+### TWENTY-THIRD BOUNDED REVISION — 2026-09-17. The rerun path reconciled.
+
+The twenty-second revision fixed the first-pass order and **left the rerun contradicting itself**.
+Two defects, both confirmed in the text before editing:
+
+- My rerun bullet said *"no commit is made between the candidate head being written and the call"*,
+  while **the very next bullet** still said *"Commit those records, resolve the new `HEAD`, and only
+  then issue the candidate final pass."* Directly contradictory.
+- The rerun put **step 4b's reader checks after the capture**, although their result is a record that
+  must be committed.
+
+**The reconciled sequence, now written as six numbered steps and identical on both paths:**
+1 repair and produce every record that must be committed · 2 **commit them** (step 7 step three's
+commit — the last before the call) · 3 **capture the candidate** into
+`.context/loop-rule-reviewed-head` · 4 final verification that writes no committed record — the
+battery, then **4c**; non-zero or unresolved returns to 1 · 5 write the evidence entry into the
+gitignored `closing-msg` · 6 issue the call with the captured head and that entry verbatim.
+
+**The recording duty kept its home rather than being deleted with the bullet.** The conflicting
+bullet's two claims were split: its *recording* duty moved into step 1, and its *"only a clean
+response against that exact `HEAD` closes the cycle"* rule is restated where the ordering now makes
+it true. The complete-rerun list gained an explicit split — **record-producing work** (repair, 4b's
+twelve items, every mechanical observation) versus **final verification** (battery, 4c) — which is
+what orders the whole step.
+
+**A second correction, and it was an overclaim of mine.** I had written that the battery reads the
+candidate identity. **It does not.** Step 4 reads `.context/loop-rule-baseref` and runs shellcheck,
+the hook suites, the invariant checkers and `claude plugin validate` **over the working tree of the
+current repository**; it takes no candidate id. Both sites now say so, and state the real binding:
+the battery describes the candidate only because it runs immediately after the capture with no commit
+in between, and **nothing enforces that the worktree is unmodified across that window** — step 6
+catches a moved `HEAD`, not a dirty tree. **A stated limit, not a guard**; no index or concurrency
+policy was invented.
+
+**Walked, both paths.** *First pass:* 1–3 → 4b (items + repairs + records, its commit) → capture
+(`:2991`) → battery → 4c → entry → call. *Rerun with a repair to a shipped file:* step one's records
+commit → step two routes → step three stages the repair **and** the plan, commits (block line 31),
+then captures `NEXTHEAD` (line 71) → battery → 4c → entry → call. *Rerun with no repair:* step three
+commits nothing, `NEXTHEAD` = the records commit step one validated, capture → battery → 4c → entry →
+call. **Exactly two writers of `reviewed-head` exist** (`:2991`, `:3576`), and in both the commit
+precedes the capture. **No instruction after the capture requires another commit before the call.**
+
+**Validation limits.** The walk is a reading of the text; the shell blocks it names were re-run —
+29 existing fixtures plus the 4c cases — all green under `sh`, `dash` and `bash`, with `sh -n`/`dash
+-n` at **6 and 7, the baseline**. **No fixture exercises the six-step sequence end to end**; that
+would need the whole of Task 15 executed, which is implementation. Fixture results remain
+self-reported.
+
+**Minor and Nit remain collected.** No findings are claimed resolved and the cycle is not clean.
+
+### TWENTY-SECOND BOUNDED REVISION — 2026-09-17. One candidate flow for Task 15.
+
+**My own proposal was wrong and the reviewer took it apart correctly.** I offered a choice between
+binding 4c late (in 7b) and binding it early without a record. **Option A was self-defeating**, and
+two citations settle it: step 6 hands the reviewer *"the evidence entry quoted verbatim"* (`:3202`)
+and 7b says that if that entry changes at revalidation **the candidate is over** (`:3640`). A binding
+4c result first appearing at 7b therefore changes the entry the final reviewer judged and forces the
+very next round it was meant to prevent. My claim that the early option means "a failure only shows
+at CI" was also **false**: a binding pre-Gate-B 4c stops before Gate B. And no new carrier was ever
+needed — step 5 already writes the entry into `.context/loop-rule-closing-msg`, which is
+**gitignored**, so no pre-pass commit touches it.
+
+**What was implemented — the reviewer's sequence, unchanged:**
+
+1. **Step 4b moved to before step 4.** It keeps its letter (six places cite "step 4b"; a rename would
+   have to reach all of them) and the block carries a note that this file executes in **reading**
+   order. It is the last step that may alter content.
+2. **One candidate identity, created once, at the end of 4b** — written to
+   `.context/loop-rule-reviewed-head`, the file that already means this. **No new state file, no new
+   recovery rule, no new cleanup entry.**
+3. **Battery and 4c run against that identity**, read from the file. Not verified → stop, no entry,
+   no call.
+4. **Step 5 writes the evidence entry including 4c's three ids, plugin diff and raw status**, into
+   the existing closing-msg, uncommitted.
+5. **Step 6 resolves nothing.** It reads the candidate head, refuses if `HEAD` has moved since, and
+   passes that value as `headSha` with the entry verbatim.
+6. **7b names how it preserves the entry** — the open design point. It reads the existing entry out
+   of closing-msg and **carries item 4 across** while rebuilding items 1–3; a missing entry is a
+   **stop**, not a rebuild, because the 4c result is read from a run and cannot be regenerated from
+   the record sections. The existing re-review rule for a changed entry is untouched.
+7. **Merge direction reversed** — check out the base, merge the candidate in, the order
+   `refs/pull/N/merge` is built in. The intended checker is still pinned **from the candidate** by
+   object id before anything merges.
+8. **Step 7's rerun bullet now states the same sequence as the first pass**, and that **no commit is
+   made between fixing the candidate head and issuing the call**.
+
+**Verified by execution — 8 cases for 4c after the direction and identity changes, plus the 29
+existing fixtures, all green under `sh`, `dash` and `bash`.** Added case: an unresolvable candidate
+head read from the file → unresolved. `sh -n`/`dash -n` remain **6 and 7 — the baseline**. Step 6
+contains **zero** fresh resolutions of `HEAD` into the reviewed-head file. **The direction change
+moved no verdict in these fixtures** — none uses a merge driver — so it is adopted because it matches
+how CI builds the object, not on fixture evidence.
+
+**Not claimed:** that pass 51's findings are resolved, or that the cycle is clean. **The Minor
+(unguarded plugin-diff pipeline) and the Nit (no `mktemp` cleanup) remain collected and unrepaired**,
+as instructed — both still sit in the 4c block.
+
+### PASS 51 — RUN, VALID, UNCLEAN. Cycle stays OPEN. No repair authorized, none made.
+
+Reviewed the frozen candidate: plan blob **`974e223ed71d52b49c6b368695372ccb72e510f1`**, `HEAD`
+`5fb3b942f1907f5d6dd25b32d15b497f855e05f8`, branch `loop-rule-consolidation`, diff +482/−64.
+**Identity checked before and after the call — the blob did not move.** Tool: `mcp__codex__exec`;
+the prompt opens with the required brainstorming line and names the four priorities plus the seven
+4c-specific questions.
+
+**Result VALID** — terminator exact, 6 body lines, every line a finding line, 6 fields each, no
+blanks, count matches. **6 findings: 2 Blockers, 2 Majors, 1 Minor, 1 Nit.** Per-finding verdicts and
+the split between reviewer claim and my own verification are in
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-51-dispositions.md`; **all six confirmed**.
+
+**Floor 3**, derived from `docs/superpowers/stories/2026-08-29-loop-rule-consolidation-story.md` read
+fresh at this pass: **Risk `high`** (level 2) · **Security `none`** (0) · max 2 ≠ 0 → 3. One cited
+story, profile resolves. Floor long satisfied; what is missing remains a **clean** pass.
+
+**The two Blockers, in one line each.** Step 4b **commits after** the battery and 4c have run, and
+the first-pass path runs no complete rerun before step 6 — so Gate B can review and close a head that
+never got either check, and a 4b repair to a shipped prompt or hook is absent from 4c's merge result
+entirely. And 4c's `HEADID` is an operator placeholder while step 6 independently resolves live
+`HEAD`: **nothing ties them**, so 4c can certify one candidate while Gate B reviews another.
+
+**Four of the six are in machinery I added in the last two revisions, and two of those are defect
+classes this cycle had already swept.** Finding 5 is an unguarded pipeline whose status a following
+`tr` consumes — the class of passes 43 and 44. Finding 6 is new state with no cleanup rule — the
+class of pass 48. **Writing new code reintroduced both.** That is regeneration from the repairs, not
+discovery in unswept ground, and the record says so rather than presenting it as fresh coverage.
+
+**Loop health: three of five tells, so stop-and-surface is mandatory** — independently of the
+instruction to stop. Findings 42–51: **3, 5, 9, 2, 1, 2, 3, 6, 4, 6**; Blockers **2, 2, 2, 1, 1, 1,
+3, 5, 2, 2**; Majors **1, 2, 7, 1, 0, 1, 0, 1, 1, 2**. (1) Finding count **rising**, 4 → 6. (2)
+Blocker count **flat at 2 — failing to fall**. (3) **Instrument cluster**, and this time
+concentrated: five of six land on step 4c and its interface. Not present: a prose cluster; and **no
+require↔withdraw pair** — finding 4 asks to reverse a merge direction I chose freely, which is a
+correction rather than a reversal of something an earlier pass removed.
+
+**The "clearly stuck" exit is still NOT available**, and this pass does not change that: the Blocker
+curve is 3, 5, 2, 2 over the last four — no plateau at six or more passes — and **no affirmative
+coverage judgement is possible**, since the last two revisions demonstrably added new unswept
+machinery. Regeneration is now present, which it was not at pass 50; that is one conjunct of three,
+and one is not the exit.
+
+**Nothing here closes the cycle**, and a clean pass would not close it by itself either: closure
+needs the clean pass **plus** every other duty §5 names.
+
+### TWENTY-FIRST BOUNDED REVISION — 2026-09-17. Three corrections to step 4c itself.
+
+All three were reported as static findings against the new procedure, and **all three validated**.
+
+**1. The outcome separation did not hold.** `scripts/check-version-bump.sh` exits `1` from **both**
+`fail()` (a policy violation, `rc=1`) and `die()` (an operational failure — unresolvable ref, failed
+git call, unparseable manifest). Verified at lines 68 and 73. My 4c read every `1` as a version
+violation. **Fixed without a parser and without touching the checker:** the output and the **raw**
+status are preserved, non-zero is reported as **NOT VERIFIED with the cause undetermined**, and the
+cause must be established from that output before anyone calls it a version violation. Both cases
+stop progression, so nothing depends on guessing.
+
+**2. The byte check ran before the merge — and its reference was wrong too.** Comparing before the
+merge establishes nothing about the bytes that then execute. **But fixing only the ordering was not
+enough, and the fixture caught it:** the comparison read the checker from the source repository's
+**worktree**, which can already sit on the base side and carry the very edit the check exists to
+catch — so it agreed with itself and the modified checker ran. It now pins
+`git show "$HEADID:scripts/check-version-bump.sh"` **before** merging and compares the merge result
+against that, **after** the merge. A green check that could not go red is not evidence; this one
+now goes red.
+
+**3. The integration contradicted the addition.** Step 7 still said checking the merge result was "a
+scope question and not a change this plan makes" — now retracted **in place**, with the reason (a
+different checking mechanism is not by itself a new requirement), and the only surviving occurrence
+of that phrase is the quotation inside the retraction. The complete rerun now **names 4c
+explicitly**, places it **last**, and says a non-zero or unresolved 4c stops progression.
+
+**The recording cycle is closed by ordering, not by machinery.** 4c runs *after* the rerun's records
+are committed and the new `HEAD` is resolved, **against that head** — the one the candidate pass is
+issued against — and **its own result goes into the closing commit body**, not into a further
+pre-pass commit. Any scheme that committed 4c's result before the pass would move the head 4c had
+just certified and demand another run, forever.
+
+**Validation — the block as extracted from the plan, eight cases, expected vs observed:**
+
+| case | want | got |
+|---|---|---|
+| valid version bump | 0 | **0** |
+| same version + plugin diff | 1 | **1**, policy cause present in the preserved output |
+| operational failure **inside** the checker | 1 | **1**, **not** labelled a version violation |
+| conflict-free merge changing the checker's bytes | 2 | **2**, refused **before** the checker ran |
+| merge conflict | 2 | **2** |
+| unresolvable pinned head | 2 | **2** |
+| no recorded base ref | 2 | **2** |
+| source fixture repository afterwards | unchanged | **branch unchanged, 0 staged, 0 dirty** |
+
+The byte-change case **failed on the first run** — exit 0, checker executed — which is what exposed
+the worktree-reference defect. It is recorded rather than quietly fixed.
+
+**Remaining limitations.** Fixture results are self-reported; the reviewer has not reproduced them.
+**No claim of complete error classification is made** — 4c distinguishes *verified* from *not
+verified* from *unresolved*, and deliberately does **not** classify the cause of a non-zero checker
+status. The other standing limits are unchanged: Resume's three marker outcomes and the
+`loop-rule-start` recovery rule text remain reader instructions, and no sweep establishes the
+resolve-once class is discharged everywhere.
+
+### TWENTIETH BOUNDED REVISION — 2026-09-17. Step 4c: the merge-result version check.
+
+Scope from Daniel's reviewer, and it is narrow: **add one bounded, isolated check of the version
+requirement against the merge result of a pinned head and a pinned base, validate it with the
+unchanged checker, dispose the pass-50 version finding on evidence, report, stop.** No CI change, no
+version policy, no pass 51, no implementation.
+
+**The reasoning error it corrects is mine.** I wrote that full closure "would be a scope decision,
+not a repair". **That does not follow** — the same correction the reviewer made about the atomicity
+case applies here: *a different checking mechanism is not automatically a new requirement*. An
+accepted Blocker is not discharged by disclosing it, and `design.md` §7 — which requires the battery
+green **at the Gate-B WIP commit** and promises nothing about a later merge commit — neither grants a
+CI guarantee nor excuses the version duty. Verified at `design.md:215`.
+
+**What was added: Task 15 step 4c.** It clones the work repo `--shared --no-checkout` into a
+disposable directory, checks out the **pinned implementation head**, merges the **pinned base** step 4
+already recorded, and runs the **unchanged** `scripts/check-version-bump.sh` against that merge
+result. **The existing battery and the Gate-B review range are untouched.**
+
+**Three outcomes, deliberately distinct** — and this separation is itself a repair: `0` the rule
+holds · `1` the rule is **violated** on the merge result · `2` **UNRESOLVED**, the check could not be
+carried out. A single non-zero code would have made a merge conflict indistinguishable from a
+rejection, so an unresolved check could have been filed as a failure — or, worse, a passing run
+inferred from "no rejection".
+
+**Two traps the step closes by construction, both learned the hard way in this cycle.** The checker's
+line 58 is `cd "$(dirname "$0")/.."`, so it is invoked **relatively from inside the clone** — an
+absolute-path call silently runs it against its own source tree, which is exactly how my earlier
+"could not be reproduced" was manufactured. And its bytes are compared against the source checker, so
+a modified checker at the pinned head is UNRESOLVED rather than trusted.
+
+**Verified by execution against the plan's own extracted block — 7 cases × the real checker:**
+
+| case | expected | observed |
+|---|---|---|
+| same version both sides + plugin diff, **current** base | reject | **exit 1** |
+| same pair against a **stale** base | false green | **exit 0** |
+| genuinely bumped version | pass | **exit 0** |
+| merge conflict | unresolved | **exit 2** |
+| unresolvable pinned head | unresolved | **exit 2** |
+| no recorded base ref | unresolved | **exit 2** |
+| checker bytes differ at the pinned head | unresolved | **exit 2** |
+
+The work repo was checked after the run: **still on its branch, zero dirty lines** — the clone
+borrows objects and writes nothing back. The rejection message names the fixture's own base commit,
+which is the observable evidence that the checker read the fixture and not its source tree.
+
+**Finding disposition — pass-50 Blocker 2 (version check): RESOLVED BY ADDED VERIFICATION**, not by
+disclosure. The failure chain is demonstrated, and the plan now performs a check that catches it for
+the pinned pair. **It is not closed in general**, and the plan says so in its own text: a `main` that
+advances after this check is a merge result that does not exist yet, and one script against one merge
+result is not a check of CI as a whole.
+
+**One more self-inflicted syntax regression, caught by the check and fixed.** The new block opened
+with a bare `HEADID=<…>`, which is a redirect, not an assignment — `sh -n` went 6 → 7. It is quoted
+now and the baseline is restored. **This is the second time the same placeholder trap bit me in one
+session**, which is worth recording as a pattern rather than an incident.
+
+**Remaining limits.** Fixture results are self-reported; Daniel's reviewer has not reproduced them.
+Resume's three marker outcomes and the `loop-rule-start` recovery *rule text* remain reader
+instructions asserted as text. No sweep has established that the resolve-once class is discharged
+everywhere.
+
+### NINETEENTH BOUNDED REVISION — 2026-09-17. Two corrections, both against my own last report.
+
+Scope from Daniel's reviewer: **clean up the remaining no-repair contradiction, and put the version
+case to the real checker with documented ids.** No CI change, no version policy, no pass 51.
+
+**Candidate state:** `HEAD` `5fb3b942f1907f5d6dd25b32d15b497f855e05f8` (unmoved), plan blob
+**`17bb2a85ec90ded1aedb81c81396380de0c49abb`**, diff **+344 / −64**, 55 fenced blocks,
+`sh -n`/`dash -n` **6 and 7 — baseline**. 29 fixtures × three shells green. Product files untouched.
+
+**1. The no-repair contradiction was still there. My claim that it was rewritten was false.** I had
+rewritten the step-three *intro*; the paragraph that actually contradicted the new branch stood
+untouched, asserting *"A non-closing pass that owes no repair still commits"* and *"There is no
+'nothing to commit' branch here: the findings files are always something."* Both phrases now occur
+**zero** times. The replacement states the true sequence: **step one commits the records**, so by
+step three those files are tracked and clean, the pile-up the old paragraph feared cannot happen, and
+the no-repair route is the ordinary one.
+
+**2. THE VERSION BLOCKER IS REAL. My "could not be reproduced" was an artefact of a broken harness,
+and the reviewer's derivation is confirmed by execution.**
+
+`scripts/check-version-bump.sh` line 58 is `cd "$(dirname "$0")/.."`. Invoking it by **absolute
+path** from a disposable repository therefore ran it **against this repository instead** — the
+checker under test never saw the fixture, which is why it answered `ok` to everything and could not
+resolve the fixture's refs. That is exactly the "wired so it could not fail" defect this plan warns
+about, and it produced a confident negative. The corrected run copies the checker **into** the
+fixture.
+
+Topology and results, with ids, as instructed:
+
+| | commit | version |
+|---|---|---|
+| common ancestor | `47c6193` | 0.11.0 |
+| `main` advances alone | `c0df286` | 0.12.0 |
+| branch head | `417e5e3` | 0.12.0 |
+| **R, the merge commit CI checks out** | `44a2698` | 0.12.0 |
+
+Plugin diff `main`..`R`: `plugins/dev-workflow/extra.md`, `plugins/dev-workflow/file.md`.
+
+- against the **stale** base `47c6193` (0.11.0 ≠ 0.12.0) → **`ok`, exit 0**
+- against the **current** base `c0df286` (0.12.0 = 0.12.0, plugin changed) → **rejected, exit 1**
+
+**And `.github/workflows/ci.yml` passes no `ref:` to `actions/checkout`**, so a `pull_request` job
+checks the **merge commit**, not the branch head — verified by reading the workflow.
+
+**The proposed repair is insufficient, and the plan now says so instead of claiming a fix.** Naming
+the fetch in the complete rerun is a precision improvement, but the battery runs against the **local
+branch head** while CI evaluates the **merge commit**; no refresh of the base ref makes those the
+same object. Closing it would mean checking the merge result — **a scope question, not a change this
+plan makes**. Recorded as a disclosed gap.
+
+**What this says about my verification generally.** Two rounds in a row, the harness was the thing
+that was wrong — first an extractor blind to indented fences, now a checker silently rebased onto its
+own repository. **A green result is evidence only once the wiring has been shown capable of
+producing a red one.** The version fixture now demonstrates both outcomes, which is why it can be
+believed.
+
+### EIGHTEENTH BOUNDED REVISION — 2026-09-17, after pass 50. Cycle still OPEN.
+
+Scope was set by Daniel's reviewer and is deliberately narrow: **fix the two confirmed flow defects,
+prove-or-dispose the version Blocker, collect the Minor, then report and stop. No pass 51.**
+
+**Candidate state:** `HEAD` `5fb3b942f1907f5d6dd25b32d15b497f855e05f8` (unmoved), plan blob
+**`b1978d77396451781ad18db6ecb372e43c08fef3`**, diff **+315 / −59**, 55 fenced blocks,
+`sh -n`/`dash -n` failures **6 and 7 — the pre-repair baseline**. Product files untouched.
+
+**Repaired, each with a counter-case and an unchanged normal case:**
+
+- **No-repair continue route (pass-50 Blocker 1).** Step three now branches on `REPAIR_OWED`, the
+  route step two established — **never on what the tree looks like**. Repair owed → stage, guarded
+  commit, pin check, head = the repair commit. **None owed → commit nothing** (step one already
+  committed the findings files, so no tracked change remains) and head = **the records commit step
+  one validated**, with a guard that `HEAD` still is it. The contradictory prose claiming those files
+  were still dirty is rewritten.
+- **Start-file router (pass-50 Major — my own defect from the seventeenth revision).** Task 0 step 1
+  now has **three** outcomes, not two: base present → Resume; **start present without base →
+  precondition stop, reported, file preserved**; neither → first entry. The recovery rule I added was
+  unreachable because the router tested only the base and Preparation overwrites the start file.
+
+**Version Blocker (pass-50 Blocker 2) — DISPOSED, not repaired, and the disposal is measured.** The
+claim was that a stale base flips `check-version-bump.sh` from fail to pass. **Put to the real
+checker in a disposable repository, it could not be reproduced.** The checker compares the
+**merge-base** of the given ref with `HEAD`, and an advancing `origin/main` does not move it:
+unrelated commits on `main`, `main` bumping the same plugin to the same version, and `main` merged
+into the branch **all left the result at `ok`**. The one direction that did change the result was the
+**opposite**: an older base ref made the check **fail**. So the *imprecise rerun instruction* — which
+is real and confirmed — is made explicit (the complete rerun names step 4's guarded fetch and base-ref
+recording), **without asserting the unproven consequence**. Topologies tested are named in the plan
+and are **not exhaustive**.
+
+**Minor (marker absent from the Failure report) — collected, not repaired**, per instruction.
+
+**Two corrections to my pass-50 report, both validated before acceptance.**
+
+1. **That Minor is NOT mine.** I attributed it to this repair round. **Both the Failure-report
+   enumeration and the marker already exist in `1ba45be`** — the enumeration verbatim at line 492 of
+   that revision, the marker four times. It is **pre-existing**, and the attribution was wrong.
+2. **"The curve turned" was interpretation, not a finding.** `CLAUDE.md:226` requires the Blocker
+   curve **across passes** and says in terms that *"one low count is a snapshot rather than a
+   plateau"* and that **neither curve measures coverage**. 6 → 4 findings and 5 → 2 Blockers are an
+   improvement **over pass 49**, not a demonstrated trend reversal, and "only one tell remains" is
+   read the same way. The instructed stop stands regardless.
+
+**Verified by execution: 29 fixtures × `sh`/`dash`/`bash`, all green** — 10 (finding 1), 6
+(finding 4), 5 (marker selection), 8 (router + no-repair route). Every repair carries a control that
+reproduces the defect it fixes. **One syntax regression was introduced and caught by the check**: a
+placeholder `if <a repair is owed…>` is not valid shell and took `sh -n` from 6 to 7; it is now a
+quoted assignment and the baseline is restored. **Harness bugs again outnumbered plan defects** —
+BSD `sed` reading `||` as a flag separator, and an `awk` skip count that left an orphan continuation
+line; both fixed in the harness, neither in the plan.
+
+**Unverified, and stated rather than implied:** Resume's three marker outcomes and the
+`loop-rule-start` recovery *rule text* are reader instructions, asserted as text. The router branch
+that reaches that rule **is** now executed. Daniel's reviewer has not reproduced any fixture result.
+
+**No pass 51 is authorized, and none was run.**
+
+### PASS 50 — RUN, VALID, UNCLEAN. Cycle stays OPEN.
+
+Run 2026-09-17 against the pinned state below, on the reviewer's recommendation of **exactly one**
+full pass with the four priorities **in the prompt file itself** — which pass 49's lacked. Result
+**VALID** (terminator exact, 4 body lines, 6 fields each, no blanks, count matches). The plan blob
+was **`af3e676d…` before and after the call**, so the artifact did not move under the reviewer this
+time.
+
+**4 findings: 2 Blockers, 1 Major, 1 Minor** — file
+`.context/codex-reviews/gate-a-plan-om0bdd7udh-pass-50.md`. **No repair is authorized; none was made.**
+
+**Two of the four are mine, from the seventeenth revision, and that is the important half.**
+
+- **MAJOR — my `loop-rule-start` recovery rule is UNREACHABLE.** Resume defines "surviving start, no
+  base" as a precondition stop, but **Task 0 routes solely on whether the base exists**, so that state
+  selects first-entry Preparation, which never refuses an existing start file and **overwrites it**.
+  The recovery rule I added to satisfy the very class pass 48 punished cannot be reached — the record
+  of the validated revision is lost silently. **I added a state file and a rule, and did not wire the
+  router to it.**
+- **MINOR — the Failure handoff report was not updated** when `loop-rule-records-commit` became
+  authoritative recovery state; it still enumerates base, reviewed head, reviewed tip and closing
+  message, so a failure report can omit that a recorded pass is still awaiting the ordering.
+
+**Two are pre-existing and were not created by this revision.**
+
+- **BLOCKER — step 7 step three deadlocks the no-repair continue route.** Continue explicitly permits
+  an unrevised artifact when no repair is owed, but step three always stages the unchanged plan and
+  attempts a commit; after step one committed the findings files there is **no tracked change**, so
+  the commit fails and the reviewed head is never advanced. A below-floor Minor-only pass or an
+  answered suspension **cannot issue its next Gate-B pass**.
+- **BLOCKER (medium) — the complete pre-candidate rerun does not repeat step 4's guarded fetch and
+  base-ref recording**, so the battery reuses a stale base object while PR CI compares against a newer
+  one: the plan can close a commit that **fails invariant 12**.
+
+**Loop health: one tell of five, and the curve turned.** Findings across 42–50: **3, 5, 9, 2, 1, 2,
+3, 6, 4**; Blockers **2, 2, 2, 1, 1, 1, 3, 5, 2**; Majors **1, 2, 7, 1, 0, 1, 0, 1, 1**. Finding
+count **fell** 6 → 4; Blockers **fell** 5 → 2; no prose cluster; no require↔withdraw pair. The only
+tell standing is the **instrument cluster**, for the thirteenth pass. **One tell is below the
+mandatory-surface threshold of two** — this stop is instructed, not compelled by the tells. The
+"clearly stuck" exit remains unavailable: there is no plateau, the curve is improving.
+
+**Nothing here closes the cycle.** Two Blockers and a Major are open and §5 requires each to resolve.
+
+### PINNED STATE for pass 50 — 2026-09-17
+
+The plan stopped moving here. **Anything reviewing this revision must check these first**, because
+two consecutive reviews were spent on a target that changed underneath them:
+
+- **HEAD** `5fb3b942f1907f5d6dd25b32d15b497f855e05f8` — unchanged throughout.
+- **Last committed plan revision** `1ba45be`; the plan is **uncommitted-dirty** against it.
+- **Worktree plan blob** `af3e676d17e6da280557e96e7db4a3657ab48d05`.
+- **Diff** +205 / −26. Earlier reports of +174/−26 and +186/−26 were true of superseded states.
+- **Fenced blocks** 55, unchanged from the baseline.
+- Advisor files still dirty and untouched; `CLAUDE.md`, `AGENTS.md`, `plugins/`, `scripts/` untouched.
+
+### State reconciliation, 2026-09-17 — the handoff against the actual tree
+
+Daniel's reviewer read this work **while it was still moving** and was right to flag it. Recorded
+plainly so no later reader trusts a stale line:
+
+- **HEAD is `5fb3b94` and has not moved.** The last *committed* plan revision is **`1ba45be`**.
+- **The plan is uncommitted-dirty.** The reviewer saw blob `16922358…` mid-edit — a state that held
+  findings 2 and 6, then 4 and the cleanup list. That blob is **superseded**; the current worktree
+  blob is what `git hash-object` reports now, and it carries all six.
+- **`.context/plan-drafts/pass-49-repair-draft.md` said "DRAFT ONLY / Nothing applied".** True when
+  written, false by the time it was read. **Corrected** — the file is now marked SUPERSEDED and keeps
+  its value as the reasoning record, not as a description of the tree.
+- **No pass-50 findings file exists, and none should.** Pass 50 is not authorized. **A continuously
+  edited draft is not a finished repair**, and nothing here claims the cycle is clean: pass 49's
+  finding stands as recorded, the cycle is **still OPEN and UNCLEAN**, and neither the disposition of
+  finding 3 nor these repairs make pass 49 retroactively clean or close anything.
+
+**Two corrections adopted from that review, both validated first.**
+
+1. **"A different close mechanism ⇒ a new precondition" is not a valid general inference**, and the
+   installed wording no longer makes it. What is out of scope is the **atomicity guarantee against a
+   concurrently writing second actor**; needing another git command is a *consequence* of that demand,
+   not the reason. The residual also now states plainly that **the race is neither impossible nor
+   harmless** and that **its window is unmeasured**.
+2. **The reviewer withdrew their own claim that the utility test was missing from pass 49's prompt** —
+   it was present at line 572. **The four priority areas were genuinely missing**, and that half
+   stands: it is why pass 49 is not a usable test of the sharpened approach. **They are now written
+   into `.context/gate-a-plan-prompt.md` itself**, as priorities that explicitly exclude nothing.
+
+**My own error, recorded because it is the cycle's own defect class.** I reported that a validation
+subagent had invented the quotation *"The gap is real and this change does not close it"*. **It is
+real**, at `target-text:1234`; my `grep -F` missed it because the sentence **wraps between `this` and
+`change`**. That is finding 6's defect exactly, hit while repairing finding 6 — the third instance in
+this cycle after carried `e9` (pass 10) and Task 7's fragment (pass 49). The accusation is withdrawn
+in the dispositions file.
 
 **After a clean close**, the real work starts: both prompt copies, the seven hook strings and their
 test expectations, version bump 0.11.0 → 0.12.0 + CHANGELOG, the quality battery, the evidence entry,
@@ -386,6 +1231,7 @@ worth checking before a pass rather than after.
 | — | — | — | — | — | — | **FIFTEENTH BOUNDED REVISION.** Step one persists the record commit's object id to `.context/loop-rule-records-commit` (added to the cleanup list); **step two reads both slots from that exact object**, and a moved `HEAD` is a reason to **stop and report**, never to re-resolve. 8b's removal is guarded — **that is the line that closes the demonstrated case**, and the prose credits it rather than the `test -f` after it, which **no demonstrated path reaches**. Commit `c2e4932` |
 | 48 | c2e4932 | 2→**3** | 1→**3** | 1→**0** | yes | **All three Blockers are ONE defect**: the plan resolved `HEAD` a second time as the identity of a commit whose properties it had already checked. Step 7 step one (tree checked on one commit, id persisted from another); **8a — the one with a shipped payer**: a moved commit could become the closing tip having satisfied **none** of condition 4's checks, and `reset --soft` folds it into the closing commit, publishing content no pass reviewed; and the `.context/loop-rule-records-commit` marker added one revision earlier with **no Resume rule**, which this plan requires of every state file |
 | — | — | — | — | — | — | **SIXTEENTH BOUNDED REVISION.** **Swept rather than patched per site** — repairing one of several sites is this cycle's most reliable defect. Each site now resolves the commit **once**, immediately after it lands, and uses that object id for every check and every record; 8a's whole condition-4 chain runs against it and writes it as the tip. **A third site the reviewer did not report** was found and fixed: step 7 step three checked the repair commit's tree and then re-resolved `HEAD` for the reviewed head. **Checked and deliberately unchanged:** step 4b resolves `HEAD` once and persists no identity, so a move makes its comparison fail rather than pass; conditions 1, 5 and 6 read `HEAD` on purpose, to detect a move. Resume now validates the marker and reports a recorded pass as **unrouted** unless the reconciliation shows step two's outcome — a precondition stop, no mutation, no call. Commit `1ba45be` |
+| 49 | 1ba45be | 3→**6** | 3→**5** | 0→**1** | yes | **UNCLEAN — reported, no repair round opened; the reviewer's authorization covered exactly this one pass.** Nothing re-raised against the three blocks the sixteenth revision repaired. **Five of six are that same defect class at sites the sweep did not reach**, which is what makes this discovery rather than regeneration. **BLOCKER** Preparation resolves `HEAD` six times and Task 0 step 1 writes the base from a seventh — missed by the sweep, in neither of its lists. **BLOCKER** step 6 records the reviewed head, then specifies the call's `headSha` in prose as a fresh resolution never wired to that file; **not shell, so a shellcheck-verified sweep could not see it**. **BLOCKER** condition 6 composes subject, parent, tree and body from four live `HEAD` reads with no captured id, then cleanup erases the recovery state — **explicitly excluded by the sweep on a rationale that holds for conditions 1 and 5 and not for 6**. **BLOCKER, partial** 8b's `reset --soft` has no atomic expected-old-object guard, but condition 5 already closes the wide window; the residual is sub-second and needs a concurrent actor, and the gap is disclosed as parked. **BLOCKER, partial** the records-commit marker's new checks are satisfied trivially by any earlier already-routed records commit, and the rebuild rule cannot reconstruct it; the named case does have a real precondition stop. **MAJOR, demonstrated** Task 7's worked fragment spans the line break between `Codex is` and `advisory` in both copies, so its `grep -cF` returns 0 where the plan expects `parent=1 worktree=1` — a correct source fails its own check. Three tells stand (findings 3→6, Blockers 3→5, instrument cluster) → mandatory stop |
 | 26 | 05ec1b2 | **5** | **1** | 2 | yes | first pass on the revised plan. Resume audited progress by `WIP:` commits and called any non-`WIP` commit a stale base — the handoff leaves two other shapes, one of them `HEAD` **at** the base with everything in the index |
 | 27 | f69db7d | 5→**6** | 1→**3** | 2→**1** | yes | the close required the commit's **tree to equal the tip's**, which target §I **parks**; `reset --soft` leaves the index untouched, so the prose beside it was wrong about git; Resume still inferred staleness from a commit subject where §A3 names that state as reachable |
 | 28 | f2e5dda | 6→**6** | 3→**2** | 1→**2** | yes | pass 27's stale-base fix reached one site of three; its reset paragraph stated the index behaviour correctly and repeated the false claim four lines later; nothing checked the closing commit's **parent**; the message was validated in the file, where `commit-msg` hooks rewrite git's copy after `-F` reads it |
