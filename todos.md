@@ -348,6 +348,39 @@ driven by recurrence rather than by enthusiasm.
       is still the shape recurring; excluding it would tune the count to who was watching.
       Four occurrences of the timing gap now, three of them benign; the dangerous `tree_hash`
       consumer above is still the one that decides this row's priority.
+- [ ] **Hook repository context can differ from the operation's target worktree.** A **distinct
+      cause from the timing row above**, and that row's occurrence count is deliberately left
+      unchanged: timing is "the staged set was empty because `git add` had not run yet",
+      this is "the staged set was read in the wrong repository". **Reported observation
+      (2026-09-21):** a docs-only commit of two `docs/**.md` paths in the linked worktree
+      `dwk-claude-init` received the Gate-B STOP **although `git add` had run in a separate
+      Bash call**, which is the control the timing row's `29da026` data point relies on. The
+      index readings behind that account are reported, not re-reproduced here.
+      **Verified mechanism, read from the source:** the hook derives its root from **its own
+      Git process context** — `repo_root=$(git rev-parse --show-toplevel)`
+      (`plugins/dev-workflow/hooks/codex-gate.sh:42`) — and uses that root both for the state
+      paths (`state_dir="$repo_root/.context"`, `:43`, holding `codex-gate.gateB`,
+      `.passCount`, `.freshCount`, `.passCountA`) and for the staged-file inspection
+      (`files=$(git -C "$repo_root" diff --cached --name-only)`, `:914`). **Do not state this
+      as "it always uses the original session worktree"** — what is established is that the
+      root comes from the hook's own context, which need not be the operation's target.
+      **Two consequences derived from the code and NOT reproduced.** First, a **false
+      docs-only exemption**: where the foreign root's staged list is non-empty and passes
+      `is_docs_only` — which also requires clearing its `is_prompt_path` exclusions, so
+      arbitrary Markdown is not enough — the hook can report "Gate B N/A" while the actual
+      commit carries product files. That is the dangerous direction, so **invariant 2 is not a
+      blanket answer for this row**, even though the observed instance was a benign false
+      alarm. Second, a **foreign state reset**: the non-WIP commit branch runs
+      `rm -f "$state_file" "$count_file" "$fresh_file"` (`:886-888`) under the same
+      `$repo_root`, so it can clear another worktree's Gate-B fingerprint and counters.
+      **Operational precaution, not a repair:** starting a session directly in the intended
+      worktree keeps the two contexts aligned; a `cd` **inside** a Bash call does not, because
+      the hook runs before that command. **Implementation deliberately undecided** — the
+      payload's cwd, the hook process's cwd and an operation's explicit target must not be
+      assumed equivalent, and picking one is the design question, not a detail. **Trigger:**
+      Daniel explicitly selects a bounded reproduction-and-design task. That task should
+      separate the reported false alarm, the possible false exemption and the possible foreign
+      reset, and establish each before a repair is proposed. This entry starts none of them.
 - [ ] **No regression test for a `git add`/`write-tree` failure inside the throwaway
       index.** Derived from the code, not recalled: sections 24a-24e stub FIVE failure shapes —
       every checksum tool failing silently, a checksum printing a token then failing, the
@@ -570,6 +603,47 @@ backlog.
       because it is followed. *Trigger: 3–5 real stories completed in a product project*
       — fewer than that and the state machine would be modelled on this repo's own
       atypical usage.
+- [ ] **Generated status HTML — task, progress and KPI views.** Direction agreed
+      with Daniel on 2026-09-17: keep Markdown as the authored source and generate
+      HTML views, with source links, revision and freshness visible. Define item
+      identity and explicit status; parked, rejected and completed work must not
+      be reduced to a raw checkbox completion percentage. A labelled static
+      snapshot may precede live telemetry. Owner/scope is the dashboard leaf to
+      be defined in `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`
+      §§4/11; this does not activate P1 or decide the future pool's storage.
+      *Trigger: Daniel explicitly selects the dashboard story for design.*
+      Recording this direction does not authorize implementation.
+      **SFX field input (2026-09-17):** expose installed/observed-loaded workflow
+      versions and local rule revision; bind status and evidence to their own
+      revisions instead of treating an older handover as current verification.
+- [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
+      Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
+      presented in the dashboard. Define confirmed distinct finding yield,
+      recurrence/repair effects, effort and coverage evidence; start with
+      separate indicators and an explained traffic light. Before implementation,
+      specify data sources, deduplication, comparison windows, missing-data
+      handling, thresholds and any composite weights, and evaluate them against
+      recorded cycles. **Priority principle agreed 2026-09-17:** the more indirect
+      the evidenced product impact, the earlier further review effort must be
+      reassessed. Define lower warning/escalation thresholds for repeated plan
+      instrument work with unsubstantiated marginal benefit, not lower severity
+      by file type. Track instrument time/rounds, evidenced benefit and observable
+      delay to product work. Include §4's calibration cases; preserve the severity
+      of defects that invalidate product verification. This does not activate the
+      experimental one-round cap parked above.
+      **SFX field input (2026-09-17):** separate finding origin, consequence and
+      effort; record optional Minor/Nit repair scope and attribution confidence.
+      Instrument classification follows actual effects on product files/state.
+      Counts independently recounted; causal attribution and test outcomes remain
+      reported. Evidence and calibration limits:
+      `docs/field-reports/2026-09-17-sfx-review-loop-economics.md`.
+      Unknown evidence must remain visible. Recommendations
+      may support continuing, changing method or stopping to surface; they do
+      not waive floors, mandatory tells or closure conditions. P8 remains passive
+      and supplies only the evidence it has. Details and unresolved decisions:
+      `docs/superpowers/specs/2026-08-30-dark-factory-vision.md` §§4/7/11.
+      *Trigger: step 2c is explicitly picked up for design.* No thresholds are
+      activated by this entry; automatic actions require separate authorization.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the

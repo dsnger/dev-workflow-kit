@@ -13,6 +13,10 @@ from an external video (four loop maturity stages; artifacts as the only handoff
 between fresh-context nodes; a "dark factory" as a repository that ships its own
 code, policed by an adversarial model with sampled human audit).
 
+**Follow-up decision, 2026-09-17 (Daniel):** record generated HTML views and
+review-loop usefulness assessment in the roadmap. This authorizes the planning
+additions below, not their implementation or a change to current review rules.
+
 ## 1. The vision
 
 Stories and ideas flow into a pool. The factory turns approved pool items into
@@ -271,6 +275,94 @@ the inspiration: the adversarial verifier is a different model *family*
   LLM summaries only on demand. Rejected: a daemon/TUI and a hosted
   artifact page (account-bound). The wave plan and the dashboard share one
   renderer — the plan is the forecast, the dashboard is the now.
+- **HTML is a generated presentation, not another maintained source
+  (decided 2026-09-17).** Existing Markdown todos, stories and planning
+  documents remain the authored sources; task lists, task details and progress
+  views are rendered from them and the available workflow records. Do not
+  replace them with hand-maintained HTML or maintain status in both formats.
+  The owning story must define stable item identities, explicit status,
+  priority, dependencies, parking triggers and evidence links. Missing values
+  remain unknown; an unchecked backlog box alone does not establish active
+  work, and raw checkbox counts are not a completion percentage. Every view
+  shows its source revision and generation time; live views also show the
+  snapshot/tick freshness above. A first static snapshot view may precede live
+  telemetry, provided it is labelled as a snapshot. This does not decide the
+  future pool's storage format (4a).
+  **Consumer evidence, 2026-09-17:** the [SFX field report](../../field-reports/2026-09-17-sfx-review-loop-economics.md)
+  adds two source requirements: display installed workflow version, observed
+  loaded version (or unknown) and project-local rule revision separately;
+  bind implementation, test evidence and review/acceptance status to their own
+  revisions. An older handover or a reported test result must not silently
+  become verification of the current HEAD, nor a single green completion state.
+- **Review-loop usefulness is a separate dashboard requirement
+  (recorded 2026-09-17; not implemented).** Step 2c owns the measurement and
+  assessment design, using P8's evidence where available without widening P8.
+  Begin with visible dimensions and an explained traffic-light assessment;
+  a composite score follows only once its calibration is supported by data:
+  - yield: confirmed, distinct material findings, linked to their evidence;
+  - repair effects: recurrence, reopened findings and findings introduced by
+    a repair, with uncertain attribution labelled as such;
+  - effort: elapsed time, tokens and cost where attributable;
+  - coverage: reviewed scope and known gaps, including evidence limitations.
+  Few findings do not establish poor usefulness or sufficient coverage, and
+  many findings do not establish high usefulness. A clean verification pass
+  can be useful. An instrument finding is judged by its consequence, not
+  discounted solely because it concerns the instrument.
+  **Product impact governs review effort (Daniel, 2026-09-17).** The more
+  indirect the evidenced effect on the operating product, the less tolerance
+  there is for additional review and repair rounds without a concrete failure
+  consequence and a justified expected benefit. Distance means the causal path
+  to product behaviour, not the file extension: shipped prompts can act directly
+  on the product, and plan shell commands can invalidate its verification.
+  Product behaviour, security and data integrity receive the strongest scrutiny.
+  Execution and verification machinery is checked for reliable outcomes;
+  further hardening or optimization must justify its benefit. Explanatory prose,
+  presentation and hypothetical edge cases without an operative consequence
+  receive less effort and do not justify continued repair loops.
+
+  **Lower thresholds mean earlier reassessment, not lower severity.** The
+  threshold design must distinguish direct product work, plan/execution
+  machinery and non-operative material, with earlier warnings and escalation
+  for repeated instrument work when its marginal benefit is unsubstantiated.
+  Unknown impact requires clarification, not an automatic low-risk label.
+  A real security or correctness defect is not discounted by its location;
+  false-green, false-red and valid-change-blocking failures retain the existing
+  consequence-based assessment. Purely hypothetical robustness gains and
+  performance tuning of rarely executed helpers need a demonstrated use case
+  and material cost to justify further rounds.
+  Show time and repair rounds spent on the instrument alongside evidenced
+  benefits and any observable delay to product work; a high instrument share
+  is a warning, not proof of waste. Escalation offers simplification, a different
+  review method or stopping the approach, without automatically continuing
+  repairs or advancing to implementation with unmet conditions.
+  **Calibration acceptance cases:** distinguish harmless explanatory polish
+  from a plan command that corrupts review evidence; distinguish speculative
+  helper optimization from an observed product bottleneck; keep a useful clean
+  verification pass distinct from a pass with unknown coverage. Record the
+  evidence and expected recommendation for each, rather than assigning priority
+  solely from the artifact's name. This is a future assessment requirement,
+  not the experimental one-repair-round cap parked in `todos.md`.
+
+  **Field-informed calibration requirements:** the SFX report above supplies
+  recounted curves, not calibrated cutoffs. Record finding origin (including
+  repair-induced, with attribution evidence/confidence) separately from its
+  product consequence and effort; distinguish optional Minor/Nit repairs from
+  required fixes. Classify helper tools by the files/state they can change and
+  decisions they affect, not by a `docs/` path. Compare cycles under documented
+  workflow/rule revisions and profiles; preserve unknowns rather than claiming
+  an efficiency improvement from raw counts or mixing incompatible contexts.
+
+  **Before implementation:** specify each metric's source, counting and
+  deduplication rules, comparison window and missing-data behaviour; define
+  candidate warning/escalation thresholds and any score weights; evaluate
+  them on recorded cycles and document their limitations. Link each proposed
+  threshold to an explained recommendation (continue, change review method,
+  or stop and surface). Missing evidence must not become a green assessment.
+  No numeric thresholds or weights are settled here. Existing pass floors,
+  mandatory tells, finding-resolution duties and closure conditions remain
+  unchanged: the assessment cannot waive them or close an unclean cycle.
+  Automatic actions or changes to those rules need a separately authorized
+  design; this entry introduces neither.
 - **Waves structure a new project.** Phase 0 assigns every initial pool item a
   wave mark (wave 1, 2, … or named milestones) — the deliberate "these
   subareas develop together first, those later" decision, usually aligned with
@@ -346,7 +438,11 @@ proceeds, the breaking part waits on the meta-story).
      does not do: run analytics with cost and duration per step, a trace ID
      carried through every stage artifact, mechanical spec-delta capture, and
      live cost counters. That is new state and new instrumentation, so it
-     cannot ride inside 2b.
+     cannot ride inside 2b. It also owns the review-loop usefulness metrics,
+     threshold calibration and explainable assessment specified in §4;
+     dashboard presentation consumes those results. P8 alone cannot supply
+     all of these inputs. The generated HTML view has a separate owning-leaf
+     question below (§11), including a possible initial static snapshot.
 3. Orchestrator story (codify the role as skill/agent per decision 1) — the
    role, the artifact handoff, and the *interface* of the tick execution plan.
    The working dry-run reads the pool, the projection, waves, lanes and the
@@ -678,7 +774,18 @@ leaf yet owns. Those are marked as such rather than counted as decomposed.
   the live-status view in §4 (snapshot per tick, rendered by code into
   status.html / status line / optional menu bar, decision queue first,
   staleness visible); still open: the snapshot schema and the owning leaf,
-  fed by 2c's traces and analytics. [2c / dashboard]
+  fed by 2c's traces and analytics. The 2026-09-17 source/presentation decision
+  in §4 adds generated task and progress views with Markdown sources; choose
+  the initial static-view scope and source mapping in that leaf, without
+  requiring live telemetry for a labelled snapshot. [2c / dashboard]
+- Review-loop usefulness — the requirement and dimensions are recorded in
+  §4; metric definitions, evidence availability, calibration sample, numeric
+  thresholds by evidenced product impact, any composite weights and
+  recommendation mapping remain to be designed. The direction is settled:
+  indirect impact requires earlier reassessment of further effort, not an
+  automatic severity demotion. Distinguish usefulness assessment from §10's proposed minimum
+  review cost/duration signal: spending longer or more is not proof of useful
+  review. Neither proposal changes current pass-validity rules. [2c]
 - Hooks and shortcuts — decided 2026-08-31 and recorded in §9 (shortcuts
   are shorter lanes, never side doors; hooks are subscribers to
   station-boundary events, passive or story-creating). Still open: the
