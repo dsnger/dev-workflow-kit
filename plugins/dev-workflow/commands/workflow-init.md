@@ -211,6 +211,26 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
+### Don't guess
+
+Applies to factual claims in every answer, not only implementation. Confidence is not evidence.
+
+**Leave gaps visible.** Do not invent missing or ambiguous facts. State what is unknown and why. In extraction
+tasks, leave unsupported fields blank where the format permits; otherwise use the format's defined missing-value
+handling.
+
+**Separate evidence from inference.** Cite the relevant source for factual conclusions. Identify deductions and
+assumptions as such, with their basis. For extraction tasks, label populated fields EXTRACTED or INFERRED and
+explain each inference where the required output format permits. If neither annotations nor accompanying
+explanations are permitted, preserve the required format. This does not permit inventing unsupported values.
+
+**Keep decisions distinct from facts.** Make reasonable design and implementation choices within the authorized
+scope, describing them as choices rather than source facts. Ask when missing information changes correctness or
+scope.
+
+**Verify before claiming.** Report a test or action as completed only when its result was observed. Preserve
+required output formats; put explanations outside structured artifacts where permitted.
+
 ## 2. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**

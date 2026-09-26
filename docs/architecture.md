@@ -22,7 +22,7 @@ plugins/dev-workflow/
   CHANGELOG.md                    # every manifest version, newest first
   skills/{intake,harden-finding}/SKILL.md
   agents/finding-triage.md
-  commands/{workflow-init,process-pr-review}.md
+  commands/{workflow-init,process-pr-review,claude-init}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
   hooks/fixtures/                 # captured PostToolUse payloads the suite replays
   examples/                       # ships, but never scaffolded — one stack's answers
