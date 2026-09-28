@@ -760,7 +760,33 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # an empty HEAD..HEAD range pre-commit). Treating it as a real commit would fire a
 # spurious STOP and reset the very counters the review loop is accumulating — the
 # documented workaround would fight the hook. So: gentle note, no reset.
-is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }
+#
+# `git commit --amend --no-edit` carries no `-m` but keeps HEAD's message, so on a WIP
+# HEAD it is a WIP commit too. That is true whether it succeeds or fails — either way
+# HEAD's subject is still WIP afterwards — so PreToolUse and PostToolUse can both read
+# it — but it reads HEAD of the repository the hook runs in, and a command string is not
+# its arguments, so THIS exemption is an allow-list, never a deny-list: one line of exactly
+# `git commit` followed only by `--amend`, `--no-edit`, `--no-verify`,
+# `-a`, `--all`, `-q` or `--quiet`, both of the first two present. No quote, `#`, backslash
+# (the jq-free reader truncates at an escaped quote and leaves one) or shell metacharacter
+# anywhere, so no quoting trick, comment, pathspec, `cd`, `git -C` or chained command can
+# qualify. Global `git -c` is refused too: its operand can expand into `-C <repo>` or set
+# `commit.cleanup` and strip the WIP subject — and for the same reason a repository that
+# sets its own comment character is refused, since cleanup can then strip a `WIP` line.
+# Anything else falls through to the reset, the safe direction. The `-m "wip…"` match above
+# is separate and unchanged.
+is_wip_commit() {
+  printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip" && return 0
+  case $1 in *'
+'*) return 1 ;; esac
+  printf '%s' "$1" | grep -q '[;&|<>$`()\\#"]' && return 1
+  printf '%s' "$1" | grep -q "'" && return 1
+  printf '%s' "$1" | grep -Eq '^[[:space:]]*git[[:space:]]+commit([[:space:]]+(--amend|--no-edit|--no-verify|-a|--all|-q|--quiet))+[[:space:]]*$' || return 1
+  printf '%s ' "$1" | grep -Eq '[[:space:]]--amend[[:space:]]' || return 1
+  printf '%s ' "$1" | grep -Eq '[[:space:]]--no-edit[[:space:]]' || return 1
+  git -C "$repo_root" config --get-regexp '^core\.comment(char|string)$' >/dev/null 2>&1 && return 1
+  git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'
+}
 
 # A commit that stages all tracked changes (-a / -am / --all) also sweeps in
 # tracked-but-unstaged edits that `git diff --cached` alone won't show, so the

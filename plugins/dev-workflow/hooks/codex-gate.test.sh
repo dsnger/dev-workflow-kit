@@ -570,6 +570,54 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command"
 commitpost
 [ ! -f "$count" ] && pass "non-WIP commit still resets counters" || fail "non-WIP commit still resets counters"
 
+# 19b. `git commit --amend --no-edit` on a WIP HEAD keeps the WIP message, so it is
+# cycle-internal too — but it carries no `-m`, and a command-string match alone reset it.
+# The empty commit keeps HEAD's tree, so no fingerprint input moves; it is undone below.
+git commit -q --allow-empty -m 'WIP: snapshot' >/dev/null 2>&1
+amendpost() { run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$1\"}}" >/dev/null; }
+reset_all; rev; rev
+out=$(wip "git commit --amend --no-edit")
+printf '%s' "$out" | grep -q 'Codex cycle preserved' && pass "amend --no-edit on WIP HEAD -> WIP note" || fail "amend --no-edit on WIP HEAD -> WIP note"
+amendpost "git commit --amend --no-edit"
+[ "$(cat "$count" 2>/dev/null)" = 2 ] && [ -f "$state" ] && pass "amend --no-edit on WIP HEAD preserves the cycle" || fail "amend --no-edit on WIP HEAD preserves the cycle"
+# A new message is a closing act (or a stray commit) and still resets
+amendpost "git commit --amend --no-edit -m 'real message'"
+[ ! -f "$count" ] && pass "amend with -m on WIP HEAD still resets" || fail "amend with -m on WIP HEAD still resets"
+# Forms outside the allow-list: message flags (quoted, split, abbreviated, -e/--edit), another
+# repository, a comment, a pathspec decoy, --no-amend cancelling --amend, and any global
+# `git -c` (its operand can expand into `-C <repo>` or strip the WIP subject via cleanup).
+# Each would fail against a rejecting commit-msg hook and leave HEAD WIP, so only the
+# command decides here.
+for c in "git commit --amend --no-edit '-m' 'real'" "git commit --amend --no-edit --mes=real" "git commit --amend --no-edit --edit" \
+         "git commit --amend --no-edit -e" "git -C /elsewhere commit --amend --no-edit" "cd /elsewhere && git commit --amend --no-edit" \
+         "git commit --amend --no-edit -''m real" "git commit --amend # --no-edit" "git commit ./file--amend--no-edit" \
+         "git commit --amend --no-edit --no-amend" "git -c {core.quotePath=false,-C,/elsewhere} commit --amend --no-edit" \
+         "git -c core.quotePath=false commit --amend --no-edit"; do
+  reset_all; rev
+  printf '%s' "$(wip "$c")" | grep -q 'Codex cycle preserved' && fail "not WIP: $c" || pass "not WIP: $c"
+  amendpost "$c"
+  [ ! -f "$count" ] && pass "resets: $c" || fail "resets: $c"
+done
+# A custom comment character lets cleanup strip the WIP line, so the plain form is refused too
+git config core.commentChar W
+reset_all; rev
+printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle preserved' && fail "custom commentChar: no WIP note" || pass "custom commentChar: no WIP note"
+amendpost "git commit --amend --no-edit"
+[ ! -f "$count" ] && pass "custom commentChar: resets" || fail "custom commentChar: resets"
+git config --unset core.commentChar
+# Without jq the reader stops at an escaped quote, so `"-m"` would vanish; the leftover
+# backslash must still decline the exemption. (JSON: \" inside the command string.)
+reset_all; rev
+out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}')
+printf '%s' "$out" | grep -q 'Codex cycle preserved' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"
+nojq_run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}' >/dev/null
+[ ! -f "$count" ] && pass "jq-free: double-quoted -m still resets" || fail "jq-free: double-quoted -m still resets"
+git reset -q --soft HEAD~1 >/dev/null 2>&1
+# On a non-WIP HEAD the kept message is a real one, so the reset stands
+reset_all; rev; rev
+amendpost "git commit --amend --no-edit"
+[ ! -f "$count" ] && pass "amend --no-edit on non-WIP HEAD still resets" || fail "amend --no-edit on non-WIP HEAD still resets"
+
 # 20. FINDING F — a Codex server whose tools the gates can't attribute
 reset_all
 out=$(codextool mcp__codex__codex)

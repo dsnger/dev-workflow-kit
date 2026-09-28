@@ -495,6 +495,14 @@ backlog.
       reading git state rather than the command string). Prefer the latter if the class
       recurs; log it through `harden-finding` when it does.
       *Trigger: the next change that touches the hook, or a second observed cycle reset.*
+      **Reset direction fixed in 0.13.2** for the plain form only: `is_wip_commit` also
+      accepts a one-line `git commit` whose only arguments are `--amend`, `--no-edit` (both
+      required), `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, with no quote, `#`,
+      backslash or shell metacharacter, when `HEAD`'s subject starts with `wip`. An
+      allow-list, because four Gate-B passes found a new bypass in every deny-list. Still
+      open, deliberately, all in the safe direction: any other spelling of a WIP amend
+      (global `git -c`, `cd … &&`, `-F`/`-C` with a WIP message) still resets, and a heredoc
+      merely containing `WIP:` or `git commit` still fires.
 
 - [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
       human-confirmed axes in the story header, a mode derived as `max(risk, security)`,

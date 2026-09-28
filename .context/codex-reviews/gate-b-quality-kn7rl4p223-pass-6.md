@@ -1,0 +1,2 @@
+MINOR | high | todos.md:498-501 | The fix annotation describes the allow-listed command and WIP HEAD as sufficient but omits the core.commentChar/core.commentString configuration guard | The documented plain amend still resets when either key is configured, even core.commentChar=#, so the annotation overstates which cases are fixed | Include the absence of both configuration keys as a prerequisite or reference is_wip_commit for the exact conditions
+END OF FINDINGS (1 total)
