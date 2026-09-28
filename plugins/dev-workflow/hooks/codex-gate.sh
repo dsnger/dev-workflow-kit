@@ -761,11 +761,11 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # spurious STOP and reset the very counters the review loop is accumulating — the
 # documented workaround would fight the hook. So: gentle note, no reset.
 #
-# `git commit --amend --no-edit` carries no `-m` but keeps HEAD's message, so on a WIP
-# HEAD it is a WIP commit too. That is true whether it succeeds or fails — either way
-# HEAD's subject is still WIP afterwards — so PreToolUse and PostToolUse can both read
-# it — but it reads HEAD of the repository the hook runs in, and a command string is not
-# its arguments, so THIS exemption is an allow-list, never a deny-list: one line of exactly
+# `git commit --amend --no-edit` carries no `-m` and normally keeps HEAD's message, so on
+# a WIP HEAD it is usually a WIP commit too, and PreToolUse and PostToolUse both read
+# HEAD's subject for it. "Usually" is why this exemption refuses whenever anything could
+# change that message: it reads HEAD of the repository the hook runs in, and a command
+# string is not its arguments, so it is an allow-list, never a deny-list: one line of exactly
 # `git commit` followed only by `--amend`, `--no-edit`, `--no-verify`,
 # `-a`, `--all`, `-q` or `--quiet`, both of the first two present. No quote, `#`, backslash
 # (the jq-free reader truncates at an escaped quote and leaves one) or shell metacharacter
@@ -773,6 +773,13 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # qualify. Global `git -c` is refused too: its operand can expand into `-C <repo>` or set
 # `commit.cleanup` and strip the WIP subject — and for the same reason a repository that
 # sets its own comment character is refused, since cleanup can then strip a `WIP` line.
+# So is one with a `prepare-commit-msg` or `commit-msg` hook in its hooks directory: either
+# may rewrite the message, `--no-verify` does not skip the first, and the hook's content is
+# not read — its presence is enough. Any `core.hooksPath` at all is refused outright rather
+# than resolved, since a path this shell cannot carry exactly (a trailing newline, say)
+# would send the check to the wrong directory. The
+# `-m "wip…"` path has the same exposure to message hooks; it predates this and is left
+# as it was, recorded in todos.md.
 # Anything else falls through to the reset, the safe direction. The `-m "wip…"` match above
 # is separate and unchanged.
 is_wip_commit() {
@@ -785,6 +792,11 @@ is_wip_commit() {
   printf '%s ' "$1" | grep -Eq '[[:space:]]--amend[[:space:]]' || return 1
   printf '%s ' "$1" | grep -Eq '[[:space:]]--no-edit[[:space:]]' || return 1
   git -C "$repo_root" config --get-regexp '^core\.comment(char|string)$' >/dev/null 2>&1 && return 1
+  git -C "$repo_root" config --get core.hooksPath >/dev/null 2>&1 && return 1
+  _hooks=$(git -C "$repo_root" rev-parse --git-path hooks 2>/dev/null) || return 1
+  [ -n "$_hooks" ] || return 1
+  case $_hooks in /*) ;; *) _hooks="$repo_root/$_hooks" ;; esac
+  [ -e "$_hooks/prepare-commit-msg" ] || [ -e "$_hooks/commit-msg" ] && return 1
   git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'
 }
 

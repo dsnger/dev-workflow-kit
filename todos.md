@@ -498,11 +498,21 @@ backlog.
       **Reset direction fixed in 0.13.2** for the plain form only: `is_wip_commit` also
       accepts a one-line `git commit` whose only arguments are `--amend`, `--no-edit` (both
       required), `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, with no quote, `#`,
-      backslash or shell metacharacter, when `HEAD`'s subject starts with `wip`. An
+      backslash or shell metacharacter, when `HEAD`'s subject starts with `wip`, no custom
+      `core.commentChar`/`core.commentString` is set, no `core.hooksPath` is set at all, and
+      the default hooks directory has no `prepare-commit-msg` or `commit-msg` hook (either
+      could rewrite the message). An
       allow-list, because four Gate-B passes found a new bypass in every deny-list. Still
       open, deliberately, all in the safe direction: any other spelling of a WIP amend
       (global `git -c`, `cd … &&`, `-F`/`-C` with a WIP message) still resets, and a heredoc
-      merely containing `WIP:` or `git commit` still fires.
+      merely containing `WIP:` or `git commit` still fires. **Open in the unsafe direction,
+      and older than this fix:** the `-m "wip…"` path trusts the typed message, so a
+      `prepare-commit-msg` or `commit-msg` hook that rewrites it into a real one gets the WIP
+      note and keeps the cycle (PR #30 review). Not fixed there, by scope. Also collected
+      there: `CLAUDE.md` §5 Mechanics (and the `workflow-init` copy) and
+      `docs/architecture.md` say a `wip`-prefixed commit *message* keeps the counters, but
+      the hook reads the command and a few git settings, not the message — a two-copy prompt
+      fix for a later change.
 
 - [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
       human-confirmed axes in the story header, a mode derived as `max(risk, security)`,

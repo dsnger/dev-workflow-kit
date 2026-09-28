@@ -30,10 +30,13 @@ AGENTS.md invariant 12 carries the complete list.
   also counts an amend as a WIP commit when `HEAD`'s subject starts with `wip` and the
   command is, on one line, exactly `git commit` followed only by `--amend`,
   `--no-edit`, `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, with both `--amend` and
-  `--no-edit` present, no quote, `#`, backslash or shell metacharacter anywhere, and no custom
-  `core.commentChar`/`core.commentString` in the repository. Any
-  other amend, including one on a non-WIP `HEAD`, still resets; the existing `-m "wip…"`
-  recognition is unchanged. Regression assertions in `codex-gate.test.sh`.
+  `--no-edit` present, no quote, `#`, backslash or shell metacharacter anywhere, no custom
+  `core.commentChar`/`core.commentString`, no `core.hooksPath` set at all, and no
+  `prepare-commit-msg` or `commit-msg` hook in the default hooks directory, since either hook
+  can rewrite the message. Any other amend, including one on a non-WIP `HEAD`, still resets;
+  the existing `-m "wip…"` recognition is unchanged, and so is its exposure to such hooks.
+  Regression assertions in `codex-gate.test.sh`, including real amends with and without
+  message hooks.
 
 ## 0.13.1
 

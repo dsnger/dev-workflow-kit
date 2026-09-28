@@ -612,7 +612,79 @@ out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":
 printf '%s' "$out" | grep -q 'Codex cycle preserved' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"
 nojq_run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}' >/dev/null
 [ ! -f "$count" ] && pass "jq-free: double-quoted -m still resets" || fail "jq-free: double-quoted -m still resets"
+# 19c. The real lifecycle: PreToolUse, an ACTUAL `git commit --amend --no-edit`, PostToolUse.
+# Git refuses to amend an empty commit into an empty one, so 19b's empty WIP commit is
+# replaced by one that adds a file; it is removed again below. Hook scripts live in the git
+# dir or the sandbox, never in the worktree.
+# These cases write hook scripts, so they run with no global or system git config — an
+# inherited core.hooksPath would otherwise aim the writes at the developer's real hooks —
+# and into a fresh hooks directory: the one `git init` made may be a symlink copied from a
+# template, so it is moved aside (mv moves a link, never its target) and restored below.
+GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1; export GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM
 git reset -q --soft HEAD~1 >/dev/null 2>&1
+printf 'wip\n' > wip.txt; git add wip.txt >/dev/null 2>&1; git commit -q -m 'WIP: snapshot' >/dev/null 2>&1
+hooksd=$(git rev-parse --git-path hooks)
+if [ "$hooksd" = "$(git rev-parse --git-dir)/hooks" ] && { [ ! -e "$hooksd" ] && [ ! -L "$hooksd" ] || mv "$hooksd" "$sandbox/orig-hooks"; } \
+   && mkdir "$hooksd"; then :; else
+  fail "19c: could not set up the test repo's own hooks directory ($hooksd); lifecycle cases skipped"
+  hooksd=$sandbox/refused
+fi
+# shellcheck disable=SC2016  # $1 belongs to the git hook, expanded when git runs it
+rewrite_hook='#!/bin/sh
+printf "real subject\n" > "$1"
+'
+lifecycle() { # runs one real amend between the two hook events; leaves $pre, $subj, $moved
+  reset_all; rev; rev
+  pre=$(wip "git commit --amend --no-edit")
+  before=$(git rev-parse HEAD)
+  # A same-second amend of an unchanged tree recreates the same commit, so stage a change
+  printf 'x\n' >> wip.txt; git add wip.txt >/dev/null 2>&1
+  git commit -q --amend --no-edit >/dev/null 2>&1
+  [ "$(git rev-parse HEAD)" != "$before" ] && moved=yes || moved=no
+  subj=$(git log -1 --format=%s)
+  amendpost "git commit --amend --no-edit"
+}
+# (a) no message hook: the amend keeps the WIP subject and the cycle survives
+lifecycle
+printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = yes ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+  && pass "real amend, no message hook: WIP note, subject kept, cycle preserved" || fail "real amend, no message hook: WIP note, subject kept, cycle preserved"
+# (b) an aborted amend with no message hook leaves HEAD WIP, so the cycle stays open
+printf '#!/bin/sh\nexit 1\n' > "$hooksd/pre-commit"; chmod +x "$hooksd/pre-commit"
+lifecycle
+[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "aborted real amend (pre-commit): cycle preserved" || fail "aborted real amend (pre-commit): cycle preserved"
+rm -f "$hooksd/pre-commit"
+# (c) prepare-commit-msg rewrites the subject into a real one: no WIP note before, reset after
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+lifecycle
+{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "message hook: no WIP note before the amend" || pass "message hook: no WIP note before the amend"
+[ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "message hook: subject rewritten, cycle reset" || fail "message hook: subject rewritten, cycle reset"
+rm -f "$hooksd/prepare-commit-msg"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# (d) commit-msg rejects the amend: HEAD stays WIP, but a message hook is present, so reset
+printf '#!/bin/sh\nexit 1\n' > "$hooksd/commit-msg"; chmod +x "$hooksd/commit-msg"
+lifecycle
+{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "rejecting commit-msg: no WIP note" || pass "rejecting commit-msg: no WIP note"
+[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ ! -f "$count" ] && pass "rejecting commit-msg: HEAD still WIP, cycle reset" || fail "rejecting commit-msg: HEAD still WIP, cycle reset"
+rm -f "$hooksd/commit-msg"
+# (e) any core.hooksPath refuses the exemption; this one also rewrites the subject
+mkdir -p "$sandbox/hooks"
+printf '%s' "$rewrite_hook" > "$sandbox/hooks/prepare-commit-msg"; chmod +x "$sandbox/hooks/prepare-commit-msg"
+git config core.hooksPath "$sandbox/hooks"
+lifecycle
+{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "core.hooksPath message hook: no WIP note" || pass "core.hooksPath message hook: no WIP note"
+[ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "core.hooksPath message hook: subject rewritten, cycle reset" || fail "core.hooksPath message hook: subject rewritten, cycle reset"
+git config --unset core.hooksPath; rm -rf "$sandbox/hooks"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# a hooksPath ending in a newline is refused too, not resolved to a neighbouring directory
+git config core.hooksPath "$sandbox/nl
+"
+reset_all; rev
+[ "$(git log -1 --format=%s)" = 'WIP: snapshot' ] && ! { printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle preserved'; } \
+  && pass "newline-ending core.hooksPath on a WIP HEAD: no WIP note" || fail "newline-ending core.hooksPath on a WIP HEAD: no WIP note"
+git config --unset core.hooksPath
+git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
+if [ "$hooksd" != "$sandbox/refused" ]; then
+  rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
+fi
+unset GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM
 # On a non-WIP HEAD the kept message is a real one, so the reset stands
 reset_all; rev; rev
 amendpost "git commit --amend --no-edit"
