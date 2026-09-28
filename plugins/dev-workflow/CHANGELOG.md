@@ -22,6 +22,13 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.13.1
+
+- **The Named residual loses a dangling reference.** Its closing clause, "as the standing
+  sentences above require", pointed at a list that exists only in the loop-rule target text, not
+  above it in `CLAUDE.md` or in `/dev-workflow:workflow-init`'s template. The clause is removed
+  from both copies; the sentence before it states the rule on its own. No rule changed.
+
 ## 0.13.0
 
 - **One closure ordering for §5**, installed in `CLAUDE.md`'s gate section and in
