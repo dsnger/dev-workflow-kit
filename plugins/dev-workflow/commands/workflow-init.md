@@ -360,7 +360,7 @@ Mechanics · Severity requires. What a clean final pass and the zero-finding ear
 closure ordering. Codex is advisory — validate before applying; dismissed finding → one-line why.
 
 **Named residual:** the hook's messages state its own threshold as an obligation, so at a
-floor of 1 they report a shortfall the cycle does not owe. **That particular overstatement is out of scope here by decision, and it is not a blanket exemption for hook text** — a reminder this change's own rules falsify is corrected in the same change, as the standing sentences above require.
+floor of 1 they report a shortfall the cycle does not owe. **That particular overstatement is out of scope here by decision, and it is not a blanket exemption for hook text** — a reminder this change's own rules falsify is corrected in the same change.
 What makes that tolerable is the precedence rule above plus the hook exiting
 0 on every branch, not the reminder being harmless.
 
