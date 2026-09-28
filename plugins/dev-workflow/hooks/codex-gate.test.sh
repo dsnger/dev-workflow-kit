@@ -151,7 +151,7 @@ reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA"; }
 # that wants the gate off must set the marker after calling this.
 reset_all() {
   rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf" \
-        "$bgadvf" "$unverf" "$pendf" "$offf"
+        "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase
 }
 
 # 0. THE jq-FREE PATH IS USABLE. Asserted before anything depends on it: if tree_hash
@@ -570,10 +570,21 @@ printf '%s' "$out" | grep -q 'Codex gate state:' && fail "WIP commit must not em
 printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP commit -> gentle note" || fail "WIP commit -> gentle note"
 out=$(wip "git commit -m 'WIP: caps variant'")
 printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP matcher is case-insensitive" || fail "WIP matcher is case-insensitive"
-# PostToolUse: a WIP commit must PRESERVE the counters (the cycle is still open)
+# PostToolUse: a WIP commit must PRESERVE the counters (the cycle is still open). Since
+# 0.13.3 PostToolUse reads the commit that resulted, so a WIP commit is made for real here
+# (empty, so no fingerprint input moves) and undone afterwards.
+wip "git commit -m 'wip: snapshot'" >/dev/null
+git commit -q --allow-empty -m 'wip: snapshot' >/dev/null 2>&1
 run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"wip: snapshot\""}}' >/dev/null
 [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "WIP commit preserves pass count (Finding 11)" || fail "WIP commit preserves pass count (Finding 11)"
 [ -f "$state" ] && pass "WIP commit preserves Gate B state" || fail "WIP commit preserves Gate B state"
+git reset -q --soft HEAD~1 >/dev/null 2>&1
+# ...and the same command on a HEAD that is not WIP (the commit did not happen, or a hook
+# rewrote it) resets
+rev
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"wip: snapshot\""}}' >/dev/null
+[ ! -f "$count" ] && pass "-m wip with a non-WIP HEAD afterwards resets" || fail "-m wip with a non-WIP HEAD afterwards resets"
+reset_all; rev; rev
 # A real (non-WIP) commit still resets
 commitpost
 [ ! -f "$count" ] && pass "non-WIP commit still resets counters" || fail "non-WIP commit still resets counters"
@@ -585,7 +596,7 @@ git commit -q --allow-empty -m 'WIP: snapshot' >/dev/null 2>&1
 amendpost() { run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$1\"}}" >/dev/null; }
 reset_all; rev; rev
 out=$(wip "git commit --amend --no-edit")
-printf '%s' "$out" | grep -q 'Codex cycle preserved' && pass "amend --no-edit on WIP HEAD -> WIP note" || fail "amend --no-edit on WIP HEAD -> WIP note"
+printf '%s' "$out" | grep -q 'Codex cycle decided after' && pass "amend --no-edit on WIP HEAD -> WIP note" || fail "amend --no-edit on WIP HEAD -> WIP note"
 amendpost "git commit --amend --no-edit"
 [ "$(cat "$count" 2>/dev/null)" = 2 ] && [ -f "$state" ] && pass "amend --no-edit on WIP HEAD preserves the cycle" || fail "amend --no-edit on WIP HEAD preserves the cycle"
 # A new message is a closing act (or a stray commit) and still resets
@@ -602,14 +613,14 @@ for c in "git commit --amend --no-edit '-m' 'real'" "git commit --amend --no-edi
          "git commit --amend --no-edit --no-amend" "git -c {core.quotePath=false,-C,/elsewhere} commit --amend --no-edit" \
          "git -c core.quotePath=false commit --amend --no-edit"; do
   reset_all; rev
-  printf '%s' "$(wip "$c")" | grep -q 'Codex cycle preserved' && fail "not WIP: $c" || pass "not WIP: $c"
+  printf '%s' "$(wip "$c")" | grep -q 'Codex cycle decided after' && fail "not WIP: $c" || pass "not WIP: $c"
   amendpost "$c"
   [ ! -f "$count" ] && pass "resets: $c" || fail "resets: $c"
 done
 # A custom comment character lets cleanup strip the WIP line, so the plain form is refused too
 git config core.commentChar W
 reset_all; rev
-printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle preserved' && fail "custom commentChar: no WIP note" || pass "custom commentChar: no WIP note"
+printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle decided after' && fail "custom commentChar: no WIP note" || pass "custom commentChar: no WIP note"
 amendpost "git commit --amend --no-edit"
 [ ! -f "$count" ] && pass "custom commentChar: resets" || fail "custom commentChar: resets"
 git config --unset core.commentChar
@@ -617,7 +628,7 @@ git config --unset core.commentChar
 # backslash must still decline the exemption. (JSON: \" inside the command string.)
 reset_all; rev
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}')
-printf '%s' "$out" | grep -q 'Codex cycle preserved' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"
+printf '%s' "$out" | grep -q 'Codex cycle decided after' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"
 nojq_run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}' >/dev/null
 [ ! -f "$count" ] && pass "jq-free: double-quoted -m still resets" || fail "jq-free: double-quoted -m still resets"
 # 19c. The real lifecycle: PreToolUse, an ACTUAL `git commit --amend --no-edit`, PostToolUse.
@@ -653,25 +664,25 @@ lifecycle() { # runs one real amend between the two hook events; leaves $pre, $s
 }
 # (a) no hooks at all: the amend keeps the WIP subject and the cycle survives
 lifecycle
-printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = yes ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+printf '%s' "$pre" | grep -q 'Codex cycle decided after' && [ "$moved" = yes ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
   && pass "real amend, no hooks: WIP note, subject kept, cycle preserved" || fail "real amend, no hooks: WIP note, subject kept, cycle preserved"
 # (a2) *.sample files are the one thing the hooks directory may hold
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/commit-msg.sample"; chmod +x "$hooksd/commit-msg.sample"
 lifecycle
-printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = yes ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+printf '%s' "$pre" | grep -q 'Codex cycle decided after' && [ "$moved" = yes ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
   && pass "real amend, only *.sample hooks: cycle preserved" || fail "real amend, only *.sample hooks: cycle preserved"
 rm -f "$hooksd/commit-msg.sample"
 # (b) an amend aborted with no hook present (a held index lock) leaves HEAD WIP: cycle kept
 : > "$(git rev-parse --git-dir)/index.lock"
 lifecycle
 rm -f "$(git rev-parse --git-dir)/index.lock"
-printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+printf '%s' "$pre" | grep -q 'Codex cycle decided after' && [ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
   && pass "aborted real amend, no hooks: cycle preserved" || fail "aborted real amend, no hooks: cycle preserved"
 # (b2) Before PR #30's review this case expected preservation: a pre-commit hook that
 # aborts. Under the any-hook rule its mere presence refuses the exemption, so it resets.
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/pre-commit"; chmod +x "$hooksd/pre-commit"
 lifecycle
-{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "pre-commit hook present: no WIP note" || pass "pre-commit hook present: no WIP note"
+{ printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "pre-commit hook present: no WIP note" || pass "pre-commit hook present: no WIP note"
 [ "$moved" = no ] && [ ! -f "$count" ] && pass "pre-commit hook present, amend aborted: cycle reset" || fail "pre-commit hook present, amend aborted: cycle reset"
 rm -f "$hooksd/pre-commit"
 # (f) a pre-commit hook that installs a rewriting prepare-commit-msg mid-commit
@@ -679,19 +690,19 @@ printf '%s' "$rewrite_hook" > "$sandbox/rewrite-hook"
 printf '#!/bin/sh\ncp "%s" "%s/prepare-commit-msg" && chmod +x "%s/prepare-commit-msg"\n' "$sandbox/rewrite-hook" "$hooksd" "$hooksd" > "$hooksd/pre-commit"
 chmod +x "$hooksd/pre-commit"
 lifecycle
-{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "pre-commit installing a message hook: no WIP note" || pass "pre-commit installing a message hook: no WIP note"
+{ printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "pre-commit installing a message hook: no WIP note" || pass "pre-commit installing a message hook: no WIP note"
 [ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "pre-commit installing a message hook: subject rewritten, cycle reset" || fail "pre-commit installing a message hook: subject rewritten, cycle reset"
 rm -f "$hooksd/pre-commit" "$hooksd/prepare-commit-msg" "$sandbox/rewrite-hook"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 # (c) prepare-commit-msg rewrites the subject into a real one: no WIP note before, reset after
 printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
 lifecycle
-{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "message hook: no WIP note before the amend" || pass "message hook: no WIP note before the amend"
+{ printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "message hook: no WIP note before the amend" || pass "message hook: no WIP note before the amend"
 [ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "message hook: subject rewritten, cycle reset" || fail "message hook: subject rewritten, cycle reset"
 rm -f "$hooksd/prepare-commit-msg"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 # (d) commit-msg rejects the amend: HEAD stays WIP, but a message hook is present, so reset
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/commit-msg"; chmod +x "$hooksd/commit-msg"
 lifecycle
-{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "rejecting commit-msg: no WIP note" || pass "rejecting commit-msg: no WIP note"
+{ printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "rejecting commit-msg: no WIP note" || pass "rejecting commit-msg: no WIP note"
 [ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ ! -f "$count" ] && pass "rejecting commit-msg: HEAD still WIP, cycle reset" || fail "rejecting commit-msg: HEAD still WIP, cycle reset"
 rm -f "$hooksd/commit-msg"
 # (e) any core.hooksPath refuses the exemption; this one also rewrites the subject
@@ -699,16 +710,123 @@ mkdir -p "$sandbox/hooks"
 printf '%s' "$rewrite_hook" > "$sandbox/hooks/prepare-commit-msg"; chmod +x "$sandbox/hooks/prepare-commit-msg"
 git config core.hooksPath "$sandbox/hooks"
 lifecycle
-{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "core.hooksPath message hook: no WIP note" || pass "core.hooksPath message hook: no WIP note"
+{ printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "core.hooksPath message hook: no WIP note" || pass "core.hooksPath message hook: no WIP note"
 [ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "core.hooksPath message hook: subject rewritten, cycle reset" || fail "core.hooksPath message hook: subject rewritten, cycle reset"
 git config --unset core.hooksPath; rm -rf "$sandbox/hooks"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 # a hooksPath ending in a newline is refused too, not resolved to a neighbouring directory
 git config core.hooksPath "$sandbox/nl
 "
 reset_all; rev
-[ "$(git log -1 --format=%s)" = 'WIP: snapshot' ] && ! { printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle preserved'; } \
+[ "$(git log -1 --format=%s)" = 'WIP: snapshot' ] && ! { printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle decided after'; } \
   && pass "newline-ending core.hooksPath on a WIP HEAD: no WIP note" || fail "newline-ending core.hooksPath on a WIP HEAD: no WIP note"
 git config --unset core.hooksPath
+# 19d. The `-m "wip…"` path, as real commits: PreToolUse, the command itself, PostToolUse.
+# Commands use single quotes so they embed in the JSON payload as they are.
+base19d=$(git rev-parse HEAD)
+mlife() { # $1 = the command; runs it for real between the two hook events
+  reset_all; rev; rev
+  pre=$(wip "$1")
+  before=$(git rev-parse HEAD)
+  printf 'x\n' >> wip.txt; git add wip.txt >/dev/null 2>&1
+  sh -c "$1" >/dev/null 2>&1
+  [ "$(git rev-parse HEAD)" != "$before" ] && moved=yes || moved=no
+  subj=$(git log -1 --format=%s)
+  amendpost "$1"
+}
+noted() { printf '%s' "$pre" | grep -q 'Codex cycle decided after'; }
+kept() { [ "$(cat "$count" 2>/dev/null)" = 2 ]; }
+# (m1) plain `-m 'WIP…'`, no hooks: note before, commit is WIP, cycle kept
+mlife "git commit -q -m 'WIP: next'"
+noted && [ "$moved" = yes ] && [ "$subj" = 'WIP: next' ] && kept && pass "-m wip, no hooks: note, WIP commit, cycle kept" || fail "-m wip, no hooks: note, WIP commit, cycle kept"
+# (m2) a hook that leaves the message alone: reminder before (it could have), cycle kept after
+printf '#!/bin/sh\nexit 0\n' > "$hooksd/pre-commit"; chmod +x "$hooksd/pre-commit"
+mlife "git commit -q -m 'WIP: next'"
+! noted && [ "$moved" = yes ] && [ "$subj" = 'WIP: next' ] && kept && pass "-m wip, harmless hook: reminder before, cycle kept" || fail "-m wip, harmless hook: reminder before, cycle kept"
+rm -f "$hooksd/pre-commit"
+# (m3) a hook rewrites the WIP message into a real one: reminder before, reset after
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+mlife "git commit -q -m 'WIP: next'"
+! noted && [ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "-m wip rewritten by a hook: reminder before, reset after" || fail "-m wip rewritten by a hook: reminder before, reset after"
+rm -f "$hooksd/prepare-commit-msg"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# (m4) the commit fails with a WIP HEAD already there: no boundary, cycle kept
+: > "$(git rev-parse --git-dir)/index.lock"
+mlife "git commit -q -m 'WIP: next'"
+rm -f "$(git rev-parse --git-dir)/index.lock"
+noted && [ "$moved" = no ] && kept && pass "-m wip that fails on a WIP HEAD: cycle kept" || fail "-m wip that fails on a WIP HEAD: cycle kept"
+# (m5) chains either way round, and a first `-m` that is not WIP: reminder before, reset after
+for c in "git commit -q -m 'real' && git commit -q --allow-empty -m 'WIP: next'" \
+         "git commit -q -m 'WIP: next' && git commit -q --allow-empty -m 'real'" \
+         "git commit -q -m 'real' -m 'WIP: next'" "git commit -q -m -m WIP" \
+         "git commit -q -m 'WIP: next' --fixup=HEAD" "git commit -q -F -m WIP"; do
+  mlife "$c"
+  ! noted && [ ! -f "$count" ] && pass "reminder and reset: $c" || fail "reminder and reset: $c"
+  git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+done
+# (m6) an editor could replace the message, so -e gets the reminder (not run: no editor here)
+pre=$(wip "git commit -q -e -m 'WIP: next'")
+! noted && pass "reminder before: -e with a WIP message" || fail "reminder before: -e with a WIP message"
+# (m7) without jq only the single-quoted form can be read whole: it keeps the cycle there too
+reset_all; rev; rev
+nojq_run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
+git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
+nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
+kept && pass "jq-free: single-quoted -m wip keeps the cycle" || fail "jq-free: single-quoted -m wip keeps the cycle"
+# (m8) a post-commit hook that makes a real commit and then a WIP one: HEAD is WIP, but it
+# no longer sits on the commit that was HEAD when the command started, so reset
+printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m real >/dev/null 2>&1\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
+chmod +x "$hooksd/post-commit"
+mlife "git commit -q -m 'WIP: next'"
+[ "$subj" = 'WIP: from a hook' ] && [ ! -f "$count" ] && pass "-m wip, then a hook adds real + WIP commits: reset" || fail "-m wip, then a hook adds real + WIP commits: reset"
+rm -f "$hooksd/post-commit"
+# (m9) no record from PreToolUse (it never ran): the result cannot be attributed, so reset
+reset_all; rev; rev
+git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
+amendpost "git commit -m 'WIP: next'"
+[ ! -f "$count" ] && pass "-m wip with no PreToolUse record: reset" || fail "-m wip with no PreToolUse record: reset"
+# (m10) --amend -m 'WIP…' keeps the cycle: the new HEAD shares the recorded parent
+mlife "git commit -q --amend -m 'WIP: amended'"
+[ "$moved" = yes ] && [ "$subj" = 'WIP: amended' ] && kept && [ ! -f .context/codex-gate.wipBase ] \
+  && pass "--amend -m wip: same parent, cycle kept, record removed" || fail "--amend -m wip: same parent, cycle kept, record removed"
+# (m11) a hook rewrites the WIP message to a real one, then amends that real commit back to
+# WIP: the final HEAD still sits on the recorded HEAD, but the reflog grew by two, so reset
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty --amend -m "WIP: amended real" >/dev/null 2>&1\n' > "$hooksd/post-commit"
+chmod +x "$hooksd/post-commit"
+mlife "git commit -q -m 'WIP: next'"
+[ "$subj" = 'WIP: amended real' ] && [ ! -f "$count" ] && pass "hook amends a real commit back to WIP: reset" || fail "hook amends a real commit back to WIP: reset"
+rm -f "$hooksd/prepare-commit-msg" "$hooksd/post-commit"
+# (m12) `--amend` inside the message is not the option: a hook that replaces HEAD with a WIP
+# sibling must not pass as an amend
+printf '#!/bin/sh\ngit reset -q --soft HEAD~2 >/dev/null 2>&1\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: sibling" >/dev/null 2>&1\n' > "$hooksd/post-commit"
+chmod +x "$hooksd/post-commit"
+mlife "git commit -q -m 'WIP: --amend explained'"
+[ "$subj" = 'WIP: sibling' ] && [ ! -f "$count" ] && pass "--amend inside the message is not an option: reset" || fail "--amend inside the message is not an option: reset"
+rm -f "$hooksd/post-commit"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# (m13) no HEAD reflog: a hook that makes a real commit and moves HEAD back would look like a
+# failed commit, so without reflog evidence the exemption is refused and the cycle resets
+gd=$(git rev-parse --git-dir)
+mv "$gd/logs" "$sandbox/logs-aside"; git config core.logAllRefUpdates false
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+printf '#!/bin/sh\ngit reset -q --soft HEAD~1 >/dev/null 2>&1\n' > "$hooksd/post-commit"; chmod +x "$hooksd/post-commit"
+mlife "git commit -q -m 'WIP: next'"
+[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ ! -f "$count" ] && pass "no HEAD reflog, real commit undone by a hook: reset" || fail "no HEAD reflog, real commit undone by a hook: reset"
+rm -f "$hooksd/prepare-commit-msg" "$hooksd/post-commit"
+git config --unset core.logAllRefUpdates; rm -rf "$gd/logs"; mv "$sandbox/logs-aside" "$gd/logs"
+git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# (m14) a corrupt record (a leading-zero count, read as octal by shell arithmetic) must neither
+# make the hook fail nor keep the cycle
+reset_all; rev; rev
+printf '%s - 08 new\n' "$(git rev-parse HEAD)" > .context/codex-gate.wipBase
+git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'"}}' >/dev/null; rc=$?
+[ "$rc" -eq 0 ] && [ ! -f "$count" ] && pass "corrupt record (08): exit 0 and reset" || fail "corrupt record (08): exit 0 and reset"
+# (m15) a backgrounded Bash call: PostToolUse arrives before the commit ran, HEAD looks
+# unchanged, and that is no evidence of a failed commit — reset
+reset_all; rev; rev
+wip "git commit -m 'WIP: next'" >/dev/null
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'","run_in_background":true},"tool_response":{"backgroundTaskId":"b1"}}' >/dev/null
+[ ! -f "$count" ] && pass "backgrounded -m wip commit: reset" || fail "backgrounded -m wip commit: reset"
+git reset -q --soft "$base19d" >/dev/null 2>&1
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
 rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
 # On a non-WIP HEAD the kept message is a real one, so the reset stands

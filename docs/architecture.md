@@ -88,6 +88,13 @@ Two consequences worth knowing:
   `git status --porcelain`. It is excluded from the hash — otherwise the hash would
   change every time the hook wrote to it, and could never match itself.
 - CLAUDE.md §5 tells you to make a throwaway commit so `mcp__codex__review` has a
-  non-empty range to read. A commit whose message starts with `WIP` is treated as
-  cycle-internal: no STOP, and the pass counters survive. Otherwise the documented
-  workaround would destroy the cycle it exists to serve.
+  non-empty range to read. That commit is treated as cycle-internal — otherwise the
+  documented workaround would destroy the cycle it exists to serve — when it is a one-line
+  `git commit` with one WIP `-m` and only a few value-less flags beside it (CHANGELOG
+  0.13.3): the pass counters survive if the commit that results starts with `WIP` and is
+  attributable to that command by the rule the 0.13.3 CHANGELOG entry states, and a
+  repository whose hooks or settings could rewrite the message gets the ordinary reminder
+  beforehand. A plain `git commit --amend --no-edit` on a WIP commit also counts, under
+  narrower conditions (CHANGELOG 0.13.2). The hook reads the command and the resulting
+  commit, not the message alone; any other commit it detects resets. A commit spelled so
+  that the hook does not detect it as a commit at all is outside both rules.

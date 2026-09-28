@@ -1315,9 +1315,22 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   object name `HEAD` resolves to at that moment, never the symbolic `HEAD` — see the
   branch-agreement rule below for why);
   pre-commit, `baseSha` = HEAD is an empty range (HEAD..HEAD) — make a WIP commit
-  and set `baseSha` to its parent. **Name that commit `WIP: …`** — the hook treats a
-  `wip`-prefixed commit message as cycle-internal, so it neither fires a Gate-B STOP
-  nor resets your pass counters. A pre-review snapshot named anything else reads to the hook as a real commit: the hook treats the
+  and set `baseSha` to its parent. **Make that commit as `git commit -m 'WIP: …'`** — the
+  recommended form, because the hook recognises a WIP commit from the command and the commit
+  that results, not from the message alone. What it accepts is a one-line `git commit` with
+  exactly one `-m` whose value starts with `wip` — single-quoted, double-quoted or bare, though
+  without `jq` a double-quoted message cannot be read whole — beside nothing but `-a`/`--all`,
+  `-q`/`--quiet`, `-n`/`--no-verify`, `--amend` or `--allow-empty`; so no chain, `cd`,
+  `git -C`, editor or `--fixup`, and none of `; & | < > $ ( )`, a backtick or a backslash
+  anywhere, the message included. Beforehand, where a hook or setting in the repository could
+  rewrite the message, it shows the ordinary Gate-B reminder instead of the WIP note.
+  Afterwards it keeps your pass counters only if the resulting commit's subject starts with
+  `wip` and `HEAD` moved by exactly this one commit since the command started — directly on
+  the previous `HEAD`, or on its parent for `--amend`, with nothing else in between — or did
+  not move at all, if the command failed; a commit run in the background resets. A
+  plain `git commit --amend --no-edit` on a WIP commit counts too, under narrower conditions
+  the dev-workflow CHANGELOG lists at 0.13.2. Any other commit the hook detects reads to it
+  as a real commit — a snapshot named anything else, or made any other way: the hook treats the
   cycle as closed and **discards its count of the passes you just accumulated**, while the cycle
   itself stays open until the closure ordering's conditions hold. **What the hook loses is its counter state**, and that
   counter is not what makes a pass valid — so the reminder now understates what you hold, and no

@@ -506,14 +506,13 @@ backlog.
       allow-list, because four Gate-B passes found a new bypass in every deny-list. Still
       open, deliberately, all in the safe direction: any other spelling of a WIP amend
       (global `git -c`, `cd … &&`, `-F`/`-C` with a WIP message) still resets, and a heredoc
-      merely containing `WIP:` or `git commit` still fires. **Open in the unsafe direction,
-      and older than this fix:** the `-m "wip…"` path trusts the typed message, so a
-      hook that rewrites it into a real one — or installs one that does — gets the WIP note
-      and keeps the cycle (PR #30 review). Not fixed there, by scope. Also collected
-      there: `CLAUDE.md` §5 Mechanics (and the `workflow-init` copy) and
-      `docs/architecture.md` say a `wip`-prefixed commit *message* keeps the counters, but
-      the hook reads the command and a few git settings, not the message — a two-copy prompt
-      fix for a later change.
+      merely containing `WIP:` or `git commit` still fires. **Fixed in 0.13.3:** the
+      `-m "wip…"` path used to trust the typed message; now the reminder is decided before
+      the commit (a repository that could rewrite the message gets the Gate-B reminder) and
+      the reset after it (counters stay only for a WIP result attributable to the command,
+      by the rule in the 0.13.3 CHANGELOG entry), for an allow-listed one-line
+      `git commit` only. The §5 Mechanics text and both docs now describe that.
+      Still open, in the safe direction: a chained or redirected WIP commit resets.
 
 - [x] **P2 — risk/security profiles, and the derived validation mode.** Shipped: two
       human-confirmed axes in the story header, a mode derived as `max(risk, security)`,
