@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.13.2
+
+- **`git commit --amend --no-edit` on a `WIP:` commit no longer resets the Gate-B cycle.** The
+  hook recognized a WIP commit only by `-m "wip…"` in the command, so an amend that keeps the
+  WIP message was read as a real commit and its counters and fingerprint were cleared. It now
+  also counts an amend as a WIP commit when `HEAD`'s subject starts with `wip` and the
+  command is, on one line, exactly `git commit` followed only by `--amend`,
+  `--no-edit`, `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, with both `--amend` and
+  `--no-edit` present, no quote, `#`, backslash or shell metacharacter anywhere, no custom
+  `core.commentChar`/`core.commentString`, no `core.hooksPath` set at all, and nothing but
+  `*.sample` files in the default hooks directory — a rule stricter than Git's own, since a
+  message hook can rewrite the message and an earlier hook can install one mid-commit; the
+  check sees the directory only as it is when the hook runs. Any other amend, including one
+  on a non-WIP `HEAD`, still resets; the existing `-m "wip…"` recognition is unchanged, and
+  so is its exposure to such hooks. Regression assertions in `codex-gate.test.sh`, including
+  real amends with and without hooks; the suite now runs without global or system git
+  config and with an empty init template.
+
 ## 0.13.1
 
 - **The Named residual loses a dangling reference.** Its closing clause, "as the standing

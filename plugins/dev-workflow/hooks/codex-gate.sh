@@ -760,7 +760,54 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # an empty HEAD..HEAD range pre-commit). Treating it as a real commit would fire a
 # spurious STOP and reset the very counters the review loop is accumulating — the
 # documented workaround would fight the hook. So: gentle note, no reset.
-is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }
+#
+# `git commit --amend --no-edit` carries no `-m` and normally keeps HEAD's message, so on
+# a WIP HEAD it is usually a WIP commit too, and PreToolUse and PostToolUse both read
+# HEAD's subject for it. "Usually" is why this exemption refuses whenever anything could
+# change that message: it reads HEAD of the repository the hook runs in, and a command
+# string is not its arguments, so it is an allow-list, never a deny-list: one line of exactly
+# `git commit` followed only by `--amend`, `--no-edit`, `--no-verify`,
+# `-a`, `--all`, `-q` or `--quiet`, both of the first two present. No quote, `#`, backslash
+# (the jq-free reader truncates at an escaped quote and leaves one) or shell metacharacter
+# anywhere, so no quoting trick, comment, pathspec, `cd`, `git -C` or chained command can
+# qualify. Global `git -c` is refused too: its operand can expand into `-C <repo>` or set
+# `commit.cleanup` and strip the WIP subject — and for the same reason a repository that
+# sets its own comment character is refused, since cleanup can then strip a `WIP` line.
+# So is one whose hooks directory holds anything but `*.sample` files — a deliberately
+# stricter rule than Git's own (Git runs only executable files with hook names): any other
+# entry refuses, executable or not, because a message hook can rewrite the message
+# (`--no-verify` does not skip `prepare-commit-msg`) and an earlier hook such as
+# `pre-commit` can install one mid-commit. Hook contents are never read. A hooks directory
+# this check cannot list refuses too. Any `core.hooksPath` at all is refused outright rather
+# than resolved, since a path this shell cannot carry exactly (a trailing newline, say)
+# would send the check to the wrong directory. The check sees the directory as it is when
+# the hook runs, not what another process does afterwards. The `-m "wip…"` path has the
+# same exposure to hooks; it predates this and is left as it was, recorded in todos.md.
+# Anything else falls through to the reset, the safe direction. The `-m "wip…"` match above
+# is separate and unchanged.
+is_wip_commit() {
+  printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip" && return 0
+  case $1 in *'
+'*) return 1 ;; esac
+  printf '%s' "$1" | grep -q '[;&|<>$`()\\#"]' && return 1
+  printf '%s' "$1" | grep -q "'" && return 1
+  printf '%s' "$1" | grep -Eq '^[[:space:]]*git[[:space:]]+commit([[:space:]]+(--amend|--no-edit|--no-verify|-a|--all|-q|--quiet))+[[:space:]]*$' || return 1
+  printf '%s ' "$1" | grep -Eq '[[:space:]]--amend[[:space:]]' || return 1
+  printf '%s ' "$1" | grep -Eq '[[:space:]]--no-edit[[:space:]]' || return 1
+  git -C "$repo_root" config --get-regexp '^core\.comment(char|string)$' >/dev/null 2>&1 && return 1
+  git -C "$repo_root" config --get core.hooksPath >/dev/null 2>&1 && return 1
+  _hooks=$(git -C "$repo_root" rev-parse --git-path hooks 2>/dev/null) || return 1
+  [ -n "$_hooks" ] || return 1
+  case $_hooks in /*) ;; *) _hooks="$repo_root/$_hooks" ;; esac
+  if [ -e "$_hooks" ] || [ -L "$_hooks" ]; then
+    [ -d "$_hooks" ] && [ -r "$_hooks" ] && [ -x "$_hooks" ] || return 1
+    for _f in "$_hooks"/* "$_hooks"/.[!.]* "$_hooks"/..?*; do
+      [ -e "$_f" ] || [ -L "$_f" ] || continue
+      case ${_f##*/} in *.sample) ;; *) return 1 ;; esac
+    done
+  fi
+  git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'
+}
 
 # A commit that stages all tracked changes (-a / -am / --all) also sweeps in
 # tracked-but-unstaged edits that `git diff --cached` alone won't show, so the
