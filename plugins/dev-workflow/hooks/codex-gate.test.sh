@@ -39,7 +39,9 @@ trap 'rm -rf "$work" "$sandbox"' EXIT
 # The whole suite runs with no global or system git config and an empty init template, so
 # a developer's core.hooksPath, comment character or template hooks can neither change
 # what the hook decides nor be written to by the cases that install hook scripts.
+# Command-scope config handed down through the environment is dropped too.
 mkdir "$sandbox/template"
+unset GIT_CONFIG_PARAMETERS GIT_CONFIG_COUNT
 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_TEMPLATE_DIR=$sandbox/template
 export GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM GIT_TEMPLATE_DIR
 cd "$work" || exit 1
@@ -630,8 +632,9 @@ printf 'wip\n' > wip.txt; git add wip.txt >/dev/null 2>&1; git commit -q -m 'WIP
 hooksd=$(git rev-parse --git-path hooks)
 if [ "$hooksd" = "$(git rev-parse --git-dir)/hooks" ] && { [ ! -e "$hooksd" ] && [ ! -L "$hooksd" ] || mv "$hooksd" "$sandbox/orig-hooks"; } \
    && mkdir "$hooksd"; then :; else
-  fail "19c: could not set up the test repo's own hooks directory ($hooksd); lifecycle cases skipped"
-  hooksd=$sandbox/refused
+  # The cases below run real commits, which would execute whatever hooks that directory holds
+  fail "19c: could not set up the test repo's own hooks directory ($hooksd); aborting the suite"
+  exit 1
 fi
 # shellcheck disable=SC2016  # $1 belongs to the git hook, expanded when git runs it
 rewrite_hook='#!/bin/sh
@@ -707,9 +710,7 @@ reset_all; rev
   && pass "newline-ending core.hooksPath on a WIP HEAD: no WIP note" || fail "newline-ending core.hooksPath on a WIP HEAD: no WIP note"
 git config --unset core.hooksPath
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
-if [ "$hooksd" != "$sandbox/refused" ]; then
-  rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
-fi
+rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
 # On a non-WIP HEAD the kept message is a real one, so the reset stands
 reset_all; rev; rev
 amendpost "git commit --amend --no-edit"
