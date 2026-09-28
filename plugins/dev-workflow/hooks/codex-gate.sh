@@ -773,13 +773,16 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # qualify. Global `git -c` is refused too: its operand can expand into `-C <repo>` or set
 # `commit.cleanup` and strip the WIP subject — and for the same reason a repository that
 # sets its own comment character is refused, since cleanup can then strip a `WIP` line.
-# So is one with a `prepare-commit-msg` or `commit-msg` hook in its hooks directory: either
-# may rewrite the message, `--no-verify` does not skip the first, and the hook's content is
-# not read — its presence is enough. Any `core.hooksPath` at all is refused outright rather
+# So is one whose hooks directory holds anything but `*.sample` files — a deliberately
+# stricter rule than Git's own (Git runs only executable files with hook names): any other
+# entry refuses, executable or not, because a message hook can rewrite the message
+# (`--no-verify` does not skip `prepare-commit-msg`) and an earlier hook such as
+# `pre-commit` can install one mid-commit. Hook contents are never read. A hooks directory
+# this check cannot list refuses too. Any `core.hooksPath` at all is refused outright rather
 # than resolved, since a path this shell cannot carry exactly (a trailing newline, say)
-# would send the check to the wrong directory. The
-# `-m "wip…"` path has the same exposure to message hooks; it predates this and is left
-# as it was, recorded in todos.md.
+# would send the check to the wrong directory. The check sees the directory as it is when
+# the hook runs, not what another process does afterwards. The `-m "wip…"` path has the
+# same exposure to hooks; it predates this and is left as it was, recorded in todos.md.
 # Anything else falls through to the reset, the safe direction. The `-m "wip…"` match above
 # is separate and unchanged.
 is_wip_commit() {
@@ -796,7 +799,13 @@ is_wip_commit() {
   _hooks=$(git -C "$repo_root" rev-parse --git-path hooks 2>/dev/null) || return 1
   [ -n "$_hooks" ] || return 1
   case $_hooks in /*) ;; *) _hooks="$repo_root/$_hooks" ;; esac
-  [ -e "$_hooks/prepare-commit-msg" ] || [ -e "$_hooks/commit-msg" ] && return 1
+  if [ -e "$_hooks" ] || [ -L "$_hooks" ]; then
+    [ -d "$_hooks" ] && [ -r "$_hooks" ] && [ -x "$_hooks" ] || return 1
+    for _f in "$_hooks"/* "$_hooks"/.[!.]* "$_hooks"/..?*; do
+      [ -e "$_f" ] || [ -L "$_f" ] || continue
+      case ${_f##*/} in *.sample) ;; *) return 1 ;; esac
+    done
+  fi
   git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'
 }
 

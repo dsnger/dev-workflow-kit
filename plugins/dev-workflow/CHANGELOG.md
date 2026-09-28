@@ -31,12 +31,14 @@ AGENTS.md invariant 12 carries the complete list.
   command is, on one line, exactly `git commit` followed only by `--amend`,
   `--no-edit`, `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, with both `--amend` and
   `--no-edit` present, no quote, `#`, backslash or shell metacharacter anywhere, no custom
-  `core.commentChar`/`core.commentString`, no `core.hooksPath` set at all, and no
-  `prepare-commit-msg` or `commit-msg` hook in the default hooks directory, since either hook
-  can rewrite the message. Any other amend, including one on a non-WIP `HEAD`, still resets;
-  the existing `-m "wip…"` recognition is unchanged, and so is its exposure to such hooks.
-  Regression assertions in `codex-gate.test.sh`, including real amends with and without
-  message hooks.
+  `core.commentChar`/`core.commentString`, no `core.hooksPath` set at all, and nothing but
+  `*.sample` files in the default hooks directory — a rule stricter than Git's own, since a
+  message hook can rewrite the message and an earlier hook can install one mid-commit; the
+  check sees the directory only as it is when the hook runs. Any other amend, including one
+  on a non-WIP `HEAD`, still resets; the existing `-m "wip…"` recognition is unchanged, and
+  so is its exposure to such hooks. Regression assertions in `codex-gate.test.sh`, including
+  real amends with and without hooks; the suite now runs without global or system git
+  config and with an empty init template.
 
 ## 0.13.1
 

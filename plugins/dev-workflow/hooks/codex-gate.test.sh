@@ -36,6 +36,12 @@ work=$(mktemp -d)
 # for a reason no label mentions.
 sandbox=$(mktemp -d)
 trap 'rm -rf "$work" "$sandbox"' EXIT
+# The whole suite runs with no global or system git config and an empty init template, so
+# a developer's core.hooksPath, comment character or template hooks can neither change
+# what the hook decides nor be written to by the cases that install hook scripts.
+mkdir "$sandbox/template"
+GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_TEMPLATE_DIR=$sandbox/template
+export GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM GIT_TEMPLATE_DIR
 cd "$work" || exit 1
 git init -q
 git config user.email t@t; git config user.name t
@@ -616,11 +622,9 @@ nojq_run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"com
 # Git refuses to amend an empty commit into an empty one, so 19b's empty WIP commit is
 # replaced by one that adds a file; it is removed again below. Hook scripts live in the git
 # dir or the sandbox, never in the worktree.
-# These cases write hook scripts, so they run with no global or system git config — an
-# inherited core.hooksPath would otherwise aim the writes at the developer's real hooks —
-# and into a fresh hooks directory: the one `git init` made may be a symlink copied from a
-# template, so it is moved aside (mv moves a link, never its target) and restored below.
-GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1; export GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM
+# These cases write hook scripts into a fresh hooks directory. The suite's empty template
+# means `git init` made none, but whatever is there is moved aside (mv moves a link, never
+# its target) and restored below, so no write can reach a directory outside this repo.
 git reset -q --soft HEAD~1 >/dev/null 2>&1
 printf 'wip\n' > wip.txt; git add wip.txt >/dev/null 2>&1; git commit -q -m 'WIP: snapshot' >/dev/null 2>&1
 hooksd=$(git rev-parse --git-path hooks)
@@ -644,15 +648,37 @@ lifecycle() { # runs one real amend between the two hook events; leaves $pre, $s
   subj=$(git log -1 --format=%s)
   amendpost "git commit --amend --no-edit"
 }
-# (a) no message hook: the amend keeps the WIP subject and the cycle survives
+# (a) no hooks at all: the amend keeps the WIP subject and the cycle survives
 lifecycle
 printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = yes ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
-  && pass "real amend, no message hook: WIP note, subject kept, cycle preserved" || fail "real amend, no message hook: WIP note, subject kept, cycle preserved"
-# (b) an aborted amend with no message hook leaves HEAD WIP, so the cycle stays open
+  && pass "real amend, no hooks: WIP note, subject kept, cycle preserved" || fail "real amend, no hooks: WIP note, subject kept, cycle preserved"
+# (a2) *.sample files are the one thing the hooks directory may hold
+printf '#!/bin/sh\nexit 1\n' > "$hooksd/commit-msg.sample"; chmod +x "$hooksd/commit-msg.sample"
+lifecycle
+printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = yes ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+  && pass "real amend, only *.sample hooks: cycle preserved" || fail "real amend, only *.sample hooks: cycle preserved"
+rm -f "$hooksd/commit-msg.sample"
+# (b) an amend aborted with no hook present (a held index lock) leaves HEAD WIP: cycle kept
+: > "$(git rev-parse --git-dir)/index.lock"
+lifecycle
+rm -f "$(git rev-parse --git-dir)/index.lock"
+printf '%s' "$pre" | grep -q 'Codex cycle preserved' && [ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
+  && pass "aborted real amend, no hooks: cycle preserved" || fail "aborted real amend, no hooks: cycle preserved"
+# (b2) Before PR #30's review this case expected preservation: a pre-commit hook that
+# aborts. Under the any-hook rule its mere presence refuses the exemption, so it resets.
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/pre-commit"; chmod +x "$hooksd/pre-commit"
 lifecycle
-[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "aborted real amend (pre-commit): cycle preserved" || fail "aborted real amend (pre-commit): cycle preserved"
+{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "pre-commit hook present: no WIP note" || pass "pre-commit hook present: no WIP note"
+[ "$moved" = no ] && [ ! -f "$count" ] && pass "pre-commit hook present, amend aborted: cycle reset" || fail "pre-commit hook present, amend aborted: cycle reset"
 rm -f "$hooksd/pre-commit"
+# (f) a pre-commit hook that installs a rewriting prepare-commit-msg mid-commit
+printf '%s' "$rewrite_hook" > "$sandbox/rewrite-hook"
+printf '#!/bin/sh\ncp "%s" "%s/prepare-commit-msg" && chmod +x "%s/prepare-commit-msg"\n' "$sandbox/rewrite-hook" "$hooksd" "$hooksd" > "$hooksd/pre-commit"
+chmod +x "$hooksd/pre-commit"
+lifecycle
+{ printf '%s' "$pre" | grep -q 'Codex cycle preserved'; } && fail "pre-commit installing a message hook: no WIP note" || pass "pre-commit installing a message hook: no WIP note"
+[ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "pre-commit installing a message hook: subject rewritten, cycle reset" || fail "pre-commit installing a message hook: subject rewritten, cycle reset"
+rm -f "$hooksd/pre-commit" "$hooksd/prepare-commit-msg" "$sandbox/rewrite-hook"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 # (c) prepare-commit-msg rewrites the subject into a real one: no WIP note before, reset after
 printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
 lifecycle
@@ -684,7 +710,6 @@ git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/nul
 if [ "$hooksd" != "$sandbox/refused" ]; then
   rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
 fi
-unset GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM
 # On a non-WIP HEAD the kept message is a real one, so the reset stands
 reset_all; rev; rev
 amendpost "git commit --amend --no-edit"
