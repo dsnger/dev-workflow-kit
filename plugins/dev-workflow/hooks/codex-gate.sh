@@ -57,7 +57,7 @@ countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since l
 bgadv_file="$state_dir/codex-gate.bgAdvice"
 unver_file="$state_dir/codex-gate.unverified"
 pend_file="$state_dir/codex-gate.unverifiedPending"
-wipbase_file="$state_dir/codex-gate.wipBase"       # HEAD (and its parent) when a `-m wip` commit starts
+wipbase_prefix="$state_dir/codex-gate.wipBase."   # + tool_use_id: one `-m wip` record per tool call
 
 # FINDING G: the plugin is installed globally, but the workflow is adopted per project.
 # A repo that never ran /workflow-init has no gate to enforce, so the hook does NOTHING
@@ -774,8 +774,8 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
 # metacharacter or backslash anywhere (the jq-free reader truncates a double-quoted message at
-# its escaped quote and leaves one, so without jq only the single-quoted and bare forms
-# qualify). Before the
+# its escaped quote and leaves one; without jq the result is never attributed anyway, see the
+# record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
 # `wip` AND HEAD is attributable to this command. PreToolUse records HEAD, its parent, the
@@ -789,8 +789,17 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # reflog is empty or unreadable before or after: without it neither branch can be told apart
 # from a hook that moved HEAD and moved it back. A Bash call that was sent to the background
 # (`run_in_background`, or a result carrying a `backgroundTaskId`) is refused too: its
-# PostToolUse arrives before the commit has finished, so an unchanged HEAD proves nothing. The record lives only from one PreToolUse to the next
-# PostToolUse and is removed there.
+# PostToolUse arrives before the commit has finished, so an unchanged HEAD proves nothing.
+# The record belongs to one tool call: it is named after the payload's `tool_use_id`, which
+# that call's PreToolUse and PostToolUse share, so overlapping calls cannot read, take or
+# delete each other's record. The id is read with jq only, as a top-level string checked
+# inside jq; a call whose id is missing, not a string, longer than 100 characters or not
+# made of [A-Za-z0-9_-] gets no record and so resets — and so does every call without jq,
+# whose fallback reader cannot establish that the key is the top-level one. The file name
+# encodes the id so that ids differing only in letter case stay apart on a case-insensitive
+# filesystem. PostToolUse removes the call's own
+# record; one whose PostToolUse never arrives stays behind as an inert file in `.context/`,
+# outside the fingerprint.
 #
 # `git commit --amend --no-edit` carries no `-m` and normally keeps HEAD's message. It is an
 # allow-list, never a deny-list: one line of exactly `git commit` followed only by `--amend`,
@@ -844,7 +853,19 @@ is_wip_amend_cmd() {
   ! msg_may_be_rewritten && head_is_wip
 }
 head_reflog_len() { git -C "$repo_root" reflog show --format=%H HEAD 2>/dev/null | grep -c ''; }
+wip_record_path() { # this call's record path; fails when the id is unusable
+  # jq only: the fallback reader cannot tell a top-level key from a nested one, and a
+  # shell capture would strip a trailing newline before any check could see it, so the
+  # type, characters and length are checked inside jq on the decoded value
+  command -v jq >/dev/null 2>&1 || return 1
+  # and then written as a name no case-insensitive filesystem can merge with another id's:
+  # `_` becomes `__` and an upper-case letter `X` becomes `_x`, which decodes uniquely
+  _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
+  case $_id in '' | *[!a-z0-9_-]*) return 1 ;; esac
+  printf '%s%s' "$wipbase_prefix" "$_id"
+}
 record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|new>"; best effort
+  wipbase_file=$(wip_record_path) || return 0
   rm -f "$wipbase_file" 2>/dev/null
   is_wip_message_cmd "$1" || return 0
   _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || return 0
@@ -859,6 +880,7 @@ record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|n
 bash_backgrounded() { printf '%s' "$payload" | grep -Eq '"run_in_background"[[:space:]]*:[[:space:]]*true|"backgroundTaskId"'; }
 wip_base_holds() { # PostToolUse: is HEAD this command's own result, or unchanged?
   _rh='' _rp='' _rn='' _rm='' _rx=''
+  wipbase_file=$(wip_record_path) || return 1
   [ -f "$wipbase_file" ] || return 1
   read -r _rh _rp _rn _rm _rx 2>/dev/null < "$wipbase_file"
   rm -f "$wipbase_file" 2>/dev/null
@@ -1007,8 +1029,8 @@ case "$event" in
         if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file"
         fi
-        # The `-m wip` record belongs to this one command, whatever the decision above was
-        is_commit "$cmd" && rm -f "$wipbase_file" 2>/dev/null
+        # This call's `-m wip` record belongs to this one command, whatever the decision above was
+        if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
         ;;
       Skill)
         case "$(input_field skill)" in

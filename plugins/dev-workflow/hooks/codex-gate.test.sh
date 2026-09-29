@@ -151,7 +151,7 @@ reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA"; }
 # that wants the gate off must set the marker after calling this.
 reset_all() {
   rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf" \
-        "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase
+        "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.*
 }
 
 # 0. THE jq-FREE PATH IS USABLE. Asserted before anything depends on it: if tree_hash
@@ -564,7 +564,7 @@ reset_all
 # 19. FINDING 11 — WIP commit is cycle-internal: gentle note, no gate-state reminder, no reset
 reset_all
 rev; rev                                   # 2 passes accumulated
-wip() { run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$1\"}}"; }
+wip() { run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"${2:-toolu_t1}\",\"tool_input\":{\"command\":\"$1\"}}"; }
 out=$(wip "git commit -m 'wip: pre-review snapshot'")
 printf '%s' "$out" | grep -q 'Codex gate state:' && fail "WIP commit must not emit the gate-state reminder" || pass "WIP commit does not emit the gate-state reminder"
 printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP commit -> gentle note" || fail "WIP commit -> gentle note"
@@ -575,7 +575,7 @@ printf '%s' "$out" | grep -q 'WIP commit' && pass "WIP matcher is case-insensiti
 # (empty, so no fingerprint input moves) and undone afterwards.
 wip "git commit -m 'wip: snapshot'" >/dev/null
 git commit -q --allow-empty -m 'wip: snapshot' >/dev/null 2>&1
-run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"wip: snapshot\""}}' >/dev/null
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1","tool_input":{"command":"git commit -m \"wip: snapshot\""}}' >/dev/null
 [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "WIP commit preserves pass count (Finding 11)" || fail "WIP commit preserves pass count (Finding 11)"
 [ -f "$state" ] && pass "WIP commit preserves Gate B state" || fail "WIP commit preserves Gate B state"
 git reset -q --soft HEAD~1 >/dev/null 2>&1
@@ -593,7 +593,7 @@ commitpost
 # cycle-internal too — but it carries no `-m`, and a command-string match alone reset it.
 # The empty commit keeps HEAD's tree, so no fingerprint input moves; it is undone below.
 git commit -q --allow-empty -m 'WIP: snapshot' >/dev/null 2>&1
-amendpost() { run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$1\"}}" >/dev/null; }
+amendpost() { run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"${2:-toolu_t1}\",\"tool_input\":{\"command\":\"$1\"}}" >/dev/null; }
 reset_all; rev; rev
 out=$(wip "git commit --amend --no-edit")
 printf '%s' "$out" | grep -q 'Codex cycle decided after' && pass "amend --no-edit on WIP HEAD -> WIP note" || fail "amend --no-edit on WIP HEAD -> WIP note"
@@ -765,12 +765,13 @@ done
 # (m6) an editor could replace the message, so -e gets the reminder (not run: no editor here)
 pre=$(wip "git commit -q -e -m 'WIP: next'")
 ! noted && pass "reminder before: -e with a WIP message" || fail "reminder before: -e with a WIP message"
-# (m7) without jq only the single-quoted form can be read whole: it keeps the cycle there too
+# (m7) without jq the call id cannot be read safely, so no record is kept and the WIP commit
+# resets (the safe direction)
 reset_all; rev; rev
-nojq_run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
+nojq_run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
 git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
-nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
-kept && pass "jq-free: single-quoted -m wip keeps the cycle" || fail "jq-free: single-quoted -m wip keeps the cycle"
+nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
+[ ! -f "$count" ] && pass "jq-free: -m wip resets (no call id without jq)" || fail "jq-free: -m wip resets (no call id without jq)"
 # (m8) a post-commit hook that makes a real commit and then a WIP one: HEAD is WIP, but it
 # no longer sits on the commit that was HEAD when the command started, so reset
 printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m real >/dev/null 2>&1\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
@@ -785,7 +786,7 @@ amendpost "git commit -m 'WIP: next'"
 [ ! -f "$count" ] && pass "-m wip with no PreToolUse record: reset" || fail "-m wip with no PreToolUse record: reset"
 # (m10) --amend -m 'WIP…' keeps the cycle: the new HEAD shares the recorded parent
 mlife "git commit -q --amend -m 'WIP: amended'"
-[ "$moved" = yes ] && [ "$subj" = 'WIP: amended' ] && kept && [ ! -f .context/codex-gate.wipBase ] \
+[ "$moved" = yes ] && [ "$subj" = 'WIP: amended' ] && kept && [ ! -f .context/codex-gate.wipBase.toolu__t1 ] \
   && pass "--amend -m wip: same parent, cycle kept, record removed" || fail "--amend -m wip: same parent, cycle kept, record removed"
 # (m11) a hook rewrites the WIP message to a real one, then amends that real commit back to
 # WIP: the final HEAD still sits on the recorded HEAD, but the reflog grew by two, so reset
@@ -816,16 +817,77 @@ git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 # (m14) a corrupt record (a leading-zero count, read as octal by shell arithmetic) must neither
 # make the hook fail nor keep the cycle
 reset_all; rev; rev
-printf '%s - 08 new\n' "$(git rev-parse HEAD)" > .context/codex-gate.wipBase
+printf '%s - 08 new\n' "$(git rev-parse HEAD)" > .context/codex-gate.wipBase.toolu__t1
 git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
-run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'"}}' >/dev/null; rc=$?
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'"}}' >/dev/null; rc=$?
 [ "$rc" -eq 0 ] && [ ! -f "$count" ] && pass "corrupt record (08): exit 0 and reset" || fail "corrupt record (08): exit 0 and reset"
 # (m15) a backgrounded Bash call: PostToolUse arrives before the commit ran, HEAD looks
 # unchanged, and that is no evidence of a failed commit — reset
 reset_all; rev; rev
 wip "git commit -m 'WIP: next'" >/dev/null
-run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'","run_in_background":true},"tool_response":{"backgroundTaskId":"b1"}}' >/dev/null
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1","tool_input":{"command":"git commit -m '"'"'WIP: next'"'"'","run_in_background":true},"tool_response":{"backgroundTaskId":"b1"}}' >/dev/null
 [ ! -f "$count" ] && pass "backgrounded -m wip commit: reset" || fail "backgrounded -m wip commit: reset"
+# (m16) overlapping calls, Greptile's order: A's Pre, A's commit, B's Pre, A's Post, B's
+# commit, B's Post. Each call reads its own record, so both valid WIP commits keep the cycle
+reset_all; rev; rev
+wip "git commit -q -m 'WIP: a'" toolu_a >/dev/null
+git commit -q --allow-empty -m 'WIP: a' >/dev/null 2>&1
+wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null
+amendpost "git commit -q -m 'WIP: a'" toolu_a
+git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
+amendpost "git commit -q -m 'WIP: b'" toolu_b
+kept && pass "overlapping WIP calls each keep the cycle" || fail "overlapping WIP calls each keep the cycle"
+# (m17) the other direction: a hook turns A's WIP commit into a real one, then B makes a WIP
+# commit on top. A's decision must not come from B's record: A resets
+reset_all; rev; rev
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+wip "git commit -q -m 'WIP: a'" toolu_a >/dev/null
+git commit -q --allow-empty -m 'WIP: a' >/dev/null 2>&1
+rm -f "$hooksd/prepare-commit-msg"
+wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null
+git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
+amendpost "git commit -q -m 'WIP: a'" toolu_a
+[ ! -f "$count" ] && pass "A rewritten to real, B WIP on top: A's Post resets" || fail "A rewritten to real, B WIP on top: A's Post resets"
+# (m18) an unusable call id gets no record, so the WIP commit resets
+reset_all; rev; rev
+wip "git commit -q -m 'WIP: c'" 'bad/id' >/dev/null
+git commit -q --allow-empty -m 'WIP: c' >/dev/null 2>&1
+amendpost "git commit -q -m 'WIP: c'" 'bad/id'
+[ ! -f "$count" ] && ! ls .context/codex-gate.wipBase.* >/dev/null 2>&1 && pass "unusable call id: no record, reset" || fail "unusable call id: no record, reset"
+# (m19) malformed ids that a lossy read would turn into a valid one: a trailing newline, and
+# a number. Each must reset without reading or removing call B's record
+for bad in '"toolu_b\n"' '123'; do
+  reset_all; rev; rev
+  printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+  run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":$bad,\"tool_input\":{\"command\":\"git commit -q -m 'WIP: a'\"}}" >/dev/null
+  git commit -q --allow-empty -m 'WIP: a' >/dev/null 2>&1
+  rm -f "$hooksd/prepare-commit-msg"
+  wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null
+  git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
+  run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":$bad,\"tool_input\":{\"command\":\"git commit -q -m 'WIP: a'\"}}" >/dev/null
+  [ ! -f "$count" ] && [ -f .context/codex-gate.wipBase.toolu__b ] && pass "malformed id $bad: reset, B's record untouched" || fail "malformed id $bad: reset, B's record untouched"
+done
+# (m20) without jq, a nested tool_use_id with no top-level one must not be taken for this
+# call's id (the fallback reader cannot tell the levels apart): reset, B untouched
+reset_all; rev; rev
+wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null
+git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
+nojq_run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"git commit -q -m '"'"'WIP: b'"'"'"},"tool_response":{"tool_use_id":"toolu_b"}}' >/dev/null
+[ ! -f "$count" ] && [ -f .context/codex-gate.wipBase.toolu__b ] && pass "nested-only id: reset, B's record untouched" || fail "nested-only id: reset, B's record untouched"
+rm -f .context/codex-gate.wipBase.*
+# (m21) ids differing only in letter case are different calls, also on a case-insensitive
+# filesystem: A (toolu_A) is rewritten to real, B (toolu_a) makes a WIP commit on top; A resets
+# and B's record survives
+reset_all; rev; rev
+printf '%s' "$rewrite_hook" > "$hooksd/prepare-commit-msg"; chmod +x "$hooksd/prepare-commit-msg"
+wip "git commit -q -m 'WIP: a'" toolu_A >/dev/null
+git commit -q --allow-empty -m 'WIP: a' >/dev/null 2>&1
+rm -f "$hooksd/prepare-commit-msg"
+wip "git commit -q -m 'WIP: b'" toolu_a >/dev/null
+git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
+amendpost "git commit -q -m 'WIP: a'" toolu_A
+[ ! -f "$count" ] && [ -f .context/codex-gate.wipBase.toolu__a ] && pass "ids differing in case stay apart: A resets, B's record kept" || fail "ids differing in case stay apart: A resets, B's record kept"
+rm -f .context/codex-gate.wipBase.*
 git reset -q --soft "$base19d" >/dev/null 2>&1
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
 rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"

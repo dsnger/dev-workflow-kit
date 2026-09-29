@@ -31,19 +31,21 @@ AGENTS.md invariant 12 carries the complete list.
   Now only an allow-listed one-line form qualifies: `git commit`, then only `-a`, `--all`,
   `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one `-m`
   whose quoted or bare value starts with `wip` — no editor, `--fixup`, `-F`, second `-m`,
-  chain, redirect, `cd`, `git -C`, shell metacharacter or backslash. Without `jq` the
-  single-quoted and bare forms qualify, since the fallback reader truncates a double-quoted
-  one. Beforehand, a repository whose hooks or
+  chain, redirect, `cd`, `git -C`, shell metacharacter or backslash. Beforehand, a repository whose hooks or
   settings could rewrite the message gets the ordinary Gate-B reminder instead of the WIP note
   — a reminder, not a reset. Afterwards, the counters stay only if the resulting commit's
   subject starts with `wip` and it is attributable to the command: PreToolUse records `HEAD`,
   its parent, the length of `HEAD`'s reflog and whether `--amend` is an option (outside quoted
-  text) in `.context/codex-gate.wipBase`. Afterwards either `HEAD` and the reflog are
-  unchanged (the commit failed, and the WIP commit already there stays), or the reflog grew
-  by exactly one and the new `HEAD` sits directly on the recorded one, or shares its parent
-  for `--amend`. A hook that commits, amends or resets in between, a missing record, an empty
-  or unreadable `HEAD` reflog, or a Bash call sent to the background (its result arrives
-  before the commit finishes) resets. The record is removed after every detected commit.
+  text) in a record of its own, `.context/codex-gate.wipBase.<tool_use_id>` — encoded so ids
+  differing only in letter case stay apart on a case-insensitive filesystem — so overlapping
+  tool calls cannot read or remove each other's. The id is read with `jq` as a top-level
+  string and checked there; a call without a usable id gets no record, and neither does any
+  call without `jq`, so there the WIP commit resets. Afterwards either `HEAD` and the reflog are unchanged (the commit failed, and the WIP
+  commit already there stays), or the reflog grew by exactly one and the new `HEAD` sits
+  directly on the recorded one, or shares its parent for `--amend`. A hook that commits,
+  amends or resets in between, a missing record, an empty or unreadable `HEAD` reflog, or a
+  Bash call sent to the background (its result arrives before the commit finishes) resets.
+  Each call's record is removed by that call's PostToolUse.
   The WIP note no longer promises the counters are kept; it says that is decided after the
   commit. The `--amend --no-edit` rules from 0.13.2 are unchanged.
 - **`CLAUDE.md` §5 Mechanics and its `/dev-workflow:workflow-init` copy** now say the hook

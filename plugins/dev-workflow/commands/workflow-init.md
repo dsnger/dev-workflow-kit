@@ -1507,8 +1507,8 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   and set `baseSha` to its parent. **Make that commit as `git commit -m 'WIP: …'`** — the
   recommended form, because the hook recognises a WIP commit from the command and the commit
   that results, not from the message alone. What it accepts is a one-line `git commit` with
-  exactly one `-m` whose value starts with `wip` — single-quoted, double-quoted or bare, though
-  without `jq` a double-quoted message cannot be read whole — beside nothing but `-a`/`--all`,
+  exactly one `-m` whose value starts with `wip` — single-quoted, double-quoted or bare; without
+  `jq` the hook cannot attribute the result and resets — beside nothing but `-a`/`--all`,
   `-q`/`--quiet`, `-n`/`--no-verify`, `--amend` or `--allow-empty`; so no chain, `cd`,
   `git -C`, editor or `--fixup`, and none of `; & | < > $ ( )`, a backtick or a backslash
   anywhere, the message included. Beforehand, where a hook or setting in the repository could
