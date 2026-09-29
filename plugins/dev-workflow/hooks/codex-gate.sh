@@ -57,6 +57,7 @@ countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since l
 bgadv_file="$state_dir/codex-gate.bgAdvice"
 unver_file="$state_dir/codex-gate.unverified"
 pend_file="$state_dir/codex-gate.unverifiedPending"
+wipbase_prefix="$state_dir/codex-gate.wipBase."   # + tool_use_id: one `-m wip` record per tool call
 
 # FINDING G: the plugin is installed globally, but the workflow is adopted per project.
 # A repo that never ran /workflow-init has no gate to enforce, so the hook does NOTHING
@@ -761,32 +762,87 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # spurious STOP and reset the very counters the review loop is accumulating — the
 # documented workaround would fight the hook. So: gentle note, no reset.
 #
-# `git commit --amend --no-edit` carries no `-m` and normally keeps HEAD's message, so on
-# a WIP HEAD it is usually a WIP commit too, and PreToolUse and PostToolUse both read
-# HEAD's subject for it. "Usually" is why this exemption refuses whenever anything could
-# change that message: it reads HEAD of the repository the hook runs in, and a command
-# string is not its arguments, so it is an allow-list, never a deny-list: one line of exactly
-# `git commit` followed only by `--amend`, `--no-edit`, `--no-verify`,
-# `-a`, `--all`, `-q` or `--quiet`, both of the first two present. No quote, `#`, backslash
-# (the jq-free reader truncates at an escaped quote and leaves one) or shell metacharacter
-# anywhere, so no quoting trick, comment, pathspec, `cd`, `git -C` or chained command can
-# qualify. Global `git -c` is refused too: its operand can expand into `-C <repo>` or set
-# `commit.cleanup` and strip the WIP subject — and for the same reason a repository that
-# sets its own comment character is refused, since cleanup can then strip a `WIP` line.
-# So is one whose hooks directory holds anything but `*.sample` files — a deliberately
-# stricter rule than Git's own (Git runs only executable files with hook names): any other
-# entry refuses, executable or not, because a message hook can rewrite the message
-# (`--no-verify` does not skip `prepare-commit-msg`) and an earlier hook such as
-# `pre-commit` can install one mid-commit. Hook contents are never read. A hooks directory
-# this check cannot list refuses too. Any `core.hooksPath` at all is refused outright rather
-# than resolved, since a path this shell cannot carry exactly (a trailing newline, say)
-# would send the check to the wrong directory. The check sees the directory as it is when
-# the hook runs, not what another process does afterwards. The `-m "wip…"` path has the
-# same exposure to hooks; it predates this and is left as it was, recorded in todos.md.
-# Anything else falls through to the reset, the safe direction. The `-m "wip…"` match above
-# is separate and unchanged.
-is_wip_commit() {
-  printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip" && return 0
+# Two questions, answered separately, because they are asked at different times:
+# PreToolUse decides whether to show the WIP note instead of the Gate-B reminder, before the
+# commit runs; PostToolUse decides whether to keep the counters, after it ran. A reminder
+# shown in doubt costs nothing, so is_wip_commit_pre refuses whenever anything could change
+# the message; is_wip_commit_post can read the commit that resulted, so it keeps the counters
+# only when that commit is WIP. Everything else resets, the safe direction.
+#
+# `-m "wip…"`: an allow-list again — one line of exactly `git commit`, then only `-a`,
+# `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
+# `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
+# editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
+# metacharacter or backslash anywhere (the jq-free reader truncates a double-quoted message at
+# its escaped quote and leaves one; without jq the result is never attributed anyway, see the
+# record below). Before the
+# commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
+# reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
+# `wip` AND HEAD is attributable to this command. PreToolUse records HEAD, its parent, the
+# number of entries in HEAD's reflog, and whether `--amend` is one of the command's options
+# (looked for outside quoted text, so a message mentioning it does not count). Afterwards
+# either HEAD and the reflog are both unchanged (the commit failed; the WIP commit already
+# there stays), or the reflog grew by exactly one entry and HEAD sits directly on the
+# recorded HEAD (a new commit) or, for `--amend`, shares the recorded parent. Any other
+# change to HEAD in between — a hook that commits, amends or resets — adds reflog entries and
+# resets, as does a missing or unreadable record, and so does a repository whose HEAD
+# reflog is empty or unreadable before or after: without it neither branch can be told apart
+# from a hook that moved HEAD and moved it back. A Bash call that was sent to the background
+# (`run_in_background`, or a result carrying a `backgroundTaskId`) is refused too: its
+# PostToolUse arrives before the commit has finished, so an unchanged HEAD proves nothing.
+# The record belongs to one tool call: it is named after the payload's `tool_use_id`, which
+# that call's PreToolUse and PostToolUse share, so overlapping calls cannot read, take or
+# delete each other's record. The id is read with jq only, as a top-level string checked
+# inside jq; a call whose id is missing, not a string, longer than 100 characters or not
+# made of [A-Za-z0-9_-] gets no record and so resets — and so does every call without jq,
+# whose fallback reader cannot establish that the key is the top-level one. The file name
+# encodes the id so that ids differing only in letter case stay apart on a case-insensitive
+# filesystem. PostToolUse removes the call's own
+# record; one whose PostToolUse never arrives stays behind as an inert file in `.context/`,
+# outside the fingerprint.
+#
+# `git commit --amend --no-edit` carries no `-m` and normally keeps HEAD's message. It is an
+# allow-list, never a deny-list: one line of exactly `git commit` followed only by `--amend`,
+# `--no-edit`, `--no-verify`, `-a`, `--all`, `-q` or `--quiet`, both of the first two present,
+# with no quote, `#`, backslash or shell metacharacter anywhere, so no quoting trick, comment,
+# pathspec, `cd`, `git -C` or chained command can qualify, and global `git -c` is refused
+# (its operand can expand into `-C <repo>` or set `commit.cleanup`). It also requires, in
+# both phases, that nothing could rewrite the message (below) and that HEAD's subject starts
+# with `wip`.
+#
+# "Could rewrite the message": a custom comment character (cleanup can then strip a `WIP`
+# line); any `core.hooksPath` at all, refused rather than resolved, since a path this shell
+# cannot carry exactly (a trailing newline, say) would send the check to the wrong directory;
+# or a hooks directory holding anything but `*.sample` files — deliberately stricter than
+# Git's own rule (Git runs only executable files with hook names), because a message hook
+# can rewrite the message (`--no-verify` does not skip `prepare-commit-msg`) and an earlier
+# hook such as `pre-commit` can install one mid-commit. Hook contents are never read, and a
+# hooks directory this check cannot list counts as able to. The check sees the repository
+# as it is when the hook runs, not what another process does afterwards.
+msg_may_be_rewritten() {
+  git -C "$repo_root" config --get-regexp '^core\.comment(char|string)$' >/dev/null 2>&1 && return 0
+  git -C "$repo_root" config --get core.hooksPath >/dev/null 2>&1 && return 0
+  _hooks=$(git -C "$repo_root" rev-parse --git-path hooks 2>/dev/null) || return 0
+  [ -n "$_hooks" ] || return 0
+  case $_hooks in /*) ;; *) _hooks="$repo_root/$_hooks" ;; esac
+  if [ -e "$_hooks" ] || [ -L "$_hooks" ]; then
+    [ -d "$_hooks" ] && [ -r "$_hooks" ] && [ -x "$_hooks" ] || return 0
+    for _f in "$_hooks"/* "$_hooks"/.[!.]* "$_hooks"/..?*; do
+      [ -e "$_f" ] || [ -L "$_f" ] || continue
+      case ${_f##*/} in *.sample) ;; *) return 0 ;; esac
+    done
+  fi
+  return 1
+}
+head_is_wip() { git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'; }
+is_wip_message_cmd() {
+  case $1 in *'
+'*) return 1 ;; esac
+  printf '%s' "$1" | grep -q '[;&|<>$`()\\]' && return 1
+  _ok='(-a|--all|-q|--quiet|--no-verify|-n|--amend|--allow-empty)'
+  printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
+}
+is_wip_amend_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
   printf '%s' "$1" | grep -q '[;&|<>$`()\\#"]' && return 1
@@ -794,19 +850,59 @@ is_wip_commit() {
   printf '%s' "$1" | grep -Eq '^[[:space:]]*git[[:space:]]+commit([[:space:]]+(--amend|--no-edit|--no-verify|-a|--all|-q|--quiet))+[[:space:]]*$' || return 1
   printf '%s ' "$1" | grep -Eq '[[:space:]]--amend[[:space:]]' || return 1
   printf '%s ' "$1" | grep -Eq '[[:space:]]--no-edit[[:space:]]' || return 1
-  git -C "$repo_root" config --get-regexp '^core\.comment(char|string)$' >/dev/null 2>&1 && return 1
-  git -C "$repo_root" config --get core.hooksPath >/dev/null 2>&1 && return 1
-  _hooks=$(git -C "$repo_root" rev-parse --git-path hooks 2>/dev/null) || return 1
-  [ -n "$_hooks" ] || return 1
-  case $_hooks in /*) ;; *) _hooks="$repo_root/$_hooks" ;; esac
-  if [ -e "$_hooks" ] || [ -L "$_hooks" ]; then
-    [ -d "$_hooks" ] && [ -r "$_hooks" ] && [ -x "$_hooks" ] || return 1
-    for _f in "$_hooks"/* "$_hooks"/.[!.]* "$_hooks"/..?*; do
-      [ -e "$_f" ] || [ -L "$_f" ] || continue
-      case ${_f##*/} in *.sample) ;; *) return 1 ;; esac
-    done
-  fi
-  git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'
+  ! msg_may_be_rewritten && head_is_wip
+}
+head_reflog_len() { git -C "$repo_root" reflog show --format=%H HEAD 2>/dev/null | grep -c ''; }
+wip_record_path() { # this call's record path; fails when the id is unusable
+  # jq only: the fallback reader cannot tell a top-level key from a nested one, and a
+  # shell capture would strip a trailing newline before any check could see it, so the
+  # type, characters and length are checked inside jq on the decoded value
+  command -v jq >/dev/null 2>&1 || return 1
+  # and then written as a name no case-insensitive filesystem can merge with another id's:
+  # `_` becomes `__` and an upper-case letter `X` becomes `_x`, which decodes uniquely
+  _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
+  case $_id in '' | *[!a-z0-9_-]*) return 1 ;; esac
+  printf '%s%s' "$wipbase_prefix" "$_id"
+}
+record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|new>"; best effort
+  wipbase_file=$(wip_record_path) || return 0
+  rm -f "$wipbase_file" 2>/dev/null
+  is_wip_message_cmd "$1" || return 0
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || return 0
+  _p=$(git -C "$repo_root" rev-parse -q --verify HEAD^ 2>/dev/null) || _p=-
+  _n=$(head_reflog_len)
+  case $_n in '' | 0 | 0* | *[!0-9]* | ??????????*) return 0 ;; esac
+  _m=new
+  printf '%s ' "$1" | sed "s/'[^']*'//g; s/\"[^\"]*\"//g" | grep -Eiq '[[:space:]]--amend[[:space:]]' && _m=amend
+  mkdir -p "$state_dir" 2>/dev/null
+  { printf '%s %s %s %s\n' "$_h" "$_p" "$_n" "$_m" > "$wipbase_file"; } 2>/dev/null || true
+}
+bash_backgrounded() { printf '%s' "$payload" | grep -Eq '"run_in_background"[[:space:]]*:[[:space:]]*true|"backgroundTaskId"'; }
+wip_base_holds() { # PostToolUse: is HEAD this command's own result, or unchanged?
+  _rh='' _rp='' _rn='' _rm='' _rx=''
+  wipbase_file=$(wip_record_path) || return 1
+  [ -f "$wipbase_file" ] || return 1
+  read -r _rh _rp _rn _rm _rx 2>/dev/null < "$wipbase_file"
+  rm -f "$wipbase_file" 2>/dev/null
+  [ -n "$_rh" ] && [ -n "$_rp" ] && [ -n "$_rm" ] && [ -z "$_rx" ] || return 1
+  # a positive decimal with no leading zero and at most nine digits, so the arithmetic
+  # below can neither read it as octal nor overflow
+  case $_rn in '' | 0* | *[!0-9]* | ??????????*) return 1 ;; esac
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || return 1
+  _n=$(head_reflog_len)
+  case $_n in '' | 0* | *[!0-9]* | ??????????*) return 1 ;; esac
+  if [ "$_h" = "$_rh" ]; then [ "$_n" = "$_rn" ]; return; fi
+  [ "$_n" = "$((_rn + 1))" ] || return 1
+  _p=$(git -C "$repo_root" rev-parse -q --verify HEAD^ 2>/dev/null) || return 1
+  if [ "$_rm" = amend ]; then [ "$_p" = "$_rp" ]; else [ "$_p" = "$_rh" ]; fi
+}
+is_wip_commit_pre() {
+  is_wip_message_cmd "$1" && ! msg_may_be_rewritten && return 0
+  is_wip_amend_cmd "$1"
+}
+is_wip_commit_post() {
+  is_wip_message_cmd "$1" && ! bash_backgrounded && head_is_wip && wip_base_holds && return 0
+  is_wip_amend_cmd "$1"
 }
 
 # A commit that stages all tracked changes (-a / -am / --all) also sweeps in
@@ -918,7 +1014,7 @@ case "$event" in
       Bash)
         cmd=$(input_field command)
         # RESET on commit closes the Gate-B cycle. A WIP commit does NOT close it
-        # (see is_wip_commit).
+        # (see is_wip_commit_post).
         #
         # We reset regardless of whether the commit actually SUCCEEDED. The Bash
         # tool_response shape is documented as {stdout, stderr, interrupted, isImage}
@@ -930,9 +1026,11 @@ case "$event" in
         # wrongly judged the commit failed — would carry passes across a real cycle
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
-        if is_commit "$cmd" && ! is_wip_commit "$cmd"; then
+        if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file"
         fi
+        # This call's `-m wip` record belongs to this one command, whatever the decision above was
+        if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
         ;;
       Skill)
         case "$(input_field skill)" in
@@ -951,8 +1049,9 @@ case "$event" in
       Bash)
         cmd=$(input_field command)
         if is_commit "$cmd"; then
-          if is_wip_commit "$cmd"; then
-            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here and your pass counters are preserved. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle preserved)"
+          record_wip_base "$cmd"
+          if is_wip_commit_pre "$cmd"; then
+            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here. Whether your pass counters are kept is decided after the commit, under the conditions $policy states for a WIP commit; where those do not hold they are cleared. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle decided after the commit)"
           else
           # Docs-only commits (spec/plan .md files) carry no code diff,
           # so Gate B (mcp__codex__review reviews a code diff) cannot apply — emit a

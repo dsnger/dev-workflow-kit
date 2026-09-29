@@ -52,8 +52,9 @@ so right when execution starts.
 code + duplication + tests) must be green locally. CI runs the same command, so
 skipping locally only postpones the red.
 
-**7. Gate B on the diff.** Claude makes a `WIP:`-prefixed commit (gives Codex a
-range to read; the hook knows WIP doesn't end the cycle), then loops
+**7. Gate B on the diff.** Claude makes a plain `git commit -m 'WIP: …'` (gives Codex a
+range to read; the hook keeps the cycle open across it under the conditions `CLAUDE.md` §5
+Mechanics states), then loops
 `mcp__codex__review` the same way: the derived floor, final clean. Invalidation is by
 **content** — any change to included content present when the hook runs, even from a
 formatter, makes the hook report that it cannot confirm the reviewed content. What that proves is bounded, and the hook's own
