@@ -516,9 +516,9 @@ Those are **instructions read by a model**, and this repo has no harness that dr
 a fixture session. They are checked by a **walkthrough** — a reading of the skill text against each
 scenario, reported as text inspection and **never** as executed skill behaviour.
 
-**The eight walkthrough scenarios**, fixed here so the set is an artifact rather than a memory. The
-first six are the ones the change was commissioned against; the last two were added by pass 1's
-Majors 2–4.
+**The twelve walkthrough scenarios**, fixed here so the set is an artifact rather than a memory. The
+first six are the ones the change was commissioned against; 7 and 8 were added by pass 1's Majors
+2–4, and 9–12 by the second repair round.
 
 1. A fresh advisory chat returns orientation and advice **without writes**.
 2. An implementation chat is **directed to a separate advisory chat**.
