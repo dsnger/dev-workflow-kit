@@ -41,7 +41,7 @@ scripts/check-version-bump.test.sh # its regression suite — policy/operational
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
   CHANGELOG.md                    # every manifest version, newest first
-  skills/{intake,harden-finding}/SKILL.md
+  skills/{intake,harden-finding,sparring}/SKILL.md
   agents/finding-triage.md        # read-only PR-comment checker (convention-loaded)
   commands/{workflow-init,process-pr-review,claude-init}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}

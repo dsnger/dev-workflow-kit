@@ -101,9 +101,17 @@ over "the report says". Decisions the human makes on your recommendation must
 end up in the repo (spec decision records, todos triggers, ledger rows) — a
 decision that lives only in this chat does not exist.
 
-## What this document is not
+## What this document is, and what the plugin ships
 
-Not a plugin feature, not scaffolded by `/workflow-init`, and not a template —
-it is one project's hand-written instance. If the pattern proves itself across
-several projects, promoting it to a scaffolded template is a todos entry with a
-trigger, not a reflex.
+This document is still one project's hand-written instance: not scaffolded by
+`/workflow-init`, not a template, and not read by any plugin component.
+
+**The role itself was promoted.** `dev-workflow:sparring` ships the advisory posture as an
+explicitly invoked skill, so a consumer project gets the front door without getting this
+repository's documentation. That promotion happened by a maintainer's decision, not because
+a recorded trigger fired — the earlier text asked for a todos entry with a trigger, and
+there was none. Recorded here so the history is not tidier than it was.
+
+The skill reads an optional `docs/SPARRING-PARTNER.md` for local context and treats its
+absence as ordinary. This briefing stays where it is, for this repository, and nothing
+scaffolds it.
