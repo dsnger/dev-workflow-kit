@@ -20,7 +20,7 @@ scripts/check-version-bump.sh     # invariant 12, PR-only, mechanically (+ .test
 plugins/dev-workflow/
   .claude-plugin/plugin.json
   CHANGELOG.md                    # every manifest version, newest first
-  skills/{intake,harden-finding}/SKILL.md
+  skills/{intake,harden-finding,sparring}/SKILL.md
   agents/finding-triage.md
   commands/{workflow-init,process-pr-review,claude-init}.md
   hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}

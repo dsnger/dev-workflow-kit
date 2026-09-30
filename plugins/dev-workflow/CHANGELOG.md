@@ -22,6 +22,16 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.14.0
+
+- **New skill: `dev-workflow:sparring`.** An advisory session for a chat you open for that
+  purpose: read-only investigation, checking an agent's report against the current files,
+  and bounded prompts for a coding agent to run elsewhere. `disable-model-invocation: true`
+  keeps the model from invoking it on its own; that setting restricts nothing once it runs,
+  and the read-only posture is an instruction the session keeps, not a sandbox. It reads an
+  optional `docs/SPARRING-PARTNER.md` and never scaffolds it. No manifest key — loaded by
+  convention from `skills/`.
+
 ## 0.13.3
 
 - **`git commit -m "WIP: …"` is judged before and after the commit separately.** The hook
