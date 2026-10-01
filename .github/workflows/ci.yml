@@ -37,7 +37,8 @@ jobs:
           # merge-base. ~50 commits, so the full history costs nothing here.
           fetch-depth: 0
 
-      # The hook, the two checkers and their three suites are the only executables here,
+      # The hook, the two checkers, the Python metrics report and their four suites are
+      # the only executables here,
       # so lint plus those suites are the only mechanical gates we have. Everything else
       # here is a prompt, and prompts have no typechecker (see README, "Contributing").
 
@@ -69,6 +70,12 @@ jobs:
             --shell=sh scripts/check-version-bump.sh
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh scripts/check-version-bump.test.sh
+          # The metrics report's suite (vision step 2b). The report itself is Python, so
+          # only its POSIX-sh suite is linted here; the suite runs the report under the
+          # runner's python3. Same `[ c ] && pass || fail` lines as the other suites,
+          # hence SC2015.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh
 
       # Two runs, because the hook has to be correct under both shells and the runner's
       # /bin/sh is dash while a contributor's may be bash. HOOK_SH selects the shell the
@@ -89,11 +96,12 @@ jobs:
       # Each rule was prose first and each was violated anyway — a floating action ref
       # shipped in this very workflow, a duplicate hooks manifest key stopped the plugin
       # loading in 0.2.1, and the plugin shipped changes without a bump twice.
-      - name: Invariant checks (pinning, manifest, prompt conformance) + both checker suites
+      - name: Invariant checks (pinning, manifest, prompt conformance) + checker and report suites
         run: |
           sh scripts/check-invariants.test.sh
           sh scripts/check-invariants.sh
           sh scripts/check-version-bump.test.sh
+          sh scripts/ledger-metrics.test.sh
 
       # Invariant 12 itself needs a base to diff against, so it runs only on pull
       # requests — a push to main has no PR base, and diffing the push range would just
