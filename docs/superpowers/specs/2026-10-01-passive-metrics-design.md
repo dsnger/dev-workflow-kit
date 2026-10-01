@@ -11,14 +11,20 @@ counts and lists. It does not compute shares, ratios or verdicts, because every 
 its own edge cases (missing values, zero denominators), and the story only asks that the data become
 readable and checkable.
 
+**Revision, 2026-10-01 (after Gate-A plan pass 1).** The first revision fixed the language as POSIX
+`sh` + `awk`. Plan review found 16 Majors, and most of them were awk parsing the quoted, escaped §5
+record grammar: quote handling, control characters, and differences between awk implementations.
+Daniel chose Python. This revision changes the language and records the narrowings the implementation
+needed; every changed passage is marked *(revision)*. Nothing else changed.
+
 ## §1 What is added or edited
 
 | Path | Change |
 |---|---|
-| `scripts/ledger-metrics.sh` | **New.** POSIX `sh` + `awk` + `git`. Reads, prints a report on stdout, writes nothing. |
-| `scripts/ledger-metrics.test.sh` | **New.** Its regression suite, built on throwaway fixture repositories. |
-| `AGENTS.md` | § Commands: the quality and lint rows gain shellcheck runs for **both** new files; the quality row (not the lint row) also gains a run of the suite. Layout tree: both files. **Boundaries** paragraph: the list of executable artifacts gains this script and its test. |
-| `.github/workflows/ci.yml` | The shellcheck step gains both new files, and the checker-suite step gains the suite. Any step name or comment that enumerates the checkers is updated too. |
+| `scripts/ledger-metrics.py` | **New.** Python 3.8 or later, standard library only, plus `git`. Reads, prints a report on stdout, writes nothing. *(revision)* |
+| `scripts/ledger-metrics.test.sh` | **New.** Its regression suite in POSIX `sh`, built on throwaway fixture repositories; it runs the script with `python3`. |
+| `AGENTS.md` | § Commands: the quality and lint rows gain a shellcheck run for the suite; the quality row (not the lint row) also gains a run of the suite. The prerequisites paragraph names `python3` 3.8 or later, addressed by name like `dash` because it is the system interpreter, not a pinned tool. Layout tree: both files. **Boundaries** paragraph: the list of executable artifacts gains this script and its test. *(revision)* |
+| `.github/workflows/ci.yml` | The shellcheck step gains the suite, and the checker-suite step runs it. *(revision)* Any step name or comment that enumerates the checkers is updated too. |
 | `README.md` | The Contributing paragraph that counts the executables and checker suites is updated, and one line says how to run the report. |
 
 **Before editing, grep for every other place that enumerates the executables or checker suites**
@@ -32,24 +38,33 @@ contain it, so invariants 11 and 12 do not bind, and the plugin version does not
 ## §2 Interface
 
 ```
-sh scripts/ledger-metrics.sh [<ref>]
+python3 scripts/ledger-metrics.py [<ref>]
 ```
 
 - **The ref is resolved once.** The script runs `git rev-parse --verify <ref>^{commit}` (default
   `HEAD`) once at start and uses only the resulting 40-character SHA afterwards. The ledger is read as
-  `git show <sha>:docs/hardening-log.md`, and the commit bodies as `git log <sha>`. Every commit
+  `git cat-file blob <sha>:docs/hardening-log.md`, and the commit bodies as
+  `git -c i18n.logOutputEncoding=UTF-8 log --encoding=UTF-8 -z --format='%H %ct%n%B' <sha>`. Forcing
+  UTF-8 output keeps the NUL separators intact whatever the repository's log encoding is; both sources
+  are decoded as UTF-8, and an undecodable byte becomes U+FFFD, which makes a record containing it
+  unparsed rather than silently different. Every git call runs with `--no-replace-objects`, so the
+  objects read are the ones the SHA names and not `git replace` substitutes. These two settings change
+  only how git reads, for this script's own calls; they are not a write and change no configuration. A
+  record header that is not a 40-hex SHA and a number is an exit-1 error. *(revision)* Every commit
   reachable from that SHA is read, not just the first-parent chain, because an ordinary merge can carry
   cycle records on its merged side. The working tree is never read. So uncommitted ledger edits are not
   counted, and the report header says so.
 - **Shallow clones.** If `git rev-parse --is-shallow-repository` prints `true`, the report header says
   that history is truncated. Every "none found" statement in the cycle and checkpoint sections then
   carries `(history truncated: absence not established)`.
-- **Locale.** The script sets `LC_ALL=C` so sorting and output do not depend on the environment.
+- **Ordering** compares Python strings and integers, so it does not depend on the locale. *(revision)*
 - **Output** goes to stdout only. Exit `0` when the report is complete. Exit `1` with a one-line
   `ledger-metrics: <cause>` on stderr when a source cannot be read. Each cause has its own message: not
   a git repository, the ref does not resolve to a commit, the ledger is absent at that commit, the
   ledger path is not a regular file there (checked with `git ls-tree`: mode `100644` or `100755`, type
-  `blob` — a directory or symlink is rejected), the ledger cannot be read, or `git log` fails. Malformed input lines are **not** an exit: they are counted and listed (§3, §4).
+  `blob` — a directory or symlink is rejected; `--full-tree`, so the caller's subdirectory does not
+  matter), the ledger cannot be read, or `git log` fails. Git's own stderr is captured and not shown,
+  so the one line is the only error. *(revision)* Malformed input lines are **not** an exit: they are counted and listed (§3, §4).
 - **The script writes nothing** — no file, no git ref, no config. The suite checks the parts of this a
   test can observe (§6). The rest is held by reading the script, and §6 says which part is which.
 - **What the script does not control.** It runs ordinary read-only git commands. Git itself can still
@@ -60,17 +75,19 @@ sh scripts/ledger-metrics.sh [<ref>]
 
 ## §3 Ledger section — recurrence and rung holding
 
-**What a row is: exactly the `harden-finding` match.** A line is a row for fingerprint `F` if it matches
-the skill's recurrence grep, `^\| *[0-9-]{10} *\| *F *\|`. The script uses that same pattern, so its
-count for `F` equals the count the skill's grep gives. This answers the story's second open question:
+**What a row is: the `harden-finding` match.** A line is a row if it matches
+`^\| *[0-9-]{10} *\| *<cell> *\|`, the shape of the skill's recurrence grep. Its fingerprint is that
+column-2 cell with spaces trimmed, compared **literally**. For every regular (kebab-case) fingerprint the
+count equals the count the skill's grep gives. For an irregular one the grep would treat the text as a
+pattern, so the two can differ, and no grep command is offered for it *(revision)*. This answers the story's second open question:
 there is one definition, not two. Cells are split on **unescaped** `|`. A matching row with a cell count
 other than seven is **still counted**, as the grep counts it, and is also listed as `irregular` with
 its line number. Irregular-width rows are **excluded from rung holding**, and their rung shows as `?` in
 the recurrence line, because their rung cell cannot be located reliably.
 
 **Fingerprint spelling.** Taxonomy classes are kebab-case. A fingerprint cell that does not match
-`^[a-z0-9]+(-[a-z0-9]+)*$` is listed as `irregular`. No verification command is printed for it, because
-its text would be pasted into a shell command.
+`^[a-z0-9]+(-[a-z0-9]+)*$` is listed as `irregular`. The verification command below does not fit it,
+and the report says so.
 
 `Superseded rows` entries are list lines, not rows, so they never match. The ledger header says this
 itself: a superseded row "keeps matching the column-2 grep, and keeps counting".
@@ -82,10 +99,11 @@ itself: a superseded row "keeps matching the column-2 grep, and keeps counting".
 ```
 
 `lines` are ledger line numbers at the SHA, ascending. `rungs` are the rung cells in file order. After
-the list comes the exact command a reader can run to check any one count:
+the list comes one command template a reader can run to check any regular fingerprint's count, with
+`<commit>` being the SHA in the report header:
 
 ```
-git show <sha>:docs/hardening-log.md | grep -cE '^\| *[0-9-]{10} *\| *<fingerprint> *\|'
+git show <commit>:docs/hardening-log.md | grep -cE '^\| *[0-9-]{10} *\| *<fingerprint> *\|'
 ```
 
 **Rung holding.** It counts only rung cells that are one of the values the ledger uses: `1 prose`,
@@ -120,23 +138,26 @@ not followed by a semicolon. A candidate that fails the full grammar is listed a
 **unparsed**, with its commit, and excluded.
 
 **Deduplication.** A record with a real nonce is keyed by its exact text. Text that appears in several
-commits is counted once, and every commit carrying it is listed. `cycle none (pre-rule)` records are
-**not** deduplicated, because identical text in two commits may be two different legacy cycles: each
-occurrence is listed with its commit and flagged `may duplicate another pre-rule record`.
+commits is counted once, and every commit carrying it is listed, oldest first. A real-nonce line
+repeated inside one commit body counts once for that commit. `cycle none (pre-rule)` records are
+**never** deduplicated, not even inside one body, because identical text may be two different legacy
+cycles: every occurrence is listed and flagged `may duplicate another pre-rule record`.
 
 **Ordering, everywhere in this section** — records, cycle lines, unparsed lines and conflict groups:
 by the **earliest** committer date (`%ct`) among the commits carrying the record (for a group, among all
-its records), then that commit's SHA, then the line text.
+its records), then that commit's SHA, then the printed line. Committer dates compare as integers.
+This one rule also orders the cycle lines; the format line below adds nothing to it. *(revision)*
 
 **Grouping.** Records with the same real nonce are grouped. A group joins cleanly only if it has at most
 one provenance line and at most one curve or skip record. A group with two different provenance lines,
 two different curves, a curve and a skip record, or two different skip records is reported as a
 **conflict** with all its records, and it is not listed as a cycle. Copying errors and nonce collisions both look like this. CLAUDE.md says the nonce is
 collision-resistant, not collision-proof, so grouping by nonce is a strong default and not a guarantee,
-and the report says so. `cycle none (pre-rule)` records are never grouped, because that field
-identifies nothing.
+and the report's "cannot answer" list says so. `cycle none (pre-rule)` records are never grouped,
+because that field identifies nothing. Provenance lines in a conflict group still appear in the
+checkpoint evidence lists (§5), because a conflict does not make a floor claim disappear.
 
-**Per cycle, one line,** sorted by first commit date, then nonce:
+**Per cycle, one line:**
 
 ```
 <cycle-field>  <kind>  passes <spec>  floor <N|->  set <story-set|->  findings <values>  blockers <values>  majors <values>
@@ -147,13 +168,28 @@ identifies nothing.
   series as story criterion 5 requires.
 - `-` means the record has no provenance line. A provenance line with no curve and no skip record is
   printed with `no curve`.
-- A skip record is printed as `skipped`, followed by its reason: CLAUDE.md §5 says the reason is the text
+- A skip record is printed as `skipped`, followed by `reason excerpt:` and its reason: CLAUDE.md §5 says the reason is the text
   immediately following the marker in the same commit body. The script takes the lines after the marker
-  up to the next blank line, joined with spaces. If the next non-empty line is itself a candidate, or
-  there is nothing after the marker, it prints `no reason found`. A skip record is keyed by marker
+  up to the next blank line **or the next candidate line**, joined with spaces, so a record directly
+  after the marker is never absorbed into the reason. It is labelled an **excerpt** because a reason can
+  run past a blank line and only the first paragraph is shown. If that leaves nothing, it prints
+  `no reason found`. *(revision)* A skip record is keyed by marker
   **and** reason, so two copies with different reasons are two records and form a conflict.
 
-**Empty states.** `no cycle records`, `no unparsed lines` and `no conflicts` are printed when they apply.
+**Empty states.** `no cycle records`, `no unparsed lines` and `no conflicts` are printed when they apply,
+each with the shallow-history suffix from §2 when it applies. If valid records exist but every group is
+a conflict, the cycle list says `no joined cycles (every record is in a conflict below)`. *(revision)*
+
+**Raw text in output.** Unparsed and conflicting lines are printed as they were written, except that
+any control character is shown as `\xNN`, so a malformed record cannot break the report's lines or move
+the terminal cursor. *(revision)*
+
+**Grammar details the parser enforces** (CLAUDE.md §5 Mechanics): a quoted path or model may use only
+the escapes `\"` and `\\`, and any control character makes the record unparsed; a repeated story path
+is compared after decoding quotes and escapes, so `a.md` and `"a.md"` are the same path; a pass spec
+that expands to more than 10000 passes makes the record unparsed, so a malformed range cannot exhaust
+memory (a single large pass number is fine); each count series must have exactly one value per expanded
+pass; per-pass model keys must be exactly the expanded passes, in order. *(revision)*
 
 ## §5 The review-loop comparison (story criterion 5)
 
@@ -199,22 +235,31 @@ story's "first post-merge" one.
 
 `scripts/ledger-metrics.test.sh` builds throwaway repositories under a `mktemp -d` directory. It commits
 a fixture ledger and fixture commit bodies, then compares the script's output **line for line** against
-expected text written in the test. Fixtures cover:
+expected text written in the test. **Isolation** *(revision)*: the suite sets `GIT_CONFIG_GLOBAL=/dev/null`
+and `GIT_CONFIG_NOSYSTEM=1`, unsets inherited repository and configuration variables (`GIT_DIR`,
+`GIT_INDEX_FILE`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_PARAMETERS`, `GIT_REPLACE_REF_BASE` and similar), creates repositories with `--template=` and `--object-format=sha1`, and fixes identity and
+dates per commit, so SHAs are reproducible and the developer's git setup is never read or touched.
+Fixtures cover:
 
 - **Ledger:** two fingerprints with different counts; an escaped `\|` inside a finding; a supersession
   list line (not counted); a row with too few cells (counted and listed as irregular); a fingerprint
-  with an uppercase letter (irregular, no command printed); a `pending` row; a row that is followed and
+  with an uppercase letter (irregular; the report says the command template does not fit it); a `pending` row; a row that is followed and
   one that is last of its fingerprint; an empty ledger (`no rows`).
 - **Cycles:** a provenance line and a curve with the same nonce (joined); a curve with no provenance
   (`-`); a provenance line with no curve (`no curve`); a skip record; a `none (pre-rule)` pair (not
   grouped); the same curve in two commits (once, both commits listed); two different curves under one
   nonce, a curve and a skip record under one nonce, and two skip records with different reasons (each a
-  conflict, not listed as a cycle); a record only on the merged side of a merge commit (found); a prose line
+  conflict, not listed as a cycle); two different provenance lines under one nonce, one of them level 0
+  (a conflict, and still listed in the checkpoint evidence); a history where every group is a conflict
+  (the cycle list says so); the same pre-rule curve twice in one body (listed twice); a record only on
+  the merged side of a merge commit (found); a prose line
   starting with "cycle " (not a candidate); a candidate with a 7-character nonce (unparsed).
 - **Grammar variants:** a quoted story path containing an escaped `\"`; a quoted model; discontiguous
   pass ranges (`1-3,5`); per-pass models with `+`; a `?` in one series (printed verbatim, counted in
-  `(? n)`). Malformed variants listed as unparsed: a repeated story path; a count list longer than the
-  pass list; a per-pass model list missing a pass; a candidate with no space after the semicolon.
+  `(? n)`); a quoted model containing `; `, `)` and `:` (valid). Malformed variants listed as unparsed:
+  a repeated story path, and the same path once bare and once quoted; a quoted model with an invalid
+  escape (`\q`); a quoted model containing a tab (shown as `\x09`); a count list longer than the pass
+  list; a per-pass model list missing a pass; a candidate with no space after the semicolon.
 - **Skip records:** a skip record followed by a two-line reason (both lines printed); one with nothing
   after it; one directly followed by another cycle record (both `no reason found`).
 - **Rungs:** an empty rung cell and a rung `0` (each `irregular rung`, not counted).
@@ -222,37 +267,44 @@ expected text written in the test. Fixtures cover:
   level-1 set and a curve (appears in the comparison); `no profiled cycles with a curve`; a level-0 set recorded with floor 3 (appears in the first list); a `floor 1` line with an
   `(unprofiled)` entry (appears in the second list, not licensed); both lists empty.
 - **Inputs:** a working-tree edit to the ledger that is not committed (no change in output); each
-  exit-1 cause, matched by its message, including the ledger path committed as a directory and as a
-  symlink; a shallow clone (header says history is truncated).
+  exit-1 cause that a fixture can produce, matched by its message: not a repository, an unresolvable
+  ref, the ledger absent, committed as a directory, committed as a symlink, its blob missing (cannot be
+  read), and an ancestor commit missing (`git log` fails); a shallow clone (header says history is
+  truncated). The unexpected-record-header error is not reachable from a well-formed repository and is
+  covered by reading the script.
 
-**What the no-write check covers, and what it does not.** Before and after each run, the suite records
+**What the no-write check covers, and what it does not.** Before and after **every** run *(revision)*, the suite records
 a listing of the whole fixture directory, `.git` included, with each file's mode and a checksum of its
 contents. The two must be identical. That catches a write that leaves a file's content, mode or presence
 different afterwards. It does not catch a rewrite with the same bytes, a change that is undone before the
 run ends, a file created and deleted during the run, or a write elsewhere on the machine. For the
-script's own commands those are held by reading it: it contains no file redirection other than to
-`/dev/null`, and no git command that writes. That reading is a review check, not a test, and is labelled
+script's own commands those are held by reading it: it opens no file for writing and runs no git
+command that writes. That reading is a review check, not a test, and is labelled
 as one. Writes git makes because of the caller's environment are outside both (§2).
 
 **The counterfactual — the observation against the prior state.** Before this change there is no
 script, so nothing can produce the recurrence report. The suite's first case runs
-`sh scripts/ledger-metrics.sh` in a fixture where the script path does not exist and checks that it
-fails with "No such file". That is the prior state, observed. It is also why the check is weak on its
+`python3 scripts/ledger-metrics.py` in a fixture where the script path does not exist and checks that
+it fails. That is the prior state, observed. It is also why the check is weak on its
 own: a missing-file error shows the tool is new, not that it counts right.
 
 **The negative control** shows the count assertion can fail. The suite runs its fingerprint-count case
 against a temp copy of the script where `sed` changes the count by one. That run must **exit 0 from the
-script** and fail **on the count assertion**, by its name. A broken copy that fails some other way, or
-passes, makes the suite fail itself. Only then does it run the real script.
+script**, and **the same comparison function every golden case uses** must reject its report, with the
+count column showing the off-by-one value. *(revision)* A broken copy that
+fails some other way, or whose report still matches, makes the suite fail itself. Only then does it run the real script.
 
 ## §7 What it cannot answer, printed in every report
 
 - **Unlogged recurrences.** The ledger only knows recurrences someone hardened.
 - **Whether a guard held.** Row succession is not guard failure, and a missing later row is not
   success (§3).
-- **Cycles with no record at all.** Before 0.11.0 the curve was a habit, not a rule. A cycle whose
-  author wrote neither a provenance line nor a curve is invisible; a malformed record shows up as
-  unparsed. Provenance-only and skipped cycles are visible, as §4 describes.
+- **Cycles with no record at all.** Before 0.11.0 the curve was a habit, not a rule. A cycle with no
+  provenance line, curve or skip record is invisible. A malformed record shows up as unparsed only when
+  its line still starts like a record (`cycle <token>;`). Provenance-only and skipped cycles are visible,
+  as §4 describes.
+- **Nonce attribution.** Records are grouped by nonce, which is collision-resistant, not
+  collision-proof; two cycles that drew the same nonce read as one.
 - **Findings files.** The script does not read `.context/`. In this repository the findings files are
   tracked under `.context/codex-reviews/`; in other projects they may be gitignored. Either way, the
   report counts only what commit bodies say.
