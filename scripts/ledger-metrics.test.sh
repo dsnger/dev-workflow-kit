@@ -152,6 +152,16 @@ fi
 # ---- 3. ledger section ------------------------------------------------------------
 out=$(report L "$SCRIPT"); st=$?
 [ "$st" -eq 0 ] && pass "ledger fixture: exit 0" || fail "ledger fixture: exit $st"
+# The report header, compared line for line: commit and ref, the working-tree disclosure,
+# the git-writes limit and the history state.
+csha=$(cd "$work/L" && git rev-parse HEAD)
+expect "header: commit, ref, sources and history state" "$(printf '%s\n' "$out" | sed -n '1,5p')" <<HEADER
+ledger-metrics — read-only report
+commit $csha (from HEAD)
+ledger: docs/hardening-log.md at that commit; the working tree is not read
+git writes: this script only runs read-only git commands; git may still write when your environment tells it to (e.g. GIT_TRACE to a file, partial-clone fetches)
+history: complete
+HEADER
 expect "ledger: recurrence, rung holding and irregular rows" "$(printf '%s\n' "$out" | ledger_section)" <<EOF
 $LEDGER_EXPECTED
 EOF

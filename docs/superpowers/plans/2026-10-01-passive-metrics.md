@@ -14,6 +14,8 @@
 
 **This plan replaces the awk plan reviewed in Gate-A plan pass 1** (`.context/codex-reviews/gate-a-plan-mtf7ua7qze-pass-1.md`). That pass's findings were about awk parsing, mawk semantics and suite isolation; the table at the end says where each landed.
 
+**Executed 2026-10-01 (PR #33).** Gate B and PR review added suite cases after this plan was approved, so the committed `scripts/ledger-metrics.test.sh` has more cases than the copy embedded below. The counts below (`30 passed`) describe the suite as the plan approved it; after PR #33's review fixes the committed suite has 32 cases. Ruling 1 below was also carried into the spec afterwards (its grammar paragraph is marked "updated after implementation"), so "the spec is not edited" describes the decision at planning time.
+
 ## Global Constraints
 
 - Worktree `/Users/daniel/DEVELOPMENT/APPS/dwk-metrics`, branch `passive-metrics`. Paths are relative to it.

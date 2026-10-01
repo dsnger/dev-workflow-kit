@@ -187,9 +187,11 @@ the terminal cursor. *(revision)*
 **Grammar details the parser enforces** (CLAUDE.md §5 Mechanics): a quoted path or model may use only
 the escapes `\"` and `\\`, and any control character makes the record unparsed; a repeated story path
 is compared after decoding quotes and escapes, so `a.md` and `"a.md"` are the same path; a pass spec
-that expands to more than 10000 passes makes the record unparsed, so a malformed range cannot exhaust
-memory (a single large pass number is fine); each count series must have exactly one value per expanded
-pass; per-pass model keys must be exactly the expanded passes, in order. *(revision)*
+must expand to exactly as many passes as the Findings series has values, and that is checked before any
+pass list is built, so a malformed range cannot exhaust memory and no pass-count ceiling is needed; the
+Blockers and Majors series are then checked against the same pass count
+*(updated after implementation, plan ruling 1; it replaces an earlier 10000-pass limit that §5's
+grammar does not have)*; each count series must have exactly one value per expanded pass; per-pass model keys must be exactly the expanded passes, in order. *(revision)*
 
 ## §5 The review-loop comparison (story criterion 5)
 
