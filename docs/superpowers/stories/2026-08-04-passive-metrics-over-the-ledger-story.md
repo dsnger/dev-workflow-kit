@@ -1,10 +1,20 @@
 # Passive metrics, read-only over the ledger and git — Story
 
 **Date:** 2026-08-04 · **Size:** story
+**Risk:** standard · **Security:** none · **Validation:** battery+check
 
-**Unprofiled, deliberately** — a split from a designed round, so it bypassed
-`dev-workflow:intake`, which excludes work already in solution design. A profile written now
-would look confirmed without being confirmed; acceptance criterion 1 carries the debt instead.
+**Profile log:**
+- 2026-10-01 · adoption · proposed as `standard` / `none` / `battery+check` when design resumed,
+  per acceptance criterion 1; **confirmed by Daniel on 2026-10-01, exactly as proposed.**
+  Reason: the dark-factory vision (`docs/superpowers/specs/2026-08-30-dark-factory-vision.md` §8)
+  gates autonomy expansion on this story's evidence, so a wrong count would mislead a later
+  decision — bounded, not trivial. Security `none`: the analysis only reads. Derived floor 3.
+
+**Placement, decided by Daniel on 2026-10-01:** a repo-local script with its own test suite, like
+the existing checkers — not shipped in the plugin. This answers §5's first open question.
+
+Originally unprofiled, deliberately — a split from a designed round, so it bypassed
+`dev-workflow:intake`, which excludes work already in solution design.
 
 ## 1. Problem statement
 
@@ -68,7 +78,7 @@ from the file rather than from recall — without the analysis writing anything 
 
 ## 3. Acceptance criteria
 
-- [ ] Before design resumes on this story, whoever picks it up proposes both axes and the mode
+- [x] Before design resumes on this story, whoever picks it up proposes both axes and the mode
       derived from them, pauses for Daniel's confirmation, and writes the confirmed profile into
       this header. Design continues only after that.
 - [ ] The analysis reads the ledger and git and writes nothing — no new state file, no
