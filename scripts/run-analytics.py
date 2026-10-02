@@ -55,7 +55,7 @@ CANNOT = """== What this report cannot answer
 - Values that were unknown when a record was written stay unknown, because records never change.
 - Undecodable bytes in transcript and log text become U+FFFD before that text is read, and control characters print as \\xNN.
 - The orchestrating session's own tokens per gate call: the transcript records usage per message, not per tool call.
-- Calls made outside Claude Code, for example Codex run directly.
+- Calls made outside Claude Code, for example Codex run directly, and calls through tool names mapped in .context/codex-gate.tools: only mcp__codex__exec and mcp__codex__review are read.
 - Renamed or reused story paths: the trace ID is the story path."""
 
 
@@ -521,7 +521,8 @@ def cycles_from_history(cwd, lm):
         die("git log failed")
     provs, others = {}, {}
     for rec in out.decode("utf-8", "replace").split("\0"):
-        for line in rec.split("\n"):
+        lines = rec.split("\n")
+        for i, line in enumerate(lines):
             if not lm.CANDIDATE.match(line):
                 continue
             parsed = lm.parse_record(line)
@@ -530,8 +531,15 @@ def cycles_from_history(cwd, lm):
             field, typ, data = parsed
             if typ == "prov":
                 provs.setdefault(field, {})[line] = data
-            else:
-                others.setdefault(field, set()).add(line)
+                continue
+            if typ == "skip":  # the reason after the marker is part of its identity, as in ledger-metrics
+                reason = []
+                for nxt in lines[i + 1:]:
+                    if nxt == "" or lm.CANDIDATE.match(nxt):
+                        break
+                    reason.append(nxt)
+                line += " | " + " ".join(reason)
+            others.setdefault(field, set()).add(line)
     return provs, others
 
 

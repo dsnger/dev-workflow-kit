@@ -33,7 +33,9 @@ cheap gate pass does not count — without changing what a pass is today until t
       with its duration and, where the source attributes them, tokens, cost and retry count; a
       value the source does not provide is recorded as unknown, never as zero.
 - [ ] Every record carries a trace ID that identifies the story it served, and the same ID can be
-      found in that story's stage artifacts (story, spec, plan, closing commit).
+      found in that story's stage artifacts (story, spec, plan, closing commit). In the closing
+      commit it is carried by records that already exist (the provenance line's story set and
+      the evidence entry), so no record format changes.
 - [ ] Recording never blocks or fails the workflow step it measures; a measurement that could not
       be written is visible as missing, not silently absent.
 - [ ] Stored run data has a stated retention rule: what is kept, for how long, and how it is

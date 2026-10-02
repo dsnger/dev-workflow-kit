@@ -209,12 +209,6 @@ clog("h1", S[9], at(115, 2), [(at(115, 20), 30, 0, 3, 0)])
 FIXTURES
 }
 
-# ---- 1. counterfactual + negative controls ----------------------------------------------------------
-build
-if [ ! -e "$work/repo/scripts/run-analytics.missing" ] && ! (cd "$work/repo" && python3 scripts/run-analytics.missing >/dev/null 2>&1); then
-  pass "prior state: an absent collector produces no report"
-else fail "prior state"; fi
-
 # ---- 2. the main run --------------------------------------------------------------------------------
 build
 before_home=$(snapshot "$work/home")
@@ -290,9 +284,23 @@ no slot:
 - Values that were unknown when a record was written stay unknown, because records never change.
 - Undecodable bytes in transcript and log text become U+FFFD before that text is read, and control characters print as \xNN.
 - The orchestrating session's own tokens per gate call: the transcript records usage per message, not per tool call.
-- Calls made outside Claude Code, for example Codex run directly.
+- Calls made outside Claude Code, for example Codex run directly, and calls through tool names mapped in .context/codex-gate.tools: only mcp__codex__exec and mcp__codex__review are read.
 - Renamed or reused story paths: the trace ID is the story path.
 EOF
+
+# ---- 2b. skip records with different reasons are different records ----------------------------------
+rm -rf "${work:?}/skips"; mkdir -p "$work/skips"
+(
+  cd "$work/skips" || exit 1
+  gitc init -q --template= .
+  commit 'skip 1\n\ncycle gggggggg; floor 3 per {docs/superpowers/stories/s1-story.md (level 0)}; hook reminder threshold absent\ncycle gggggggg; Gate B: skipped (see skip reason)\nreason one\n'
+  commit 'skip 2\n\ncycle gggggggg; floor 3 per {docs/superpowers/stories/s1-story.md (level 0)}; hook reminder threshold absent\ncycle gggggggg; Gate B: skipped (see skip reason)\nreason two\n'
+)
+cls=$(cd "$work/skips" && python3 -c 'import importlib.util,sys
+sys.dont_write_bytecode=True
+s=importlib.util.spec_from_file_location("ra",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+p,o=m.cycles_from_history(".",m.load_ledger_parser(sys.argv[2])); print(m.classify("gggggggg",p,o)[0])' "$work/repo/scripts/run-analytics.py" "$work/repo/scripts")
+[ "$cls" = conflicting ] && pass "two skip records with different reasons make the cycle conflicting" || fail "skip reasons: $cls"
 
 # ---- 3. second run, deleted sources, retention ------------------------------------------------------
 cp "$STORE" "$work/store1"
@@ -397,8 +405,8 @@ build
 sed 's/rec\["slots"\] = slots_of(body)/rec["slots"] = slots_of(body); rec["models"] = [str(body)]/' "$work/repo/scripts/run-analytics.py" > "$work/repo/scripts/leaky.py"
 cmp -s "$work/repo/scripts/run-analytics.py" "$work/repo/scripts/leaky.py" && fail "negative control: leak mutation did not apply"
 runs "$work/repo" "$work/repo/scripts/leaky.py" >/dev/null 2>&1
-if grep -q 'SECRET-MARKER-7f3a' "$STORE" 2>/dev/null || ! [ -s "$STORE" ]; then
-  pass "negative control: a copy that stores reply text is caught (store rejected or marker found)"
+if grep -q 'SECRET-MARKER-7f3a' "$STORE" 2>/dev/null; then
+  pass "negative control: a copy that stores reply text is caught (marker found in its store)"
 else fail "negative control: leak not caught"; fi
 build
 sed 's/            member_cache\[wd\] = common_dir(wd) == mine/            member_cache[wd] = True/' "$work/repo/scripts/run-analytics.py" > "$work/repo/scripts/nomember.py"
