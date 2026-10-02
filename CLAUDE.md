@@ -1358,9 +1358,9 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   **Every cycle records one provenance line in its closing commit body** — default floor or
   not, so an absent line is never ambiguous between "the default applied" and "someone forgot".
   **One line per cycle**, so a change running five cycles records five. There is no informal
-  variant; anything quoting this form elsewhere quotes an instance of it, because the deferred
-  metrics work is intended to parse it — that consumer does not exist yet, and the form is pinned
-  now so that it can.
+  variant; anything quoting this form elsewhere quotes an instance of it, because tooling parses
+  it — in this repository `scripts/ledger-metrics.py` (dark-factory vision step 2b) — and the
+  form is pinned so that it can.
 
   <CYCLE-FIELD>; floor <N> per <STORY-SET>; hook reminder threshold <KNOB>
 
