@@ -160,12 +160,17 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on 
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus three prompt-conformance checks) plus
-both checkers' regression suites, the metrics report's suite, and
+both checkers' regression suites, the two reports' suites, and
 `claude plugin validate . --strict`.
 
 `python3 scripts/ledger-metrics.py` prints a read-only report over the hardening ledger
 and the review-cycle records in commit bodies: which fingerprints recur, how rungs were
 followed, and each cycle's recorded curve beside the `fic2` baseline. It writes nothing.
+
+`python3 scripts/run-analytics.py` reads the Claude Code transcripts and Codex session logs
+on this machine and reports how many gate calls each review cycle and story took, how long
+they ran and how many tokens they used, including effort no closed cycle accounts for. It
+keeps numbers and identifiers only, in `.context/telemetry/` of this clone, for 365 days.
 
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which
