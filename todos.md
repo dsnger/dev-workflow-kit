@@ -470,6 +470,151 @@ That belongs in each product project's own `todos.md` once `/workflow-init` has 
 there, not here: this repo ships the workflow, it does not hold another project's
 backlog.
 
+- [ ] **Ordering group G1 — workflow guidance, controlled requirement changes, visible
+      acceptance evidence.** Recorded 2026-10-03 (Daniel), from the advisory comparison
+      with `AlexPEClub/ai-coding-starter-kit` at `21a97bb5`
+      (`.context/sparring/20261003-124930-ai-coding-starter-kit-process-assessment.md`,
+      local and untracked). It is an ordering group of three leaves, each its own story at
+      intake, and **none of them is activated by this entry**. Every leaf must also serve the
+      Dark Factory's monitoring promise: what it produces is something the human can see in
+      the computed live view (vision §4, "The live status is a computed view too"), which
+      renders it. No leaf adds a status store, a second roadmap, a new QA gate, a routine
+      approval checkpoint or an agent fleet, and none changes a gate obligation.
+      Stack-neutral: nothing from upstream's stack, severity vocabulary or synchronized
+      PRD/index statuses is adopted.
+      - **G1a — controlled change to an existing story or spec. First candidate.**
+        *Problem:* narrowing or redirecting an approved story after a gate finding is ad
+        hoc today. Both 2c narrowings (part 1 on 2026-10-02, part 2 on 2026-10-03) were
+        handled by hand, each with its own fate table: part 1's in
+        `docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md`,
+        and part 2's in `docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`
+        (PR #35, on `main` once it merges). *Outcome:* a bounded refinement
+        procedure in the existing `sparring` and `intake` workflow. It classifies the reason
+        (a changed requirement, a gap the implementation discovered, or a change of
+        direction). It then names the affected criteria, the conditions kept, moved or
+        deliberately dropped (AGENTS.md, "Never replace a decision procedure without
+        accounting for its old conditions"), the changed scope, the open questions, the
+        dependent artifacts and the consequence for reviews already run. Every decision is
+        dated, with its rationale. *Excluded:* a separate skill (a later design decision,
+        inspired by upstream `refine`); any automatic "spec updated, continue"; closing
+        adjacent gaps as a side task. *Owner and dependencies:* the plugin's `sparring` and
+        `intake` skills, so implementing it is a prompt change (full Gate B, version bump).
+        **2c part 3 (spec-delta capture,
+        `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md`)
+        owns the mechanical record of a spec change after its Gate-A cycle closed;** G1a owns
+        the human decision procedure that produces such a change, and feeds part 3 rather
+        than competing with it. *Status:* ready for intake; activated only when Daniel
+        selects it. *Acceptance checks:* replayed on the two recorded 2c narrowings, the
+        procedure reproduces their fate tables and names their dependent artifacts; a change
+        after a closed gate states which further pass or cycle it owes, as §5 already
+        decides.
+      - **G1b — acceptance evidence per criterion.** Attached to **P5 light** (stable AC IDs,
+        below) and to vision §7 leaf **4e** (AC IDs, given/when/then normalization, per-AC
+        test report), which stay the owners. 4e's order and safeguards are unchanged.
+        *Adds:* a compact presentation per criterion: `AC-ID → test evidence, test result,
+        tested revision → review status, reviewed revision`. Each result is one of passed,
+        failed or not assessed, and review and test keep their own revisions (vision §4: no
+        older result may read as verification of the current work). It reuses the
+        existing commit-body evidence entries and review artifacts before any new report.
+        It is shown in the live view as a per-story panel. *Excluded:* a QA stage, an E2E
+        test per criterion, "production-ready" claims, and upstream's severity scheme.
+        *Status:* proposed; it follows P5 light's trigger and 4e's place in the build path.
+      - **G1c — workflow navigation.** Attached to **P1** (`workflow-status` →
+        `workflow-next`, Someday), whose staged rollout and trigger are unchanged.
+        *Adds:* a fixed output shape for the status read: current story and revision, the
+        last completed stage **evidenced** by its closing records (not by a section being
+        present), the current blocker (an open stop, hold or decision), and source links.
+        Once the status is reliably right, the next permitted action follows. The console
+        command and the live view render the **same** computed read: the dashboard's
+        per-story view is G1c's output, so the human can follow every story without asking.
+        *Excluded:* a separately maintained help workflow, and any stored status.
+        *Status:* proposed; P1's trigger (3–5 real stories completed in a product project)
+        still governs it.
+      *Secondary design inputs, not leaves:* path-scoped project rules with referenced
+      checklists, and project-level goal and non-goal discovery, are considered when the
+      owning areas (rule loading, the vision's AGENTS.md goals and the pool) are designed.
+      *Trigger for the group:* Daniel selects G1a for intake. G1b and G1c keep their
+      owners' triggers.
+
+- [ ] **Ordering group G2 — one workflow core for Claude Code and Codex, with session
+      roles.** Recorded 2026-10-03 (Daniel). It draws on two advisory inputs, local and
+      untracked: `.context/sparring/20261003-132000-client-neutral-workflow-assessment.md`
+      and `.context/sparring/20261003-133609-session-role-entry-assessment.md`. This is an
+      architecture direction, not an approved specification. **Nothing is implemented, and
+      no leaf is activated.**
+      *Intent:* Daniel opens separate sessions in one project, in either supported client,
+      and chooses each session's role:
+      - **coding agent:** implements in its assigned scope and requests independent Gate A
+        and B reviews;
+      - **sparring partner:** investigates, verifies and drafts handoffs, does not implement,
+        and may write explicitly authorized advisory documents;
+      - **reviewer:** takes a bounded assignment against identified artifacts or revisions and
+        returns findings without repairing the candidate.
+      The two initial directions are Claude Code implementing with a configured Codex
+      reviewer (today's route), and Codex implementing with a configured Claude reviewer.
+      Gate A and Gate B reviewers are configurable, with reusable confirmed defaults. The
+      different-model-family requirement stays: a different model name or gateway alone does
+      not establish independence, and the parked same-family fallback stays parked.
+      *Architecture direction:*
+      - **A shared core:** stages, profiles, gate contracts, findings, hardening and closure
+        rules each keep one authoritative source. Invariant 8's inline templates and the
+        `Target model:` lines of executable prompts stay.
+      - **Thin client integrations,** each verified per client: installation, discovery,
+        entry points, configuration and lifecycle events. Credentials and loaded versions
+        stay separately observable.
+      - **A reviewer integration** that normalizes the assignment and the result while keeping
+        the exact reviewed input and the observed execution identity. A missing, failed,
+        truncated or unattributable result is never a successful independent review.
+      - **Session-local roles over shared project defaults.** Choosing sparring in one
+        terminal never switches another. A transition that needs independent context opens a
+        fresh session, so relabeling an implementation conversation is not a review.
+      The first delivery uses two human-facing sessions (coding and sparring), with the coding
+      agent starting a fresh reviewer per gate; a third reviewer terminal is not required.
+      One writer and a read-only adviser may share a checkout, with advice tied to its
+      observed revision. Several implementers need separate assigned workspaces and change
+      ownership, because a shared plugin installation coordinates no writes.
+      *Leaves, in dependency order, each its own story with its own profile at intake:*
+      - **G2a — inventory and contracts.** List every place the kit assumes Claude Code or
+        the Codex reviewer: skills, `CLAUDE.md`, hook events, the `mcp__codex__.*` matcher in
+        `hooks/hooks.json`, the `mcp__codex__exec` and `mcp__codex__review` names in
+        `codex-gate.sh`, and AGENTS.md's dependency-direction statement. Define the client contract and the reviewer
+        assignment/result contract, mapping each existing condition as kept, moved or
+        changed. Output: a spec. *First candidate of this group.*
+      - **G2b — the Codex-implements, Claude-reviews route,** proven on one small real change
+        while the existing route stays valid. *Open technical questions:* how Claude is
+        invoked as an external reviewer, how it is isolated, and what replaces the hook's
+        lifecycle events in Codex.
+      - **G2c — session role entry:** role choice, role persistence across resume, and
+        reviewer configuration. Each session shows its role, project or worktree, known model
+        and kit version, and a coding session also shows its reviewer assignments. It builds
+        on the shipped `sparring` skill (advisory and explicitly invoked; its limits are
+        prompt instructions, not a demonstrated sandbox).
+      - **G2d — installation, update and end-to-end support verification** for both clients,
+        showing installed and loaded versions separately.
+      *Proposed acceptance checks, to be refined at intake:*
+      - both directions complete story → spec → plan → implementation → quality →
+        independent review → closure on a small real change;
+      - today's route demonstrably still works;
+      - two sessions in one project keep independent roles, and sparring does not implement;
+      - a configuration or identity mismatch, or an unknown model family, is surfaced, and an
+        unavailable independent reviewer cannot produce a successful gate;
+      - every finding is tied to its exact assignment and candidate;
+      - lifecycle, resume and version behavior are checked per client;
+      - role limits are labelled as prompt instructions or as enforced restrictions.
+      *Relation to G1 and the Dark Factory:*
+      - G1a's refinement procedure belongs to the sparring role.
+      - G1c's status read shows the session's role and its next permitted action.
+      - G1b, P5 light and vision leaf 4e keep AC evidence.
+      - In the vision, these roles are what the orchestrator (step 3) assigns. The computed
+        live view (vision §4) is where the human sees which session holds which role,
+        reviewer assignment and revision.
+      No status store and no roadmap copy is added; no gate obligation changes.
+      *Excluded:* support promised for every model or client, autonomous role switching, new
+      routine approval checkpoints, and any change to shipped files, hooks, CI or
+      configuration before a leaf is designed.
+      *Trigger:* Daniel selects G2a for intake. Until then the active 2c work (parts 3 and 4)
+      keeps priority; how G1a and G2a rank against it is Daniel's call.
+
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
       `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
@@ -533,6 +678,9 @@ backlog.
       instead of re-described. *Trigger: the first story that runs under profiles* — the
       IDs exist to label what profiles produce, so the numbering scheme should meet a real
       profiled story before it gets a template slot.
+      **2026-10-03:** ordering group G1 (above) adds G1b, an `AC-ID → evidence → result →
+      revision` view, on top of these IDs. The trigger above is unchanged; whether the
+      profiled 2c stories already meet it is Daniel's call.
 
 - [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
       variable keeps a >120 s gate call in the foreground so its result reaches the hook.
@@ -621,6 +769,8 @@ backlog.
       because it is followed. *Trigger: 3–5 real stories completed in a product project*
       — fewer than that and the state machine would be modelled on this repo's own
       atypical usage.
+      **2026-10-03:** ordering group G1 (in Next) records G1c, the status read's output
+      shape, which the live view renders. The staging and the trigger above are unchanged.
 - [ ] **Generated status HTML — task, progress and KPI views.** Direction agreed
       with Daniel on 2026-09-17: keep Markdown as the authored source and generate
       HTML views, with source links, revision and freshness visible. Define item

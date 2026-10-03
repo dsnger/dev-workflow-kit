@@ -778,6 +778,16 @@ leaf yet owns. Those are marked as such rather than counted as decomposed.
   in §4 adds generated task and progress views with Markdown sources; choose
   the initial static-view scope and source mapping in that leaf, without
   requiring live telemetry for a labelled snapshot. [2c / dashboard]
+  **2026-10-03:** `todos.md` ordering group G1 adds three inputs for this view, none of
+  them a status store. G1c is the per-story status read (P1), G1b is the per-criterion
+  evidence panel (P5 light / 4e), and G1a's dated change records feed 2c part 3's
+  spec-delta. [2c / dashboard]
+- Client-neutral workflow and session roles — `todos.md` ordering group G2 (recorded
+  2026-10-03, not designed). It covers one shared workflow core for Claude Code and Codex,
+  each able to implement with an independent reviewer from another model family, and
+  session-local roles: coding agent, sparring partner, reviewer. Open questions: the
+  external Claude-reviewer interface and its isolation, Codex lifecycle events, and how the
+  orchestrator (step 3) assigns these roles. [step 3 / dashboard]
 - Review-loop usefulness — the requirement and dimensions are recorded in
   §4; metric definitions, evidence availability, calibration sample, numeric
   thresholds by evidenced product impact, any composite weights and
