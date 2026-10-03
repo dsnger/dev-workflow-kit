@@ -667,6 +667,10 @@ backlog.
       or a legacy graft can change which provenance lines it reads. `scripts/ledger-metrics.py`
       and `scripts/loop-usefulness.py` already guard against this. Fix it when run-analytics is
       next touched. Pre-existing, small, and outside PR #35's diff.
+      **2026-10-03 (PR #35 review, Daniel):** `scripts/loop-usefulness.py` counts any
+      non-test `plugins/*/hooks/*.sh` as product (spec §4), even one `hooks.json` does not
+      register. Today the only hook script, `codex-gate.sh`, is registered, so no result
+      changes. Read the registrations from `hooks.json` when a second hook script appears.
       **2026-10-03:** 2c part 2 delivers only a warning light (reassess effort; no
       green, no usefulness verdict). Confirmed distinct yield, repair origin,
       reviewed coverage and "was it worth it" remain open in this row.
