@@ -575,9 +575,9 @@ backlog.
       ownership, because a shared plugin installation coordinates no writes.
       *Leaves, in dependency order, each its own story with its own profile at intake:*
       - **G2a — inventory and contracts.** List every place the kit assumes Claude Code or
-        the Codex reviewer: skills, `CLAUDE.md`, hook events, the `mcp__codex__exec` and
-        `mcp__codex__review` keys in `hooks/hooks.json` and `codex-gate.sh`, and AGENTS.md's
-        dependency-direction statement. Define the client contract and the reviewer
+        the Codex reviewer: skills, `CLAUDE.md`, hook events, the `mcp__codex__.*` matcher in
+        `hooks/hooks.json`, the `mcp__codex__exec` and `mcp__codex__review` names in
+        `codex-gate.sh`, and AGENTS.md's dependency-direction statement. Define the client contract and the reviewer
         assignment/result contract, mapping each existing condition as kept, moved or
         changed. Output: a spec. *First candidate of this group.*
       - **G2b — the Codex-implements, Claude-reviews route,** proven on one small real change
