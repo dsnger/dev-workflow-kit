@@ -536,6 +536,85 @@ backlog.
       *Trigger for the group:* Daniel selects G1a for intake. G1b and G1c keep their
       owners' triggers.
 
+- [ ] **Ordering group G2 — one workflow core for Claude Code and Codex, with session
+      roles.** Recorded 2026-10-03 (Daniel). It draws on two advisory inputs, local and
+      untracked: `.context/sparring/20261003-132000-client-neutral-workflow-assessment.md`
+      and `.context/sparring/20261003-133609-session-role-entry-assessment.md`. This is an
+      architecture direction, not an approved specification. **Nothing is implemented, and
+      no leaf is activated.**
+      *Intent:* Daniel opens separate sessions in one project, in either supported client,
+      and chooses each session's role:
+      - **coding agent:** implements in its assigned scope and requests independent Gate A
+        and B reviews;
+      - **sparring partner:** investigates, verifies and drafts handoffs, does not implement,
+        and may write explicitly authorized advisory documents;
+      - **reviewer:** takes a bounded assignment against identified artifacts or revisions and
+        returns findings without repairing the candidate.
+      The two initial directions are Claude Code implementing with a configured Codex
+      reviewer (today's route), and Codex implementing with a configured Claude reviewer.
+      Gate A and Gate B reviewers are configurable, with reusable confirmed defaults. The
+      different-model-family requirement stays: a different model name or gateway alone does
+      not establish independence, and the parked same-family fallback stays parked.
+      *Architecture direction:*
+      - **A shared core:** stages, profiles, gate contracts, findings, hardening and closure
+        rules each keep one authoritative source. Invariant 8's inline templates and the
+        `Target model:` lines of executable prompts stay.
+      - **Thin client integrations,** each verified per client: installation, discovery,
+        entry points, configuration and lifecycle events. Credentials and loaded versions
+        stay separately observable.
+      - **A reviewer integration** that normalizes the assignment and the result while keeping
+        the exact reviewed input and the observed execution identity. A missing, failed,
+        truncated or unattributable result is never a successful independent review.
+      - **Session-local roles over shared project defaults.** Choosing sparring in one
+        terminal never switches another. A transition that needs independent context opens a
+        fresh session, so relabeling an implementation conversation is not a review.
+      The first delivery uses two human-facing sessions (coding and sparring), with the coding
+      agent starting a fresh reviewer per gate; a third reviewer terminal is not required.
+      One writer and a read-only adviser may share a checkout, with advice tied to its
+      observed revision. Several implementers need separate assigned workspaces and change
+      ownership, because a shared plugin installation coordinates no writes.
+      *Leaves, in dependency order, each its own story with its own profile at intake:*
+      - **G2a — inventory and contracts.** List every place the kit assumes Claude Code or
+        the Codex reviewer: skills, `CLAUDE.md`, hook events, the `mcp__codex__exec` and
+        `mcp__codex__review` keys in `hooks/hooks.json` and `codex-gate.sh`, and AGENTS.md's
+        dependency-direction statement. Define the client contract and the reviewer
+        assignment/result contract, mapping each existing condition as kept, moved or
+        changed. Output: a spec. *First candidate of this group.*
+      - **G2b — the Codex-implements, Claude-reviews route,** proven on one small real change
+        while the existing route stays valid. *Open technical questions:* how Claude is
+        invoked as an external reviewer, how it is isolated, and what replaces the hook's
+        lifecycle events in Codex.
+      - **G2c — session role entry:** role choice, role persistence across resume, and
+        reviewer configuration. Each session shows its role, project or worktree, known model
+        and kit version, and a coding session also shows its reviewer assignments. It builds
+        on the shipped `sparring` skill (advisory and explicitly invoked; its limits are
+        prompt instructions, not a demonstrated sandbox).
+      - **G2d — installation, update and end-to-end support verification** for both clients,
+        showing installed and loaded versions separately.
+      *Proposed acceptance checks, to be refined at intake:*
+      - both directions complete story → spec → plan → implementation → quality →
+        independent review → closure on a small real change;
+      - today's route demonstrably still works;
+      - two sessions in one project keep independent roles, and sparring does not implement;
+      - a configuration or identity mismatch, or an unknown model family, is surfaced, and an
+        unavailable independent reviewer cannot produce a successful gate;
+      - every finding is tied to its exact assignment and candidate;
+      - lifecycle, resume and version behavior are checked per client;
+      - role limits are labelled as prompt instructions or as enforced restrictions.
+      *Relation to G1 and the Dark Factory:*
+      - G1a's refinement procedure belongs to the sparring role.
+      - G1c's status read shows the session's role and its next permitted action.
+      - G1b, P5 light and vision leaf 4e keep AC evidence.
+      - In the vision, these roles are what the orchestrator (step 3) assigns. The computed
+        live view (vision §4) is where the human sees which session holds which role,
+        reviewer assignment and revision.
+      No status store and no roadmap copy is added; no gate obligation changes.
+      *Excluded:* support promised for every model or client, autonomous role switching, new
+      routine approval checkpoints, and any change to shipped files, hooks, CI or
+      configuration before a leaf is designed.
+      *Trigger:* Daniel selects G2a for intake. Until then the active 2c work (parts 3 and 4)
+      keeps priority; how G1a and G2a rank against it is Daniel's call.
+
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
       `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
