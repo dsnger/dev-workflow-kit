@@ -662,6 +662,9 @@ backlog.
       `docs/superpowers/specs/2026-08-30-dark-factory-vision.md` §§4/7/11.
       *Trigger: step 2c is explicitly picked up for design.* No thresholds are
       activated by this entry; automatic actions require separate authorization.
+      **2026-10-03:** 2c part 2 delivers only a warning light (reassess effort; no
+      green, no usefulness verdict). Confirmed distinct yield, repair origin,
+      reviewed coverage and "was it worth it" remain open in this row.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the

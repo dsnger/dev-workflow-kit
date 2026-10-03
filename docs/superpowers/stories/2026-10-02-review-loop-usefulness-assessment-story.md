@@ -1,4 +1,4 @@
-# Review-loop usefulness assessment (vision step 2c, part 2) — Story
+# Review-loop warning light (vision step 2c, part 2) — Story
 
 **Date:** 2026-10-02 · **Size:** story
 **Risk:** standard · **Security:** none · **Validation:** battery+check
@@ -16,33 +16,54 @@ found, what its repairs caused, what it cost and what it did not cover — so a 
 3-pass loop look alike until someone reads every commit body.
 
 ## 2. Desired outcome
-For every closed review cycle, a maintainer can read an assessment along the vision §4
-dimensions — yield, repair effects, effort and coverage — with an explained traffic light: which
-evidence put the cycle at that colour, and which evidence was missing. The assessment
-distinguishes direct product work from plan/execution machinery and from non-operative material,
-so loops spending effort far from the product are flagged earlier. It informs a human; it changes
-no gate, floor, severity or pass-validity rule.
+**Narrowed 2026-10-03 (Daniel): this part delivers a warning light, not a usefulness assessment.**
+For every closed review cycle, a maintainer can see whether the recorded numbers reach a warning
+threshold that calls for **reassessing further review effort** — a loop running far past its
+floor, or reporting more material findings after a pass than before it — together with the
+evidence behind the warning and what the data could not show. A warning means "reassess", never
+"waste proven"; the absence of a warning means "no threshold reached in the available data",
+never "useful". Where the data cannot settle the warning state, the report says so instead of
+showing no warning. The full usefulness assessment the epic and the vision §4 describe — whether a
+loop was worth its effort — stays open in the epic and in `todos.md`. The report informs a human;
+it changes no gate, floor, severity or pass-validity rule.
 
 ## 3. Acceptance criteria
-- [ ] For every closed cycle in the history read, the assessment shows the four dimensions
-      (yield, repair effects, effort, coverage) separately, each with its value or an explicit
-      "unknown" and the reason it is unknown. Unknown is never shown as zero or as a good result.
-- [ ] Each cycle gets a traffic light (green / amber / red) with a one-line explanation naming the
-      evidence that decided it. No composite numeric score is shown.
-- [ ] The thresholds behind the colours are stated in one place, and each cites the recorded cycles
-      it was checked against (at least the cycles named in the vision §4 calibration cases and the
-      field reports under `docs/field-reports/`). A threshold that cannot be checked against recorded
-      data is marked provisional.
-- [ ] A cycle's product distance (direct product, plan/execution machinery, non-operative) is shown,
-      and how it was determined. Where it cannot be determined it is shown as unknown, not defaulted
-      to low risk. More distant work reaches amber earlier at the same effort.
-- [ ] A cycle with few or zero findings is not marked red for that reason alone, and a cycle with
-      many findings is not marked green for that reason alone.
-- [ ] The assessment says what it cannot establish (for example: whether a finding was true, causal
-      attribution of repair effects, cost in money), in the report itself.
-- [ ] Building the assessment changes no gate, hook, floor, severity rule, pass-validity rule or
-      commit-body record format, and writes no file outside the existing per-clone telemetry
-      location.
+- [ ] For every closed cycle in the history read, the report shows the recorded evidence behind
+      the warning light (passes against the floor, material findings per pass, increases between
+      passes, stored effort), each with its value or an explicit "unknown" and the reason.
+      Unknown is never shown as zero.
+- [ ] Each cycle gets exactly one of four states, each with a one-line explanation naming the
+      evidence that decided it: **red** and **amber** (reassess, with a different urgency),
+      **no warning** ("no threshold reached in the available data; usefulness unknown"), and
+      **not determinable** (missing data could change the state). A threshold already reached
+      stays visible even when other data is missing. No green and no numeric score are shown.
+- [ ] Each warning threshold is stated in one place and checked against the recorded cycles and
+      the field reports under `docs/field-reports/`, each case with its expected state, and the
+      vision §4 calibration cases are walked through. A case the warning light cannot distinguish
+      is listed as a limit, not counted as passed.
+- [ ] A cycle's product distance is shown only where the changed files establish it (a shipped
+      plugin path, or an executable of this repository); otherwise it is unknown, with "classify
+      by hand". Unknown is never treated as low risk.
+- [ ] A cycle with few or zero findings is not warned about for that reason alone.
+- [ ] The report states what it cannot establish (for example: whether a finding was true, that
+      a repair caused an increase, what the reviewer examined, whether the loop was worth its
+      effort, cost in money), in the report itself.
+- [ ] Building the report changes no gate, hook, floor, severity rule, pass-validity rule or
+      commit-body record format, and it writes no file.
+
+**Scope narrowed 2026-10-03 (Daniel, on the reviewer's assessment
+`.context/sparring/20261003-104113-loop-usefulness-warning-assessment.md`), after Gate-A spec pass 1
+found that a green light would rest on evidence the report does not read.** What changed:
+
+| Earlier criterion or promise | Fate |
+|---|---|
+| Outcome: an assessment along yield, repair effects, effort and coverage | **Narrowed** to a warning light over recorded counts and stored effort. Confirmed distinct yield, repair origin and reviewed scope are **deferred** to the epic's open usefulness assessment. |
+| Criterion 1: four dimensions with values | **Narrowed** to the recorded evidence behind the warning; the dimensions the records cannot supply are shown as unknown. |
+| Criterion 2: green / amber / red | **Replaced** by red / amber / no warning / not determinable. Green is dropped: missing evidence must not become a green assessment (vision §4). |
+| Criterion 3: thresholds calibrated against recorded cycles and field reports | **Kept**, with indistinguishable cases listed as limits. |
+| Criterion 4: product distance, earlier amber for distant work | **Narrowed**: distance only where the changed files establish it; otherwise unknown. |
+| Criteria 5–7 | **Kept**, reworded for the warning light. |
+| Whether a loop was worth its effort | **Deferred** to the epic (criterion 5) and `todos.md`. |
 
 ## 4. Affected AGENTS.md invariants
 - `## Don'ts` — "**Never describe what a gate proves without checking what it actually compares.**"
@@ -53,8 +74,6 @@ no gate, floor, severity or pass-validity rule.
 ## 5. Open questions
 - Which recorded cycles form the calibration sample, given that most findings files live only in
   local `.context/` archives and the commit-body curves are author-written?
-- How is a finding "confirmed" for the yield dimension when dispositions files are optional and
-  sparse?
 - How is a cycle's product distance determined from what the records hold?
 
 ## 6. Suggested size

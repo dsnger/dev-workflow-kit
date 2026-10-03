@@ -75,3 +75,8 @@ epic-needs-splitting — four sub-stories, in this order (Daniel, 2026-10-02):
 (1) run analytics, trace ID and retention; (2) review-loop usefulness assessment;
 (3) spec-delta capture; (4) live cost counters and the minimum-cost INCOMPLETE signal. Part 4
 changes gate pass validity and needs its own profile, risk high.
+
+**Part 2 narrowed 2026-10-03 (Daniel).** Part 2 delivers a warning light over recorded counts and
+stored effort (`docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`).
+It does not satisfy criterion 5: confirmed distinct yield, repair origin, reviewed coverage and a
+judgement of whether a loop was worth its effort remain open here and in `todos.md`.
