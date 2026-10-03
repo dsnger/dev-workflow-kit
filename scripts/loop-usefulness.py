@@ -77,8 +77,11 @@ def git_env():
 
 
 def git(args, cwd="."):
+    # --no-replace-objects and an empty graft file, as in P8: read the history the commit names,
+    # not `git replace` substitutes or legacy grafts.
+    env = dict(git_env(), GIT_GRAFT_FILE=os.devnull)
     try:
-        p = subprocess.run(("git",) + tuple(args), cwd=cwd, env=git_env(),
+        p = subprocess.run(("git", "--no-replace-objects") + tuple(args), cwd=cwd, env=env,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except OSError:
         return 127, b""

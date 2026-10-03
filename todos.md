@@ -662,6 +662,11 @@ backlog.
       `docs/superpowers/specs/2026-08-30-dark-factory-vision.md` §§4/7/11.
       *Trigger: step 2c is explicitly picked up for design.* No thresholds are
       activated by this entry; automatic actions require separate authorization.
+      **2026-10-03 (PR #35 review):** `scripts/run-analytics.py` reads commit history for
+      attribution without `--no-replace-objects` or an empty graft file, so a `git replace` ref
+      or a legacy graft can change which provenance lines it reads. `scripts/ledger-metrics.py`
+      and `scripts/loop-usefulness.py` already guard against this. Fix it when run-analytics is
+      next touched. Pre-existing, small, and outside PR #35's diff.
       **2026-10-03:** 2c part 2 delivers only a warning light (reassess effort; no
       green, no usefulness verdict). Confirmed distinct yield, repair origin,
       reviewed coverage and "was it worth it" remain open in this row.

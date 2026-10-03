@@ -479,6 +479,19 @@ printf '%s\n' "$rel" | grep -q '^sameprov  Gate B  amber: 3 excess passes (amber
   pass "run from a subdirectory with diff.relative set: distance still from repository-root paths" ||
   fail "diff.relative changed the distance"
 
+build
+if (
+  cd "$work/repo" || exit 1
+  old=$(git log --format=%H --grep='^p red$')
+  git cat-file commit "$old" | sed 's/^cycle prodred9; floor 3 per/cycle prodred9; floor 1 per/' > "$work/fake"
+  git cat-file commit "$old" | cmp -s - "$work/fake" && exit 1  # the substitution must change the commit
+  new=$(git hash-object -t commit -w "$work/fake") && git replace "$old" "$new"
+); then
+  rep=$(run "$work/repo")
+  printf '%s\n' "$rep" | grep -q '^prodred9  Gate B  red: 9 excess passes (red at 9, product)$' &&
+    pass "a git replace ref does not change what is read" || fail "a replace ref changed the report"
+else fail "replace-ref fixture could not be built"; fi
+
 # ---- 3. negative control ----------------------------------------------------------------------------
 build
 python3 - "$work/repo/scripts/loop-usefulness.py" "$work/repo/scripts/noinc.py" <<'PY'
