@@ -191,7 +191,7 @@ def baseline_block(path, ref, head, lm):
     lines += records
     out = must(("-c", "log.showRoot=true", "show", "--first-parent", "--no-renames", "--name-only", "--format=",
                 "-z", commit))
-    changed = [p for p in out.decode("utf-8", "replace").split("\0") if p]
+    changed = [os.fsdecode(p) for p in out.split(b"\0") if p]  # path bytes kept, as in main
     same_kind = [p for p in changed if kind and kind_of(p) == kind]
     amb = []
     if not fields:
@@ -214,7 +214,7 @@ def baseline_block(path, ref, head, lm):
         d = must(DIFF_CFG + ("diff",) + DIFF_FLAGS + (commit, head, "--", path))
         return "changed", lines + ["diff:"] + [shown(x) for x in d.decode("utf-8", "replace").rstrip("\n").split("\n")]
     ns = must(("diff", "--find-renames", "--name-status", "-z", commit, head))
-    parts = ns.decode("utf-8", "replace").split("\0")
+    parts = [os.fsdecode(x) for x in ns.split(b"\0")]
     target, i = None, 0
     while i < len(parts) - 1:
         st = parts[i]
@@ -264,7 +264,8 @@ def main(argv):
         out = must(("log", "--format=", "--name-only", "--no-renames", "--diff-merges=first-parent", "-z",
                     "%s..%s" % (base, head)))
         net = must(("diff", "--name-only", "--no-renames", "-z", base, head))  # includes merge-only edits
-        changed = list(dict.fromkeys(p for p in (out + b"\0" + net).decode("utf-8", "replace").split("\0") if p))
+        # os.fsdecode keeps a non-UTF-8 name's bytes, so it can be looked up again; shown() escapes it on output
+        changed = list(dict.fromkeys(os.fsdecode(p) for p in (out + b"\0" + net).split(b"\0") if p))
     plans = list(dict.fromkeys(o["plan"] + [p for p in changed if p.startswith(PLANS) and p.endswith(".md")]))
     relevant = dict.fromkeys(plans)
     relevant.update(dict.fromkeys(p for p in changed if p.startswith(SPECS) and p.endswith(".md")))

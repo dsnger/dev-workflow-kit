@@ -95,6 +95,10 @@ mkrepo() {
     put $S/r.md "# r\\nchanged in a merge\\n"; tick=$((tick + 100)); gitc add -A && gitc commit -q -m 'merge side2'
     gitc merge -q --no-ff --no-commit side3 >/dev/null 2>&1
     put $S/r.md "# r\\nline one\\n"; tick=$((tick + 100)); gitc add -A && gitc commit -q -m 'merge side3'
+    # a spec whose name is not valid UTF-8, added through the index (some file systems refuse the name)
+    blob=$(printf 'x\n' | git hash-object -w --stdin)
+    git update-index --add --cacheinfo "100644,$blob,$(printf '%s/bad\377.md' "$S")"
+    tick=$((tick + 100)); gitc commit -q -m 'non-UTF-8 name'
     sha > "$work/c_head"
   )
 }
@@ -128,7 +132,7 @@ build() { rm -rf "${work:?}/home"; mkdir -p "$work/home"; mkrepo; }
 wargs() {
   "$@" --base "$(cat "$work/c_basepoint")" --plan $PL/p2.md --plan $PL/p3.md --plan $PL/p4.md \
     --plan $PL/ghost.md --spec $S/j.md --baseline "$(cat "$work/c_skip"):$S/n.md" \
-    --baseline "$(cat "$work/c_base"):$S/q.md" \
+    --baseline "$(cat "$work/c_base"):$S/q.md" --baseline "$(cat "$work/c_head"):$(printf '%s/bad\377.md' "$S")" \
     --baseline "$(cat "$work/c_closeA"):$S/a.md" --baseline "$(cat "$work/c_base"):$S/b.md" \
     --baseline "$(cat "$work/c_base"):$S/c.md" --baseline "$(cat "$work/c_base"):$S/d.md" \
     --baseline "$(cat "$work/c_two"):$S/g.md" --baseline "$(cat "$work/c_squash"):$S/i.md" \
@@ -146,7 +150,7 @@ out=$(wargs run); st=$?
 expect "report" "$(printf '%s\n' "$out" | mask)" <<'EOF'
 spec-delta — compared with given baselines; Gate-A metadata checked; review attribution not established; informs and obliges nothing
 head SHA  base SHA
-artifacts 23: baseline commit not available — unknown 1, baseline missing — unknown 12, baseline path absent 1, changed 2, no change 5, renamed or deleted 2
+artifacts 24: baseline commit not available — unknown 1, baseline missing — unknown 12, baseline path absent 1, changed 2, no change 6, renamed or deleted 2
 
 == docs/superpowers/specs/a.md
 baseline: SHA (SHA)
@@ -170,6 +174,12 @@ index X..Y 100644
 baseline: SHA (SHA)
 records in the baseline commit: none
 ambiguity: no matching-kind record with a cycle nonce at the baseline; the baseline commit changes 13 specs, so it does not settle which one a cycle reviewed
+state: no change
+
+== docs/superpowers/specs/bad\udcff.md
+baseline: SHA (SHA)
+records in the baseline commit: none
+ambiguity: no matching-kind record with a cycle nonce at the baseline
 state: no change
 
 == docs/superpowers/specs/c.md
