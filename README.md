@@ -160,7 +160,7 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on 
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus three prompt-conformance checks) plus
-both checkers' regression suites, the two reports' suites, and
+both checkers' regression suites, the three reports' suites, and
 `claude plugin validate . --strict`.
 
 `python3 scripts/ledger-metrics.py` prints a read-only report over the hardening ledger
@@ -171,6 +171,13 @@ followed, and each cycle's recorded curve beside the `fic2` baseline. It writes 
 on this machine and reports how many gate calls each review cycle and story took, how long
 they ran and how many tokens they used, including effort no closed cycle accounts for. It
 keeps numbers and identifiers only, in `.context/telemetry/` of this clone, for 365 days.
+
+`python3 -B scripts/loop-usefulness.py [<ref>]` gives every review cycle whose records are in the
+history read a warning light (a skipped cycle ran no loop and is listed without one):
+red or amber where its recorded passes or rising findings call for reassessing review effort,
+no warning where no threshold is reached, and not determinable where missing or conflicting
+data leaves the state open. It does not say whether a loop was worth its effort, and it writes
+nothing (`-B` keeps the interpreter from writing bytecode too).
 
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which
