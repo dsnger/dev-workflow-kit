@@ -485,7 +485,10 @@ backlog.
       - **G1a — controlled change to an existing story or spec. First candidate.**
         *Problem:* narrowing or redirecting an approved story after a gate finding is ad
         hoc today. Both 2c narrowings (part 1 on 2026-10-02, part 2 on 2026-10-03) were
-        handled by hand, each with its own fate table. *Outcome:* a bounded refinement
+        handled by hand, each with its own fate table: part 1's in
+        `docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md`,
+        and part 2's in `docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`
+        (PR #35, on `main` once it merges). *Outcome:* a bounded refinement
         procedure in the existing `sparring` and `intake` workflow. It classifies the reason
         (a changed requirement, a gap the implementation discovered, or a change of
         direction). It then names the affected criteria, the conditions kept, moved or
@@ -508,8 +511,10 @@ backlog.
       - **G1b — acceptance evidence per criterion.** Attached to **P5 light** (stable AC IDs,
         below) and to vision §7 leaf **4e** (AC IDs, given/when/then normalization, per-AC
         test report), which stay the owners. 4e's order and safeguards are unchanged.
-        *Adds:* a compact presentation, `AC-ID → evidence → result → reviewed or tested
-        revision`, where the result is one of passed, failed or not assessed. It reuses the
+        *Adds:* a compact presentation per criterion: `AC-ID → test evidence, test result,
+        tested revision → review status, reviewed revision`. Each result is one of passed,
+        failed or not assessed, and review and test keep their own revisions (vision §4: no
+        older result may read as verification of the current work). It reuses the
         existing commit-body evidence entries and review artifacts before any new report.
         It is shown in the live view as a per-story panel. *Excluded:* a QA stage, an E2E
         test per criterion, "production-ready" claims, and upstream's severity scheme.
