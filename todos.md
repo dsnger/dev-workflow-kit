@@ -470,6 +470,67 @@ That belongs in each product project's own `todos.md` once `/workflow-init` has 
 there, not here: this repo ships the workflow, it does not hold another project's
 backlog.
 
+- [ ] **Ordering group G1 — workflow guidance, controlled requirement changes, visible
+      acceptance evidence.** Recorded 2026-10-03 (Daniel), from the advisory comparison
+      with `AlexPEClub/ai-coding-starter-kit` at `21a97bb5`
+      (`.context/sparring/20261003-124930-ai-coding-starter-kit-process-assessment.md`,
+      local and untracked). It is an ordering group of three leaves, each its own story at
+      intake, and **none of them is activated by this entry**. Every leaf must also serve the
+      Dark Factory's monitoring promise: what it produces is something the human can see in
+      the computed live view (vision §4, "The live status is a computed view too"), which
+      renders it. No leaf adds a status store, a second roadmap, a new QA gate, a routine
+      approval checkpoint or an agent fleet, and none changes a gate obligation.
+      Stack-neutral: nothing from upstream's stack, severity vocabulary or synchronized
+      PRD/index statuses is adopted.
+      - **G1a — controlled change to an existing story or spec. First candidate.**
+        *Problem:* narrowing or redirecting an approved story after a gate finding is ad
+        hoc today. Both 2c narrowings (part 1 on 2026-10-02, part 2 on 2026-10-03) were
+        handled by hand, each with its own fate table. *Outcome:* a bounded refinement
+        procedure in the existing `sparring` and `intake` workflow. It classifies the reason
+        (a changed requirement, a gap the implementation discovered, or a change of
+        direction). It then names the affected criteria, the conditions kept, moved or
+        deliberately dropped (AGENTS.md, "Never replace a decision procedure without
+        accounting for its old conditions"), the changed scope, the open questions, the
+        dependent artifacts and the consequence for reviews already run. Every decision is
+        dated, with its rationale. *Excluded:* a separate skill (a later design decision,
+        inspired by upstream `refine`); any automatic "spec updated, continue"; closing
+        adjacent gaps as a side task. *Owner and dependencies:* the plugin's `sparring` and
+        `intake` skills, so implementing it is a prompt change (full Gate B, version bump).
+        **2c part 3 (spec-delta capture,
+        `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md`)
+        owns the mechanical record of a spec change after its Gate-A cycle closed;** G1a owns
+        the human decision procedure that produces such a change, and feeds part 3 rather
+        than competing with it. *Status:* ready for intake; activated only when Daniel
+        selects it. *Acceptance checks:* replayed on the two recorded 2c narrowings, the
+        procedure reproduces their fate tables and names their dependent artifacts; a change
+        after a closed gate states which further pass or cycle it owes, as §5 already
+        decides.
+      - **G1b — acceptance evidence per criterion.** Attached to **P5 light** (stable AC IDs,
+        below) and to vision §7 leaf **4e** (AC IDs, given/when/then normalization, per-AC
+        test report), which stay the owners. 4e's order and safeguards are unchanged.
+        *Adds:* a compact presentation, `AC-ID → evidence → result → reviewed or tested
+        revision`, where the result is one of passed, failed or not assessed. It reuses the
+        existing commit-body evidence entries and review artifacts before any new report.
+        It is shown in the live view as a per-story panel. *Excluded:* a QA stage, an E2E
+        test per criterion, "production-ready" claims, and upstream's severity scheme.
+        *Status:* proposed; it follows P5 light's trigger and 4e's place in the build path.
+      - **G1c — workflow navigation.** Attached to **P1** (`workflow-status` →
+        `workflow-next`, Someday), whose staged rollout and trigger are unchanged.
+        *Adds:* a fixed output shape for the status read: current story and revision, the
+        last completed stage **evidenced** by its closing records (not by a section being
+        present), the current blocker (an open stop, hold or decision), and source links.
+        Once the status is reliably right, the next permitted action follows. The console
+        command and the live view render the **same** computed read: the dashboard's
+        per-story view is G1c's output, so the human can follow every story without asking.
+        *Excluded:* a separately maintained help workflow, and any stored status.
+        *Status:* proposed; P1's trigger (3–5 real stories completed in a product project)
+        still governs it.
+      *Secondary design inputs, not leaves:* path-scoped project rules with referenced
+      checklists, and project-level goal and non-goal discovery, are considered when the
+      owning areas (rule loading, the vision's AGENTS.md goals and the pool) are designed.
+      *Trigger for the group:* Daniel selects G1a for intake. G1b and G1c keep their
+      owners' triggers.
+
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
       `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
@@ -533,6 +594,9 @@ backlog.
       instead of re-described. *Trigger: the first story that runs under profiles* — the
       IDs exist to label what profiles produce, so the numbering scheme should meet a real
       profiled story before it gets a template slot.
+      **2026-10-03:** ordering group G1 (above) adds G1b, an `AC-ID → evidence → result →
+      revision` view, on top of these IDs. The trigger above is unchanged; whether the
+      profiled 2c stories already meet it is Daniel's call.
 
 - [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
       variable keeps a >120 s gate call in the foreground so its result reaches the hook.
@@ -621,6 +685,8 @@ backlog.
       because it is followed. *Trigger: 3–5 real stories completed in a product project*
       — fewer than that and the state machine would be modelled on this repo's own
       atypical usage.
+      **2026-10-03:** ordering group G1 (in Next) records G1c, the status read's output
+      shape, which the live view renders. The staging and the trigger above are unchanged.
 - [ ] **Generated status HTML — task, progress and KPI views.** Direction agreed
       with Daniel on 2026-09-17: keep Markdown as the authored source and generate
       HTML views, with source links, revision and freshness visible. Define item
