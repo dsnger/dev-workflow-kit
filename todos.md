@@ -679,8 +679,11 @@ backlog.
       IDs exist to label what profiles produce, so the numbering scheme should meet a real
       profiled story before it gets a template slot.
       **2026-10-03:** ordering group G1 (above) adds G1b, an `AC-ID → evidence → result →
-      revision` view, on top of these IDs. The trigger above is unchanged; whether the
-      profiled 2c stories already meet it is Daniel's call.
+      revision` view, on top of these IDs. The trigger above is unchanged.
+      **2026-10-03 (Daniel, on `.context/sparring/20261003-152014-post-pr35-p5-next-step-assessment.md`):
+      trigger met — profiled stories have run (the 2c parts). Ready for intake, scope the IDs
+      only: G1b and vision leaf 4e are not activated by it. It is not started in parallel with
+      2c part 3; after part 3 it is ranked against part 4.**
 
 - [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
       variable keeps a >120 s gate call in the foreground so its result reaches the hook.
