@@ -137,7 +137,8 @@ Follow in order. Each step names why it exists.
    yet).
 9. **Present and wait** — show the draft and wait. On requested edits, apply them,
    **re-validate the edited draft against every constraint** (six sections, the
-   profile header line, no-HOW except §4, grounding floor, ≥3 checkable criteria), and
+   profile header line, no-HOW except §4, grounding floor, ≥3 checkable criteria, the
+   criteria reading `AC-1 … AC-k` in order under the italic ID rule line), and
    re-present. Never commit unseen or edit-broken text; a user edit can accidentally
    introduce HOW or drop a section.
 10. **On approval, write and commit** — write the **exact approved text** to the
@@ -167,9 +168,10 @@ Write the file with exactly these six `##` sections, in order:
 <The WHAT and WHY of the change — an observable result, no solution design.>
 
 ## 3. Acceptance criteria
-- [ ] <Observable outcome or constraint, checkable true/false by a reviewer.>
-- [ ] <…>
-- [ ] <… at least three.>
+_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._
+- [ ] **AC-1** <Observable outcome or constraint, checkable true/false by a reviewer.>
+- [ ] **AC-2** <…>
+- [ ] **AC-3** <… at least three.>
 
 ## 4. Affected AGENTS.md invariants
 - `## <Section>` — "<quoted bullet line the change would touch>"
@@ -190,6 +192,53 @@ worth — name the suggested split.
 
 **Acceptance criteria** describe observable outcomes or constraints, never
 implementation steps (WHAT is true when done, not how it's built).
+
+**Acceptance-criterion IDs.** Every criterion carries an identifier, `AC-<n>`, so that a
+plan, a spec, a gate call or a commit can cite it and still mean the same criterion after
+the list changes. The italic line under §3 travels with every story and carries these
+rules in short, because later amendments happen where this skill does not run.
+
+1. **Fixed at commit, free before.** While the draft is shown and edited (steps 8–9),
+   renumber freely, so the draft always reads `AC-1 … AC-k` in order. Identifiers become
+   permanent when the approved story is committed (step 10).
+2. **After commit: never renumbered, never reused** — the one exception is a renumbering
+   a human decides under rule 3. In any later amendment:
+   - a **new** criterion takes the next unused number, wherever it is placed in the list;
+   - a **removed** criterion keeps its line, struck through, with a dated reason:
+     `- [ ] **AC-3** ~~<old text>~~ — withdrawn 2026-10-04: <reason>`;
+   - a **narrowed or reworded** criterion keeps its identifier, with a dated note in the
+     same line: `(narrowed 2026-10-04: <reason>)`.
+
+   Why: a citation outlives the list it points into, and a renumbered or reused
+   identifier silently redirects every earlier citation to a different criterion.
+3. **Concurrent amendments.** Before committing an amendment, take "next unused" over the
+   story on its own branch **and** on the branch it will merge into. If two amendments
+   still claim the same number when they meet, stop and ask a human which one gives way.
+   That amendment's new criteria are then renumbered together with every citation already
+   made to them. Nothing resolves this automatically, because an identifier committed on a
+   branch may already be cited.
+4. **Citation form.** For a story with identifiers: `<story path> AC-<n>`, or `AC-<n>`
+   inside the story itself. Plans, specs, gate calls, evidence entries and fate tables use
+   it instead of a position ("criterion 4") or a paraphrase. For a story without
+   identifiers: the story path and the criterion's text, quoted — never an identifier
+   guessed from its position, because a position changes whenever the list does. This is a
+   citation convention; no record format changes.
+5. **Older stories.** A story that already carries `AC-<n>` identifiers keeps them, and
+   rules 2–4 apply from now on. A story without identifiers is not rewritten: at its first
+   later amendment it adopts them — its existing criteria are numbered in their current
+   order, the italic rule line is added, and a dated line under §3 records the adoption.
+   Rewriting it earlier would change what its existing citations point at, with nobody
+   amending it to notice.
+
+**Worked example.** A committed story has AC-1, AC-2 and AC-3. Three amendments follow:
+
+| Amendment | §3 afterwards (identifiers only) |
+|---|---|
+| a criterion inserted between AC-1 and AC-2 | AC-1, **AC-4**, AC-2, AC-3 — the new one takes the next unused number, not its position |
+| AC-2 withdrawn | AC-1, AC-4, ~~AC-2~~ withdrawn (dated), AC-3 — the line stays, the number is never reused |
+| AC-3 narrowed | AC-1, AC-4, ~~AC-2~~, AC-3 (narrowed, dated) — same identifier, new text |
+
+Every citation made before these amendments still points at the same criterion.
 
 **Profile log.** A `**Profile log:**` label directly beneath the profile header, followed
 by `-` entries — written **on the first change and never before**, so a story whose
@@ -295,6 +344,7 @@ intake captures WHAT and WHY; brainstorming decides HOW.
 - Tagging invariants from memory instead of grepping AGENTS.md.
 - Looping past one question round instead of pausing for the user.
 - Padding to reach three acceptance criteria when the idea can't ground them.
+- Renumbering the criteria of a committed story, or reusing a withdrawn identifier.
 - Committing with `git add -A`, or committing text the user hasn't approved.
 - Leaving Section 4 or the invariants empty instead of the explicit "No AGENTS.md
   invariants matched".
