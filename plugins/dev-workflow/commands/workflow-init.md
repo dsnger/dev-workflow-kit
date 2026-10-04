@@ -208,10 +208,11 @@ definitions of the rules, or none — and the rules themselves stop on either.
    - **pointer form** — the body after the heading line is byte-identical to the pointer
      under §5 in the `CLAUDE.md` template below, optionally preceded by exactly the `INACTIVE` notice
      from 2.13 and one blank line;
-   - **mixed** — the body contains "The full rules live in `.claude/review-gates.md`" but is
-     not pointer form. An edited pointer and a pointer pasted above rules that are still
-     inline look the same here, so neither is assumed;
-   - **inline form** — the body does not contain that sentence and is not empty;
+   - **mixed** — the body names `.claude/review-gates.md` anywhere but is not pointer form.
+     An edited or re-wrapped pointer and a pointer pasted above rules that are still inline
+     look the same here, so neither is assumed, and nothing that points at the rules file
+     is ever moved into it as if it were the rules;
+   - **inline form** — the body does not name `.claude/review-gates.md` and is not empty;
    - **empty** — the heading has no body; **absent** — no matching heading;
      **ambiguous** — more than one matching heading.
 
@@ -224,7 +225,7 @@ definitions of the rules, or none — and the rules themselves stop on either.
    |---|---|---|---|
    | missing | missing | write both templates | `written` ×2 |
    | missing | usable | write `CLAUDE.md`; the rules file by Rule 2 | per file |
-   | §5 absent | missing or usable | offer the append above; the rules file by Rule 2 | per file |
+   | §5 absent | missing or usable | offer the append above. **Declined:** skip both files, so no rules file is written that nothing points to. **Accepted:** append, then the rules file by Rule 2 | `skipped (user)` ×2, or per file |
    | pointer form | missing | write the rules file, and say the project had no gate rules until now | `written` + that note |
    | pointer form | usable | each file by Rule 2 | per file |
    | inline form | missing | offer the migration (step 4) | `migrated`, `skipped (user)` or a failure state |
@@ -249,12 +250,14 @@ definitions of the rules, or none — and the rules themselves stop on either.
      here is overwritten automatically, because the file may hold the project's only copy
      of its rules.
 4. **The migration** (inline form, no rules file):
-   1. **Preconditions:** `CLAUDE.md` is tracked by git with no uncommitted changes, and
-      `.claude/review-gates.md` does not exist. Otherwise stop with
-      `stopped: commit CLAUDE.md first` (or the table's state) and write nothing. Why: git
-      then holds the original, which is what makes step 5's rollback safe.
-   2. **Show the change** and record two SHA-256 sums: the current `CLAUDE.md`, and the
-      payload below.
+   1. **Preconditions:** `CLAUDE.md` is tracked by git with no uncommitted changes,
+      `.claude/review-gates.md` does not exist, and git would not ignore it
+      (`git check-ignore -q .claude/review-gates.md` finds no match). Otherwise stop with
+      `stopped: commit CLAUDE.md first`, `stopped: .claude/review-gates.md is git-ignored`
+      (fix: un-ignore that path, then re-run) or the table's state, and write nothing. Why:
+      git then holds the original, which is what makes step 5's rollback safe; and an
+      ignored rules file would leave every clone with a pointer to nothing.
+   2. **Show the change**, and record the SHA-256 of the current `CLAUDE.md`.
       - In `CLAUDE.md`, exactly the §5 range is replaced by the template's pointer. If the
         body begins with exactly the `INACTIVE` notice from 2.13 and one blank line, that
         notice stays above the pointer and is not moved: it must stay always loaded.
@@ -270,13 +273,16 @@ definitions of the rules, or none — and the rules themselves stop on either.
       - Where §5 ran to the end of the file, say so in words: everything after the heading
         moves.
    3. **Ask:** migrate / skip. Skip writes nothing; report `skipped (user)` and warn that
-      the inline rules keep the project near or over the instruction-size limit.
+      the inline rules keep the project near or over the instruction-size limit. On
+      migrate, the payload is final as approved, including any edits the user made, and
+      record **its** SHA-256 now: that is the value step 4's read-back and step 5's
+      rollback compare against.
    4. **On migrate:**
       - re-check the preconditions, and that `CLAUDE.md`'s SHA-256 still equals the one
         recorded. If not, someone edited it while you asked: stop with
         `stopped: CLAUDE.md changed while asking` and write nothing;
       - create `.claude/review-gates.md` only if it is still absent;
-      - read it back in full; its SHA-256 must equal the payload's. A short, partial or
+      - read it back in full; its SHA-256 must equal the approved payload's. A short, partial or
         different read-back is a failure — this is what stops a truncated move from
         removing the only copy of the rules;
       - only then write the new `CLAUDE.md`, read it back, and classify it: §5 must be
@@ -285,7 +291,7 @@ definitions of the rules, or none — and the rules themselves stop on either.
       - restore `CLAUDE.md` from git (`git checkout -- CLAUDE.md`), which step 1 made equal
         to the original;
       - delete `.claude/review-gates.md` **only if** its content is still exactly the
-        payload. A file that differs may be a short write of your own or another writer's
+        approved payload. A file that differs may be a short write of your own or another writer's
         file; you cannot tell which, so leave it, and the rollback is incomplete.
 
       Report `migration failed: <step> (<cause>), rolled back` only when `CLAUDE.md` is

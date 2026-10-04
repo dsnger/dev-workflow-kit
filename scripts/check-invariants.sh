@@ -656,7 +656,8 @@ fi
 # AGENTS.md and other instruction files still fit.
 #
 # It measures CHARACTERS, not bytes, because the limit counts characters: the body of the
-# first ````markdown fence inside `### 2.1`, up to the next line that is exactly ````. The
+# ````markdown fence inside `### 2.1`, which must be the only one there, up to the next line
+# that is exactly ````. The
 # count runs under a UTF-8 locale, probed first; without one it fails, because a byte count
 # would read every non-ASCII character as two or three.
 #
@@ -674,7 +675,7 @@ tpl_size_scan() { # $1 = file
     infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 } else print; next }
     /^### 2\.1[[:space:]]/ { heads += 1; in21 = 1; next }
     in21 && /^### / { in21 = 0; next }
-    in21 && !done && $0 == "````markdown" { infence = 1; opened += 1; next }
+    in21 && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
     END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
   ' "$1" || return 2
 }
@@ -700,6 +701,11 @@ else
     elif [ "$3" -eq 0 ]; then
       fail "CLAUDE.md template size: no \`\`\`\`markdown fence inside '### 2.1' in $TPL_FILE." \
            "the template must be fenced"
+    elif [ "$3" -gt 1 ]; then
+      # Which fence is the template would be a guess, and measuring a short example
+      # instead of the template is the fail-open direction.
+      fail "CLAUDE.md template size: $3 \`\`\`\`markdown fences inside '### 2.1' in $TPL_FILE, so the template cannot be located." \
+           "keep exactly one fenced template in that section"
     elif [ "$4" -eq 0 ]; then
       fail "CLAUDE.md template size: the template fence in '### 2.1' is never closed." \
            "expected a line that is exactly \`\`\`\`"

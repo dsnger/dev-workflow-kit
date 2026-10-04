@@ -39,8 +39,10 @@ AGENTS.md invariant 12 carries the complete list.
   ambiguous. An inline §5 with no rules file is offered a migration that moves the
   project's own text (not the template's). It needs a clean, tracked `CLAUDE.md`, re-checks
   it before writing, requires a byte-equal read-back of the new file, and rolls back from
-  git on failure. Two definitions, a mixed or empty §5, or an unusable rules file stop and
-  are reported. The degraded-mode `INACTIVE` notice stays at the top of §5 in `CLAUDE.md`.
+  git on failure; it also stops when git would ignore `.claude/review-gates.md`. Two
+  definitions, a mixed or empty §5 and an unusable rules file each stop with their fix; a §5
+  that names the rules file without being the exact pointer is never migrated, and a
+  declined append writes neither file. The degraded-mode `INACTIVE` notice stays at the top of §5 in `CLAUDE.md`.
 - `scripts/check-invariants.sh`: check 4c's placement rule now anchors on `### 2.1a`, and
   a new check 4e fails when the scaffolded `CLAUDE.md` template passes 20,000 characters.
 

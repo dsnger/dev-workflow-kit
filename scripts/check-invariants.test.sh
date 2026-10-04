@@ -392,8 +392,9 @@ done
 #              fires`; no accept case moved (re-measured 2026-10-04 after the
 #              no-fence-before-the-next-section and rule-below-the-criteria cases were
 #              added).
-#   4e -> 6    every `4e:` reject fixture (5) and `4e template size parser failure
-#              fires`; no accept case moved (measured 2026-10-04). 4a, 4b and 4d were
+#   4e -> 7    every `4e:` reject fixture (6) and `4e template size parser failure
+#              fires`; no accept case moved (re-measured 2026-10-04 after the two-fence
+#              case was added). 4a, 4b and 4d were
 #              re-measured the same day after the shared fixtures changed: 20, 22, 22.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
@@ -882,6 +883,9 @@ te_case "4e: a heading inside the fence accepted"          0 '### 2.1 CLAUDE-md
 ````markdown
 ### Don'"'"'t guess
 ````'
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+te_case "4e: a short fence before an oversized one rejected"  1 "$(printf '### 2.1 CLAUDE-md\n\n````markdown\nexample\n````\n\n````markdown\n%s\n````' "$(te_body a 20000)")" \
+  'fences inside'
 te_case "4e: missing command file rejected"                1 "@GONE@"
 inject_case "4e template size parser failure fires" awk '*tpl-size-scan*' \
   'CLAUDE.md template size parser failed'

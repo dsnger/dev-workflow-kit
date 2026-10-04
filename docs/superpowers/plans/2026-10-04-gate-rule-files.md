@@ -15,6 +15,11 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-04-gate-rule-files-design.md` (Gate-A spec cycle `m45di86udd`, closed in `763b067`).
 
+**Executed 2026-10-04 (PR #41).** Some counts below describe the code as this plan approved it, and later steps changed them:
+- **The pointer:** a sentence was added during execution ("read it in parts to its last line"; spec §2), after the first AC-2 run failed once. The `CLAUDE.md` template is therefore 5039 characters, not 4820.
+- **PR #41 review:** check 4e gained a two-fence case, so the suite has 185 assertions and deleting 4e flips 7 cases, not 6. The migration rules gained a git-ignore precondition, a paired skip for a declined append, a broader "mixed" state, and the approved-payload hash.
+- **The embedded scripts are kept as approved.** The closing commits record what changed after them.
+
 ## Global Constraints
 
 - Worktree `/Users/daniel/DEVELOPMENT/APPS/dwk-gate-files`, branch `gate-rule-files`. Paths are relative to it.

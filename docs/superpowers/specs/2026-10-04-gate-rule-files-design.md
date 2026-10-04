@@ -72,6 +72,18 @@ instruction-file limit does not apply to it.
 
 ## §3 Existing projects: states, migration and failure states
 
+**Updated after implementation (PR #41 review, 2026-10-04).** Four rules below are
+superseded, and the command (`/workflow-init` 2.1) carries the current text:
+- **mixed** means §5 names `.claude/review-gates.md` anywhere without being the exact pointer;
+  **inline form** means it does not name that file. So nothing that points at the rules file
+  is moved into it.
+- **§5 absent:** a declined append skips both files, so no rules file is written that nothing
+  points to.
+- **Precondition:** the migration also requires that git does not ignore
+  `.claude/review-gates.md`. Otherwise it stops with its fix.
+- **Hash:** the payload is hashed as approved, including the user's edits, at the answer.
+  Step 4's read-back and step 5's rollback compare against that hash.
+
 `/workflow-init` already writes each target by Rule 2 (missing → write; identical → `unchanged`;
 different → show the diff and ask). Two targets now hold the rules, so their **combined** state
 decides what happens. `/workflow-init` reads both before writing either.
@@ -202,7 +214,8 @@ locale; the plan gives the mechanism.
 - **Budget: 20,000 characters.** About 5k after this change. That leaves room for §1–§4 to grow,
   and for a project's `AGENTS.md` and other instruction files within the 150.0k limit.
 - Over budget → a named failure with the measured count. A missing anchor or fence → a named
-  failure, never a skip.
+  failure, never a skip. More than one ````markdown fence in `### 2.1` → a named failure
+  (added in PR #41's review), because measuring the wrong fence is the fail-open direction.
 - **What it does not check, said in the checker:**
   - the rules template (loaded on demand, not always);
   - a project's own `AGENTS.md` or other instruction files, which `/workflow-init` does not write
