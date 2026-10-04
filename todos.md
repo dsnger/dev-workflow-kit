@@ -673,7 +673,9 @@ backlog.
       boundaries, roles, external systems and abuse paths. *Reopens when:* field use shows
       high-security content scattering incoherently across specs — that recurrence is the
       trigger, not a fresh opinion.
-- [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** Identifiers
+- [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** **In progress
+      2026-10-04:** `docs/superpowers/stories/2026-10-04-stable-acceptance-criterion-ids-story.md`
+      (one `AC-<n>` sequence, no `SEC-<n>`; the kit ships no plan template, so plans cite the IDs). Identifiers
       that survive from story to plan to review, so an acceptance criterion can be cited
       instead of re-described. *Trigger: the first story that runs under profiles* — the
       IDs exist to label what profiles produce, so the numbering scheme should meet a real

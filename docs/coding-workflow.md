@@ -73,7 +73,8 @@ the actual skills, commands, agent definitions, and hook messages of this plugin
 
 **1. Intake — from idea to story.** The front door turns a raw idea into a scoped
 story that captures *what* and defers *how*: the problem, the desired outcome, the
-acceptance criteria, which core invariants the change touches, the open questions,
+acceptance criteria (each with a permanent `AC-<n>` identifier), which core invariants
+the change touches, the open questions,
 a rough size, and a **profile** — risk and security relevance, confirmed by the human,
 with a validation mode derived from the two. The two axes **add** review lenses at the
 gates for a risky or security-relevant change (they never subtract a baseline question; the

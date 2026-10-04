@@ -67,6 +67,9 @@ cheap gate pass does not count — without changing what a pass is today until t
   measurable and which are permanently unknown.
 - Does run data stay per-clone (like `.context/`), or is any of it ever committed?
 - Is telemetry part of the shipped plugin (every consumer project) or repo-local first, like P8?
+- **Part 4's central question (2026-10-04, from the reviewer's assessment
+  `.context/sparring/20261004-101100-pr37-merge-and-p5-assessment.md`):** when does low effort
+  actually indicate an incomplete review? Few tokens or a short run alone do not answer it.
 - What minimum cost or duration makes a gate pass suspicious? Vision §10 proposes the signal but
   sets no number; calibration needs sub-stories 1 and 2 first.
 
