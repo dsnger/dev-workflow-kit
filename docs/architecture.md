@@ -7,10 +7,11 @@ subject — that lives in [`coding-workflow.md`](coding-workflow.md).
 ## Layout
 
 A selective view — the loaded surface plus the workflow's own project files. Repo
-furniture (`.gitignore`, `.claude/`, generated state) is omitted on purpose.
+furniture (`.gitignore`, `.claude/settings.json`, generated state) is omitted on purpose.
 
 ```
 README.md, MANIFEST.md, AGENTS.md, CLAUDE.md, todos.md
+.claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned
 .claude-plugin/marketplace.json

@@ -42,9 +42,10 @@ init_prompt_fixtures() { # $1 = fixture repo root
     } > "$pf"
   done
   # `docs/prompt-standards.md` got the section from the loop as well; harmless, 4c does
-  # not read that path. CLAUDE.md is not written by the loop and needs its own copy --
-  # and needs no `### 2.1`, since the whole file is the artifact there.
-  printf '# Fixture\n\n%s\n' "$SEV_LINE" > "$1/CLAUDE.md"
+  # not read that path. .claude/review-gates.md is not written by the loop and needs its
+  # own copy -- and needs no `### 2.1`, since the whole file is the artifact there.
+  mkdir -p "$1/.claude"
+  printf '# Fixture\n\n%s\n' "$SEV_LINE" > "$1/.claude/review-gates.md"
 }
 
 work=$(mktemp -d) || work=''
@@ -665,17 +666,17 @@ sev_put() { # $1 = path, $2 = body-or-sentinel
     *) printf '%s\n' "$2" > "$1" ;;
   esac
 }
-sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = CLAUDE.md, $4 = command file
+sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = .claude/review-gates.md, $4 = command file
   rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
     "$work/r/plugins/p/.claude-plugin"
   cp "$CHECKER" "$work/r/scripts/"
   init_prompt_fixtures "$work/r"
   printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
   printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
-  sev_put "$work/r/CLAUDE.md" "$3"
+  sev_put "$work/r/.claude/review-gates.md" "$3"
   sev_put "$work/r/plugins/dev-workflow/commands/workflow-init.md" "$4"
   out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
-  chmod 644 "$work/r/CLAUDE.md" 2>/dev/null
+  chmod 644 "$work/r/.claude/review-gates.md" 2>/dev/null
   if [ "$2" -eq 1 ]; then
     if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
     elif ! printf '%s' "$out" | grep -q "$SEV"; then
@@ -698,7 +699,7 @@ sev_tpl() {
 TPL_NONE=$(sev_tpl "nothing here")
 
 sev_case "4c: both copies stating the line accepted"      0 "@KEEP@" "@KEEP@"
-sev_case "4c: absent from CLAUDE.md rejected"             1 "# F" "@KEEP@"
+sev_case "4c: absent from review-gates.md rejected"       1 "# F" "@KEEP@"
 sev_case "4c: absent from the command file rejected"      1 "@KEEP@" "$TPL_NONE"
 sev_case "4c: absent from both rejected"                  1 "# F" "$TPL_NONE"
 sev_case "4c: twice in one file rejected"                 1 "# F
@@ -759,15 +760,15 @@ $SEV_LINE
 
 ### 2.3 later"
 sev_case "4c: absent terminator rejected"                 1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed '/^### 2\.2 next/d')"
-sev_case "4c: CLAUDE.md needs no 2.1 anchor"              0 "# F
+sev_case "4c: review-gates.md needs no 2.1 anchor"        0 "# F
 
 $SEV_LINE" "@KEEP@"
 
-sev_case "4c: missing CLAUDE.md rejected"                 1 "@GONE@" "@KEEP@"
+sev_case "4c: missing review-gates.md rejected"           1 "@GONE@" "@KEEP@"
 if [ "$(id -u)" -ne 0 ]; then
   # root satisfies -r on a mode-000 file, so the checker is right and the fixture would
   # be wrong; the suite's scan-error case guards the same way.
-  sev_case "4c: unreadable CLAUDE.md rejected"            1 "@LOCK@" "@KEEP@"
+  sev_case "4c: unreadable review-gates.md rejected"      1 "@LOCK@" "@KEEP@"
 fi
 
 # The parser branch, through the same PATH seam the 4a/4b stage failures use. The 4c awk

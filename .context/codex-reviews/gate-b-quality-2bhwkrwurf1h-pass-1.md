@@ -1,0 +1,2 @@
+MINOR | high | docs/architecture.md:9-10 | The architecture layout still categorizes all of .claude/ as omitted repo furniture, although this change moves the mandatory review rules into .claude/review-gates.md | The architecture guide now misclassifies and omits a principal workflow instruction file, contrary to the requirement to keep location-dependent documentation accurate | List .claude/review-gates.md in the layout and narrow the furniture exclusion to configuration such as .claude/settings.json.
+END OF FINDINGS (1 total)
