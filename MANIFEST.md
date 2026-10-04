@@ -33,7 +33,8 @@ name. It is not. The three:
 - **The inline copy inside `plugins/dev-workflow/commands/workflow-init.md`** — the
   *operative* scaffold, the only one a user's project ever receives. Invariant 8 keeps it
   inline in the command body, so nothing reads a template off disk. It covers **§1–§5**,
-  and `/workflow-init` §2.1 scaffolds it by that name.
+  and `/workflow-init` §2.1 scaffolds it by that name. Since 0.16.0 its §5 is a pointer:
+  the rules are the §2.1a template, scaffolded as `.claude/review-gates.md`.
 - **The repo-root `CLAUDE.md`** — this project's own instance of the rules, governing
   work in this repo. It is not a template and is not read by `/workflow-init`.
 

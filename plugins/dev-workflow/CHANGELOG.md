@@ -22,6 +22,28 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.16.0
+
+- **The gate rules get their own scaffolded file.** `/workflow-init`'s `CLAUDE.md` template
+  keeps the `## 5. Cross-Model Review` heading, which the hook greps, but its body is now a
+  pointer; the rules (about 122k characters) are a new `### 2.1a` template written to
+  `.claude/review-gates.md`. Inline, they put an initialized project near or over Claude
+  Code's instruction-file limit. The rules are unchanged except four sentences that named
+  their own location; the command lists them. The pointer adds two things this
+  repository's pointer lacks: the file is longer than one read returns, so read it in
+  parts to its last line (a verification run showed an agent searching the rest
+  instead); and if the file is missing, the project has no gate rules, so stop and
+  restore it.
+- **Existing projects are migrated, never silently.** `/workflow-init` reads both targets
+  first and classifies `CLAUDE.md` §5: pointer form, inline, mixed, empty, absent or
+  ambiguous. An inline §5 with no rules file is offered a migration that moves the
+  project's own text (not the template's). It needs a clean, tracked `CLAUDE.md`, re-checks
+  it before writing, requires a byte-equal read-back of the new file, and rolls back from
+  git on failure. Two definitions, a mixed or empty §5, or an unusable rules file stop and
+  are reported. The degraded-mode `INACTIVE` notice stays at the top of §5 in `CLAUDE.md`.
+- `scripts/check-invariants.sh`: check 4c's placement rule now anchors on `### 2.1a`, and
+  a new check 4e fails when the scaffolded `CLAUDE.md` template passes 20,000 characters.
+
 ## 0.15.0
 
 - **Stable acceptance-criterion IDs in the `intake` story template.** Every criterion is

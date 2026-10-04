@@ -170,7 +170,11 @@ reader can judge whether it still holds.
 8. **`/workflow-init`'s templates stay inline** in the command body. Claude Code does
    not expand `${CLAUDE_PLUGIN_ROOT}` inside command markdown (verified), and the cache
    path is not an API — a command that read templates from disk would break the first
-   time that layout changed.
+   time that layout changed. Inline does not mean always loaded: the scaffolded
+   `CLAUDE.md` holds §5 as a pointer, and the rules go to `.claude/review-gates.md`
+   (template `### 2.1a`), because inline they would put an initialized project past
+   Claude Code's instruction-file limit. Check 4e in `scripts/check-invariants.sh` fails
+   when the `CLAUDE.md` template passes 20,000 characters; it measures that template only.
 9. **`/workflow-init` never overwrites silently.** Idempotent: missing → write;
    identical → report unchanged; present and different → show the diff and ask;
    additive files (`.gitattributes`, `.mcp.json`, …) → merge. Scaffolded project files
@@ -272,7 +276,7 @@ Every command below was run in this session and observed to exit 0.
 | typecheck | n/a — no typed sources (shell, four untyped Python reports, markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
-| invariant checks (5 pinning, 6 manifest, prompt conformance) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance, template size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
 

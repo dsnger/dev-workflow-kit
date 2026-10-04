@@ -44,6 +44,10 @@ keeping it is what leaves the hook untouched. The body is the pointer:
 - Read that file in full before any work it governs: any Gate A or Gate B pass, resuming or
   closing a cycle, any commit, preparing a merge, and deciding a change needs no gate.
 - Every reference to §5 (its Mechanics, Profiles, closure ordering or gate prompt) means that file.
+- **Added during implementation (2026-10-04), not in this repository's pointer:** the file is
+  longer than one read returns, so read it in parts until its last line; a search does not
+  replace reading. The first AC-2 run (§5) had one of twelve sessions read about 880 of 1505
+  lines and search the rest.
 - **New, not in this repository's pointer:** if that file is missing, this project has no gate
   rules. Stop before any work the rules govern, and restore the file (`/workflow-init` writes it).
   Without this sentence, a missing file leaves an agent with a pointer to nothing and no

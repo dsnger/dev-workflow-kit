@@ -22,15 +22,16 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The four prompt-conformance
-# checks below are bracketed by `# --- BEGIN check 4a ---` / `# --- END check 4a ---`
-# markers -- and likewise for 4b, 4c and 4d -- so a scratch copy can be neutered cleanly.
+# checks below, and the size-budget check 4e, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d and 4e -- so a scratch
+# copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
 #   TMP=$(mktemp -d) || exit 1
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, then 4d
+#   chk=4a   # then 4b, 4c, 4d, then 4e
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -489,9 +490,12 @@ fi
 # guarantee: the line can sit in the command file's own prose, outside the template that
 # `/workflow-init` actually scaffolds, and the count is still 1. Verified, not theorised.
 # Only the template region reaches a user's project, so the command file gets a placement
-# rule anchored on its `### 2.1` scaffold heading and terminated by the NEXT NUMBERED
-# heading -- not the next `###`, because the template contains its own unnumbered
-# `### Profiles` and `### Mechanics` subsections and would truncate the range.
+# rule anchored on its `### 2.1a` heading -- the gate-rules template, which `/workflow-init`
+# writes to `.claude/review-gates.md` -- and terminated by the NEXT NUMBERED heading -- not
+# the next `###`, because the template contains its own unnumbered `### Profiles` and
+# `### Mechanics` subsections and would truncate the range. The `### 2.1` CLAUDE.md
+# template is outside the range on purpose: since 0.16.0 it holds only a pointer, and a
+# severity line left there would ship in the wrong file.
 #
 # The repo's own copy is `.claude/review-gates.md` (CLAUDE.md §5, moved out for size) and
 # needs no placement rule: the whole file is the artifact.
@@ -509,7 +513,7 @@ SEV_CANON='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no othe
 # anchor drifting is worth nothing.
 severity_rule_scan() { # $1 = file
   awk -v canon="$SEV_CANON" '                       # sev-canon-count
-    /^### 2\.1[[:space:]]/ { intpl = 1; heads += 1; next }
+    /^### 2\.1a[[:space:]]/ { intpl = 1; heads += 1; next }
     intpl && /^### [0-9]/  { intpl = 0; term = $2; next }
     { line = $0
       sub(/^[ \t]*/, "", line); sub(/^> ?/, "", line); sub(/^[ \t]*/, "", line)
@@ -550,18 +554,18 @@ for sev_file in .claude/review-gates.md plugins/dev-workflow/commands/workflow-i
     # skipping the rule -- the safe direction, and the one an anchor-based check has to
     # get right to be worth having.
     if [ "$sev_heads" -ne 1 ]; then
-      fail "Prompt standards: $sev_file has $sev_heads '### 2.1' scaffold headings, so the closed severity set's placement cannot be checked." \
+      fail "Prompt standards: $sev_file has $sev_heads '### 2.1a' gate-rules template headings, so the closed severity set's placement cannot be checked." \
            "expected exactly one"
     elif [ "$sev_term" != 2.2 ]; then
       # Loud, not lenient. A renumbered or renamed boundary is precisely when the range
       # silently widens, so the check refuses rather than measuring a range it cannot
       # trust. Fixing it is renaming a heading back, or updating this expectation
       # deliberately.
-      fail "Prompt standards: $sev_file's '### 2.1' section is terminated by '$sev_term', not '2.2', so the closed severity set's placement cannot be checked." \
+      fail "Prompt standards: $sev_file's '### 2.1a' section is terminated by '$sev_term', not '2.2', so the closed severity set's placement cannot be checked." \
            "the range would silently widen past the scaffolded template"
     elif [ "$sev_t" -ne 1 ]; then
-      fail "Prompt standards: $sev_file states the closed severity set outside the scaffolded CLAUDE.md template, so an initialized project would not receive it." \
-           "expected it inside the '### 2.1' section"
+      fail "Prompt standards: $sev_file states the closed severity set outside the scaffolded gate-rules template, so an initialized project would not receive it." \
+           "expected it inside the '### 2.1a' section"
     fi
   fi
 done
@@ -642,6 +646,82 @@ else
   fi
 fi
 # --- END check 4d ---
+
+# --- BEGIN check 4e ---
+# Size budget for the scaffolded CLAUDE.md. Claude Code warns when a project's always-loaded
+# instruction files pass a combined limit (150.0k characters when this was written; its docs
+# do not state the number). The gate rules alone are about 122k characters, which is why
+# `/workflow-init` scaffolds them into `.claude/review-gates.md` and leaves only a pointer in
+# CLAUDE.md. This check keeps the CLAUDE.md template small enough that a project's own
+# AGENTS.md and other instruction files still fit.
+#
+# It measures CHARACTERS, not bytes, because the limit counts characters: the body of the
+# first ````markdown fence inside `### 2.1`, up to the next line that is exactly ````. The
+# count runs under a UTF-8 locale, probed first; without one it fails, because a byte count
+# would read every non-ASCII character as two or three.
+#
+# What it does NOT check: the gate-rules template (`### 2.1a`, read on demand, not always
+# loaded); a project's own AGENTS.md or other instruction files, which `/workflow-init` does
+# not write from a fixed template; this repository's own instruction files; and whether
+# Claude Code's limit is still 150.0k.
+TPL_FILE=plugins/dev-workflow/commands/workflow-init.md
+TPL_BUDGET=20000
+
+# Prints the fence body, then a last line `@@STATUS <anchors> <opened> <closed>`. Headings
+# inside the fence are template text, not section boundaries. Returns 2 if awk itself failed.
+tpl_size_scan() { # $1 = file
+  awk '                                            # tpl-size-scan
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 } else print; next }
+    /^### 2\.1[[:space:]]/ { heads += 1; in21 = 1; next }
+    in21 && /^### / { in21 = 0; next }
+    in21 && !done && $0 == "````markdown" { infence = 1; opened += 1; next }
+    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+  ' "$1" || return 2
+}
+
+if [ ! -f "$TPL_FILE" ]; then
+  fail "CLAUDE.md template size: $TPL_FILE is missing, so the budget cannot be checked." \
+       "the scaffolded template lives there"
+elif [ ! -r "$TPL_FILE" ]; then
+  fail "CLAUDE.md template size: $TPL_FILE is unreadable, so the budget cannot be checked." \
+       "check permissions"
+else
+  tpl_out=$(tpl_size_scan "$TPL_FILE"); tpl_st=$?
+  if [ "$tpl_st" -ne 0 ]; then
+    fail "CLAUDE.md template size parser failed; results are not trustworthy." \
+         "awk exited $tpl_st on $TPL_FILE"
+  else
+    # Word splitting is the point: the status line is four space-separated fields.
+    # shellcheck disable=SC2046
+    set -- $(printf '%s\n' "$tpl_out" | tail -n 1)
+    if [ "$2" -ne 1 ]; then
+      fail "CLAUDE.md template size: $TPL_FILE has $2 '### 2.1' headings, so the template cannot be located." \
+           "expected exactly one"
+    elif [ "$3" -eq 0 ]; then
+      fail "CLAUDE.md template size: no \`\`\`\`markdown fence inside '### 2.1' in $TPL_FILE." \
+           "the template must be fenced"
+    elif [ "$4" -eq 0 ]; then
+      fail "CLAUDE.md template size: the template fence in '### 2.1' is never closed." \
+           "expected a line that is exactly \`\`\`\`"
+    else
+      tpl_loc=''
+      for l in C.UTF-8 en_US.UTF-8; do
+        if [ "$(printf '\303\251' | LC_ALL=$l wc -m | tr -d ' ')" = 1 ]; then tpl_loc=$l; break; fi
+      done
+      if [ -z "$tpl_loc" ]; then
+        fail "CLAUDE.md template size: no UTF-8 locale (C.UTF-8 or en_US.UTF-8), so characters cannot be counted." \
+             "a byte count would overstate every non-ASCII character"
+      else
+        tpl_chars=$(printf '%s\n' "$tpl_out" | sed '$d' | LC_ALL=$tpl_loc wc -m | tr -d ' ')
+        if [ "$tpl_chars" -gt "$TPL_BUDGET" ]; then
+          fail "CLAUDE.md template size: the scaffolded CLAUDE.md is $tpl_chars characters, over the $TPL_BUDGET budget." \
+               "keep §5 a pointer; the rules belong in the '### 2.1a' template"
+        fi
+      fi
+    fi
+  fi
+fi
+# --- END check 4e ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"
