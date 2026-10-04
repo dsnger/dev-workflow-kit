@@ -24,7 +24,9 @@ the checklist it scaffolds (`docs/prompt-standards.md`).
    `# TODO(stack):` marker, leave the marker in and name it in the closing checklist.
    A plausible-looking command that was never run is worse than an honest TODO.
 5. **Report what happened per file** — `written` / `unchanged` / `merged` /
-   `skipped (user)` / `asked, overwrote`. No silent no-ops.
+   `skipped (user)` / `asked, overwrote`, and for the two gate-rules targets also
+   `migrated`, a `migration failed …` state or a `stopped: …` state (2.1). No silent
+   no-ops.
 
 ## Step 1 — Preflight: check every prerequisite, then say what's missing
 
@@ -189,6 +191,119 @@ If a `CLAUDE.md` already exists with unrelated project content, do not overwrite
 offer to **append** sections §1–§5 (renumbering only if the file already uses those
 numbers) and say so in the report.
 
+**The two gate-rules targets.** This template's §5 is only a pointer; the rules are the
+`### 2.1a` template, written to `.claude/review-gates.md`. **Read both targets before writing
+either, and act on their combined state.** Why: a project initialized before 0.16.0 carries
+the rules inline in §5, and writing the two files one by one could leave it with two
+definitions of the rules, or none — and the rules themselves stop on either.
+
+1. **Find §5 in an existing `CLAUDE.md`.** It starts at a line matching
+   `^#{1,6}[[:space:]]+([0-9]+\.)?[[:space:]]*Cross-Model Review` (the gate hook's own
+   pattern). It ends before the first of: the next heading of the same or a higher level;
+   the scaffolded footer — a line that is exactly `---`, one blank line, then a line
+   beginning `**These guidelines are working if:**`; the end of the file. A `---` line on
+   its own does not end it: a project may use one inside its rules, and ending there would
+   strand the rest.
+2. **Classify §5:**
+   - **pointer form** — the body after the heading line is byte-identical to the pointer
+     under §5 in the `CLAUDE.md` template below, optionally preceded by exactly the `INACTIVE` notice
+     from 2.13 and one blank line;
+   - **mixed** — the body names `.claude/review-gates.md` anywhere but is not pointer form.
+     An edited or re-wrapped pointer and a pointer pasted above rules that are still inline
+     look the same here, so neither is assumed, and nothing that points at the rules file
+     is ever moved into it as if it were the rules;
+   - **inline form** — the body does not name `.claude/review-gates.md` and is not empty;
+   - **empty** — the heading has no body; **absent** — no matching heading;
+     **ambiguous** — more than one matching heading.
+
+   Classify `.claude/review-gates.md` as **missing**, **usable** (a readable regular file
+   with at least one non-blank line), or **unusable** — empty, all blank, unreadable, or not
+   a regular file; name which.
+3. **Act on the pair:**
+
+   | `CLAUDE.md` | `.claude/review-gates.md` | Do | Report |
+   |---|---|---|---|
+   | missing | missing | write both templates | `written` ×2 |
+   | missing | usable | write `CLAUDE.md`; the rules file by Rule 2 | per file |
+   | §5 absent | missing or usable | offer the append above. **Declined:** skip both files, so no rules file is written that nothing points to. **Accepted:** append, then the rules file by Rule 2 | `skipped (user)` ×2, or per file |
+   | pointer form | missing | write the rules file, and say the project had no gate rules until now | `written` + that note |
+   | pointer form | usable | each file by Rule 2 | per file |
+   | inline form | missing | offer the migration (step 4) | `migrated`, `skipped (user)` or a failure state |
+   | inline form | usable | **stop**: two definitions — show both paths and offer the diff between them; the user chooses | `stopped: two definitions` |
+   | mixed | any | **stop**: show §5's line range against the template pointer | `stopped: §5 neither pointer nor rules` |
+   | empty | any | **stop**: §5 defines nothing | `stopped: §5 empty` |
+   | ambiguous | any | **stop**: name each matching heading and its line | `stopped: ambiguous §5` |
+   | any | unusable | **stop** | `stopped: rules file unusable (<cause>)` |
+
+   A **stop** writes neither file. The rest of the run goes on with the other targets, and
+   the closing report lists every stop with its cause and the fix that clears it, so the
+   next run can proceed:
+   - **two definitions** — keep the copy the project means, delete or empty the other's
+     rules (remove `.claude/review-gates.md`, or reduce §5 to the pointer), then re-run;
+   - **§5 neither pointer nor rules** — make §5 either exactly the template pointer or the
+     full inline rules, then re-run;
+   - **§5 empty** — restore the §5 body (from git history or the template), then re-run;
+   - **ambiguous §5** — keep one matching heading, rename or remove the others, then re-run;
+   - **rules file unusable** — empty or all blank: restore its content from git history,
+     or delete it so the next run writes it fresh; unreadable: fix its permissions; not a
+     regular file (a directory or a dangling link): move it aside. Then re-run. Nothing
+     here is overwritten automatically, because the file may hold the project's only copy
+     of its rules.
+4. **The migration** (inline form, no rules file):
+   1. **Preconditions:** `CLAUDE.md` is tracked by git with no uncommitted changes,
+      `.claude/review-gates.md` does not exist, and git would not ignore it
+      (`git check-ignore -q .claude/review-gates.md` finds no match). Otherwise stop with
+      `stopped: commit CLAUDE.md first`, `stopped: .claude/review-gates.md is git-ignored`
+      (fix: un-ignore that path, then re-run) or the table's state, and write nothing. Why:
+      git then holds the original, which is what makes step 5's rollback safe; and an
+      ignored rules file would leave every clone with a pointer to nothing.
+   2. **Show the change**, and record the SHA-256 of the current `CLAUDE.md`.
+      - In `CLAUDE.md`, exactly the §5 range is replaced by the template's pointer. If the
+        body begins with exactly the `INACTIVE` notice from 2.13 and one blank line, that
+        notice stays above the pointer and is not moved: it must stay always loaded.
+      - The payload for `.claude/review-gates.md` is **the project's own §5 body**, minus
+        such a notice — not
+        this template's, because a project may have adapted its rules; moving them is not
+        updating them — under the level-1 heading and the two-line note from 2.1a, with the
+        four relocation edits from 2.1a applied wherever the exact "before" sentence is
+        present.
+      - List each relocation edit whose sentence was not found, and every remaining line of
+        the payload that names `CLAUDE.md`. They stay as they are unless the user edits them
+        before answering, so a self-reference no exact edit caught is decided by a person.
+      - Where §5 ran to the end of the file, say so in words: everything after the heading
+        moves.
+   3. **Ask:** migrate / skip. Skip writes nothing; report `skipped (user)` and warn that
+      the inline rules keep the project near or over the instruction-size limit. On
+      migrate, the payload is final as approved, including any edits the user made, and
+      record **its** SHA-256 now: that is the value step 4's read-back and step 5's
+      rollback compare against.
+   4. **On migrate:**
+      - re-check the preconditions, and that `CLAUDE.md`'s SHA-256 still equals the one
+        recorded. If not, someone edited it while you asked: stop with
+        `stopped: CLAUDE.md changed while asking` and write nothing;
+      - create `.claude/review-gates.md` only if it is still absent;
+      - read it back in full; its SHA-256 must equal the approved payload's. A short, partial or
+        different read-back is a failure — this is what stops a truncated move from
+        removing the only copy of the rules;
+      - only then write the new `CLAUDE.md`, read it back, and classify it: §5 must be
+        pointer form, and every byte outside the §5 range must equal the original.
+   5. **On any failure after the first write, roll back:**
+      - restore `CLAUDE.md` from git (`git checkout -- CLAUDE.md`), which step 1 made equal
+        to the original;
+      - delete `.claude/review-gates.md` **only if** its content is still exactly the
+        approved payload. A file that differs may be a short write of your own or another writer's
+        file; you cannot tell which, so leave it, and the rollback is incomplete.
+
+      Report `migration failed: <step> (<cause>), rolled back` only when `CLAUDE.md` is
+      restored and the rules file is gone. Otherwise report
+      `migration failed, rollback incomplete` with what each file now holds —
+      §5's form, and whether the rules file exists — and the git command that restores
+      `CLAUDE.md`. Retry nothing silently: two definitions or none is the state the rules
+      stop on, so it must never be left without a report that names it.
+   6. Bringing the moved rules up to this template's version is **not** part of the
+      migration. A later run offers it by Rule 2's diff on `.claude/review-gates.md`, so the
+      user sees content changes apart from the move.
+
 > **Prompt-standards item 1 for the scaffolded `CLAUDE.md`: n/a, and why.** The file this
 > template writes is model-agnostic by design — its executing model is whatever the reader of
 > that project runs — so a `Target model:` line inside it would be false in every repo it lands
@@ -282,6 +397,63 @@ Ground progress claims: before reporting a step as done, audit the claim against
 The work loop includes the review gates: **spec ready → Gate A (spec) → Gate-A closing act → plan ready → Gate A (plan) → Gate-A closing act → execute → tests green → Gate B → Gate-B closing act** (see §5, which states when each act may be performed and what it is).
 
 ## 5. Cross-Model Review (Codex) — TWO MANDATORY GATES
+
+**The full rules live in `.claude/review-gates.md`. Read that file in full before any
+work it governs: any Gate A or Gate B pass, resuming or closing a cycle, any commit,
+preparing a merge, and deciding a change needs no gate.** Every reference to §5 (its
+Mechanics, Profiles, closure ordering or gate prompt) means that file.
+
+**It is longer than one read returns.** Read it in parts, each starting where the last one
+stopped, until you have seen its last line. A search finds a passage; it does not tell you
+what the rest of the rules require.
+
+**If that file is missing, this project has no gate rules.** Stop before any work they
+govern, and restore it: `/workflow-init` writes it.
+
+Why it is separate: inline, the rules push the instruction files past Claude Code's size
+limit.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+Project architecture, stack-specific patterns, and invariants live in @AGENTS.md
+(single source of truth — also read directly by Codex and the PR review bots). The
+Cross-Model Review gates (§5) check against the invariants there.
+````
+
+### 2.1a `.claude/review-gates.md` — the gate rules
+
+The full text of §5, which the `CLAUDE.md` template above reduces to a pointer. Write it by
+the Rules above, and decide it **together with** `CLAUDE.md` as "The two gate-rules
+targets" (in 2.1) says. Why a separate file: inline, these rules are about 122k characters,
+and Claude Code warns when a project's always-loaded instruction files pass its combined
+limit (150.0k characters when this was written). This file is read when the pointer
+sends the agent here, not at every session start. It lives under `.claude/`, so the gate
+hook treats it as a prompt, and an edit to it fires full Gate B.
+
+**What differs from the inline §5 it replaces**, so a reader can check that nothing else
+did: the heading is level 1, the two-line note below it is new, and four sentences that
+named the rules' own location now name this file:
+
+| Before (inline in `CLAUDE.md`) | After (in this file) |
+|---|---|
+| so these rules bind only over the text a project's `CLAUDE.md` actually contains, and a | so these rules bind only over the text a project's `CLAUDE.md` and `.claude/review-gates.md` actually contain, and a |
+| first — `Minor`, `minor` and `MINOR` are all `MINOR`, because `CLAUDE.md` Mechanics | first — `Minor`, `minor` and `MINOR` are all `MINOR`, because this file's Mechanics |
+| nothing that any mandatory rule in this file or in `AGENTS.md` requires.** | nothing that any mandatory rule in this file, in `CLAUDE.md` or in `AGENTS.md` requires.** |
+| **"Mandatory" is not limited to this file.** | **"Mandatory" is not limited to these files.** |
+
+> **Prompt-standards item 1 for the scaffolded `.claude/review-gates.md`: n/a, and why** —
+> the same reason as for the `CLAUDE.md` template above: its executing model is whatever
+> the project runs. This note sits outside the fence so it never scaffolds.
+
+````markdown
+# Cross-Model Review (Codex) — TWO MANDATORY GATES
+
+This is `CLAUDE.md` §5 in full, moved here unchanged except where the text named its own
+location. Everything below that says "this section" or "§5" means this file.
 
 Independent second opinion at two gates. Easiest steps to skip, so the discipline is
 yours — a non-blocking hook (shipped by the `dev-workflow` plugin) reminds you at
@@ -399,7 +571,7 @@ fallback covers only where it is not.
 
 **Downstream has no shipping commit.** Adoption binds from the `/workflow-init` run that
 actually writes the text — which may write nothing, be declined, or be merged in part —
-so these rules bind only over the text a project's `CLAUDE.md` actually contains, and a
+so these rules bind only over the text a project's `CLAUDE.md` and `.claude/review-gates.md` actually contain, and a
 partial adoption can persist undetected. A project taking the floor rule without the
 severity test gets a floor whose docs-only question the severity test is what settles.
 **A partial adoption can leave a project's floor undefined or self-contradictory.** The rule
@@ -1138,7 +1310,7 @@ Blocker/Major visible" as clean.
 trimming the ASCII whitespace the finding format puts either side of each separator; a field
 that is empty or all whitespace is a **structural** failure, so the line is INCOMPLETE and is
 never normalized. Otherwise the field is matched **case-insensitively** against the four tokens
-first — `Minor`, `minor` and `MINOR` are all `MINOR`, because `CLAUDE.md` Mechanics
+first — `Minor`, `minor` and `MINOR` are all `MINOR`, because this file's Mechanics
 legitimately spells them in Title case and a model copying that spelling is doing as it was
 told, not drifting. A field that matches no token case-insensitively, and is non-empty, is
 read as `MAJOR`. Every **structural** failure stays INCOMPLETE — a malformed
@@ -1749,13 +1921,13 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   was already the human's to make about something genuinely optional. It is **never** the answer to a
   below-floor pass, an unclean final pass, a `STOP and surface`, a Gate-A or Gate-B
   obligation, or a profile-derived evidence requirement — and more generally **it authorizes
-  nothing that any mandatory rule in this file or in `AGENTS.md` requires.** Those have their own terminal actions and this paragraph changes none of them: on a STOP you
+  nothing that any mandatory rule in this file, in `CLAUDE.md` or in `AGENTS.md` requires.** Those have their own terminal actions and this paragraph changes none of them: on a STOP you
   still stop, and **neither a human's general assent nor this record** lets an agent close or
   continue a cycle. **The answers a suspension asks for are not assent of that kind**: they are the
   answers the closure ordering prescribes, and both which answers those are and what they produce are
   stated there.
 
-  **"Mandatory" is not limited to this file.** A rule in `AGENTS.md`, a project doc, CI, a
+  **"Mandatory" is not limited to these files.** A rule in `AGENTS.md`, a project doc, CI, a
   branch policy or the platform is equally out of reach — under **Wait for**,
   `docs/pr-review-bots.md` requires a bot review unless an explicit recorded human decision
   permits proceeding without it, and this form is not that decision. If you are reaching for it to get past something mandatory, the answer
@@ -1783,16 +1955,6 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   reworded or unrecognized shape still counts fail-open. Do not reason from the counter
   either way — an incomplete pass is discounted whatever it says. Counter and workspace
   state persist in `.context/`; the *pass* does not.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
----
-
-Project architecture, stack-specific patterns, and invariants live in @AGENTS.md
-(single source of truth — also read directly by Codex and the PR review bots). The
-Cross-Model Review gates (§5) check against the invariants there.
 ````
 
 ### 2.2 `docs/hardening-log.md` — the empty ledger
@@ -2309,7 +2471,8 @@ than no hook. Instead, degrade explicitly:
 1. Write `.context/codex-gate.off` so the hook stays silent (it keeps classifying and
    tracking state, so re-enabling later lands on counters carrying the same semantics
    as gate-on — never evidence that a review happened).
-2. Add one line at the very top of §5 in the scaffolded `CLAUDE.md`:
+2. Add one line at the very top of §5 in the scaffolded `CLAUDE.md`, above the pointer
+   (not in `.claude/review-gates.md`, which is read only on demand):
 
    ```markdown
    > **INACTIVE — Codex not configured; the gates below do not run.** Re-enable: set up
@@ -2469,6 +2632,7 @@ Prerequisites:
 
 Scaffolded:
   CLAUDE.md                        written
+  .claude/review-gates.md          written
   AGENTS.md                        written (3 TODOs — see checklist)
   docs/hardening-log.md            written (empty ledger)
   docs/hardening-taxonomy.md       written (no classes yet)

@@ -118,8 +118,9 @@ smallest that matches your intent:
    skippable at any level.
 3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable;
    state keeps tracking, so nothing goes stale).
-4. **Leave for good:** remove §5 from the project's `CLAUDE.md` (and
-   `.context/codex-gate.on`) — the project reads as not adopted again. The other
+4. **Leave for good:** remove §5 from the project's `CLAUDE.md`, delete
+   `.claude/review-gates.md` and `.context/codex-gate.on` — the project reads as not
+   adopted again. The other
    scaffolds (ledger, CI, `AGENTS.md`) work fine without the gates.
 5. **Machine-wide:** `claude plugin disable dev-workflow`.
 

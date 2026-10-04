@@ -35,10 +35,12 @@ init_prompt_fixtures() { # $1 = fixture repo root
       i=1
       while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
       printf '\n## After\n\nReviewed against all 12 items.\n'
-      # 4c: the command file needs the line INSIDE a `### 2.1` scaffold section, because
-      # only that region is written into an initialized project. A copy anywhere else in
-      # the file satisfies the duplicate count and still ships nothing.
-      printf '\n### 2.1 CLAUDE-md\n\n%s\n\n### 2.2 next\n' "$SEV_LINE"
+      # 4c: the command file needs the line INSIDE the `### 2.1a` gate-rules section,
+      # because only that region is written into an initialized project's rules file. A
+      # copy anywhere else satisfies the duplicate count and still ships nothing.
+      # 4e: `### 2.1` needs a small fenced CLAUDE.md template, or every fixture fails the
+      # size check on a missing fence before reaching its own assertion.
+      printf '\n'; tpl_sections "$TPL_OK" "$SEV_LINE"
     } > "$pf"
   done
   # `docs/prompt-standards.md` got the section from the loop as well; harmless, 4c does
@@ -49,6 +51,18 @@ init_prompt_fixtures() { # $1 = fixture repo root
   # 4d: a minimal valid intake story template, for the same isolation reason.
   mkdir -p "$1/plugins/dev-workflow/skills/intake"
   ac_skill "$(ac_rows 3)" > "$1/plugins/dev-workflow/skills/intake/SKILL.md"
+}
+# A valid `### 2.1` section: a heading and a small fenced CLAUDE.md template.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+TPL_OK='### 2.1 CLAUDE-md
+
+````markdown
+# T
+````'
+# The three template sections of a command file: $1 is the whole `### 2.1` section, $2 goes
+# inside `### 2.1a`, and $3, if given, after `### 2.2` (outside both templates).
+tpl_sections() {
+  printf '%s\n\n### 2.1a review-gates\n\n%s\n\n### 2.2 next\n\n%s\n' "$1" "$2" "${3:-}"
 }
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
@@ -369,14 +383,19 @@ done
 #              controls, and the two stage-failure fixtures that reach their stage only
 #              through 4b -- `checklist parser failure fires` and
 #              `4b claim validator failure fires`.
-#   4c -> 19   every `4c:` reject fixture (18) and
-#              `4c canonical-line parser failure fires`. NO accept case moved, which is
+#   4c -> 20   every `4c:` reject fixture (19) and
+#              `4c canonical-line parser failure fires` (re-measured 2026-10-04 after the
+#              `### 2.1a` anchor and the CLAUDE.md-template case). NO accept case moved, which is
 #              the second half of the check and the one a non-empty flip set alone does
 #              not establish.
 #   4d -> 22   every `4d:` reject fixture (21) and `4d AC-<n> template parser failure
 #              fires`; no accept case moved (re-measured 2026-10-04 after the
 #              no-fence-before-the-next-section and rule-below-the-criteria cases were
 #              added).
+#   4e -> 7    every `4e:` reject fixture (6) and `4e template size parser failure
+#              fires`; no accept case moved (re-measured 2026-10-04 after the two-fence
+#              case was added). 4a, 4b and 4d were
+#              re-measured the same day after the shared fixtures changed: 20, 22, 22.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -711,12 +730,13 @@ sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = .claude/review-gates.md, 
 }
 
 # The command file must keep its checklist or the case fails 4b instead of 4c.
-# $1 goes INSIDE the `### 2.1` section; $2, if given, after it (outside the template).
+# $1 goes INSIDE the `### 2.1a` section; $2, if given, after `### 2.2` (outside the
+# template). $3, if given, replaces the valid `### 2.1` section.
 sev_tpl() {
   printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
   i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
   printf '\n## After\n\nReviewed against all 12 items.\n\n'
-  printf '### 2.1 CLAUDE-md\n\n%s\n\n### 2.2 next\n\n%s\n' "$1" "${2:-}"
+  tpl_sections "${3:-$TPL_OK}" "$1" "${2:-}"
 }
 TPL_NONE=$(sev_tpl "nothing here")
 
@@ -762,10 +782,19 @@ sev_case "4c: line inside the scaffolded template accepted"  0 "@KEEP@" \
   "$(sev_tpl "$SEV_LINE")"
 # The anchor's own failure modes fail LOUDLY rather than skipping the placement rule --
 # the safe direction, and the thing an anchor-based check must get right.
-sev_case "4c: missing 2.1 anchor rejected"                1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed 's/^### 2\.1.*/## not an anchor/')"
-sev_case "4c: duplicate 2.1 anchor rejected"              1 "@KEEP@" "$(sev_tpl "$SEV_LINE")
-### 2.1 CLAUDE-md again
+sev_case "4c: missing 2.1a anchor rejected"               1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed 's/^### 2\.1a.*/## not an anchor/')"
+sev_case "4c: duplicate 2.1a anchor rejected"             1 "@KEEP@" "$(sev_tpl "$SEV_LINE")
+### 2.1a review-gates again
 "
+# The CLAUDE.md template (`### 2.1`) is outside the range: since 0.16.0 it is a pointer,
+# and a severity line there would ship in CLAUDE.md, not in the rules file.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+sev_case "4c: line in the CLAUDE.md template rejected"    1 "@KEEP@" "$(sev_tpl "nothing here" "" '### 2.1 CLAUDE-md
+
+````markdown
+# T
+'"$SEV_LINE"'
+````')"
 # The template's own unnumbered subsections must not truncate the range: terminating on
 # any `###` instead of a NUMBERED one would put a line after them outside the template.
 sev_case "4c: line after an unnumbered subsection accepted" 0 "@KEEP@" \
@@ -782,7 +811,7 @@ $SEV_LINE
 
 ### 2.3 later"
 sev_case "4c: absent terminator rejected"                 1 "@KEEP@" "$(sev_tpl "$SEV_LINE" | sed '/^### 2\.2 next/d')"
-sev_case "4c: review-gates.md needs no 2.1 anchor"        0 "# F
+sev_case "4c: review-gates.md needs no 2.1a anchor"        0 "# F
 
 $SEV_LINE" "@KEEP@"
 
@@ -797,6 +826,69 @@ fi
 # is identified by its `sev-canon-count` marker comment.
 inject_case "4c canonical-line parser failure fires" awk '*sev-canon-count*' \
   'closed severity set parser failed'
+
+# --- Check 4e, the size budget of the scaffolded CLAUDE.md template ---------------------
+#
+# Each case replaces the `### 2.1` section of an otherwise valid command file. The budget is
+# 20000 characters of fence body, each line counted with its newline; the multibyte case
+# is the one that shows characters, not bytes, are counted.
+TE='CLAUDE.md template size'
+te_body() { # $1 = character, $2 = count; $2 copies of $1, no newline
+  printf '%*s' "$2" '' | LC_ALL=C sed "s/ /$1/g"
+}
+te_section() { # $1 = fence body, one line; with its newline it counts length + 1
+  # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+  printf '### 2.1 CLAUDE-md\n\n````markdown\n%s\n````' "$1"
+}
+te_case() { # $1 = name, $2 = 1|0 expect reject, $3 = the whole `### 2.1` section, or @GONE@,
+  #          $4 = optional diagnostic substring a reject must also carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  cf="$work/r/plugins/dev-workflow/commands/workflow-init.md"
+  case "$3" in @GONE@) rm -f "$cf" ;; *) sev_tpl "$SEV_LINE" "" "$3" > "$cf" ;; esac
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF "$TE" || ! printf '%s' "$out" | grep -qF -- "${4:-$TE}"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+te_case "4e: template at the budget accepted"              0 "$(te_section "$(te_body a 19999)")"
+te_case "4e: template one over the budget rejected"        1 "$(te_section "$(te_body a 20000)")" \
+  'is 20001 characters, over the 20000 budget'
+# 19999 two-byte characters plus a newline: 20000 characters, 39999 bytes.
+te_case "4e: multibyte template counted in characters"     0 "$(te_section "$(te_body 'é' 19999)")"
+te_case "4e: missing 2.1 anchor rejected"                  1 "$(te_section x | sed 's/^### 2\.1 .*/## not an anchor/')" \
+  "has 0 '### 2.1' headings"
+te_case "4e: missing fence rejected"                       1 '### 2.1 CLAUDE-md
+
+no fence here' 'markdown fence inside'
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+te_case "4e: unclosed fence rejected"                      1 '### 2.1 CLAUDE-md
+
+````markdown
+# T' 'is never closed'
+# A heading inside the fence is template text: it must not end the section or the fence.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+te_case "4e: a heading inside the fence accepted"          0 '### 2.1 CLAUDE-md
+
+````markdown
+### Don'"'"'t guess
+````'
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+te_case "4e: a short fence before an oversized one rejected"  1 "$(printf '### 2.1 CLAUDE-md\n\n````markdown\nexample\n````\n\n````markdown\n%s\n````' "$(te_body a 20000)")" \
+  'fences inside'
+te_case "4e: missing command file rejected"                1 "@GONE@"
+inject_case "4e template size parser failure fires" awk '*tpl-size-scan*' \
+  'CLAUDE.md template size parser failed'
 
 # --- Prompt conformance: check 4d, the AC-<n> story template ---------------------------
 #

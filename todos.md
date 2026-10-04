@@ -687,6 +687,17 @@ backlog.
       only: G1b and vision leaf 4e are not activated by it. It is not started in parallel with
       2c part 3; after part 3 it is ranked against part 4.**
 
+- [ ] **This repository's `.claude/review-gates.md` still says its rules bind over the text
+      a project's `CLAUDE.md` contains.** Found while splitting the `/workflow-init`
+      template (0.16.0), which corrects the same sentence in the scaffolded copy; PR #38
+      moved this repository's copy without it, and the repository's own rules files were
+      out of that change's scope. *Trigger:* the next change to this repository's
+      `.claude/review-gates.md`.
+- [ ] **Re-verify invariant 8's `${CLAUDE_PLUGIN_ROOT}` claim.** As of 2026-10-04 the Claude
+      Code plugin reference says the variable expands in skill, command and agent markdown;
+      AGENTS.md invariant 8 and `docs/architecture.md` say it does not (verified earlier).
+      Inline templates stay right either way; the stated reason may be stale. *Trigger:* the
+      next change to invariant 8 or the template layout.
 - [ ] **Gate-rule storage within the instruction-size limit.** Claude Code limits the
       always-loaded instruction files to 150.0k characters; this repository measured 151.2k
       on `main` at `b18e7db`, almost all of it CLAUDE.md §5, and `/workflow-init` scaffolds
