@@ -20,8 +20,8 @@ fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 # diagnostic-isolation failure the $5-substring guard exists to prevent. Measured before
 # this existed: 25 of 61 assertions failed.
 #
-# One initializer, called from all five builders. Extending only `run_with` would leave
-# `sh_case` and the two inline blocks broken.
+# One initializer, called from every fixture builder. Extending only `run_with` would leave
+# `sh_case`, the later case builders and the inline blocks broken.
 #
 # Check 4c adds a second reason this exists: it requires the canonical severity line in
 # BOTH prompt copies, and neither exists in a bare fixture repo. Without the two writes
@@ -45,6 +45,24 @@ init_prompt_fixtures() { # $1 = fixture repo root
   # not read that path. CLAUDE.md is not written by the loop and needs its own copy --
   # and needs no `### 2.1`, since the whole file is the artifact there.
   printf '# Fixture\n\n%s\n' "$SEV_LINE" > "$1/CLAUDE.md"
+  # 4d: a minimal valid intake story template, for the same isolation reason.
+  mkdir -p "$1/plugins/dev-workflow/skills/intake"
+  ac_skill "$(ac_rows 3)" > "$1/plugins/dev-workflow/skills/intake/SKILL.md"
+}
+# The backticks are literal Markdown in the rule line, not command substitution.
+# shellcheck disable=SC2016
+AC_RULE_LINE='_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._'
+# ac_rows N: criterion rows AC-1..AC-N
+ac_rows() { i=1; while [ "$i" -le "$1" ]; do printf -- '- [ ] **AC-%s** criterion %s\n' "$i" "$i"; i=$((i + 1)); done; }
+# ac_skill REGION [AFTER]: a skill file whose template's criteria region is REGION (the rule
+# line is added unless REGION already starts with @NORULE@); AFTER goes outside the fence.
+ac_skill() {
+  region=$1
+  case "$region" in @NORULE@*) region=${region#@NORULE@}; rule='' ;; *) rule="$AC_RULE_LINE
+" ;; esac
+  # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+  printf '# intake\n\n## Story template\n\n```markdown\n# T\n\n## 3. Acceptance criteria\n%s%s\n\n## 4. Affected AGENTS.md invariants\n- none\n```\n\n%s\n' \
+    "$rule" "$region" "${2:-}"
 }
 
 work=$(mktemp -d) || work=''
@@ -354,6 +372,9 @@ done
 #              `4c canonical-line parser failure fires`. NO accept case moved, which is
 #              the second half of the check and the one a non-empty flip set alone does
 #              not establish.
+#   4d -> 21   every `4d:` reject fixture (20) and `4d AC-<n> template parser failure
+#              fires`; no accept case moved (re-measured 2026-10-04 after the
+#              no-fence-before-the-next-section case was added).
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -774,6 +795,92 @@ fi
 # is identified by its `sev-canon-count` marker comment.
 inject_case "4c canonical-line parser failure fires" awk '*sev-canon-count*' \
   'closed severity set parser failed'
+
+# --- Prompt conformance: check 4d, the AC-<n> story template ---------------------------
+#
+# Each case replaces the intake skill file and asserts the shared diagnostic. The accepting
+# near-misses are the point: rows outside the fence or under `## 4.` must not count.
+AC='AC-<n>'
+ac_case() { # $1 = name, $2 = 1|0 expect reject, $3 = skill body, @GONE@ or @LOCK@,
+  #            $4 = optional diagnostic substring a reject must also carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  sk="$work/r/plugins/dev-workflow/skills/intake/SKILL.md"
+  case "$3" in @GONE@) rm -f "$sk" ;; @LOCK@) chmod 000 "$sk" ;; *) printf '%s\n' "$3" > "$sk" ;; esac
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  chmod 644 "$sk" 2>/dev/null
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF "$AC" || ! printf '%s' "$out" | grep -qF -- "${4:-$AC}"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+ac_case "4d: valid template accepted"                          0 "$(ac_skill "$(ac_rows 3)")"
+ac_case "4d: worked example outside the fence with other numbers accepted" 0 \
+  "$(ac_skill "$(ac_rows 2)" '- [ ] **AC-4** an inserted criterion
+- [ ] **AC-2** ~~withdrawn~~')"
+ac_case "4d: rows under ## 4. inside the fence accepted"       0 \
+  "$(ac_skill "$(ac_rows 3)" | sed 's/^- none$/- [ ] not a criterion/')"
+ac_case "4d: missing skill rejected"                           1 "@GONE@"
+if [ "$(id -u)" -ne 0 ]; then
+  ac_case "4d: unreadable skill rejected"                      1 "@LOCK@"
+fi
+ac_case "4d: no Story template heading rejected"               1 "$(ac_skill "$(ac_rows 3)" | sed 's/^## Story template$/## Template/')"
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+ac_case "4d: a non-markdown first fence rejected"              1 "$(ac_skill "$(ac_rows 3)" | sed 's/^```markdown$/```text/')" \
+  'is not ```markdown'
+# The section ends before any fence, and a valid template follows the next heading: the
+# search must stop at that heading rather than validate the later template.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+ac_case "4d: no fence before the next section rejected"       1 \
+  "$(ac_skill "$(ac_rows 3)" | awk '{ print } $0 == "## Story template" { print "## Other section" }')" \
+  'no ```markdown fence inside'
+ac_case "4d: unclosed fence rejected"                          1 "$(ac_skill "$(ac_rows 3)" | sed '/^```$/d')"
+ac_case "4d: missing criteria heading rejected"                1 "$(ac_skill "$(ac_rows 3)" | sed 's/^## 3\. Acceptance criteria$/## 3. Criteria/')"
+ac_case "4d: duplicated criteria heading rejected"             1 "$(ac_skill "$(ac_rows 3)" | sed 's/^# T$/## 3. Acceptance criteria/')"
+ac_case "4d: missing next section rejected"                    1 "$(ac_skill "$(ac_rows 3)" | sed 's/^## 4\. Affected AGENTS\.md invariants$/## 4. Something else/')"
+ac_case "4d: boundaries out of order rejected"                 1 "$(ac_skill "$(ac_rows 3)" | sed 's/^# T$/## 4. Affected AGENTS.md invariants/')"
+ac_case "4d: a row without an identifier rejected"             1 "$(ac_skill "$(ac_rows 2)
+- [ ] <… at least three.>")"
+ac_case "4d: a bare list row rejected"                         1 "$(ac_skill "$(ac_rows 3)
+- extra")"
+ac_case "4d: out-of-order numbers rejected"                    1 "$(ac_skill '- [ ] **AC-1** one
+- [ ] **AC-3** three
+- [ ] **AC-2** two')"
+ac_case "4d: a leading-zero identifier rejected"               1 "$(ac_skill '- [ ] **AC-01** one')"
+ac_case "4d: missing rule line rejected"                       1 "$(ac_skill "@NORULE@$(ac_rows 3)")"
+ac_case "4d: duplicated rule line rejected"                    1 "$(ac_skill "$(ac_rows 3)
+$AC_RULE_LINE")"
+ac_case "4d: an empty criteria region rejected"                1 "$(ac_skill '')"
+ac_case "4d: an altered rule line rejected"                    1 "$(ac_skill "$(ac_rows 3)" | sed 's/never renumber or reuse one/renumber when needed/')"
+ac_case "4d: duplicated next-section boundary rejected"        1 "$(ac_skill "$(ac_rows 3)" | sed 's/^- none$/## 4. Affected AGENTS.md invariants/')"
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+ac_case "4d: a non-markdown first fence is not skipped for a later one" 1 \
+  "$(ac_skill "$(ac_rows 3)" | sed 's/^```markdown$/```text/')
+\`\`\`markdown
+## 3. Acceptance criteria
+$AC_RULE_LINE
+- [ ] **AC-1** later
+## 4. Affected AGENTS.md invariants
+\`\`\`"
+ac_case "4d: a Story template heading after the template is ignored" 0 \
+  "$(ac_skill "$(ac_rows 3)")
+
+## Story template
+an example section after the real one"
+
+# The parser branch, through the same PATH seam the 4a-4c stage failures use. The 4d awk
+# is identified by its `ac-template-scan` marker comment.
+inject_case "4d AC-<n> template parser failure fires" awk '*ac-template-scan*' \
+  'AC-<n> template parser failed'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

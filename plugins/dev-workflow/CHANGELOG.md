@@ -22,6 +22,17 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.15.0
+
+- **Stable acceptance-criterion IDs in the `intake` story template.** Every criterion is
+  written `- [ ] **AC-<n>** …`, under an italic rule line that travels with each story:
+  identifiers are fixed when the story is committed, never renumbered or reused, a new
+  criterion takes the next unused number, and a collision between concurrent amendments
+  stops for a human. The skill states the full rules, the citation form
+  (`<story path> AC-<n>`), how an older story adopts identifiers, and a worked example. No
+  gate rule, record format or evidence-entry format changes. `scripts/check-invariants.sh`
+  gains check 4d, which pins the template's spelling only.
+
 ## 0.14.0
 
 - **New skill: `dev-workflow:sparring`.** An advisory session for a chat you open for that

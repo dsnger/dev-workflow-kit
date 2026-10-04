@@ -21,16 +21,16 @@
 #
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
-# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The three prompt-conformance
+# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The four prompt-conformance
 # checks below are bracketed by `# --- BEGIN check 4a ---` / `# --- END check 4a ---`
-# markers -- and likewise for 4b and 4c -- so a scratch copy can be neutered cleanly.
+# markers -- and likewise for 4b, 4c and 4d -- so a scratch copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
 #   TMP=$(mktemp -d) || exit 1
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, then 4c
+#   chk=4a   # then 4b, 4c, then 4d
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -261,10 +261,10 @@ for manifest in plugins/*/.claude-plugin/plugin.json; do
 done
 
 # Scan domain for checks 4a and 4b: Markdown only, because both rules are about prompt
-# text. NOT 4c -- that one reads two fixed paths directly and is not part of this scan,
-# so this domain stays a two-check domain even though the file now carries three
-# prompt-conformance checks. Incrementing the number here would claim a scope 4c does not
-# use. The wider yml/json/toml domain used by invariant 5 is
+# text. NOT 4c or 4d -- those read fixed paths directly and are not part of this scan,
+# so this domain stays a two-check domain even though the file now carries four
+# prompt-conformance checks. Incrementing the number here would claim a scope 4c and 4d do
+# not use. The wider yml/json/toml domain used by invariant 5 is
 # deliberately NOT reused — a `Target model:` line in a JSON fixture is not a prompt
 # claim. `grep -r` does not follow symlinks (`-R` would), which is the intended form.
 #
@@ -565,6 +565,81 @@ for sev_file in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   fi
 done
 # --- END check 4c ---
+
+# --- BEGIN check 4d ---
+# The `intake` story template numbers its criteria `AC-<n>` under one italic rule line, so
+# every story it writes can be cited by identifier (P5 light). The check reads ONLY the
+# template: the first ```markdown fence after the `## Story template` heading, and inside it
+# the region from `## 3. Acceptance criteria` to `## 4. Affected AGENTS.md invariants`. The
+# worked example and the rule prose live outside the fence and can neither satisfy nor
+# break it. A moved or renamed boundary fails rather than widening the region.
+#
+# Every region line must be blank, exactly the rule line, or a criterion row
+# `- [ ] **AC-<n>** <text>`; the rule line occurs once; there is at least one row; and the
+# numbers read 1, 2, 3, ... in order. What it does NOT catch: whether the rule prose or the
+# worked example says the right thing, whether any written story follows the rules, or
+# whether a later amendment renumbered anything. It pins the template's spelling only.
+# The backticks are literal Markdown in the rule line, not command substitution.
+# shellcheck disable=SC2016
+AC_RULE='_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._'
+AC_FILE=plugins/dev-workflow/skills/intake/SKILL.md
+
+# Prints `ok`, or one line naming the first problem found. Returns 2 if awk itself failed.
+ac_template_scan() { # $1 = file
+  awk -v rule="$AC_RULE" '                         # ac-template-scan
+    function bad(msg) { if (problem == "") problem = msg }
+    done { next }                                  # nothing after the template counts
+    $0 == "## Story template" { heads += 1; want = 1; next }
+    want && /^```/ { want = 0; if ($0 == "```markdown") { infence = 1; fences += 1 } else { wrongfence = $0; done = 1 }; next }
+    want && /^## / { want = 0; done = 1; next }    # the section ended without a fence
+    infence && $0 == "```" { infence = 0; closed = 1; done = 1; next }
+    !infence { next }
+    $0 == "## 3. Acceptance criteria" { h3 += 1; if (h4 == 0) region = 1; else bad("the criteria heading comes after the next section"); next }
+    $0 == "## 4. Affected AGENTS.md invariants" { h4 += 1; if (h3 == 0) bad("the next section comes before the criteria heading"); region = 0; next }
+    region {
+      if ($0 ~ /^[ \t]*$/) next
+      if ($0 == rule) { rules += 1; next }
+      if ($0 ~ /^- \[ \] \*\*AC-[1-9][0-9]*\*\* ./) {
+        n += 1
+        num = $0; sub(/^- \[ \] \*\*AC-/, "", num); sub(/\*\*.*$/, "", num)
+        if (num + 0 != n) bad("criterion " n " is numbered AC-" num ": " $0)
+        next
+      }
+      bad("not a criterion row, blank or the rule line: " $0)
+    }
+    END {
+      if (heads == 0) print "no `## Story template` heading"
+      else if (heads > 1) print heads " `## Story template` headings"
+      else if (wrongfence != "") print "the first fence after `## Story template` is not ```markdown: " wrongfence
+      else if (fences == 0) print "no ```markdown fence inside the `## Story template` section"
+      else if (!closed) print "the template fence is never closed"
+      else if (h3 != 1) print h3 " `## 3. Acceptance criteria` headings in the template, need exactly 1"
+      else if (h4 != 1) print h4 " `## 4. Affected AGENTS.md invariants` headings in the template, need exactly 1"
+      else if (problem != "") print problem
+      else if (rules != 1) print rules " italic ID rule lines in the criteria region, need exactly 1"
+      else if (n == 0) print "no criterion rows in the template"
+      else print "ok"
+    }
+  ' "$1" || return 2
+}
+
+if [ ! -f "$AC_FILE" ]; then
+  fail "Prompt standards: $AC_FILE is missing, so the AC-<n> story template cannot be checked." \
+       "the intake skill is required"
+elif [ ! -r "$AC_FILE" ]; then
+  fail "Prompt standards: $AC_FILE is unreadable, so the AC-<n> story template cannot be checked." \
+       "check permissions"
+else
+  ac_out=$(ac_template_scan "$AC_FILE"); ac_st=$?
+  if [ "$ac_st" -ne 0 ]; then
+    fail "Prompt standards: the AC-<n> template parser failed; results are not trustworthy." \
+         "awk exited $ac_st on $AC_FILE"
+  elif [ "$ac_out" != ok ]; then
+    fail "Prompt standards: the intake story template's AC-<n> criteria are malformed: $ac_out" \
+         "every criterion row is '- [ ] **AC-<n>** <text>', numbered 1, 2, 3, ... under the one italic ID rule line"
+  fi
+fi
+# --- END check 4d ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

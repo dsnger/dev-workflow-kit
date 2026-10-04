@@ -10,7 +10,8 @@ answering questions, approving drafts, judging findings.
 
 **1. Capture the idea.** Say "users want to export their invoices as CSV" (or paste
 a voice transcript — German is fine). The `intake` skill turns it into a story:
-problem, outcome, ≥3 checkable acceptance criteria, which `AGENTS.md` invariants it
+problem, outcome, ≥3 checkable acceptance criteria (numbered `AC-1`, `AC-2`, … so later
+steps can cite them), which `AGENTS.md` invariants it
 touches, and a **profile** — how risky this is (`trivial|standard|high`), how
 security-relevant (`none|standard|high`), and the validation mode derived from the two.
 It proposes both axes and the derived mode with a reason; you confirm or correct the
