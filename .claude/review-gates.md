@@ -1,7 +1,7 @@
 # Cross-Model Review (Codex) — TWO MANDATORY GATES
 
-This is `CLAUDE.md` §5 in full, moved here word for word. Everything below that says
-"this section" or "§5" means this file.
+This is `CLAUDE.md` §5 in full, moved here unchanged except where the text named its own
+location. Everything below that says "this section" or "§5" means this file.
 
 
 Independent second opinion at two gates. Easiest steps to skip, so the discipline is
@@ -865,7 +865,7 @@ Blocker/Major visible" as clean.
 trimming the ASCII whitespace the finding format puts either side of each separator; a field
 that is empty or all whitespace is a **structural** failure, so the line is INCOMPLETE and is
 never normalized. Otherwise the field is matched **case-insensitively** against the four tokens
-first — `Minor`, `minor` and `MINOR` are all `MINOR`, because `CLAUDE.md` Mechanics
+first — `Minor`, `minor` and `MINOR` are all `MINOR`, because this file's Mechanics
 legitimately spells them in Title case and a model copying that spelling is doing as it was
 told, not drifting. A field that matches no token case-insensitively, and is non-empty, is
 read as `MAJOR`. Every **structural** failure stays INCOMPLETE — a malformed
@@ -1480,13 +1480,13 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   was already the human's to make about something genuinely optional. It is **never** the answer to a
   below-floor pass, an unclean final pass, a `STOP and surface`, a Gate-A or Gate-B
   obligation, or a profile-derived evidence requirement — and more generally **it authorizes
-  nothing that any mandatory rule in this file or in `AGENTS.md` requires.** Those have their own terminal actions and this paragraph changes none of them: on a STOP you
+  nothing that any mandatory rule in this file, in `CLAUDE.md` or in `AGENTS.md` requires.** Those have their own terminal actions and this paragraph changes none of them: on a STOP you
   still stop, and **neither a human's general assent nor this record** lets an agent close or
   continue a cycle. **The answers a suspension asks for are not assent of that kind**: they are the
   answers the closure ordering prescribes, and both which answers those are and what they produce are
   stated there.
 
-  **"Mandatory" is not limited to this file.** A rule in `AGENTS.md`, a project doc, CI, a
+  **"Mandatory" is not limited to these files.** A rule in `AGENTS.md`, a project doc, CI, a
   branch policy or the platform is equally out of reach — under **Wait for**,
   `docs/pr-review-bots.md` requires a bot review unless an explicit recorded human decision
   permits proceeding without it, and this form is not that decision. If you are reaching for it to get past something mandatory, the answer
