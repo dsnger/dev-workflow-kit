@@ -507,6 +507,16 @@ proceeds, the breaking part waits on the meta-story).
      end state is never reached.
    Merge stays human until 6c ships and holds.
 
+**Interposed leaf, before step 3 (2026-10-04, Daniel): gate-rule storage.** Claude Code
+limits the always-loaded instruction files to 150.0k characters. This repository exceeded it
+on `main` at `b18e7db` (151.2k), and `/workflow-init` scaffolds the gate rules (CLAUDE.md §5)
+inline, so initialized projects start near the limit. Every later step adds rules, so this one
+ranks after P5 light and before 2c part 4. Story:
+`docs/superpowers/stories/2026-10-04-gate-rule-storage-story.md` (profile risk `high`,
+security `none`, confirmed 2026-10-04). It moves the rules unchanged; shrinking them is a
+separate later leaf. PR #38 (`split-review-gates`) moves §5 for this repository only and is
+that story's open question, not its answer.
+
 ## 8. Non-goals
 
 - No daemon or server-side runner (decision 1).

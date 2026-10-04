@@ -685,6 +685,18 @@ backlog.
       only: G1b and vision leaf 4e are not activated by it. It is not started in parallel with
       2c part 3; after part 3 it is ranked against part 4.**
 
+- [ ] **Gate-rule storage within the instruction-size limit.** Claude Code limits the
+      always-loaded instruction files to 150.0k characters; this repository measured 151.2k
+      on `main` at `b18e7db`, almost all of it CLAUDE.md §5, and `/workflow-init` scaffolds
+      §5 inline into every project. Story:
+      `docs/superpowers/stories/2026-10-04-gate-rule-storage-story.md` — profile risk `high`,
+      security `none` (Daniel, 2026-10-04). **Ranked (Daniel, 2026-10-04): right after P5
+      light, before 2c part 4** (vision §7, interposed leaf). Open: file vs. shipped skill
+      vs. short core (Daniel leans to the skill, once reliable loading is shown), how the
+      hook names what to load, heading grep vs. `.context/codex-gate.on`, the size budget,
+      and how PR #38 (`split-review-gates`, this repository only) relates. Shrinking §5 is
+      a separate, later, high-risk step. *Trigger:* P5 light merged.
+
 - [ ] **`/workflow-init` preflight checks `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`.** The
       variable keeps a >120 s gate call in the foreground so its result reaches the hook.
       **The failure mode this row originally described was fixed in 0.8.0** — a
