@@ -372,9 +372,10 @@ done
 #              `4c canonical-line parser failure fires`. NO accept case moved, which is
 #              the second half of the check and the one a non-empty flip set alone does
 #              not establish.
-#   4d -> 21   every `4d:` reject fixture (20) and `4d AC-<n> template parser failure
+#   4d -> 22   every `4d:` reject fixture (21) and `4d AC-<n> template parser failure
 #              fires`; no accept case moved (re-measured 2026-10-04 after the
-#              no-fence-before-the-next-section case was added).
+#              no-fence-before-the-next-section and rule-below-the-criteria cases were
+#              added).
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -857,6 +858,8 @@ ac_case "4d: out-of-order numbers rejected"                    1 "$(ac_skill '- 
 - [ ] **AC-2** two')"
 ac_case "4d: a leading-zero identifier rejected"               1 "$(ac_skill '- [ ] **AC-01** one')"
 ac_case "4d: missing rule line rejected"                       1 "$(ac_skill "@NORULE@$(ac_rows 3)")"
+ac_case "4d: rule line below the criteria rejected"            1 "$(ac_skill "@NORULE@$(ac_rows 3)
+$AC_RULE_LINE")" 'before the italic ID rule line'
 ac_case "4d: duplicated rule line rejected"                    1 "$(ac_skill "$(ac_rows 3)
 $AC_RULE_LINE")"
 ac_case "4d: an empty criteria region rejected"                1 "$(ac_skill '')"

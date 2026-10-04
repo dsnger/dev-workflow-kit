@@ -31,7 +31,10 @@ AGENTS.md invariant 12 carries the complete list.
   stops for a human. The skill states the full rules, the citation form
   (`<story path> AC-<n>`), how an older story adopts identifiers, and a worked example. No
   gate rule, record format or evidence-entry format changes. `scripts/check-invariants.sh`
-  gains check 4d, which pins the template's spelling only.
+  gains check 4d, which pins the template's form only: its fence and section boundaries,
+  the exact rule line above the criteria, and one or more `AC-<n>` rows numbered
+  consecutively from 1. It does not check the rule prose, the worked example, or any
+  written story.
 
 ## 0.14.0
 

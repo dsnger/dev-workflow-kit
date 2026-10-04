@@ -601,6 +601,7 @@ ac_template_scan() { # $1 = file
       if ($0 == rule) { rules += 1; next }
       if ($0 ~ /^- \[ \] \*\*AC-[1-9][0-9]*\*\* ./) {
         n += 1
+        if (rules == 0) bad("criterion row before the italic ID rule line: " $0)
         num = $0; sub(/^- \[ \] \*\*AC-/, "", num); sub(/\*\*.*$/, "", num)
         if (num + 0 != n) bad("criterion " n " is numbered AC-" num ": " $0)
         next
