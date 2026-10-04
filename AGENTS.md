@@ -28,7 +28,8 @@ under `.mcp/`) is deliberately absent, not overlooked.
 README.md                         # what the kit is, setup, daily use, contributing
 MANIFEST.md                       # inventory of source-files/, the frozen extraction seed
 AGENTS.md                         # this file — the invariants both gates check
-CLAUDE.md                         # discipline rules + the two review gates
+CLAUDE.md                         # discipline rules + pointer to the review gates
+.claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
 todos.md                          # backlog; `pending` ledger rows point here by ref
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned

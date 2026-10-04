@@ -493,7 +493,8 @@ fi
 # heading -- not the next `###`, because the template contains its own unnumbered
 # `### Profiles` and `### Mechanics` subsections and would truncate the range.
 #
-# The repo's own CLAUDE.md needs no placement rule: the whole file is the artifact.
+# The repo's own copy is `.claude/review-gates.md` (CLAUDE.md §5, moved out for size) and
+# needs no placement rule: the whole file is the artifact.
 SEV_CANON='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.'
 
 # Prints "<whole-file count> <in-template count> <anchor count> <terminator>", where the
@@ -520,7 +521,7 @@ severity_rule_scan() { # $1 = file
 # Both paths are REQUIRED. A missing one is a named failure, never a skip: the rule is
 # defined over both copies, so continuing quietly would turn half the check off exactly
 # when a file is deleted or moved -- the fail-open direction.
-for sev_file in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
+for sev_file in .claude/review-gates.md plugins/dev-workflow/commands/workflow-init.md; do
   if [ ! -f "$sev_file" ]; then
     fail "Prompt standards: $sev_file is missing, so the closed severity set cannot be checked." \
          "both prompt copies are required"
@@ -544,7 +545,7 @@ for sev_file in CLAUDE.md plugins/dev-workflow/commands/workflow-init.md; do
   if [ "$sev_n" -ne 1 ]; then
     fail "Prompt standards: $sev_file must state the closed severity set exactly once; found $sev_n." \
          "$SEV_CANON"
-  elif [ "$sev_file" != CLAUDE.md ]; then
+  elif [ "$sev_file" != .claude/review-gates.md ]; then
     # Placement, command file only. A missing or renamed anchor fails loudly rather than
     # skipping the rule -- the safe direction, and the one an anchor-based check has to
     # get right to be worth having.

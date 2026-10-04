@@ -1084,3 +1084,17 @@ backlog.
     whose output is tested do not check status, so a failed `git diff` with empty output can
     select "ALREADY APPLIED AND COMMITTED". True, and C1 was dissolved into the rollout on
     2026-09-01 without being executed. Fix it if C1 is ever revived.
+
+## From PR #38 — backlog only, nothing implemented here
+
+- **Valid findings from PR #38 recorded as out of scope** (per `process-pr-review` item 2 —
+  pre-existing §5 text, only moved by #38; each holds in both copies, `.claude/review-gates.md`
+  and the `/workflow-init` template, so a fix in one copy alone would make them disagree):
+  - **Gate-B story-set comparison contradicts the union rule** (CodeRabbit). §5 defines the
+    Gate-B governing header as the *union* of the contributing plans' `Story:` headers, then
+    requires every expected artifact's set to be equal and stops on any difference. Two plans
+    citing different stories therefore always stop. Decide whether the comparison should
+    apply to the union only, then fix both copies.
+  - **The finding-format example mixes both file shapes** (CodeRabbit). The Gate-A paragraph's
+    code block shows a `MAJOR` line followed by `NO FINDINGS`, while a valid file carries
+    `NO FINDINGS` only as its sole body line. Show the two shapes as separate examples.
