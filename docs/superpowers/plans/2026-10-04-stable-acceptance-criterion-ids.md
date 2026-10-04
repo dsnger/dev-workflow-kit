@@ -14,6 +14,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-04-stable-acceptance-criterion-ids-design.md` (Gate-A spec cycle `74w54vqst8`, closed in `4b6be6b`).
 
+**Executed 2026-10-04 (PR #40).** Gate B and PR review added suite cases after this plan was approved, so the committed `scripts/check-invariants.test.sh` differs from the copy embedded below. The counts below (24 cases, `172 assertions`, five SC2016 disables, 20 mutation flips) describe the suite as the plan approved it; after Gate B (4972cb1) and PR #40's review fix (2164624) the committed suite has 26 cases, 174 assertions, six SC2016 disables and 22 flips, and check 4d also requires the rule line above the criteria.
+
 ## Global Constraints
 
 - Worktree `/Users/daniel/DEVELOPMENT/APPS/dwk-ac-ids`, branch `ac-ids`. Paths are relative to it.
