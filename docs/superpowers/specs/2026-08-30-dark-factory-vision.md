@@ -363,6 +363,32 @@ the inspiration: the adversarial verifier is a different model *family*
   unchanged: the assessment cannot waive them or close an unclean cycle.
   Automatic actions or changes to those rules need a separately authorized
   design; this entry introduces neither.
+- **Human attention is measured, not session time (recorded 2026-10-05; not
+  implemented).** From Daniel's follow-up handoff of 2026-10-04, from an advisory Dark Factory concept assessment relayed by the sparring partner. Measurement belongs to step 2c beside review-loop
+  usefulness; presentation belongs to the dashboard leaf (§11). Future metrics:
+  - human interventions per story, split into **necessary decisions** (a mandatory stop,
+    a profile confirmation, a scope or architecture choice) and **avoidable steering**
+    (re-prompting, correcting a report, chasing a status);
+  - waiting time on the human, on reviewers and on CI, each measured separately;
+  - the share of PRs reported merge-ready that were actually decision-ready (no further
+    fix, review or CI round before the merge decision);
+  - human review time and later rework, where measurable.
+  **Before implementation:** define each metric's data source, counting rule and
+  missing-value behaviour, as for review-loop usefulness above. **Session duration is
+  not a measure of human working time**, and an unknown value stays unknown. The goal is
+  less avoidable supervision with equally reliable results; necessary escalations stay
+  wanted and do not count against a story.
+- **The decision queue is a decision-oriented inbox (recorded 2026-10-05; not
+  implemented).** From the same handoff. It sharpens the dashboard's existing decision
+  queue (above) and G1c's per-story status read (`todos.md`, P1) rather than adding a
+  view. Every entry that needs attention shows:
+  - the decision or action needed;
+  - the reason, a recommendation and the consequences of each option;
+  - the story, the affected revision and links to the evidence;
+  - how fresh the shown state is (the staleness stamp, per entry).
+  Notifications bundle the relevant state changes rather than firing per event.
+  Archiving an entry changes only its visibility, never the item's status. The inbox
+  stays derived from existing sources, like every view here.
 - **Waves structure a new project.** Phase 0 assigns every initial pool item a
   wave mark (wave 1, 2, … or named milestones) — the deliberate "these
   subareas develop together first, those later" decision, usually aligned with
@@ -447,6 +473,21 @@ proceeds, the breaking part waits on the meta-story).
    role, the artifact handoff, and the *interface* of the tick execution plan.
    The working dry-run reads the pool, the projection, waves, lanes and the
    tick, so it lands after 4d and 5a rather than here (§4).
+   **The handoff is a complete assignment frame (recorded 2026-10-05).** From the
+   2026-10-04 follow-up handoff. Every assignment names the problem, the expected
+   result, the permitted scope of action, the end point, the required evidence, the
+   budget and the escalations. Example: "work up to a merge-ready PR, including CI and
+   the required review fixes, then present the merge decision". Most fields already
+   have an owner and are referenced, not redefined: the evidence comes from the story
+   profile's validation mode; the budget is §10's token budget per story, plus its round
+   cap per Bau-Loop, which does not apply to review loops [step 3/5]; the escalations are the human presence §8 keeps (mandatory stops,
+   profile confirmations, scope changes, architecture meta-stories); the end point
+   respects the merge authority in force (human until 6c). The new part is the requirement that the handoff carries all
+   seven fields together, so a session can tell when it is done and when it must
+   stop. The shipped `sparring` skill's coding-agent prompts are the precursor: their
+   six parts (goal, verified snapshot, exact scope, boundaries, done-when, escalate-if)
+   cover most of these fields but carry no budget, so the budget is part of the new
+   requirement.
 4. **Story pool and classification** (decisions 2, 4, 6, 7 and 9). An epic, so
    §5's own split rule applies to it; the ordered stories, behind named
    interfaces:
@@ -465,7 +506,8 @@ proceeds, the breaking part waits on the meta-story).
    - **4d** Freigabe and wave control: the rendered wave plan, the granularity
      knob and its standing rules, wave opening and closing (decision 7). No
      other step owned this, and the pipeline cannot run without it.
-   - **4e** decision 9's mechanics: acceptance-criterion IDs, the read-only
+   - **4e** decision 9's mechanics: acceptance-criterion IDs (the story template's
+     `AC-<n>` IDs shipped in 0.15.0 as P5 light; the rest of this leaf is open), the read-only
      rule inside a lane, the AC-block comparison at Gate B and the pool
      round-trip — plus given/when/then normalization and the per-AC test
      report as a handoff artifact, which is the machine-checkable goal
@@ -507,15 +549,34 @@ proceeds, the breaking part waits on the meta-story).
      end state is never reached.
    Merge stays human until 6c ships and holds.
 
-**Interposed leaf, before step 3 (2026-10-04, Daniel): gate-rule storage.** Claude Code
-limits the always-loaded instruction files to 150.0k characters. This repository exceeded it
-on `main` at `b18e7db` (151.2k), and `/workflow-init` scaffolds the gate rules (CLAUDE.md §5)
-inline, so initialized projects start near the limit. Every later step adds rules, so this one
+**Interposed leaf, before step 3 (2026-10-04, Daniel): gate-rule storage.** The state when
+it was recorded: Claude Code limits the always-loaded instruction files to 150.0k characters.
+This repository exceeded it on `main` at `b18e7db` (151.2k), and `/workflow-init` scaffolded
+the gate rules (CLAUDE.md §5) inline, so initialized projects started near the limit. Every later step adds rules, so this one
 ranks after P5 light and before 2c part 4. Story:
 `docs/superpowers/stories/2026-10-04-gate-rule-storage-story.md` (profile risk `high`,
 security `none`, confirmed 2026-10-04). It moves the rules unchanged; shrinking them is a
 separate later leaf. PR #38 (`split-review-gates`) moves §5 for this repository only and is
-that story's open question, not its answer.
+that story's open question, not its answer. **Shipped in 0.16.0 (PR #41, 2026-10-04):**
+`/workflow-init` scaffolds the rules into `.claude/review-gates.md`, and `CLAUDE.md` keeps a
+pointer.
+
+**Validation order — a recommendation (recorded 2026-10-05), not a release decision.**
+From the 2026-10-04 follow-up handoff. It changes no step's order, trigger or prerequisite
+above, and it is no way around them; 4e in particular stays ordered before any autonomous
+lane execution.
+1. Finish P5 light. **Done:** 0.15.0, PR #40.
+2. In 2c part 4, keep **live effort measurement** apart from **changes to pass
+   validity**. A short or cheap review is not, on its own, evidence that it was incomplete
+   (part 4's central question in its story). Measuring first and deciding a validity rule
+   later, on calibrated data, is the recommended split; whether part 4 is split is Daniel's
+   decision.
+3. Pilot one lane, later, up to a merge-ready PR, including an interruption, a resumption
+   and the evidence it leaves (the restart cases in §11).
+4. Then two independent lanes and their integration through the merge queue.
+5. Build the fleet and automatic merge on that operating experience.
+Autonomy, parallelism and infrastructure size are separate dimensions: raising one does not
+raise the others. Always-on execution may later be an external operating option.
 
 ## 8. Non-goals
 
@@ -527,7 +588,11 @@ that story's open question, not its answer.
 - No autonomy expansion ahead of the measured evidence (P8) that the review
   economics support it.
 - No deployment stage. The factory ends at the merge; what follows (release
-  tags, environments, direct deploy) is the project's own CI.
+  tags, environments, direct deploy) is the project's own CI. The kit does need a
+  defined **feedback intake** for what happens after the merge (§11, autonomy
+  downgrade), not a deployment engine (2026-10-05).
+- No fleet management, hosting, account proxies or subscription-utilization strategy
+  (2026-10-05). Always-on execution may later be an external operating option.
 
 ## 9. Parallelism and flow control (decisions 2026-08-30, Daniel)
 
@@ -559,6 +624,13 @@ that story's open question, not its answer.
   Gate B's two review branches already do. What does
   not parallelize: the serial passes of one review loop, the merge queue to
   main, and the human's decisions.
+  **Worktrees isolate files, not runtime (recorded 2026-10-05).** From the 2026-10-04
+  follow-up handoff. Parallel lanes can still share ports, test databases, browser
+  profiles, credentials and CI capacity, so disjoint branches are necessary for
+  parallelism, not sufficient. A worktree gives no runtime or permission isolation by
+  itself. Later execution needs **resource assignment and capacity limits** in the lane
+  contract, beside branch claims and the `lanes` budget. [owner: 5a] This commissions no
+  multi-host scheduler.
 - **The parallelism budget is a user-owned knob.** It lives in the story
   pool's header (one committed, visible place, e.g. `lanes: 3`), is never
   written by an agent, and is read fresh by the orchestrator at every tick —
@@ -846,11 +918,36 @@ writes the story.
   tick from mutable inputs, so the clock can execute a materially different
   plan than the one approved. Binding an approval to an input digest and
   re-rendering when it moves is the candidate. [4d]
+- *Durable story, exchangeable sessions (recorded 2026-10-05)* — from the 2026-10-04
+  follow-up handoff. Story identity, execution attempt and agent session stay three
+  separate things: §9's "identity lives in artifacts" and G2's session roles already
+  say so for sessions, and this names the attempt in between. Four restart scenarios
+  become later acceptance cases:
+  1. the run stops after the PR was created and before its status was saved;
+  2. the same event is delivered twice;
+  3. an old worker keeps running after another took over;
+  4. the worktree is removed before its evidence was saved.
+  Expected in each: an existing result is recognized, no action runs twice, ownership is
+  valid, and the resumption is traceable. The outcomes are required; the mechanisms are
+  not chosen here. They should build on what this document already names: the lease with a
+  heartbeat and a fencing token, which is still a *candidate* (*orchestrator exclusion*,
+  below), idempotent writes and stable IDs (*intake concurrency*, above), and the shipped
+  cycle nonce and working-record resume rules (`.claude/review-gates.md`).
+  **Today's telemetry covers case 4 only partly, and nothing across machines.**
+  `scripts/run-analytics.py` stores gate calls per clone, in the main worktree's
+  untracked `.context/telemetry/`, and it can attribute a call only while that call's
+  working directory still exists in this clone. Calls from a worktree removed before
+  collection, and from other clones or machines, are not covered; the report says so.
+  Nothing in the workflow runs it before a worktree is removed; this repository runs it
+  by hand at that point. No machine-independent evidence trail exists yet. [4a identity and states, 5a lease and resume, G2c session
+  roles]
 - *The decision-queue throttle's `N`* — a committed knob with a default, a
   range and an exact comparison, distinct from `lanes`. [5a]
 - *Branch-claim semantics* — "disjoint branches" is undefined for
   ancestor/descendant overlap, shared roots, multi-branch stories, and a lane
-  whose touched set grows during the build. [5a]
+  whose touched set grows during the build. Shared runtime resources (ports, test
+  databases, browser profiles, credentials, CI capacity; §9) need claims and capacity
+  limits of their own (2026-10-05). [5a]
 - *Orchestrator exclusion* — stale-lock cleanup is not exclusion: a live owner
   paused in a usage-limit hold is exactly what a staleness heuristic
   misreads. A lease with a heartbeat and a fencing token that every mutating
@@ -888,6 +985,13 @@ writes the story.
   deteriorating metrics). Triggers, authority, hysteresis and the immediate
   safe state belong to 6d, which owns the promotion path in both directions;
   until 6d defines them "a dial, never a ratchet" is only half true. [6d]
+  **Operational consequences feed it (recorded 2026-10-05).** From the 2026-10-04
+  follow-up handoff. Reverts, production faults and failed releases should feed the
+  decision to raise or lower autonomy, as far as they can be attributed to a merge.
+  Reversibility is judged by actual effect: a code revert does not undo a data change.
+  Deployment and operations stay with each project. The kit needs a defined way for a
+  project to report such an event back (the feedback intake in §8), not a deployment
+  engine. [6c thresholds, 6d triggers; the intake format is open]
 - *Meta-story batching versus the split rule* — one architecture meta-story per
   wave can combine independent subsystems and mixed profiles, which §5 says
   must split. Batching by compatible branch and profile group is the candidate,
@@ -923,17 +1027,33 @@ roadmap from reading complete while a drawn station is unbuilt.
   runner that fires before **every** model-operated node, including nodes that
   do not exist yet. Candidate: its own leaf under the shared contract, with
   its pool, split-threshold and projection checks mapped to 4a, 4b and 4c.
+  **Proposed placement (2026-10-05, not decided):** its runner and the pool-item checks
+  land with 4a, before 4b's Intake-Loop, the first model-operated loop; the
+  split-threshold and projection checks join as 4b and 4c land. So no model pass runs
+  unvetted while the later checks are still being built. It is a different thing from 5a's *environment*
+  preflight before every tick, which 5a already owns.
 - *The judge / watchdog* — §10 assigns it to step 5 as a whole, and it appears
   in no leaf. It supervises the model loops **and** the merge queue, which is
   not a clock loop, so it does not fall out of 5a either. Candidate: its own
   leaf covering every supervised node plus the push notifications.
+  **Proposed placement (2026-10-05, not decided):** after 5a and 5b, because it uses 5a's
+  lease and heartbeat to tell a stalled owner from a held one, and it supervises 5b's
+  queue.
 - *The working orchestrator dry-run* — step 3 owns the plan interface and
   says the runnable dry-run lands after 4d and 5a, but no later leaf owns it
   and §10 still points at step 3. Candidate: a leaf after 5a, with §10
-  repointed to it.
+  repointed to it. **Proposed (2026-10-05, not decided):** keep that candidate. It prints
+  the plan for §7's one-lane pilot; running the pilot is lane execution, which stays
+  behind its existing prerequisites (4e among them) and has no leaf of its own yet.
 - *The as-built view at wave close* — §10 assigns it to steps 4 and 5, it is
   in no leaf, and it is not drawn in §1. Candidate: 5d generates it and 4d
   requires it in the wave-close transition.
+- *The dashboard* — §4 decides what it shows and §11 above leaves its owning leaf open;
+  G1c (P1), G1b and the generated-HTML row in `todos.md` feed it.
+  **Proposed owner (2026-10-05, not decided):** its own leaf in two stages. A labelled
+  static snapshot from the Markdown sources and the existing workflow records can come
+  first, after 2c part 4. The live view follows the tick snapshot that 5a's contract
+  produces. The human-attention metrics and the decision inbox (§4) are its content.
 - *Punchlist generation* — §10 promises it as the artifact a sampled audit
   reads, assigned to step 6 as a whole; 6b owns the draw and the audit state,
   6c owns the merge thresholds, and neither owns producing the punchlist.
