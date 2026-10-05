@@ -1027,8 +1027,10 @@ roadmap from reading complete while a drawn station is unbuilt.
   runner that fires before **every** model-operated node, including nodes that
   do not exist yet. Candidate: its own leaf under the shared contract, with
   its pool, split-threshold and projection checks mapped to 4a, 4b and 4c.
-  **Proposed placement (2026-10-05, not decided):** after 4c, since it needs the pool,
-  the card and the projection. It is a different thing from 5a's *environment*
+  **Proposed placement (2026-10-05, not decided):** its runner and the pool-item checks
+  land with 4a, before 4b's Intake-Loop, the first model-operated loop; the
+  split-threshold and projection checks join as 4b and 4c land. So no model pass runs
+  unvetted while the later checks are still being built. It is a different thing from 5a's *environment*
   preflight before every tick, which 5a already owns.
 - *The judge / watchdog* — §10 assigns it to step 5 as a whole, and it appears
   in no leaf. It supervises the model loops **and** the merge queue, which is
