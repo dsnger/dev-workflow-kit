@@ -72,8 +72,11 @@ Shown by reading this machine's files on 2026-10-05, not assumed:
 
 **Header** (`AC-2`, `AC-3`, `AC-6`):
 - `report produced <UTC time>`.
-- `newest observed value <UTC time>`: the latest source timestamp this report used, or
-  `none observed` when it used none.
+- `newest observed value <UTC time>`: the latest start or end time among the calls this report
+  shows (open cycles, recent unattributed and pending calls), or `none observed` when there is
+  none. Calls in excluded cycles do not count, and Codex log times are not used at all, since a log
+  can be shared with an excluded call; so neither can make old open-cycle data look fresh (updated
+  after implementation, PR #43 review).
 - Source coverage, in part 1's form: for each source root, whether it was found, and the skipped
   sources by cause (unreadable file, malformed line, wrong shape), taken from the scan's
   `problems` counts. A missing root is shown as `not found`, so "no calls" and "sources

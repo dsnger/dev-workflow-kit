@@ -103,18 +103,6 @@ def main(argv):
         else:
             records.append(rec)
 
-    # Freshness: the newest source timestamp this report used, ignoring any later than now.
-    seen, future = [], 0
-    for t in [p[0] for p in pending] + [ra.parse_ts(r["started"]) for r in records] + \
-             [ra.parse_ts(r["ended"]) for r in records if r["ended"]] + \
-             [f["last_ts"] for r in records for s in r["session_ids"] for f in sessions.get(s, ()) if f["last_ts"]]:
-        if t is None:
-            continue
-        if t > now:
-            future += 1
-        else:
-            seen.append(t)
-
     provs, others = ra.cycles_from_history(cwd, lm)
     rc, out = ra.git(("rev-parse", "--is-shallow-repository"), cwd)
     shallow = out.strip() == b"true"
@@ -129,6 +117,21 @@ def main(argv):
         for n in nonces:  # run-analytics' rule: a call naming several nonces counts under each
             cls = ra.classify(n, provs, others)[0]
             (open_cycles if cls == "open" else excluded[cls]).setdefault(n, []).append(r)
+
+    # Freshness: the newest start or end time among the calls this report shows (open cycles, recent
+    # unattributed and pending), ignoring any later than now. Codex log times are not used: a log can be
+    # shared with a call this report excludes, so it could make old data look fresh.
+    shown_recs = {id(r): r for rs in open_cycles.values() for r in rs}
+    shown_recs.update((id(r), r) for r in unattr)
+    seen, future = [], 0
+    for t in [p[0] for p in pending] + [ra.parse_ts(r["started"]) for r in shown_recs.values()] + \
+             [ra.parse_ts(r["ended"]) for r in shown_recs.values() if r["ended"]]:
+        if t is None:
+            continue
+        if t > now:
+            future += 1
+        else:
+            seen.append(t)
 
     roots = (("transcripts", os.path.join(os.path.expanduser("~"), ".claude", "projects")),
              ("codex logs", os.path.join(os.path.expanduser("~"), ".codex", "sessions")))

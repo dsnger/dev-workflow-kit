@@ -119,6 +119,9 @@ def write(name, objs, mode="w", raw=()):
 if step == "build":
     write("s.jsonl", [
         use("toolu_closed", at(100), "x"), result("toolu_closed", at(100, 20), S[1], reply("aaaaaaaa", 1)),
+        # a closed-cycle call that ends after everything shown and resumes toolu_open1's Codex session,
+        # whose log then runs later still: neither the call nor the shared log may set the freshness value
+        use("toolu_late", at(3), "x"), result("toolu_late", at(3, 30), S[2], reply("aaaaaaaa", 2)),
         use("toolu_open1", at(90), "x"), result("toolu_open1", at(90, 100), S[2], reply("ffffffff", 1)),
         use("toolu_open2", at(80), "x"), result("toolu_open2", at(80, 50), S[3], reply("ffffffff", 2)),
         use("toolu_multi", at(70), "x"),
@@ -135,7 +138,7 @@ if step == "build":
     write("locked.jsonl", [use("toolu_hidden", at(3), ask)])
     if sys.argv[3] == "with-codex":
         clog("closed", S[1], at(100, 1), [(at(100, 10), 5, 0, 1, 0)])
-        clog("open1", S[2], at(90, 1), [(at(90, 60), 1000, 800, 40, 4)])
+        clog("open1", S[2], at(90, 1), [(at(90, 60), 1000, 800, 40, 4), (at(2, 40), 1500, 900, 60, 6)])
         clog("open2", S[3], at(80, 1), [])
         clog("multi", S[4], at(70, 1), [(at(70, 5), 7, 0, 1, 0)])
         clog("failed", S[5], at(60, 1), [(at(60, 20), 3, 0, 1, 0)])
@@ -178,6 +181,7 @@ if [ "$(id -u)" -ne 0 ]; then chmod 000 "$work/home/.claude/projects/-fixture/lo
 else rm -f "$work/home/.claude/projects/-fixture/locked.jsonl"; fi
 before_home=$(snapshot "$work/home"); before_repo=$(snapshot "$work/repo")
 out=$(run repo); st=$?
+date -u +%s > "$work/t1"  # wall clock after the run: the upper bound for the elapsed checks
 [ "$st" -eq 0 ] && pass "main run exits 0" || fail "main run exit $st: $out"
 [ "$before_home" = "$(snapshot "$work/home")" ] && pass "sources unchanged" || fail "sources changed"
 [ "$before_repo" = "$(snapshot "$work/repo")" ] && pass "repository unchanged (no store, no bytecode)" || fail "repository changed"
@@ -194,11 +198,11 @@ $skipped
 calls not shown (not in this clone) 1  malformed calls 0  values that failed their checks 0
 history searched: git log --all
 a gate call is not a review pass: this report counts calls and does not count or validate passes
-excluded, closed or contested (cycles / call-nonce pairs): confirmed 1 / 1  no story 1 / 1  conflicting 1 / 1
+excluded, closed or contested (cycles / call-nonce pairs): confirmed 1 / 2  no story 1 / 1  conflicting 1 / 1
 
 == Open cycles (no closing record found; calls counted once per nonce they name)
 cycle ffffffff  calls 3  cycle elapsed <s>  summed call duration 160.0 s (? 0 of 3)
-  tokens_in 1007 (? 1 of 3)  tokens_cached 800 (? 1 of 3)  tokens_out 41 (? 1 of 3)  tokens_reasoning 4 (? 1 of 3)
+  tokens_in 7 (? 2 of 3)  tokens_cached 0 (? 2 of 3)  tokens_out 1 (? 2 of 3)  tokens_reasoning 0 (? 2 of 3)
 
 == Unattributed calls (pending, or no cycle; started in the last 24 hours)
 pending (no result observed yet) 3
@@ -219,13 +223,16 @@ clock() { # output
   printf '%s\n' "$1" | python3 -c '
 import datetime, re, sys
 out, newest = sys.stdin.read(), open(sys.argv[1]).read()
+t0 = datetime.datetime.fromisoformat(open(sys.argv[2]).read()).timestamp()
+slack = int(open(sys.argv[3]).read()) - t0 + 2  # seconds between fixture time and the end of the run
 t = lambda s: datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%fZ")
 prod = t(re.search(r"^report produced (\S+)", out, re.M).group(1))
 seen = re.search(r"^newest observed value (\S+)", out, re.M).group(1)
 el = float(re.search(r"cycle ffffffff .*cycle elapsed ([0-9.]+) s", out).group(1))
 pe = float(re.search(r"toolu_pending .*pending since invocation ([0-9.]+) s", out).group(1))
-ok = seen == newest and prod > t(newest) and 90 * 60 <= el <= 90 * 60 + 300 and 5 * 60 <= pe <= 5 * 60 + 300
-print("ok" if ok else "bad: newest %s vs %s, elapsed %s, pending %s" % (seen, newest, el, pe))' "$work/newest"
+ok = seen == newest and prod > t(newest) and 90 * 60 <= el <= 90 * 60 + slack and 5 * 60 <= pe <= 5 * 60 + slack
+print("ok" if ok else "bad: newest %s vs %s, elapsed %s, pending %s, slack %s" % (seen, newest, el, pe, slack))' \
+    "$work/newest" "$work/t0" "$work/t1"
 }
 c=$(clock "$out")
 [ "$c" = ok ] && pass "clock: newest value exact, report time later, elapsed and pending within bounds" || fail "clock: $c"
@@ -239,7 +246,7 @@ out=$(run repo)
 expect "after completion: pending gone, counted once, failed moves" "$(printf '%s\n' "$out" | mask | sed -n '/^== Open cycles/,/^== What this report cannot see/p' | sed '$d')" <<'EOF'
 == Open cycles (no closing record found; calls counted once per nonce they name)
 cycle ffffffff  calls 4  cycle elapsed <s>  summed call duration 340.0 s (? 0 of 4)
-  tokens_in 1057 (? 1 of 4)  tokens_cached 800 (? 1 of 4)  tokens_out 46 (? 1 of 4)  tokens_reasoning 5 (? 1 of 4)
+  tokens_in 57 (? 2 of 4)  tokens_cached 0 (? 2 of 4)  tokens_out 6 (? 2 of 4)  tokens_reasoning 1 (? 2 of 4)
 
 == Unattributed calls (pending, or no cycle; started in the last 24 hours)
 pending (no result observed yet) 1
