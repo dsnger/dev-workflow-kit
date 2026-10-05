@@ -79,6 +79,11 @@ epic-needs-splitting — four sub-stories, in this order (Daniel, 2026-10-02):
 (3) spec-delta capture; (4) live cost counters and the minimum-cost INCOMPLETE signal. Part 4
 changes gate pass validity and needs its own profile, risk high.
 
+**Part 4 split 2026-10-05 (Daniel).** Measurement first: part 4a, live effort counters
+(`docs/superpowers/stories/2026-10-05-live-effort-counters-story.md`, risk standard), changes no
+pass validity. Part 4b, the minimum-cost INCOMPLETE signal, comes later, on calibrated data; it keeps
+the risk-high profile above and the central question in §5.
+
 **Part 2 narrowed 2026-10-03 (Daniel).** Part 2 delivers a warning light over recorded counts and
 stored effort (`docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`).
 It does not satisfy criterion 5: confirmed distinct yield, repair origin, reviewed coverage and a
