@@ -201,6 +201,11 @@ Each prompt carries six things:
 Ask for a completion report covering changes made, checks actually run, remaining gaps
 and git state.
 
+**When the advice is to change an approved story or spec**, draft the change record in the
+conversation, in the shape `dev-workflow:intake` gives under *Amending an approved story
+or spec*, and put it in the prompt's scope: the coding session writes it through that
+route. Point at intake's section rather than restating its steps, so the two cannot drift.
+
 A usable shape:
 
 ```text

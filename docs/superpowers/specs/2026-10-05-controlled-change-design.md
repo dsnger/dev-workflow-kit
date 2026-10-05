@@ -182,7 +182,7 @@ pass, and only those flip. Reject/accept pairs in `scripts/check-invariants.test
 against the prior skill text. It proves the template is present, not that the procedure is
 followed; the replay below carries that.
 
-**Named verification: replay on the two 2c narrowings** (`AC-9`).
+**Named verification: replay on the two 2c narrowings** (`AC-11`; it replaced `AC-9` on 2026-10-05).
 
 *Replay package* — fixed files in `.context/g1a-replay/` in the main checkout (copied there because
 git may prune the unreachable commits; the replay reads only these copies):
@@ -218,13 +218,31 @@ about them; step 9 is reduced to naming what stays blocked. The agent writes onl
 records, to the scratch directory.
 
 *Run*: a fresh agent, given the package and told to follow intake's amendment route within that
-boundary, produces one change record per part. *Compare* with the expected answers: every historical row and fate must be
-reproduced (historical `Narrowed` → `kept` plus a `moved` or `dropped` remainder; `Replaced` →
-`withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded" → `kept` with `reworded`), and the
-dependent artifacts each change touched must be named (part 1:
+boundary, produces one change record per part. *Compare* with the expected answers (historical `Narrowed` → `kept` plus a `moved` or
+`dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded"
+→ `kept` with `reworded`). **Pass condition** (`AC-11`): every baseline condition receives a fate
+or is listed as Unaccounted; the dependent artifacts each change touched are named (part 1:
 `docs/superpowers/specs/2026-10-02-run-analytics-design.md`, written in the same commit; part 2:
-`docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`). Each difference is reported, not
-hidden.
+`docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`);
+and every row that differs from the historical table is reported with its cause — a rule the
+history predates, a change the historical table did not account for, or decision evidence missing
+from the input — none of them a procedure failure.
+
+**Changed 2026-10-05 — change of direction.** Decided by Daniel, 2026-10-05, in this session. Baseline: 832510b. The pass condition required every historical row to be reproduced; Gate B pass 2 (cycle xby91gy4in) showed the historical tables are not a correct oracle under today's rules. Full record: the story, end of §3 (AC-9 withdrawn, AC-11 added).
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| "every historical row and fate must be reproduced" | dropped — see the story's record | none (cites the story's AC-9 withdrawal) |
+| dependent artifacts named; each difference reported | kept, now with a cause per difference | none |
+| the battery; check 4f with its counterfactual and mutation record | kept | none |
+| the replay package: preserved inputs, withheld answers, today's rules applied retrospectively, part 1's two changes as one | kept | none |
+| recording every input that already states a fate, in compare.md and the evidence entry | kept | none |
+| the replay boundary: steps 1, 2, 4–7 only; steps 3 and 8 not exercised | kept | none |
+| §0–§3 and §5 | kept | none |
+
+- **Unaccounted:** none. **Intervening changes:** none since 832510b. **Scope boundary:** unchanged. **Open questions:** none.
+- **Dependent artifacts:** the story → updated in this change; the plan → updated in this change; `todos.md` (G1a's acceptance checks) → updated in this change.
+- **Reviews already run:** as in the story's record.
 
 ## §5 Surfaces this change touches
 

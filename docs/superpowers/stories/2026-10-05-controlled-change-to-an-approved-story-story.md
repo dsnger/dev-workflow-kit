@@ -51,11 +51,35 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-8** The session roles stay as the skills define them: sparring prepares the change
       record and the handoff and changes no files, and the coding session updates the development
       artifacts.
-- [ ] **AC-9** Replayed on the two recorded 2c narrowings, the procedure reproduces their fate
+- [ ] **AC-9** ~~Replayed on the two recorded 2c narrowings, the procedure reproduces their fate
       tables (every row and its fate) and names the dependent artifacts each one changed; any row it
-      cannot reproduce is reported as a difference, not hidden.
+      cannot reproduce is reported as a difference, not hidden.~~ — withdrawn 2026-10-05: the
+      historical tables are not ground truth under today's rules (Gate B cycle xby91gy4in, pass 2);
+      replaced by AC-11.
 - [ ] **AC-10** Out of scope and absent from the change: a separate skill, new approval levels,
       dashboard or live-view work, and any part of the 2c part-4b calibration.
+- [ ] **AC-11** Replayed on the two recorded 2c narrowings, the procedure gives every condition of
+      each baseline a fate or lists it as Unaccounted, and names the dependent artifacts each change
+      touched. Every row where it differs from the historical fate table is reported with its
+      cause — a rule the history predates, a change the historical table did not account for, or
+      decision evidence missing from the replay input — and none of the differences is a procedure
+      failure.
+
+**Changed 2026-10-05 — change of direction.** Decided by Daniel, 2026-10-05, in this session (answer "Regel anpassen" to the replay pass-condition question). Baseline: 4870887. The replay's pass condition required every historical fate-table row to be reproduced. Gate B pass 2 (cycle xby91gy4in) showed the historical tables are not ground truth: two rows labelled Kept hid dropped conditions, the narrowed-or-replaced test postdates them, and one decision has no recorded decider. The condition now measures the procedure, not agreement with history.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-9: replay reproduces every historical row and its fate | dropped — the history is not a correct oracle under today's rules (Gate B pass 2) | withdrawn |
+| AC-9: replay names the dependent artifacts each change touched | moved → AC-11 | added AC-11 |
+| AC-9: a row it cannot reproduce is reported as a difference, not hidden | moved → AC-11 (now with a named cause per row, and no row may be a procedure failure) | added AC-11 |
+| AC-1 to AC-8, AC-10, §1, §2, §4–§6 | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none; the story is unchanged since 4870887.
+- **Scope boundary:** in: the replay's success measure; out: unchanged.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-05-controlled-change-design.md` → updated in this change (§4); `docs/superpowers/plans/2026-10-05-controlled-change.md` → updated in this change (Task 4 Step 4, evidence template, coverage map); `todos.md` (G1a's acceptance checks) → updated in this change.
+- **Reviews already run:** Gate-A spec cycle lbveuxkbje and plan cycle p3780ujtg3 (closed) → no rule found (input: the spec's and plan's verification text after their Gate-A cycles closed; paragraphs checked: "Gate A's content condition, and its closing act", "Closure introduces no new kind of record"); human decision: Daniel 2026-10-05, the change rides in the open Gate-B cycle xby91gy4in, whose next pass reviews the story, spec and plan edits together, as a Gate-B fix that changes specified behaviour does ("A fix that changes specified behaviour updates the spec in the same commit").
 
 ## 4. Affected AGENTS.md invariants
 - `## Don'ts` — "**Never replace a decision procedure without accounting for its old conditions.**

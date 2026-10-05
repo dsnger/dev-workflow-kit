@@ -18,7 +18,7 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 
 | | |
 |---|---|
-| `dev-workflow:intake` | skill — a raw idea or voice transcript (German or English) becomes a reviewable story. Captures WHAT and WHY; refuses to invent the parts that aren't there. |
+| `dev-workflow:intake` | skill — a raw idea or voice transcript (German or English) becomes a reviewable story. Captures WHAT and WHY; refuses to invent the parts that aren't there. Also amends an approved story or spec with a change record that accounts for every earlier condition. |
 | `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule, type constraint, test, or documented convention, at the right rung, recorded in the ledger. |
 | `dev-workflow:sparring` | skill — invoked by name only, in a chat you open for advice: investigates read-only, checks agent reports against the current files, and drafts bounded prompts for a coding agent to run elsewhere. It advises; it does not implement, commit, or run review gates. |
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
@@ -159,7 +159,7 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
-[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus four prompt-conformance checks) plus
+[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus five prompt-conformance checks) plus
 both checkers' regression suites, the five reports' suites, and
 `claude plugin validate . --strict`.
 

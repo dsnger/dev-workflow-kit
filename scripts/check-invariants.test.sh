@@ -67,6 +67,22 @@ tpl_sections() {
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
 AC_RULE_LINE='_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._'
+# 4f: the 12 lines the amendment route's change-record template must carry, verbatim.
+# shellcheck disable=SC2016  # literal Markdown backticks, not command substitution
+CR_LINES='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>
+| Earlier condition | Fate | AC operation |
+- **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
+- **Intervening changes:** <change since the baseline> → <how accounted>; or none.
+- **Scope boundary:** in: <…>; out: <…>.
+- **Open questions:** <question> → <where recorded>; or none.
+- **Dependent artifacts:** <path> → <status>; or none.
+- **Reviews already run:** <input or cycle> → <consequence>, per <rule cited>; or "no rule found" (<input>, <paragraphs checked>) → <human decision, or pending: blocks <continuation>>.
+- **Reason class**, exactly one: `changed requirement` · `gap found` · `change of direction`.
+- **Fate**, one or more per condition: `kept` · `moved → <destination>` · `dropped — <reason>`.
+- **AC operation**, per intake'"'"'s ID rules: `none` · `reworded` · `narrowed` · `withdrawn` · `added AC-<n>`.
+- **Dependent-artifact status**, exactly one: `updated in this change` · `open — permitted by <rule>` · `blocks <named continuation> until updated`.'
+# cr_section [LINES]: the amendment section holding LINES (default: all 12).
+cr_section() { printf '## Amending an approved story or spec\n\nprose\n\n%s\n\n## Stop and ask\n' "${1-$CR_LINES}"; }
 # ac_rows N: criterion rows AC-1..AC-N
 ac_rows() { i=1; while [ "$i" -le "$1" ]; do printf -- '- [ ] **AC-%s** criterion %s\n' "$i" "$i"; i=$((i + 1)); done; }
 # ac_skill REGION [AFTER]: a skill file whose template's criteria region is REGION (the rule
@@ -76,8 +92,8 @@ ac_skill() {
   case "$region" in @NORULE@*) region=${region#@NORULE@}; rule='' ;; *) rule="$AC_RULE_LINE
 " ;; esac
   # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
-  printf '# intake\n\n## Story template\n\n```markdown\n# T\n\n## 3. Acceptance criteria\n%s%s\n\n## 4. Affected AGENTS.md invariants\n- none\n```\n\n%s\n' \
-    "$rule" "$region" "${2:-}"
+  printf '# intake\n\n## Story template\n\n```markdown\n# T\n\n## 3. Acceptance criteria\n%s%s\n\n## 4. Affected AGENTS.md invariants\n- none\n```\n\n%s\n\n%s\n' \
+    "$rule" "$region" "${2:-}" "$(cr_section)"
 }
 
 work=$(mktemp -d) || work=''
@@ -396,6 +412,11 @@ done
 #              fires`; no accept case moved (re-measured 2026-10-04 after the two-fence
 #              case was added). 4a, 4b and 4d were
 #              re-measured the same day after the shared fixtures changed: 20, 22, 22.
+#   4f -> 29   every `4f:` reject fixture (28) and `4f change-record parser failure
+#              fires`; no accept case moved (measured 2026-10-05). 4a-4e re-measured the
+#              same day after the shared intake fixture gained the amendment section:
+#              20, 22, 20, 22, 7, unchanged. The first 4d run flipped 109 cases, accepts
+#              among them, because 4f read 4d's file variable; 4f now sets its own.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -977,6 +998,55 @@ an example section after the real one"
 # is identified by its `ac-template-scan` marker comment.
 inject_case "4d AC-<n> template parser failure fires" awk '*ac-template-scan*' \
   'AC-<n> template parser failed'
+
+# --- Prompt conformance: check 4f, the amendment route's change-record template --------
+#
+# Each case writes an intake skill whose story template is valid (so 4d stays quiet) and
+# whose amendment section varies. Rejects must carry the shared 4f diagnostic phrase.
+CR='change-record template'
+cr_case() { # $1 = name, $2 = 1|0 expect reject, $3 = text after the story template,
+  #            $4 = optional diagnostic substring a reject must also carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+  printf '# intake\n\n## Story template\n\n```markdown\n# T\n\n## 3. Acceptance criteria\n%s\n%s\n\n## 4. Affected AGENTS.md invariants\n- none\n```\n\n%s\n' \
+    "$AC_RULE_LINE" "$(ac_rows 3)" "$3" > "$work/r/plugins/dev-workflow/skills/intake/SKILL.md"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF "$CR" || ! printf '%s' "$out" | grep -qF -- "${4:-$CR}"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+cr_case "4f: valid section accepted"                   0 "$(cr_section)"
+cr_case "4f: section last in the file accepted"        0 "$(printf '## Amending an approved story or spec\n\n%s\n' "$CR_LINES")"
+cr_case "4f: no amendment section rejected"            1 "## Stop and ask"
+cr_case "4f: two amendment sections rejected"          1 "$(cr_section)
+$(cr_section)"
+cr_case "4f: a duplicated required line rejected"      1 "$(cr_section "$CR_LINES
+$(printf '%s\n' "$CR_LINES" | sed -n 1p)")"
+cr_case "4f: a required line outside the section rejected" 1 \
+  "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed 1d)")
+$(printf '%s\n' "$CR_LINES" | sed -n 1p)"
+# cr_i, not i: init_prompt_fixtures (called by cr_case) uses and leaves a global i.
+cr_i=1
+while [ "$cr_i" -le 12 ]; do
+  cr_case "4f: required line $cr_i missing rejected" 1 \
+    "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${cr_i}d")")" "line $cr_i occurs 0 times"
+  cr_case "4f: required line $cr_i altered rejected" 1 \
+    "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${cr_i}s/\$/ x/")")" "line $cr_i occurs 0 times"
+  cr_i=$((cr_i + 1))
+done
+inject_case "4f change-record parser failure fires" awk '*cr-template-scan*' \
+  'change-record template parser failed'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else
