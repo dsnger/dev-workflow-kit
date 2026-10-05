@@ -741,7 +741,12 @@ fi
 #
 # What it does NOT catch: whether the procedure prose around them is right, whether any
 # written record follows the template, or whether its values are true. It pins the
-# template's spelling only.
+# template's spelling only. Nor does it parse Markdown: it takes the first line that is exactly
+# ```markdown as the template's opener and the next line that is exactly ``` as its closer, so a
+# template nested inside another fence (four backticks, tildes, indented) is not recognised as
+# literal text and can pass. A full fence parser was tried in PR #45 and every review pass found
+# a new edge case (indentation, tabs, openers before the heading, backticks in prose), so the
+# limit is stated here instead; the shipped intake skill uses only plain ``` fences.
 # The backticks are literal Markdown, not command substitution.
 # shellcheck disable=SC2016
 CR_REQ='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>

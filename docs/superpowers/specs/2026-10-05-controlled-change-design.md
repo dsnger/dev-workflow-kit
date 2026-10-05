@@ -175,14 +175,17 @@ unchanged (`AC-8`).
 `scripts/check-invariants.sh` fails unless intake's skill text carries the change-record shape:
 the heading line's fields (date, reason class, decider, baseline), the three reason classes, the
 three fates, the AC-operation set, the *Unaccounted* and *Intervening changes* fields, the three
-dependent-artifact statuses and the reviews field, the template lines inside the section's
-first ```markdown fence and the closed sets outside it (placement added 2026-10-05, PR #45
-review). It is bracketed by `# --- BEGIN check 4f ---` /
+dependent-artifact statuses and the reviews field, the template lines between the section's
+first line that is exactly ```markdown and the next line that is exactly ```, and the closed sets
+outside them (placement added 2026-10-05, PR #45 review). It does not parse Markdown: a template
+nested inside another fence (four backticks, tildes, indented) can pass. A fence parser was tried
+in PR #45 and withdrawn after each review pass found new edge cases; the limit is stated in the
+checker and in `todos.md`. It is bracketed by `# --- BEGIN check 4f ---` /
 `# --- END check 4f ---` markers like 4a–4e and joins the script header's mutation procedure, so
 its own rejection cases are shown to depend on it: with the 4f block removed, its reject cases
 pass, and only those flip. Reject/accept pairs in `scripts/check-invariants.test.sh`. It fails
-against the prior skill text. It proves the template is present, not that the procedure is
-followed; the replay below carries that.
+against the prior skill text. It shows the template's lines are present in that layout, not that
+the template renders as one or that the procedure is followed; the replay below carries the latter.
 
 **Named verification: replay on the two 2c narrowings** (`AC-12`; it replaced `AC-11`, which had replaced `AC-9`, on 2026-10-05).
 
