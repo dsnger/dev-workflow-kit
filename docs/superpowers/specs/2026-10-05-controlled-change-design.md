@@ -29,33 +29,80 @@ solution and does not start a new story for an approved one.
 **Separate from the new-story flow.** A new section, *Amending an approved story or spec*, is its
 own route. It does not run the new-story flow's question round, profile proposal, file naming,
 story-only commit protocol or brainstorming hand-off. Each of those would either add an approval
-step (`AC-7`) or write the wrong file. intake's WHAT/WHY boundary still holds: the record states
-what changed and why, never how the solution is built.
+step (`AC-7`) or write the wrong file. The route makes no new solution-design decision. For a
+story, intake's WHAT/WHY boundary holds as before; for a spec, the record may state an
+already-decided technical condition (an ordering, a contract, an algorithm), because recording it
+is not designing it.
+
+**intake's global instructions are scoped, and each old condition is accounted for.** Today
+*Stop and ask* and *Common mistakes* read as rules for every intake run. The change scopes each item:
+
+| Existing instruction | Fate under this change |
+|---|---|
+| One-round pause | kept for the new-story route; the amendment route's only question is step 1's uncovered decision |
+| Grounding floor | kept for the new-story route; the amendment route's equivalent is step 2's stop when the baseline cannot be established |
+| Dirty or unexpected index (story path only) | kept for the new-story route; moved → step 8 for a standalone amendment commit: pre-existing staged work stops it, the expected staged set is the changed artifact plus the dependent artifacts marked `updated in this change`, and staged content must equal the written files. Where a gate or an open cycle governs the commit, step 8 defers to its rules instead |
+| No AGENTS.md | kept for both routes: a story's §4 needs it, and every amendment needs it for the Don't "Never replace a decision procedure without accounting for its old conditions" |
+| No `superpowers:brainstorming` | kept for the new-story route only; the amendment route hands off to nothing |
+| Common mistake "committing text the user hasn't approved" | kept for the new-story route; for amendments the covering decision of step 1 is the approval, and no draft-approval step is added (`AC-7`) |
+| Common mistakes "HOW outside §4" and "empty §4" | kept for stories on both routes (story-template constraints); not applied to specs, whose sections are their own. Recording an already-decided technical change in a spec is recording, not designing |
+| Other common mistakes (invariants from memory, padding, `git add -A`) | kept for both routes |
 
 **Steps** (each states its reason in the skill text, per `docs/prompt-standards.md`):
 1. **Establish the decision.** Name the explicit human decision that covers this change: who, when,
    and where it was given (a message, a review thread, a commit). If no explicit decision covers
    the whole change, ask the human the uncovered question before writing anything, then continue
    on the answer. No other approval step exists (`AC-7`).
-2. **Fix the baseline.** Name the artifact revision the change is measured against: the commit at
-   which the changed text was last approved. Read the artifact at that revision.
-3. **Enumerate the baseline's conditions** before assigning any fate: every acceptance criterion,
+2. **Fix the baseline.** Name the approved text the change is measured against: the commit at
+   which it was last approved, or, for approved text that was never committed, the content hash
+   recorded with the approval (for example the hash a Gate-A request pinned). Read the baseline.
+   **If the approved text cannot be established** — no such commit, no recorded hash, or a hash
+   that matches no available text — stop and name what is missing. Never substitute `HEAD` or the
+   working copy for it.
+3. **Reconcile the current text with the baseline.** Compare the artifact as it now stands (working
+   tree and index) with the baseline. Changes made since then — another amendment, another
+   session's edits — are listed in the record and accounted for like any other condition, or, if
+   no decision covers them, put to the human under step 1. Unrelated edits are preserved, never
+   overwritten. Concurrent AC-number claims stay under intake's rule 3. **The same applies to every
+   file the route will write**, not only the changed artifact: each existing dependent artifact's
+   current state (working tree and index) is captured here, an intervening edit to it is reconciled
+   the same way, and a path the route will create must not yet exist.
+4. **Enumerate the baseline's conditions** before assigning any fate: every acceptance criterion,
    every outcome or scope sentence that constrains the result, and every stated exclusion. A
-   template cannot reveal an omitted condition; the enumeration can (`AC-3`).
-4. **Assign fates and AC operations** (§2), one row per condition or per contiguous group of
+   template cannot reveal an omitted condition; the enumeration can (`AC-3`). **For a spec
+   amendment**, also read the governing stories named in the spec's `Story:` header, and map each
+   changed spec condition to the story criteria it serves.
+5. **Assign fates and AC operations** (§2), one row per condition or per contiguous group of
    criteria that share a fate. Then **reconcile**: every enumerated condition appears in a row. A
-   condition that has none is listed in the record as `unaccounted`, never left out (`AC-3`).
-5. **Apply the AC operations** to the criteria list under intake's existing rules 1–5
-   (*Acceptance-criterion IDs*): citation form, adoption for older stories, dated notes,
-   withdrawals and the branch-aware next number with its collision stop. The route adds no
-   numbering or citation rule of its own (`AC-2`).
-6. **Fill the remaining fields** (§2): scope boundary, open questions, dependent artifacts,
+   condition with no settled fate goes to the record's *Unaccounted* field (§2), never into the
+   table under a fate it does not have (`AC-3`).
+6. **Apply intake's ID rules exactly as written** (*Acceptance-criterion IDs*, rules 1–5). The
+   route adds no numbering or citation rule of its own (`AC-2`). Concretely: every affected
+   criterion is cited in rule 4's form, which has two branches — `<story path> AC-<n>` for a story
+   with identifiers, and the story path with the quoted criterion text for one without. A story
+   amendment of any kind is an amendment under rule 5, so an older story adopts identifiers at it
+   even when no criterion's wording changes. Criterion operations (rule 2) apply only to criteria
+   the decision changes. A spec amendment edits a governing story only when the decision changes
+   that story, and then the story is a dependent artifact.
+7. **Fill the remaining fields** (§2): scope boundary, open questions, dependent artifacts,
    reviews already run.
-7. **Write and commit.** Write the record and the edited text. Stage only the changed artifact and
-   any dependent artifact this change updates. Check the staged set before committing. Commit with
-   a message naming the change, the decider and the date.
-8. **Stop.** Name what the change unblocks and what stays blocked (§2, dependent artifacts and
-   reviews). Nothing resumes a gate, a plan or an implementation on its own (`AC-7`).
+8. **Write and commit, deferring to the gate rules.** Two checkpoints, each against its own expected
+   state: immediately before writing, every file the route will write must still equal the state step 3
+   captured for it (a new path must still be absent); before staging, each must equal exactly what
+   this step wrote. Only an unexpected difference returns to
+   step 3; the route's own write is never read as an intervening change. Then decide, from the existing rules and not from this route, whether
+   the complete changed set — the artifact and every dependent artifact updated with it — owes a
+   gate (`.claude/review-gates.md`, "What counts as prose (the only Gate-B exemption)", and the
+   rules of any open cycle). Where it owes one, or an open cycle's rules govern how it is committed,
+   the commit goes through that gate and those rules, and the route stops at handing it over.
+   Only otherwise is it a standalone commit, under the same index checks the new-story route uses:
+   stop if the index already holds staged work this change did not stage; stage exactly the changed
+   artifact and the dependent artifacts the record marks `updated in this change`; verify the staged
+   path set and that each staged file's content equals the written file; commit with a message
+   naming the change, the decider and the date.
+9. **Stop.** Name what the change unblocks and what stays blocked (§2: unaccounted conditions,
+   dependent artifacts, reviews). Nothing resumes a gate, a plan or an implementation on its own
+   (`AC-7`).
 
 ## §2 The change record
 
@@ -63,12 +110,14 @@ Placed in the changed artifact: in a story at the end of §3 (the criteria it ac
 spec at the end of the section it changes. Its shape:
 
 ```markdown
-**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit>. <Rationale.>
+**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>
 
 | Earlier condition | Fate | AC operation |
 |---|---|---|
 | <AC-n, or the quoted condition> | <fate, or several> | <operation> |
 
+- **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
+- **Intervening changes:** <change since the baseline> → <how accounted>; or none.
 - **Scope boundary:** in: <…>; out: <…>.
 - **Open questions:** <question> → <where recorded>; or none.
 - **Dependent artifacts:** <path> → <status>; …
@@ -82,7 +131,8 @@ or a review) · `change of direction`.
 **Fate**, per condition, the AGENTS.md set (`AC-3`): `kept` · `moved → <destination>` ·
 `dropped — <reason>`. A row may carry several fates when a narrowing keeps part of a condition and
 moves or drops the rest; naming only the surviving part would hide what left the scope.
-`deferred` is a move and names where it went.
+`deferred` is a move and names where it went. A condition with no settled fate is not given one:
+it goes to **Unaccounted**, which blocks the named continuation until a decision settles it.
 
 **AC operation**, separate from the fate, under intake's rules (`AC-2`): `none` · `reworded` ·
 `narrowed` · `withdrawn` · `added AC-<n>`. A replacement is `withdrawn` plus `added AC-<n>`;
@@ -91,28 +141,20 @@ operation `reworded`.
 
 **Dependent artifacts** (`AC-5`), each with exactly one status: `updated in this change` ·
 `open — permitted by <rule>` · `blocks <named continuation> until updated`. `open` requires a cited
-rule that permits leaving it. Where a rule demands the update in the same commit, `open` is not
-available; for example a Gate-B fix that changes specified behaviour updates the spec in that commit
-(`.claude/review-gates.md`, Gate B, "A fix that changes specified behaviour updates the spec in the
-same commit").
+rule that permits leaving it; where a rule demands the update in the same commit, `open` is not
+available, and the record cites that rule.
 
-**Reviews already run** (`AC-6`): for each gate cycle the change touches, the consequence and the
-rule that decides it. What the rules decide, as read on 2026-10-05:
-- a change to a governing profile or to the cited set while a cycle is open costs that cycle a
-  further pass (`.claude/review-gates.md`, "Any profile change costs at least one further pass";
-  "The cited set is re-read at each pass");
-- a cycle that has already closed stands (the opening floor paragraph: "a cycle that has already
-  closed stands");
-- a behavioural Gate-B fix and its spec update share a commit and one re-review (the Gate-B
-  paragraph quoted above);
-- a change to an artifact's content after its Gate-A cycle closed: the rules give no general
-  "further pass" or "new cycle" answer. Gate A's content condition reads equality at closure only,
-  and "Closure introduces no new kind of record" states that a change to a cited story's criteria
-  "nothing here reaches". The record says so and names the human's decision (or that it is pending,
-  which blocks the dependent continuation). It never writes a rule the gates do not have.
-
-The skill text cites these rules by paragraph title, and does not copy them, so a later gate
-change has one source.
+**Reviews already run** (`AC-6`): for each review input the change touches and each cycle it
+affects, open or closed, the record cites the existing source rule that decides the consequence,
+by its paragraph title in `.claude/review-gates.md`. The inputs to check include, without this list
+being exhaustive: the artifact's text, a governing profile, the cited set, the assigned fix set, a
+cited story's criteria and settled decisions. **The spec deliberately does not summarise what those
+rules decide**: each summary written during this design overstated a rule (Gate-A passes 1 and 2),
+and AGENTS.md forbids describing a gate beyond what it compares. The record quotes or cites the
+rule it relied on. Only where the author checked the sources for an input and found none that
+decides it does the record say "no rule found", naming the input and the paragraphs checked, and
+then the human's decision or that it is pending, which blocks the dependent continuation. It never
+writes a rule the gates do not have.
 
 **Evidence link** (story §5): optional. Where `scripts/spec-delta.py` produced a report for the
 change, the record may cite it as evidence. The route does not run or require it.
@@ -131,27 +173,63 @@ unchanged (`AC-8`).
 
 **Check, mechanical (rung 2), with its counterfactual.** A new check `4f` in
 `scripts/check-invariants.sh` fails unless intake's skill text carries the change-record shape:
-the heading line's fields, the three reason classes, the three fates, the AC-operation set, the
-three dependent-artifact statuses and the reviews field. Reject/accept pairs in
-`scripts/check-invariants.test.sh`. It fails against the prior skill text. It proves the template is
-present, not that the procedure is followed; the replay below carries that.
+the heading line's fields (date, reason class, decider, baseline), the three reason classes, the
+three fates, the AC-operation set, the *Unaccounted* and *Intervening changes* fields, the three
+dependent-artifact statuses and the reviews field. It is bracketed by `# --- BEGIN check 4f ---` /
+`# --- END check 4f ---` markers like 4a–4e and joins the script header's mutation procedure, so
+its own rejection cases are shown to depend on it: with the 4f block removed, its reject cases
+pass, and only those flip. Reject/accept pairs in `scripts/check-invariants.test.sh`. It fails
+against the prior skill text. It proves the template is present, not that the procedure is
+followed; the replay below carries that.
 
-**Named verification: replay on the two 2c narrowings** (`AC-9`). Inputs: the pre-narrowing story
-texts, recovered from unreachable local commits (`9fb981f` for part 1, `5fcc072` for part 2), the
-narrowing commits with their decision text (`f9aae57` for part 1, `32609a0` for part 2), and the
-narrowed versions on `main`. All four are copied to `.context/g1a-replay/` in the main checkout,
-since git may prune unreachable objects; the replay reads those copies. A fresh agent given only the new intake section and
-those inputs produces a change record for each. Compare with the historical fate tables
-(`docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md` and
-`docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`): every
-historical row and fate must be reproduced (historical `Narrowed` → `kept` plus a `moved` or
-`dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`), and the
-dependent artifacts each narrowing changed must be named. Each difference is reported, not hidden.
+**Named verification: replay on the two 2c narrowings** (`AC-9`).
+
+*Replay package* — fixed files in `.context/g1a-replay/` in the main checkout (copied there because
+git may prune the unreachable commits; the replay reads only these copies):
+- the baselines: part 1 at `9fb981f`, part 2 at `5fcc072` (the story text before any amendment);
+- the after-texts: each story as its narrowing commit left it (`f9aae57` for part 1, `32609a0` for
+  part 2), **with the change-record blocks removed** (the amendment paragraphs and fate tables);
+- the decision evidence: each narrowing commit's message and the decision source it names, with any
+  fate table removed;
+- each narrowing commit's unabridged changed-path list (`git show --format= --name-only`; the
+  `--stat` view abbreviates long paths), so dependent artifacts can be named;
+- the rule context, all at the implementation's head commit (named in the evidence entry): the new
+  intake skill text, which is the procedure under test and carries the ID rules, plus
+  `.claude/review-gates.md` and `AGENTS.md`. The historical cycles ran under older text (neither
+  baseline commit has `.claude/review-gates.md` or the ID rules), so the replay applies today's
+  rules retrospectively, and a difference caused by a rule that did not exist then is labelled as
+  such, apart from procedure failures.
+The expected answers (both historical change records, verbatim) are kept in a separate file the
+replay agent does not receive; only the comparator reads it. Any leakage that cannot be avoided —
+for example a narrowed criterion whose wording reveals its fate — is recorded as a limit of the
+verification.
+
+*Part 1 holds two changes in one commit*: an amendment after Gate-A pass 1 (credit balance dropped,
+criterion 1 re-keyed on the transcript) and the narrowing after pass 4. No committed text sits
+between them. The replay therefore treats part 1 as one change from `9fb981f` to `f9aae57`, and the
+expected answer is the union of both historical records. A difference that comes only from this
+boundary is labelled as such, apart from procedure failures.
+
+*Boundary.* The replay exercises the **record-generating subset** of the route: steps 1, 2, 4, 5, 6
+and 7, from the package alone, in an isolated scratch directory outside any checkout. Steps 3
+(reconciling against a live working tree) and 8 (writing and committing) need repository state the
+historical cases no longer have, so they are **not** exercised, and the verification claims nothing
+about them; step 9 is reduced to naming what stays blocked. The agent writes only its change
+records, to the scratch directory.
+
+*Run*: a fresh agent, given the package and told to follow intake's amendment route within that
+boundary, produces one change record per part. *Compare* with the expected answers: every historical row and fate must be
+reproduced (historical `Narrowed` → `kept` plus a `moved` or `dropped` remainder; `Replaced` →
+`withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded" → `kept` with `reworded`), and the
+dependent artifacts each change touched must be named (part 1:
+`docs/superpowers/specs/2026-10-02-run-analytics-design.md`, written in the same commit; part 2:
+`docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`). Each difference is reported, not
+hidden.
 
 ## §5 Surfaces this change touches
 
 - `plugins/dev-workflow/skills/intake/SKILL.md`: frontmatter `description`, *When to use*, the new
-  section.
+  section, and the route scoping of *Stop and ask* and *Common mistakes* (§1's table).
 - `plugins/dev-workflow/skills/sparring/SKILL.md`: the pointer paragraph.
 - `plugins/dev-workflow/.claude-plugin/plugin.json` 0.16.0 → 0.17.0 and `CHANGELOG.md` (invariant 12).
 - `scripts/check-invariants.sh` and its test (check 4f).
