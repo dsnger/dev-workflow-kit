@@ -86,9 +86,8 @@ the risk-high profile above and the central question in §5.
 
 **What a 4b threshold decision needs (recorded 2026-10-05, after part 4a shipped).** 4b stays behind
 its calibration trigger, and no other story builds the calibration on the side. Real cycles are the
-measurement opportunity: before each worktree is removed, `python3 -B scripts/run-analytics.py`
-stores its gate calls (a session habit since part 1, not a written workflow step). A later threshold decision needs, per gate kind
-(Gate-A spec, Gate-A plan, Gate B):
+measurement opportunity. A later threshold decision needs, per gate kind (Gate-A spec, Gate-A
+plan, Gate B):
 - the effort of each **valid** pass: duration and tokens, with unknown values counted as unknown,
   never as zero;
 - the effort of each pass **known to be incomplete**: a failed envelope, an `INCOMPLETE` reply or a
@@ -98,6 +97,21 @@ stores its gate calls (a session habit since part 1, not a written workflow step
   is the case 4b exists for;
 - the size of what was reviewed (artifact length or diff size), since a small diff may honestly
   need a short review.
+
+**Capture step, written here so it is not a habit.** `run-analytics.py` stores effort only; it does
+not store pass validity, reviewed size or later contradictions, and it skips calls once their
+worktree is gone. So, before removing any worktree in this repository:
+1. run `python3 -B scripts/run-analytics.py` from the main checkout, so the worktree's gate calls are
+   stored while it still exists;
+2. move the worktree's untracked `.context/codex-reviews/` files to
+   `.context/archive-<worktree>/` in the main checkout: the findings files carry each pass's
+   validity, and the closing commit bodies carry the curves and the reviewed range (its size is
+   recoverable from git);
+3. when a PR bot or a later pass finds a true defect after a clean pass, the fix commit body names
+   the finding and the reviewed commit pair, which keeps the contradiction in history.
+
+These are local, per-clone records (`.context/` is not committed), the same limit part 1 states.
+Joining them into one calibration record is 4b's work, not this note's.
 
 The decision states its own sample size and why that is enough; this note sets no number. A cheap
 or short pass is still not, on its own, evidence of an incomplete review.
