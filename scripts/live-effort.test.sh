@@ -140,7 +140,7 @@ if step == "build":
         clog("closed", S[1], at(100, 1), [(at(100, 10), 5, 0, 1, 0)])
         clog("open1", S[2], at(90, 1), [(at(90, 60), 1000, 800, 40, 4), (at(2, 40), 1500, 900, 60, 6)])
         clog("open2", S[3], at(80, 1), [])
-        clog("multi", S[4], at(70, 1), [(at(70, 5), 7, 0, 1, 0)])
+        clog("multi", S[4], at(70, 1), [(at(70, 5), 7, 3, 1, 0)])
         clog("failed", S[5], at(60, 1), [(at(60, 20), 3, 0, 1, 0)])
         # a log in the repository's directory that starts after the pending call: never matched to it
         clog("live", "0000000f-0000-7000-8000-00000000000f", at(4, 30), [(at(1), 9999, 0, 99, 9)])
@@ -202,7 +202,7 @@ excluded, closed or contested (cycles / call-nonce pairs): confirmed 1 / 2  no s
 
 == Open cycles (no closing record found; calls counted once per nonce they name)
 cycle ffffffff  calls 3  cycle elapsed <s>  summed call duration 160.0 s (? 0 of 3)
-  tokens_in 7 (? 2 of 3)  tokens_cached 0 (? 2 of 3)  tokens_out 1 (? 2 of 3)  tokens_reasoning 0 (? 2 of 3)
+  tokens_in 7 (? 2 of 3)  tokens_cached 3 (? 2 of 3)  tokens_out 1 (? 2 of 3)  tokens_reasoning 0 (? 2 of 3)
 
 == Unattributed calls (pending, or no cycle; started in the last 24 hours)
 pending (no result observed yet) 3
@@ -246,7 +246,7 @@ out=$(run repo)
 expect "after completion: pending gone, counted once, failed moves" "$(printf '%s\n' "$out" | mask | sed -n '/^== Open cycles/,/^== What this report cannot see/p' | sed '$d')" <<'EOF'
 == Open cycles (no closing record found; calls counted once per nonce they name)
 cycle ffffffff  calls 4  cycle elapsed <s>  summed call duration 340.0 s (? 0 of 4)
-  tokens_in 57 (? 2 of 4)  tokens_cached 0 (? 2 of 4)  tokens_out 6 (? 2 of 4)  tokens_reasoning 1 (? 2 of 4)
+  tokens_in 57 (? 2 of 4)  tokens_cached 3 (? 2 of 4)  tokens_out 6 (? 2 of 4)  tokens_reasoning 1 (? 2 of 4)
 
 == Unattributed calls (pending, or no cycle; started in the last 24 hours)
 pending (no result observed yet) 1
