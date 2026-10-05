@@ -24,7 +24,7 @@
 
 ## Review Focus
 
-1. **The new section drifts from the 4f literals.** A wording edit to a pinned line fails CI with a 4f diagnostic. Expected: the diagnostic names the missing line. Pinned by Task 1's per-line reject cases.
+1. **The new section drifts from the 4f literals.** A wording edit to a pinned line fails CI with a 4f diagnostic. Expected: the diagnostic names the line's number. Pinned by Task 1's per-line reject cases, which each assert `line <n> occurs 0 times`.
 2. **The shared intake fixture lacks the new section.** Every existing suite case would fail on 4f first. Expected: the fixture carries a valid section, so each case still reaches its own assertion. Pinned by Task 1 Step 1 (`ac_skill` appends it) and the whole suite staying green.
 3. **A pinned line sits outside the section** (for example in *Common mistakes*). Expected: rejected, because only the section is read. Pinned by Task 1's "outside the section" case.
 4. **The route's text summarises a gate rule.** Expected: none; it cites paragraph titles. Checked by Task 2 Step 3's grep and by Gate B.
@@ -94,7 +94,8 @@ cr_section() { printf '## Amending an approved story or spec\n\nprose\n\n%s\n\n#
 # Each case writes an intake skill whose story template is valid (so 4d stays quiet) and
 # whose amendment section varies. Rejects must carry the shared 4f diagnostic phrase.
 CR='change-record template'
-cr_case() { # $1 = name, $2 = 1|0 expect reject, $3 = text after the story template
+cr_case() { # $1 = name, $2 = 1|0 expect reject, $3 = text after the story template,
+  #            $4 = optional diagnostic substring a reject must also carry
   rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
     "$work/r/plugins/p/.claude-plugin"
   cp "$CHECKER" "$work/r/scripts/"
@@ -107,7 +108,7 @@ cr_case() { # $1 = name, $2 = 1|0 expect reject, $3 = text after the story templ
   out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
   if [ "$2" -eq 1 ]; then
     if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
-    elif ! printf '%s' "$out" | grep -qF "$CR"; then
+    elif ! printf '%s' "$out" | grep -qF "$CR" || ! printf '%s' "$out" | grep -qF -- "${4:-$CR}"; then
       fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
     else pass "$1"; fi
   else
@@ -125,11 +126,14 @@ $(printf '%s\n' "$CR_LINES" | sed -n 1p)")"
 cr_case "4f: a required line outside the section rejected" 1 \
   "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed 1d)")
 $(printf '%s\n' "$CR_LINES" | sed -n 1p)"
-i=1
-while [ "$i" -le 12 ]; do
-  cr_case "4f: required line $i missing rejected" 1 "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${i}d")")"
-  cr_case "4f: required line $i altered rejected" 1 "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${i}s/\$/ x/")")"
-  i=$((i + 1))
+# cr_i, not i: init_prompt_fixtures (called by cr_case) uses and leaves a global i.
+cr_i=1
+while [ "$cr_i" -le 12 ]; do
+  cr_case "4f: required line $cr_i missing rejected" 1 \
+    "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${cr_i}d")")" "line $cr_i occurs 0 times"
+  cr_case "4f: required line $cr_i altered rejected" 1 \
+    "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${cr_i}s/\$/ x/")")" "line $cr_i occurs 0 times"
+  cr_i=$((cr_i + 1))
 done
 inject_case "4f change-record parser failure fires" awk '*cr-template-scan*' \
   'change-record template parser failed'
@@ -212,10 +216,7 @@ fi
 # checks below, and the size-budget check 4e, are bracketed` with `The prompt-conformance checks
 # below (4a-4d and 4f), and the size-budget check 4e, are bracketed`, `and likewise for 4b, 4c, 4d and 4e`
 with `and likewise for 4b, 4c, 4d, 4e and 4f`, and `chk=4a   # then 4b, 4c, 4d, then 4e` with
-`chk=4a   # then 4b, 4c, 4d, 4e, then 4f`. In the scan-domain comment, replace `even though the file now
-carries four
-# prompt-conformance checks` with `even though the file now carries five
-# prompt-conformance checks` (4a–4d and 4f; 4e is a size check).
+`chk=4a   # then 4b, 4c, 4d, 4e, then 4f`. In the scan-domain comment (one line reads `# so this domain stays a two-check domain even though the file now carries four`), replace `now carries four` with `now carries five` (4a–4d and 4f; 4e is a size check), and in the next lines `Incrementing the number here would claim a scope 4c and 4d do` with `Incrementing the number here would claim a scope 4c, 4d and 4f do`.
 
 - [ ] **Step 6: Suite passes (with Task 2's intake text still absent the real-repo run fails — expected until Task 2).**
 
@@ -361,7 +362,12 @@ replacement is `withdrawn` plus `added AC-<n>`. `open` needs a cited rule that p
 leaving the artifact; where a rule demands the update in the same commit, `open` is not
 available.
 
-Example row, from a real narrowing: `| AC-2: green / amber / red | kept: red, amber; dropped — green: missing evidence must not read as green | narrowed |`.
+Example rows, one narrowing and one replacement:
+
+```markdown
+| AC-3: export runs nightly and on demand | kept: on demand; dropped — nightly: the scheduler is out of this release | narrowed |
+| AC-4: progress shown as a percentage | dropped — no reliable total exists; moved → AC-6 (a step counter) | withdrawn; added AC-6 |
+```
 `````
 
 - [ ] **Step 3: Check the section cites and does not summarise.**
@@ -387,7 +393,9 @@ These stops belong to the Flow. The amendment route's stops are in its own steps
   In `## Common mistakes`, replace `- Designing a solution (HOW) anywhere outside Section 4.` with
   `- Designing a solution (HOW) anywhere outside a story's Section 4.`, replace
   `- Committing with \`git add -A\`, or committing text the user hasn't approved.` with
-  `- Committing with \`git add -A\`, or, in the Flow, committing text the user hasn't approved.`, and append:
+  `- Committing with \`git add -A\`, or, in the Flow, committing text the user hasn't approved.`, replace `- Leaving Section 4 or the invariants empty instead of the explicit "No AGENTS.md
+  invariants matched".` with `- Leaving a story's Section 4 or the invariants empty instead of the explicit
+  "No AGENTS.md invariants matched".`, and append:
 
 ````text
 - In an amendment: giving an undecided condition a fate instead of listing it under
@@ -438,10 +446,13 @@ Expected: `invariant checks: ok`.
 - [ ] **Step 4: README.** In the `dev-workflow:intake` row, append before ` |`: ` Also amends an approved story or spec with a change record that accounts for every earlier condition.`
 - [ ] **Step 5: todos.md.** In G1a's entry, replace `*Status:* ready for intake; activated only when Daniel
         selects it.` with `*Status:* selected 2026-10-05 (Daniel); shipped in dev-workflow 0.17.0.`
+  And replace `      - G1a's refinement procedure belongs to the sparring role.` with
+  `      - G1a's refinement procedure is drafted by the sparring role and written by the coding
+        session through intake's amendment route.`
 - [ ] **Step 6: Statements this change falsifies.**
 
-Run: `grep -rnE "four narrow|Four narrow|four prompt-conformance|4a-4e|4a–4e|0\.16\.0" --include='*.md' --include='*.sh' --include='*.yml' --include='*.json' . | grep -vE 'docs/superpowers/|source-files/|\.context/|CHANGELOG.md'`
-Expected: no hit (each one found is updated, or listed with its reason in the Gate-B call).
+Run: `grep -rnE "four narrow|Four narrow|carries four|four prompt-conformance|4a-4e|4a–4e|0\.16\.0|refinement procedure belongs" --include='*.md' --include='*.sh' --include='*.yml' --include='*.json' . | grep -vE 'docs/superpowers/|source-files/|\.context/|CHANGELOG.md'`
+Expected: no hit (each one found is updated, or listed with its reason in the Gate-B call). Also read the checker's scan-domain paragraph whole, since its count wraps across lines.
 
 - [ ] **Step 7: Mutation record for 4f** (and the other checks, since the shared fixture changed). Run the header's procedure from the worktree root once per check, `chk` in `4a 4b 4c 4d 4e 4f`. For each, compare the flipped set with that check's reject cases and confirm no accept case moved. Record in the test file's header block, after the `4e -> 7` entry:
 
@@ -456,39 +467,65 @@ Expected: no hit (each one found is updated, or listed with its reason in the Ga
 
 ### Task 4: Named verification — the replay
 
-- [ ] **Step 1: Assemble the package** in a scratch directory outside any checkout, `$R` (from the main checkout):
+**Order:** run this task after Task 5 Steps 1–4, so the WIP snapshot exists and the replay
+exercises the candidate's own intake text; Task 5 Step 5 (Gate B) follows it. After any amend
+that changes `plugins/dev-workflow/skills/intake/SKILL.md`, re-run this task on the new head.
+
+**Inputs, preserved 2026-10-05** in
+`/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/inputs/` (git may prune the
+unreachable source commits; the replay reads only these copies): per part N, `partN-baseline.md`,
+`partN-after-full.md`, `partN-message-full.txt`, `partN-changed-paths.txt` (unabridged,
+`--name-only`), `partN-decision-assessment.md` (the assessment each decision was taken on:
+`20261002-132344-telemetry-t1-scope-triage-assessment.md`,
+`20261003-104113-loop-usefulness-warning-assessment.md`) and `partN-meta.txt` (story path, full
+baseline and after commit IDs, the baseline's sha256).
+
+- [ ] **Step 1: Assemble the package, failing fast.**
 
 ````sh
-R=$(mktemp -d) && M=/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit && W=/Users/daniel/DEVELOPMENT/APPS/dwk-controlled-change
+set -eu
+I=/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/inputs
+W=/Users/daniel/DEVELOPMENT/APPS/dwk-controlled-change
+R=$(mktemp -d); [ -n "$R" ] && [ -d "$R" ] || { echo "no scratch dir" >&2; exit 1; }
 H=$(git -C "$W" rev-parse HEAD)
+git -C "$W" log -1 --format=%s "$H" | grep -q '^WIP' || { echo "HEAD is not the WIP snapshot" >&2; exit 1; }
 mkdir -p "$R/in/part1" "$R/in/part2" "$R/rules" "$R/out" "$R/expected"
-cp "$M/.context/g1a-replay/part1-baseline-9fb981f.md" "$R/in/part1/baseline.md"
-cp "$M/.context/g1a-replay/part2-baseline-5fcc072.md" "$R/in/part2/baseline.md"
-for p in 1:f9aae57:2026-10-02-run-analytics-trace-id-and-retention-story.md 2:32609a0:2026-10-02-review-loop-usefulness-assessment-story.md; do
-  n=${p%%:*}; rest=${p#*:}; c=${rest%%:*}; f=${rest#*:}
-  git -C "$M" show "$c:docs/superpowers/stories/$f" > "$R/expected/part$n-after-full.md"
-  git -C "$M" log -1 --format=%B "$c" > "$R/expected/part$n-message-full.txt"
-  git -C "$M" show --format= --name-only "$c" > "$R/in/part$n/changed-paths.txt"
+for n in 1 2; do
+  for f in baseline.md after-full.md message-full.txt changed-paths.txt decision-assessment.md meta.txt; do
+    [ -s "$I/part$n-$f" ] || { echo "missing input part$n-$f" >&2; exit 1; }
+  done
+  [ "$(shasum -a 256 "$I/part$n-baseline.md" | cut -d' ' -f1)" = "$(sed -n 's/^baseline sha256: //p' "$I/part$n-meta.txt")" ] \
+    || { echo "part$n baseline does not match its recorded hash" >&2; exit 1; }
+  cp "$I/part$n-baseline.md" "$R/in/part$n/baseline.md"
+  cp "$I/part$n-meta.txt" "$R/in/part$n/meta.txt"
+  cp "$I/part$n-changed-paths.txt" "$R/in/part$n/changed-paths.txt"
+  cp "$I/part$n-decision-assessment.md" "$R/in/part$n/decision-assessment.md"
+  cp "$I/part$n-after-full.md" "$R/expected/part$n-after-full.md"
+  cp "$I/part$n-message-full.txt" "$R/expected/part$n-message-full.txt"
 done
-git -C "$W" show "$H:plugins/dev-workflow/skills/intake/SKILL.md" > "$R/rules/intake-SKILL.md"
-git -C "$W" show "$H:.claude/review-gates.md" > "$R/rules/review-gates.md"
-git -C "$W" show "$H:AGENTS.md" > "$R/rules/AGENTS.md"
+for m in plugins/dev-workflow/skills/intake/SKILL.md:intake-SKILL.md .claude/review-gates.md:review-gates.md AGENTS.md:AGENTS.md; do
+  f=${m%%:*}; t=${m#*:}
+  git -C "$W" show "$H:$f" > "$R/rules/$t" && [ -s "$R/rules/$t" ] \
+    || { echo "could not extract $f at $H" >&2; exit 1; }
+done
+for t in intake-SKILL.md review-gates.md AGENTS.md; do [ -s "$R/rules/$t" ] || { echo "missing rules/$t" >&2; exit 1; }; done
+echo "R=$R H=$H"
 ````
 
-- [ ] **Step 2: Withhold the answers.** From each `after-full.md`, write `in/partN/after.md` with the change-record blocks removed: delete from the line starting `**Criteria amended` or `**Scope narrowed` (part 1) / `**Scope narrowed` (part 2) through the end of its fate table, and the part-2 top note starting `**Narrowed 2026-10-03`. From each `message-full.txt`, write `in/partN/decision.txt` with any table rows (`^|`) removed; add the decision source the message names. Keep the removed blocks verbatim in `expected/partN-record.md`.
+- [ ] **Step 2: Withhold the answers.** For each part, write `in/partN/after.md` = `expected/partN-after-full.md` with the change-record blocks removed, and keep the removed blocks verbatim in `expected/partN-record.md`. The blocks: part 1 — the paragraphs starting `**Criteria amended 2026-10-02` and `**Scope narrowed 2026-10-02` through the end of the fate table; part 2 — the single line `**Narrowed 2026-10-03 (Daniel): this part delivers a warning light, not a usefulness assessment.**` (the outcome prose that follows it on the next lines stays), and the paragraph starting `**Scope narrowed 2026-10-03` through the end of its fate table. Then verify that `diff` of `after.md` against `after-full.md` shows only those deleted lines. Write `in/partN/decision.txt` = `expected/partN-message-full.txt` with every line starting `|` removed, plus one line: `Decision by Daniel, <date>, on the assessment in decision-assessment.md.`
 
-Run: `grep -rlE '^\| *(Earlier criterion|Criterion|Criteria|Desired outcome|Outcome)' "$R/in" "$R/rules"; echo "leak=$?"`
-Expected: `leak=1` (no fate-table row in what the agent receives). A leak that cannot be removed is written down as a verification limit.
+Run: `grep -rnE '^\| *(Earlier criterion|Criterion|Criteria|Desired outcome|Outcome|Whether a loop)|\*\*(Narrowed|Replaced|Kept|Deferred)' "$R/in" "$R/rules"; echo "leak=$?"` (the baselines legitimately contain the old criteria; what must not appear is a historical fate row or fate verdict)
+Expected: `leak=1`. This is a bounded scan for fate rows and fate verdicts, not the leakage check by itself. Then **read** every file under `$R/in` against the withheld blocks (both of part 1's — the pass-1 amendment and the pass-4 narrowing — and both of part 2's). The decision evidence necessarily says what changes (for example part 1's commit message says the credit balance was dropped): that is the decision the route starts from, not the record it must produce, and it stays. Record in `compare.md`, and in the evidence entry, every place where the input already states a fate the agent must produce — whether or not the grep found it — so the replay's independence is not overstated.
 
-- [ ] **Step 3: Run a fresh agent** (Agent tool, general-purpose, sonnet), prompt:
+- [ ] **Step 3: Run a fresh agent** (Agent tool, general-purpose, sonnet), prompt (with `$R` expanded):
 
 ````text
-You are a coding session following the `intake` skill's route "Amending an approved story or spec" (file: $R/rules/intake-SKILL.md). Read only files under $R/in and $R/rules. For each of part1 and part2: the baseline is in/partN/baseline.md, the text after the change (without its change record) is in/partN/after.md, the decision is in/partN/decision.txt, and in/partN/changed-paths.txt lists every path the change touched. Run steps 1, 2, 4, 5, 6 and 7 of the route and write the change record the route prescribes to $R/out/partN-record.md. Do not run steps 3 or 8 (there is no repository); for step 9, list what stays blocked. Apply today's rules (in $R/rules) even though the historical change predates some of them. Write nothing else.
+You are a coding session following the `intake` skill's route "Amending an approved story or spec" (its text: $R/rules/intake-SKILL.md). Read only files under $R/in and $R/rules. For each of part1 and part2: in/partN/meta.txt names the story path and the approved baseline (commit and sha256); in/partN/baseline.md is that approved text; in/partN/after.md is the text after the change, without its change record; in/partN/decision.txt and in/partN/decision-assessment.md are the human decision and what it was taken on; in/partN/changed-paths.txt lists every path the change touched. Run steps 1, 2, 4, 5, 6 and 7 of the route and write the change record it prescribes to $R/out/partN-record.md. Do not run step 3 or step 8: there is no repository. For step 9, list what stays blocked at the end of the record. Apply the rules in $R/rules even where the historical change predates them. Write nothing else.
 ````
 
-- [ ] **Step 4: Compare.** For each part, map every row of `expected/partN-record.md` to the agent's rows: historical `Narrowed` → `kept` plus a `moved` or `dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded" → `kept` with `reworded`; `Kept` → `kept`. Part 1's expected answer is the union of its pass-1 amendment (credit balance dropped; criterion 1 re-keyed on the transcript) and its pass-4 table. Dependent artifacts must include part 1: `docs/superpowers/specs/2026-10-02-run-analytics-design.md`; part 2: `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`. Write the comparison to `$R/compare.md`: per historical row, reproduced / differs (with the reason: procedure, part-1 boundary, or retrospective rule). Copy `$R` to `/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/run-<head>/`.
+- [ ] **Step 4: Compare.** For each part, map every row of `expected/partN-record.md` to the agent's rows: historical `Narrowed` → `kept` plus a `moved` or `dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded" → `kept` with `reworded`; `Kept` → `kept`. Part 1's expected answer is the union of its pass-1 amendment (credit balance dropped; criterion 1 re-keyed on the transcript) and its pass-4 table. Dependent artifacts must include, for part 1, `docs/superpowers/specs/2026-10-02-run-analytics-design.md`; for part 2, `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`. Write `$R/compare.md`: per historical row, reproduced, or differs with its reason (procedure, part-1 boundary, or retrospective rule). Then copy the whole of `$R` to `/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/run-<H>/`.
 
-  Pass condition: every historical row is reproduced, and every listed dependent artifact named; any other difference is reported in the evidence entry, not hidden.
+  Pass condition: every historical row is reproduced and every listed dependent artifact named; any other difference is reported in the evidence entry, not hidden.
 
 ### Task 5: Evidence, Gate B, close
 
@@ -496,7 +533,8 @@ You are a coding session following the `intake` skill's route "Amending an appro
 - [ ] **Step 2: Counterfactual.** In a temporary copy of the candidate tree, restore `plugins/dev-workflow/skills/intake/SKILL.md` from `origin/main`; run `sh scripts/check-invariants.sh`. Expected: exit 1 with `change-record template` in the output.
 - [ ] **Step 3: Stage and snapshot.** Stage the changed paths (two skills, manifest, changelog, `AGENTS.md`, `README.md`, `todos.md`, checker, suite, this plan's checkboxes if ticked). Run `git diff --cached --name-only`. Then, as its own one-line tool call: `git commit -m 'WIP: controlled change candidate'`.
 - [ ] **Step 4: Version check:** `sh scripts/check-version-bump.sh main` → ok.
-- [ ] **Step 5: Gate B** per `.claude/review-gates.md`: nonce; floor 3 (story level 1); `mcp__codex__health` first; one `reviewType: full` call per pass, each branch to its own slot. Each call carries the story path, the evidence entry, the spec-delta report and the standing lens (named: the check count in AGENTS.md invariant 11, the checker header's lists, the README intake row, the version string). After fixes: amend the WIP, re-run Steps 1–2 and the affected mutation records, re-review.
+- [ ] **Step 4b: Run Task 4** on this WIP head.
+- [ ] **Step 5: Gate B** per `.claude/review-gates.md`: nonce; floor 3 (story level 1); `mcp__codex__health` first; one `reviewType: full` call per pass, each branch to its own slot. Each call carries the story path, the evidence entry, the spec-delta report and the standing lens (named: the check count in AGENTS.md invariant 11, the checker header's lists, the README intake row, the version string). After fixes: amend the WIP, re-run Steps 1–2, the affected mutation records and, if intake changed, Task 4; re-review.
 
 Evidence entry:
 
@@ -506,7 +544,8 @@ Battery: AGENTS.md quality row, exit 0 at <headSha>.
 Check (counterfactual): with intake's skill text from origin/main, check-invariants exits 1 ("change-record
 template"); 4f's mutation flips exactly its <n> reject cases, no accept case.
 Named verification (replay, AC-9): <reproduced rows>/<historical rows> per part, dependent artifacts named
-<yes/no>; differences: <list or none> (.context/g1a-replay/run-<head>/compare.md).
+<yes/no>; differences: <list or none>
+(/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/run-<head>/compare.md).
 ```
 
 - [ ] **Step 6: Close, PR, merge** when the closure ordering allows: amend with the real message, evidence, provenance line and curve; push; open the PR listing every cycle (spec `lbveuxkbje` in `832510b`, plan cycle, Gate B cycle); `/dev-workflow:process-pr-review`; squash-merge when green with every record in the body; then run-analytics, archive the untracked `.context/codex-reviews/` files, remove the worktree.
