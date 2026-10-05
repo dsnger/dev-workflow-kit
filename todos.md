@@ -621,6 +621,87 @@ backlog.
       *Trigger:* Daniel selects G2a for intake. Until then the active 2c work (parts 3 and 4)
       keeps priority; how G1a and G2a rank against it is Daniel's call.
 
+- [ ] **Ordering group G3 — efficiency: tokens, context and time per reviewed result.**
+      Recorded 2026-10-05 (Daniel), from two consumer projects: `sfx-time-tracking-dashboard`
+      (adopted the kit 2026-10-03) and `infinite-portfolio-canvas`. **Placed after G1a and
+      before the orchestrator (vision §7 step 3)**; the intended benefit, still a hypothesis to
+      test, is lower effort for every later step. Four leaves, in this order, each its own story
+      at intake; none is activated by this entry.
+      *Evidence, kept apart by how far it is checked:*
+      - **Measured twice (agent and reviewer, or agent and this session):** SFX plans reach very
+        large sizes, with decreases between some steps (P3b 383,977 bytes, P3c 373,794, P4a
+        283,489); P5a measured 587,091 bytes / 10,323 lines by the reviewer and 615,299 / 10,672
+        on the evening of 2026-10-05, of which 9,666 lines sit inside code fences. P4c's plan
+        has 8,403 lines; its commit `3ee7c4e` adds 4,932 lines in all, 4,892 of them code and
+        tests under `apps/`. P5a's plan says Gate-A pass 1 "was repaired in full in the
+        prototype, so the code in the tasks below already carries every repair" (plan line 43):
+        implementation is being written and reviewed as planning. Canvas: A5 plan 361,884 bytes,
+        A5 spec 272,507, `AGENTS.md` 123,320; the A5 spec reaches test-file names and concrete
+        negative test cases in places (spec line 3163). This repository's own recent plans are
+        also mostly fenced code: 300 to 992 lines of 561 to 1,169 per plan. SFX's moved gate
+        rules `.claude/review-gates.md`: 122,843 bytes. SFX's scaffolded `CLAUDE.md` at
+        `f0c8fe8`: 126,885 bytes (126,179 characters). SFX Gate-A spec: 8 passes, 159 finding
+        lines. Both projects: 0 dated ledger rows.
+      - **One cause is in the instructions themselves:** superpowers' `writing-plans` (6.4.1,
+        not part of this kit) requires code blocks for code steps and repeating code rather than
+        "Similar to Task N" (its *No Placeholders* list). Which version each historical session
+        loaded is not established.
+      - **Counted once, not deduplicated or confirmed:** SFX finding lines split about 89–93 %
+        Gate A to Gate B (agent 89 %, reviewer 455 vs 34 = 93 %; different cut-off or scope).
+        Few Gate-B findings may be the effect of a working Gate A, not waste.
+      - **Reported, not independently verified:** about 5M Codex input tokens (≈94 % cached)
+        per Gate-A plan pass on SFX's large plans; a main session at a median context of 423k
+        tokens over 2.5 days with 4 compactions; the old `CLAUDE.md` loaded into 141
+        transcripts; a canvas quality battery of about 65 minutes that hit the one-hour
+        background limit once (`.context/a6-s2a-resume.md`). Token volume, cache share, paid
+        cost and elapsed time are different quantities and stay separate in any later claim.
+      - **G3a — separate what spec, plan and code each decide, then cut; piloted on SFX P5b.**
+        A spec states behaviour, boundaries, contracts, architecture decisions and acceptance
+        precisely, and leaves internal implementation open where it meets them. A plan states
+        steps, affected areas, dependencies and a concrete test strategy — the expected
+        behaviour and relevant failure cases per test — and leaves function bodies, full test
+        code and local implementation choices to the code. Critical algorithms may still get a
+        targeted sketch or a spike; a full program in the plan is not the default. Gate A on a
+        plan asks about missing decisions, unrealistic steps and an inadequate test strategy,
+        never about missing function bodies. Where `writing-plans` asks for more, this kit's
+        instructions say what the plan is for (user instructions outrank skills). Only then:
+        split by subject, with size as a warning signal and no fixed limit until measured; the
+        EXPERIMENTAL pre-split heuristic above keeps its own trigger (SFX split P3 and P4 at plan
+        time, not mid-execution). *The pilot:* SFX split P5 into four plans (P5a–P5d) under one
+        already-reviewed epic spec (`.context/p5-decisions.md`), so P5b exercises compact plans,
+        not a pre-spec story split; intake decides whether to cut P5b into child stories and
+        specs first (G1a's amendment route records that change) or to pilot plan compactness
+        alone and say so. *Measured by total effort to a reviewed result* — planning, Gate A,
+        implementation, tests, Gate B, rework, human interventions — against a comparison intake
+        names (scope, quality conditions, how inherited spec work is counted); without a
+        defensible comparison the pilot reports its numbers and claims no saving. More Gate-B
+        findings are a signal to investigate, not a failure on their own; one pilot shows a
+        direction, not a general saving rate.
+      - **G3b — a fresh session at a completed unit of work**, after a closing act, as a
+        *planned* efficiency step with a checked handover: state, open obligations, nonce and
+        evidence paths. It does not override mandatory stops, the interrupted-cycle resume
+        procedure (`.claude/review-gates.md`, "Optional companions") or a human-directed
+        handover. Related: vision §7 step 3's complete assignment frame.
+      - **G3c — rule consolidation through the existing leaf** (vision: shrinking the gate rules
+        is "a separate later leaf"), widened to `AGENTS.md`: a short binding core, details
+        loaded for the task at hand, clear ownership. Helpers load the rules their assignment
+        needs, not none. AGENTS.md's Don't on replacing a decision procedure governs every cut.
+      - **G3d — targeted operational fixes from measured incidents:** test re-runs and
+        execution limits (the canvas battery) and a layout for per-cycle artifacts (SFX's
+        `.context/` held 179 loose files: nonce, evidence, mutation and commit-draft files).
+        Review-slot collisions (the `reviewType: full` race recurred in SFX P4c and in this
+        repository's PR #45 cycles) belong to the existing row "`reviewType: full` races" and
+        its story `docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md`,
+        which records why changing the call order alone is not enough; the new incidents are
+        evidence there, not a second route.
+      *Method lesson from canvas A5/T2a (recorded, not a leaf):* four rounds of the same finding
+      shape — a checker covering less than its description promised — ended once the claim was
+      narrowed, the limits made visible and the deeper parser work given its own ticket (passes
+      8–15: 9, 9, 6, 2, 4, 2, 1, 0; the share due to the method change is not isolated). When a
+      finding shape recurs, question the method before adding the next special case.
+      *Ledger:* both projects' empty ledgers are evidence for **Finding A** below, not a new item.
+      *Trigger for the group:* G1a merged; then Daniel selects G3a for intake.
+
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
       `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
@@ -1037,7 +1118,10 @@ backlog.
       *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
-      open PRs.** The only mandated ledger check lives in `process-pr-review` step 5, so a
+      open PRs.** **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
+      finding lines, many Majors repaired, no PRs) also has 0 ledger rows; canvas keeps its
+      recurrences and counter-measures in its taxonomy, dispositions and handovers instead, so
+      the gap is the merge into the ledger, not the learning. The only mandated ledger check lives in `process-pr-review` step 5, so a
       no-PR project never reaches it: canvas has 51 Gate-A pass files and **0** ledger
       rows. Cut from the canvas-findings round after drawing a Major on all five Gate-A
       passes; those findings are the story's opening evidence rather than a blank page:
