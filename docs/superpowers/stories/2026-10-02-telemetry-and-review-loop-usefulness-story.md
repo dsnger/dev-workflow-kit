@@ -84,6 +84,24 @@ changes gate pass validity and needs its own profile, risk high.
 pass validity. Part 4b, the minimum-cost INCOMPLETE signal, comes later, on calibrated data; it keeps
 the risk-high profile above and the central question in §5.
 
+**What a 4b threshold decision needs (recorded 2026-10-05, after part 4a shipped).** 4b stays behind
+its calibration trigger, and no other story builds the calibration on the side. Real cycles are the
+measurement opportunity: before each worktree is removed, `python3 -B scripts/run-analytics.py`
+stores its gate calls (a session habit since part 1, not a written workflow step). A later threshold decision needs, per gate kind
+(Gate-A spec, Gate-A plan, Gate B):
+- the effort of each **valid** pass: duration and tokens, with unknown values counted as unknown,
+  never as zero;
+- the effort of each pass **known to be incomplete**: a failed envelope, an `INCOMPLETE` reply or a
+  findings file that failed validation, so the two groups can be compared;
+- each valid clean pass that a **later** review contradicted: a PR bot or later pass finding a true
+  defect in the same reviewed range, with the commit pair, since a cheap pass that missed something
+  is the case 4b exists for;
+- the size of what was reviewed (artifact length or diff size), since a small diff may honestly
+  need a short review.
+
+The decision states its own sample size and why that is enough; this note sets no number. A cheap
+or short pass is still not, on its own, evidence of an incomplete review.
+
 **Part 2 narrowed 2026-10-03 (Daniel).** Part 2 delivers a warning light over recorded counts and
 stored effort (`docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md`).
 It does not satisfy criterion 5: confirmed distinct yield, repair origin, reviewed coverage and a
