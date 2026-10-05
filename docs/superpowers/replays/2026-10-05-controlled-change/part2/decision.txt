@@ -1,0 +1,4 @@
+docs(stories): narrow 2c part 2 to a warning light (Daniel, 2026-10-03)
+
+
+Attribution, added for this package: the narrowing was decided by Daniel, 2026-10-03, on the assessment excerpted in decision-evidence.md (source: the story's own amendment paragraph, "Scope narrowed 2026-10-03 (Daniel, on the reviewer's assessment …)").

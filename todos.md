@@ -503,11 +503,12 @@ backlog.
         `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md`)
         owns the mechanical record of a spec change after its Gate-A cycle closed;** G1a owns
         the human decision procedure that produces such a change, and feeds part 3 rather
-        than competing with it. *Status:* ready for intake; activated only when Daniel
-        selects it. *Acceptance checks:* replayed on the two recorded 2c narrowings, the
-        procedure reproduces their fate tables and names their dependent artifacts; a change
-        after a closed gate states which further pass or cycle it owes, as §5 already
-        decides.
+        than competing with it. *Status:* selected 2026-10-05 (Daniel); shipped in dev-workflow 0.17.0. **Open (2026-10-05):** six replays never produced a fully compliant record (`docs/superpowers/replays/2026-10-05-controlled-change/compare.md`); try a stronger replay model and a quote-check step (each fate's quote re-read against what it decides) before relying on agent-written change records. **Check 4f limit (PR #45, CodeRabbit):** 4f takes the first exact ```markdown line as the template opener and does not parse Markdown, so a template nested in another fence can pass; a fence parser in awk drew new edge cases each review pass and was withdrawn. *Trigger:* a real template layout that 4f misreads. *Acceptance checks* (story AC-12, which replaced AC-11 and AC-9 on
+        2026-10-05): replayed on the two recorded 2c narrowings, the deviations of the replay
+        agent from the route that review finds are named (not claimed exhaustive), every row that differs from the historical
+        tables is explained, and the run's compliance is stated; a change after a closed
+        gate cites the gate rule that decides its review consequence, or records that none
+        does.
       - **G1b — acceptance evidence per criterion.** Attached to **P5 light** (stable AC IDs,
         below) and to vision §7 leaf **4e** (AC IDs, given/when/then normalization, per-AC
         test report), which stay the owners. 4e's order and safeguards are unchanged.
@@ -605,7 +606,8 @@ backlog.
       - lifecycle, resume and version behavior are checked per client;
       - role limits are labelled as prompt instructions or as enforced restrictions.
       *Relation to G1 and the Dark Factory:*
-      - G1a's refinement procedure belongs to the sparring role.
+      - G1a's refinement procedure is drafted by the sparring role and written by the coding
+        session through intake's amendment route.
       - G1c's status read shows the session's role and its next permitted action.
       - G1b, P5 light and vision leaf 4e keep AC evidence.
       - In the vision, these roles are what the orchestrator (step 3) assigns. The computed

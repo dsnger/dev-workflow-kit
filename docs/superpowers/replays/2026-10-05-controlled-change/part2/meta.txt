@@ -1,0 +1,4 @@
+story: docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md
+baseline commit: 5fcc072768df7a7dec281f6acb5dac917e1c2fd5
+after commit: 32609a02120a909b770fda2f0773d092e755e692
+baseline sha256: 1bd2909d91a2a3b4b4c153bf8a448fb85ce08fe363f18269c87f949b17ccd9ec

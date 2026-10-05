@@ -1,0 +1,2 @@
+docs/superpowers/specs/2026-10-02-run-analytics-design.md
+docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md

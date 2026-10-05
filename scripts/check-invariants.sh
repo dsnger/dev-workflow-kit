@@ -21,9 +21,9 @@
 #
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
-# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The four prompt-conformance
-# checks below, and the size-budget check 4e, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d and 4e -- so a scratch
+# MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
+# below (4a-4d and 4f), and the size-budget check 4e, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e and 4f -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -31,7 +31,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, then 4e
+#   chk=4a   # then 4b, 4c, 4d, 4e, then 4f
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -263,8 +263,8 @@ done
 
 # Scan domain for checks 4a and 4b: Markdown only, because both rules are about prompt
 # text. NOT 4c or 4d -- those read fixed paths directly and are not part of this scan,
-# so this domain stays a two-check domain even though the file now carries four
-# prompt-conformance checks. Incrementing the number here would claim a scope 4c and 4d do
+# so this domain stays a two-check domain even though the file now carries five
+# prompt-conformance checks. Incrementing the number here would claim a scope 4c, 4d and 4f do
 # not use. The wider yml/json/toml domain used by invariant 5 is
 # deliberately NOT reused — a `Target model:` line in a JSON fixture is not a prompt
 # claim. `grep -r` does not follow symlinks (`-R` would), which is the intended form.
@@ -728,6 +728,83 @@ else
   fi
 fi
 # --- END check 4e ---
+
+# --- BEGIN check 4f ---
+# The `intake` amendment route writes a change record for an approved story or spec (G1a).
+# Its shape is pinned here: inside the one `## Amending an approved story or spec` section
+# (up to the next `## ` heading), each of the 12 lines below occurs exactly once. The first
+# eight -- the template's heading line, table header and six field lines -- must sit inside
+# the section's first ```markdown fence, the template; the last four -- the closed sets
+# (reason class, fate, AC operation, dependent-artifact status) -- outside it. Placement is
+# checked because a template line moved out of the fence (or a closed set into it) would
+# leave a broken template with every line still present.
+#
+# What it does NOT catch: whether the procedure prose around them is right, whether any
+# written record follows the template, or whether its values are true. It pins the
+# template's spelling only. Nor does it parse Markdown: it takes the first line that is exactly
+# ```markdown as the template's opener and the next line that is exactly ``` as its closer, so a
+# template nested inside another fence (four backticks, tildes, indented) is not recognised as
+# literal text and can pass. A full fence parser was tried in PR #45 and every review pass found
+# a new edge case (indentation, tabs, openers before the heading, backticks in prose), so the
+# limit is stated here instead; the shipped intake skill uses only plain ``` fences.
+# The backticks are literal Markdown, not command substitution.
+# shellcheck disable=SC2016
+CR_REQ='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>
+| Earlier condition | Fate | AC operation |
+- **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
+- **Intervening changes:** <change since the baseline> → <how accounted>; or none.
+- **Scope boundary:** in: <…>; out: <…>.
+- **Open questions:** <question> → <where recorded>; or none.
+- **Dependent artifacts:** <path> → <status>; or none.
+- **Reviews already run:** <input or cycle> → <consequence>, per <rule cited>; or "no rule found" (<input>, <paragraphs checked>) → <human decision, or pending: blocks <continuation>>.
+- **Reason class**, exactly one: `changed requirement` · `gap found` · `change of direction`.
+- **Fate**, one or more per condition: `kept` · `moved → <destination>` · `dropped — <reason>`.
+- **AC operation**, per intake'"'"'s ID rules: `none` · `reworded` · `narrowed` · `withdrawn` · `added AC-<n>`.
+- **Dependent-artifact status**, exactly one: `updated in this change` · `open — permitted by <rule>` · `blocks <named continuation> until updated`.'
+
+# Its own copy of the path, so this block does not depend on check 4d's variable.
+CR_FILE=plugins/dev-workflow/skills/intake/SKILL.md
+
+# Prints `ok`, or one line naming the first problem. Returns 2 if awk itself failed.
+cr_template_scan() { # $1 = file
+  CR_REQ="$CR_REQ" awk '                           # cr-template-scan
+    BEGIN { n = split(ENVIRON["CR_REQ"], req, "\n"); for (i = 1; i <= n; i++) want[req[i]] = 0 }
+    $0 == "## Amending an approved story or spec" { heads += 1; insec = 1; next }
+    insec && /^## / { insec = 0; next }
+    insec && !tpl && !tpldone && $0 == "```markdown" { tpl = 1; next }
+    insec && tpl && $0 == "```" { tpl = 0; tpldone = 1; next }
+    insec && ($0 in want) { want[$0] += 1; if (tpl) infence[$0] += 1 }
+    END {
+      if (heads == 0) { print "no `## Amending an approved story or spec` section"; exit }
+      if (heads > 1) { print heads " `## Amending an approved story or spec` sections"; exit }
+      for (i = 1; i <= n; i++) if (want[req[i]] != 1) {
+        print "line " i " occurs " want[req[i]] " times in the section, need exactly 1: " req[i]; exit
+      }
+      for (i = 1; i <= n; i++) if ((i <= 8) != (infence[req[i]] == 1)) {
+        print "line " i " must be " (i <= 8 ? "inside" : "outside") " the section'"'"'s first ```markdown fence: " req[i]; exit
+      }
+      print "ok"
+    }
+  ' "$1" || return 2
+}
+
+if [ ! -f "$CR_FILE" ]; then
+  fail "Prompt standards: $CR_FILE is missing, so the change-record template cannot be checked." \
+       "the intake skill is required"
+elif [ ! -r "$CR_FILE" ]; then
+  fail "Prompt standards: $CR_FILE is unreadable, so the change-record template cannot be checked." \
+       "check permissions"
+else
+  cr_out=$(cr_template_scan "$CR_FILE"); cr_st=$?
+  if [ "$cr_st" -ne 0 ]; then
+    fail "Prompt standards: the change-record template parser failed; results are not trustworthy." \
+         "awk exited $cr_st on $CR_FILE"
+  elif [ "$cr_out" != ok ]; then
+    fail "Prompt standards: the intake change-record template is malformed: $cr_out" \
+         "the amendment section carries each of the 12 template lines exactly once"
+  fi
+fi
+# --- END check 4f ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

@@ -1,0 +1,3 @@
+docs/superpowers/stories/2026-10-02-review-loop-usefulness-assessment-story.md
+docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md
+todos.md
