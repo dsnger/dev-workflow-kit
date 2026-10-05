@@ -47,6 +47,8 @@ scripts/loop-usefulness.py        # warning light over recorded review cycles (v
 scripts/loop-usefulness.test.sh   # its regression suite — fixture repo + store, expected text
 scripts/spec-delta.py             # spec/plan change since a given baseline, for Gate B (vision step 2c, part 3)
 scripts/spec-delta.test.sh        # its regression suite — fixture repo, expected text
+scripts/live-effort.py            # effort of review cycles not yet closed (vision step 2c, part 4a)
+scripts/live-effort.test.sh       # its regression suite — fixture home + repos, expected text
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
   CHANGELOG.md                    # every manifest version, newest first
@@ -71,9 +73,9 @@ source-files/                     # the extraction seed this repo was built from
 **Boundaries.** `skills/`, `commands/`, `agents/` and `hooks/hooks.json` are loaded by convention
 from their paths. The executable artifacts are the hook and its test, plus the two
 repo-local CI checkers and their tests (`scripts/check-invariants.{sh,test.sh}` and
-`scripts/check-version-bump.{sh,test.sh}`), plus four Python reports with their suites:
-`scripts/ledger-metrics.{py,test.sh}`, `scripts/loop-usefulness.{py,test.sh}` and
-`scripts/spec-delta.{py,test.sh}` (read-only),
+`scripts/check-version-bump.{sh,test.sh}`), plus five Python reports with their suites:
+`scripts/ledger-metrics.{py,test.sh}`, `scripts/loop-usefulness.{py,test.sh}`,
+`scripts/spec-delta.{py,test.sh}` and `scripts/live-effort.{py,test.sh}` (read-only),
 and `scripts/run-analytics.{py,test.sh}` (writes only its own store under
 `.context/telemetry/`) — the hook ships in the plugin, the checkers and the reports do not; everything else is text read by a model. `examples/` is reference material,
 outside the loaded surface: never scaffolded or copied into a user's project, though it
@@ -272,9 +274,9 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && claude plugin validate . --strict` |
-| typecheck | n/a — no typed sources (shell, four untyped Python reports, markdown) |
-| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh` |
+| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && sh scripts/live-effort.test.sh && claude plugin validate . --strict` |
+| typecheck | n/a — no typed sources (shell, five untyped Python reports, markdown) |
+| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
 | invariant checks (5 pinning, 6 manifest, prompt conformance, template size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
@@ -289,8 +291,8 @@ invariant 5; `dash` is addressed by name because it is the system shell, not a p
 tool. Without it the second run cannot start, and dropping that run is what let a
 `dash`-only defect ship once already. The metrics report's suite also needs
 **`python3`** 3.8 or later, addressed by name for the same reason as `dash`: it is the
-system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop-usefulness.py` and
-`scripts/spec-delta.py` also need git 2.36 or later and check for it.
+system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop-usefulness.py`,
+`scripts/spec-delta.py` and `scripts/live-effort.py` also need git 2.36 or later and check for it.
 
 **The `--exclude=SC2015` on the test file** is a single-code exclusion, not a blanket
 disable: every other shellcheck rule still applies to that file. Its hits are all

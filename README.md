@@ -160,7 +160,7 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on 
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus four prompt-conformance checks) plus
-both checkers' regression suites, the four reports' suites, and
+both checkers' regression suites, the five reports' suites, and
 `claude plugin validate . --strict`.
 
 `python3 scripts/ledger-metrics.py` prints a read-only report over the hardening ledger
@@ -184,6 +184,12 @@ Gate-B reviewer how each relevant spec and plan changed since a baseline you nam
 commit that closed its Gate-A cycle. It quotes that commit's cycle records and names any
 ambiguity. It does not claim the cycle reviewed exactly that file, and it informs without
 obliging anything. It writes nothing.
+
+`python3 -B scripts/live-effort.py` shows the effort of review cycles that have not closed yet: calls,
+time and tokens per open cycle, plus gate calls still waiting for their result, with unknown values
+counted rather than hidden. Re-run it to refresh. It counts calls, not review passes, sets no
+threshold, and changes no gate rule. It writes nothing, and it reads every transcript, so a run can
+take a minute or two.
 
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which

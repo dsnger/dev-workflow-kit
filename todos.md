@@ -869,6 +869,9 @@ backlog.
       **2026-10-05 (recommendation, vision §7):** in part 4, keep live effort measurement
       apart from any change to pass validity. A short or cheap review is not, on its own,
       evidence of an incomplete one. Whether part 4 splits is Daniel's decision.
+      **2026-10-05 (Daniel): split.** Part 4a, live effort counters
+      (`scripts/live-effort.py`), measures only. Part 4b, the minimum-cost INCOMPLETE signal, waits
+      for calibration data and keeps its risk-high profile.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the
