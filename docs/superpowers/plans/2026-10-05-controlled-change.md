@@ -471,6 +471,10 @@ Expected: no hit (each one found is updated, or listed with its reason in the Ga
 exercises the candidate's own intake text; Task 5 Step 5 (Gate B) follows it. After any amend
 that changes `plugins/dev-workflow/skills/intake/SKILL.md`, re-run this task on the new head.
 
+**Superseded 2026-10-05 (Daniel, PR #45 review):** the replay now reads the committed, sanitized
+package `docs/superpowers/replays/2026-10-05-controlled-change/`; its README gives the run
+procedure and lists every sanitization. The steps below describe the first two runs.
+
 **Inputs, preserved 2026-10-05** in
 `/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/inputs/` (git may prune the
 unreachable source commits; the replay reads only these copies): per part N, `partN-baseline.md`,
@@ -525,7 +529,7 @@ You are a coding session following the `intake` skill's route "Amending an appro
 
 - [ ] **Step 4: Compare.** For each part, map every row of `expected/partN-record.md` to the agent's rows: historical `Narrowed` → `kept` plus a `moved` or `dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded" → `kept` with `reworded`; `Kept` → `kept`. Part 1's expected answer is the union of its pass-1 amendment (credit balance dropped; criterion 1 re-keyed on the transcript) and its pass-4 table. Dependent artifacts must include, for part 1, `docs/superpowers/specs/2026-10-02-run-analytics-design.md`; for part 2, `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`. Write `$R/compare.md`: per historical row, reproduced, or differs with its reason (procedure, part-1 boundary, or retrospective rule). Then copy the whole of `$R` to `/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/run-<H>/`.
 
-  Pass condition (story `AC-11`, changed 2026-10-05 by Daniel after Gate B pass 2): every baseline condition receives a fate or is listed as Unaccounted, every listed dependent artifact is named, and every row that differs from the historical table is reported with its cause (a rule the history predates, a change the historical table did not account for, or decision evidence missing from the input), none of them a procedure failure.
+  Pass condition: story `AC-12` (it replaced AC-11, which had replaced AC-9, both on 2026-10-05 by Daniel; read the story for its current text and dated narrowing): the deviations found are named with their locations and the list is not claimed exhaustive, every differing row is reported with its cause, and the comparison states whether the run complied.
 
 ### Task 5: Evidence, Gate B, close
 
@@ -543,9 +547,9 @@ Evidence — docs/superpowers/stories/2026-10-05-controlled-change-to-an-approve
 Battery: AGENTS.md quality row, exit 0 at <headSha>.
 Check (counterfactual): with intake's skill text from origin/main, check-invariants exits 1 ("change-record
 template"); 4f's mutation flips exactly its <n> reject cases, no accept case.
-Named verification (replay, AC-11): <reproduced rows>/<historical rows> per part, dependent artifacts named
+Named verification (replay, AC-12): <compliant yes/no, deviations with locations>; <reproduced rows>/<historical rows> per part, dependent artifacts named
 <yes/no>; differences: <list or none>; input overlap: <where the input already states a fate>
-(/Users/daniel/DEVELOPMENT/APPS/dev-workflow-kit/.context/g1a-replay/run-<head>/compare.md).
+(docs/superpowers/replays/2026-10-05-controlled-change/compare.md).
 ```
 
 - [ ] **Step 6: Close, PR, merge** when the closure ordering allows: amend with the real message, evidence, provenance line and curve; push; open the PR listing every cycle (spec `lbveuxkbje` in `832510b`, plan cycle, Gate B cycle); `/dev-workflow:process-pr-review`; squash-merge when green with every record in the body; then run-analytics, archive the untracked `.context/codex-reviews/` files, remove the worktree.
@@ -553,5 +557,5 @@ Named verification (replay, AC-11): <reproduced rows>/<historical rows> per part
 ## Self-review (2026-10-05)
 
 - **Spec coverage:** §0 → Global Constraints; §1 entry → Task 2 Step 1; separate route and scoping table → Task 2 Steps 2 and 4; steps 1–9 → Task 2 Step 2; §2 shape, closed sets, reviews field → Task 2 Step 2 and Task 1's lines; §3 → Task 2 Step 5; §4 check → Task 1, Task 3 Step 7, Task 5 Step 2; replay → Task 4; §5 surfaces → Tasks 2–3.
-- **Story criteria:** AC-1, AC-2, AC-3 → step 1/6/4–5 and the closed sets; AC-4 → scope and open-questions fields; AC-5 → dependent statuses and step 8; AC-6 → step 7 and Task 2 Step 3; AC-7 → steps 1 and 9; AC-8 → Task 2 Step 5 and the "Who runs it" paragraph; AC-9 (withdrawn 2026-10-05) and AC-11 → Task 4; AC-10 → Global Constraints.
+- **Story criteria:** AC-1, AC-2, AC-3 → step 1/6/4–5 and the closed sets; AC-4 → scope and open-questions fields; AC-5 → dependent statuses and step 8; AC-6 → step 7 and Task 2 Step 3; AC-7 → steps 1 and 9; AC-8 → Task 2 Step 5 and the "Who runs it" paragraph; AC-9 and AC-11 (both withdrawn 2026-10-05) and AC-12 → Task 4; AC-10 → Global Constraints.
 - **Type consistency:** the 12 lines appear identically in Task 1 Steps 1 and 4 and Task 2 Step 2 (`CR_LINES`, `CR_REQ`, the section text); `intake'"'"'s` in the shell strings is the quoting of `intake's`.

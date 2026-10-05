@@ -1,0 +1,4 @@
+story: docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md
+baseline commit: 9fb981fcbc5757887a48b60909b610876f8e19cf
+after commit: f9aae5702e91d037bec0dc69ea081ab16239ecb5
+baseline sha256: 07098aeb44d54a8cc154ec5c33d89ae9df11609cc7c79992cc24afb42ff97691

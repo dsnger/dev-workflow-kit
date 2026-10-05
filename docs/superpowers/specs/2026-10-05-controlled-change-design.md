@@ -175,32 +175,41 @@ unchanged (`AC-8`).
 `scripts/check-invariants.sh` fails unless intake's skill text carries the change-record shape:
 the heading line's fields (date, reason class, decider, baseline), the three reason classes, the
 three fates, the AC-operation set, the *Unaccounted* and *Intervening changes* fields, the three
-dependent-artifact statuses and the reviews field. It is bracketed by `# --- BEGIN check 4f ---` /
+dependent-artifact statuses and the reviews field, the template lines inside the section's
+first ```markdown fence and the closed sets outside it (placement added 2026-10-05, PR #45
+review). It is bracketed by `# --- BEGIN check 4f ---` /
 `# --- END check 4f ---` markers like 4a–4e and joins the script header's mutation procedure, so
 its own rejection cases are shown to depend on it: with the 4f block removed, its reject cases
 pass, and only those flip. Reject/accept pairs in `scripts/check-invariants.test.sh`. It fails
 against the prior skill text. It proves the template is present, not that the procedure is
 followed; the replay below carries that.
 
-**Named verification: replay on the two 2c narrowings** (`AC-11`; it replaced `AC-9` on 2026-10-05).
+**Named verification: replay on the two 2c narrowings** (`AC-12`; it replaced `AC-11`, which had replaced `AC-9`, on 2026-10-05).
 
-*Replay package* — fixed files in `.context/g1a-replay/` in the main checkout (copied there because
-git may prune the unreachable commits; the replay reads only these copies):
+*Replay package* — a committed, sanitized package in
+`docs/superpowers/replays/2026-10-05-controlled-change/`, so that anyone with the repository can
+inspect the inputs and re-run the replay (the source commits are unreachable and may be pruned;
+the replay reads only the package). The repository is public, so local advisory files are never
+copied wholesale; the package README lists every removal and its reason:
 - the baselines: part 1 at `9fb981f`, part 2 at `5fcc072` (the story text before any amendment);
 - the after-texts: each story as its narrowing commit left it (`f9aae57` for part 1, `32609a0` for
   part 2), **with the change-record blocks removed** (the amendment paragraphs and fate tables);
-- the decision evidence: each narrowing commit's message and the decision source it names, with any
-  fate table removed;
+- the decision evidence: each narrowing commit's message, with any fate table removed, and a
+  sanitized excerpt of the assessment the decision was taken on (the parts that carry the
+  decision kept verbatim; local paths, snapshots and side analysis removed);
 - each narrowing commit's unabridged changed-path list (`git show --format= --name-only`; the
   `--stat` view abbreviates long paths), so dependent artifacts can be named;
-- the rule context, all at the implementation's head commit (named in the evidence entry): the new
+- the rule context, read from the implementation's head commit (named in the evidence entry and the
+  package README), not copied into the package: the new
   intake skill text, which is the procedure under test and carries the ID rules, plus
   `.claude/review-gates.md` and `AGENTS.md`. The historical cycles ran under older text (neither
   baseline commit has `.claude/review-gates.md` or the ID rules), so the replay applies today's
   rules retrospectively, and a difference caused by a rule that did not exist then is labelled as
   such, apart from procedure failures.
-The expected answers (both historical change records, verbatim) are kept in a separate file the
-replay agent does not receive; only the comparator reads it. Any leakage that cannot be avoided —
+The expected answers (both historical change records, verbatim) sit in the package's `expected/`
+directory, which the replay agent does not receive; only the comparator reads it. The replay's
+records and the comparison are committed beside them. When an input changes, the replay is run
+again on the changed package. Any leakage that cannot be avoided —
 for example a narrowed criterion whose wording reveals its fate — is recorded as a limit of the
 verification.
 
@@ -220,13 +229,19 @@ records, to the scratch directory.
 *Run*: a fresh agent, given the package and told to follow intake's amendment route within that
 boundary, produces one change record per part. *Compare* with the expected answers (historical `Narrowed` → `kept` plus a `moved` or
 `dropped` remainder; `Replaced` → `withdrawn` plus `added`; `Deferred` → `moved`; "Kept, reworded"
-→ `kept` with `reworded`). **Pass condition** (`AC-11`): every baseline condition receives a fate
-or is listed as Unaccounted; the dependent artifacts each change touched are named (part 1:
+→ `kept` with `reworded`). **Pass condition** (`AC-12`, which replaced `AC-11` on 2026-10-05):
+as the story states it, including its dated narrowing. In short: the record is checked
+condition by condition against the route; the deviations found (a fate or operation without a
+quoted covering decision, an omitted baseline condition, a wrong dependent-artifact status) are
+named with their locations, and the list is not claimed exhaustive; and the comparison states whether
+the run complied, including whether every baseline condition received a fate or was listed as
+Unaccounted (an omission is a deviation to name, not a reason to hide the run); and the
+comparison checks that the dependent artifacts each change touched are named (part 1:
 `docs/superpowers/specs/2026-10-02-run-analytics-design.md`, written in the same commit; part 2:
 `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md` and `todos.md`);
 and every row that differs from the historical table is reported with its cause — a rule the
 history predates, a change the historical table did not account for, or decision evidence missing
-from the input — none of them a procedure failure.
+from the input. A non-compliant run is reported as such, never as a pass of the procedure.
 
 **Changed 2026-10-05 — change of direction.** Decided by Daniel, 2026-10-05, in this session. Baseline: 832510b. The pass condition required every historical row to be reproduced; Gate B pass 2 (cycle xby91gy4in) showed the historical tables are not a correct oracle under today's rules. Full record: the story, end of §3 (AC-9 withdrawn, AC-11 added).
 
@@ -243,6 +258,21 @@ from the input — none of them a procedure failure.
 - **Unaccounted:** none. **Intervening changes:** none since 832510b. **Scope boundary:** unchanged. **Open questions:** none.
 - **Dependent artifacts:** the story → updated in this change; the plan → updated in this change; `todos.md` (G1a's acceptance checks) → updated in this change.
 - **Reviews already run:** as in the story's record.
+
+**Changed 2026-10-05 — changed requirement.** Decided by Daniel, 2026-10-05, in this session, on Greptile's PR #45 review ("replay evidence is checkout-local"). Baseline: c9be2fe. The replay inputs were local copies in one checkout, so no other reviewer could inspect or re-run the verification. They become a committed, sanitized package; private advisory files are excerpted, not copied, and every removal is listed. The same record carries the check-4f placement repair from the same review: it is a defect in this change's own check, fixed under the PR review rules and not a separate decision.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| package in `.context/g1a-replay/` of the main checkout (serves `docs/superpowers/stories/2026-10-05-controlled-change-to-an-approved-story-story.md` AC-11) | dropped — not inspectable outside one checkout; moved → `docs/superpowers/replays/2026-10-05-controlled-change/` | none |
+| decision evidence: the full assessment each decision was taken on (AC-11) | kept: the decision-bearing parts, verbatim; dropped — local paths, snapshots, side analysis, the spec-level repair advice (public repository) | none |
+| rule context copied into the package (AC-11) | moved → read from the named head commit | none |
+| expected answers withheld from the replay agent (AC-11) | kept (`expected/`, not given to the agent) | none |
+| every other §4 condition, and §0–§3, §5 | kept | none |
+| check 4f: the required lines present once in the section (the `battery+check` evidence for the story's profile; no criterion changes) | kept; added: template lines inside the template fence, closed sets outside it (Greptile, PR #45: lines elsewhere in the section passed) | none |
+
+- **Unaccounted:** none. **Intervening changes:** none since c9be2fe. **Scope boundary:** unchanged. **Open questions:** none.
+- **Dependent artifacts:** the plan (Task 4) → updated in this change; `AGENTS.md` (architecture tree) → updated in this change.
+- **Reviews already run:** the closed Gate-A spec cycle lbveuxkbje and plan cycle p3780ujtg3, whose reviewed spec §4 and plan Task 4 this changes → no rule found (input: the spec's and plan's verification text after their Gate-A cycles closed; paragraphs checked: "Gate A's content condition, and its closing act", "Closure introduces no new kind of record"); human decision: Daniel 2026-10-05, as for Gate B below. The closed Gate-B cycle xby91gy4in → no rule found (input: the spec's verification text after that cycle closed; paragraphs checked: "Gate B's content condition, and its closing act", "Closure introduces no new kind of record"); human decision: Daniel 2026-10-05, the change and the 4f placement fix go through a new Gate-B cycle; the replay is re-run on the package, since its decision evidence changed.
 
 ## §5 Surfaces this change touches
 

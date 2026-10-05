@@ -345,11 +345,20 @@ prompt; the coding session writes it here.
 5. **Assign a fate and an AC operation** to every enumerated condition (one row per
    condition, or per run of criteria sharing a fate). Then check that every condition has
    a row. A condition nobody decided goes to *Unaccounted*, never into the table under a
-   fate it does not have.
+   fate it does not have. **The changed text is not a decision**: that a later draft drops or
+   rewrites a condition shows what changed, not that a human chose it. A fate needs the
+   decision of step 1 (or an answer to its question) to cover that condition; reading a
+   covering decision into nearby wording is the same as having none.
+   **So every `moved` or `dropped` fate quotes the passage of the decision that covers it**,
+   in the row; a fate with no passage to quote is not a fate but an *Unaccounted* entry. A
+   passage that limits *how* something may be decided (what evidence counts, what may not be
+   inferred) does not decide *whether* it changes.
 6. **Apply *Acceptance-criterion IDs* rules 1–5 exactly as written.** Cite each affected
    criterion in rule 4's form (with or without identifiers). Any amendment of an older
    story adopts identifiers under rule 5, even when no criterion's wording changes.
-   Criterion operations apply only to criteria the decision changes. A spec amendment
+   Criterion operations apply only to criteria the decision changes. A criterion whose
+   change is wholly or partly *Unaccounted* gets operation `none` and keeps its approved
+   text until a decision covers it; the record names it under *Unaccounted*. A spec amendment
    edits a story only when the decision changes that story, which then is a dependent
    artifact.
 7. **Fill the remaining fields.** For *Reviews already run*, cite, for each review input the
@@ -415,8 +424,8 @@ available.
 Example rows, one narrowing and one replacement:
 
 ```markdown
-| AC-3: export runs nightly and on demand | kept: on demand; dropped — nightly: the scheduler is out of this release | narrowed |
-| AC-4: progress shown as a percentage | dropped — no reliable total exists; moved → AC-6 (a step counter) | withdrawn; added AC-6 |
+| AC-3: export runs nightly and on demand | kept: on demand; dropped — nightly, per the decision: "the scheduler is out of this release" | narrowed |
+| AC-4: progress shown as a percentage | dropped — per the decision: "no reliable total exists; show steps instead"; moved → AC-6 (a step counter) | withdrawn; added AC-6 |
 ```
 
 ## Stop and ask

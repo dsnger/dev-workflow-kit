@@ -81,8 +81,14 @@ CR_LINES='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. 
 - **Fate**, one or more per condition: `kept` · `moved → <destination>` · `dropped — <reason>`.
 - **AC operation**, per intake'"'"'s ID rules: `none` · `reworded` · `narrowed` · `withdrawn` · `added AC-<n>`.
 - **Dependent-artifact status**, exactly one: `updated in this change` · `open — permitted by <rule>` · `blocks <named continuation> until updated`.'
-# cr_section [LINES]: the amendment section holding LINES (default: all 12).
-cr_section() { printf '## Amending an approved story or spec\n\nprose\n\n%s\n\n## Stop and ask\n' "${1-$CR_LINES}"; }
+# cr_section [LINES]: the amendment section holding LINES (default: all 12), laid out as the
+# shipped skill does: the template lines in a ```markdown fence, the closed sets after it.
+CR_SETS='^- \*\*(Reason class|Fate|AC operation|Dependent-artifact status)\*\*'
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+cr_section() {
+  printf '## Amending an approved story or spec\n\nprose\n\n```markdown\n%s\n```\n\n%s\n\n## Stop and ask\n' \
+    "$(printf '%s\n' "${1-$CR_LINES}" | grep -vE "$CR_SETS")" "$(printf '%s\n' "${1-$CR_LINES}" | grep -E "$CR_SETS")"
+}
 # ac_rows N: criterion rows AC-1..AC-N
 ac_rows() { i=1; while [ "$i" -le "$1" ]; do printf -- '- [ ] **AC-%s** criterion %s\n' "$i" "$i"; i=$((i + 1)); done; }
 # ac_skill REGION [AFTER]: a skill file whose template's criteria region is REGION (the rule
@@ -412,10 +418,11 @@ done
 #              fires`; no accept case moved (re-measured 2026-10-04 after the two-fence
 #              case was added). 4a, 4b and 4d were
 #              re-measured the same day after the shared fixtures changed: 20, 22, 22.
-#   4f -> 29   every `4f:` reject fixture (28) and `4f change-record parser failure
-#              fires`; no accept case moved (measured 2026-10-05). 4a-4e re-measured the
-#              same day after the shared intake fixture gained the amendment section:
-#              20, 22, 20, 22, 7, unchanged. The first 4d run flipped 109 cases, accepts
+#   4f -> 32   every `4f:` reject fixture (31) and `4f change-record parser failure
+#              fires`; no accept case moved (re-measured 2026-10-05 after the fence-placement
+#              cases were added, PR #45 review; 29 before). 4a-4e re-measured the same day
+#              after the shared intake fixture gained the amendment section: 20, 22, 20,
+#              22, 7, unchanged. The first 4d run flipped 109 cases, accepts
 #              among them, because 4f read 4d's file variable; 4f now sets its own.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
@@ -1027,7 +1034,15 @@ cr_case() { # $1 = name, $2 = 1|0 expect reject, $3 = text after the story templ
   fi
 }
 cr_case "4f: valid section accepted"                   0 "$(cr_section)"
-cr_case "4f: section last in the file accepted"        0 "$(printf '## Amending an approved story or spec\n\n%s\n' "$CR_LINES")"
+cr_case "4f: section last in the file accepted"        0 "$(cr_section | sed '$d')"
+cr_case "4f: an unfenced template rejected"            1 "$(printf '## Amending an approved story or spec\n\n%s\n' "$CR_LINES")" \
+  "line 1 must be inside"
+cr_case "4f: a closed set inside the fence rejected"   1 \
+  "$(cr_section | awk -v l="$(printf '%s\n' "$CR_LINES" | sed -n 9p)" '$0 == l { next } $0 == "```" && !d { print l; d = 1 } { print }')" \
+  "line 9 must be outside"
+cr_case "4f: a template line after the fence rejected" 1 \
+  "$(cr_section | awk -v l="$(printf '%s\n' "$CR_LINES" | sed -n 3p)" '$0 == l { next } { print } $0 == "```" && !d { print l; d = 1 }')" \
+  "line 3 must be inside"
 cr_case "4f: no amendment section rejected"            1 "## Stop and ask"
 cr_case "4f: two amendment sections rejected"          1 "$(cr_section)
 $(cr_section)"

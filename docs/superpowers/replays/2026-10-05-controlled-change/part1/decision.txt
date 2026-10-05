@@ -1,0 +1,31 @@
+docs(specs): design run analytics for gate calls (vision 2c, part 1)
+
+A repo-local, read-only collector over the Claude Code transcripts and Codex
+session logs that already exist. It stores one immutable record per Codex
+gate call that ran in this clone — typed numbers and identifiers only, no
+session text — in .context/telemetry/ with a 365-day retention. At report
+time it attributes effort to a story only through an unambiguous closing
+provenance line, and reports all other effort as unattributed. The trace ID
+is the story path, which the artifacts already carry.
+
+The story changed during the cycle, each change dated in it: after pass 1
+(the credit balance does not move inside a session, so it was dropped) and
+after pass 4. Pass 4's change narrowed the scope, decided by Daniel on the
+sparring assessment in .context/sparring/: membership by the git common
+directory only, attribution by provenance only, unattributed effort kept.
+Shared or resumed Codex sessions get unknown tokens rather than an estimate,
+after passes 6-9 showed that resumed counters cannot be split per call.
+
+Gate-A spec cycle closed. Pass 10 is clean (0 Blockers, 0 Majors) and comes
+after the pass-4 scope change, which cost further passes as §5 requires. Its
+Minors are collected for the plan. The committed spec is byte-identical to
+the text pass 10 reviewed (sha256
+7dd814a826db7f5e8d8ac67b8e01da55ce7d8b45c9ae6b432d328be6b45fcb63).
+
+Docs-only change (docs/**.md): Gate B is N/A per CLAUDE.md §5.
+
+cycle bd2vvqjtbn; floor 3 per {docs/superpowers/stories/2026-10-02-run-analytics-trace-id-and-retention-story.md (level 1)}; hook reminder threshold absent
+cycle bd2vvqjtbn; Gate-A spec (passes 1-10, gpt-6-astra): Findings 36,27,15,18,14,15,19,17,17,17. Blockers 0,0,0,0,0,0,0,0,0,0. Majors 17,13,4,7,2,2,2,1,1,0.
+
+
+Attribution, as the message above states it and no further: the pass-4 narrowing was decided by Daniel, 2026-10-02, on the assessment excerpted in decision-evidence.md. The message names no decider for the pass-1 change.

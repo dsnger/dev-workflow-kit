@@ -30,8 +30,15 @@ AGENTS.md invariant 12 carries the complete list.
   `dropped`) with the criterion operation under the existing ID rules, unaccounted
   conditions, intervening edits, the scope boundary, open questions, dependent artifacts
   and the consequence for reviews already run, cited from the gate rules and never
-  summarised. It adds no approval step and resumes nothing on its own. *Stop and ask* and
+  summarised. A fate needs a decision that covers the condition, and each moved or dropped fate quotes
+  that passage: a changed draft is not one,
+  and an undecided condition stays Unaccounted with its criterion unchanged. It adds no
+  approval step and resumes nothing on its own. *Stop and ask* and
   *Common mistakes* now say which route each item belongs to.
+- **Limit, measured:** in six replays of two historical narrowings, a fresh agent following
+  the route still gave some conditions a fate no decision covered, at different places each
+  run. The route says what is right; it does not make an agent comply. A human checks the
+  change record (`docs/superpowers/replays/2026-10-05-controlled-change/compare.md`).
 - **`sparring` points at it**: an advisory session drafts the change record and hands it
   over in its coding-agent prompt, and the coding session writes it; sparring's authority
   is unchanged.

@@ -732,9 +732,12 @@ fi
 # --- BEGIN check 4f ---
 # The `intake` amendment route writes a change record for an approved story or spec (G1a).
 # Its shape is pinned here: inside the one `## Amending an approved story or spec` section
-# (up to the next `## ` heading), each of the 12 lines below occurs exactly once. They are
-# the template's heading line, table header and six field lines, and the four closed sets
-# (reason class, fate, AC operation, dependent-artifact status).
+# (up to the next `## ` heading), each of the 12 lines below occurs exactly once. The first
+# eight -- the template's heading line, table header and six field lines -- must sit inside
+# the section's first ```markdown fence, the template; the last four -- the closed sets
+# (reason class, fate, AC operation, dependent-artifact status) -- outside it. Placement is
+# checked because a template line moved out of the fence (or a closed set into it) would
+# leave a broken template with every line still present.
 #
 # What it does NOT catch: whether the procedure prose around them is right, whether any
 # written record follows the template, or whether its values are true. It pins the
@@ -763,12 +766,17 @@ cr_template_scan() { # $1 = file
     BEGIN { n = split(ENVIRON["CR_REQ"], req, "\n"); for (i = 1; i <= n; i++) want[req[i]] = 0 }
     $0 == "## Amending an approved story or spec" { heads += 1; insec = 1; next }
     insec && /^## / { insec = 0; next }
-    insec && ($0 in want) { want[$0] += 1 }
+    insec && !tpl && !tpldone && $0 == "```markdown" { tpl = 1; next }
+    insec && tpl && $0 == "```" { tpl = 0; tpldone = 1; next }
+    insec && ($0 in want) { want[$0] += 1; if (tpl) infence[$0] += 1 }
     END {
       if (heads == 0) { print "no `## Amending an approved story or spec` section"; exit }
       if (heads > 1) { print heads " `## Amending an approved story or spec` sections"; exit }
       for (i = 1; i <= n; i++) if (want[req[i]] != 1) {
         print "line " i " occurs " want[req[i]] " times in the section, need exactly 1: " req[i]; exit
+      }
+      for (i = 1; i <= n; i++) if ((i <= 8) != (infence[req[i]] == 1)) {
+        print "line " i " must be " (i <= 8 ? "inside" : "outside") " the section'"'"'s first ```markdown fence: " req[i]; exit
       }
       print "ok"
     }

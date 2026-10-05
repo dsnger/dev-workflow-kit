@@ -503,10 +503,10 @@ backlog.
         `docs/superpowers/stories/2026-10-02-telemetry-and-review-loop-usefulness-story.md`)
         owns the mechanical record of a spec change after its Gate-A cycle closed;** G1a owns
         the human decision procedure that produces such a change, and feeds part 3 rather
-        than competing with it. *Status:* selected 2026-10-05 (Daniel); shipped in dev-workflow 0.17.0. *Acceptance checks* (story AC-11, which replaced AC-9 on
-        2026-10-05): replayed on the two recorded 2c narrowings, the procedure gives every
-        condition a fate or lists it as Unaccounted, names their dependent artifacts, and
-        explains every row that differs from the historical tables; a change after a closed
+        than competing with it. *Status:* selected 2026-10-05 (Daniel); shipped in dev-workflow 0.17.0. **Open (2026-10-05):** six replays never produced a fully compliant record (`docs/superpowers/replays/2026-10-05-controlled-change/compare.md`); try a stronger replay model and a quote-check step (each fate's quote re-read against what it decides) before relying on agent-written change records. *Acceptance checks* (story AC-12, which replaced AC-11 and AC-9 on
+        2026-10-05): replayed on the two recorded 2c narrowings, the deviations of the replay
+        agent from the route that review finds are named (not claimed exhaustive), every row that differs from the historical
+        tables is explained, and the run's compliance is stated; a change after a closed
         gate cites the gate rule that decides its review consequence, or records that none
         does.
       - **G1b — acceptance evidence per criterion.** Attached to **P5 light** (stable AC IDs,
