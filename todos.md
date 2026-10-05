@@ -530,6 +530,9 @@ backlog.
         *Excluded:* a separately maintained help workflow, and any stored status.
         *Status:* proposed; P1's trigger (3–5 real stories completed in a product project)
         still governs it.
+        **2026-10-05:** the vision's decision inbox (§4) adds the fields an attention entry
+        shows: the decision or action, reason, recommendation and consequences, story,
+        revision, evidence links and freshness. Archiving changes visibility, never status.
       *Secondary design inputs, not leaves:* path-scoped project rules with referenced
       checklists, and project-level goal and non-goal discovery, are considered when the
       owning areas (rule loading, the vision's AGENTS.md goals and the pool) are designed.
@@ -609,6 +612,9 @@ backlog.
         live view (vision §4) is where the human sees which session holds which role,
         reviewer assignment and revision.
       No status store and no roadmap copy is added; no gate obligation changes.
+      **2026-10-05:** story identity, execution attempt and agent session stay separate.
+      The vision's four restart cases (§11, *durable story, exchangeable sessions*) are
+      acceptance input for G2c's role persistence across resume, beside 4a and 5a.
       *Excluded:* support promised for every model or client, autonomous role switching, new
       routine approval checkpoints, and any change to shipped files, hooks, CI or
       configuration before a leaf is designed.
@@ -673,8 +679,8 @@ backlog.
       boundaries, roles, external systems and abuse paths. *Reopens when:* field use shows
       high-security content scattering incoherently across specs — that recurrence is the
       trigger, not a fresh opinion.
-- [ ] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** **In progress
-      2026-10-04:** `docs/superpowers/stories/2026-10-04-stable-acceptance-criterion-ids-story.md`
+- [x] **P5 light — stable AC-/SEC-IDs in the story and plan templates.** **Shipped in
+      0.15.0 (PR #40, 2026-10-04).** Was in progress on 2026-10-04: `docs/superpowers/stories/2026-10-04-stable-acceptance-criterion-ids-story.md`
       (one `AC-<n>` sequence, no `SEC-<n>`; the kit ships no plan template, so plans cite the IDs). Identifiers
       that survive from story to plan to review, so an acceptance criterion can be cited
       instead of re-described. *Trigger: the first story that runs under profiles* — the
@@ -698,13 +704,17 @@ backlog.
       AGENTS.md invariant 8 and `docs/architecture.md` say it does not (verified earlier).
       Inline templates stay right either way; the stated reason may be stale. *Trigger:* the
       next change to invariant 8 or the template layout.
-- [ ] **Gate-rule storage within the instruction-size limit.** Claude Code limits the
+- [x] **Gate-rule storage within the instruction-size limit.** **Shipped in 0.16.0 (PR #41,
+      2026-10-04):** a scaffolded `.claude/review-gates.md` (Daniel chose the file over a
+      skill), check 4e and the migration. Shrinking §5 stays open (below). The rest of this
+      entry is the state when it was recorded: Claude Code limits the
       always-loaded instruction files to 150.0k characters; this repository measured 151.2k
-      on `main` at `b18e7db`, almost all of it CLAUDE.md §5, and `/workflow-init` scaffolds
+      on `main` at `b18e7db`, almost all of it CLAUDE.md §5, and `/workflow-init` scaffolded
       §5 inline into every project. Story:
       `docs/superpowers/stories/2026-10-04-gate-rule-storage-story.md` — profile risk `high`,
       security `none` (Daniel, 2026-10-04). **Ranked (Daniel, 2026-10-04): right after P5
-      light, before 2c part 4** (vision §7, interposed leaf). Open: file vs. shipped skill
+      light, before 2c part 4** (vision §7, interposed leaf). Open then, all since decided
+      by PR #41: file vs. shipped skill
       vs. short core (Daniel leans to the skill, once reliable loading is shown), how the
       hook names what to load, heading grep vs. `.context/codex-gate.on`, the size budget,
       and how PR #38 (`split-review-gates`, this repository only) relates. Shrinking §5 is
@@ -812,6 +822,10 @@ backlog.
       **SFX field input (2026-09-17):** expose installed/observed-loaded workflow
       versions and local rule revision; bind status and evidence to their own
       revisions instead of treating an older handover as current verification.
+      **2026-10-05:** the vision adds two content requirements (§4): human-attention
+      metrics, measured by 2c, and the decision-oriented inbox. It also proposes an owner
+      (§11): a static snapshot after 2c part 4, then the live view after 5a. The trigger
+      above is unchanged.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,
@@ -852,6 +866,9 @@ backlog.
       **2026-10-03:** 2c part 2 delivers only a warning light (reassess effort; no
       green, no usefulness verdict). Confirmed distinct yield, repair origin,
       reviewed coverage and "was it worth it" remain open in this row.
+      **2026-10-05 (recommendation, vision §7):** in part 4, keep live effort measurement
+      apart from any change to pass validity. A short or cheap review is not, on its own,
+      evidence of an incomplete one. Whether part 4 splits is Daniel's decision.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the
