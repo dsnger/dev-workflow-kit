@@ -49,9 +49,12 @@ The model under trial:
 - **Removal** is itself a story: the feature doc is archived, a short stub stays at its
   old path, dated records stay where they are, and open work is explicitly ended,
   adapted or reassigned.
-- **Context.** The agent assembles its own context under a binding selection rule, reads
-  historical records only on demand, and notes in its plan which features and contracts
-  are touched and where its investigation ended.
+- **Context.** The agent assembles its own context under a binding selection rule: the
+  story and the current work state (spec, plan); the touched feature docs and relevant
+  flows; the shared contracts and affected users per the impact check; and the project
+  rules that apply. What this rule selects is the *map-guided set* AC-4 measures against.
+  The agent reads historical records only on demand, and notes in its plan which features
+  and contracts are touched and where its investigation ended.
 
 Why a pilot first: the pilot shows whether the model makes integration risks visible
 earlier at an upkeep cost worth paying. "The model was usable but needed too much upkeep"
@@ -70,14 +73,32 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-9** No file under `plugins/` changes in this story. Adoption into the kit is a separate, later story that takes the report as its input.
 - [ ] **AC-10** The report is one authoritative file in this repo; SFX links to it and keeps no copy.
 
+**Changed 2026-10-06 — gap found.** Decided by Daniel in the Claude Code session of 2026-10-06: the context-selection rule by his decision to record the discussed model ("A, erst festhalten, dann im SFX-Dashboard erproben", about 10:04), whose context decision named the rule's sources; the open question by his vision decision (answer "a", about 10:14); the goals/scope check by his answer "A" (about 10:36), which keeps the vision text unchanged. Baseline: 7ee641e. Two PR #47 bot findings, both confirmed true: AC-4 measures against a "map-guided set" the story never defined, and §5 still listed a decided question as open.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §2 model bullets other than Context, the guiding principle and "Why a pilot first" | kept | none |
+| §2 Context: "assembles its own context under a binding selection rule" | kept, with the rule's sources written out as the context decision named them: "story + current work state (spec, plan); touched feature docs + relevant flows; shared contracts + affected users per the impact check; the project rules that apply"; what it selects is named the map-guided set | none |
+| AC-1 … AC-10 | kept | none |
+| §5: the vision decision 2 question, "Blocks the pilot start (AC-1)" | dropped — per the decision: "Jede verbindliche Architektur-Aussage hat genau eine maßgebliche Quelle" (recorded in the vision's change record); struck through with a pointer to that record | none |
+| §5: which SFX story is the pilot story | kept, with a check added per Daniel's decision (about 10:36): "Bei Auswahl der Pilotstory prüfen, ob sie davon betroffen ist. Falls ja, die Frage vor der abhängigen Arbeit klären; andernfalls bei der späteren Kit-Übernahme." | none |
+| §6 size | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between 7ee641e and this change.
+- **Scope boundary:** in: the §2 Context bullet and both §5 questions. out: every criterion's wording; choosing the pilot story; the vision text.
+- **Open questions:** none added.
+- **Dependent artifacts:** none.
+- **Reviews already run:** none — this story ran no gate cycle, being docs-only under `.claude/review-gates.md`, "What counts as prose (the only Gate-B exemption)"; the PR #47 bot comments are this change's inputs.
+
 ## 4. Affected AGENTS.md invariants
 - `## Don'ts` — "**Never rename or delete a doc section without grepping for references first.**"
 - `## Don'ts` — "**Never describe what a gate proves without checking what it actually compares.**"
 - `## Don'ts` — "**Never replace a decision procedure without accounting for its old conditions.**"
 
 ## 5. Open questions
-- How is the conflict with vision decision 2 resolved: is the rule amended (for example to "each architecture statement stands in exactly one place"), or is the model changed? Blocks the pilot start (AC-1).
-- Which SFX story is the pilot story? It must cross a feature border (AC-2).
+- ~~How is the conflict with vision decision 2 resolved: is the rule amended (for example to "each architecture statement stands in exactly one place"), or is the model changed? Blocks the pilot start (AC-1).~~ Answered 2026-10-06 by Daniel's decision, recorded in the change record at the end of §2 of `docs/superpowers/specs/2026-08-30-dark-factory-vision.md`.
+- Which SFX story is the pilot story? It must cross a feature border (AC-2). When choosing it, check whether it needs goals or scope moved out of AGENTS.md into product-level files; if so, settle the open goals/scope question in the vision's §2 change record before the work that depends on it, otherwise it waits for the later kit adoption.
 
 ## 6. Suggested size
 story — one pilot on one SFX story with one report; the kit changes are deliberately left out (AC-9).
