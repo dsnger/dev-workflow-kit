@@ -105,8 +105,7 @@ acceptable if documented in the script header), cache file format.
 changed files are re-read; deletion only on the file's own "does not exist"; incomplete reads keep
 previous facts as `stale`; a trailing partial line is not an error. The cache holds only the
 allowlisted facts, projected recursively (token keys validated, models through `RE_MODEL`, all
-else dropped), plus per transcript its session ID, latest entry time (session-wide and latest
-member entry), skill-load observations and `cwd` set. Every collection recomputes measurements,
+else dropped), plus per transcript its session ID, latest entry time (session-wide only), skill-load observations and `cwd` set. Every collection recomputes measurements,
 membership and cycles from all cached facts. Cycles from records in baseline..`HEAD` via
 `parse_record` and `classify`, with the spec's mapping (`open` + "conflicting provenance lines" →
 `conflicting`). Display rules: no closing record in range → "no closing record observed in this
