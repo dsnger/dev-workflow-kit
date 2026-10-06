@@ -9,8 +9,14 @@ made it, not on a resolvable commit. One run per variant; nothing was repeated.
 ## Setup actually used
 
 Two fixture directories, identical except `CLAUDE.md` (`fixture/CLAUDE-old.md` = `main`'s,
-`fixture/CLAUDE-new.md` = this change's): `AGENTS.md`, `.claude/review-gates.md`, the intake
-`SKILL.md`, `TASK.md`, `inputs/`. Each run: `claude -p` with `--plugin-dir` on superpowers
+`fixture/CLAUDE-new.md` = this change as tested, an earlier snapshot kept unchanged as the
+record); the other fixture files are `AGENTS.md`, `.claude/review-gates.md`, the intake
+`SKILL.md`, `TASK.md` and `inputs/`. After the runs, the PR #48 review fixes changed the
+shipped text twice: the handover rule gained the cross-checkout sentence and the
+no-publication clause, which the planning task did not exercise; and the Gate-A sentence was
+reworded positively — the review checks below used its earlier wording, "A missing function
+body or complete test is not by itself a finding", so they tested that wording, not the
+shipped one. Each run: `claude -p` with `--plugin-dir` on superpowers
 6.4.1, `--setting-sources project`, `--strict-mcp-config`, `--permission-mode acceptEdits`,
 the prompt in `prompt.txt`. Init records (`out/probe-and-runs.txt`) show the same model and
 client version, only superpowers 6.4.1 plus built-in plugins, no MCP servers, a fresh memory
