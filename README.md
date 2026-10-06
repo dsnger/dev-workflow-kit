@@ -160,7 +160,7 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on 
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus five prompt-conformance checks) plus
-both checkers' regression suites, the five reports' suites, and
+both checkers' regression suites, the six reports' suites, and
 `claude plugin validate . --strict`.
 
 `python3 scripts/ledger-metrics.py` prints a read-only report over the hardening ledger
@@ -190,6 +190,14 @@ time and tokens per open cycle, plus gate calls still waiting for their result, 
 counted rather than hidden. Re-run it to refresh. It counts calls, not review passes, sets no
 threshold, and changes no gate rule. It writes nothing, and it reads every transcript, so a run can
 take a minute or two.
+
+`python3 -B scripts/status-view.py [--base <commit>] [--watch <seconds>]` writes one HTML page,
+`.context/status/index.html`: current work, evidenced progress, open points, effort, artifact growth
+against a baseline (merge-base with `main` unless `--base` names one) and the installed, loaded and
+declared workflow versions. Each value names its source and age; what the sources cannot establish
+says `unknown`. `--watch` regenerates it at that interval until you stop it, and the page reloads
+itself. It writes only `.context/status/`, keeps a cache there so later runs re-read only changed
+logs, and makes no model call. The first run reads every transcript once.
 
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which

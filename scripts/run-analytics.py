@@ -187,38 +187,48 @@ def scan_transcripts(problems):
     root = os.path.join(os.path.expanduser("~"), ".claude", "projects")
     calls = {}
     for path in walk_jsonl(root, lambda n: n.endswith(".jsonl"), problems):
-        uses = {}
-        for obj in read_lines(path, problems, keep=(b"codex", b"tool_")):
-            msg = obj.get("message") if isinstance(obj, dict) else None
-            content = msg.get("content") if isinstance(msg, dict) else None
-            if not isinstance(content, list):
-                if not isinstance(obj, dict):
-                    bump(problems, "wrong shape")
-                continue
-            role = obj.get("type")
-            for it in content:
-                kind = it.get("type") if isinstance(it, dict) else None
-                if kind == "tool_use":
-                    name = it.get("name")
-                    if not isinstance(name, str) or not isinstance(it.get("id"), str):
-                        bump(problems, "wrong shape")
-                    elif name in GATE_TOOLS:
-                        if role != "assistant":
-                            bump(problems, "wrong shape")
-                        elif it["id"] not in uses:
-                            inp = it.get("input") if isinstance(it.get("input"), dict) else {}
-                            uses[it["id"]] = [obj.get("timestamp"), GATE_TOOLS[name], inp, None]
-                elif kind == "tool_result":
-                    uid = it.get("tool_use_id")
-                    if not isinstance(uid, str) or role != "user":
-                        bump(problems, "wrong shape")
-                    elif uid in uses and uses[uid][3] is None:
-                        uses[uid][3] = (obj.get("timestamp"), it.get("content"))
-        for uid, (ts, tool, inp, res) in uses.items():
+        for uid, (ts, tool, inp, res) in transcript_uses(path, problems).items():
             prev = calls.get(uid)
             if prev is None or (prev["result"] is None and res is not None):
                 calls[uid] = {"id": uid, "started": ts, "tool": tool, "input": inp, "result": res}
     return calls
+
+
+def transcript_uses(path, problems):
+    """One transcript: tool_use_id -> [timestamp, tool, input, result or None] (ruling 8)."""
+    return uses_from_lines(read_lines(path, problems, keep=(b"codex", b"tool_")), problems)
+
+
+def uses_from_lines(objs, problems):
+    """The gate-call uses and results in one transcript's parsed lines, in file order."""
+    uses = {}
+    for obj in objs:
+        msg = obj.get("message") if isinstance(obj, dict) else None
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if not isinstance(content, list):
+            if not isinstance(obj, dict):
+                bump(problems, "wrong shape")
+            continue
+        role = obj.get("type")
+        for it in content:
+            kind = it.get("type") if isinstance(it, dict) else None
+            if kind == "tool_use":
+                name = it.get("name")
+                if not isinstance(name, str) or not isinstance(it.get("id"), str):
+                    bump(problems, "wrong shape")
+                elif name in GATE_TOOLS:
+                    if role != "assistant":
+                        bump(problems, "wrong shape")
+                    elif it["id"] not in uses:
+                        inp = it.get("input") if isinstance(it.get("input"), dict) else {}
+                        uses[it["id"]] = [obj.get("timestamp"), GATE_TOOLS[name], inp, None]
+            elif kind == "tool_result":
+                uid = it.get("tool_use_id")
+                if not isinstance(uid, str) or role != "user":
+                    bump(problems, "wrong shape")
+                elif uid in uses and uses[uid][3] is None:
+                    uses[uid][3] = (obj.get("timestamp"), it.get("content"))
+    return uses
 
 
 def first_session_id(path, problems):
@@ -248,30 +258,40 @@ def scan_codex(problems, wanted):
         sid = first_session_id(path, problems)
         if sid not in wanted:
             continue
-        before = dict(problems)
-        lines = read_lines(path, problems)
-        fact = {"meta_ts": None, "last_ts": None, "usage": None, "models": set(),
-                "bad": problems != before or not lines}
-        if lines and isinstance(lines[0], dict):
-            meta = lines[0].get("payload") if isinstance(lines[0].get("payload"), dict) else {}
-            fact["meta_ts"] = parse_ts(meta.get("timestamp") or lines[0].get("timestamp"))
-        for obj in lines:
-            if not isinstance(obj, dict):
-                bump(problems, "wrong shape")
-                fact["bad"] = True
-                continue
-            t = parse_ts(obj.get("timestamp"))
-            if t and (fact["last_ts"] is None or t > fact["last_ts"]):
-                fact["last_ts"] = t
-            payload = obj.get("payload") if isinstance(obj.get("payload"), dict) else {}
-            if obj.get("type") == "event_msg" and payload.get("type") == "token_count":
-                info = payload.get("info")
-                u = info.get("total_token_usage") if isinstance(info, dict) else None
-                fact["usage"] = u if isinstance(u, dict) else None  # the last event wins, usable or not
-            if obj.get("type") == "turn_context" and "model" in payload:
-                fact["models"].add(payload["model"] if isinstance(payload["model"], str) else None)
-        sessions.setdefault(sid, []).append(fact)
+        sessions.setdefault(sid, []).append(codex_fact(path, problems))
     return sessions
+
+
+def codex_fact(path, problems):
+    """One Codex session log's facts: first and last timestamps, the last token usage, its models."""
+    before = dict(problems)
+    lines = read_lines(path, problems)
+    return fact_from_lines(lines, problems, problems != before)
+
+
+def fact_from_lines(lines, problems, bad):
+    """The facts of one Codex session log's parsed lines; `bad` marks a log that did not read cleanly."""
+    fact = {"meta_ts": None, "last_ts": None, "usage": None, "models": set(),
+            "bad": bad or not lines}
+    if lines and isinstance(lines[0], dict):
+        meta = lines[0].get("payload") if isinstance(lines[0].get("payload"), dict) else {}
+        fact["meta_ts"] = parse_ts(meta.get("timestamp") or lines[0].get("timestamp"))
+    for obj in lines:
+        if not isinstance(obj, dict):
+            bump(problems, "wrong shape")
+            fact["bad"] = True
+            continue
+        t = parse_ts(obj.get("timestamp"))
+        if t and (fact["last_ts"] is None or t > fact["last_ts"]):
+            fact["last_ts"] = t
+        payload = obj.get("payload") if isinstance(obj.get("payload"), dict) else {}
+        if obj.get("type") == "event_msg" and payload.get("type") == "token_count":
+            info = payload.get("info")
+            u = info.get("total_token_usage") if isinstance(info, dict) else None
+            fact["usage"] = u if isinstance(u, dict) else None  # the last event wins, usable or not
+        if obj.get("type") == "turn_context" and "model" in payload:
+            fact["models"].add(payload["model"] if isinstance(payload["model"], str) else None)
+    return fact
 
 
 # ---- building records ------------------------------------------------------------------------------
