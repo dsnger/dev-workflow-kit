@@ -116,8 +116,11 @@ measures, each a validated number or `unknown`; a model identifier is kept only 
 run-analytics' bounded identifier pattern (`RE_MODEL`), otherwise it is written `undetermined`
 (the curve grammar is not that test: it also admits quoted free text); every other field is dropped
 before anything is written. Per Claude Code transcript the cache may also hold, beside its
-calls: its session ID, the time of its latest entry, and its load observations (§7) as component,
-version and time. These are what §5 and §7 need, so they survive a restart without re-reading an
+calls: its session ID, the time of its latest entry, its load observations (§7) as component,
+version and time, and the working directories (`cwd`) its entries record. A session without gate
+calls belongs to this repository when one of those working directories lies in a checkout sharing
+this repository's git common directory — the same membership test live-effort applies to a call's
+working directory, re-evaluated at every collection. These are what §5 and §7 need, so they survive a restart without re-reading an
 unchanged transcript. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
 `scan_codex`), the plan adds a per-file function to run-analytics that those scans then call; that
 is the only permitted change to run-analytics, and its output and suite stay unchanged. The
@@ -143,7 +146,9 @@ record observed in this range" — never as proven open — and only when its fi
 the baseline commit's time; older calls without a record are not shown. Calls with no nonce are
 listed as unattributed. **Without a baseline** (§3) there is no range and no cutoff: calls from the
 last 24 hours, the window live-effort uses for calls with no cycle, are shown grouped by nonce with
-closure and branch attribution "unavailable: no baseline", nonce-bearing and nonce-less alike.
+closure and branch attribution "unavailable: no baseline", nonce-bearing and nonce-less alike. A
+call without an observed result is shown regardless of age in every case, baseline or not; the
+24-hour window applies only to calls that have a result.
 
 **Shown, each figure separately:** gate calls; observed call slots (attempts, including incomplete
 ones); valid passes, taken only from a closing curve and labelled as the author's self-reported
@@ -283,11 +288,13 @@ behaviour it covers. Cases:
 6. Growth: added, modified, shrunk, deleted, untracked and uncommitted files, with code and tests
    apart, under the named checkout root; a handover that grows, shrinks or disappears shows its change since first observed.
 7. No merge-base → the reason is shown, current sizes stay, net change and range items show
-   "unavailable", recent nonce-bearing and nonce-less calls stay visible; `--base` fills them.
+   "unavailable", recent nonce-bearing and nonce-less calls stay visible, and so does a call without a result older
+than 24 hours; `--base` fills them.
 8. Watch mode keeps the baseline when `main` moves between two collections, and marks a branch
    change.
 9. Incremental: an unchanged file is not read again, and after a restart with unchanged
-   transcripts the loaded versions and last activity are still shown; a grown transcript whose pending call received
+   transcripts the loaded versions and last activity are still shown — for a session of this
+   repository without gate calls, and not for one of another repository; a grown transcript whose pending call received
    its result shows the result; a call older than six hours without a result is still shown; a
    deleted file drops out; a late Codex log fills an unchanged completed call's tokens; a resume
    found in another transcript makes an earlier call's tokens shared and so `unknown`.
