@@ -958,6 +958,18 @@ backlog.
       control, automatic stops, new gate rules, full cost accounting. Starts through intake
       at the compact-planning release's handover boundary; this entry stays the single
       owner, no second dashboard entry.
+- [ ] **Optional codebase-memory MCP integration into task context.** Recorded with Daniel on
+      2026-10-06: the next bounded unit after the first process-monitoring delivery (the row
+      above), and not part of that row's story. Belongs to the existing context selection
+      (CLAUDE.md §4 "Context, by task", 0.18.0): detect a server that is already present;
+      support its setup optionally; state when to use it and the fallback to direct search;
+      check that the index belongs to the current checkout. Not a required dependency, and
+      not a second source for architecture decisions or workflow status. The locally present
+      server may already be used during current work. It should be stable before the
+      living-feature-docs pilot starts; if it would delay that start, name the concrete
+      dependency instead of blocking the pilot silently.
+      *Trigger: the first process-monitoring delivery is complete.* This entry records order and
+      scope only; design starts at the trigger.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,
