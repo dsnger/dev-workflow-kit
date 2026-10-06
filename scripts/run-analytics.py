@@ -196,8 +196,13 @@ def scan_transcripts(problems):
 
 def transcript_uses(path, problems):
     """One transcript: tool_use_id -> [timestamp, tool, input, result or None] (ruling 8)."""
+    return uses_from_lines(read_lines(path, problems, keep=(b"codex", b"tool_")), problems)
+
+
+def uses_from_lines(objs, problems):
+    """The gate-call uses and results in one transcript's parsed lines, in file order."""
     uses = {}
-    for obj in read_lines(path, problems, keep=(b"codex", b"tool_")):
+    for obj in objs:
         msg = obj.get("message") if isinstance(obj, dict) else None
         content = msg.get("content") if isinstance(msg, dict) else None
         if not isinstance(content, list):
