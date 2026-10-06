@@ -30,17 +30,20 @@ of all local transcripts (2026-10-06) found versioned plugin paths in: `type: us
 entries whose `attachment.type` is `invoked_skills` (11) — both harness-written, both for skills;
 and otherwise only in assistant tool uses, tool results, user text and queue operations, which are
 mentions. No harness event recorded a command's or a hook's versioned path. So **only those two
-skill-load event kinds count**; commands and hooks show `unknown` as their loaded version. Nearly
-every transcript entry carries a `cwd` field (23,895 of 23,900 checked), which spec §4 uses for
-session membership.
+skill-load event kinds count**; commands and hooks show `unknown` as their loaded version. On
+`cwd`: the probe's first count sampled only lines it pre-filtered (23,895 of 23,900 carried
+`cwd`); the Gate-A plan review's full read-only scan of the same surface counted 673,347 entries,
+487,291 of them with a string `cwd`. So `cwd` is common, not universal: a session whose entries
+carry no member `cwd` is not counted as this repository's, and the corpus is large enough that the
+first collection's full read is a real cost (Review focus 1).
 
-**Collected Minor from Gate-A spec pass 6, decided here within spec §0:** a session's
-latest-entry time is shown as session-wide ("last entry in this session — may include work in
-other repositories") unless that entry's own `cwd` is a member; the cache keeps the latest
-member entry's time beside the session-wide one.
+**Collected Minor from Gate-A spec pass 6, decided here within spec §0 and §4:** a session's
+latest-entry time is always shown as session-wide ("last entry in this session — may include work
+in other repositories"). The cache holds only the latest-entry time spec §4 allows; no
+per-directory time is kept.
 
 **Global constraints.** Python 3.8+, git 2.36+, standard library only; no model call; writes only
-under `.context/status/`; `sys.dont_write_bytecode` set before other imports, as the other reports
+under `.context/status/`, with containment checked before the first write (Task 2); `sys.dont_write_bytecode` set before other imports, as the other reports
 do; every path and environment rule the other reports apply to git calls (`GIT_SELECTORS`,
 `--no-replace-objects` or equivalent, signature display off) applies here too.
 
@@ -77,10 +80,18 @@ generation time and per-source as-of times, and in watch mode carries a reload a
 that shows "stale: no successful refresh observed within three intervals" with last success and
 last failure. One-shot exit codes as spec §1.
 **Files.** `scripts/status-view.py` (new), `scripts/status-view.test.sh` (new).
-**Reuse.** Loader pattern and git environment handling from `live-effort.py` / `loop-usefulness.py`.
+**Output containment.** Before the first write: `.context` and `.context/status` must be real
+directories, not symlinks (created when absent); the lock, cache, temporary and page files are
+opened relative to the status directory's descriptor without following symlinks, reusing the
+directory-descriptor and no-follow approach run-analytics uses for its store where it fits. Any
+violation → no write, non-zero exit naming the path.
+**Reuse.** Loader pattern and git environment handling from `live-effort.py` / `loop-usefulness.py`;
+run-analytics' store-opening approach.
 **Tests (fixture repo + fixture home, expected text with times masked):**
 - a second invocation while the lock is held → writes nothing, exits non-zero naming the lock (case 15);
-- a forced failure of one source → that section `stale` with its original as-of time, others `ok`; a forced failure of the whole collection → previous page kept, banner added (case 7 of §2);
+- a forced failure of one source → that section `stale` with its original as-of time, others `ok`; a forced failure of the whole collection → previous page kept, banner added (spec §2, the source-failure and whole-collection-failure bullets);
+- `HEAD` moved during a collection (through the suite's documented hook) → that collection is not published, the previous page stays, the next names one pinned commit (spec §2, checkout consistency);
+- `.context` or `.context/status` a symlink, and a symlinked lock, cache or page file → nothing written, the outside targets unchanged, non-zero exit;
 - page contains no completion percentage and no composite score (case 16);
 - read-only snapshot: nothing outside `.context/status/` changes (case 18);
 - a string with `<script>` in a repository file appears escaped.
@@ -113,7 +124,7 @@ live-effort uses for tokens and membership); `parse_record`; `classify`.
 - `INCOMPLETE` reply's slot counts as an attempt, not a valid pass (case 11);
 - markers in a tool input, a tool result, transcript text, an extra nested token field and a bare and a quoted free-text model value → absent from page and cache (case 12);
 - a cache-only restart still shows loaded versions and last activity for a member session without gate calls, and not for another repository's session (case 9);
-- a transcript spanning two repositories → session-wide time labelled, member time separate (collected Minor);
+- a transcript spanning two repositories, and one whose latest entry has no `cwd` → its latest-entry time is labelled session-wide (collected Minor); a session with no member `cwd` is not shown as this repository's;
 - no baseline → recent calls with a result and an old call without a result stay visible (case 7).
 **Decision space.** Cache format and invalidation mechanics, how the suite counts re-reads, how
 the session-wide label is worded.
@@ -180,9 +191,19 @@ steps beside live-effort's); `README.md` (where it lists the reports).
 **Steps.** Before editing, grep for every statement of the report count and list
 (`grep -rn "Python reports\|five \|live-effort" AGENTS.md README.md .github docs/architecture.md`),
 per AGENTS.md's Don'ts on docs drift. Run the full quality command from `AGENTS.md` and record it.
-**Real run (`AC-12`).** On this branch: generate the page; make the commit that closes a step (the
-Gate-B WIP snapshot is the natural one); regenerate; the evidence entry quotes, from both pages, the
-evidenced state change and the growth change, and names both runs' generation times.
+**Real run (`AC-12`).** On real revisions of this branch, with one fixed baseline
+(`--base 62ebb90`, this branch's merge-base with `main`): run the implemented report in a temporary
+worktree checked out at `fc0b43d` (spec committed, Gate-A spec cycle open), then move that worktree
+to `b1f76f1` (the commit carrying the closing records of Gate-A spec cycle `zz66702iyt`) and let the
+running watch process refresh. Expected: the last evidenced phase moves from "spec written" to
+"spec reviewed" with `b1f76f1` as source, and the spec's growth figure changes (the spec grew
+between the two revisions). The evidence entry quotes both pages' phase and growth lines and both
+generation times. The temporary worktree is removed afterwards. A `WIP:` commit is not used: it is
+an observation, not a closing step (spec §5).
+**Browser age check (named verification).** Open a watch-mode page in a browser, stop the watch
+process, keep the tab open past three intervals while it keeps reloading, and observe "stale: no
+successful refresh observed within three intervals" with the original last-success time; open a
+one-shot page and observe no reload and no age check. The evidence entry names what was observed.
 **Evidence entry (validation `battery+check`).** Battery green, plus the suite's counterfactual:
 for at least the cases tied to `AC-3`, `AC-6`, `AC-9` and `AC-10`, name the observation that would
 exist if the behaviour were absent and show the case failing against a mutant that removes it.
