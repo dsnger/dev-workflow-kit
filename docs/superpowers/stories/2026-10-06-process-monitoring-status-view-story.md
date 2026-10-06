@@ -42,8 +42,8 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - `## Key invariants` / Packaging, 12 — "A pull request that changes any path under a `plugins/<name>/` directory … must also change that plugin manifest's `version`" (applies only if the delivery touches `plugins/`)
 
 ## 5. Open questions
-- Which baseline AC-5 names by default (for example the story's first commit or the merge-base with `main`) — a requirement choice to settle in brainstorming.
-- Whether "phase" (AC-1) should become an explicitly recorded field later, or stay inferred in this first delivery.
+- Which baseline AC-5 names by default (for example the story's first commit or the merge-base with `main`) — a requirement choice to settle in brainstorming. **Answered 2026-10-06 (Daniel, brainstorming):** merge-base with `main`, overridable with an explicit commit; see the spec, §3.
+- Whether "phase" (AC-1) should become an explicitly recorded field later, or stay inferred in this first delivery. **Answered for this delivery 2026-10-06 (Daniel, brainstorming):** derived from evidence only, labelled as such (spec §5); a recorded phase field later stays open.
 
 ## 6. Suggested size
 story — one local generated view over existing sources, one spec → plan → PR.
