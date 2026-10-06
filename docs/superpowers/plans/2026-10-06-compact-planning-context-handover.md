@@ -70,7 +70,8 @@ and of the `### 2.1a` template.
 **Settled:** the broad prompt, every-finding coverage and "coverage floor, not a cage" stay.
 **Decision space:** wording and where in the bullet.
 **Test situations:**
-- `git diff` of both files shows hunks only inside that bullet.
+- T1 is committed first; `git diff` against that commit shows, in both files, hunks only
+  inside the Gate-A bullet.
 - The bullet text differs between the two copies only where it differed before (compare
   pre-change difference with post-change difference).
 - `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` green.
@@ -138,6 +139,10 @@ via `mcp__codex__exec` only if the preconditions in spec §6 hold, the degraded 
 by diff.
 **Decision space:** fixture layout, prompt wording (identical in both runs), how the probe
 shows its context.
+**Qualifying observation, fixed in the rubric before the runs:** the old-instruction plan
+contains implementation in full for at least one step (rubric item "implementation in
+full: yes"), and the new-instruction plan does not, while meeting the rubric's planning
+items. That is the check that fails without the change.
 **Test situations:** "no observed difference" is recorded as such; a failed precondition
 marks that part of AC-12 unmet; no run is repeated to obtain another result.
 
@@ -145,5 +150,9 @@ marks that part of AC-12 unmet; no run is repeated to obtain another result.
 
 **Outcome:** quality battery green; Gate B (spec and quality as two sequential calls on the
 same base and head) closed; PR opened, bots processed, merged.
+**Prerequisite:** T7's qualifying observation holds and the AC-12 parts are reported. If the
+observation does not hold, or a part of AC-12 is unmet, stop before Gate B and surface it to
+Daniel: an unobservable counterfactual is a blocking evidence gap under the gate rules'
+evidence paragraph, and only a logged human decision can change the mode.
 **Evidence entry (battery+check):** the named verification is T7's old-vs-new comparison;
 its counterfactual is the old-instruction run.
