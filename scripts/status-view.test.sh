@@ -19,7 +19,7 @@ pass() { printf 'PASS %s\n' "$1"; passed=$((passed + 1)); }
 fail() { printf 'FAIL %s\n' "$1"; failed=$((failed + 1)); }
 
 cat > "$work/driver.py" <<'PY'
-import datetime, fcntl, hashlib, importlib.util, json, os, re, shutil, subprocess, sys
+import datetime, errno, fcntl, hashlib, importlib.util, json, os, re, shutil, subprocess, sys
 
 WORK, SCRIPT, ONLY = sys.argv[1], sys.argv[2], set(sys.argv[3:])
 HOME = os.path.join(WORK, "home")
@@ -842,6 +842,75 @@ if wanted("p3"):
     git(SG, "commit", "-q", "-S", "-m", "signed story")
     rc = run(SG)
     check("p3:signed history with showSignature still renders", rc == 0 and "inferred current story" in text(SG))
+
+# PR #49 bot findings
+if wanted("b1"):
+    PB = mkrepo("PB")
+    put(PB, STORY, "# S\n")
+    commit(PB, "story")
+    st0 = os.stat(os.path.join(PB, "CLAUDE.md"))
+    put(PB, "CLAUDE.md", "RULES\n")  # same length as "rules\n"
+    os.utime(os.path.join(PB, "CLAUDE.md"), ns=(st0.st_atime_ns, st0.st_mtime_ns))
+    run(PB)
+    check("b1:same-length edit with the old mtime is seen", "uncommitted changes" in section_of(text(PB), "Workflow version"))
+    os.chmod(os.path.join(PB, STORY), 0o755)
+    run(PB, "--base", git(PB, "rev-parse", "HEAD", date=False))
+    w = section_of(text(PB), "Current work")
+    check("b1:mode-only change stays a changed artifact", STORY in w.split("stories, specs and plans this branch changes:")[1][:300], w[:400])
+    os.chmod(os.path.join(PB, STORY), 0o644)
+    os.remove(os.path.join(PB, "scripts", "old.sh"))
+    os.mkfifo(os.path.join(PB, "scripts", "old.sh"))
+    run(PB)
+    gr = section_of(text(PB), "Artifact growth")
+    check("b1:file replaced by a FIFO is unknown, not deleted", "scripts/old.sh  unreadable (size unknown)" in gr and "old.sh  deleted" not in gr, gr[-300:])
+    os.remove(os.path.join(PB, "scripts", "old.sh"))
+    git(PB, "checkout", "-q", "--", "scripts/old.sh")
+    # a committed executable-bit change stays visible under core.filemode=false; equal blobs keep their line count
+    before_exec = git(PB, "rev-parse", "HEAD", date=False)
+    os.chmod(os.path.join(PB, STORY), 0o755)
+    commit(PB, "exec bit")
+    git(PB, "config", "core.filemode", "false")
+    run(PB)
+    w = section_of(text(PB), "Current work")
+    check("b2:committed mode change visible without core.filemode", STORY in w.split("stories, specs and plans this branch changes:")[1][:300], w[:400])
+    git(PB, "config", "--unset", "core.filemode")
+    # pathspec magic in a file name is a literal name
+    put(PB, ":odd.sh", "old\n")
+    put(PB, "odd.sh", "new\n")
+    commit(PB, "odd names")
+    odd_base = git(PB, "rev-parse", "HEAD", date=False)
+    put(PB, ":odd.sh", "new\n")
+    put(PB, STORY, "# S changed\n")
+    run(PB, "--base", odd_base)
+    gr = section_of(text(PB), "Artifact growth")
+    check("b3:file named with pathspec magic is compared literally", ":odd.sh  modified" in gr, gr[-400:])
+    put(PB, ":odd.sh", "old\n")
+    put(PB, STORY, "# S\n")
+    run(PB, "--base", before_exec)
+    gr = section_of(text(PB), "Artifact growth")
+    check("b2:mode-only row keeps its baseline line count", re.search(re.escape(STORY) + r"\s+modified\s+4 → 4 \(\+0\)\s+1 → 1", gr), gr[-400:])
+    # a failed publication leaves the published cache untouched
+    put(PB, ".context/handover-p.md", "abcd\n")
+    calls = {"n": 0}
+    real_write = SV.write_atomic
+
+    def flaky(dfd, name, data):
+        calls["n"] += 1
+        if calls["n"] == 3:  # the second collection's page write (the page is written before the cache)
+            raise OSError(errno.EIO, "injected")
+        return real_write(dfd, name, data)
+
+    def grow():
+        put(PB, ".context/handover-p.md", "abcdefghijklmnop\n")
+    SV.write_atomic = flaky
+    run(PB, "--watch", "5", hooks={"iterations": 2, "sleep": lambda s: None, "after_collection": grow})
+    SV.write_atomic = real_write
+    cache = json.load(open(os.path.join(PB, ".context", "status", "cache.json")))
+    check("b2:failed page write keeps the published handover cache", cache.get("handovers", {}).get("handover-p.md", {}).get("last_size") == 5, cache.get("handovers"))
+    installed({"scope": "user"})
+    run(PB)
+    check("b1:installed record without version is not shown as a version", "installed: None" not in text(PB) and "no valid version string" in text(PB))
+    installed(rec("0.18.0"))
 
 # a partial clone is refused before any object is read
 if wanted("g1"):

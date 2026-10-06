@@ -272,7 +272,7 @@ visibly marked.
   local logs as they are; it runs nothing they configure. No git command it uses executes a
   configured helper: it does not call `git status` or `git diff <tree>` (which run clean/process
   filters, fsmonitor and submodule recursion); the working-tree state is derived from `ls-tree`,
-  `ls-files` (index entries with their size and mtime, untracked files), `check-attr` and hashes of
+  `ls-files` (index entries with their size, mtime and ctime — a file as new as the index is hashed, as git does — and untracked files), `check-attr` and hashes of
   the raw bytes. A file git would normalize or filter (a `text`, `eol` or `filter` attribute, or any
   file under `core.autocrlf`) whose raw bytes differ is reported as "possibly changed" — in Current
   work and in Artifact growth alike — and not compared further, because comparing it would run the

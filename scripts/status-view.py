@@ -96,7 +96,7 @@ def esc(text):
 def git(args, cwd):
     """Every report git call. None of them runs a filter, fsmonitor or other configured helper:
     `git status` and `git diff <tree>` are not used (spec §8); signatures are not checked."""
-    return lu.git(("-c", "log.showSignature=false", "-c", "core.fsmonitor=false") + tuple(args), cwd)
+    return lu.git(("--literal-pathspecs", "-c", "log.showSignature=false", "-c", "core.fsmonitor=false") + tuple(args), cwd)
 
 
 def read_regular(path):
@@ -287,7 +287,7 @@ def cycles(cwd, base, head):
     return out
 
 
-RE_INDEX = re.compile(rb"(\d{6}) ([0-9a-f]+) (\d)\t([^\0]*)\0  ctime: \d+:\d+\n  mtime: (\d+):(\d+)\n.*?size: (\d+)", re.S)
+RE_INDEX = re.compile(rb"(\d{6}) ([0-9a-f]+) (\d)\t([^\0]*)\0  ctime: (\d+):(\d+)\n  mtime: (\d+):(\d+)\n.*?size: (\d+)", re.S)
 
 
 def worktree_state(ctx):
@@ -310,10 +310,17 @@ def worktree_state(ctx):
     index = {}
     for m in RE_INDEX.finditer(raw):
         path = os.fsdecode(m.group(4))
-        index[path] = (m.group(1).decode(), m.group(2).decode(), int(m.group(5)), int(m.group(6)), int(m.group(7)))
+        index[path] = (m.group(1).decode(), m.group(2).decode(), int(m.group(7)), int(m.group(8)), int(m.group(9)),
+                       int(m.group(5)), int(m.group(6)))
+    ctx["index_modes"] = {p: v[0] for p, v in index.items()}
+    try:
+        index_mtime = os.stat(os.path.join(root, git_text(("rev-parse", "--git-path", "index"), root).strip())).st_mtime_ns
+    except OSError:
+        index_mtime = 0  # no index file: every stat shortcut is refused
     maybe = []
     cfg = lambda k: git_text(("config", "--get", k), root).strip().lower() if git(("config", "--get", k), root)[0] == 0 else ""
-    filemode = cfg("core.filemode") not in ("false", "no", "off", "0")
+    filemode = ctx["filemode"] = cfg("core.filemode") not in ("false", "no", "off", "0")
+    ctx["symlinks"] = cfg("core.symlinks") not in ("false", "no", "off", "0")
     autocrlf = cfg("core.autocrlf") in ("true", "input", "yes", "on", "1")
     for path in set(head_tree) | set(index):
         if path.startswith(".context/"):
@@ -339,8 +346,9 @@ def worktree_state(ctx):
                 (i[0] == "100755") != bool(st.st_mode & 0o100):
             out[path] = "M"  # a mode-only change, as git reports it with core.filemode
             continue
-        if st.st_size == i[4] and st.st_mtime_ns // 10**9 == i[2] and st.st_mtime_ns % 10**9 == i[3]:
-            continue
+        if st.st_size == i[4] and st.st_mtime_ns // 10**9 == i[2] and st.st_mtime_ns % 10**9 == i[3] \
+                and st.st_ctime_ns == i[5] * 10**9 + i[6] and st.st_mtime_ns < index_mtime:
+            continue  # unchanged by stat; a file as new as the index itself is hashed (git's racy-clean rule)
         try:
             data = os.readlink(full).encode() if stat.S_ISLNK(st.st_mode) else read_regular(full)
         except OSError:
@@ -359,6 +367,24 @@ def worktree_state(ctx):
             out[p] = "A"
     ctx["wt"] = out
     return out
+
+
+def file_mode(full, ctx, path=None):
+    """The git mode of a working-tree path: 120000 symlink, 100755 executable, 100644 regular. Without
+    core.filemode the executable bit on disk is not trusted and the index's mode is taken, as git does."""
+    st = os.lstat(full)
+    if stat.S_ISLNK(st.st_mode):
+        return "120000"
+    indexed = ctx.get("index_modes", {}).get(path)
+    if indexed == "120000" and not ctx.get("symlinks", True):
+        return "120000"  # without core.symlinks git checks a symlink out as a file holding its target
+    if not ctx.get("filemode", True) and indexed in ("100644", "100755"):
+        return indexed  # only the executable bit is untrusted without core.filemode, never the type
+    return "100755" if st.st_mode & 0o100 else "100644"
+
+
+def modes_equal(a, b, ctx):
+    return a == b
 
 
 def changed_paths(ctx, base, head):
@@ -384,13 +410,16 @@ def changed_paths(ctx, base, head):
     out = {p: s for p, s in out.items() if s and not p.startswith(".context/")}
     fmt_ = git_text(("rev-parse", "--show-object-format"), cwd).strip() or "sha1"
     for p in [p for p, st in out.items() if st in ("M", "A")]:  # an edit undone on disk is no net change
-        rc, blob = git(("rev-parse", "--verify", "--quiet", "%s:%s" % (base, p)), cwd)
+        rc, entry = git(("ls-tree", "-z", base, "--", p), cwd)
+        meta = entry.decode("utf-8", "replace").split("\t", 1)[0].split()
         full = os.path.join(cwd, p)
         try:
             data = os.readlink(full).encode() if os.path.islink(full) else read_regular(full)
+            mode = file_mode(full, ctx, p)
         except OSError:
             continue
-        if rc == 0 and blob.decode().strip() == hashlib.new(fmt_, b"blob %d\0" % len(data) + data).hexdigest():
+        if rc == 0 and len(meta) == 3 and meta[2] == hashlib.new(fmt_, b"blob %d\0" % len(data) + data).hexdigest() \
+                and modes_equal(meta[0], mode, ctx):
             del out[p]
     return out
 
@@ -452,7 +481,10 @@ def newest_handover(root):
         return None
     best = None
     for n in names:
-        st = os.lstat(os.path.join(d, n))
+        try:
+            st = os.lstat(os.path.join(d, n))
+        except FileNotFoundError:
+            continue  # removed between listing and lookup
         if stat.S_ISREG(st.st_mode) and (best is None or st.st_mtime > best[1]):
             best = (n, st.st_mtime)
     return best
@@ -1072,7 +1104,7 @@ def sec_growth(ctx):
         else:
             return "skip"
         return [len(data), blob_lines(data), hashlib.new(ctx["object_format"], b"blob %d\0" % len(data) + data).hexdigest(),
-                fmt(ctx["now"])]
+                fmt(ctx["now"]), file_mode(full, ctx, p)]
     for p in now_files:
         full = os.path.join(root, p)
         try:
@@ -1082,10 +1114,10 @@ def sec_growth(ctx):
         except OSError:
             pass  # exists or not cannot be told: measure() fails the same way, so it is listed as unknown
         m = source(ctx, "growth", "size " + p, lambda: measure(full))  # an unreadable file keeps its last size
-        if m is None:
-            unknown.add(p)  # exists, never measured: size unknown, not deleted
-        elif m != "skip":
-            cur[p] = tuple(m[:3])
+        if m is None or m == "skip":
+            unknown.add(p)  # exists but never measured, or not a file: size unknown, not deleted
+        else:
+            cur[p] = (m[0], m[1], m[2], m[4] if len(m) > 4 else None)
             if ctx["src_now"]["size " + p][1]:  # a retained measurement shows when it was taken
                 retained.append(m[3])
                 measured_at[p] = m[3]
@@ -1098,7 +1130,10 @@ def sec_growth(ctx):
             parts = meta.split()
             if parts[1] != "blob" or path.startswith(".context/"):
                 continue
-            old[path] = [int(parts[3]), None, parts[2]]
+            old[path] = [int(parts[3]), None, parts[2], parts[0]]
+        for p in old:
+            if p in cur and cur[p][2] == old[p][2]:
+                old[p][1] = cur[p][1]  # same blob: same line count
         need = [p for p in old if p not in cur or cur[p][2] != old[p][2]]
         for p in need:
             rc, data = git(("cat-file", "blob", old[p][2]), root)
@@ -1119,7 +1154,7 @@ def sec_growth(ctx):
             rows.append((g, p, "current (no baseline)" + (" (size kept from %s; current read failed)" % measured_at[p]
                                                           if p in measured_at else ""), None, c[0], None, c[1]))
             continue
-        if c and o and c[2] == o[2]:
+        if c and o and c[2] == o[2] and (c[3] is None or modes_equal(o[3], c[3], ctx)):
             if p in measured_at:
                 rows.append((g, p, "unchanged (size kept from %s; current read failed)" % measured_at[p], o[0], c[0], o[1], c[1]))
             continue
@@ -1163,7 +1198,7 @@ def sec_growth(ctx):
 
 def handover_growth(ctx):
     d = os.path.join(ctx["root"], ".context")
-    seen = dict(ctx["cache"].get("handovers", {}))
+    seen = json.loads(json.dumps(ctx["cache"].get("handovers", {})))  # a deep copy: nothing mutates the published cache
     rows, now = [], fmt(ctx["now"])
     try:
         names = sorted(n for n in os.listdir(d) if re.fullmatch(r"handover-[^/]+\.md", n))
@@ -1171,8 +1206,13 @@ def handover_growth(ctx):
         names = []
     present = set()
     for n in names:
-        st = os.lstat(os.path.join(d, n))
+        try:
+            st = os.lstat(os.path.join(d, n))
+        except FileNotFoundError:
+            continue  # removed between listing and lookup: shown as deleted below
         if not stat.S_ISREG(st.st_mode):
+            present.add(n)  # still there, but not measurable: kept, not deleted
+            rows.append("%s: not a regular file; size unknown" % esc(n))
             continue
         present.add(n)
         try:
@@ -1229,6 +1269,8 @@ def installed_source(root):
                 esc(r.get(k, "?")) for k in ("scope", "version", "lastUpdated", "gitCommitSha")))
     if len(applying) == 1:
         installed = applying[0].get("version")
+        if not isinstance(installed, str) or not installed.strip():
+            raise RuntimeError("installed_plugins.json has no valid version string")
         rows.append("<b>installed: %s</b>" % esc(installed))
     elif applying:
         rows.append("<b>installed: ambiguous (%d applying records)</b>" % len(applying))
@@ -1418,12 +1460,11 @@ def run_once(state, dfd, hooks):
             continue
     else:
         raise RuntimeError("HEAD kept moving during collection")
-    state["sections"] = sections
-    state["cache"] = ctx["new_cache"]
-    state["last_success"] = fmt(ctx["now"])
-    state["published"] = ctx["now"]
+    candidate = dict(state, last_success=fmt(ctx["now"]), published=ctx["now"])
+    write_atomic(dfd, "index.html", render(ctx, sections, candidate))  # the page first: a cache without its page is never left
     write_atomic(dfd, "cache.json", json.dumps(ctx["new_cache"], sort_keys=True).encode())
-    write_atomic(dfd, "index.html", render(ctx, sections, state))
+    state.update(sections=sections, cache=ctx["new_cache"], last_success=candidate["last_success"],
+                 published=ctx["now"])  # the published state changes only once the page is replaced
 
 
 def main(argv, hooks=None):
