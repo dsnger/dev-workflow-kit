@@ -886,6 +886,11 @@ if wanted("b1"):
     check("b3:file named with pathspec magic is compared literally", ":odd.sh  modified" in gr, gr[-400:])
     put(PB, ":odd.sh", "old\n")
     put(PB, STORY, "# S\n")
+    os.environ["GIT_GLOB_PATHSPECS"] = "1"
+    rc = run(PB)
+    os.environ.pop("GIT_GLOB_PATHSPECS", None)
+    ve = section_of(text(PB), "Workflow version")
+    check("b4:a pathspec setting in the environment does not break path-limited reads", rc == 0 and re.search(r"rule file CLAUDE.md: last commit [0-9a-f]{40}", ve), ve[-300:])
     run(PB, "--base", before_exec)
     gr = section_of(text(PB), "Artifact growth")
     check("b2:mode-only row keeps its baseline line count", re.search(re.escape(STORY) + r"\s+modified\s+4 → 4 \(\+0\)\s+1 → 1", gr), gr[-400:])

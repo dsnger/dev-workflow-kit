@@ -1478,6 +1478,9 @@ def main(argv, hooks=None):
         else:
             return fail("usage: status-view.py [--base <commit>] [--watch <seconds, at least 5>]")
     os.environ["GIT_OPTIONAL_LOCKS"] = "0"  # no git command of the report may take an optional lock or refresh the index
+    for k in ("GIT_GLOB_PATHSPECS", "GIT_NOGLOB_PATHSPECS", "GIT_ICASE_PATHSPECS", "GIT_LITERAL_PATHSPECS"):
+        os.environ.pop(k, None)  # --literal-pathspecs on every call: git rejects it beside the glob and icase settings,
+        # and the other two are cleared so literal matching is the only pathspec setting in force
     root = os.getcwd()
     rc, out = git(("--version",), root)
     m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
