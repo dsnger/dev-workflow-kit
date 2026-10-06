@@ -115,7 +115,10 @@ The projection is applied to nested values too: token facts keep only the token 
 measures, each a validated number or `unknown`; a model identifier is kept only when it matches
 run-analytics' bounded identifier pattern (`RE_MODEL`), otherwise it is written `undetermined`
 (the curve grammar is not that test: it also admits quoted free text); every other field is dropped
-before anything is written. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
+before anything is written. Per Claude Code transcript the cache may also hold, beside its
+calls: its session ID, the time of its latest entry, and its load observations (§7) as component,
+version and time. These are what §5 and §7 need, so they survive a restart without re-reading an
+unchanged transcript. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
 `scan_codex`), the plan adds a per-file function to run-analytics that those scans then call; that
 is the only permitted change to run-analytics, and its output and suite stay unchanged. The
 projection to the allowlist happens in the status view. The cross-file rule run-analytics applies
@@ -283,7 +286,8 @@ behaviour it covers. Cases:
    "unavailable", recent nonce-bearing and nonce-less calls stay visible; `--base` fills them.
 8. Watch mode keeps the baseline when `main` moves between two collections, and marks a branch
    change.
-9. Incremental: an unchanged file is not read again; a grown transcript whose pending call received
+9. Incremental: an unchanged file is not read again, and after a restart with unchanged
+   transcripts the loaded versions and last activity are still shown; a grown transcript whose pending call received
    its result shows the result; a call older than six hours without a result is still shown; a
    deleted file drops out; a late Codex log fills an unchanged completed call's tokens; a resume
    found in another transcript makes an earlier call's tokens shared and so `unknown`.
