@@ -109,12 +109,21 @@ read in this collection and how many came from the cache.
 **What the cache may hold — an allowlist.** Raw tool inputs and raw results stay in memory during a
 read and are never written. The cache holds only: call ID, tool, review type, start and result
 times, whether a result was observed, the slot names and session IDs derived from the call, the
-success flag, model identifiers, token counts, and per Codex log its session ID and the facts
-run-analytics derives from it. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
+call's working directory (a path, needed for repository membership), the success flag, model
+identifiers, token counts, and per Codex log its session ID, timestamps and token and model facts.
+The projection is applied to nested values too: token facts keep only the token keys run-analytics
+measures, each a validated number or `unknown`; a model identifier is kept only when it matches
+the identifier form the curve grammar admits, otherwise `undetermined`; every other field is dropped
+before anything is written. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
 `scan_codex`), the plan adds a per-file function to run-analytics that those scans then call; that
 is the only permitted change to run-analytics, and its output and suite stay unchanged. The
 projection to the allowlist happens in the status view. The cross-file rule run-analytics applies
 (the first occurrence of a call that has a result supplies its values) is applied the same way.
+**Only per-file facts are cached, never a measurement.** Every collection recomputes every call's
+measurement, its repository membership (from the cached working directory against the current git
+common directory, as live-effort does) and every cycle from the full set of facts, so a change in
+one file — a late Codex log, a resume of the same Codex session found in another transcript — reaches
+every call it affects.
 
 **Calls without a result.** A call whose result has not been observed is shown as "no result
 observed since <time>", however old it is. The six-hour transition run-analytics applies is not
@@ -123,11 +132,14 @@ that the call is still running.
 
 **Cycles.** A cycle is identified by its nonce (from slot names). Its state comes from the records
 in baseline..`HEAD`, read with ledger-metrics' parser and classified with loop-usefulness'
-`classify`: `closed`, `skipped`, `conflicting` (with its reason) or `open` (a curve without a
-matching provenance line). A nonce with calls but no record in the range is shown as "no closing
+`classify`, mapped as follows: `closed` and `skipped` as they are; `conflicting` with its reason;
+`open` with the reason "conflicting provenance lines" is shown as `conflicting` with that reason;
+any other `open` as "curve without provenance line". loop-usefulness itself is not changed. A nonce with calls but no record in the range is shown as "no closing
 record observed in this range" — never as proven open — and only when its first call is later than
 the baseline commit's time; older calls without a record are not shown. Calls with no nonce are
-listed as unattributed.
+listed as unattributed. **Without a baseline** (§3) there is no range and no cutoff: calls from the
+last 24 hours, the window live-effort uses for calls with no cycle, are shown grouped by nonce with
+closure and branch attribution "unavailable: no baseline", nonce-bearing and nonce-less alike.
 
 **Shown, each figure separately:** gate calls; observed call slots (attempts, including incomplete
 ones); valid passes, taken only from a closing curve and labelled as the author's self-reported
@@ -138,11 +150,14 @@ never 0. No composite score and no completion percentage anywhere on the page (`
 
 ## §5 Current work, progress and open points (story `AC-1`–`AC-3`)
 
-**Current task.** Candidates, each shown with its source: the stories this branch changes against
-the baseline; the stories cited in provenance lines in the range; the heading of the newest
-handover's next-task section. When they name exactly one story, that is the current task; otherwise
-the page shows "current task not established" and lists the candidates. Nothing is chosen by
-recency alone.
+**Current task.** The page never states the current task as established; it shows candidates,
+each with its source and date: the stories this branch changes against the baseline; the stories
+cited in provenance lines in the range; and the body of the newest handover's next-task section
+(the section whose heading starts with "Next"), shown verbatim as a task description. When the
+story candidates name exactly one story, it is shown as "inferred current story (only candidate;
+last evidence <date>)"; otherwise "current task not established", with the candidates. Nothing is
+chosen by recency alone, and a handover description is linked to a story only where it names that
+story's path.
 
 **Current work** also shows branch, `HEAD`, the number of uncommitted paths, and the specs and plans
 this branch changes. Per story, a **last evidenced phase**, derived only from evidence associated
@@ -156,10 +171,11 @@ with that story, each with its source commit:
 | plan citing it committed | plan written |
 | a `closed` Gate-A plan cycle citing it | plan reviewed |
 | a `closed` Gate-B cycle citing it | Gate B closed |
+| a `skipped` cycle citing it | "<cycle kind> skipped (reason in commit <sha>)" — never "reviewed" or "closed" |
 
 A record is associated with a story through the story set in its provenance line, and an artifact
 through its `**Story:**` header. Evidence that names no story, or a different one, is shown
-separately as unassociated. Only `closed` (or `skipped`) cycles advance a phase; `open` and
+separately as unassociated. Only `closed` and `skipped` cycles advance a phase, each with its own label; `open` and
 `conflicting` cycles are shown with their state and never as a phase.
 
 Observations that are **not** phases and **not** current activity are shown as observations with
@@ -202,8 +218,12 @@ Without a baseline, current sizes are shown and the net change is unavailable (�
 | code | other files under `scripts/` and `plugins/` |
 | other | everything else |
 
-The first matching row decides. Handovers (`.context/handover-*.md`) are not in git, so they are
-listed separately with their current size and modification time and "no baseline".
+The first matching row decides. Handovers (`.context/handover-*.md`) are not in git and have no
+baseline commit. They are listed separately: current size, lines and modification time, and the
+change since this status directory first observed each one (its size at that first observation is
+kept in the cache), labelled "change since first observed at <time> — not the branch baseline". A
+handover that disappears stays listed as deleted with its last observed size. A handover first seen
+in the current collection shows "first observed now".
 
 ## §7 Workflow version (story `AC-6`)
 
@@ -247,25 +267,28 @@ behaviour it covers. Cases:
 1. A plan without later evidence shows "current activity unknown" and the last evidenced phase.
 2. A `WIP:` commit with no review, and a call without a result, are shown as observations; neither
    becomes a phase or current activity.
-3. Cycle states: a closed cycle advances the phase; a curve without provenance, two conflicting
-   curves and a skip beside a curve do not, and show their state.
-4. Several candidate stories → "current task not established" with the candidates; evidence for
-   another story is shown as unassociated.
+3. Cycle states: a closed cycle advances the phase; an ordinary skip shows its skipped label; a
+   curve without provenance, one curve with two distinct provenance lines, two conflicting curves
+   and a skip beside a curve do not advance it, and show their state.
+4. Several candidate stories → "current task not established" with the candidates; one candidate →
+   "inferred"; the handover's next-task body is shown as a description; evidence for another story
+   is shown as unassociated.
 5. No open-point source readable → `unknown`; a handover that says none → "source states none".
 6. Growth: added, modified, shrunk, deleted, untracked and uncommitted files, with code and tests
-   apart.
+   apart; a handover that grows, shrinks or disappears shows its change since first observed.
 7. No merge-base → the reason is shown, current sizes stay, net change and range items show
-   "unavailable"; `--base` fills them.
+   "unavailable", recent nonce-bearing and nonce-less calls stay visible; `--base` fills them.
 8. Watch mode keeps the baseline when `main` moves between two collections, and marks a branch
    change.
 9. Incremental: an unchanged file is not read again; a grown transcript whose pending call received
    its result shows the result; a call older than six hours without a result is still shown; a
-   deleted file drops out.
+   deleted file drops out; a late Codex log fills an unchanged completed call's tokens; a resume
+   found in another transcript makes an earlier call's tokens shared and so `unknown`.
 10. Incomplete reads: an unreadable file, a malformed line and a failed listing keep the previous
     facts marked `stale` with their original as-of time; a trailing partial line is not an error.
 11. Valid passes: an `INCOMPLETE` reply's slot counts as an attempt, not a valid pass.
-12. Marker strings placed in a tool input, a tool result and ordinary transcript text never appear
-    in the page or the cache.
+12. Marker strings placed in a tool input, a tool result, ordinary transcript text, an extra nested
+    token field and a free-text model value in a Codex log never appear in the page or the cache.
 13. Loaded version: a versioned path in user text or a tool result does not count; two versions in
     one session show "conflicting".
 14. Installed version: several applying records show "ambiguous".
