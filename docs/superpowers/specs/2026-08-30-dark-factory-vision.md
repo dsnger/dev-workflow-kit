@@ -106,8 +106,8 @@ the inspiration: the adversarial verifier is a different model *family*
    offers no such trigger there is no stage-4 wake at all: the story waits for
    the next scheduled tick. That is stage-3 polling at the configured latency
    and is named as such rather than counted as proactive.
-2. **Project truth is AGENTS.md, and the architecture tree is subordinate to
-   the pool.** Three things can disagree and stay distinct: the **approved
+2. **Project truth is anchored in AGENTS.md, and the architecture tree is
+   subordinate to the pool.** Three things can disagree and stay distinct: the **approved
    tree** in AGENTS.md (normative — what classification reads), the **code**
    (observed fact), and the **pool** (intent). On a green field the approved
    tree is built *from* the pool; on an existing codebase tree v1 is read from
@@ -116,8 +116,14 @@ the inspiration: the adversarial verifier is a different model *family*
    drift that the audit reports, and a pool/tree divergence is what produces a
    meta-story (decision 3) — neither is resolved silently. Either way
    the tree is continuously re-evaluated against the pool (Bewertungs-Loop),
-   versioned, living in AGENTS.md beside the invariants and conventions. No
-   second architecture document that could drift.
+   versioned, living in AGENTS.md beside the invariants and conventions.
+   **Each binding architecture statement has exactly one authoritative
+   source** (amended 2026-10-06, see the change record at the end of this
+   section): AGENTS.md holds the architecture core and the slim feature map;
+   separate architecture documents hold the details of shared parts and
+   cross-cutting rules; capability and feature documents hold the details
+   assigned to them. Other documents refer to these, and a summary never
+   grounds a diverging rule.
 3. **Architecture re-evaluation is a meta-story through the same factory.**
    When a story breaks the tree, classification produces a story "extend the
    architecture for X" with a high risk profile (heavy review, human in the
@@ -230,6 +236,29 @@ the inspiration: the adversarial verifier is a different model *family*
    acceptance criteria carry IDs (§10 second sweep), the AC block's
    fingerprint is compared at Gate B, and a changed block without the pool
    round-trip is a Blocker.
+
+**Changed 2026-10-06 — change of direction.** Decided by Daniel, in the Claude Code session of 2026-10-06 (answer "a", about 10:14, to the proposed rule quoted below). Baseline: 62931c3. The living-feature-docs model (`docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md`) splits architecture detail across several documents so that no file grows beyond what one task needs; "No second architecture document" forbade that. The approved rule, quoted from the decision: "Jede verbindliche Architektur-Aussage hat genau eine maßgebliche Quelle. `AGENTS.md` enthält den Architektur-Kern und die schlanke Feature-Karte. Eigene Architektur-Dokumente enthalten die Details zu gemeinsamen Teilen und Querschnitts-Regeln. Capability- und Feature-Dokumente enthalten die jeweils zugeordneten Details. Andere Dokumente verweisen darauf; Zusammenfassungen begründen keine abweichenden Regeln." Its "one authoritative source" deliberately allows an explanatory example or a historical record to repeat a statement without becoming a second source.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| Decision 2 heading: "Project truth is AGENTS.md" | kept: AGENTS.md as the anchor holding the architecture core and the feature map; moved → the architecture, capability and feature documents for the details, per the decision: "`AGENTS.md` enthält den Architektur-Kern und die schlanke Feature-Karte. Eigene Architektur-Dokumente enthalten die Details zu gemeinsamen Teilen und Querschnitts-Regeln. Capability- und Feature-Dokumente enthalten die jeweils zugeordneten Details." | none |
+| "the architecture tree is subordinate to the pool" | kept | none |
+| Approved tree (in AGENTS.md, normative, what classification reads), code and pool stay distinct | kept, per the decision: "Freigegebene Architektur, beobachteter Code und geplante Arbeit bleiben unterscheidbar" | none |
+| Tree built from the pool on a green field; tree v1 read from the code on an existing codebase; Phase 0 makes the tree agree with the code before it becomes authoritative | kept | none |
+| Code/tree divergence is drift the audit reports; pool/tree divergence produces a meta-story; "neither is resolved silently" | kept, per the decision: "Abweichungen werden sichtbar gemacht, nie still aufgelöst" | none |
+| The tree is continuously re-evaluated against the pool, versioned, living in AGENTS.md beside the invariants and conventions | kept | none |
+| "No second architecture document that could drift." | dropped — per the decision: "Jede verbindliche Architektur-Aussage hat genau eine maßgebliche Quelle"; its narrower purpose, no competing authoritative architecture definitions, moved → the one-authoritative-source sentence in decision 2. Source uniqueness does not prevent drift between a source and the code; the drift audit above stays the answer to that | none |
+| §8: "No second architecture or roadmap document (decisions 2, §4)." | kept: no second roadmap document, per the decision: "Die Roadmap-Regel in Zeile 584 bleibt unverändert"; dropped — the architecture half, per the decision: "Jede verbindliche Architektur-Aussage hat genau eine maßgebliche Quelle"; moved → "no binding architecture statement with more than one authoritative source" in the same bullet | none |
+
+- **Unaccounted:**
+  - Under the baseline every binding architecture statement lived in AGENTS.md, so the consumers that read architecture there — the classification's architecture read (§1, §4) and step 4c's projection "*generated from* AGENTS.md" (§10) — covered all of it. Now they reach only the core and the feature map unless they also reach the details held elsewhere. Which details they must cover, and how, is not decided → blocks the design of step 4c until settled (pointer added there).
+  - Likewise the planned write protection of "the architecture section of AGENTS.md" (§10) covered all binding architecture; whether it covers the details in the separate documents is not decided → blocks that item's prerequisite meta-story until settled (pointer added there).
+- **Intervening changes:** none — the file is unchanged between 62931c3 and this change.
+- **Scope boundary:** in: decision 2's heading and closing sentence, the §8 non-goal bullet, and a pointer to this record added to step 4c (§7) and to the write-protection item (§10). out: deciding anything those pointers name as open; §4's project-conventions paragraph and project goals.
+- **Open questions:**
+  - §4 places project goals and the out-of-scope list in AGENTS.md, while the model under trial puts vision, strategy and scope in their own product-level files. This decision does not cover that → recorded here; it needs its own decision before the pilot relies on product-level files.
+- **Dependent artifacts:** none. `docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md AC-1` asks for this decision, and that story's first open question is answered by this record; neither changes the story's requirements.
+- **Reviews already run:** Gate-A spec cycle xhhmnbaflb (closed in 62931c3) → "no rule found" (input: the vision text amended after that cycle closed; paragraphs checked in `.claude/review-gates.md`: the opening floor paragraph, "Gate A's content condition, and its closing act", the "Gate A — Spec, then plan" bullet, and "What counts as prose (the only Gate-B exemption)") → Daniel decided (same session, answer "a", about 10:24) that this amendment runs its own Gate-A spec cycle, as the change in 62931c3 did.
 
 ## 3. Maturity ladder
 
@@ -502,7 +531,11 @@ proceeds, the breaking part waits on the meta-story).
      projection generated from AGENTS.md, **and the Bewertungs-Loop runtime**
      — its continuous pool-versus-tree evaluation, its meta-story batching per
      wave, and the re-classification an architecture merge triggers. The
-     bootstrap alone would leave §1's Bewertungs-Loop unbuilt.
+     bootstrap alone would leave §1's Bewertungs-Loop unbuilt. (Since decision
+     2's amendment of 2026-10-06, binding architecture details may live outside
+     AGENTS.md. Which of them the projection and the classification's
+     architecture read must cover, and how they reach them, is open for 4c —
+     see the change record at the end of §2.)
    - **4d** Freigabe and wave control: the rendered wave plan, the granularity
      knob and its standing rules, wave opening and closing (decision 7). No
      other step owned this, and the pipeline cannot run without it.
@@ -581,7 +614,8 @@ raise the others. Always-on execution may later be an external operating option.
 ## 8. Non-goals
 
 - No daemon or server-side runner (decision 1).
-- No second architecture or roadmap document (decisions 2, §4).
+- No second roadmap document (§4), and no binding architecture statement with
+  more than one authoritative source (decision 2).
 - No removal of the human from mandatory stops, profile confirmations, scope
   changes, or architecture meta-stories — "dark" means sampled presence, not
   absence.
@@ -772,6 +806,10 @@ Adopted, with owning step:
   unauthorized local write, and the factory can schedule or build from one for
   as long as it takes a commit to reach CI. That bypass window is the reason
   the blocking mechanism is wanted, and the interim path does not close it.
+  Since decision 2's amendment of 2026-10-06, binding architecture details may
+  also live in separate architecture, capability and feature documents;
+  whether this protection covers them is open for that meta-story (see the
+  change record at the end of §2).
   [prerequisite meta-story, then step 4/5]
 - A run lock per orchestrator tick with stale-lock cleanup by the judge, so
   a double-firing clock never runs two orchestrators. [step 5]
