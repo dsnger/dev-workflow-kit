@@ -38,8 +38,9 @@ It must state, compactly:
    approved behaviour does not.
 4. **Context (AC-6).** The reading list and the on-demand rule for history exactly as AC-6
    states them, including that binding reading duties stay and that "reference" does not
-   make binding conditions optional. The plan carries a short **Sources and impact
-   boundary** note; no separate report document.
+   make binding conditions optional. A short **Sources and impact boundary** note goes in
+   the existing plan, or, for a task without a plan, in its existing work record; no
+   separate report document.
 5. **Splitting (AC-8).** Before a large spec: check for independently reviewable outcomes
    with identifiable shared contracts; touching several features is a signal to examine,
    not a reason to split; size is a warning, with no fixed cap.
@@ -78,9 +79,10 @@ items for the changed prompt text; the quality battery green.
 
 ## 5. Adoption (AC-10, AC-11, AC-14)
 
-Re-running `/workflow-init` is not the path for a customised project: for a changed
-`CLAUDE.md` it offers a whole-file diff, so accepting loses local changes and declining
-keeps the old rules. The adoption path is an insertion guide in the 0.18.0 CHANGELOG entry:
+Re-running `/workflow-init` stays available — for a file that differs it shows a short
+diff and offers overwrite / merge / skip — but a merge there is judged per file by whoever
+runs it, with no statement of which parts this release changes. The adoption path is
+therefore a focused insertion guide in the 0.18.0 CHANGELOG entry:
 insert the §4 subsection, replace (not duplicate) any local rule covering the same ground,
 update the Gate-A bullet wherever the project keeps its gate rules (`.claude/review-gates.md`
 or an inline §5), at a completed work boundary; running cycles keep their rules.
@@ -94,7 +96,10 @@ Prepared, not applied: one adoption file per project (SFX, canvas) in that proje
 the first suitable completed-work boundary after both P5b's closing act and the release; P5b
 itself continues under its pilot instruction (`.context/plan-form-pilot.md`). Canvas applies
 it at a boundary its responsible session confirms (`.context/HANDOVER.md`). In-flight
-artifacts in either project are not edited.
+artifacts in either project are not edited. Each project's adoption record names the first
+unfinished unit that runs under the released rules once the boundary is confirmed; until
+then it says "pending", and the session applying the adoption fills it in. Completed units
+are not redone.
 
 ## 6. Evidence (AC-12)
 
@@ -104,18 +109,23 @@ A public replay package under `docs/superpowers/replays/2026-10-06-compact-plann
   field), with a fixed brief and the input files it needs.
 - **Fixed before any run:** the rubric (from AC-1: per step outcome, components and reuse,
   prerequisites and settled decisions, test situations with expected outcomes including
-  failures, decision space; plus whether full function bodies or complete tests appear),
-  and, for the review check, which material decision is removed and which implementation gap
-  that leaves.
+  failures, decision space; plus whether implementation appears in full). Because this task
+  changes a prompt, implementation in full includes complete replacement prompt or template
+  text, not only function bodies and complete tests. Also fixed in advance, for the review
+  check: which material decision is removed and which implementation gap that leaves.
 - **Two runs, isolated:** the same task, inputs, model and `writing-plans` 6.4.1, loaded in
   both; no user-level instructions, memory or other project files; the only difference is
   the project `CLAUDE.md` (before vs after this change). One run each, one sample each; "no
   observed difference" is a valid result and runs are not repeated to obtain another.
 - **Review check, not a gate cycle:** a Codex call with the new Gate-A plan question on (a)
-  the new-run plan — no finding whose only complaint is a missing body or test code; other
-  real findings are allowed — and (b) the same plan with the named decision removed — a
-  finding identifies that gap.
-- Results and limitations are reported as observations.
+  the new-run plan — no finding whose only complaint is missing implementation; other real
+  findings are allowed — and (b) the same plan with the named decision removed, everything
+  else unchanged (checked by diff) — a finding identifies that gap. The check is interpreted
+  only if the new-run plan meets the rubric, leaves implementation out and contains the
+  decision chosen for removal; otherwise it is not run on that sample.
+- Results and limitations are reported as observations. Where the single sample cannot
+  support a part of AC-12, the report says that part is unmet rather than counting it as
+  shown.
 
 ## 7. Backlog (AC-13, AC-14)
 
