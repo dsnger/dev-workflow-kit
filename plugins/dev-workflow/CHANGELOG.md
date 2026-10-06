@@ -38,8 +38,8 @@ AGENTS.md invariant 12 carries the complete list.
   § Tooling revalidation.
 - **Gate A asks what the artifact is for.** The Gate-A bullet in the gate rules adds, for a
   spec, whether its commitments are coherent, decided and feasible, and for a plan, whether
-  implementation can proceed; a missing function body or complete test is not by itself a
-  finding. Nothing else in the gate rules changes: findings protocol, floor, closure ordering,
+  implementation can proceed; missing code or tests are reported only where their absence has
+  a concrete consequence. Nothing else in the gate rules changes: findings protocol, floor, closure ordering,
   severity and evidence rules are as before.
 - **Adopting in an existing project.** Re-running `/workflow-init` still offers overwrite /
   merge / skip per differing file; for a customised project the focused route is:
@@ -55,7 +55,9 @@ AGENTS.md invariant 12 carries the complete list.
      `CLAUDE.md` where the rules are still inline — insert the sentences beginning "Ask also
      what the artifact is for" after "(coverage floor, not a cage)." Leave the rest of the
      bullet as the project has it.
-  4. Record, in the project's next handover, the first unit of work that runs under the new
+  4. Name the tracked location for handovers that cross checkouts (the section's
+     session-change rule needs one when the next unit runs elsewhere).
+  5. Record, in the project's next handover, the first unit of work that runs under the new
      rules. Completed units are not redone.
 
 ## 0.17.0

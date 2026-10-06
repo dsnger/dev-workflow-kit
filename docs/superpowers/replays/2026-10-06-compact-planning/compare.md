@@ -1,8 +1,10 @@
 # Compact planning replay — results (2026-10-06)
 
 Story: `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md` AC-12.
-Rubric, removal and task were committed before any run (`rubric.md`, `removal.md`, `TASK.md`,
-commit `ecec400`). One run per variant; nothing was repeated.
+Rubric, removal and task were written and committed before any run (`rubric.md`, `removal.md`,
+`TASK.md`, in a work-in-progress snapshot that the branch's Gate-B close later squashed). That
+snapshot is not in `main`'s history, so the ordering rests on this record and the session that
+made it, not on a resolvable commit. One run per variant; nothing was repeated.
 
 ## Setup actually used
 
@@ -49,7 +51,7 @@ line 74 removed).
   **Expected result not met.** The cause is in `removal.md`'s choice, made before the runs: it
   picked a decision the spec already settles, so its removal was not material to the plan.
 
-## Review check 2 (approved by Daniel after check 1; registered in `removal-2.md`, commit `89e2a6c`, before the run)
+## Review check 2 (approved by Daniel after check 1; registered in `removal-2.md` before the run, in a work-in-progress snapshot later squashed — same limit as above)
 
 The degraded plan `out/plan-new-degraded-2.md` drops the test expectation for the task's own
 incident (an answered question still listed as open in a story whose requirements are

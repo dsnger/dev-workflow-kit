@@ -412,7 +412,7 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **Splitting.** Before a large spec, check whether the work holds independently reviewable outcomes with identifiable shared contracts. Touching several features is a reason to examine the scope, not by itself to split. File size is a warning signal, not a limit. Why: a split decided by size alone separates what belongs together.
 
-**Fresh session at a completed unit.** The plan names its handover boundary: normally the completed story or an independently executable sub-plan; a closed review cycle may be chosen as an earlier one; never inside a running cycle. At the boundary, write the handover and stop; the next unit starts in a fresh session, started by the human unless an approved mechanism for it exists. The handover is a current summary: verified state and next task; every open obligation and unresolved decision, including any still recorded only in an earlier state; authoritative artifact and evidence paths; review-cycle identity and status. It links earlier states instead of appending full status reports. Use the project's existing handover file, otherwise `.context/handover-<unit>.md`, one per unit. An interrupted review cycle follows the resume rules in §5, not this paragraph. Why: a long session carries context the next unit does not need, and a summary that carries every obligation lets the fresh session lose none.
+**Fresh session at a completed unit.** The plan names its handover boundary: normally the completed story or an independently executable sub-plan; a closed review cycle may be chosen as an earlier one; never inside a running cycle. At the boundary, write the handover and stop; the next unit starts in a fresh session, started by the human unless an approved mechanism for it exists. The handover is a current summary: verified state and next task; every open obligation and unresolved decision, including any still recorded only in an earlier state; authoritative artifact and evidence paths; review-cycle identity and status. It links earlier states instead of appending full status reports. Use the project's existing handover file, otherwise `.context/handover-<unit>.md`, one per unit; that is enough when the next unit continues in the same checkout. When the next checkout is another one or not yet known, save the compact handover — summary, open obligations, the source paths needed to continue — in the tracked location the project designates for handovers, and before continuing confirm it is present in the target checkout; a local commit alone does not make it so. This creates no obligation to publish session logs or the rest of `.context/`. An interrupted review cycle follows the resume rules in §5, not this paragraph. Why: a long session carries context the next unit does not need, and a summary that carries every obligation lets the fresh session lose none.
 
 ## 5. Cross-Model Review (Codex) — TWO MANDATORY GATES
 
@@ -1404,9 +1404,10 @@ Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not 
   (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Ask also what the artifact is for: of a spec, whether its
   commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
   proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
-  line between local choices and questions that need a decision. A missing function body or complete
-  test is not by itself a finding, and a finding names its concrete consequence; code a plan does
-  include stays reviewable. Append the
+  line between local choices and questions that need a decision. Report missing code or tests only where
+  their absence has a concrete consequence, and name that consequence; review code a plan does
+  include like any other content. Why: a plan exists to settle decisions, and the code is written
+  and checked in implementation. Append the
   intent + artifact text + which invariants it touches. Ask for **every** finding
   with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
   every line for everything else**, Codex never filters, because a model told to report only high

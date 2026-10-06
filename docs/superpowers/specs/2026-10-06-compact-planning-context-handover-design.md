@@ -59,7 +59,12 @@ It must state, compactly:
    unit starts in a fresh session. Without an existing, approved mechanism for changing
    session, the human starts it. Handover file: the project's existing mechanism if it has
    one, otherwise `.context/handover-<unit>.md`, one file per unit so parallel units do not
-   overwrite each other. The interrupted-cycle resume rules in the gate rules stay as they
+   overwrite each other; that is enough when the next unit continues in the same checkout.
+   When the next checkout is another one or not yet known, the compact handover (summary,
+   open obligations, the source paths needed to continue) is saved in the tracked location
+   the project designates for handovers, and its presence in the target checkout is confirmed
+   before continuing — a local commit alone does not ensure it. This creates no obligation to
+   publish session logs or the rest of `.context/`. The interrupted-cycle resume rules in the gate rules stay as they
    are. No context percentage or token estimate.
 
 7. **Model and client independence (AC-19).** The added text names no model, effort level,
@@ -152,20 +157,37 @@ A public replay package under `docs/superpowers/replays/2026-10-06-compact-plann
   failures, decision space; plus whether implementation appears in full). Because this task
   changes a prompt, implementation in full includes complete replacement prompt or template
   text, not only function bodies and complete tests. Also fixed in advance, for the review
-  check: which material decision is removed and which implementation gap that leaves.
+  check: which material decision or critical test expectation is removed and which
+  implementation gap that leaves.
 - **Two runs, isolated:** the same task, inputs, model and `writing-plans` 6.4.1, loaded in
   both; no user-level instructions, memory or other project files; the only difference is
   the project `CLAUDE.md` (before vs after this change). One run each, one sample each; "no
   observed difference" is a valid result and runs are not repeated to obtain another.
 - **Review check, not a gate cycle:** a Codex call with the new Gate-A plan question on (a)
   the new-run plan — no finding whose only complaint is missing implementation; other real
-  findings are allowed — and (b) the same plan with the named decision removed, everything
-  else unchanged (checked by diff) — a finding identifies that gap. The check is interpreted
+  findings are allowed — and (b) the same plan with a named material decision or critical test
+  expectation removed, everything else unchanged (checked by diff) — a finding identifies that
+  gap. The check is interpreted
   only if the new-run plan meets the rubric, leaves implementation out and contains the
-  decision chosen for removal; otherwise it is not run on that sample.
+  decision or test expectation chosen for removal; otherwise it is not run on that sample.
 - Results and limitations are reported as observations. Where the single sample cannot
   support a part of AC-12, the report says that part is unmet rather than counting it as
   shown.
+
+**Changed 2026-10-06 — gap found.** Decided by Daniel in the Claude Code session of 2026-10-06: the review check, by the reviewer feedback he passed on at about 13:05 ("A: Ein zusätzlicher, vorher festgelegter Gegenfall ist freigegeben."), after check 1 missed its target; the handover location, at about 14:25 ("Bei einem anderen oder noch unbekannten nächsten Checkout wird die kompakte Übergabe an einem dafür vorgesehenen versionierten Projektort gesichert. Vor der Fortsetzung muss geprüft werden, dass die Übergabe im Zielcheckout tatsächlich vorhanden ist. Ein lokaler Commit allein garantiert das nicht." and "Daraus entsteht keine Pflicht, private Sitzungsprotokolle oder die gesamte .context/-Historie zu veröffentlichen."). Baseline: miojp85c1q's closed text (commit aae9c44). Two PR #48 bot findings: the spec named only a removed decision while the story's AC-12 also allows a critical test expectation (CodeRabbit), and an untracked default handover path can be absent in another checkout (Greptile).
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §6 review check (b): "the same plan with the named decision removed", with its advance registration and interpretation precondition | kept; widened, in all three places, to "a material decision or critical test expectation", matching the story's AC-12, per the decision: "Ein zusätzlicher, vorher festgelegter Gegenfall ist freigegeben." | none |
+| §2 item 6: handover file `.context/handover-<unit>.md`, one per unit | kept, for continuation in the same checkout; a tracked location and a presence check added for another or unknown checkout, per the 14:25 decision quoted above | none |
+| All other sections and items | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between aae9c44 and this change.
+- **Scope boundary:** in: §6 check (b), §2 item 6. out: the story's criteria (AC-12 and AC-16 already allow both changes), every other design decision.
+- **Open questions:** none.
+- **Dependent artifacts:** none — the instruction copies, the CHANGELOG guide and the prepared adoption files change in the same branch as implementation of this text.
+- **Reviews already run:** Gate-A spec cycle miojp85c1q and Gate-B cycle zxj4zl6gkv are closed; this change is reviewed in the Gate-B re-review of the PR #48 fixes, per `.claude/review-gates.md`, "Gate B — Code" ("Re-review after every fix") and its rule that "a fix that changes specified behaviour updates the spec in the same commit".
 
 ## 7. Backlog (AC-13, AC-14)
 
