@@ -175,7 +175,7 @@ PRs ihren bestehenden Backlog-Aufgaben zu." Baseline: 545bb0a. The story's match
 - **Scope boundary:** in: §2 items 4 and 6, §5's project list, §7's evidence sentence. out: every other design decision; the order and scope of the follow-up repairs.
 - **Open questions:** none added here; the new project's boundary is recorded in the story's §5.
 - **Dependent artifacts:** `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md` → updated in this change; `todos.md` → updated in this change.
-- **Reviews already run:** Gate-A spec cycle 1zetzfju6f (closed in 545bb0a) → "no rule found" (input: this spec amended after that cycle closed; paragraphs checked in `.claude/review-gates.md`: the opening floor paragraph, "Gate A's content condition, and its closing act", the "Gate A — Spec, then plan" bullet, and "What counts as prose (the only Gate-B exemption)") → pending: blocks writing the plan until Daniel decides whether the amended spec runs a new Gate-A spec cycle, as the vision amendment of PR #47 did.
+- **Reviews already run:** Gate-A spec cycle 1zetzfju6f (closed in 545bb0a) → "no rule found" (input: this spec amended after that cycle closed; paragraphs checked in `.claude/review-gates.md`: the opening floor paragraph, "Gate A's content condition, and its closing act", the "Gate A — Spec, then plan" bullet, and "What counts as prose (the only Gate-B exemption)") → Daniel decided (same session, about 12:17): "A. Starte einen neuen Gate-A-Spec-Zyklus nach den geltenden Profil- und Abschlussregeln." The new cycle reviews the new obligations and their consistency with the rest of the design; the existing decisions stay its basis.
 
 ## 8. Out of scope
 
