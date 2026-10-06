@@ -113,7 +113,8 @@ call's working directory (a path, needed for repository membership), the success
 identifiers, token counts, and per Codex log its session ID, timestamps and token and model facts.
 The projection is applied to nested values too: token facts keep only the token keys run-analytics
 measures, each a validated number or `unknown`; a model identifier is kept only when it matches
-the identifier form the curve grammar admits, otherwise `undetermined`; every other field is dropped
+run-analytics' bounded identifier pattern (`RE_MODEL`), otherwise it is written `undetermined`
+(the curve grammar is not that test: it also admits quoted free text); every other field is dropped
 before anything is written. Where run-analytics only offers whole-tree scans (`scan_transcripts`,
 `scan_codex`), the plan adds a per-file function to run-analytics that those scans then call; that
 is the only permitted change to run-analytics, and its output and suite stay unchanged. The
@@ -159,7 +160,8 @@ last evidence <date>)"; otherwise "current task not established", with the candi
 chosen by recency alone, and a handover description is linked to a story only where it names that
 story's path.
 
-**Current work** also shows branch, `HEAD`, the number of uncommitted paths, and the specs and plans
+**Current work** also shows the checkout root (the resolved top-level directory of the checkout
+the page describes), branch, `HEAD`, the number of uncommitted paths, and the specs and plans
 this branch changes. Per story, a **last evidenced phase**, derived only from evidence associated
 with that story, each with its source commit:
 
@@ -202,8 +204,9 @@ the section says `unknown`, never "none" (`AC-3`).
 
 ## §6 Artifact growth (story `AC-5`)
 
-The baseline tree against the current files, including uncommitted changes and untracked,
-non-ignored files; `.context/` is excluded. Per file: status (added, modified, deleted), bytes and
+The baseline tree against the current files of the named checkout root, including uncommitted
+changes and untracked, non-ignored files; `.context/` is excluded. The checkout root is shown here
+and kept apart from the repository-wide scope of the effort section. Per file: status (added, modified, deleted), bytes and
 lines at the baseline and now, and the net change; shrinking and deletion are shown like growth.
 Without a baseline, current sizes are shown and the net change is unavailable (§3). Groups:
 
@@ -275,7 +278,7 @@ behaviour it covers. Cases:
    is shown as unassociated.
 5. No open-point source readable → `unknown`; a handover that says none → "source states none".
 6. Growth: added, modified, shrunk, deleted, untracked and uncommitted files, with code and tests
-   apart; a handover that grows, shrinks or disappears shows its change since first observed.
+   apart, under the named checkout root; a handover that grows, shrinks or disappears shows its change since first observed.
 7. No merge-base → the reason is shown, current sizes stay, net change and range items show
    "unavailable", recent nonce-bearing and nonce-less calls stay visible; `--base` fills them.
 8. Watch mode keeps the baseline when `main` moves between two collections, and marks a branch
@@ -288,7 +291,7 @@ behaviour it covers. Cases:
     facts marked `stale` with their original as-of time; a trailing partial line is not an error.
 11. Valid passes: an `INCOMPLETE` reply's slot counts as an attempt, not a valid pass.
 12. Marker strings placed in a tool input, a tool result, ordinary transcript text, an extra nested
-    token field and a free-text model value in a Codex log never appear in the page or the cache.
+    token field and a free-text model value, bare or quoted, in a Codex log never appear in the page or the cache.
 13. Loaded version: a versioned path in user text or a tool result does not count; two versions in
     one session show "conflicting".
 14. Installed version: several applying records show "ambiguous".
