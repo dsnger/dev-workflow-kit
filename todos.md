@@ -1154,12 +1154,13 @@ backlog.
       ledger acquires two formats.
       *Trigger: the next round that touches §5, or a project
       reporting an empty ledger across cycles that fixed findings.*
-      **2026-10-06 evidence — the PR route does not fill the ledger either:**
+      **2026-10-06 evidence — an empty ledger in a project that does open PRs:**
       `sfx-bricks-api-builder` has 22 merges into `main` from 2026-10-02 on, and its session notes
       record fixed Greptile findings (`.remember/today-2026-10-04.md` lines 2, 10 and 39), yet
       its `docs/hardening-log.md` has 0 rows and its taxonomy says "_None yet_" (counted
-      2026-10-06). So the gap is not limited to projects without PRs: a project with PRs can
-      also reach no ledger check. Whether this row's design covers that is for its story to say.
+      2026-10-06). So an empty ledger is not limited to projects without PRs. Unknown: whether
+      `process-pr-review` step 5 ran there, and whether any of those findings qualified for
+      hardening (step 5 invokes `harden-finding` only for a matching or clearly warranted class).
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same

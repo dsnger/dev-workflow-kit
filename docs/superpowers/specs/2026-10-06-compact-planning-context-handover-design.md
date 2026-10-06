@@ -149,8 +149,9 @@ entries for them. Two `sfx-bricks-api-builder` observations are added as evidenc
 rows, not as entries: review passes continuing after a clean branch pass goes to the
 "Review-loop usefulness" row, with the counter-example that one cycle's clean pass 7 was
 followed by a pass 8 that found a real Major; and an empty ledger despite merged PRs with
-fixed bot findings goes to Finding A, as evidence that the PR route alone does not fill the
-ledger either. The measurements are cited as recorded; no new mandatory artifact follows.
+fixed bot findings goes to Finding A, as evidence that the ledger stays empty there too;
+whether `process-pr-review` step 5 ran, and whether any finding qualified for hardening, is
+unknown. The measurements are cited as recorded; no new mandatory artifact follows.
 
 **Changed 2026-10-06 — changed requirement.** Decided by Daniel in the Claude Code session of
 2026-10-06 (about 11:55): "Präzisiere die Übergabe als aktuelle Zusammenfassung mit
