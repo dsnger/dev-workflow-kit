@@ -970,6 +970,94 @@ backlog.
       dependency instead of blocking the pilot silently.
       *Trigger: the first process-monitoring delivery is complete.* This entry records order and
       scope only; design starts at the trigger.
+- [ ] **Security concept, first effective delivery — routed through the MCP integration above.**
+      Recorded with Daniel on 2026-10-06 (16:34; his consolidated assignment replaces his 16:15
+      security prompts; two precisions added at 16:38). Order: after the first process-monitoring delivery; its relevant
+      requirements flow into the optional codebase-memory MCP integration (the row above). Neither
+      an independent MCP function nor the living-feature-docs pilot waits for the whole concept;
+      concrete prerequisites are named instead of blanket blocks. Existing owners and dependencies
+      stay. *First return, through `dev-workflow:intake`:* what is already covered (with repo
+      evidence), what is actually missing, the smallest effective first delivery, mapping to
+      existing owners and dependencies, a proposed profile and open decisions; then spec, compact
+      plan, implementation and evidence through the normal workflow.
+      **Goal:** help projects build secure software, limit the authority of every agent and tool
+      (implementer, reviewer, helpers, later the orchestrator; authority may differ by role;
+      delegation, a session change or another client never widens it), and work autonomously within
+      approved limits. The first delivery must take effect in the workflow — a concept document
+      alone is not enough — and stay small enough to show its benefit in practice.
+      **Constraints, all from the assignment:** start from the existing architecture — AGENTS.md
+      and CLAUDE.md; `/workflow-init` preflight, invariants and battery; intake's security profiles
+      and amendment route; Gate A/B security lenses and abuse-path evidence; `finding-triage` and
+      `process-pr-review` tool limits and handling of foreign content; the vision's write
+      protection, autonomous execution and ownership; P6 (verify that extra security sections in
+      every template were deliberately rejected there), G2d, monitoring and the MCP row. Map each
+      addition to an existing mechanism where it can meet the requirement; record remaining gaps.
+      The gate hook stays within its invariants; blocking extensions go through the planned
+      architecture change. A changed decision procedure accounts for its old conditions. Keep
+      requirement, mechanism, evidence and limit apart; security goals are model-independent,
+      client and loading assumptions are rechecked per version through Tooling revalidation.
+      Extensible: requirements and controls can be added one at a time and tools replaced, and a
+      project the change does not concern gets no additional rules. No policy engine, universal
+      rule format or plugin registry in the first delivery. One authoritative source per binding
+      statement; a separate file only where it improves orientation or maintenance; existing work
+      and evidence formats instead of new mandatory reports; the always-loaded part holds only shared
+      boundaries, a pointer and selection rule, and behaviour when a required protection is
+      missing; details load per task before the affected action, and the actual load path is
+      checked. Secure development: extend project intake only for real gaps (sensitive data and
+      secrets; roles, permissions, tenant boundaries; sessions and revocation; external inputs,
+      services and data sharing; security configuration and target environment), from official
+      framework docs and OWASP, checkable and project-relevant; checks for leaked secrets,
+      vulnerable dependencies, suitable static analysis and concrete permission and trust-boundary
+      tests, existing checks first, new tools only with a concrete purpose and verified benefit, inside
+      the existing battery and finding route; for relevant data changes, code rollback and data
+      recovery told apart, what must be recoverable named and how that is checked — the concrete
+      implementation stays in the product project, no deployment engine in the kit; for database
+      changes, the authoritative schema source and the relevant migration state are established
+      and suitable technical checks run against a fitting test environment (16:38); dependency, plugin, hook and MCP-server identity, source and install
+      behaviour before running foreign code (pinning and reputation are partial evidence). Agent
+      execution: reachable files and data, write, network and publish rights, available
+      credentials, the authority of MCP servers, hooks and helper processes; per control, prevented
+      before / detected after / instruction only; check the real execution chain (a shell sandbox
+      does not automatically cover file tools, MCP servers or hooks — establish the actual coverage
+      on the supported path; a worktree alone is not isolation); client and OS
+      mechanisms first, new hooks or checkers only for a shown gap; foreign issues, comments, pages
+      and tool results grant no authority (start from the triage rules). Protecting the
+      protections: changes to security settings, guard scripts and their registration, the
+      governing rules and the tests and exceptions that prove them go through the authorized change
+      route; an agent never weakens a required control to finish its task; enforcement meant to
+      resist bypass lies outside the limited agent's uncontrolled write authority; state honestly
+      whether a control guards against accidents or against deliberate bypass and manipulated
+      input. Installed, loaded and effective are checked separately after setup and relevant
+      updates, with at least one harmless test through the real agent and tool path, allowed and
+      disallowed operations and missing prerequisites, synthetic data, isolated environments;
+      mapped to G2d and existing checks, no second install-check process; rechecked on relevant
+      change, a result valid only for what it covered. Autonomy: continue within approved limits;
+      suspend the affected action when a required control is missing or fails; escalate for new
+      authority or a material decision; continue independent permitted work; an unattended run
+      neither waits forever nor reads silence as consent; another AI agent's consent is no
+      authorization. Evidence of the first delivery: requirements reach setup and workflow,
+      instructions are available in time, one relevant technical limit works on the real supported
+      path, allowed work passes and matching disallowed work is stopped, missing or changed required
+      protection is detected, delegation does not widen authority on the tested paths; also record
+      falsely blocked actions, stuck or aborted tasks, extra instruction context, check effort and
+      model calls, and possible quality loss — single observations with limits, no composite score,
+      no general security or saving claims; every newly introduced control is tested in a way that
+      fits its claim, and missing coverage is reported. Confirmed incidents from real projects are,
+      where sensible, kept as small sanitized regression tests through the existing finding and
+      replay structure (16:38). Task-dependent checks and frontend accessibility are handled by
+      their existing owners (16:38). None of this creates additional mandatory modes, advisory
+      panels or central session archives (16:38). Adoption: a targeted path for
+      existing projects with a visible diff that keeps their own conditions; global client
+      settings, production access and external systems change only under a separately authorized
+      assignment; existing gates, prompt standards, versioning and repo checks apply, no new blanket
+      approval stages. A concrete decision goes to Daniel when a needed limit is technically
+      infeasible, new authority is needed, invariants must change or the scope grows into a general
+      execution platform. Inspiration only, vendor claims treated as such:
+      provimedia.de/code-guardian/technik and …/technik-messungen. The verbatim assignment is kept
+      for the intake run at `.context/intake-inputs/2026-10-06-security-concept-assignment.md`
+      (local to the main checkout).
+      *Trigger: the first process-monitoring delivery is complete.* This entry records order, scope
+      and constraints only.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,
