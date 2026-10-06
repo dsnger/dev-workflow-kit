@@ -16,7 +16,9 @@ the hardest to see, because each agent works with one feature's context.
 Daniel decided a documentation model on 2026-10-06. Before any of it enters the kit, it is
 recorded here and tried on one real story, so that the kit adopts only what a pilot
 supports. Guiding principle: no Markdown file grows huge, because no task needs to read
-more than its solution requires.
+more than its solution requires. The structure must be equally traceable for people and
+selectively readable for agents, and it stays independent of particular models and their
+current properties.
 
 The model under trial:
 - **Two trees.** *Structure* (living — what the software is): product level (vision,
@@ -55,6 +57,21 @@ The model under trial:
   rules that apply. What this rule selects is the *map-guided set* AC-4 measures against.
   The agent reads historical records only on demand, and notes in its plan which features
   and contracts are touched and where its investigation ended.
+- **Responsibilities and findability.** Each kind of content has one home: where to find
+  what → a short documentation signpost; system structure, components, boundaries and
+  cross-cutting architecture → the architecture overview; technologies, their job, why
+  they were chosen and their constraints → a tech-stack section (its own document when
+  needed); project-specific coding conventions and pointers to technical checks →
+  development guidelines; current business behaviour → the living feature docs; past
+  decisions and changes → the existing stories, specs and plans. This assigns
+  responsibilities, not a mandatory set of new files: suitable existing documents are kept,
+  a separate file exists only where content is read or maintained independently, and there
+  is no file per library and no empty template. Names are understandable and locations
+  unambiguous; the signpost says briefly what belongs where and does not duplicate content.
+  Every binding statement has exactly one authoritative source, linked from elsewhere;
+  exact installed versions stay in manifests and lockfiles. Architecture knowledge people
+  need is never kept only in agent-only configuration, and splitting or linking a file does
+  not by itself show that its content is loaded when needed.
 
 Why a pilot first: the pilot shows whether the model makes integration risks visible
 earlier at an upkeep cost worth paying. "The model was usable but needed too much upkeep"
@@ -72,6 +89,9 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-8** The report ends with exactly one recommendation — adopt, adapt (naming the changes) or reject — with its reasons. It distinguishes the model elements the pilot exercised from those it did not, and limits its conclusions to the exercised ones. A completed pilot may recommend against adoption.
 - [ ] **AC-9** No file under `plugins/` changes in this story. Adoption into the kit is a separate, later story that takes the report as its input.
 - [ ] **AC-10** The report is one authoritative file in this repo; SFX links to it and keeps no copy.
+- [ ] **AC-11** The documents the pilot touches are reachable from a short signpost that says what belongs where and links to it without duplicating content. The signpost covers only what the pilot touches and the existing documents those point to; no other part of SFX is reorganised.
+- [ ] **AC-12** The report records observed orientation problems — a wrong place searched, an unclear authoritative source, human help needed to find something — and uses them together with AC-5's effort figures to judge whether the split is worth its upkeep. No separate test process is set up for this.
+- [ ] **AC-13** Before the pilot runs, it is checked and recorded how the client in use actually loads instructions (which files automatically, which only when read), and architecture knowledge people need is not kept only in agent-only configuration.
 
 **Changed 2026-10-06 — gap found.** Decided by Daniel in the Claude Code session of 2026-10-06: the context-selection rule by his decision to record the discussed model ("A, erst festhalten, dann im SFX-Dashboard erproben", about 10:04), whose context decision named the rule's sources; the open question by his vision decision (answer "a", about 10:14); the goals/scope check by his answer "A" (about 10:36), which keeps the vision text unchanged. Baseline: 7ee641e. Two PR #47 bot findings, both confirmed true: AC-4 measures against a "map-guided set" the story never defined, and §5 still listed a decided question as open.
 
@@ -90,6 +110,22 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - **Open questions:** none added.
 - **Dependent artifacts:** none.
 - **Reviews already run:** none — this story ran no gate cycle, being docs-only under `.claude/review-gates.md`, "What counts as prose (the only Gate-B exemption)"; the PR #47 bot comments are this change's inputs.
+
+**Changed 2026-10-06 — changed requirement.** Decided by Daniel in the Claude Code session of 2026-10-06 (about 12:21): "Die Dokumentationsstruktur muss für Menschen nachvollziehbar und für Agenten gezielt lesbar sein. Beide Anforderungen sind gleichwertig. Die Struktur bleibt unabhängig von konkreten Modellen und deren heutigen Eigenschaften." / "Ergänze dort die Zuständigkeiten, menschliche Auffindbarkeit und den Wegweiser." / "Erweitere den begrenzten Pilotumfang nicht zu einer vollständigen Projekt-Reorganisation." / "Halte im bestehenden Pilotbericht beobachtete Orientierungsprobleme fest: falscher Suchort, unklare maßgebliche Quelle oder notwendige menschliche Hilfe beim Auffinden." / "Nutze dieselben Beobachtungen, um zu beurteilen, ob die Aufteilung ihren Pflegeaufwand wert ist. Kein eigener Testprozess dafür." / "Prüfe bei der Einrichtung, wie der verwendete Client Anweisungen tatsächlich lädt. Menschenrelevantes Architekturwissen darf nicht ausschließlich in versteckten Agentenkonfigurationen stehen." Baseline: adf79f6. AC-11, AC-12 and AC-13 are new criteria per these passages; they replace no earlier condition.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §2 guiding principle | kept; a sentence added on equal human and agent readability and model independence, per the decision's first passage | none |
+| §2 model bullets | kept; a "Responsibilities and findability" bullet added, per the decision: "Ergänze dort die Zuständigkeiten, menschliche Auffindbarkeit und den Wegweiser." | none |
+| AC-1 … AC-10 | kept (AC-3's pilot scope included, per the decision: "Erweitere den begrenzten Pilotumfang nicht zu einer vollständigen Projekt-Reorganisation.") | none |
+| §1, §4, §5, §6 | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between adf79f6 and this change.
+- **Scope boundary:** in: §2's guiding principle and new bullet, AC-11 … AC-13. out: the open goals/scope placement and every other decision on product documents, architecture sources and their readers, which this does not decide in passing; the kit's context rule, which `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md` owns.
+- **Open questions:** none added.
+- **Dependent artifacts:** none.
+- **Reviews already run:** none — docs-only story, no gate cycle (`.claude/review-gates.md`, "What counts as prose (the only Gate-B exemption)").
 
 ## 4. Affected AGENTS.md invariants
 - `## Don'ts` — "**Never rename or delete a doc section without grepping for references first.**"

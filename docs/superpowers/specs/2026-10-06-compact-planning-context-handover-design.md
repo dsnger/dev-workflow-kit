@@ -10,8 +10,10 @@ local choices to the plan and the implementer.
 
 The working contract (§2) goes into the **`CLAUDE.md` template** of `/workflow-init`
 (`### 2.1`), as a new subsection of §4 *Goal-Driven Execution*, and into this repository's
-own `CLAUDE.md` §4. `CLAUDE.md` is loaded at session start, so the contract is in context
-before `writing-plans` runs (AC-2). Rejected: a new skill (nothing guarantees it is loaded
+own `CLAUDE.md` §4. The placement relies on a fact about the current client — it loads
+`CLAUDE.md` at session start, so the contract is in context before `writing-plans` runs —
+which AC-2 verifies in the actual planning workflow; the rule text itself does not depend on
+it (AC-19). Rejected: a new skill (nothing guarantees it is loaded
 while planning) and the gate rules alone (read before a gate, which is after planning).
 
 The Gate-A review questions (§3) go into the gate rules: `.claude/review-gates.md` in this
@@ -36,9 +38,10 @@ It must state, compactly:
    change to an *approved commitment* about product behaviour, a shared contract, a security
    guarantee or scope follows the existing decision and amendment route; implementing the
    approved behaviour does not.
-4. **Context (AC-15).** The reading list and the on-demand rule for history exactly as
-   AC-15 states them — the reading list names the relevant configuration, realistic data
-   volumes and target environments — including that binding reading duties stay and that "reference" does not
+4. **Context (AC-18).** The reading list and the on-demand rule for history exactly as
+   AC-18 states them — by kind of task, with the dependency-change and interface-change
+   examples, and naming the relevant configuration, realistic data volumes and target
+   environments — including that binding reading duties stay and that "reference" does not
    make binding conditions optional. A short **Sources and impact boundary** note goes in
    the existing plan, or, for a task without a plan, in its existing work record; no
    separate report document.
@@ -59,7 +62,36 @@ It must state, compactly:
    overwrite each other. The interrupted-cycle resume rules in the gate rules stay as they
    are. No context percentage or token estimate.
 
+7. **Model and client independence (AC-19).** The added text names no model, effort level,
+   context size or loading mechanism. The client- and skill-specific facts this design relies
+   on — when the client loads `CLAUDE.md`, and that `writing-plans` 6.4.1 asks for code in
+   plans — are recorded with their checked version in `todos.md` § Tooling revalidation, the
+   kit's existing place for re-verifiable tool assumptions, so a model, client or skill change
+   re-checks them against existing tasks and evidence.
+
 The `CLAUDE.md` template must stay within check 4e's budget.
+
+**Changed 2026-10-06 — changed requirement.** Decided by Daniel in the Claude Code session of
+2026-10-06 (about 12:21): "Die Agentenanweisungen erklären, bei welchen Aufgaben welche
+Quellen gelesen werden müssen." / "Keine festen Modellnamen, Effort-Stufen, Kontextgrößen
+oder heutigen Ladeverfahren in den fachlichen Regeln verankern." / "Bei einem Wechsel von
+Modell, Client oder wesentlichen Skills werden betroffene Annahmen gezielt anhand vorhandener
+Aufgaben und Nachweise überprüft." Baseline: a1bc65d. The story's matching change (AC-15
+replaced by AC-18; AC-19 added) is its dependent artifact. Item 7 is new, per the second and
+third quoted passages; it replaces no earlier condition.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §1 placement: "`CLAUDE.md` is loaded at session start, so the contract is in context before `writing-plans` runs" | kept, reworded as a fact about the current client that AC-2 verifies, per the decision: "Keine … heutigen Ladeverfahren in den fachlichen Regeln verankern." | none |
+| §2 item 4, the context rule as AC-15 stated it | kept; moved → item 4 citing AC-18, which ties sources to the kind of task, per the decision: "Die Agentenanweisungen erklären, bei welchen Aufgaben welche Quellen gelesen werden müssen." | none |
+| §2 items 1–3, 5, 6; §3 … §9 and the change record at the end of §7 | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between a1bc65d and this change.
+- **Scope boundary:** in: §1's placement sentence, §2 items 4 and 7. out: the documentation structure, which belongs to `docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md`; any change to model configuration or review validity.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md` → updated in this change.
+- **Reviews already run:** Gate-A spec cycle bkt90xphyk (closed in a1bc65d) → no rule found (same paragraphs checked as in the change record at the end of §7). Daniel's decision of about 12:17 for the previous amendment gave its reason — "Die Ergänzungen ändern verbindliche Pflichten … Der bisherige Spec-Abschluss deckt diese Fassung nicht ab." — and this amendment again changes binding obligations, so it runs a new Gate-A spec cycle on that reasoning, as his instruction to derive the necessary follow-up checks from the actual review status asks.
 
 ## 3. Gate A (AC-3)
 
