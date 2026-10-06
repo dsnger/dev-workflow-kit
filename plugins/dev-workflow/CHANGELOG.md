@@ -22,6 +22,44 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.18.0
+
+- **The scaffolded `CLAUDE.md` §4 gains "Spec, plan and code — what each decides".** A spec
+  fixes behaviour, scope, boundaries, contracts, significant architecture and security
+  decisions and acceptance criteria; a plan states per step the outcome, affected parts and
+  reuse, prerequisites and settled decisions, test situations with expected outcomes, and the
+  implementer's remaining decision space; function bodies and complete tests belong in the
+  code. Where `superpowers:writing-plans` asks for code in every code step, this section
+  governs. The same section adds local choices within approved commitments, context chosen by
+  kind of task (including configuration, data volumes and target environments), splitting by
+  substance with size only a warning, and a fresh session at a named handover boundary with a
+  current-summary handover. It names no model, effort level, context size or loading
+  mechanism; the client and skill facts it relies on are listed under `todos.md`
+  § Tooling revalidation.
+- **Gate A asks what the artifact is for.** The Gate-A bullet in the gate rules adds, for a
+  spec, whether its commitments are coherent, decided and feasible, and for a plan, whether
+  implementation can proceed; missing code or tests are reported only where their absence has
+  a concrete consequence. Nothing else in the gate rules changes: findings protocol, floor, closure ordering,
+  severity and evidence rules are as before.
+- **Adopting in an existing project.** Re-running `/workflow-init` still offers overwrite /
+  merge / skip per differing file; for a customised project the focused route is:
+  1. Wait for a completed work or review boundary. A review cycle already running finishes
+     under the rules it started with.
+  2. In the project's `CLAUDE.md` §4, after the paragraph that lists the work loop, insert the
+     "Spec, plan and code — what each decides" section from the `CLAUDE.md` template in
+     `/workflow-init` (`### 2.1`). If the project already has a local rule about plan form,
+     context or handovers (in `CLAUDE.md`, `AGENTS.md`, a memory file or a pilot note),
+     replace it with this section or reduce it to project-specific additions; do not keep two
+     rules for the same thing.
+  3. In the Gate-A bullet of the project's gate rules — `.claude/review-gates.md`, or §5 of
+     `CLAUDE.md` where the rules are still inline — insert the sentences beginning "Ask also
+     what the artifact is for" after "(coverage floor, not a cage)." Leave the rest of the
+     bullet as the project has it.
+  4. Name the tracked location for handovers that cross checkouts (the section's
+     session-change rule needs one when the next unit runs elsewhere).
+  5. Record, in the project's next handover, the first unit of work that runs under the new
+     rules. Completed units are not redone.
+
 ## 0.17.0
 
 - **`intake` gains an amendment route** for an approved story or spec, separate from the

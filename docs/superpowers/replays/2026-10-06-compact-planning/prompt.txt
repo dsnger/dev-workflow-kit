@@ -1,0 +1,1 @@
+Use the superpowers:writing-plans skill to write the implementation plan for the task in TASK.md. Save the plan as plan.md in this directory. Do not implement anything and do not edit any other file.
