@@ -36,19 +36,23 @@ It must state, compactly:
    change to an *approved commitment* about product behaviour, a shared contract, a security
    guarantee or scope follows the existing decision and amendment route; implementing the
    approved behaviour does not.
-4. **Context (AC-6).** The reading list and the on-demand rule for history exactly as AC-6
-   states them, including that binding reading duties stay and that "reference" does not
+4. **Context (AC-15).** The reading list and the on-demand rule for history exactly as
+   AC-15 states them — the reading list names the relevant configuration, realistic data
+   volumes and target environments — including that binding reading duties stay and that "reference" does not
    make binding conditions optional. A short **Sources and impact boundary** note goes in
    the existing plan, or, for a task without a plan, in its existing work record; no
    separate report document.
 5. **Splitting (AC-8).** Before a large spec: check for independently reviewable outcomes
    with identifiable shared contracts; touching several features is a signal to examine,
    not a reason to split; size is a warning, with no fixed cap.
-6. **Session change (AC-7).** The plan names its **handover boundary**: normally the
+6. **Session change (AC-16).** The plan names its **handover boundary**: normally the
    completed story or an independently executable sub-plan; a closed gate cycle may be
    chosen as an earlier boundary; never inside a running cycle. At the boundary the agent
    writes the handover (verified state and next task, open obligations and unresolved
-   decisions, artifact and evidence paths, cycle identity and status) and stops; the next
+   decisions, artifact and evidence paths, cycle identity and status) and stops. The
+   handover is a **current summary**: it carries every open obligation in full, including
+   one still recorded only in an earlier state, and links earlier states (a commit, an
+   archived note) instead of appending a full status report each time; the next
    unit starts in a fresh session. Without an existing, approved mechanism for changing
    session, the human starts it. Handover file: the project's existing mechanism if it has
    one, otherwise `.context/handover-<unit>.md`, one file per unit so parallel units do not
@@ -77,7 +81,7 @@ place that describes plan contents is found by grep and either updated or left w
 reason. Plugin `version` → 0.18.0 with a CHANGELOG entry; `docs/prompt-standards.md` all 12
 items for the changed prompt text; the quality battery green.
 
-## 5. Adoption (AC-10, AC-11, AC-14)
+## 5. Adoption (AC-10, AC-14, AC-17)
 
 Re-running `/workflow-init` stays available — for a file that differs it shows a short
 diff and offers overwrite / merge / skip — but a merge there is judged per file by whoever
@@ -91,8 +95,12 @@ Verification: the guide is applied once to scratch copies of SFX's current `CLAU
 `.claude/review-gates.md`; the result carries the new rule once, keeps SFX's own conditions,
 and contains no competing plan-form rule.
 
-Prepared, not applied: one adoption file per project (SFX, canvas) in that project's
-`.context/`, built from its current local rules (canvas keeps §5 inline). SFX applies it at
+Prepared, not applied: one adoption file per project (SFX, canvas, `sfx-bricks-api-builder`)
+in that project's `.context/`, built from its current local rules (canvas and
+`sfx-bricks-api-builder` keep their gate rules inline in `CLAUDE.md` §5).
+`sfx-bricks-api-builder` applies it at a boundary its responsible session confirms; its
+oversized `docs/HANDOVER.md` is not rewritten by the adoption — moving it to a current
+summary is that session's first handover under the new rule. SFX applies it at
 the first suitable completed-work boundary after both P5b's closing act and the release; P5b
 itself continues under its pilot instruction (`.context/plan-form-pilot.md`). Canvas applies
 it at a boundary its responsible session confirms (`.context/HANDOVER.md`). In-flight
@@ -137,7 +145,37 @@ P5b's state and the SFX adoption boundary are recorded at G3a. The follow-up rep
 their existing owners and this order: reviewer-output collisions (the "`reviewType: full`
 races" row), durable learning from findings (Finding A), repeated findings about the checking
 method (the arms-race remedy row), the rest of G3c/G3d, the PR #47 intake correction. No new
-entries for them.
+entries for them. Two `sfx-bricks-api-builder` observations are added as evidence to existing
+rows, not as entries: review passes continuing after a clean branch pass goes to the
+"Review-loop usefulness" row, with the counter-example that one cycle's clean pass 7 was
+followed by a pass 8 that found a real Major; and an empty ledger despite merged PRs with
+fixed bot findings goes to Finding A, as evidence that the PR route alone does not fill the
+ledger either. The measurements are cited as recorded; no new mandatory artifact follows.
+
+**Changed 2026-10-06 — changed requirement.** Decided by Daniel in the Claude Code session of
+2026-10-06 (about 11:55): "Präzisiere die Übergabe als aktuelle Zusammenfassung mit
+vollständig übernommenen offenen Verpflichtungen und Verweisen auf historische Belege.
+Ergänze bei der Kontextauswahl relevante Konfigurationen, Datenumfänge und Zielumgebungen.
+Nimm das Projekt als dritten Kandidaten für eine vorbereitete Übernahme an einer sicheren
+Arbeitsgrenze auf. Ordne die Befunde zu unnötiger Review-Fortsetzung und leerem Ledger trotz
+PRs ihren bestehenden Backlog-Aufgaben zu." Baseline: 545bb0a. The story's matching change
+(AC-6, AC-7, AC-11 replaced by AC-15, AC-16, AC-17) is its dependent artifact.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §1, §3, §4, §6, §8, §9 | kept | none |
+| §2 items 1–3 and 5 | kept | none |
+| §2 item 4, the context rule as AC-6 stated it | kept; moved → item 4 citing AC-15, which adds configuration, realistic data volumes and target environments, per the decision: "Ergänze bei der Kontextauswahl relevante Konfigurationen, Datenumfänge und Zielumgebungen." | none |
+| §2 item 6, session change and handover | kept; the handover is now a current summary carrying every open obligation and linking earlier states, per the decision: "Präzisiere die Übergabe als aktuelle Zusammenfassung mit vollständig übernommenen offenen Verpflichtungen und Verweisen auf historische Belege." | none |
+| §5, adoption for SFX and canvas | kept; `sfx-bricks-api-builder` added as a third project, per the decision: "Nimm das Projekt als dritten Kandidaten für eine vorbereitete Übernahme an einer sicheren Arbeitsgrenze auf." | none |
+| §7, backlog regrouping and follow-up order | kept; two observations added as evidence to existing rows, per the decision: "Ordne die Befunde … ihren bestehenden Backlog-Aufgaben zu." | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between 545bb0a and this change.
+- **Scope boundary:** in: §2 items 4 and 6, §5's project list, §7's evidence sentence. out: every other design decision; the order and scope of the follow-up repairs.
+- **Open questions:** none added here; the new project's boundary is recorded in the story's §5.
+- **Dependent artifacts:** `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md` → updated in this change; `todos.md` → updated in this change.
+- **Reviews already run:** Gate-A spec cycle 1zetzfju6f (closed in 545bb0a) → "no rule found" (input: this spec amended after that cycle closed; paragraphs checked in `.claude/review-gates.md`: the opening floor paragraph, "Gate A's content condition, and its closing act", the "Gate A — Spec, then plan" bullet, and "What counts as prose (the only Gate-B exemption)") → pending: blocks writing the plan until Daniel decides whether the amended spec runs a new Gate-A spec cycle, as the vision amendment of PR #47 did.
 
 ## 8. Out of scope
 

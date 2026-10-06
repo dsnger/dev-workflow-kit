@@ -955,6 +955,12 @@ backlog.
       **2026-10-05 (Daniel): split.** Part 4a, live effort counters
       (`scripts/live-effort.py`), measures only. Part 4b, the minimum-cost INCOMPLETE signal, waits
       for calibration data and keeps its risk-high profile.
+      **2026-10-06 evidence (`sfx-bricks-api-builder`, counted from its review corpus
+      `docs/superpowers/reviews/`, not stated by the project):** Gate-B spec and quality run in
+      pairs, so cycles kept running while one branch was already clean — verdict-decode-once's
+      quality branch was clean in passes 3, 5 and 6 of 6, oc13's in pass 1 of 4. Counter-example,
+      kept beside it: census-memo's clean pass 7 was followed by a pass 8 that found a real
+      MAJOR. Evidence for reassessing continued effort; not a basis for skipping passes.
 - [ ] **P7 — `workflow-doctor`, extracted from the `/workflow-init` preflight.** Not a
       second implementation of the same checks: the point is a **single shared check
       source** that both the initializer and the doctor call, or the two drift and the
@@ -1148,6 +1154,12 @@ backlog.
       ledger acquires two formats.
       *Trigger: the next round that touches §5, or a project
       reporting an empty ledger across cycles that fixed findings.*
+      **2026-10-06 evidence — the PR route does not fill the ledger either:**
+      `sfx-bricks-api-builder` has 22 merges into `main` from 2026-10-02 on, and its session notes
+      record fixed Greptile findings (`.remember/today-2026-10-04.md` lines 2, 10 and 39), yet
+      its `docs/hardening-log.md` has 0 rows and its taxonomy says "_None yet_" (counted
+      2026-10-06). So the gap is not limited to projects without PRs: a project with PRs can
+      also reach no ledger check. Whether this row's design covers that is for its story to say.
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same
