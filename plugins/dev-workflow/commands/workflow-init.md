@@ -396,6 +396,24 @@ Ground progress claims: before reporting a step as done, audit the claim against
 
 The work loop includes the review gates: **spec ready → Gate A (spec) → Gate-A closing act → plan ready → Gate A (plan) → Gate-A closing act → execute → tests green → Gate B → Gate-B closing act** (see §5, which states when each act may be performed and what it is).
 
+### Spec, plan and code — what each decides
+
+- **Spec:** intended behaviour and scope; boundaries and shared contracts; significant architecture and security decisions; acceptance criteria. Internal implementation stays open where those commitments permit.
+- **Plan**, per meaningful step: the outcome; affected components and existing implementation to reuse; prerequisites, order and the decisions that must already be settled; concrete test situations with expected outcomes, including relevant failures; the implementer's remaining decision space. The plan also names its handover boundary and carries a short **Sources and impact boundary** note.
+- **Code:** function bodies, complete tests and routine local choices. A short algorithm sketch or a bounded feasibility probe belongs in a plan only where it resolves a named uncertainty.
+
+Why: code written into a plan is written and reviewed twice, and a plan review then spends its passes on that code instead of on missing decisions.
+
+Where `superpowers:writing-plans` asks for code blocks in every code step, complete test code, or repeated code instead of a reference to an earlier step, this section governs: user instructions outrank skills.
+
+**Local choices.** Decide locally within approved commitments. A change to an approved commitment about product behaviour, a shared contract, a security guarantee or scope goes through the decision and amendment route; implementing approved behaviour does not. Why: review settled the commitments, not every line that realises them.
+
+**Context, by task.** Read the applicable binding instructions, the current task and its approved artifacts, and what this kind of task needs — a dependency change: the tech-stack description and the affected manifests; an interface change: its contracts and their users — plus the relevant components, dependencies, configuration, realistic data volumes and target environments. Read further while a material uncertainty or a possible impact stays open. Load a historical record when you need it to understand a decision, constraint or open obligation; following one link does not mean loading everything it links to. Binding reading duties stay until changed through their route, and calling a document "reference" does not make its binding conditions optional. Note the sources and the impact boundary in the plan, or in the task's existing work record when there is no plan. Why: reading by task keeps context small without dropping a binding condition, and the note lets a reviewer see what was and was not looked at.
+
+**Splitting.** Before a large spec, check whether the work holds independently reviewable outcomes with identifiable shared contracts. Touching several features is a reason to examine the scope, not by itself to split. File size is a warning signal, not a limit. Why: a split decided by size alone separates what belongs together.
+
+**Fresh session at a completed unit.** The plan names its handover boundary: normally the completed story or an independently executable sub-plan; a closed review cycle may be chosen as an earlier one; never inside a running cycle. At the boundary, write the handover and stop; the next unit starts in a fresh session, started by the human unless an approved mechanism for it exists. The handover is a current summary: verified state and next task; every open obligation and unresolved decision, including any still recorded only in an earlier state; authoritative artifact and evidence paths; review-cycle identity and status. It links earlier states instead of appending full status reports. Use the project's existing handover file, otherwise `.context/handover-<unit>.md`, one per unit. An interrupted review cycle follows the resume rules in §5, not this paragraph. Why: a long session carries context the next unit does not need, and a summary that carries every obligation lets the fresh session lose none.
+
 ## 5. Cross-Model Review (Codex) — TWO MANDATORY GATES
 
 **The full rules live in `.claude/review-gates.md`. Read that file in full before any
@@ -1383,7 +1401,12 @@ Add `/.context/codex-reviews/` to `.gitignore` — that entry specifically, not 
   the plan run), then ask Codex to check it against our settled decisions and
   surface **contradictions/inconsistencies, missing requirements, unhandled
   state/edge/error/empty/concurrent paths, and risks to the Key Invariants
-  (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Append the
+  (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Ask also what the artifact is for: of a spec, whether its
+  commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
+  proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
+  line between local choices and questions that need a decision. A missing function body or complete
+  test is not by itself a finding, and a finding names its concrete consequence; code a plan does
+  include stays reviewable. Append the
   intent + artifact text + which invariants it touches. Ask for **every** finding
   with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
   every line for everything else**, Codex never filters, because a model told to report only high

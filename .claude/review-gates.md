@@ -938,7 +938,12 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   the plan run), then ask Codex to check it against our settled decisions and
   surface **contradictions/inconsistencies, missing requirements, unhandled
   state/edge/error/empty/concurrent paths, and risks to the Key Invariants
-  (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Append the
+  (@AGENTS.md) — plus anything else** (coverage floor, not a cage). Ask also what the artifact is for: of a spec, whether its
+  commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
+  proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
+  line between local choices and questions that need a decision. A missing function body or complete
+  test is not by itself a finding, and a finding names its concrete consequence; code a plan does
+  include stays reviewable. Append the
   intent + artifact text + which invariants it touches. Ask for **every** finding
   with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
   every line for everything else**, Codex never filters, because a model told to report only high

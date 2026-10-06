@@ -703,6 +703,39 @@ backlog.
       finding shape recurs, question the method before adding the next special case.
       *Ledger:* both projects' empty ledgers are evidence for **Finding A** below, not a new item.
       *Trigger for the group:* G1a merged; then Daniel selects G3a for intake.
+      **2026-10-06 — trigger fired and grouping changed (Daniel).** His assignment of 2026-10-06
+      "deliberately changes G3's previous 'one story per leaf, fixed sequence' arrangement for this
+      first delivery": G3a, G3b and the task-context part of G3c ship together as
+      `docs/superpowers/stories/2026-10-06-compact-planning-context-handover-story.md`. Fate of
+      each earlier condition of this entry:
+      - Recorded origin, placement after G1a and before the orchestrator, benefit as a
+        hypothesis, the evidence block and its four precision tiers — kept.
+      - "Four leaves, in this order, each its own story at intake" — dropped for G3a, G3b and
+        the task-context part of G3c, per the quoted decision; moved → the story above. G3c's
+        rule consolidation and G3d stay leaves, each its own story, in that order.
+      - G3a's content (roles, Gate-A plan questions, precedence over `writing-plans`, split by
+        subject with size only a warning, the EXPERIMENTAL pre-split heuristic keeping its own
+        trigger) — moved → the story's AC-1 … AC-3 and AC-8; the heuristic's trigger kept.
+      - G3a's pilot on SFX P5b — kept, in a narrower form: P5b had started under SFX's local
+        pilot instruction (`.context/plan-form-pilot.md`) before this delivery, so the
+        "intake decides whether to cut P5b into child stories first" choice was already made
+        there (plan compactness alone) — dropped here, per Daniel (10:58): "Jedenfalls ist es
+        zu spät." SFX records P5b's numbers in that file; no saving is claimed from one pilot.
+        SFX adopts the released rules at the first suitable completed-work boundary after
+        P5b's closing act and the release; the first unit under them is named then (AC-14).
+      - G3a's measurement by total effort to a reviewed result against a named comparison —
+        kept, for the P5b pilot and for the story's AC-12 evidence.
+      - G3b's handover content and its limits (no override of mandatory stops, of the
+        interrupted-cycle resume procedure or of a human-directed handover) — moved → the
+        story's AC-16; this delivery changes no stop or resume rule.
+      - G3c "helpers load the rules their assignment needs" — moved → the story's AC-18 for
+        task context; the rule-file consolidation and the AGENTS.md widening stay in G3c.
+      - G3d, the method lesson and the ledger note — kept.
+      *Follow-up repairs, existing owners, this order:* reviewer-output collisions (row
+      "`reviewType: full` races"), durable learning from findings (Finding A), repeated findings
+      about the checking method (the arms-race remedy row), the rest of G3c and G3d, then the
+      PR #47 intake correction (`## From PR #47`). None is a prerequisite of the
+      living-feature-docs pilot.
 
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
@@ -909,6 +942,22 @@ backlog.
       metrics, measured by 2c, and the decision-oriented inbox. It also proposes an owner
       (§11): a static snapshot after 2c part 4, then the live view after 5a. The trigger
       above is unchanged.
+      **2026-10-06 — TRIGGER FIRED (Daniel): process monitoring is the next delivery after the
+      compact-planning release**, before the living-feature-docs pilot and further work. It
+      does not wait for the full orchestrator, 2c part 4b or full G1b/G1c; it uses their
+      available foundations (`scripts/run-analytics.py`, `scripts/live-effort.py`,
+      `scripts/loop-usefulness.py`, git and the workflow records) and they keep their later
+      scope. First delivery, for this repository, a local generated HTML view answering:
+      current work (story or task, phase, artifacts, last observed activity); evidenced
+      progress (last closed step with source and revision); open points (decisions,
+      blockers, waits — "unknown" when unknown); effort (run time, tokens, gate calls,
+      review passes, kept apart); artifact growth against a named baseline, code and tests
+      shown apart. Activity, result and effort side by side; no checkbox percentages, no
+      composite score; refresh during work without model calls and without rescanning all
+      history each time; stale or missing data visibly marked. Out: orchestrator, agent
+      control, automatic stops, new gate rules, full cost accounting. Starts through intake
+      at the compact-planning release's handover boundary; this entry stays the single
+      owner, no second dashboard entry.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,
@@ -993,6 +1042,13 @@ backlog.
       command of its own.
 
 ## Tooling revalidation
+- [ ] **Client and skill facts the 0.18.0 working contract relies on** (checked 2026-10-06,
+      current implementation, not a lasting requirement): Claude Code 2.1.291 loads `CLAUDE.md`
+      at session start, so the §4 "Spec, plan and code" section is in context before planning;
+      `superpowers:writing-plans` 6.4.1 asks for code blocks in code steps and complete test
+      code (its *No Placeholders* list), which that section overrides. On a change of model, client
+      or that skill, re-check only the affected assumption against an existing planning task and
+      its evidence; no general review cycle (Daniel, 2026-10-06).
 - [ ] Re-check `docs/prompt-standards.md` against the current model-specific
       prompting pages on every model-generation change (new Claude model in Claude
       Code, new Codex model for the gates). Include `docs/sparring-briefing.md` in

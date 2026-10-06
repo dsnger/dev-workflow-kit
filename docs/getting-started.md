@@ -41,7 +41,8 @@ the counter, not an error. Your job: arbitrate disputed findings — Codex is
 advisory, and a dismissed finding needs a one-line reason.
 
 **4. Plan, and Gate A again.** `superpowers:writing-plans` turns the spec into a
-task-by-task plan (each task starts with a failing test); the same loop runs at the derived floor
+task-by-task plan — outcomes, affected parts, settled decisions and test situations per step,
+with the code left to implementation (`CLAUDE.md` §4); the same loop runs at the derived floor
 on the plan and ends with its own Gate-A closing act before execution starts. A flaw caught
 here never reaches code.
 

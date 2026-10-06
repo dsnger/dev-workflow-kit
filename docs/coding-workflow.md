@@ -105,17 +105,23 @@ flaw in the spec is far cheaper than catching it after it has been baked into th
 plan and the code.
 
 **4. Planning.** The spec is turned into a task-by-task implementation plan. Each
-task names the files it touches, the interfaces or contracts it produces, and its
-steps — and the steps begin with a *failing test* (test-first). Global constraints
-are restated at the top so they aren't lost mid-build. A plan at this resolution
-makes execution mechanical and the resulting diff traceable back to a requirement.
+step states its outcome, the components it touches and what existing code it reuses,
+its prerequisites and the decisions already settled, concrete test situations with
+expected outcomes (failures included), and the implementer's remaining decision space.
+Function bodies and complete tests belong in the code, not the plan; a short sketch or
+a bounded probe is there only to resolve a named uncertainty. Global constraints are
+restated at the top, and the plan names its sources, its impact boundary and its
+handover boundary. Each diff stays traceable to a requirement without the plan
+pre-writing it (scaffolded `CLAUDE.md` §4, "Spec, plan and code").
 
 **5. Gate A on the plan.** The same independent review, now applied to the plan —
 so a plan-level flaw is caught before implementation, not during it. Each Gate-A cycle
 ends with its own closing act — the reviewed artifact committed with the cycle's
 records — before the next stage starts.
 
-**6. Execution.** The plan is implemented task by task, followed literally.
+**6. Execution.** The plan is implemented task by task, test-first. The implementer
+makes local choices inside the approved commitments; a change to an approved commitment
+goes back through the decision and amendment route.
 Bounded subtasks can be delegated to cheaper models or subagents. Discipline
 holds: every changed line traces to the story; no drive-by refactors.
 
