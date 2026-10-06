@@ -37,7 +37,7 @@ jobs:
           # merge-base. ~50 commits, so the full history costs nothing here.
           fetch-depth: 0
 
-      # The hook, the two checkers, the five Python reports and their eight suites are
+      # The hook, the two checkers, the six Python reports and their nine suites are
       # the only executables here,
       # so lint plus those suites are the only mechanical gates we have. Everything else
       # here is a prompt, and prompts have no typechecker (see README, "Contributing").
@@ -88,6 +88,9 @@ jobs:
           # The live-effort suite (vision step 2c, part 4a), linted the same way.
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 scripts/live-effort.test.sh
+          # The status-view suite (process monitoring), linted the same way.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 scripts/status-view.test.sh
 
       # Two runs, because the hook has to be correct under both shells and the runner's
       # /bin/sh is dash while a contributor's may be bash. HOOK_SH selects the shell the
@@ -118,6 +121,7 @@ jobs:
           sh scripts/loop-usefulness.test.sh
           sh scripts/spec-delta.test.sh
           sh scripts/live-effort.test.sh
+          sh scripts/status-view.test.sh
 
       # Invariant 12 itself needs a base to diff against, so it runs only on pull
       # requests — a push to main has no PR base, and diffing the push range would just

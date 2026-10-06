@@ -268,6 +268,37 @@ visibly marked.
   times, counts, identifiers and short session IDs. Repository files (handover, stories) are
   repository content and may be shown.
 - Every string taken from a file is HTML-escaped. The page loads nothing external.
+- **Trust boundary.** The monitor reads the repository's own git configuration, its files and the
+  local logs as they are; it runs nothing they configure. No git command it uses executes a
+  configured helper: it does not call `git status` or `git diff <tree>` (which run clean/process
+  filters, fsmonitor and submodule recursion); the working-tree state is derived from `ls-tree`,
+  `ls-files` (index entries with their size and mtime, untracked files), `check-attr` and hashes of
+  the raw bytes. A file git would normalize or filter (a `text`, `eol` or `filter` attribute, or any
+  file under `core.autocrlf`) whose raw bytes differ is reported as "possibly changed" — in Current
+  work and in Artifact growth alike — and not compared further, because comparing it would run the
+  helper. Mode-only changes (with `core.filemode`) and staged submodule commits count as changes. Every file is read without following into anything but a
+  regular file: a symlink is hashed by its target string where git does so, and a FIFO, device or
+  other special file is never read, so it can neither block nor flood a collection. Ordinary
+  parallel work during a collection — edits, commits, checkouts, branch moves — is handled by the
+  pinning and discard rules of §2 and, at worst, gives one collection a mix of before and after,
+  corrected by the next. Out of scope: a local actor deliberately manipulating configuration or
+  files during a collection to mislead or stall the monitor; the monitor does not guarantee
+  correct output against that, and its write boundary (first bullet) does not depend on it.
+
+**Changed 2026-10-06 — gap found.** Decided by Daniel, in this session's chat at 20:38 and 20:39 (relayed from the sparring session, confirmed by him): "Variante 1, aber bitte enger: Definiere die Vertrauensgrenze konkret, statt manipulierte Einstellungen und Spezialdateien pauschal auszunehmen. Repariere sowohl den Verlust bisheriger Nachweise bei kaputten Protokolleinträgen als auch das blockierende Lesen von Symlinks beziehungsweise Spezialdateien. Eine Garantie gegen gezielte gleichzeitige Manipulation durch einen lokalen Akteur brauchen wir für diesen Monitor nicht. Vorhandene Git-Konfiguration und gewöhnliche parallele Entwicklungsarbeit bleiben jedoch zu berücksichtigen. Prüfe zuerst, ob sich die filterauslösende Git-Abfrage einfach vermeiden lässt." Baseline: `b1f76f1` (Gate-A spec cycle `zz66702iyt` closed). Rationale: Gate B passes 4–7 kept finding helper-execution and special-file paths because §8 named no trust boundary. Validation of the relayed proposal before applying it (Daniel, 20:39): avoiding the filter-running query holds — `ls-tree`, `ls-files -s --debug`, `ls-files --others`, `diff-tree`, `log`, `show`, `check-attr` ran neither a clean filter nor fsmonitor nor wrote the index in a probe repository, while `git status` ran the filter; it is not exact, though — raw-byte hashes differ from git's for `text=auto` files (probe: a CRLF file git calls clean), hence the "possibly changed" label instead of a false "changed"; a non-blocking open plus a regular-file check refuses a symlinked FIFO (probe). The trust boundary fits ordinary parallel work because the reads take no lock and the §2 rules already cover a moving checkout.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| "The script writes only under `.context/status/`. It changes no record it reads." | kept | none |
+| "No session text reaches the page or the cache …" | kept | none |
+| "Every string taken from a file is HTML-escaped. The page loads nothing external." | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none to this file since the baseline.
+- **Scope boundary:** in: the trust boundary, helper-free working-tree state, special files, the "possibly changed" label, verification cases 19–21; out: any guarantee against deliberate concurrent local manipulation, per the decision.
+- **Open questions:** none.
+- **Dependent artifacts:** `scripts/status-view.py`, `scripts/status-view.test.sh` → updated in this change. The story changes no criterion and is not touched (`AC-10` kept).
+- **Reviews already run:** Gate-A spec cycle `zz66702iyt` → stands as closed; the change is reviewed in the open Gate-B cycle `ew334touto`, per `.claude/review-gates.md`, Gate B bullet: "A fix that changes specified behaviour updates the spec in the same commit … Update both, and let the re-review cover both."
 
 ## §9 Verification (validation mode `battery+check`)
 
@@ -311,6 +342,9 @@ than 24 hours; `--base` fills them.
 17. Installed, loaded, declared and rule revision show separately; a mismatch and an uncommitted
     rule file are marked.
 18. The script writes nothing outside `.context/status/`.
+19. A clean filter configured before or during a collection, or in a submodule, is never run.
+20. An untracked symlink to a FIFO neither blocks nor fails the collection.
+21. A file git normalizes, touched but unchanged, is reported as possibly changed, not changed.
 
 **Real run (story `AC-12`):** on this branch, the page is generated before and after a commit that
 closes a step, and the evidenced change and the growth are visible after the refresh. The evidence

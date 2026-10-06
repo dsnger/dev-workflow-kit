@@ -266,8 +266,13 @@ def codex_fact(path, problems):
     """One Codex session log's facts: first and last timestamps, the last token usage, its models."""
     before = dict(problems)
     lines = read_lines(path, problems)
+    return fact_from_lines(lines, problems, problems != before)
+
+
+def fact_from_lines(lines, problems, bad):
+    """The facts of one Codex session log's parsed lines; `bad` marks a log that did not read cleanly."""
     fact = {"meta_ts": None, "last_ts": None, "usage": None, "models": set(),
-            "bad": problems != before or not lines}
+            "bad": bad or not lines}
     if lines and isinstance(lines[0], dict):
         meta = lines[0].get("payload") if isinstance(lines[0].get("payload"), dict) else {}
         fact["meta_ts"] = parse_ts(meta.get("timestamp") or lines[0].get("timestamp"))
