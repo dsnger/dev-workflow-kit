@@ -67,7 +67,9 @@ Check, in order:
    **One exception to running it — a codebase-memory MCP server.** Do not run `claude mcp list`
    or `claude mcp get codex` yourself when any of these holds:
    - `CLAUDE_CONFIG_DIR` is set, so the configuration home is not the one these reads can attribute;
-   - item 8 below finds a codebase-memory server configured in any scope;
+   - item 8 below finds a codebase-memory server configured in any scope, **or item 8 stopped or has
+     not yet completed its discovery** (for example `unsupported` because of a linked worktree or an
+     inherited `GIT_DIR`): detection that did not finish cannot show that no such server exists;
    - the command that the effective `codex` entry launches cannot be read from the configuration
      files (`~/.claude.json` for user and local scope, `.mcp.json` for project scope).
 
@@ -2627,7 +2629,8 @@ Every later step uses that resolved path, never a `PATH` lookup. Then:
    `changed`. Stop here and do not execute the file. Why: a binary nobody has assessed must not
    run, not even for `--version`.
 3. Only when there is no row yet, or the hash matches, run
-   `CBM_CACHE_DIR="$(mktemp -d)" '<file>' --version`. `--version` opens no store on 0.9.0.
+   `d="$(mktemp -d)"; CBM_CACHE_DIR="$d" '<file>' --version; rm -rf "$d"`. The temporary
+   directory is removed whether or not `--version` succeeds. `--version` opens no store on 0.9.0.
 
 Then compare the values:
 - **No row.** Show the user the observed identity. Write the row only after they confirm it.
@@ -2707,8 +2710,10 @@ restart: this session itself carries no protection claim.
 
 **Every entry starts the same way.** Before anything else, run Step 1 item 8's early checks in their
 order: `CLAUDE_CONFIG_DIR`, linked worktree, then 2.14 steps 1–2 with the settings-`env` check.
-Then run the identity check. This holds when you come from 2.14 and when you revalidate directly.
-Why: the hook gate and the identity commands are safe only after those checks.
+Then evaluate the supported environment and the command-valued settings keys below. An untested
+client version passes here only through the user's explicit one-run consent described there. Only
+if they pass, run the identity check. This holds when you come from 2.14 and when you revalidate directly.
+Why: the hook gate, the identity commands and the launches are safe only after those checks.
 
 **What it is.** A procedure you follow. It is not a script. Run it from 2.14, and on revalidation
 after any relevant change: client, server binary, permission mode, the rules, start configuration
@@ -2718,7 +2723,6 @@ permission path.
 **Before anything launches.** If any of these fails, the result is `unproven`, and nothing
 launches.
 - **The hook gate (2.14 step 2)** passes for every call below.
-- **Identity** matches the row (2.14 step 3). A mismatch is `changed`.
 - **Supported environment:**
   - macOS;
   - Claude Code at a tested version. The baseline this kit shipped with is **2.1.292**, with
@@ -2726,7 +2730,11 @@ launches.
     A project's later canary record that passed at a newer version adds that version for that
     project. **An untested version** is `unproven` by default. To revalidate after a client update,
     ask the user whether this canary may run once at that version, naming the version. Ask only
-    when every other check in this list passes. On an explicit yes, launch once; the version counts
+    when every other supported-environment and command-key check passes. The client version is a
+    property of the client, not of the server binary, so this consent is the one environment
+    exception that may precede the identity check. On an explicit yes, this version check counts
+    as passed for this one run; the identity check then follows, and a mismatch still stops the
+    run as `changed`. If the identity check passes, launch once; the version counts
     as tested only if that run returns `ok`. Until then, make no protection claim. Why: the first
     record at a new version cannot exist before a first run, and running an untested client is the
     user's call;
@@ -2745,6 +2753,7 @@ launches.
   - `statusLine` does not run in `-p` and passes;
   - `apiKeyHelper`, `awsAuthRefresh`, `awsCredentialExport`, `otelHeadersHelper` and any key you
     have not evaluated mean `unproven`.
+- **Identity**, checked last: it matches the row (2.14 step 3). A mismatch is `changed`.
 
 **Fixture.** Create a temporary git repository:
 Run every `git` command on it with `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -c
