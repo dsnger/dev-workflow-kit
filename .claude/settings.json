@@ -1,3 +1,18 @@
 {
-  "includeCoAuthoredBy": false
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      "mcp__codebase-memory-mcp__index_repository",
+      "mcp__codebase-memory-mcp__delete_project",
+      "mcp__codebase-memory-mcp__ingest_traces",
+      "mcp__codebase-memory-mcp__manage_adr"
+    ],
+    "allow": [
+      "mcp__codebase-memory-mcp__list_projects", "mcp__codebase-memory-mcp__index_status",
+      "mcp__codebase-memory-mcp__search_graph", "mcp__codebase-memory-mcp__query_graph",
+      "mcp__codebase-memory-mcp__search_code", "mcp__codebase-memory-mcp__trace_path",
+      "mcp__codebase-memory-mcp__get_code_snippet", "mcp__codebase-memory-mcp__get_graph_schema",
+      "mcp__codebase-memory-mcp__get_architecture", "mcp__codebase-memory-mcp__detect_changes"
+    ]
+  }
 }

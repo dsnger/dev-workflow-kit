@@ -131,13 +131,34 @@ reader can judge whether it still holds.
    **Scope:** things that *execute* in a run — CI actions and runners, npm packages,
    Docker images, MCP servers. A `$schema` URL is editor metadata that no run reads, so
    it is outside the invariant (pinning one anyway is fine, not required).
-   Three bounded exceptions, stated rather than silent: `source-files/` is a frozen
+   Four bounded exceptions, stated rather than silent: `source-files/` is a frozen
    extraction archive and is never edited (see MANIFEST.md); `runs-on` pins an Ubuntu
    *release* — GitHub still refreshes that image weekly, which only a container would
    fix, and this battery doesn't warrant one; and `claude plugin marketplace add
    <owner>/<repo>` takes no version or ref — the CLI offers no pinning syntax, so
    prerequisite plugins (superpowers, this kit) are addressed by name and revalidated
    on update, not pinned.
+   The fourth applies to **the optional codebase-memory MCP integration only**
+   (`/workflow-init` 2.14–2.15), and to no other user-installed MCP server
+   (Daniel, 2026-10-07, decision D1 in
+   `docs/superpowers/specs/2026-10-07-codebase-memory-mcp-bounded-context-design.md`).
+   The kit only restricts that server: it never installs, configures or registers it.
+   Its binary is therefore not pinned at launch on these paths:
+   - P1, ordinary sessions starting it from the user's own entry;
+   - P2, the canary session;
+   - P3, the canary's fixture indexing, which runs against an isolated store;
+   - P4, a `claude mcp get` the user runs;
+   - P5, a refresh the user runs;
+   - P6, Codex-preflight health commands, which are left to the user whenever this server is
+     configured.
+
+   **What stands in for a pin:**
+   - its source, version and sha256 are recorded;
+   - before every kit-run launch (P2, P3), the binary is compared against that record;
+   - a mismatch invalidates the earlier evidence, and nothing launches until a human reassesses
+     the binary and re-records it.
+
+   This is detection after a change, not a pin: P1 runs whatever binary the user's entry names.
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not

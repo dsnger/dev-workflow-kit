@@ -958,7 +958,7 @@ backlog.
       control, automatic stops, new gate rules, full cost accounting. Starts through intake
       at the compact-planning release's handover boundary; this entry stays the single
       owner, no second dashboard entry.
-- [ ] **Optional codebase-memory MCP integration into task context.** Recorded with Daniel on
+- [ ] **Optional codebase-memory MCP integration into task context.** **2026-10-07: first delivery in progress** — story `docs/superpowers/stories/2026-10-07-codebase-memory-mcp-bounded-context-story.md`, spec and plan beside it (dev-workflow 0.19.0); agents read-only, indexing stays the human's. Original record: Recorded with Daniel on
       2026-10-06: the next bounded unit after the first process-monitoring delivery (the row
       above), and not part of that row's story. Belongs to the existing context selection
       (CLAUDE.md §4 "Context, by task", 0.18.0): detect a server that is already present;
@@ -970,7 +970,7 @@ backlog.
       dependency instead of blocking the pilot silently.
       *Trigger: the first process-monitoring delivery is complete.* This entry records order and
       scope only; design starts at the trigger.
-- [ ] **Security concept, first effective delivery — routed through the MCP integration above.**
+- [ ] **Security concept, first effective delivery — routed through the MCP integration above.** **2026-10-07: first return given and first delivery in progress** through the same story (deny rules for the server's write tools, canary through the real client; spec §9 maps the rest to existing owners). Original record:
       Recorded with Daniel on 2026-10-06 (16:34; his consolidated assignment replaces his 16:15
       security prompts; two precisions added at 16:38). Order: after the first process-monitoring delivery; its relevant
       requirements flow into the optional codebase-memory MCP integration (the row above). Neither
@@ -1141,7 +1141,35 @@ backlog.
       extension; the honest conclusion is that the extension point is Finding A's design, not a
       command of its own.
 
+- [ ] **Bounded agent refresh of the codebase-memory index.** Recorded 2026-10-07 (spec
+      `docs/superpowers/specs/2026-10-07-codebase-memory-mcp-bounded-context-design.md` §9). Agents
+      may not index in the first delivery because `index_repository` on 0.9.0 cannot be confined to
+      one checkout. *Trigger:* a server version whose refresh confines the destination name, the
+      cross-repo targets and repository writes as well as the source path; a new decision by Daniel
+      is needed before any agent gets that authority.
+- [ ] **ADR backup for the codebase-memory store.** Recorded 2026-10-07 (same spec §7/§9): ADRs
+      written through `manage_adr` are not rebuildable by re-indexing. No owner yet. *Trigger:*
+      a project that actually stores ADRs there.
+
 ## Tooling revalidation
+- [ ] **codebase-memory MCP identity** (`/workflow-init` 2.14 step 3; recorded 2026-10-07, confirmed by
+      Daniel 2026-10-07 17:12 for this installation only, not for updates or other binaries).
+      Name `codebase-memory-mcp`, user scope, command `/Users/daniel/.local/bin/codebase-memory-mcp`;
+      version 0.9.0; sha256 `04ee3048810c19099502adc8bb83039423f02f2553d17677892a7f03b924e01f`;
+      platform darwin x86_64. Source: equal to the binary in release v0.9.0 asset
+      `codebase-memory-mcp-darwin-amd64.tar.gz` of `github.com/DeusData/codebase-memory-mcp`, whose
+      archive hash matches that release's `checksums.txt` (local evidence
+      `.context/evidence/2026-10-07-mcp-probe/v0.9.0-checksums.txt`); MIT licence (vendor file). Install
+      route: release binary placed in `~/.local/bin` (inferred; not brew or npm). Updates: manual
+      `codebase-memory-mcp update` (needs a terminal or `-y`) from `releases/latest`; the binary checks
+      GitHub for newer releases (it reported v0.11.0). Network reach: GitHub API and release downloads;
+      an optional UI on `127.0.0.1:9749` (vendor statement). Launch env: none. Store: `~/.cache/codebase-memory-mcp`.
+      Human refresh: `codebase-memory-mcp cli index_repository --repo-path <checkout root>` — run by a
+      human only. A `worker crashed` answer from `index_repository` can be a refusal or a technical
+      failure; it is no evidence that any boundary works. Recheck with the 2.15 canary after any change
+      to client, binary, permission mode, rules, start configuration or account.
+      Protects against: accidental or instructed agent misuse, on the client paths the canary showed. Not
+      against: deliberate bypass, a manipulated binary, the server's own store changes, other clients.
 - [ ] **Client and skill facts the 0.18.0 working contract relies on** (checked 2026-10-06,
       current implementation, not a lasting requirement): Claude Code 2.1.291 loads `CLAUDE.md`
       at session start, so the §4 "Spec, plan and code" section is in context before planning;
