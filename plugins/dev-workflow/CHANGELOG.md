@@ -22,6 +22,31 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.19.0
+
+- **Optional codebase-memory MCP integration, read-only for agents.** This is the first effective
+  delivery of the security concept.
+  - **Preflight item 8.** `/workflow-init` Step 1 detects a codebase-memory server without
+    launching it, in one of five states: unsupported, loaded, configured not loaded, installed not
+    configured, absent.
+  - **Adoption, 2.14.** Only when the server is loaded and the user agrees, it adds:
+    - project permission rules that deny the four write tools (`index_repository`,
+      `delete_project`, `ingest_traces`, `manage_adr`) and allow the ten reads;
+    - a marked task-context block in `CLAUDE.md` §4;
+    - an identity row (source, version, sha256) under Tooling revalidation.
+  - **Canary, 2.15.** It checks the rules through the real client against an isolated store, for
+    the main agent and a delegated subagent. A control session without the rules shows that the
+    rules make the difference.
+  - **Indexing stays the human's.** On 0.9.0 the index tool cannot be confined to one checkout.
+  - **Start actions.** Before each step, the hooks that its calls can reach are evaluated. An
+    unknown or unsafe hook stops the step. Two residuals are accepted and named with every result:
+    managed settings delivered for the first time at a canary start, and this session's hooks on
+    the first configuration reads.
+  - **Codex preflight.** It no longer runs `claude mcp list` or `claude mcp get codex` itself while
+    this server is configured, because those commands start the server on its real store.
+  - **Adopting:** re-run `/workflow-init` in a project where the server is loaded. Projects without
+    it are unaffected.
+
 ## 0.18.0
 
 - **The scaffolded `CLAUDE.md` §4 gains "Spec, plan and code — what each decides".** A spec
