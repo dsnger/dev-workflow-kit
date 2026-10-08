@@ -51,6 +51,9 @@ init_prompt_fixtures() { # $1 = fixture repo root
   # 4d: a minimal valid intake story template, for the same isolation reason.
   mkdir -p "$1/plugins/dev-workflow/skills/intake"
   ac_skill "$(ac_rows 3)" > "$1/plugins/dev-workflow/skills/intake/SKILL.md"
+  # 4g: small instruction files, or every fixture fails the size check on a missing file.
+  printf '# C\n' > "$1/CLAUDE.md"
+  printf '# A\n' > "$1/AGENTS.md"
 }
 # A valid `### 2.1` section: a heading and a small fenced CLAUDE.md template.
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
@@ -424,6 +427,10 @@ done
 #              after the shared intake fixture gained the amendment section: 20, 22, 20,
 #              22, 7, unchanged. The first 4d run flipped 109 cases, accepts
 #              among them, because 4f read 4d's file variable; 4f now sets its own.
+#   4g -> 11   every `4g:` reject case (11, the unreadable case run as non-root); no accept
+#              case moved (measured 2026-10-08, when 4g was added). The shared initializer
+#              gained the two instruction files the same day; 4a-4f re-measured after it:
+#              20, 22, 20, 22, 7, 32, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1062,6 +1069,84 @@ while [ "$cr_i" -le 12 ]; do
 done
 inject_case "4f change-record parser failure fires" awk '*cr-template-scan*' \
   'change-record template parser failed'
+
+# --- Check 4g, the size budget of this repo's CLAUDE.md + AGENTS.md -------------------
+#
+# Each case replaces the two instruction files of an otherwise valid fixture. Content is
+# written without a trailing newline, so a file of N characters is exactly N characters.
+TG='repo instruction size'
+tg_put() { # $1 = path, $2 = content spec: @GONE@ @DIR@ @LOCK@ @LINK@, or "<char> <count>"
+  case "$2" in
+    @GONE@) rm -f "$1" ;;
+    @DIR@) rm -f "$1"; mkdir "$1" ;;
+    @LOCK@) chmod 000 "$1" ;;
+    @LINK@) te_body a 150001 > "${1%/*}/big.md"; rm -f "$1"; ln -s big.md "$1" ;;
+    *) te_body "${2% *}" "${2#* }" > "$1" ;;
+  esac
+}
+tg_setup() { # $1 = CLAUDE.md spec, $2 = AGENTS.md spec
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin" "$work/r/fakebin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  tg_put "$work/r/CLAUDE.md" "$1"; tg_put "$work/r/AGENTS.md" "$2"
+}
+tg_judge() { # $1 = name, $2 = 1|0 expect reject, $3 = optional diagnostic substring
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF "$TG" || ! printf '%s' "$out" | grep -qF -- "${3:-$TG}"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+tg_case() { # $1 = name, $2 = 1|0 expect reject, $3 = CLAUDE.md spec, $4 = AGENTS.md spec,
+  #          $5 = optional diagnostic substring a reject must also carry
+  tg_setup "$3" "$4"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  for f in "$work/r/CLAUDE.md" "$work/r/AGENTS.md"; do [ -f "$f" ] && chmod 644 "$f" 2>/dev/null; done
+  tg_judge "$1" "$2" "${5:-}"
+}
+# A `wc` that answers the locale probe (no file operand) like the real one, and prints $1
+# for any call naming a file — so the probe and the read succeed and only the count is bad.
+tg_count_case() { # $1 = name, $2 = what wc prints for a file operand
+  tg_setup "a 1" "a 1"
+  real=$(command -v wc)
+  { printf '#!/bin/sh\n'
+    # shellcheck disable=SC2016  # deliberate: $@ must stay literal in the GENERATED script
+    printf 'for a in "$@"; do case "$a" in *.md) printf "%%s\\n" %s; exit 0 ;; esac; done\n' "'$2'"
+    printf 'exec %s "$@"\n' "$real"
+  } > "$work/r/fakebin/wc"
+  chmod +x "$work/r/fakebin/wc"
+  out=$( cd "$work/r" && PATH="$work/r/fakebin:$PATH" sh scripts/check-invariants.sh 2>&1 ); st=$?
+  tg_judge "$1" 1 'untrustworthy'
+}
+tg_case "4g: combined size at the budget accepted"           0 "a 100000" "a 50000"
+tg_case "4g: combined size one over the budget rejected"     1 "a 100000" "a 50001" \
+  'is 150001 characters, over the 150000 budget'
+tg_case "4g: one file alone over the budget rejected"        1 "a 150001" "a 0" \
+  'is 150001 characters, over the 150000 budget'
+# 150000 two-byte characters: 300000 bytes, so a byte count would reject this.
+tg_case "4g: multibyte content counted in characters"        0 "é 100000" "é 50000"
+tg_case "4g: both files empty accepted (a count of 0)"       0 "a 0" "a 0"
+tg_case "4g: missing CLAUDE.md rejected"                     1 "@GONE@" "a 1" 'CLAUDE.md is missing'
+tg_case "4g: missing AGENTS.md rejected"                     1 "a 1" "@GONE@" 'AGENTS.md is missing'
+tg_case "4g: CLAUDE.md as a directory rejected"              1 "@DIR@" "a 1" 'CLAUDE.md is missing'
+tg_case "4g: a symlinked CLAUDE.md counted like its target"  1 "@LINK@" "a 0" \
+  'is 150001 characters'
+if [ "$(id -u)" -ne 0 ]; then
+  tg_case "4g: unreadable AGENTS.md rejected"                1 "a 1" "@LOCK@" 'AGENTS.md is unreadable'
+fi
+inject_case "4g: no UTF-8 locale rejected" wc '-m' \
+  'repo instruction size: no UTF-8 locale'
+inject_case "4g: a failed read rejected" wc '*AGENTS.md' \
+  'repo instruction size: counting AGENTS.md failed'
+tg_count_case "4g: an empty count rejected" ''
+tg_count_case "4g: a non-numeric count rejected" 'x CLAUDE.md'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

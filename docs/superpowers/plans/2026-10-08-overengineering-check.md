@@ -121,7 +121,7 @@ total for the report.
 
 **Outcome:** the dated notes of spec §4, each on an existing row, with no new row.
 
-**Rows and content:**
+**Rows and content** (line numbers as of `fd4c1de`; the notes themselves move later rows):
 - **"The arms-race remedy exists as an observation and not as a procedure"** (`:221`):
   - #50 Gate B as story §1 now reads it: the class was generalised in passes 5–6, and passes 7–10 concerned further environment sources and the order of the checks; that this was an arms race is not established;
   - candidate: a method or alternatives statement at the existing halt, with its limits (#50 does not carry it; canvas A5/T2a is unverified here);
@@ -176,7 +176,7 @@ as the Gate-B `WIP:` snapshot, so `check-version-bump.sh main` compares commits.
 - `mcp__codex__review`, `reviewType: full`;
 - `baseSha` = the merge-base with `main`, so the range includes `781d9d4`, the story commits and the spec;
 - `headSha` = the explicit 40-character HEAD;
-- floor 3; the security lens set is appended;
+- the floor and the lens sets derived from the story's profile, read fresh at each pass;
 - the evidence entry (battery result, Task 4's counter-check, the test pairs) is quoted verbatim in each call, with the story path.
 
 No triviality skip.

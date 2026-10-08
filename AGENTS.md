@@ -305,7 +305,7 @@ Every command below was run in this session and observed to exit 0.
 | typecheck | n/a — no typed sources (shell, six untyped Python reports, markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
-| invariant checks (5 pinning, 6 manifest, prompt conformance, template size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
 
@@ -338,3 +338,9 @@ CI runs the parts as separate steps for readable failures; the chained form abov
 is the single command a human runs. One difference is deliberate: CI's version-bump
 step is `pull_request`-only, while the local battery always runs it (on `main`, where
 the merge-base is HEAD, it passes trivially).
+
+**Check 4g measures exactly two files.** It fails when this repository's `CLAUDE.md` plus
+`AGENTS.md` exceed 150,000 characters, a budget set for this repository after `main` went past
+the 150.0k characters Claude Code warned at (`b18e7db`). It is not a statement of any client's
+current limit, and everything else a session loads — the user's own instruction files, memory,
+plugin, skill and hook text, `.claude/review-gates.md` — is outside the measurement.

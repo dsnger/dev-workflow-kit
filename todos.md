@@ -245,6 +245,12 @@ driven by recurrence rather than by enthusiasm.
       recorded in both directions on purpose: one decision branch, one design, and whichever is
       picked up first must read the other rather than re-deriving it.
       *Trigger: either story being picked up, or a third arms-race series observed.*
+      **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** #50's Gate B
+      (cycle 27xgcofe9f) as its story §1 now reads it: the class was generalised in passes 5–6,
+      and passes 7–10 concerned further environment sources and the order and placement of the
+      checks — that this series was an arms race is not established. Candidate, not adopted: a
+      short method-or-alternatives statement at the existing loop halt. #50 does not carry it, and
+      canvas A5/T2a is a possible instance not verified there. This row's story is unchanged.
 - [ ] **A handback says nothing about how much context produced it.** When a gate loop stops and
       surfaces — §5's `clearly stuck → STOP and surface`, or the new scope stop beside it — the
       human decides whether to continue in the same session or start fresh, and one input that
@@ -279,6 +285,9 @@ driven by recurrence rather than by enthusiasm.
       trustworthy, and the false-green carve-out is the whole difficulty rather than a footnote.
       *Trigger: a cycle where instrument findings measurably starve product findings of passes,
       with both counted.*
+      **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** fic2
+      (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`) as further motivation only; this
+      row's trigger is still not shown.
 - [ ] **EXPERIMENTAL — pre-split heuristic for oversized tranches.** Proposed rule: a tranche
       exceeding a size signal (the report suggests >N new runners or steps) is split by subject
       at PLAN time. **Its factual premise is rejected as unverified, not merely caveated:** the
@@ -688,6 +697,11 @@ backlog.
         is "a separate later leaf"), widened to `AGENTS.md`: a short binding core, details
         loaded for the task at hand, clear ownership. Helpers load the rules their assignment
         needs, not none. AGENTS.md's Don't on replacing a decision procedure governs every cut.
+        **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** no kit guidance or
+        check keeps a project's own `AGENTS.md` within the always-loaded budget — 4e measures only
+        the `CLAUDE.md` template. Problem evidence: canvas's `AGENTS.md` at 126,332 bytes
+        (`docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md:11`). Trimming
+        canvas's own file is that project's work, not this backlog's.
       - **G3d — targeted operational fixes from measured incidents:** test re-runs and
         execution limits (the canvas battery) and a layout for per-cycle artifacts (SFX's
         `.context/` held 179 loose files: nonce, evidence, mutation and commit-draft files).
@@ -1068,10 +1082,13 @@ backlog.
       checkout): how the kit already prevents over-engineering in specs, plans and implementation,
       which gaps remain with evidence, and the smallest effective addition — deterministic checks
       where sensible, any new rule or tool only with shown benefit. Field evidence: #50's Gate B
-      (cycle 27xgcofe9f, 11 passes on the canary procedure's environment isolation, each repair
-      spawning an adjacent case). *Trigger: #50's handover boundary (fired 2026-10-07).*
+      (cycle 27xgcofe9f, 11 passes on the canary procedure's environment isolation; as the story's
+      §1 reads it since `a9743c4`, the class was generalised in passes 5–6 and later passes concerned
+      environment sources and check order). *Trigger: #50's handover boundary (fired 2026-10-07).*
       **2026-10-08:** intake done — story
-      `docs/superpowers/stories/2026-10-08-overengineering-check-story.md` is the single owner.
+      `docs/superpowers/stories/2026-10-08-overengineering-check-story.md` is the single owner;
+      spec `docs/superpowers/specs/2026-10-08-overengineering-check-design.md`; report
+      `docs/field-reports/2026-10-08-overengineering-check.md`.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,

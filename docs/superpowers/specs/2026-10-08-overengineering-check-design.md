@@ -45,6 +45,7 @@ Enforcement: **I** instruction only · **R** judged by a reviewer · **M** a scr
 | implementation | §3: "Every changed line should trace directly to the user's request." | `CLAUDE.md:61` | I | scaffolded |
 | implementation (downstream) | dead-code and duplication checks named in the scaffolded CI battery, as a `TODO(stack)` | `plugins/dev-workflow/commands/workflow-init.md:2486-2487` | M once wired | scaffolded, as a TODO |
 | Gate B | standing lens "which existing statements does this diff falsify?" | `.claude/review-gates.md:993` | R | scaffolded |
+| Gate B | the pinned reviewer's own templates ask "Was anything over-engineered or unnecessarily added?" (spec branch) and "No scope creep?" (quality branch); `reviewType: full` runs both | `.mcp.json:6` pins `mcp-codex-dev@1.0.1`; its `templates/spec-reviewer.md:47-50`, `templates/code-reviewer.md:47` (outside this repo, in the installed package) | R | scaffolded (`/workflow-init` writes the same pin, `plugins/dev-workflow/commands/workflow-init.md:2392`) |
 | review loop | Minor and Nit "buy no repair round"; scope stop: "size is not the test, novelty of the question is"; two tells make stop-and-surface mandatory | `.claude/review-gates.md:1184`, `:563`, `:637` | I | scaffolded |
 | hardening | "not always the highest" rung; prefer existing rules over new dependencies | `plugins/dev-workflow/skills/harden-finding/SKILL.md:39`, `:86` | I | plugin skill |
 | prompts | "Token-lean"; delete a claim at its fourth correction; test with instructions removed on a model upgrade | `docs/prompt-standards.md:56`, `:98`, `:127` | R | scaffolded |
@@ -52,17 +53,17 @@ Enforcement: **I** instruction only · **R** judged by a reviewer · **M** a scr
 | size | 4e: 20,000-character budget for the scaffolded `CLAUDE.md` template; it does not check "this repository's own instruction files" | `scripts/check-invariants.sh:650-730`, `:666` | M | this repo (it guards the template) |
 | effort | `loop-usefulness` warning light; "It does not say whether a loop was worth its effort" | `README.md:179` | report | this repo |
 
-Phases with nothing found: no Gate A or Gate B prompt question asks about unneeded scope; Gate B checks against `AGENTS.md`, which has no simplicity invariant; nothing in this repository fails the build on growth of its own instruction files.
+Phases with nothing found: no Gate A prompt question asks about unneeded scope (Gate B's does, through the pinned reviewer's templates above); `AGENTS.md`, which Gate B checks against, has no simplicity invariant; nothing in this repository fails the build on growth of its own instruction files.
 
 ## 4. Candidate gaps and their fates (story AC-2, AC-3, AC-7)
 
-Each candidate is judged on story AC-4 (an observed instance it would have prevented or caught, plus a check that fails without it) and on cost or redundancy. A missing comparison group is not a criterion (story AC-9).
+`todos.md` line numbers in this spec are as of `c9fce5e`; later notes move them, so each row is also named. Each candidate is judged on story AC-4 (an observed instance it would have prevented or caught, plus a check that fails without it) and on cost or redundancy. A missing comparison group is not a criterion (story AC-9).
 
 | Candidate | Observed instance | Check failing without it | Fate |
 |---|---|---|---|
 | Size-regression check for this repo's `CLAUDE.md` + `AGENTS.md` | `b18e7db`: 151,246 characters, over the 150,000 the client warned at (vision `:586-587`) | planned: 4g on the `b18e7db` contents (§5.4) | **closed here** |
 | Method or alternatives statement at the existing loop halt | #50 Gate B (cycle 27xgcofe9f) does not carry it: the class was generalised in passes 5 and 6 (story §1, as corrected in `a9743c4`); canvas A5/T2a is a possible instance, not verified here | not determinable without a new search | routed: note at the arms-race row, its story unchanged |
-| A Gate A/B question on unneeded scope | none: #50's growth came from accepted security findings, #49's robustness came from the reviewer | — | not evidenced; recorded in the report only |
+| A Gate A question on unneeded scope (Gate B already asks it, §3) | none: #50's growth came from accepted security findings, #49's robustness came from the reviewer | — | not evidenced; recorded in the report only |
 | Proportionality of review effort for instrument findings | fic2 (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`) as motivation; the proportionality row's own trigger (instrument findings measurably starving product findings, both counted) is not shown | — | routed: note at `todos.md` "EXPERIMENTAL — proportionality for findings whose subject is a test instrument" |
 | No kit guidance or check keeps a project's own `AGENTS.md` within the always-loaded budget (4e measures only the `CLAUDE.md` template, `scripts/check-invariants.sh:664-667`) | canvas `AGENTS.md` at 126,332 bytes (`docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md:11`); no combined character count of canvas's instruction files is recorded | — | routed: the kit-side gap is G3c's, which already covers "widened to `AGENTS.md`: a short binding core, details loaded for the task at hand" (`todos.md:687-690`); dated note with this evidence; the living-feature-docs pilot may help later but commissions an SFX pilot, not a canvas cleanup (its AC-2, AC-9) |
 
@@ -114,4 +115,4 @@ Only those two files, at fixed paths. Outside the measurement: the user's own `~
 
 ## 8. Gates
 
-Gate A on this spec, then on the plan; Gate B over the branch from its merge-base with `main`, which includes `781d9d4` (`todos.md`) and the story commits. The story's profile is standard/standard, so the floor is 3 and the security lens set applies. No triviality skip.
+Gate A on this spec, then on the plan; Gate B over the branch from its merge-base with `main`, which includes `781d9d4` (`todos.md`) and the story commits. The floor and the lens sets derive from the cited story's profile, read fresh at each pass. No triviality skip.
