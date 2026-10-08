@@ -28,8 +28,9 @@ does not repeat them.
 ## Evidence
 
 - **Counter-check on the historical contents**, run 2026-10-08:
-  - Setup: a copy of the tree at `9655adc` with only `CLAUDE.md` and `AGENTS.md` replaced by their
-    `b18e7db` contents.
+  - Setup: a copy of the tree at `f5d7740` (`git archive f5d7740`) with only `CLAUDE.md` and
+    `AGENTS.md` replaced by `git show b18e7db:<file>`; then `sh scripts/check-invariants.sh` in it.
+    First run at `9655adc`, a commit later folded into `f5d7740`, with the same result.
   - Result: exit 1, with 4g's line as the only failure: `repo instruction size: CLAUDE.md + AGENTS.md
     is 151246 characters, over the 150000 budget.`
   - The same check on the unmodified copy printed `invariant checks: ok`, exit 0.
