@@ -417,10 +417,11 @@ done
 #              fires`; no accept case moved (re-measured 2026-10-04 after the
 #              no-fence-before-the-next-section and rule-below-the-criteria cases were
 #              added).
-#   4e -> 7    every `4e:` reject fixture (6) and `4e template size parser failure
-#              fires`; no accept case moved (re-measured 2026-10-04 after the two-fence
-#              case was added). 4a, 4b and 4d were
-#              re-measured the same day after the shared fixtures changed: 20, 22, 22.
+#   4e -> 9    every `4e:` reject fixture (8) and `4e template size parser failure
+#              fires`; no accept case moved (re-measured 2026-10-08 after the empty- and
+#              non-numeric-count cases were added; 7 before). Deleting only the count guard
+#              flips exactly those two. 4a, 4b and 4d were re-measured on 2026-10-04 after
+#              the shared fixtures changed: 20, 22, 22.
 #   4f -> 32   every `4f:` reject fixture (31) and `4f change-record parser failure
 #              fires`; no accept case moved (re-measured 2026-10-05 after the fence-placement
 #              cases were added, PR #45 review; 29 before). 4a-4e re-measured the same day
@@ -924,6 +925,33 @@ te_case "4e: a short fence before an oversized one rejected"  1 "$(printf '### 2
 te_case "4e: missing command file rejected"                1 "@GONE@"
 inject_case "4e template size parser failure fires" awk '*tpl-size-scan*' \
   'CLAUDE.md template size parser failed'
+# A count that comes back empty or non-numeric must fail, not compare as false. The stub
+# `wc` answers the locale probe (stdin is the one character é) like the real one, passes
+# calls naming a file through to the real one (check 4g), and prints $2 for the 4e count.
+te_count_case() { # $1 = name, $2 = what wc prints for the template count
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin" "$work/r/fakebin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  real=$(command -v wc)
+  { printf '#!/bin/sh\n'
+    # shellcheck disable=SC2016  # deliberate: $@ must stay literal in the GENERATED script
+    printf 'for a in "$@"; do case "$a" in -*) ;; *) exec %s "$@" ;; esac; done\n' "$real"
+    # shellcheck disable=SC2016  # deliberate: $in and $(cat) belong to the GENERATED script
+    printf 'in=$(cat); [ "$in" = "%s" ] && { echo 1; exit 0; }\n' "$(printf '\303\251')"
+    printf 'printf "%%s\\n" %s\n' "'$2'"
+  } > "$work/r/fakebin/wc"
+  chmod +x "$work/r/fakebin/wc"
+  out=$( cd "$work/r" && PATH="$work/r/fakebin:$PATH" sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+  elif ! printf '%s' "$out" | grep -qF 'CLAUDE.md template size: the count is not a number'; then
+    fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+  else pass "$1"; fi
+}
+te_count_case "4e: an empty count rejected" ''
+te_count_case "4e: a non-numeric count rejected" 'x'
 
 # --- Prompt conformance: check 4d, the AC-<n> story template ---------------------------
 #
