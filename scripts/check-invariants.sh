@@ -719,6 +719,14 @@ else
              "a byte count would overstate every non-ASCII character"
       else
         tpl_chars=$(printf '%s\n' "$tpl_out" | sed '$d' | LC_ALL=$tpl_loc wc -m | tr -d ' ')
+        # The pipeline hides wc's status, and `[ "" -gt N ]` is an error that evaluates
+        # false — so an empty or non-numeric count must fail here, not pass below.
+        case "$tpl_chars" in
+          ''|*[!0-9]*)
+            fail "CLAUDE.md template size: the count is not a number; the result is untrustworthy." \
+                 "wc printed '$tpl_chars'"
+            tpl_chars=0 ;;
+        esac
         if [ "$tpl_chars" -gt "$TPL_BUDGET" ]; then
           fail "CLAUDE.md template size: the scaffolded CLAUDE.md is $tpl_chars characters, over the $TPL_BUDGET budget." \
                "keep §5 a pointer; the rules belong in the '### 2.1a' template"
