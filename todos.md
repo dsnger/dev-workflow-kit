@@ -245,6 +245,12 @@ driven by recurrence rather than by enthusiasm.
       recorded in both directions on purpose: one decision branch, one design, and whichever is
       picked up first must read the other rather than re-deriving it.
       *Trigger: either story being picked up, or a third arms-race series observed.*
+      **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** #50's Gate B
+      (cycle 27xgcofe9f) as its story §1 now reads it: the class was generalised in passes 5–6,
+      and passes 7–10 concerned further environment sources and the order and placement of the
+      checks — that this series was an arms race is not established. Candidate, not adopted: a
+      short method-or-alternatives statement at the existing loop halt. #50 does not carry it, and
+      canvas A5/T2a is a possible instance not verified there. This row's story is unchanged.
 - [ ] **A handback says nothing about how much context produced it.** When a gate loop stops and
       surfaces — §5's `clearly stuck → STOP and surface`, or the new scope stop beside it — the
       human decides whether to continue in the same session or start fresh, and one input that
@@ -279,6 +285,9 @@ driven by recurrence rather than by enthusiasm.
       trustworthy, and the false-green carve-out is the whole difficulty rather than a footnote.
       *Trigger: a cycle where instrument findings measurably starve product findings of passes,
       with both counted.*
+      **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** fic2
+      (`docs/field-reports/2026-08-26-fic2-cycle-evidence.md`) as further motivation only; this
+      row's trigger is still not shown.
 - [ ] **EXPERIMENTAL — pre-split heuristic for oversized tranches.** Proposed rule: a tranche
       exceeding a size signal (the report suggests >N new runners or steps) is split by subject
       at PLAN time. **Its factual premise is rejected as unverified, not merely caveated:** the
@@ -688,6 +697,11 @@ backlog.
         is "a separate later leaf"), widened to `AGENTS.md`: a short binding core, details
         loaded for the task at hand, clear ownership. Helpers load the rules their assignment
         needs, not none. AGENTS.md's Don't on replacing a decision procedure governs every cut.
+        **2026-10-08 (over-engineering check, `docs/superpowers/specs/2026-10-08-overengineering-check-design.md` §4):** no kit guidance or
+        check keeps a project's own `AGENTS.md` within the always-loaded budget — 4e measures only
+        the `CLAUDE.md` template. Problem evidence: canvas's `AGENTS.md` at 126,332 bytes
+        (`docs/superpowers/stories/2026-10-06-living-feature-docs-pilot-story.md:11`). Trimming
+        canvas's own file is that project's work, not this backlog's.
       - **G3d — targeted operational fixes from measured incidents:** test re-runs and
         execution limits (the canvas battery) and a layout for per-cycle artifacts (SFX's
         `.context/` held 179 loose files: nonce, evidence, mutation and commit-draft files).
@@ -958,7 +972,7 @@ backlog.
       control, automatic stops, new gate rules, full cost accounting. Starts through intake
       at the compact-planning release's handover boundary; this entry stays the single
       owner, no second dashboard entry.
-- [ ] **Optional codebase-memory MCP integration into task context.** **2026-10-07: first delivery in progress** — story `docs/superpowers/stories/2026-10-07-codebase-memory-mcp-bounded-context-story.md`, spec and plan beside it (dev-workflow 0.19.0); agents read-only, indexing stays the human's. Original record: Recorded with Daniel on
+- [ ] **Optional codebase-memory MCP integration into task context.** **2026-10-07: first delivery shipped in #50 (33e72e2)** — story `docs/superpowers/stories/2026-10-07-codebase-memory-mcp-bounded-context-story.md`, spec and plan beside it (dev-workflow 0.19.0); agents read-only, indexing stays the human's. Original record: Recorded with Daniel on
       2026-10-06: the next bounded unit after the first process-monitoring delivery (the row
       above), and not part of that row's story. Belongs to the existing context selection
       (CLAUDE.md §4 "Context, by task", 0.18.0): detect a server that is already present;
@@ -970,7 +984,7 @@ backlog.
       dependency instead of blocking the pilot silently.
       *Trigger: the first process-monitoring delivery is complete.* This entry records order and
       scope only; design starts at the trigger.
-- [ ] **Security concept, first effective delivery — routed through the MCP integration above.** **2026-10-07: first return given and first delivery in progress** through the same story (deny rules for the server's write tools, canary through the real client; spec §9 maps the rest to existing owners). Original record:
+- [ ] **Security concept, first effective delivery — routed through the MCP integration above.** **2026-10-07: first return given; first delivery shipped in #50 (33e72e2)** through the same story (deny rules for the server's write tools, canary through the real client; spec §9 maps the rest to existing owners). Original record:
       Recorded with Daniel on 2026-10-06 (16:34; his consolidated assignment replaces his 16:15
       security prompts; two precisions added at 16:38). Order: after the first process-monitoring delivery; its relevant
       requirements flow into the optional codebase-memory MCP integration (the row above). Neither
@@ -1058,6 +1072,23 @@ backlog.
       (local to the main checkout).
       *Trigger: the first process-monitoring delivery is complete.* This entry records order, scope
       and constraints only.
+      **2026-10-07 follow-up (from #50; recorded only, not implemented):** the gate hook's failure
+      note tells the agent to run `claude mcp list`, which starts every configured server —
+      codebase-memory included — on its real store. This falls under this row's "kit-instructed
+      tool and server launches" and "the hook stays within its invariants". Changing the hook text
+      is a plugin change with its own story and gates.
+- [ ] **Over-engineering check.** Daniel's assignment of 2026-10-07 18:49, verbatim in
+      `.context/intake-inputs/2026-10-07-overengineering-assignment.md` (local to the main
+      checkout): how the kit already prevents over-engineering in specs, plans and implementation,
+      which gaps remain with evidence, and the smallest effective addition — deterministic checks
+      where sensible, any new rule or tool only with shown benefit. Field evidence: #50's Gate B
+      (cycle 27xgcofe9f, 11 passes on the canary procedure's environment isolation; as the story's
+      §1 reads it since `a9743c4`, the class was generalised in passes 5–6 and later passes concerned
+      environment sources and check order). *Trigger: #50's handover boundary (fired 2026-10-07).*
+      **2026-10-08:** intake done — story
+      `docs/superpowers/stories/2026-10-08-overengineering-check-story.md` is the single owner;
+      spec `docs/superpowers/specs/2026-10-08-overengineering-check-design.md`; report
+      `docs/field-reports/2026-10-08-overengineering-check.md`.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,

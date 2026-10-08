@@ -22,8 +22,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d and 4f), and the size-budget check 4e, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e and 4f -- so a scratch
+# below (4a-4d and 4f), and the size-budget checks 4e and 4g, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f and 4g -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -31,7 +31,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, then 4f
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, then 4g
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -805,6 +805,65 @@ else
   fi
 fi
 # --- END check 4f ---
+
+# --- BEGIN check 4g ---
+# Size budget for THIS repository's always-loaded instruction files: CLAUDE.md plus
+# AGENTS.md (which CLAUDE.md imports), in characters under a UTF-8 locale, as 4e counts.
+# The budget, 150000, is this repository's own: main exceeded the 150.0k characters Claude
+# Code warned at when 4e was written (b18e7db, 151246), and this keeps that from recurring.
+# It does not claim any client's current limit.
+#
+# What it does NOT measure: anything but these two files at fixed paths — not the user's
+# own CLAUDE.md, memory, text that plugins, skills and hooks inject, .claude/review-gates.md
+# (read on demand), or a file CLAUDE.md might import later. Nothing locks the import set.
+#
+# It fails closed: a missing, non-regular or unreadable file, no UTF-8 locale, a failed
+# count, or a count that is not a number is a failure. An unchecked empty count would
+# pass, because `[ "" -gt N ]` is an error that evaluates false.
+IS_BUDGET=150000
+is_loc=''
+for l in C.UTF-8 en_US.UTF-8; do
+  if [ "$(printf '\303\251' | LC_ALL=$l wc -m | tr -d ' ')" = 1 ]; then is_loc=$l; break; fi
+done
+if [ -z "$is_loc" ]; then
+  fail "repo instruction size: no UTF-8 locale (C.UTF-8 or en_US.UTF-8), so characters cannot be counted." \
+       "a byte count would overstate every non-ASCII character"
+else
+  is_sum=0
+  for f in CLAUDE.md AGENTS.md; do
+    if [ ! -f "$f" ]; then
+      fail "repo instruction size: $f is missing or not a regular file, so the budget cannot be checked." \
+           "the two always-loaded instruction files live at the repository root"
+      is_sum=''
+    elif [ ! -r "$f" ]; then
+      fail "repo instruction size: $f is unreadable, so the budget cannot be checked." "check permissions"
+      is_sum=''
+    else
+      is_out=$(LC_ALL=$is_loc wc -m "$f"); is_st=$?
+      # Word splitting is the point: wc prints the count, then the file name.
+      # shellcheck disable=SC2086
+      set -- $is_out
+      is_n=${1:-}
+      if [ "$is_st" -ne 0 ]; then
+        fail "repo instruction size: counting $f failed; the result is untrustworthy." "wc exited $is_st"
+        is_sum=''
+      else
+        case "$is_n" in
+          ''|*[!0-9]*)
+            fail "repo instruction size: the count for $f is not a number; the result is untrustworthy." \
+                 "wc printed '$is_out'"
+            is_sum='' ;;
+          *) [ -n "$is_sum" ] && is_sum=$((is_sum + is_n)) ;;
+        esac
+      fi
+    fi
+  done
+  if [ -n "$is_sum" ] && [ "$is_sum" -gt "$IS_BUDGET" ]; then
+    fail "repo instruction size: CLAUDE.md + AGENTS.md is $is_sum characters, over the $IS_BUDGET budget." \
+         "move detail out of the always-loaded files, or raise the budget deliberately"
+  fi
+fi
+# --- END check 4g ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"
