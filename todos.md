@@ -958,7 +958,7 @@ backlog.
       control, automatic stops, new gate rules, full cost accounting. Starts through intake
       at the compact-planning release's handover boundary; this entry stays the single
       owner, no second dashboard entry.
-- [ ] **Optional codebase-memory MCP integration into task context.** **2026-10-07: first delivery in progress** — story `docs/superpowers/stories/2026-10-07-codebase-memory-mcp-bounded-context-story.md`, spec and plan beside it (dev-workflow 0.19.0); agents read-only, indexing stays the human's. Original record: Recorded with Daniel on
+- [ ] **Optional codebase-memory MCP integration into task context.** **2026-10-07: first delivery shipped in #50 (33e72e2)** — story `docs/superpowers/stories/2026-10-07-codebase-memory-mcp-bounded-context-story.md`, spec and plan beside it (dev-workflow 0.19.0); agents read-only, indexing stays the human's. Original record: Recorded with Daniel on
       2026-10-06: the next bounded unit after the first process-monitoring delivery (the row
       above), and not part of that row's story. Belongs to the existing context selection
       (CLAUDE.md §4 "Context, by task", 0.18.0): detect a server that is already present;
@@ -970,7 +970,7 @@ backlog.
       dependency instead of blocking the pilot silently.
       *Trigger: the first process-monitoring delivery is complete.* This entry records order and
       scope only; design starts at the trigger.
-- [ ] **Security concept, first effective delivery — routed through the MCP integration above.** **2026-10-07: first return given and first delivery in progress** through the same story (deny rules for the server's write tools, canary through the real client; spec §9 maps the rest to existing owners). Original record:
+- [ ] **Security concept, first effective delivery — routed through the MCP integration above.** **2026-10-07: first return given; first delivery shipped in #50 (33e72e2)** through the same story (deny rules for the server's write tools, canary through the real client; spec §9 maps the rest to existing owners). Original record:
       Recorded with Daniel on 2026-10-06 (16:34; his consolidated assignment replaces his 16:15
       security prompts; two precisions added at 16:38). Order: after the first process-monitoring delivery; its relevant
       requirements flow into the optional codebase-memory MCP integration (the row above). Neither
@@ -1058,6 +1058,20 @@ backlog.
       (local to the main checkout).
       *Trigger: the first process-monitoring delivery is complete.* This entry records order, scope
       and constraints only.
+      **2026-10-07 follow-up (from #50; recorded only, not implemented):** the gate hook's failure
+      note tells the agent to run `claude mcp list`, which starts every configured server —
+      codebase-memory included — on its real store. This falls under this row's "kit-instructed
+      tool and server launches" and "the hook stays within its invariants". Changing the hook text
+      is a plugin change with its own story and gates.
+- [ ] **Over-engineering check.** Daniel's assignment of 2026-10-07 18:49, verbatim in
+      `.context/intake-inputs/2026-10-07-overengineering-assignment.md` (local to the main
+      checkout): how the kit already prevents over-engineering in specs, plans and implementation,
+      which gaps remain with evidence, and the smallest effective addition — deterministic checks
+      where sensible, any new rule or tool only with shown benefit. Field evidence: #50's Gate B
+      (cycle 27xgcofe9f, 11 passes on the canary procedure's environment isolation, each repair
+      spawning an adjacent case). *Trigger: #50's handover boundary (fired 2026-10-07).*
+      **2026-10-08:** intake done — story
+      `docs/superpowers/stories/2026-10-08-overengineering-check-story.md` is the single owner.
 - [ ] **Review-loop usefulness — metrics, scoring and calibrated thresholds.**
       Requirement recorded with Daniel on 2026-09-17; owned by vision step 2c,
       presented in the dashboard. Define confirmed distinct finding yield,
