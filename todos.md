@@ -750,6 +750,25 @@ backlog.
       about the checking method (the arms-race remedy row), the rest of G3c and G3d, then the
       PR #47 intake correction (`## From PR #47`). None is a prerequisite of the
       living-feature-docs pilot.
+      **2026-10-09 — P5b pilot read (Daniel: "ja, mach den Eintrag").** Source: SFX
+      `.context/plan-form-pilot.md`; Gate-B curves in SFX commits `7a72bb4` (P5a) and `af2bdb9`
+      (P5b). P5a full-code plan vs P5b sketch plan:
+      - plan 660 KB vs 67 KB;
+      - Gate-A plan passes 6 vs 6, Blockers 2 vs 0, about 5.5 h vs about 50 min;
+      - Gate-B findings 4,5,1 vs 2,1,1;
+      - start to Gate-B close about 8–10 h vs about 3.7 h.
+      Conclusion: keep the compact plan as the default, since no cost was observed. **No saving is
+      shown.** P5b was more mechanical than P5a, the pass count did not fall (P5c later took 8),
+      and there are no token or cost numbers, only timestamps. The leaner plan also moved
+      decisions into execution: about 12 implementer rulings, and 28 vs 15 deferred task-level
+      Minors. Canvas has no compact-plan data yet (S2c is the first). Next, before step 3, per
+      plan (SFX P6b on, canvas S2c):
+      - Record review calls, tokens, passes and time with the existing
+        `scripts/run-analytics.py` and `scripts/live-effort.py`.
+      - Count late rulings by hand: no script counts them. The session running the plan counts
+        them in its project's pilot note (SFX `.context/plan-form-pilot.md`, canvas
+        `.context/a6-orchestration.md`).
+      AC-12 and AC-14 stay open.
 
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
