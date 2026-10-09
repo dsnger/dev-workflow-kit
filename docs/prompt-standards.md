@@ -71,7 +71,13 @@ Living references (consult, don't copy — copies go stale):
     round a loop that never terminates. This is a real failure: `/workflow-init`'s
     preflight reported "restart the session" for every not-loaded Codex, so a
     same-named server winning on scope precedence went undiagnosed through this repo's
-    own initialization.
+    own initialization. A result the prompt could not fully establish is reported as
+    undetermined, a state of its own, rather than as "protected", "absent" or
+    "permitted"; what follows from it is what the contract for the affected action
+    already says. Why: filing an undetermined result under the state that needs no
+    action removes a protection nobody decided to remove — a revision of `/workflow-init`
+    under review in PR #50 filed a partly readable MCP server as absent, which would have
+    left its write tools callable; Gate B caught it before it shipped.
 11. **Enforcement claims name their mechanism.** Any sentence saying something is
     enforced, caught, guaranteed or prevented names *what does it*, and the author
     verified that mechanism exists before writing the sentence — by reading the code,

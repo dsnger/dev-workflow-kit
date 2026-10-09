@@ -22,6 +22,17 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.20.0
+
+- **Prompt standard 10 gains a rule on undetermined results, with its why.** In the scaffolded
+  `docs/prompt-standards.md` template, a result a prompt could not fully establish is reported as
+  undetermined, a state of its own, rather than as "protected", "absent" or "permitted"; what
+  follows from it is what the contract for the affected action already says. It is an
+  instruction a reviewer checks; no mechanical check exists for it. It comes from PR #50's Gate B,
+  where `/workflow-init` filed a partly readable MCP server as absent.
+  - **Adopting:** re-run `/workflow-init` and take the changed item 10 in
+    `docs/prompt-standards.md`.
+
 ## 0.19.0
 
 - **Optional codebase-memory MCP integration, read-only for agents.** This is the first effective
