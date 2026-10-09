@@ -1,0 +1,2 @@
+MINOR | high | docs/hardening-log.md:142 | The new row calls this the tenth verification-masks-failure occurrence, but the prescribed anchored column-2 search finds seven earlier rows and eight including this one; continuing the prior row's incorrect ordinal does not establish the count | The ledger overstates the recurrence signal used to assess whether hardening holds | Append a Superseded rows entry correcting this row's ordinal and citing the canonical fingerprint rows as the source; preserve the append-only table
+END OF FINDINGS (1 total)

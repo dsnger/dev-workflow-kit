@@ -116,6 +116,23 @@ driven by recurrence rather than by enthusiasm.
       `docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md`. The
       reviewer-availability story closed without shipping the sequential-calls rider — it is a
       hook change, not a §5 prose edit, and the unchanged hook counts each call as a pass.*
+      **CLOSED 2026-10-09 by dev-workflow 0.21.0** (story above; spec
+      `docs/superpowers/specs/2026-10-09-sequential-branch-calls-hook-design.md`): two sequential
+      single-branch calls are the documented default in `.claude/review-gates.md` and the
+      `/workflow-init` template, and the hook counts a matched pair as one pass. `full` still
+      works and is still exposed to the race; detecting a race after the fact stays out of scope.
+- [ ] **The hook suite is not green on a host without `jq`, and nothing runs it there.**
+      Found on PR #55 (Greptile P1 led there): run with a PATH holding every tool but `jq`,
+      `codex-gate.test.sh` reports 19 failures, all in cases that predate that PR — section 19's
+      WIP-commit cases (the hook cannot attribute a WIP commit without `jq` and resets, as
+      designed, while the cases expect the counters kept) and section 39b's `sed` faults (its
+      comment says jq stays on the PATH; the prefix-PATH shapes inherit a host PATH that may
+      not have it). AGENTS.md invariant 4 says `jq` is optional, and CI and this machine both
+      have it, so the battery never sees the gap. PR #55 made its own new cases (section 42,
+      the 39a jq-present variant) skip or switch on `jq`; the older ones are unchanged.
+      Fix candidate: gate each `jq`-assuming case on `command -v jq` the way section 42 does,
+      and add a jq-free run of the suite to CI. *Trigger: the next change to the hook suite, or
+      a downstream report from a jq-free host.*
 - [ ] **§5 gives the finding-line severity by example only, never as a closed set.** The gate
       prompt shows `MAJOR | high | …` and tells the reader to filter to Blocker/Major, but never
       states the four permitted tokens, and the acceptance rule validates shape — terminator,
@@ -746,7 +763,7 @@ backlog.
         task context; the rule-file consolidation and the AGENTS.md widening stay in G3c.
       - G3d, the method lesson and the ledger note — kept.
       *Follow-up repairs, existing owners, this order:* reviewer-output collisions (row
-      "`reviewType: full` races"), durable learning from findings (Finding A), repeated findings
+      "`reviewType: full` races" — done 2026-10-09, dev-workflow 0.21.0), durable learning from findings (Finding A), repeated findings
       about the checking method (the arms-race remedy row), the rest of G3c and G3d, then the
       PR #47 intake correction (`## From PR #47`). None is a prerequisite of the
       living-feature-docs pilot.
@@ -1321,8 +1338,8 @@ backlog.
       *Trigger: a root `.md` file acquiring gate-relevant state.*
 - [ ] **Tier-2 counting and containment.** A same-family reviewer whose passes are worth
       counting, per `docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`.
-      The unchanged hook counts each call as a pass, so counting is part of the problem, not a
-      detail of it.
+      Before 0.21.0 the hook counted each call as a pass; it now credits a `full` call or a matched
+      `spec` + `quality` pair. Counting is still part of the problem, not a detail of it.
       *Trigger: the tier-2 story being picked up, or a second multi-day reviewer outage.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
