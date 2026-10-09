@@ -4,7 +4,8 @@
 # docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md (spec §5).
 # Runs the hook from this checkout and the hook from 205efd3 (dev-workflow 0.20.0) over the
 # same throwaway repository and the same payload sequence, under sh and dash, with jq and
-# with a jq-free PATH. Prints one line per checkpoint x hook x shell x jq mode and exits 1
+# with a jq-free PATH (the jq mode is skipped, with a skip line, on a host without jq).
+# Prints one line per checkpoint x hook x shell x jq mode and exits 1
 # if any expectation for the NEW hook, or the counterfactual for the OLD one, fails.
 # Run from the repository root: sh docs/superpowers/replays/2026-10-09-pair-counting/replay.sh
 set -u
@@ -50,6 +51,11 @@ expect() { if eval "$1"; then line "$2" ok "$3"; else line "$2" FAIL "$3"; fi; }
 for sh in sh dash; do
   shbin=$(command -v "$sh") || { printf 'skip: %s not found\n' "$sh"; continue; }
   for mode in jq nojq; do
+    # The jq mode runs on the host PATH; without jq there it would be the jq-free mode
+    # under the wrong expectations (PR #55, CodeRabbit).
+    if [ "$mode" = jq ] && ! command -v jq >/dev/null 2>&1; then
+      printf 'skip: jq mode under %s — no jq on this host\n' "$sh"; continue
+    fi
     for which in old new; do
       hook="$work/$which-hook.sh"
       # C1 — three uninterrupted pairs.

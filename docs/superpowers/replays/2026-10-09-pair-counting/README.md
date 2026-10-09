@@ -6,7 +6,8 @@ The named verification of the risk path for
 
 **What it shows.** The hook from this branch and the hook from `205efd3` (dev-workflow 0.20.0)
 read the same payloads, in the same throwaway repository, from the same empty `.context/`,
-under `sh` and `dash`, with `jq` and with a `jq`-free PATH:
+under `sh` and `dash`, with `jq` and with a `jq`-free PATH. On a host without `jq` the `jq`
+mode is skipped with a skip line, so such a run cannot show the `jq`-specific C3 behaviour:
 
 - **C1, three uninterrupted spec→quality pairs.** Old hook: 6 and a satisfied line (the
   counterfactual — the false ✓ the story describes). New hook: 3.
