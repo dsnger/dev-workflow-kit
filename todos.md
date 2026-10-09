@@ -761,10 +761,14 @@ backlog.
       shown.** P5b was more mechanical than P5a, the pass count did not fall (P5c later took 8),
       and there are no token or cost numbers, only timestamps. The leaner plan also moved
       decisions into execution: about 12 implementer rulings, and 28 vs 15 deferred task-level
-      Minors. Canvas has no compact-plan data yet (S2c is the first). Next, before step 3: record
-      tokens, passes, time and late rulings per plan (SFX P6b on, canvas S2c), using the
-      existing `scripts/run-analytics.py` and `scripts/live-effort.py`. AC-12 and AC-14 stay
-      open.
+      Minors. Canvas has no compact-plan data yet (S2c is the first). Next, before step 3, per
+      plan (SFX P6b on, canvas S2c):
+      - Record review calls, tokens, passes and time with the existing
+        `scripts/run-analytics.py` and `scripts/live-effort.py`.
+      - Count late rulings by hand: no script counts them. The session running the plan counts
+        them in its project's pilot note (SFX `.context/plan-form-pilot.md`, canvas
+        `.context/a6-orchestration.md`).
+      AC-12 and AC-14 stay open.
 
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
