@@ -9,7 +9,7 @@ _unrelated-seo-work/
 
 # Hook state. The adoption marker `.context/codex-gate.on` is meant to be committed
 # and shared; the mutable counters are per-clone scratch and must not be — a committed
-# passCount hands every fresh clone a pre-counted Gate-B pass.
+# pass count (`codex-gate.passes`) hands every fresh clone a pre-counted Gate-B pass.
 #
 # `codex-reviews/` is tracked from 2026-09-10, for the same reason `docs/field-reports/`
 # is: three field reports exist only because someone hand-carried per-pass counts out of

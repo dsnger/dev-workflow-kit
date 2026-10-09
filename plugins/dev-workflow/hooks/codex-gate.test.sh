@@ -53,8 +53,13 @@ mkdir -p .context
 # covers the non-adopted repo.
 : > .context/codex-gate.on
 state=".context/codex-gate.gateB"
-count=".context/codex-gate.passCount"
-fresh=".context/codex-gate.freshCount"
+count=".context/codex-gate.passes"
+fresh=".context/codex-gate.freshPasses"
+# The pending half of a single-branch pair, and the pre-0.21.0 per-call counter names
+# the hook retires (spec 2026-10-09 §3.1).
+pendb=".context/codex-gate.pendingBranch"
+old_count=".context/codex-gate.passCount"
+old_fresh=".context/codex-gate.freshCount"
 countA=".context/codex-gate.passCountA"
 floorf=".context/codex-gate.floor"
 toolsf=".context/codex-gate.tools"
@@ -127,14 +132,14 @@ mk_path() { # $1 = directory name under $sandbox, $2.. = commands to link
 # computes `unavailable` and takes a different branch, so a matrix claiming to compare
 # jq and jq-free would be comparing two different code paths. The oracle for that is
 # asserted below, right after the PATH is built.
-nojq=$(mk_path nojq cat grep sed head tr git mkdir rm cp mktemp awk shasum sha1sum cksum)
+nojq=$(mk_path nojq cat grep sed head tr git mkdir rm mv cp mktemp awk shasum sha1sum cksum)
 
 # A jq-free PATH whose `sed` fails ONLY for the fallback emitter's escaping pass. Prints
 # nothing when the real sed cannot be located, so the caller can skip its assertions.
 mk_sedfail_path() {
   _real=$(command -v sed 2>/dev/null) || return 0
   case "$_real" in /*) ;; *) return 0 ;; esac
-  _sd=$(mk_path sedfail cat grep head tr git mkdir rm cp mktemp awk shasum sha1sum cksum)
+  _sd=$(mk_path sedfail cat grep head tr git mkdir rm mv cp mktemp awk shasum sha1sum cksum)
   cat > "$_sd/sed" <<SH
 #!/bin/sh
 for a in "\$@"; do
@@ -146,12 +151,13 @@ SH
   printf '%s' "$_sd"
 }
 
-reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA"; }
+reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$pendb" "$old_count" "$old_fresh"; }
 # Full reset INCLUDING the opt-out marker and the three diagnostic markers. A section
 # that wants the gate off must set the marker after calling this.
 reset_all() {
   rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf" \
-        "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.*
+        "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.* \
+        "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.*
 }
 
 # 0. THE jq-FREE PATH IS USABLE. Asserted before anything depends on it: if tree_hash
@@ -1080,7 +1086,7 @@ printf '%s' "$out" | grep -q 'Codex gate state:' && pass "silent checksum -> gat
 # Absence is asserted by inverting the RESULT, not with `grep -v` — `grep -qv` means
 # "some line lacks the pattern", which is a different question and was observed to
 # return 1 regardless on the dev machine.
-printf '%s' "$out" | grep -qF 'no mcp__codex__review has run' \
+printf '%s' "$out" | grep -qF 'no mcp__codex__review has been credited' \
   && fail "silent checksum -> not the never-run branch" \
   || pass "silent checksum -> not the never-run branch"
 
@@ -1352,7 +1358,7 @@ reset_all
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint."
+expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has been credited (a single-branch call waiting for its partner, and a call whose request was rejected, write no fingerprint by design), the last credit's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint."
 expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 [ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
 [ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
@@ -1734,7 +1740,12 @@ cls_pay "pretty-printed payload" '{
 #      of them the classifier deciding anything. Their claim is about the locator, so they
 #      are asserted at that level, against the hook's OWN embedded program rather than a
 #      copy that could drift.
-extract_locate_awk() { sed -n "/^LOCATE_AWK='\$/,/^'\$/p" "$HOOK" | sed '1d;$d'; }
+# Since 0.21.0 the program is the shared JSON_AWK_FUNCS block followed by the locator's own
+# body, so the extraction joins the two exactly as the hook's assignment does.
+extract_locate_awk() {
+  sed -n "/^JSON_AWK_FUNCS='\$/,/^'\$/p" "$HOOK" | sed '1d;$d'
+  sed -n "/^LOCATE_AWK=\"\\\$JSON_AWK_FUNCS\"'\$/,/^'\$/p" "$HOOK" | sed '1d;$d'
+}
 LOCATE_PROG=$(extract_locate_awk)
 loc_verdict() { # $1 = a raw document -> located:<bytes> | nothing | refused
   _b=$(printf '%s' "$1" | awk "$LOCATE_PROG" 2>/dev/null); _r=$?
@@ -2119,7 +2130,7 @@ shim_run() { printf '%s' "$2" | PATH="$1:$PATH" "$HOOK_SH_BIN" "$HOOK"; }
 
 # 39a. awk faults. Input is a real FAILURE envelope — the one case where fail-open costs a
 #      real count, so `discards it anyway` would be fail-CLOSED on pass state.
-awk_absent=$(mk_path noawk cat grep sed head tr git mkdir rm cp mktemp jq shasum sha1sum cksum)
+awk_absent=$(mk_path noawk cat grep sed head tr git mkdir rm mv cp mktemp jq shasum sha1sum cksum)
 awk_fail=$(mk_shim awkfail awk 'exit 3')
 # The partial shim exits 2, not 1: status 1 is the locator saying "unambiguously nothing
 # there", a DOCUMENTED verdict a healthy awk returns. A shim exiting 1 would be asserting
@@ -2156,6 +2167,35 @@ for pair in "absent:$awk_absent:absolute" "nonzero:$awk_fail:prefix" "partial:$a
   printf '%s' "$(disc_payload failure mcp__codex__exec)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK" >/dev/null
   [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "awk $shape: exec counts (fail-open)" \
                                          || fail "awk $shape: exec counts (fail-open)"
+done
+reset_all
+# 39a, jq-free. Without jq the Gate-B request reader needs awk, so a broken awk makes the
+# request unreadable: no credit and no fingerprint write (spec 2026-10-09 §3.2, plan Task 2).
+# Gate A does not read the request, so its fail-open count is unchanged.
+awk_absent_nojq=$(mk_path noawknojq cat grep sed head tr git mkdir rm mv cp mktemp shasum sha1sum cksum)
+for pair in "absent:$awk_absent_nojq:absolute" "nonzero:$awk_fail:prefix" "partial:$awk_partial:prefix"; do
+  shape=${pair%%:*}; rest=${pair#*:}; d=${rest%:*}; mode=${rest##*:}
+  if [ -z "$d" ]; then
+    skip "awk fault '$shape' without jq — shim could not be built; its assertions did not run"
+    continue
+  fi
+  if [ "$mode" = absolute ]; then faultpath="$d"; else faultpath="$d:$nojq"; fi
+  PATH="$faultpath" command -v jq >/dev/null 2>&1 && { skip "awk fault '$shape' without jq — jq still present"; continue; }
+  printf 'x\n' | PATH="$faultpath" awk '{print}' >/dev/null 2>&1 && { skip "awk fault '$shape' without jq — awk still works"; continue; }
+  reset_all
+  out=$(printf '%s' "$(disc_payload failure mcp__codex__review)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK"); rc=$?
+  [ "$rc" = 0 ] && pass "awk $shape, no jq: exits 0" || fail "awk $shape, no jq: exits 0 (got $rc)"
+  [ "$(cat "$count" 2>/dev/null || echo 0)" = 0 ] && pass "awk $shape, no jq: review credits nothing" \
+                                                  || fail "awk $shape, no jq: review credits nothing"
+  [ -e "$state" ] && fail "awk $shape, no jq: writes no fingerprint" \
+                  || pass "awk $shape, no jq: writes no fingerprint"
+  printf '%s' "$out" | grep -q 'could not be read' \
+    && pass "awk $shape, no jq: says the request could not be read" \
+    || fail "awk $shape, no jq: says the request could not be read"
+  reset_all
+  printf '%s' "$(disc_payload failure mcp__codex__exec)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK" >/dev/null
+  [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "awk $shape, no jq: exec counts (fail-open)" \
+                                         || fail "awk $shape, no jq: exec counts (fail-open)"
 done
 reset_all
 
@@ -2304,7 +2344,7 @@ golden "unknown-tool note" "$(codextool mcp__codex__codex)" "$G_UNKNOWN_CTX" "$G
 #      routes nowhere, and classification is never reached: no class, no count, no
 #      disclosure. Read as unconditional, that guarantee would promise a message the hook
 #      has no path to emit — and invariant 1 still requires exit 0 through all of it.
-nosed=$(mk_path nosed cat grep head tr git mkdir rm cp mktemp awk shasum sha1sum cksum)
+nosed=$(mk_path nosed cat grep head tr git mkdir rm mv cp mktemp awk shasum sha1sum cksum)
 if PATH="$nosed" command -v sed >/dev/null 2>&1 || PATH="$nosed" command -v jq >/dev/null 2>&1; then
   skip "no-route oracle — could not build a PATH lacking both jq and sed"
 else
@@ -2484,6 +2524,303 @@ for _r in normal nojq; do
   fi
 done
 reset_all
+
+# 42. SEQUENTIAL SINGLE-BRANCH CALLS (spec docs/superpowers/specs/2026-10-09-sequential-
+#     branch-calls-hook-design.md, story AC-1..AC-5). A `spec` call and a `quality` call
+#     on identical 40-hex baseSha/headSha are ONE pass; a lone branch counts nothing.
+#     Request fields come from `tool_input` only. Every case runs under jq and jq-free.
+B1=1111111111111111111111111111111111111111
+B2=4444444444444444444444444444444444444444
+H1=2222222222222222222222222222222222222222
+H2=3333333333333333333333333333333333333333
+SEEDFP=seeded-fingerprint-not-a-real-one
+# $1 = tool_input JSON, $2 = tool_response JSON (default: a real success envelope)
+rvp() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":%s,"tool_response":%s}' "$1" "${2:-$(resp_success)}"; }
+ti() { printf '{"reviewType":"%s","baseSha":"%s","headSha":"%s"}' "$1" "$2" "$3"; }
+# Every section-42 hook invocation records a nonzero exit in a file, so the record survives
+# command substitutions and background jobs; one assertion at the end reads it (AC-5, inv. 1).
+rc42f="$sandbox/rc42"; : > "$rc42f"
+chk42() { "$@"; _rc42=$?; [ "$_rc42" = 0 ] || printf '%s %s: %s\n' "$m42" "$_rc42" "$1" >> "$rc42f"; return "$_rc42"; }
+r42() { if [ "$m42" = nojq ]; then chk42 nojq_run "$1"; else chk42 run "$1"; fi; }
+br() { r42 "$(rvp "$(ti "$1" "$2" "$3")" "${4:-}")"; }       # capturing branch call
+seed42() { printf '%s' 5 > "$count"; printf '%s' 2 > "$fresh"; printf '%s' "$SEEDFP" > "$state"
+           printf '%s' "spec $B1 $H1" > "$pendb"; }
+# The preservation oracle: no-credit paths leave the counters and the fingerprint alone,
+# and (where §3.2 says so) the pending record too.
+kept42() { # $1 = label, $2 = "pend" to also require the pending record unchanged
+  [ "$(cat "$count" 2>/dev/null)" = 5 ] && [ "$(cat "$fresh" 2>/dev/null)" = 2 ] \
+    && [ "$(cat "$state" 2>/dev/null)" = "$SEEDFP" ] \
+    && pass "42/$m42: $1 — counters and fingerprint unchanged" \
+    || fail "42/$m42: $1 — counters and fingerprint unchanged (passes=$(cat "$count" 2>/dev/null) fresh=$(cat "$fresh" 2>/dev/null))"
+  if [ "${2:-}" = pend ]; then
+    [ "$(cat "$pendb" 2>/dev/null)" = "spec $B1 $H1" ] \
+      && pass "42/$m42: $1 — pending record unchanged" \
+      || fail "42/$m42: $1 — pending record unchanged (got [$(cat "$pendb" 2>/dev/null)])"
+  fi
+}
+cnt() { cat "$count" 2>/dev/null || echo 0; }
+eq42() { [ "$2" = "$3" ] && pass "42/$m42: $1" || fail "42/$m42: $1 (got [$2], want [$3])"; }
+has42() { printf '%s' "$2" | grep -q "$3" && pass "42/$m42: $1" || fail "42/$m42: $1 (no [$3])"; }
+
+PATH="$nojq" command -v mv >/dev/null 2>&1 \
+  && pass "42: the jq-free PATH carries mv, so a claim can succeed there" \
+  || fail "42: the jq-free PATH carries mv, so a claim can succeed there"
+
+real_mv=$(command -v mv)
+mv_vanish=$(mk_shim mvvanish mv "case \"\$1\" in *codex-gate.pendingBranch) rm -f \"\$1\" ;; esac
+exec $real_mv \"\$@\"")
+if [ -n "$mv_vanish" ]; then
+  printf x > "$sandbox/mvv-a"; PATH="$mv_vanish:$PATH" mv "$sandbox/mvv-a" "$sandbox/mvv-b" 2>/dev/null
+  printf x > "$sandbox/codex-gate.pendingBranch"
+  if [ -e "$sandbox/mvv-b" ] && ! PATH="$mv_vanish:$PATH" mv "$sandbox/codex-gate.pendingBranch" "$sandbox/mvv-c" 2>/dev/null \
+     && [ ! -e "$sandbox/codex-gate.pendingBranch" ] && [ ! -e "$sandbox/mvv-c" ]; then
+    pass "42: the mv shim moves ordinary files and makes a pending-file claim fail"
+  else
+    fail "42: the mv shim moves ordinary files and makes a pending-file claim fail"; mv_vanish=''
+  fi
+  rm -f "$sandbox/mvv-a" "$sandbox/mvv-b" "$sandbox/mvv-c"
+fi
+
+for m42 in normal nojq; do
+  # AC-1 — three pairs are three passes, and the commit check reports them as satisfied.
+  reset_all
+  for _p in 1 2 3; do br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" >/dev/null; done
+  eq42 "AC-1: three spec->quality pairs count 3" "$(cnt)" 3
+  [ -e "$pendb" ] && fail "42/$m42: AC-1: no pending branch left after complete pairs" \
+                  || pass "42/$m42: AC-1: no pending branch left after complete pairs"
+  out=$(chk42 commitpre)
+  has42 "AC-1: commit check reports the floor met" "$out" '3/3 pass(es) this cycle'
+  # AC-2 — a lone branch is not counted, and the commit check says so.
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" >/dev/null
+  out=$(br spec "$B1" "$H1")
+  eq42 "AC-2: pair + lone spec counts 1" "$(cnt)" 1
+  has42 "AC-2: the lone branch says it is recorded and awaited" "$out" 'this review branch is recorded'
+  out=$(chk42 commitpre)
+  has42 "AC-2: commit check carries the pending note" "$out" 'pending-branch state is present'
+  reset_all
+  for _p in 1 2 3; do br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" >/dev/null; done
+  br spec "$B1" "$H2" >/dev/null
+  out=$(chk42 commitpre)
+  has42 "AC-2: three pairs + lone spec still print the satisfied line" "$out" '3/3 pass(es) this cycle'
+  has42 "AC-2: ...and the pending note beside it" "$out" 'pending-branch state is present'
+  # AC-3 — full and absent reviewType count one each, as before.
+  reset_all
+  r42 "$(rvp '{}')" >/dev/null
+  eq42 "AC-3: absent reviewType counts 1" "$(cnt)" 1
+  r42 "$(rvp "$(ti full "$B1" "$H1")")" >/dev/null
+  eq42 "AC-3: reviewType full counts 1 more" "$(cnt)" 2
+  # AC-4 — the pair state machine.
+  reset_all
+  br spec "$B1" "$H1" "$(resp_from shape1-fast-fail)" >/dev/null
+  eq42 "AC-4: failed first branch counts nothing" "$(cnt)" 0
+  [ -e "$pendb" ] && fail "42/$m42: AC-4: failed first branch records nothing" \
+                  || pass "42/$m42: AC-4: failed first branch records nothing"
+  br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" >/dev/null
+  eq42 "AC-4: retry then partner counts 1" "$(cnt)" 1
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" "$(resp_from shape1-fast-fail)" >/dev/null
+  eq42 "AC-4: failed second branch counts nothing" "$(cnt)" 0
+  eq42 "AC-4: failed second branch keeps the pending half" "$(cat "$pendb" 2>/dev/null)" "spec $B1 $H1"
+  reset_all
+  br quality "$B1" "$H1" >/dev/null; br spec "$B1" "$H1" >/dev/null
+  eq42 "AC-4: quality before spec counts 1" "$(cnt)" 1
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; br spec "$B1" "$H2" >/dev/null
+  eq42 "AC-4: same branch twice counts nothing" "$(cnt)" 0
+  eq42 "AC-4: same branch twice replaces the pending half" "$(cat "$pendb" 2>/dev/null)" "spec $B1 $H2"
+  for _rt in spec quality; do
+    if [ "$_rt" = spec ]; then _ot=quality; else _ot=spec; fi
+    reset_all
+    br "$_rt" "$B1" "$H1" >/dev/null; br "$_rt" "$B1" "$H1" >/dev/null
+    eq42 "AC-4: $_rt twice on identical SHAs counts nothing" "$(cnt)" 0
+    eq42 "AC-4: ...and keeps one $_rt half pending" "$(cat "$pendb" 2>/dev/null)" "$_rt $B1 $H1"
+    br "$_ot" "$B1" "$H1" >/dev/null
+    eq42 "AC-4: ...then $_ot on those SHAs counts 1" "$(cnt)" 1
+  done
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; br quality "$B2" "$H1" >/dev/null
+  eq42 "AC-4: same head, different base counts nothing" "$(cnt)" 0
+  eq42 "AC-4: ...and the later call becomes the pending half" "$(cat "$pendb" 2>/dev/null)" "quality $B2 $H1"
+  br spec "$B2" "$H1" >/dev/null
+  eq42 "AC-4: a partner on that base pairs with it" "$(cnt)" 1
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; chk42 commitpost
+  [ -e "$pendb" ] && fail "42/$m42: AC-4: a non-WIP commit removes the pending half" \
+                  || pass "42/$m42: AC-4: a non-WIP commit removes the pending half"
+  reset_all
+  br spec "$B1" "$H1" >/dev/null; r42 "$(rvp "$(ti full "$B1" "$H1")")" >/dev/null
+  eq42 "AC-4: full with a pending half counts 1" "$(cnt)" 1
+  [ -e "$pendb" ] && fail "42/$m42: AC-4: full retires the pending half" \
+                  || pass "42/$m42: AC-4: full retires the pending half"
+  # Request rejections — each under the preservation oracle.
+  for _bad in HEAD 2222222 2222222222222222222222222222222222222AAA; do
+    reset_all; seed42; out=$(br quality "$B1" "$_bad")
+    kept42 "unusable headSha [$_bad]" pend
+    has42 "unusable headSha [$_bad] says why" "$out" 'cannot be paired'
+  done
+  reset_all; seed42; out=$(r42 "$(rvp "$(ti both "$B1" "$H1")")")
+  kept42 "unknown reviewType" pend
+  has42 "unknown reviewType is named" "$out" 'reviewType value'
+  for _ti in null '"spec"'; do
+    reset_all; seed42; out=$(r42 "$(rvp "$_ti")")
+    kept42 "tool_input $_ti is uncertain" pend
+    has42 "tool_input $_ti says the request could not be read" "$out" 'could not be read'
+  done
+  reset_all; seed42
+  out=$(r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_response":%s}' "$(resp_success)")")
+  kept42 "missing tool_input is uncertain" pend
+  reset_all; seed42; r42 "$(rvp "$(printf '{"reviewType":"quality","baseSha":"%s","headSha":"%s\\n"}' "$B1" "$H1")")" >/dev/null
+  kept42 "headSha with a trailing escaped newline is unusable" pend
+  # 39 hex + a newline is 40 characters, and jq's `$` also matches before a final newline,
+  # so a length check plus an anchored regex would accept it (final review, Important).
+  H39=$(printf '%s' "$H1" | cut -c1-39); B39=$(printf '%s' "$B1" | cut -c1-39)
+  reset_all; seed42; r42 "$(rvp "$(printf '{"reviewType":"quality","baseSha":"%s","headSha":"%s\\n"}' "$B1" "$H39")")" >/dev/null
+  kept42 "headSha of 39 hex plus an escaped newline is unusable" pend
+  reset_all; seed42; r42 "$(rvp "$(printf '{"reviewType":"quality","baseSha":"%s\\n","headSha":"%s"}' "$B39" "$H1")")" >/dev/null
+  kept42 "baseSha of 39 hex plus an escaped newline is unusable" pend
+  for _rt in full spec; do
+    reset_all; seed42; r42 "$(rvp "$(printf '{"reviewType":"%s\\n","baseSha":"%s","headSha":"%s"}' "$_rt" "$B1" "$H1")")" >/dev/null
+    kept42 "reviewType $_rt with a trailing escaped newline is not $_rt" pend
+  done
+  # Field ownership — values come from tool_input and nowhere else.
+  reset_all; seed42
+  r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"reviewType":"quality","baseSha":"%s"},"extra":{"headSha":"%s"},"tool_response":%s}' "$B1" "$H1" "$(resp_success)")" >/dev/null
+  kept42 "headSha in a sibling object is not read" pend
+  reset_all; seed42
+  r42 "$(rvp "$(printf '{"reviewType":"quality","baseSha":"%s"}' "$B1")" "$(resp "{\\\"headSha\\\": \\\"$H1\\\"}")")" >/dev/null
+  kept42 "headSha inside tool_response is not read" pend
+  reset_all
+  br spec "$B1" "$H1" >/dev/null
+  r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_response":%s,"tool_input":%s}' "$(resp_success)" "$(ti quality "$B1" "$H1")")" >/dev/null
+  eq42 "tool_response before tool_input pairs normally" "$(cnt)" 1
+  reset_all
+  br spec "$B1" "$H1" >/dev/null
+  r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","decoy":"x \\"tool_input\\":{\\"reviewType\\":\\"full\\"}","tool_input":%s,"tool_response":%s}' "$(ti quality "$B1" "$H1")" "$(resp_success)")" >/dev/null
+  eq42 "an escaped tool_input inside a string is not the key" "$(cnt)" 1
+  # Synthetic: the full capture, retargeted to the two branches.
+  reset_all
+  sed 's/"reviewType":"full"/"reviewType":"spec"/' "$FIXTURES/shape0-success-review.json" > "$sandbox/syn-spec.json"
+  sed 's/"reviewType":"full"/"reviewType":"quality"/' "$FIXTURES/shape0-success-review.json" > "$sandbox/syn-quality.json"
+  r42 "$(cat "$sandbox/syn-spec.json")" >/dev/null; r42 "$(cat "$sandbox/syn-quality.json")" >/dev/null
+  eq42 "synthetic (full capture retargeted): spec + quality count 1" "$(cnt)" 1
+  # Upgrade: a legacy per-call count is ignored and retired.
+  reset_all; printf '%s' 3 > "$old_count"; printf '%s' 3 > "$old_fresh"
+  br spec "$B1" "$H1" >/dev/null; br quality "$B1" "$H1" >/dev/null
+  eq42 "upgrade: legacy passCount 3 is ignored" "$(cnt)" 1
+  [ -e "$old_count" ] || [ -e "$old_fresh" ] \
+    && fail "42/$m42: upgrade: legacy counter names are retired" \
+    || pass "42/$m42: upgrade: legacy counter names are retired"
+  # Retirement runs on every call classification lets through, rejected requests included.
+  for _rq in "$(ti quality "$B1" HEAD)" "$(ti both "$B1" "$H1")" null; do
+    reset_all; seed42; printf '%s' 3 > "$old_count"; printf '%s' 3 > "$old_fresh"
+    r42 "$(rvp "$_rq")" >/dev/null
+    kept42 "rejected request [$_rq]" pend
+    [ -e "$old_count" ] || [ -e "$old_fresh" ] \
+      && fail "42/$m42: rejected request [$_rq] still retires the legacy names" \
+      || pass "42/$m42: rejected request [$_rq] still retires the legacy names"
+  done
+  reset_all; printf '%s' 3 > "$old_count"; chk42 commitpost
+  [ -e "$old_count" ] && fail "42/$m42: a reset removes the legacy names too" \
+                      || pass "42/$m42: a reset removes the legacy names too"
+  # Stale state that cannot be removed blocks the credit.
+  reset_all; seed42; rm -f "$pendb"; mkdir -p "$old_count/x"
+  out=$(r42 "$(rvp "$(ti full "$B1" "$H1")")")
+  kept42 "a legacy counter that cannot be removed blocks credit"
+  has42 "...and the note names that path" "$out" 'codex-gate.passCount'
+  rm -rf "$old_count"
+  # Unwritable .context: the claim fails, so nothing is credited.
+  reset_all; seed42; chmod a-w .context
+  out=$(br quality "$B1" "$H1")
+  chmod u+w .context
+  kept42 "read-only .context: the claim fails, quality credits nothing"
+  reset_all; seed42; chmod a-w .context
+  out=$(r42 "$(rvp "$(ti full "$B1" "$H1")")")
+  chmod u+w .context
+  kept42 "read-only .context: a pending half that cannot be retired blocks full" pend
+  has42 "...and the note names the pending path" "$out" 'codex-gate.pendingBranch'
+  reset_all; chmod a-w .context
+  out=$(br spec "$B1" "$H1")
+  chmod u+w .context
+  has42 "read-only .context, no pending file: recording could not be confirmed" "$out" 'could not be confirmed'
+  # The claim is exclusive: a claim file is never read, and a vanished pending file
+  # credits nothing. A hook that read the pending file without renaming it first would
+  # still fail the first assertion below only if the file were there — so the second
+  # case plants the record ONLY where a non-claiming reader would never look.
+  reset_all
+  printf '%s' "spec $B1 $H1" > .context/codex-gate.pendingClaim.99999
+  br quality "$B1" "$H1" >/dev/null
+  eq42 "a leftover claim file is never read" "$(cnt)" 0
+  # The pending file vanishes immediately before the rename, as when another hook process
+  # claims it first: an mv shim removes it and then runs the real mv, which fails. A hook
+  # that read the pending file without renaming it would credit here, so the count
+  # assertion below is the one that version fails.
+  if [ -n "$mv_vanish" ]; then
+    reset_all; seed42
+    if [ "$m42" = nojq ]; then _vp="$mv_vanish:$nojq"; else _vp="$mv_vanish:$PATH"; fi
+    out=$(printf '%s' "$(rvp "$(ti quality "$B1" "$H1")")" | PATH="$_vp" "$HOOK_SH_BIN" "$HOOK"); _rc=$?
+    eq42 "vanished before the rename: exits 0" "$_rc" 0
+    kept42 "vanished before the rename credits nothing"
+  else
+    skip "42/$m42: vanished-before-rename — mv shim could not be built"
+  fi
+  # Unverified disclosure: a rejected call creates no new disclosure and no debt.
+  reset_all
+  out=$(r42 "$(rvp "$(ti spec "$B1" HEAD)" "$(unrec)")")
+  printf '%s' "$out" | grep -q 'classified at least one gate call as countable' \
+    && fail "42/$m42: a rejected unrecognized call discloses nothing" \
+    || pass "42/$m42: a rejected unrecognized call discloses nothing"
+  [ -f "$pendf" ] && fail "42/$m42: a rejected unrecognized call leaves no debt" \
+                  || pass "42/$m42: a rejected unrecognized call leaves no debt"
+done
+# jq-free only: a key spelled with a unicode escape might be reviewType, so it is uncertain.
+m42=nojq; reset_all; seed42
+r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"\\u0072eviewType":"spec","baseSha":"%s","headSha":"%s"},"tool_response":%s}' "$B1" "$H1" "$(resp_success)")" >/dev/null
+kept42 "a unicode-escaped key is uncertain without jq" pend
+# ...while jq decodes it to spec, so it pairs with the seeded half's partner shape.
+m42=normal; reset_all
+br quality "$B1" "$H1" >/dev/null
+r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"\\u0072eviewType":"spec","baseSha":"%s","headSha":"%s"},"tool_response":%s}' "$B1" "$H1" "$(resp_success)")" >/dev/null
+eq42 "a unicode-escaped key decodes to spec under jq" "$(cnt)" 1
+# jq-free only: a truncated payload is uncertain; the jq path refuses it at routing.
+m42=nojq; reset_all; seed42
+r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"reviewType":"spec","baseSha":"%s"' "$B1")" >/dev/null; rc=$?
+eq42 "truncated payload exits 0" "$rc" 0
+kept42 "truncated payload is uncertain" pend
+m42=normal; reset_all
+out=$(r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"reviewType":"spec"')"); rc=$?
+eq42 "truncated payload exits 0" "$rc" 0
+eq42 "truncated payload is not routed" "$out" ''
+# jq with a WIP commit between the branches: the second carries the new head, no pair.
+m42=normal; reset_all
+wip_base=$(git rev-parse HEAD)
+br spec "$wip_base" "$H1" >/dev/null
+chk42 wip "git commit -m 'wip: snapshot'" >/dev/null
+git commit -q --allow-empty -m 'wip: snapshot' >/dev/null 2>&1
+chk42 run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1","tool_input":{"command":"git commit -m \"wip: snapshot\""}}' >/dev/null
+eq42 "WIP commit between branches keeps the pending half" "$(cat "$pendb" 2>/dev/null)" "spec $wip_base $H1"
+br quality "$wip_base" "$(git rev-parse HEAD)" >/dev/null
+eq42 "WIP commit between branches: the new head does not pair" "$(cnt)" 0
+git reset -q --soft HEAD~1 >/dev/null 2>&1
+# jq-free scan bound: a sibling past the ceiling before tool_input is uncertain, quickly.
+m42=nojq; reset_all; seed42
+big42=$(awk 'BEGIN{ s=sprintf("%1024s",""); gsub(/ /,"x",s); r=""; for(i=0;i<1100;i++) r=r s; printf "%s", r }')
+t0=$(date +%s)
+r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","big":"%s","tool_input":%s,"tool_response":%s}' "$big42" "$(ti quality "$B1" "$H1")" "$(resp_success)")" >/dev/null
+el=$(( $(date +%s) - t0 ))
+kept42 "a payload past the scan bound is uncertain" pend
+[ "$el" -le 10 ] && pass "42/nojq: the bounded refusal finished in ${el}s" || fail "42/nojq: the bounded refusal finished in ${el}s (limit 10s)"
+# Concurrency smoke, not proof (bump_count is a read-modify-write): two partners against
+# one pending half never credit more than one pass.
+m42=normal; over42=0
+for _i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  reset_all; printf '%s' "spec $B1 $H1" > "$pendb"
+  br quality "$B1" "$H1" >/dev/null & br quality "$B1" "$H1" >/dev/null & wait
+  [ "$(cnt)" -le 1 ] || over42=$((over42 + 1))
+done
+eq42 "concurrency smoke: no repetition credited more than one pass" "$over42" 0
+reset_all
+eq42 "every section-42 hook invocation exited 0" "$(cat "$rc42f")" ''
 
 reset_all
 echo "---"

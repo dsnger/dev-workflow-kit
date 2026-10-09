@@ -22,6 +22,47 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.21.0
+
+- **Gate B's default call shape is two sequential single-branch reviews, and the hook counts
+  the pair as one pass.** `reviewType: full` runs the spec and quality reviewers in parallel,
+  and nothing binds either to its own findings slot: on PR #23 both wrote both paths and the
+  spec branch's findings were lost while every shape check passed; it recurred in SFX P4c and
+  in this repository's PR #45 cycles. `.claude/review-gates.md` and `/workflow-init`'s template
+  now make `reviewType: spec`, then `reviewType: quality`, the default, each with the same
+  `baseSha` and `headSha` resolved to full 40-character object names, each naming and deleting
+  only its own slot. `full` still works and still counts as one pass; it is no longer the
+  default. Story: `docs/superpowers/stories/2026-08-14-sequential-branch-calls-hook-story.md`.
+  - **The hook reads the request.** `reviewType`, `baseSha` and `headSha` come from the direct
+    members of `tool_input` only (jq, or a bounded awk scan sharing the result locator's string
+    handling). A `spec` and a `quality` call on identical 40-character lowercase SHAs count as
+    one pass, in either order; a lone branch counts nothing and is kept as
+    `.context/codex-gate.pendingBranch`; a `spec` or `quality` call with an unusable SHA, an
+    unknown `reviewType` or a request it cannot read counts nothing and says why (a `full` call is
+    not checked for SHA usability, as before). The pending record is consumed by an atomic rename,
+    so one record credits at most one pass. A commit check with a pending half says so beside
+    the count. **Without jq**, an awk that cannot run now means no Gate-B credit for that call
+    (it used to count with a disclosure), because the request cannot be read.
+  - **Counters renamed:** `codex-gate.passCount`/`freshCount` counted calls; the new
+    `codex-gate.passes`/`freshPasses` count passes. A cycle spanning the upgrade starts the new
+    count at zero, and the hook retires the old names; a credit is withheld while a stale file it
+    must remove survives removal.
+  - **Rollback:** after downgrading, delete `.context/codex-gate.gateB`,
+    `.context/codex-gate.passes`, `.context/codex-gate.freshPasses`,
+    `.context/codex-gate.pendingBranch`, `.context/codex-gate.passCount` and
+    `.context/codex-gate.freshCount`. Skipping that step leaves state a later re-upgrade would
+    read, because the old hook never touches the new files. Cleanup does not make the old hook
+    pair: the scaffolded rules keep sequential `spec` then `quality` calls as the default, and the
+    0.20.0 hook counts each of those calls, so its count reaches its threshold before the logical
+    passes do. After a rollback, count logical passes yourself, or call `full`.
+  - **What this does not do:** it does not detect a `full` race after the fact; a review hook
+    running at the same moment as a commit's reset can still write counters after the reset, as
+    before; the counter still never reads a findings file, so a call that returns over an invalid
+    file counts and a fresh single-branch re-run can shift later pairing — discount every
+    incomplete pass whatever the counter says. The reader was tested on synthetic single-branch
+    payloads only (a `full` capture rewritten); no real single-branch payload was captured.
+  - **Adopting:** re-run `/workflow-init` and take the changed `.claude/review-gates.md`.
+
 ## 0.20.0
 
 - **Prompt standard 10 gains a rule on undetermined results, with its why.** In the scaffolded

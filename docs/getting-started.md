@@ -60,11 +60,11 @@ Mechanics states), then loops
 `mcp__codex__review` the same way: the derived floor, final clean. Invalidation is by
 **content** — any change to included content present when the hook runs, even from a
 formatter, makes the hook report that it cannot confirm the reviewed content. What that proves is bounded, and the hook's own
-source says so: the current fingerprint matches the one recorded on a counted call, which
+source says so: the current fingerprint matches the one recorded on a credited pass, which
 is not evidence that Codex read those bytes; `.context/` and untracked ignored paths are
 excluded, and staging counts, because the fingerprint covers the index and that is what
 a commit carries. On
-`✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the calls the hook counted this cycle, the hook's own reminder threshold, and the **consecutive** counted calls on the current fingerprint since it last changed. The first is not the calls you made: the hook withholds the count for a recognized failure envelope, the backgrounding notice, and a result it can get no text from. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges, and the message is what the hook checked, not
+`✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the passes the hook credited this cycle — one per `full` call or per `spec` + `quality` pair on the same `baseSha` and `headSha` — the hook's own reminder threshold, and the **consecutive** credited passes on the current fingerprint since it last changed. The first is not the calls you made: a single branch counts only together with its partner, and the hook withholds credit for a recognized failure envelope, the backgrounding notice, a result it can get no text from, and a request it cannot read or pair. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges, and the message is what the hook checked, not
 permission to close: §5's closure ordering says when the Gate-B cycle may close, and its
 *Finishing the cycle* operation says how — amend the WIP commit, or, where several `WIP:`
 snapshots piled up, `git reset --soft` to the parent of the first and commit once.

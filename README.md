@@ -61,7 +61,9 @@ old version until you restart it or run `/reload-plugins`.
   `exec` and `review`** — the gates key on those two tool names, and the pass counters
   additionally skip routed calls whose result the hook reads as failed, backgrounded, or
   yielding no usable text; a result it can read but not interpret still counts, and
-  normally says so once.
+  normally says so once. For Gate B the counter also reads the request: a `spec` and a
+  `quality` call on the same 40-character lowercase `baseSha` and `headSha` count as one pass, and a
+  lone branch counts as none.
   Use the `mcp-codex-dev` server `/workflow-init` pins, which has both. The official
   `codex mcp-server` is a *different* server exposing a single `codex` tool, which can't
   be attributed to Gate A (reviews text) or Gate B (reviews a diff): with it connected,
@@ -101,8 +103,8 @@ write into the findings slot afterwards, leaving a correctly terminated file fro
 run that no downstream check can detect. Stop that task by the id in the tool result — or
 await it if the result carries none — and delete the findings slot first. The hook's own
 backgrounding message carries that procedure; follow it there rather than from memory. If that harness prose ever changes, the hook can no longer recognize
-the notice and the call is *counted* instead, with a disclosure that says the count was
-made without inspection. That second outcome is why this setting is the defence rather
+the notice and the call is *counted* instead — credited as a pass, or recorded as half of one
+for a single branch — with a disclosure that says this was done without inspection. That second outcome is why this setting is the defence rather
 than the hook: the hook fails safe against today's wording, not against every future one.
 
 (`CLAUDE_CODE_AUTO_BACKGROUND_TIMEOUT_MS` appears in the 2.1.220 string table but was

@@ -107,7 +107,9 @@ was re-serialized.
 ## `shape0-success-review.json` — how the review capture was taken
 
 The other six fixtures are `mcp__codex__exec` payloads. This one covers
-`mcp__codex__review` in `reviewType: full`, the mode this project's Gate B uses, whose
+`mcp__codex__review` in `reviewType: full` — the mode this project's Gate B used when it was
+captured; since 0.21.0 the default is two single-branch calls, and the suite rewrites this
+capture's `reviewType` to make synthetic ones — whose
 envelope carries `specSessionId` and `qualitySessionId` alongside `success` and whose
 result text is a whole review rather than a word.
 

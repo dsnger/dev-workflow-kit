@@ -170,7 +170,7 @@ of current values and says so where it is stated.
 
 **What a pass is read from.** Every finding-derived predicate reads the validated findings file
 **or files** of the logical pass as **the concatenation of their finding lines after each file has
-been validated separately** — a `full` Gate-B pass has two, one branch alone is already an
+been validated separately** — a Gate-B pass has two — one per branch, whether one `full` call or two single-branch calls produced them — one branch alone is already an
 incomplete pass, each file's terminator is not a finding line, and a branch whose body is
 `NO FINDINGS` contributes an empty sequence rather than a line. **Which severity field each
 predicate reads is settled in Mechanics · Severity**, which is where that split lives and is not
@@ -179,7 +179,7 @@ standing over this cycle**, any **hold still standing**, and **every closure con
 has** — those above and this cycle's gate's. The scope triggers read the **current assigned fix
 set** as the absorb paragraph defines it, and the answers already given; the clearly-stuck reading
 adds its own coverage judgement. **A line in one branch file and a line in the other are distinct
-findings for holds and answers**, so a `full` pass asks twice rather than risk resuming over one it
+findings for holds and answers**, so a Gate-B pass asks twice rather than risk resuming over one it
 never asked about. **Within one running cycle an answer binds to the finding or question as the
 pass that raised it recorded them** — which is what an agent running the cycle can do with nothing
 written down. Recognising the same finding or question **across a lost session** has no mandatory
@@ -536,8 +536,7 @@ union of the scope every approved story or plan governing this change assigns to
 plus every finding this cycle has accepted at a membership stop together with any repair
 obligation accepted with it, minus every finding this cycle has declined.** **A decline excludes
 the finding it answers and nothing else**: it does not cancel a repair obligation that the
-approved scope, or another accepted finding, has independently put in the set. So where a `full`
-Gate-B pass's two branch files carry the same complaint, **each line is a finding of its own, owes
+approved scope, or another accepted finding, has independently put in the set. So where a Gate-B pass's two branch files carry the same complaint, **each line is a finding of its own, owes
 its own explicit answer, and each answer binds only its own line** — an acceptance puts its own
 finding in, a decline takes only its own finding out, and neither reads the other; the set is
 whatever the definition above then computes. **A declined finding stays declined for the cycle**,
@@ -707,12 +706,9 @@ Append to the gate prompt:
 > — or `INCOMPLETE | <cause> | <path>` if you could not write the file. An unwritten
 > file behind a normal-looking reply is the one outcome the reader cannot diagnose.
 
-**Gate B takes one file per branch** because `reviewType: full` runs the spec and
-quality reviewers in parallel from one `additionalContext`. Aimed at a single path they
-race, and the second writer leaves a correctly terminated, correctly counted file
-holding half the findings — with every check still passing.
+**Gate B takes one file per branch.** Under the default call shape each branch is its own sequential call writing its own slot, so no two reviewers write at once. `reviewType: full` runs the spec and quality reviewers in parallel from one `additionalContext`: aimed at a single path they race, and even with a path each, both reviewers have written both paths (PR #23) — the second writer leaves a correctly terminated, correctly counted file holding half the findings, with every check still passing. That race is `full`'s, and it is why `full` is not the default.
 
-**Before each call, delete every target file and confirm it is gone.** A call that dies
+**Before each call, delete every target file and confirm it is gone.** A single-branch call's target is its own slot only: deleting the partner's slot before the second call would destroy the completed branch's file. A call that dies
 part-way leaves the prior attempt's valid file behind, and no terminator can tell that
 from a fresh one. If a target survives deletion, stop and name the cause — path resolved
 against the wrong root, permissions, a *directory* at the target, or a file reappearing
@@ -732,9 +728,7 @@ terminator remain the only hard requirement, and a zero-finding pass needs no co
   `gate-a-plan-resume.md`, `gate-b-resume.md`. Cycle-stable, not pass-named: a note keyed
   to the interrupted pass number is exactly the file a resuming agent will not look for
   once the counter moves or an incomplete pass is discounted. Gate A runs separate spec
-  and plan loops, so those are two cycles; Gate B is one cycle with one note even under
-  `reviewType: full`, because the per-branch findings files race only since Codex's two
-  reviewers write them — the resume note is written by the outer agent, sequentially, and
+  and plan loops, so those are two cycles; Gate B is one cycle with one note even though each pass writes two branch files, because those files are written by Codex's reviewers, and race only under `reviewType: full` — the resume note is written by the outer agent, sequentially, and
   splitting it would create two records able to disagree about one shared recovery budget.
   Whoever runs the cycle writes it when useful, replaces it as the cycle moves, and
   deletes it once the cycle closes. Nothing depends on it existing.
@@ -854,8 +848,7 @@ had been invented per-session there before the protocol knew about them.)
 **Accept a pass only when** the file exists and is readable; its last line is exactly
 `END OF FINDINGS (<n> total)`; it contains exactly `<n>` finding lines *and nothing
 else* (or the single line `NO FINDINGS` when `<n>` is 0 — "n valid lines somewhere in
-the file" would accept a truncated file padded with fragments); and, for a `full` Gate-B
-pass, both branch files satisfy all of that. Anything else — missing, unreadable or
+the file" would accept a truncated file padded with fragments); and, for a Gate-B pass, both branch files satisfy all of that. Anything else — missing, unreadable or
 empty file, wrong path, malformed terminator, count mismatch, extra lines, one branch
 file, an `INCOMPLETE` reply — is an **INCOMPLETE pass**, which is not a review: don't
 act on the partial list, don't count it toward the floor, and don't read "no
@@ -882,16 +875,14 @@ re-run, only the failed branch for a single-branch resume — deleting both and 
 one makes the both-files check fail by construction, spending the attempt on a path that
 cannot succeed. Prefer a resume only when the reply shows the review ran and just the
 write failed: pass the `sessionId` from the original tool result back, and for a Gate-B
-branch pass its `reviewType` alongside (`spec` with `specSessionId`, `quality` with
-`qualitySessionId`) — the tool defaults to `full`, and a resume that omits it can run the
+branch pass its `reviewType` alongside (`spec` with `specSessionId`, `quality` with `qualitySessionId`), and the same `baseSha` and `headSha` as its partner branch, since the hook pairs a recovered branch with the waiting one only on those two exact values — the tool defaults to `full`, and a resume that omits it can run the
 other reviewer and write the wrong slot, which no check detects, because the file is
 well-formed and merely from the wrong branch. Whether a resumed session re-executes the
 write or just returns its prior summary is not established; if it returns the summary,
 that was the attempt. Spent and still incomplete → STOP and surface, naming which check
 failed.
 
-**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name **and on
-the result envelope**, and still never sees the file. Claude Code fires `PostToolUse`
+**What this does not do.** The hook counts on `PostToolUse`, keyed on tool name, **on the result envelope** and, for Gate B as of 0.21.0, **on the request**: a `spec` and a `quality` call on identical 40-character lowercase `baseSha` and `headSha` count as one pass, a `full` call or one with no `reviewType` as one — in both cases unless stale gate state the hook must remove first survives removal, which it names — and a lone branch, a `spec` or `quality` call with an unusable SHA, an unknown `reviewType` or a request it cannot read not at all (a `full` call is not checked for SHA usability). It still never sees the file. Claude Code fires `PostToolUse`
 after a *successful* call and routes a failed one to `PostToolUseFailure`, which the
 plugin registers no handler for — but do not infer from that which failures escape
 counting: the pinned `mcp-codex-dev` catches its own errors, executor timeouts and aborts
@@ -901,7 +892,7 @@ still looks like a successful *tool call* — but as of 0.8.0 the hook reads the
 gate calls it can route, and withholds the count for three **recognized** shapes: an
 envelope whose **first** property is `success: false`, the harness backgrounding notice
 **in the wording it currently uses**, and a result from which no usable text can be
-obtained. Every other routed gate call counts, including any located text the hook cannot
+obtained. Every other routed gate call counts as the request rule above says, including any located text the hook cannot
 interpret — a reordered envelope, a reworded notice, an unknown third-party shape — which
 counts **with** a disclosure that is attempted and normally shown once per workspace, but
 can be lost or repeated when its marker cannot be persisted. So does a call that returns
@@ -968,8 +959,7 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   a spec may be destructive or an intentional failure. (Large/high-risk artifact: optional focused
   per-dimension passes on top.)
 - **Gate B — Code.** Tests green, before `git commit`. Tool: `mcp__codex__review`
-  (args `instruction`, `whatWasImplemented`, `baseSha`; `reviewType: full` runs
-  spec + quality in parallel). Skip ONLY trivial changes. Check against
+  (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`). **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot. `reviewType: full` runs both reviewers in parallel from one call; it stays accepted and counts as one pass, but its two reviewers can write each other's slots and the result passes every shape check, so it is not the default. Skip ONLY trivial changes. Check against
   @AGENTS.md. Re-review after every fix — a fix changes the artifact, so the prior
   review no longer covers it. The hook merely notices, at commit time.
 
@@ -1237,7 +1227,7 @@ like the rest of §5; the detection is a reader comparing the pass against the s
 - **Tool routing:** docs (spec/plan, incl. code snippets) → `mcp__codex__exec`;
   implemented diff → `mcp__codex__review`. Never `review` a doc — it reads the
   git range, not the text.
-- **`baseSha`:** against main = merge-base with main (`headSha` = the full 40-character
+- **`baseSha`:** against main = merge-base with main, passed as its full 40-character object name like `headSha`, since the hook pairs two branches only on two exact 40-character values (`headSha` = the full 40-character
   object name `HEAD` resolves to at that moment, never the symbolic `HEAD` — see the
   branch-agreement rule below for why);
   pre-commit, `baseSha` = HEAD is an empty range (HEAD..HEAD) — make a WIP commit
@@ -1425,8 +1415,7 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   the comparisons that read that series while keeping the pass's other series.
 
   A `full` Gate-B pass, separate `spec`/`quality` calls, and a single-branch recovery are
-  **branches of one logical pass** contributing one summed entry — **the curve counts logical
-  passes; the hook counts calls**, and where they differ the body says so **as prose beside the
+  **branches of one logical pass** contributing one summed entry — **the curve counts logical passes; the hook counts a `full` call or a matched `spec`+`quality` pair as one pass and a lone branch as none**, so the two agree for those shapes, and where they differ — a recovery re-run, a call the hook could not read — the body says so **as prose beside the
   curve**: neither grammar has a field for a call count, deliberately, since the count is a
   property of how the pass was invoked rather than of what it found. **Both branches must be
   issued against the same commit**, and that — not what they read — is what this rule
@@ -1517,6 +1506,8 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   hook's counter depends on the shape it returned and on which hook version is installed:
   as of 0.8.0 a recognized failure envelope, the recognized backgrounding notice and a
   result yielding no usable text are all withheld from the count, while a reordered,
-  reworded or unrecognized shape still counts fail-open. Do not reason from the counter
+  reworded or unrecognized shape is still admitted fail-open — and as of 0.21.0 an admitted
+  call is credited only as a `full` call or a completed pair, by the request rule above. Do
+  not reason from the counter
   either way — an incomplete pass is discounted whatever it says. Counter and workspace
   state persist in `.context/`; the *pass* does not.

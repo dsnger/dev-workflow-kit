@@ -47,8 +47,14 @@ on_file="$state_dir/codex-gate.on"                # workflow-adoption marker
 floor_file="$state_dir/codex-gate.floor"          # optional per-project floor override
 tools_file="$state_dir/codex-gate.tools"          # optional Codex tool-name mapping
 noted_file="$state_dir/codex-gate.toolNote"       # marks the unknown-tool note as said
-count_file="$state_dir/codex-gate.passCount"      # Gate B (review) passes since last commit
-fresh_file="$state_dir/codex-gate.freshCount"     # Gate B passes covering the CURRENT tree
+# Gate-B passes since the last commit: one per `full` call or matched spec+quality pair.
+# Renamed in 0.21.0 because the unit changed — the old names counted CALLS, and a cycle
+# spanning the upgrade must start from zero rather than inherit per-call counts.
+count_file="$state_dir/codex-gate.passes"
+fresh_file="$state_dir/codex-gate.freshPasses"    # Gate B passes covering the CURRENT tree
+pending_file="$state_dir/codex-gate.pendingBranch" # one single-branch call awaiting its partner
+legacy_count="$state_dir/codex-gate.passCount"     # pre-0.21.0 names: retired, never read
+legacy_fresh="$state_dir/codex-gate.freshCount"
 countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since last plan execution
 # Diagnostic markers. These are NOT gate-pass state: they dedupe one-time disclosures,
 # and every write is best-effort. `bgAdvice` is independent of the other two;
@@ -392,8 +398,10 @@ UNVERIFIED_MSG='ℹ A gate call was classified as countable without inspection, 
 #
 # SINGLE-QUOTED, so no ASCII apostrophe may appear anywhere below, comments included —
 # one would terminate the quote and leave this hook unparseable.
+# The string, span and whitespace helpers are shared with REQUEST_AWK below, so both scans
+# decide string boundaries the same way.
 # shellcheck disable=SC2016  # an awk program, not shell: $0 and $1 are awk fields
-LOCATE_AWK='
+JSON_AWK_FUNCS='
 function skipws(s, i,   c) {
   while (i <= SLEN) { c = substr(s,i,1)
     if (c==" "||c=="\t"||c=="\n"||c=="\r") i++; else break }
@@ -454,6 +462,9 @@ function skipval(s, i,   c, st, e, j, tok) {
   if (tok ~ /^-?(0|[1-9][0-9]*)([.][0-9]+)?([eE][-+]?[0-9]+)?$/) return j
   return 0
 }
+'
+# shellcheck disable=SC2016  # an awk program, not shell: $0 and $1 are awk fields
+LOCATE_AWK="$JSON_AWK_FUNCS"'
 # Read the WHOLE input by accumulating records; the newline put back is the separator
 # awk stripped. RS="\0" would be shorter and is NOT portable across POSIX awks.
 # CEILING: a payload past the bound is refused rather than SCANNED. It does not bound
@@ -532,6 +543,221 @@ END {
 # is appended — the caller reads it through command substitution, which strips trailing
 # newlines, harmless only because a JSON string cannot contain a raw newline.
 locate_result() { printf '%s' "$payload" | awk "$LOCATE_AWK"; }
+
+# --- REQUEST READER (0.21.0) -------------------------------------------------------
+# Reads reviewType, baseSha and headSha from the DIRECT members of the top-level
+# `tool_input` object and nowhere else — a review result in `tool_response` can quote any
+# of those names. Prints one line of three verdicts, `<reviewType> <baseSha> <headSha>`:
+# reviewType is absent | spec | quality | full | other; each SHA is absent | bad | its 40
+# lowercase hex characters. Prints `uncertain` when the request cannot be read at all.
+# Every verdict is decided inside jq or awk, never on a shell capture of the value: jq
+# checks the DECODED value, awk the RAW escaped spelling (so an escape anywhere in a value
+# makes it fail the exact comparison, the conservative direction). The shell must not
+# decide: command substitution strips trailing newlines, so a captured "full" plus a
+# newline would read as full. A usable SHA is safe to capture because it can then hold only hex.
+# The jq check compares code points rather than using test(): jq regex `$` also matches
+# before a final newline, so 39 hex characters plus a newline would pass a length check
+# and an anchored pattern together.
+#
+# The jq-free scan walks with the locator helpers above and carries the same size bound.
+# It is uncertain when it finds no top-level tool_input, no closing brace, a member that is
+# not a string, a repeated member, or ANY member key containing a backslash — an escaped
+# key might decode to one of the three names, and reading it as absent would default a
+# single branch to a whole `full` pass.
+# SINGLE-QUOTED, so no ASCII apostrophe may appear below.
+# shellcheck disable=SC2016  # an awk program, not shell
+REQUEST_AWK="$JSON_AWK_FUNCS"'
+function rtv(p, v) { if (!p) return "absent"; if (v=="spec"||v=="quality"||v=="full") return v; return "other" }
+function shav(p, v) { if (!p) return "absent"; if (length(v)==40 && v !~ /[^0-9a-f]/) return v; return "bad" }
+BEGIN { MAXLEN = 1048576; over = 0; tot = 0 }
+{ if (over || tot + length($0) + 1 > MAXLEN) over = 1; else { s = s $0 "\n"; tot += length($0) + 1 } }
+END {
+  if (over) exit 2
+  SLEN=length(s); n=SLEN; i=skipws(s,1)
+  if (substr(s,i,1) != "{") exit 2
+  i++; found=0; first=1; closed=0
+  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
+    if (c=="}") { i++; closed=1; break }
+    if (!first) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
+    first=0
+    if (c!="\"") exit 2
+    e=readstr(s,i); if(!e) exit 2
+    key=RAWSTR; i=skipws(s,e+1)
+    if (substr(s,i,1)!=":") exit 2
+    i=skipws(s,i+1)
+    if (key=="tool_input") { if (found) exit 2; found=1; ti=i }
+    i=skipval(s,i); if(!i) exit 2 }
+  if (!closed || !found) exit 2
+  if (skipws(s,i) <= n) exit 2
+  i=ti
+  if (substr(s,i,1)!="{") exit 2
+  i++; firstm=1; oclosed=0
+  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
+    if (c=="}") { oclosed=1; break }
+    if (!firstm) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
+    firstm=0
+    if (c!="\"") exit 2
+    e=readstr(s,i); if(!e) exit 2
+    k=RAWSTR; i=skipws(s,e+1)
+    if (index(k, "\\")) exit 2
+    if (substr(s,i,1)!=":") exit 2
+    i=skipws(s,i+1)
+    if (k=="reviewType" || k=="baseSha" || k=="headSha") {
+      if (k in seen) exit 2
+      seen[k]=1
+      if (substr(s,i,1)!="\"") exit 2
+      e=readstr(s,i); if(!e) exit 2
+      val[k]=RAWSTR; i=e+1; continue }
+    i=skipval(s,i); if(!i) exit 2 }
+  if (!oclosed) exit 2
+  printf "%s %s %s", rtv(("reviewType" in seen), val["reviewType"]), shav(("baseSha" in seen), val["baseSha"]), shav(("headSha" in seen), val["headSha"])
+  exit 0
+}
+'
+# shellcheck disable=SC2016  # a jq program, not shell
+REQUEST_JQ='
+def rt: if has("reviewType") | not then "absent"
+  elif (.reviewType | type) != "string" then "uncertain"
+  elif .reviewType == "spec" or .reviewType == "quality" or .reviewType == "full" then .reviewType
+  else "other" end;
+def sha($k): if has($k) | not then "absent"
+  elif (.[$k] | type) != "string" then "uncertain"
+  elif (.[$k] | length) == 40 and (.[$k] | explode | all(.[]; (. >= 48 and . <= 57) or (. >= 97 and . <= 102))) then .[$k]
+  else "bad" end;
+if (.tool_input | type) != "object" then "uncertain"
+else .tool_input | [rt, sha("baseSha"), sha("headSha")]
+  | if any(.[]; . == "uncertain") then "uncertain" else join(" ") end end'
+read_request() {
+  if command -v jq >/dev/null 2>&1; then
+    _req=$(printf '%s' "$payload" | jq -r "$REQUEST_JQ" 2>/dev/null) || _req=uncertain
+  else
+    _req=$(printf '%s' "$payload" | awk "$REQUEST_AWK" 2>/dev/null) || _req=uncertain
+  fi
+  # Exactly three space-separated tokens, or nothing usable.
+  case "$_req" in
+    *' '*' '*' '* | ' '* | *' ' | *'  '*) _req=uncertain ;;
+    *' '*' '*) ;;
+    *) _req=uncertain ;;
+  esac
+  printf '%s' "$_req"
+}
+
+# --- PAIRING MESSAGES (0.21.0) ------------------------------------------------------
+# Target model: Claude Sonnet 4.5 / Opus 4.1 via Claude Code — same family and same
+# prompting-guidance check as the classification messages above. Single-quoted ones carry
+# no ASCII apostrophe; the two that interpolate a path or field name are built in their
+# functions below.
+PAIR_RECORDED_CTX='Claude via Claude Code — gate hook. <state>This mcp__codex__review call ran one branch (reviewType spec or quality) and is recorded as a pending branch. It is not counted.</state> <consequence>The hook counts one pass when the other branch runs on the same baseSha and headSha, and counts nothing for a branch whose partner never runs.</consequence> <next>If this branch is half of a logical pass not yet credited, run the other branch with exactly the same baseSha and headSha. If it re-ran a branch of a pass already credited (a recovery), it needs no partner, and a call made only to complete the count is not a review pass.</next> <stop>Said on every unpaired branch call.</stop>'
+PAIR_RECORDED_MSG='ℹ Codex Gate B: this review branch is recorded; no matching partner was credited, so it is not counted.'
+PAIR_UNCONFIRMED_CTX='Claude via Claude Code — gate hook. <state>This single-branch mcp__codex__review call was not counted, and recording it as the first half of a pass could not be confirmed: writing .context/codex-gate.pendingBranch and reading it back did not return the same record.</state> <consequence>Its partner may not pair with it, so this pass may stay uncounted.</consequence> <next>Treat the pass as uncounted unless a later reminder shows it counted; a recovery of a branch whose pass is already credited needs no partner either way. The cause is not determined here: the write may have failed (check that .context/ is writable), the file may be unreadable or not a regular file (check its type and permissions), or another hook process may have claimed it first (check for review calls running at the same time, and run the branches one after the other).</next> <stop>Said on every call where this happens.</stop>'
+PAIR_UNCONFIRMED_MSG='ℹ Codex Gate B: recording this review branch could not be confirmed. Check that .context/ is writable and that no two review calls run at once.'
+# shellcheck disable=SC2016  # the backticks quote commands for a human to read, verbatim
+REQ_UNREAD_CTX='Claude via Claude Code — gate hook. <state>This mcp__codex__review call was not counted because its request fields (reviewType, baseSha, headSha) could not be read from tool_input.</state> <consequence>The hook cannot tell a whole pass from one branch of a pass, so it counts nothing and leaves any waiting branch as it was.</consequence> <next>Treat this call as uncounted when you report gate status. Causes, each with its check: the request itself — tool_input missing or not an object, reviewType, baseSha or headSha not a plain string, repeated, or written with an escape in its name (check the arguments of the call you made, and pass the three as plain strings); without jq, a payload past the 1 Mi-unit scan bound or the 200-frame nesting-depth cap, or a malformed one (rare for a real call; measure its size and nesting depth if this repeats); a jq that fails (check that `jq --version` runs); or, without jq, an awk that fails (check that `printf "x\\n" | awk "{print}"` prints x). This message cannot tell those apart, so where none of the checks finds the cause, record it as undetermined.</next> <stop>Said on every such call.</stop>'
+REQ_UNREAD_MSG='ℹ Codex Gate B: a review call was not counted because its request fields could not be read.'
+RT_UNKNOWN_CTX='Claude via Claude Code — gate hook. <state>This mcp__codex__review call carried a reviewType value other than exactly spec, quality or full, so it was not counted.</state> <consequence>The hook credits only shapes it recognizes; an unknown value is never read as a whole pass.</consequence> <next>Use reviewType spec, then quality, on the same baseSha and headSha.</next> <stop>Said on every such call.</stop>'
+RT_UNKNOWN_MSG='ℹ Codex Gate B: a review call with an unrecognized reviewType value was not counted.'
+PENDING_AT_COMMIT_CTX='Claude via Claude Code — gate hook. <state>Gate-B pending-branch state is present (.context/codex-gate.pendingBranch): a single-branch review call may have run whose partner was never credited. It is not counted, and the hook has not checked that the record is usable.</state> <consequence>Any pass count reported beside this counts hook credits only — full calls and matched spec+quality pairs — and adds nothing for this file. A credit is not a validated findings file.</consequence> <next>If that branch is the first half of your final pass, run its partner on the same baseSha and headSha before closing the cycle. If it was a recovery of a branch whose pass is already counted, it needs no partner, and a call made only to complete the count is not a review pass.</next> <stop>Said at every Gate-B commit check while the file exists.</stop>'
+PENDING_AT_COMMIT_MSG='ℹ Codex Gate B: pending-branch state is present, unverified and not counted.'
+
+note_unusable_sha() { # $1 = which field(s)
+  note "Claude via Claude Code — gate hook. <state>This single-branch mcp__codex__review call cannot be paired: its $1 is missing or is not a full 40-character lowercase object name.</state> <consequence>It is not counted and is not recorded as half of a pass; any branch already waiting is kept.</consequence> <next>Resolve baseSha and headSha to full 40-character object names (git rev-parse) once per pass and pass the same two values to both branches. The tool default HEAD is symbolic and cannot bind a pair.</next> <stop>Said on every such call.</stop>" \
+       "ℹ Codex Gate B: a review branch was not counted — its $1 is not a full 40-character object name."
+}
+note_stale() { # $1 = absolute path that survived removal
+  _rel=${1#"$repo_root"/}
+  note "Claude via Claude Code — gate hook. <state>Credit for this mcp__codex__review call was withheld because $_rel could not be removed before counting.</state> <consequence>Nothing was counted and no fingerprint was written, so stale state cannot be read as a fresh pass.</consequence> <next>The cause is not determined here: .context/ may not be writable, the path may be a directory or another non-file, or another writer may have recreated it. Check those, remove the path, and run the pass again.</next> <stop>Said on every call while the path survives.</stop>" \
+       "⚠ Codex Gate B: credit withheld — $_rel could not be removed. Check that .context/ is writable and that the path is a plain file."
+}
+
+# --- PAIRING (0.21.0) -----------------------------------------------------------------
+# A credit happens only after every stale file it depends on is CONFIRMED GONE — the path
+# absent after the attempt. Removal and writes fail independently (an unwritable directory
+# still lets existing files be overwritten), so the test is absence, not a write status.
+gone() { ! { [ -e "$1" ] || [ -L "$1" ]; }; }
+retire() { gone "$1" && return 0; rm -f "$1" 2>/dev/null; gone "$1"; }
+retire_legacy() {
+  retire "$legacy_count" || { note_stale "$legacy_count"; return 1; }
+  retire "$legacy_fresh" || { note_stale "$legacy_fresh"; return 1; }
+  return 0
+}
+# CLAIM by rename: one rename(2) inside .context/, so at most one hook process can take a
+# given pending file, and only the claimant reads it. A failed rename means "nothing
+# claimed", which credits nothing. A leftover claim file is never read again.
+claim_pending() {
+  _claim="$state_dir/codex-gate.pendingClaim.$$"
+  mv "$pending_file" "$_claim" 2>/dev/null || return 1
+  printf '%s' "$_claim"
+}
+
+# Today's counting block, unchanged except that it now runs once per PASS.
+credit_pass() {
+  h=$(tree_hash)
+  prev=$(cat "$state_file" 2>/dev/null || echo '')
+  # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
+  # count; a pass on a changed fingerprint starts the count over. That is what lets
+  # the satisfied message report how many passes carry the CURRENT fingerprint,
+  # rather than how many happened at some point this cycle (Finding 9). It does not
+  # establish that Codex read those bytes — see the note at the satisfied branch.
+  # An unhashable pass carries no fingerprint, so it neither counts as a match with
+  # the last pass nor starts a fresh streak at 1 — two `unavailable` values are not
+  # a match.
+  if [ "$h" != unavailable ] && [ "$h" = "$prev" ]; then
+    bump_count "$fresh_file"
+  elif [ "$h" = unavailable ]; then
+    { printf '%s' 0 > "$fresh_file"; } 2>/dev/null || true
+  else
+    { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true
+  fi
+  { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
+  bump_count "$count_file"
+}
+
+# One routed, non-discarded review call. $1 = its classification (success | unrecognized).
+# The unverified disclosure says recording was ATTEMPTED, so it is raised only on paths
+# that attempt a credit or a pending record, never on a call rejected before that.
+review_call() {
+  mkdir -p "$state_dir" 2>/dev/null
+  # Spec §3.1: the old names are retired on every review call classification lets through,
+  # before the request is read, so a rejected request still leaves no legacy count behind.
+  retire_legacy || return 0
+  _req=$(read_request)
+  if [ "$_req" = uncertain ]; then note "$REQ_UNREAD_CTX" "$REQ_UNREAD_MSG"; return 0; fi
+  _rt=${_req%% *}; _rest=${_req#* }; _base=${_rest%% *}; _head=${_rest#* }
+  case "$_rt" in
+    absent | full)
+      # A whole pass supersedes a half one; a half that cannot be retired blocks it.
+      if ! gone "$pending_file"; then
+        _c=$(claim_pending) && rm -f "$_c" 2>/dev/null
+        gone "$pending_file" || { note_stale "$pending_file"; return 0; }
+      fi
+      [ "$1" = unrecognized ] && note_unverified
+      credit_pass
+      ;;
+    spec | quality)
+      _bad=''
+      case "$_base" in absent | bad) _bad=baseSha ;; esac
+      case "$_head" in absent | bad) _bad="${_bad:+$_bad and }headSha" ;; esac
+      if [ -n "$_bad" ]; then note_unusable_sha "$_bad"; return 0; fi
+      # Every path below attempts a credit or a pending record, so the disclosure is true.
+      [ "$1" = unrecognized ] && note_unverified
+      if [ "$_rt" = spec ]; then _other=quality; else _other=spec; fi
+      if _c=$(claim_pending); then
+        _rec=$(cat "$_c" 2>/dev/null)
+        rm -f "$_c" 2>/dev/null
+        if [ "$_rec" = "$_other $_base $_head" ]; then credit_pass; return 0; fi
+      fi
+      _line="$_rt $_base $_head"
+      { printf '%s' "$_line" > "$pending_file"; } 2>/dev/null
+      if [ "$(cat "$pending_file" 2>/dev/null)" = "$_line" ]; then
+        note "$PAIR_RECORDED_CTX" "$PAIR_RECORDED_MSG"
+      else
+        note "$PAIR_UNCONFIRMED_CTX" "$PAIR_UNCONFIRMED_MSG"
+      fi
+      ;;
+    *) note "$RT_UNKNOWN_CTX" "$RT_UNKNOWN_MSG" ;;
+  esac
+  return 0
+}
 
 # --- THE MATCHER, over the ESCAPED bytes the locator produced -------------------------
 # strip_ws is BOUNDED at 64 units: real JSON whitespace runs are 0-3 bytes, and an
@@ -961,27 +1187,7 @@ case "$event" in
         case "$cls" in
           failure | no-result | backgrounded) note_discarded "$cls" ;;
           *)
-        [ "$cls" = unrecognized ] && note_unverified
-        mkdir -p "$state_dir" 2>/dev/null
-        h=$(tree_hash)
-        prev=$(cat "$state_file" 2>/dev/null || echo '')
-        # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
-        # count; a pass on a changed fingerprint starts the count over. That is what lets
-        # the satisfied message report how many passes carry the CURRENT fingerprint,
-        # rather than how many happened at some point this cycle (Finding 9). It does not
-        # establish that Codex read those bytes — see the note at the satisfied branch.
-        # An unhashable pass carries no fingerprint, so it neither counts as a match with
-        # the last pass nor starts a fresh streak at 1 — two `unavailable` values are not
-        # a match.
-        if [ "$h" != unavailable ] && [ "$h" = "$prev" ]; then
-          bump_count "$fresh_file"
-        elif [ "$h" = unavailable ]; then
-          { printf '%s' 0 > "$fresh_file"; } 2>/dev/null || true
-        else
-          { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true
-        fi
-        { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
-        bump_count "$count_file"
+            review_call "$cls"
             ;;
         esac
         ;;
@@ -1027,7 +1233,8 @@ case "$event" in
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
         if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
-          rm -f "$state_file" "$count_file" "$fresh_file"
+          rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
+                "$legacy_count" "$legacy_fresh"
         fi
         # This call's `-m wip` record belongs to this one command, whatever the decision above was
         if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
@@ -1063,6 +1270,7 @@ case "$event" in
           if is_docs_only "$files"; then
             note "Docs-only commit — no code is staged, so Codex Gate B (mcp__codex__review reviews a code diff) does not apply here. If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
           else
+            retire "$legacy_count"; retire "$legacy_fresh"   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
             fresh=$(read_count "$fresh_file")
             reviewed=$(cat "$state_file" 2>/dev/null || echo '')
@@ -1076,7 +1284,7 @@ case "$event" in
               # preserves the older, now-stale fingerprint, which reaches the STALE
               # branch below, not this one. The message names the absent FINGERPRINT,
               # not an absent review.
-              note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has run, the last one's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
+              note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has been credited (a single-branch call waiting for its partner, and a call whose request was rejected, write no fingerprint by design), the last credit's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.
             elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
@@ -1101,6 +1309,9 @@ case "$event" in
               # restore it as a clarity improvement.
               note "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them." "✓ Codex Gate B hook checks passed ($passes/$floor cycle, $fresh on current fingerprint)"
             fi
+            # A half pass is never part of the count above; say so beside whichever
+            # message that chain printed (spec 2026-10-09 §3.4). Existence is the test.
+            gone "$pending_file" || note "$PENDING_AT_COMMIT_CTX" "$PENDING_AT_COMMIT_MSG"
           fi
           fi
         fi
