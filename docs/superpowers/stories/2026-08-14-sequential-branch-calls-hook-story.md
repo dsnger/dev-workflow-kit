@@ -48,19 +48,40 @@ means what it says. Whichever way that is achieved, the observable result is:
 
 ## 3. Acceptance criteria
 
-- [ ] A Gate-B cycle of three logical passes made as sequential single-branch calls causes
+_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._
+
+- [ ] **AC-1** A Gate-B cycle of three logical passes made as sequential single-branch calls causes
       the hook to report **three** passes, not six.
-- [ ] A pass whose second branch has not completed does **not** count toward the floor, and
+- [ ] **AC-2** A pass whose second branch has not completed does **not** count toward the floor, and
       the hook's message distinguishes that state from a satisfied one.
-- [ ] `reviewType: full` continues to behave as it does today, or the hook/§5 refuses it
+- [ ] **AC-3** `reviewType: full` continues to behave as it does today, or the hook/§5 refuses it
       with a named cause — no silent miscount either way.
-- [ ] The regression suite covers the pair state machine: both branches succeed, first
+- [ ] **AC-4** The regression suite covers the pair state machine: both branches succeed, first
       fails, second fails, branches interleaved with a commit, and a `full` call.
-- [ ] The hook still exits 0 on every one of those paths, and remains POSIX `sh` with `jq`
+- [ ] **AC-5** The hook still exits 0 on every one of those paths, and remains POSIX `sh` with `jq`
       optional.
-- [ ] `CLAUDE.md` §5 and `/workflow-init`'s inline mirror agree after the change.
-- [ ] `docs/hardening-log.md`'s `unverified-enforcement-claim` row and the `todos.md` row
-      that pointed at the parent story re-point here.
+- [ ] **AC-6** `CLAUDE.md` §5 and `/workflow-init`'s inline mirror agree after the change.
+- [ ] **AC-7** The `todos.md` row that pointed at the parent story re-points here.
+      (narrowed 2026-10-09: the `docs/hardening-log.md` half is dropped — the ledger holds no
+      row for this defect, and it is append-only, so no row exists to re-point.)
+
+_Identifiers adopted 2026-10-09 at this story's first amendment: the existing criteria were
+numbered AC-1 to AC-7 in their order at that time._
+
+**Changed 2026-10-09 — gap found.** Decided by Daniel, in the session that started this unit (answer to the AC-7 question: "Amend: narrow AC-7 (Recommended)" — "Keep the todos.md part [...] Drop the ledger part, since there's no row and the ledger is append-only."). Baseline: `baa75c1516dccff5e9fe04fd6b1b6bb3a5ad4dad`. AC-7 named a `docs/hardening-log.md` `unverified-enforcement-claim` row for this defect; none exists — the reviewer-availability salvage plan (`docs/superpowers/plans/2026-08-15-reviewer-availability-salvage.md`, Task 4, "`docs/hardening-log.md` is NOT in this task") deliberately wrote none, and the fingerprint lives on the `todos.md` row, which was re-pointed here on 2026-08-16.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §2, all four outcome bullets | kept | none |
+| AC-1 to AC-6 | kept | none |
+| AC-7: "`docs/hardening-log.md`'s `unverified-enforcement-claim` row and the `todos.md` row that pointed at the parent story re-point here" | kept: the `todos.md` row re-points here; dropped — the ledger row, per the decision: "Drop the ledger part, since there's no row and the ledger is append-only." | narrowed |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the baseline is the only commit touching this file.
+- **Scope boundary:** in: AC-7's wording and AC identifiers; out: every other condition, unchanged.
+- **Open questions:** none.
+- **Dependent artifacts:** none — no artifact cites this story's criteria by position, and no `**Story:**` header cites it.
+- **Reviews already run:** none — no Gate-A or Gate-B cycle has had this story in its cited set (no `**Story:**` header names it), so `.claude/review-gates.md`'s cited-set rule ("The cited set is re-read at each pass") reaches no cycle.
 
 ## 4. Affected AGENTS.md invariants
 
