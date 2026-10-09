@@ -2238,7 +2238,11 @@ Living references (consult, don't copy — copies go stale):
     produce that state, gives a check that tells them apart, and pairs each with its
     own fix. Why: causes with an identical symptom but different fixes are the case
     the reader cannot resolve alone — offering only the most common one sends them
-    round a loop that never terminates.
+    round a loop that never terminates. A result the prompt could not fully establish
+    is reported as undetermined, a state of its own, rather than as "protected",
+    "absent" or "permitted"; what follows from it is what the contract for the
+    affected action already says. Why: filing an undetermined result under the state
+    that needs no action removes a protection nobody decided to remove.
 11. **Enforcement claims name their mechanism.** Any sentence saying something is
     enforced, caught, guaranteed or prevented names *what does it*, and the author
     verified that mechanism exists before writing it — by reading the code, running the

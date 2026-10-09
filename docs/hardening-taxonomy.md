@@ -103,6 +103,18 @@ the synonyms a future reader might search for instead.
   check never ran at all. Grep this one when the sentence is "a parser would have found it
   immediately"; grep the other when it is "the check passed and proved nothing".
 
+- `undetermined-state-falls-to-permissive` — a result that could not be fully established
+  lands in the state that needs no action ("absent", "protected", "permitted"), so a
+  protection is skipped without anyone deciding it. Aliases: partial read filed as absent,
+  catch-all state is the permissive one, stopped discovery leaves the guard open, half
+  matched falls through.
+
+  **Not `prompt-diagnostic-cause-unnamed`.** There a state is named but its causes are
+  not; here the state itself is the wrong one. **Not `truncated-tool-output-read-as-complete`**
+  either: nothing arrived cut off, the classification routes an incomplete result to the
+  permissive state. Grep this one when the sentence is "it didn't fit any state, so it
+  counted as nothing to do".
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project
