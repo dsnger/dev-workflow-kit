@@ -68,7 +68,7 @@ for sh in sh dash; do
       pend=$(printf '%s' "$out" | grep -c 'pending-branch state is present')
       sat=$(printf '%s' "$out" | grep -o "Codex Gate B: [0-9]*/3 pass(es) this cycle" | head -n1)
       if [ "$which" = new ]; then
-        expect '[ "$pend" -ge 1 ] && [ "$(count "$hook" new)" = 3 ]' C2 "count=$(count "$hook" new) [$sat] pending-note=$pend"
+        expect '[ "$pend" -ge 1 ] && [ "$(count "$hook" new)" = 3 ] && [ -n "$sat" ]' C2 "count=$(count "$hook" new) [$sat] pending-note=$pend"
       else
         expect '[ "$pend" = 0 ] && [ -n "$sat" ]' C2 "count=$(count "$hook" old) [$sat] pending-note=$pend (counterfactual)"
       fi

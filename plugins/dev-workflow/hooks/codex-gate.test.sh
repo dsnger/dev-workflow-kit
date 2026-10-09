@@ -2153,6 +2153,9 @@ for pair in "absent:$awk_absent:absolute" "nonzero:$awk_fail:prefix" "partial:$a
     printf 'x\n' | PATH="$faultpath" awk '{print}' >/dev/null 2>&1 && { skip "awk fault '$shape' — the shim does not fail"; continue; }
   fi
   [ "$(printf 'x\n' | awk '{print}' 2>/dev/null)" = x ] || { skip "awk fault '$shape' — the real awk is unusable"; continue; }
+  # With jq the request reader does not need awk, which is what this variant asserts; the
+  # jq-free variant below covers a host without jq (PR #55, Greptile).
+  PATH="$faultpath" command -v jq >/dev/null 2>&1 || { skip "awk fault '$shape' — no jq on this host; the jq-free variant covers it"; continue; }
   reset_all
   out=$(printf '%s' "$(disc_payload failure mcp__codex__review)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK"); rc=$?
   [ "$rc" = 0 ] && pass "awk $shape: exits 0" || fail "awk $shape: exits 0 (got $rc)"
@@ -2528,7 +2531,10 @@ reset_all
 # 42. SEQUENTIAL SINGLE-BRANCH CALLS (spec docs/superpowers/specs/2026-10-09-sequential-
 #     branch-calls-hook-design.md, story AC-1..AC-5). A `spec` call and a `quality` call
 #     on identical 40-hex baseSha/headSha are ONE pass; a lone branch counts nothing.
-#     Request fields come from `tool_input` only. Every case runs under jq and jq-free.
+#     Request fields come from `tool_input` only. The loop runs each case twice: once on
+#     the host PATH (the jq reader where jq is installed, else the awk one) and once on
+#     the jq-free PATH. Cases specific to one reader skip when it is unavailable, and the
+#     read-only `.context` cases skip when a write probe shows the chmod did not take.
 B1=1111111111111111111111111111111111111111
 B2=4444444444444444444444444444444444444444
 H1=2222222222222222222222222222222222222222
@@ -2729,20 +2735,30 @@ for m42 in normal nojq; do
   kept42 "a legacy counter that cannot be removed blocks credit"
   has42 "...and the note names that path" "$out" 'codex-gate.passCount'
   rm -rf "$old_count"
-  # Unwritable .context: the claim fails, so nothing is credited.
-  reset_all; seed42; chmod a-w .context
-  out=$(br quality "$B1" "$H1")
-  chmod u+w .context
-  kept42 "read-only .context: the claim fails, quality credits nothing"
-  reset_all; seed42; chmod a-w .context
-  out=$(r42 "$(rvp "$(ti full "$B1" "$H1")")")
-  chmod u+w .context
-  kept42 "read-only .context: a pending half that cannot be retired blocks full" pend
-  has42 "...and the note names the pending path" "$out" 'codex-gate.pendingBranch'
-  reset_all; chmod a-w .context
-  out=$(br spec "$B1" "$H1")
-  chmod u+w .context
-  has42 "read-only .context, no pending file: recording could not be confirmed" "$out" 'could not be confirmed'
+  # Unwritable .context: the claim fails, so nothing is credited. Root ignores directory
+  # write permission, so each case first proves the chmod took (PR #55, CodeRabbit).
+  ro42() { chmod a-w .context
+           # printf, never `:` — a failed redirection on the special builtin `:` exits dash.
+           if { printf '' > .context/.ro-probe; } 2>/dev/null; then rm -f .context/.ro-probe; chmod u+w .context; return 1; fi; }
+  reset_all; seed42
+  if ro42; then
+    out=$(br quality "$B1" "$H1")
+    chmod u+w .context
+    kept42 "read-only .context: the claim fails, quality credits nothing"
+  else skip "42/$m42: read-only .context — the directory stays writable (root?)"; fi
+  reset_all; seed42
+  if ro42; then
+    out=$(r42 "$(rvp "$(ti full "$B1" "$H1")")")
+    chmod u+w .context
+    kept42 "read-only .context: a pending half that cannot be retired blocks full" pend
+    has42 "...and the note names the pending path" "$out" 'codex-gate.pendingBranch'
+  else skip "42/$m42: read-only .context (full) — the directory stays writable (root?)"; fi
+  reset_all
+  if ro42; then
+    out=$(br spec "$B1" "$H1")
+    chmod u+w .context
+    has42 "read-only .context, no pending file: recording could not be confirmed" "$out" 'could not be confirmed'
+  else skip "42/$m42: read-only .context (no pending) — the directory stays writable (root?)"; fi
   # The claim is exclusive: a claim file is never read, and a vanished pending file
   # credits nothing. A hook that read the pending file without renaming it first would
   # still fail the first assertion below only if the file were there — so the second
@@ -2777,21 +2793,28 @@ done
 m42=nojq; reset_all; seed42
 r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"\\u0072eviewType":"spec","baseSha":"%s","headSha":"%s"},"tool_response":%s}' "$B1" "$H1" "$(resp_success)")" >/dev/null
 kept42 "a unicode-escaped key is uncertain without jq" pend
-# ...while jq decodes it to spec, so it pairs with the seeded half's partner shape.
+# ...while jq decodes it to spec, so it pairs with the seeded half's partner shape. This and
+# the next two blocks assert jq-path behaviour, so they skip on a host without jq (PR #55).
+have_jq42=0; command -v jq >/dev/null 2>&1 && have_jq42=1
+if [ "$have_jq42" = 1 ]; then
 m42=normal; reset_all
 br quality "$B1" "$H1" >/dev/null
 r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"\\u0072eviewType":"spec","baseSha":"%s","headSha":"%s"},"tool_response":%s}' "$B1" "$H1" "$(resp_success)")" >/dev/null
 eq42 "a unicode-escaped key decodes to spec under jq" "$(cnt)" 1
+else skip "42: unicode-escaped key under jq — no jq on this host"; fi
 # jq-free only: a truncated payload is uncertain; the jq path refuses it at routing.
 m42=nojq; reset_all; seed42
 r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"reviewType":"spec","baseSha":"%s"' "$B1")" >/dev/null; rc=$?
 eq42 "truncated payload exits 0" "$rc" 0
 kept42 "truncated payload is uncertain" pend
+if [ "$have_jq42" = 1 ]; then
 m42=normal; reset_all
 out=$(r42 "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__review","tool_input":{"reviewType":"spec"')"); rc=$?
 eq42 "truncated payload exits 0" "$rc" 0
 eq42 "truncated payload is not routed" "$out" ''
+else skip "42: truncated payload refused at jq routing — no jq on this host"; fi
 # jq with a WIP commit between the branches: the second carries the new head, no pair.
+if [ "$have_jq42" = 1 ]; then
 m42=normal; reset_all
 wip_base=$(git rev-parse HEAD)
 br spec "$wip_base" "$H1" >/dev/null
@@ -2802,6 +2825,7 @@ eq42 "WIP commit between branches keeps the pending half" "$(cat "$pendb" 2>/dev
 br quality "$wip_base" "$(git rev-parse HEAD)" >/dev/null
 eq42 "WIP commit between branches: the new head does not pair" "$(cnt)" 0
 git reset -q --soft HEAD~1 >/dev/null 2>&1
+else skip "42: WIP commit between branches under jq — no jq on this host"; fi
 # jq-free scan bound: a sibling past the ceiling before tool_input is uncertain, quickly.
 m42=nojq; reset_all; seed42
 big42=$(awk 'BEGIN{ s=sprintf("%1024s",""); gsub(/ /,"x",s); r=""; for(i=0;i<1100;i++) r=r s; printf "%s", r }')

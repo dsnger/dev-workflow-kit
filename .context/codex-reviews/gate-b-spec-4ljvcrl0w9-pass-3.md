@@ -1,0 +1,2 @@
+MINOR | high | docs/hardening-log.md:142 | The new hardening row claims a tenth occurrence, but the canonical column-2 recurrence check finds only seven earlier verification-masks-failure rows, making this the eighth logged occurrence; continuing the preceding row's ordinal propagates its error | The new hardening record overstates the recurrence count used to describe this class | Append a Superseded rows entry identifying the unsupported ordinal and pointing to the canonical recurrence query; preserve the append-only row
+END OF FINDINGS (1 total)
