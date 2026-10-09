@@ -75,9 +75,9 @@ Living references (consult, don't copy — copies go stale):
     undetermined, a state of its own, rather than as "protected", "absent" or
     "permitted"; what follows from it is what the contract for the affected action
     already says. Why: filing an undetermined result under the state that needs no
-    action removes a protection nobody decided to remove — `/workflow-init` once filed
-    a partly readable MCP server as absent, so its write tools stayed callable (PR #50,
-    Gate B).
+    action removes a protection nobody decided to remove — a revision of `/workflow-init`
+    under review in PR #50 filed a partly readable MCP server as absent, which would have
+    left its write tools callable; Gate B caught it before it shipped.
 11. **Enforcement claims name their mechanism.** Any sentence saying something is
     enforced, caught, guaranteed or prevented names *what does it*, and the author
     verified that mechanism exists before writing the sentence — by reading the code,
