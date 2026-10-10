@@ -786,6 +786,34 @@ backlog.
         them in its project's pilot note (SFX `.context/plan-form-pilot.md`, canvas
         `.context/a6-orchestration.md`).
       AC-12 and AC-14 stay open.
+      **2026-10-10 — SFX read, P5c to P6c1 (Daniel: "Ja, trag das ein").** Source: the SFX
+      checkout at `577f18d` (branch `v2`, read at 08:46 CEST while P6c1's Gate B was still
+      open), cycle lines in commit bodies, `.context/codex-reviews/`, `.context/plan-form-pilot.md`.
+      SFX still runs the 0.16.0 project text, and its running session started before 0.21.0 was
+      installed.
+      - *Compact plan:* every plan since P5b is 12–96 KB (P5a: 660 KB). Gate-A plan cycles, with
+        closing commits: P6a2 `be031c2`, 4 passes; P6r `035f38d`, 3 passes; P6b `f9b08f6`, 6 passes
+        in about 30 min; P6c1 `a6bad01`, 6 passes. 0 Blockers in every pass. P6c1's plan, 96 KB, is
+        the largest compact plan so far.
+      - *Handover per unit:* `.context/handover-p5a.md` … `handover-p6b.md` exist. P6b closed at
+        19:22, and P6c1 ran in a new session started at 19:32.
+      - *Bottleneck moved to execution:* plan start to Gate-B close took about 2 h 40 min for P5d
+        and about 10 h 40 min for P6b. P6c1 had been running about 13 h and was still open:
+        execution 20:52–06:22, with several fix rounds per task. P5c and P5d had approved every
+        task review on the first pass. One browser (e2e) suite run takes about 9.5 min
+        (`.context/p6c1-e2e.txt`). This is an inference from timestamps, not a measurement:
+        further gate savings now buy little. The per-plan recording asked for above was not
+        done: the pilot note ends at P5d.
+      - *Branch duplicates inflate counts:* P6c1 Gate-B pass 1 has 14 finding lines (spec 6,
+        quality 8; 6 Major, 8 Minor). At least 3 complaints appear in both branches
+        (`Segments.tsx:107` freshness, `presenter.tsx:286` findSegment, `RunsPage.tsx:54`
+        NOT_FOUND). So a curve's Findings series counts lines, not distinct defects. Every
+        reading of it (`scripts/loop-usefulness.py`, the tells) inherits that.
+      - *Slot races under the old rules:* P5c's Gate B (`8qt2y7q4st9v`) had the quality branch
+        overwrite the spec slot. P5d's (`d97o17zvmfq6`) had the quality branch append into the spec
+        file. This supports the 0.21.0 default; SFX has not adopted it yet.
+      - *Finding content:* all 14 P6c1 pass-1 lines concern product behaviour (stale data,
+        races, navigation). None is about prose or the test instrument.
 
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
@@ -1412,6 +1440,11 @@ backlog.
       2026-10-06). So an empty ledger is not limited to projects without PRs. Unknown: whether
       `process-pr-review` step 5 ran there, and whether any of those findings qualified for
       hardening (step 5 invokes `harden-finding` only for a matching or clearly warranted class).
+      **2026-10-10 evidence — SFX, counted at `577f18d`:** 23 Gate-B cycle lines in commit bodies.
+      17 ran passes, 6 were skipped, and 9 of the 17 repaired at least one Major. P6c1's cycle
+      `07hfgs3o7mye` was still open with 6 Majors in pass 1. `docs/hardening-log.md` still holds
+      only its table header, unchanged since the scaffold commit `f0c8fe8` (2026-10-03). Story
+      scope since 2026-10-09: every project, with or without PRs (AC-5).
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same

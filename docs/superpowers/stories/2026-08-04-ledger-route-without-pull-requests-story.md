@@ -18,6 +18,10 @@ for hardening.
 record fixed Greptile findings, yet its `docs/hardening-log.md` had 0 rows when counted on 2026-10-06
 (`todos.md`, Finding A row).
 
+2026-10-10: in `sfx-time-tracking-dashboard` (counted at `577f18d`), 9 closed Gate-B cycles
+repaired at least one Major, and `docs/hardening-log.md` still holds only its table header,
+unchanged since the scaffold commit `f0c8fe8` (`todos.md`, Finding A row).
+
 ### Conditions inherited from the source row
 
 From `todos.md`, "**Finding A — a route from a fixed finding to the ledger for projects that
@@ -90,6 +94,22 @@ written.
   under `docs/superpowers/specs/` and `docs/superpowers/plans/`).
 - **Reviews already run:** none. No Gate-A or Gate-B cycle has had this story as a cited input
   (same check), so `.claude/review-gates.md` has nothing to decide here.
+
+**Changed 2026-10-10 — gap found.** Decided by Daniel, in the coding session of 2026-10-10
+(08:48 CEST), answering the proposal to record the SFX ledger count as evidence in this story:
+"Ja, trag das ein." Baseline: `a54389e`. Rationale: §1 gains one dated evidence paragraph. No
+condition changes.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| Every condition the 2026-10-09 record lists, as it stands after that record | kept | none |
+
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file at `HEAD` equals `a54389e`.
+- **Scope boundary:** unchanged.
+- **Open questions:** none.
+- **Dependent artifacts:** `todos.md` → updated in this change (Finding A row, 2026-10-10 evidence).
+- **Reviews already run:** none (same check as the 2026-10-09 record).
 
 ## 4. Affected AGENTS.md invariants
 
