@@ -740,8 +740,8 @@ fi
 # --- BEGIN check 4f ---
 # The `intake` amendment route writes a change record for an approved story or spec (G1a).
 # Its shape is pinned here: inside the one `## Amending an approved story or spec` section
-# (up to the next `## ` heading), each of the 12 lines below occurs exactly once. The first
-# eight -- the template's heading line, table header and six field lines -- must sit inside
+# (up to the next `## ` heading), each of the 13 lines below occurs exactly once. The first
+# nine -- the template's heading line, table header and seven field lines -- must sit inside
 # the section's first ```markdown fence, the template; the last four -- the closed sets
 # (reason class, fate, AC operation, dependent-artifact status) -- outside it. Placement is
 # checked because a template line moved out of the fence (or a closed set into it) would
@@ -759,6 +759,7 @@ fi
 # shellcheck disable=SC2016
 CR_REQ='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>
 | Earlier condition | Fate | AC operation |
+- **Added without an earlier condition:** <AC-n: "requirement text", or in a spec: "the added condition, quoted"> → per the decision: "<quoted passage>"; or none.
 - **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
 - **Intervening changes:** <change since the baseline> → <how accounted>; or none.
 - **Scope boundary:** in: <…>; out: <…>.
@@ -788,8 +789,8 @@ cr_template_scan() { # $1 = file
       for (i = 1; i <= n; i++) if (want[req[i]] != 1) {
         print "line " i " occurs " want[req[i]] " times in the section, need exactly 1: " req[i]; exit
       }
-      for (i = 1; i <= n; i++) if ((i <= 8) != (infence[req[i]] == 1)) {
-        print "line " i " must be " (i <= 8 ? "inside" : "outside") " the section'"'"'s first ```markdown fence: " req[i]; exit
+      for (i = 1; i <= n; i++) if ((i <= 9) != (infence[req[i]] == 1)) {
+        print "line " i " must be " (i <= 9 ? "inside" : "outside") " the section'"'"'s first ```markdown fence: " req[i]; exit
       }
       print "ok"
     }
@@ -809,7 +810,7 @@ else
          "awk exited $cr_st on $CR_FILE"
   elif [ "$cr_out" != ok ]; then
     fail "Prompt standards: the intake change-record template is malformed: $cr_out" \
-         "the amendment section carries each of the 12 template lines exactly once"
+         "the amendment section carries each of the 13 template lines exactly once"
   fi
 fi
 # --- END check 4f ---

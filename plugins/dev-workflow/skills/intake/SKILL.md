@@ -353,6 +353,10 @@ prompt; the coding session writes it here.
    in the row; a fate with no passage to quote is not a fate but an *Unaccounted* entry. A
    passage that limits *how* something may be decided (what evidence counts, what may not be
    inferred) does not decide *whether* it changes.
+   **Then list what the decision adds with no earlier condition behind it** in *Added without
+   an earlier condition*, each entry with its quoted covering passage — never as a table row,
+   because the table holds earlier conditions only and a row with no earlier condition has no
+   fate to give.
 6. **Apply *Acceptance-criterion IDs* rules 1–5 exactly as written.** Cite each affected
    criterion in rule 4's form (with or without identifiers). Any amendment of an older
    story adopts identifiers under rule 5, even when no criterion's wording changes.
@@ -360,7 +364,11 @@ prompt; the coding session writes it here.
    change is wholly or partly *Unaccounted* gets operation `none` and keeps its approved
    text until a decision covers it; the record names it under *Unaccounted*. A spec amendment
    edits a story only when the decision changes that story, which then is a dependent
-   artifact.
+   artifact. **Each entry in *Added without an earlier condition* stands in the changed
+   artifact as the record names it**: in a story, in §3 under rule 2 (the next unused
+   identifier), with the same identifier and text as in the record; in a spec, in the changed
+   section, with the text the record quotes — and a story changes only under the sentence
+   before this one.
 7. **Fill the remaining fields.** For *Reviews already run*, cite, for each review input the
    change touches and each cycle it affects, the paragraph of the project's gate rules
    (`.claude/review-gates.md` where `/workflow-init` scaffolded them) that decides the
@@ -393,6 +401,7 @@ section it changes. Shape:
 |---|---|---|
 | <AC-n, or the quoted condition> | <fate, or several> | <operation> |
 
+- **Added without an earlier condition:** <AC-n: "requirement text", or in a spec: "the added condition, quoted"> → per the decision: "<quoted passage>"; or none.
 - **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
 - **Intervening changes:** <change since the baseline> → <how accounted>; or none.
 - **Scope boundary:** in: <…>; out: <…>.
@@ -408,6 +417,30 @@ The closed sets:
 - **Fate**, one or more per condition: `kept` · `moved → <destination>` · `dropped — <reason>`.
 - **AC operation**, per intake's ID rules: `none` · `reworded` · `narrowed` · `withdrawn` · `added AC-<n>`.
 - **Dependent-artifact status**, exactly one: `updated in this change` · `open — permitted by <rule>` · `blocks <named continuation> until updated`.
+
+**Added without an earlier condition — the rules.** This field is not a closed set: its
+entries are free text and identifiers, and it widens none of the sets above.
+
+- It lists every criterion or condition the change adds that has **no** earlier condition
+  behind it — nothing it replaces, narrows or takes over. In a story each entry carries the new
+  identifier and the requirement text as written into §3; in a spec, which has no criterion
+  identifiers of its own, the added condition quoted as written into the changed section. Every
+  entry carries the passage of the step-1 decision that covers it. The requirement text holds
+  only what that passage covers: a detail taken from another criterion or nearby wording — a
+  place, a format, a limit — is not covered by it, so it stays out, or goes to *Unaccounted*
+  when the human should decide it. Separate several entries with `;`.
+- `none` means the change adds nothing of this kind. It says nothing about replacements.
+- A **replacement** — a criterion that replaces an earlier one or receives a moved condition —
+  keeps its full mapping and decision passage in that earlier condition's row
+  (`moved → AC-<n>`, `withdrawn; added AC-<n>`) and is not listed here, so what it replaced
+  and why stay in one row.
+- A table row exists only for an earlier condition of the baseline. A row whose
+  earlier-condition cell is empty, `—` or a new condition is not a valid record.
+- An addition with no passage of the decision to quote is not added: it goes to
+  *Unaccounted*, by the same rule step 5 applies to fates.
+
+Example entry, a story amended with a criterion nothing earlier covered:
+`- **Added without an earlier condition:** AC-7: "An admin can stop a running export." → per the decision: "admins need a way to stop a runaway export"`
 
 A narrowing usually carries several fates in one row — the part kept and the part moved
 or dropped — because naming only the surviving part hides what left the scope.

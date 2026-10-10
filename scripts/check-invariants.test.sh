@@ -82,10 +82,11 @@ tpl_sections() {
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
 AC_RULE_LINE='_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._'
-# 4f: the 12 lines the amendment route's change-record template must carry, verbatim.
+# 4f: the 13 lines the amendment route's change-record template must carry, verbatim.
 # shellcheck disable=SC2016  # literal Markdown backticks, not command substitution
 CR_LINES='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. Baseline: <commit or approved-content hash>. <Rationale.>
 | Earlier condition | Fate | AC operation |
+- **Added without an earlier condition:** <AC-n: "requirement text", or in a spec: "the added condition, quoted"> → per the decision: "<quoted passage>"; or none.
 - **Unaccounted:** <condition> → blocks <named continuation> until settled; or none.
 - **Intervening changes:** <change since the baseline> → <how accounted>; or none.
 - **Scope boundary:** in: <…>; out: <…>.
@@ -96,7 +97,7 @@ CR_LINES='**Changed YYYY-MM-DD — <reason class>.** Decided by <who>, <where>. 
 - **Fate**, one or more per condition: `kept` · `moved → <destination>` · `dropped — <reason>`.
 - **AC operation**, per intake'"'"'s ID rules: `none` · `reworded` · `narrowed` · `withdrawn` · `added AC-<n>`.
 - **Dependent-artifact status**, exactly one: `updated in this change` · `open — permitted by <rule>` · `blocks <named continuation> until updated`.'
-# cr_section [LINES]: the amendment section holding LINES (default: all 12), laid out as the
+# cr_section [LINES]: the amendment section holding LINES (default: all 13), laid out as the
 # shipped skill does: the template lines in a ```markdown fence, the closed sets after it.
 CR_SETS='^- \*\*(Reason class|Fate|AC operation|Dependent-artifact status)\*\*'
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
@@ -434,10 +435,14 @@ done
 #              non-numeric-count cases were added; 7 before). Deleting only the count guard
 #              flips exactly those two. 4a, 4b and 4d were re-measured on 2026-10-04 after
 #              the shared fixtures changed: 20, 22, 22.
-#   4f -> 32   every `4f:` reject fixture (31) and `4f change-record parser failure
-#              fires`; no accept case moved (re-measured 2026-10-05 after the fence-placement
-#              cases were added, PR #45 review; 29 before). 4a-4e re-measured the same day
-#              after the shared intake fixture gained the amendment section: 20, 22, 20,
+#   4f -> 34   every `4f:` reject fixture (33) and `4f change-record parser failure
+#              fires`; no accept case moved (re-measured 2026-10-10 after the template gained
+#              its 13th line, the "Added without an earlier condition" field, and the
+#              missing/altered loop its two cases; 32 before, re-measured 2026-10-05 after the
+#              fence-placement cases were added, PR #45 review; 29 before that). 4a-4e, 4g
+#              and 4h re-measured on 2026-10-10, since the shared intake fixture embeds the
+#              changed section: 20, 22, 20, 22, 9, 11, 28, unchanged. 4a-4e re-measured on
+#              2026-10-05 after the shared intake fixture gained the amendment section: 20, 22, 20,
 #              22, 7, unchanged. The first 4d run flipped 109 cases, accepts
 #              among them, because 4f read 4d's file variable; 4f now sets its own.
 #   4g -> 11   every `4g:` reject case (11, the unreadable case run as non-root); no accept
@@ -1095,8 +1100,8 @@ cr_case "4f: section last in the file accepted"        0 "$(cr_section | sed '$d
 cr_case "4f: an unfenced template rejected"            1 "$(printf '## Amending an approved story or spec\n\n%s\n' "$CR_LINES")" \
   "line 1 must be inside"
 cr_case "4f: a closed set inside the fence rejected"   1 \
-  "$(cr_section | awk -v l="$(printf '%s\n' "$CR_LINES" | sed -n 9p)" '$0 == l { next } $0 == "```" && !d { print l; d = 1 } { print }')" \
-  "line 9 must be outside"
+  "$(cr_section | awk -v l="$(printf '%s\n' "$CR_LINES" | sed -n 10p)" '$0 == l { next } $0 == "```" && !d { print l; d = 1 } { print }')" \
+  "line 10 must be outside"
 cr_case "4f: a template line after the fence rejected" 1 \
   "$(cr_section | awk -v l="$(printf '%s\n' "$CR_LINES" | sed -n 3p)" '$0 == l { next } { print } $0 == "```" && !d { print l; d = 1 }')" \
   "line 3 must be inside"
@@ -1110,7 +1115,7 @@ cr_case "4f: a required line outside the section rejected" 1 \
 $(printf '%s\n' "$CR_LINES" | sed -n 1p)"
 # cr_i, not i: init_prompt_fixtures (called by cr_case) uses and leaves a global i.
 cr_i=1
-while [ "$cr_i" -le 12 ]; do
+while [ "$cr_i" -le 13 ]; do
   cr_case "4f: required line $cr_i missing rejected" 1 \
     "$(cr_section "$(printf '%s\n' "$CR_LINES" | sed "${cr_i}d")")" "line $cr_i occurs 0 times"
   cr_case "4f: required line $cr_i altered rejected" 1 \
