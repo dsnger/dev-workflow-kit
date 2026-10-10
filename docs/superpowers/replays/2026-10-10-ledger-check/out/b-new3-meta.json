@@ -1,0 +1,10 @@
+{
+ "session_id": "68b68a12-6c5d-46ae-8a2f-12319476fcdf",
+ "num_turns": 6,
+ "is_error": false,
+ "duration_ms": 27327,
+ "total_cost_usd": 0.5487324,
+ "models": [
+  "claude-opus-5-5"
+ ]
+}

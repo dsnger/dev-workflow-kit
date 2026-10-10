@@ -359,6 +359,87 @@ outk=$(report K "$SCRIPT"); st=$?
 [ "$st" -eq 0 ] && printf '%s\n' "$outk" | grep -qx 'no joined cycles (every record is in a conflict below)' &&
   pass "conflict-only history: the cycle list says why it is empty" || fail "conflict-only empty label"
 
+# ---- 4b. ledger-check records (dev-workflow 0.22.0) ---------------------------------------
+# A valid ledger-check, owed or outcome line starts like a record but is none of the three kinds, so
+# the reader sets it aside; a malformed line in those families stays an unparsed candidate.
+LN=ledgrec1; LS=gate-b-quality-ledgrec1-pass-1
+LEDG_VALID="cycle $LN; ledger check: fixed 1, hardening owed 1\ncycle $LN; hardening owed $LS:1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code\ncycle $LN; hardening $LS:2: rung 2\ncycle $LN; hardening $LS:3: pending todos.md#ledger\ncycle $LN; hardening $LS:4: rung 0 — no mechanical check fits\n"
+LEDG_BAD="cycle zzzzzzzz; not a record\ncycle $LN; hardening owed $LS:4 — major — docs-drift\ncycle $LN; hardening $LS:5: rung 7\n"
+mk_ledg_repo() { # dir, 1 = with the five valid ledger lines, 0 = without
+  newrepo "$1"; printf '%s\n' "$LEDGER_HEAD" > "$work/$1/docs/hardening-log.md"
+  if [ "$2" = 1 ]; then v=$LEDG_VALID; else v=''; fi
+  (cd "$work/$1" && tick=1700000000 && commit 'ledger\n' &&
+    commit "close\n\ncycle $LN; floor 3 per {docs/s.md (level 1)}; hook reminder threshold absent\n${v}cycle $LN; Gate B (passes 1-2, codex): Findings 1,0. Blockers 0,0. Majors 1,0.\n$LEDG_BAD")
+}
+mk_ledg_repo LW 1; mk_ledg_repo LN 0
+outw=$(report LW "$SCRIPT"); stw=$?
+outn=$(report LN "$SCRIPT"); stn=$?
+[ "$stw" -eq 0 ] && [ "$stn" -eq 0 ] && pass "ledger-check fixture: exit 0 with and without the valid lines" ||
+  fail "ledger-check fixture: exit $stw / $stn"
+hashless() { sed -E 's/[0-9a-f]{12,40}/H/g'; }
+expect "ledger-check records: report equals the report without the five valid lines" \
+  "$(printf '%s\n' "$outw" | hashless)" <<EOF
+$(printf '%s\n' "$outn" | hashless)
+EOF
+expect "ledger-check records: unparsed lists the three malformed lines and no valid one" \
+  "$(printf '%s\n' "$outw" | sed -n '/^== Git: unparsed candidate lines/,/^$/p' | hashless)" <<EOF
+== Git: unparsed candidate lines
+H  cycle $LN; hardening $LS:5: rung 7
+H  cycle $LN; hardening owed $LS:4 — major — docs-drift
+H  cycle zzzzzzzz; not a record
+EOF
+printf '%s\n' "$outw" | grep -qx "$LN  Gate B  passes 1-2  floor 3  set {docs/s.md (level 1)}  findings 1,0 (? 0)  blockers 0,0 (? 0)  majors 1,0 (? 0)" &&
+  pass "ledger-check records: the cycle keeps its provenance and curve" || fail "ledger-check records: cycle line"
+
+# is_ledger_record itself, over valid and malformed lines.
+unit=$(python3 -I -c '
+import importlib.util, sys
+s = importlib.util.spec_from_file_location("lm", sys.argv[1]); lm = importlib.util.module_from_spec(s)
+sys.dont_write_bytecode = True; s.loader.exec_module(lm)
+n, sl = "cycle ledgrec1; ", "gate-b-quality-ledgrec1-pass-1"
+cases = [
+    (True, n + "ledger check: fixed 0, hardening owed 0"),
+    (True, n + "ledger check: fixed 12, hardening owed 3"),
+    (True, n + "hardening owed " + sl + ":1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code"),
+    (True, n + "hardening owed " + sl + ":2 — nit — prose — docs/a.md — wording"),
+    (True, n + "hardening owed gate-a-spec-ledgrec1-pass-10:3 — blocker — x — \"a \\\"q\\\" b\" — d"),
+    (True, n + "hardening " + sl + ":1: rung 1"),
+    (True, n + "hardening " + sl + ":1: rung P"),
+    (True, n + "hardening " + sl + ":1: pending todos.md#ledger"),
+    (True, n + "hardening " + sl + ":1: rung 0 — no mechanical check fits"),
+    (False, "cycle zzzzzzzz; not a record"),
+    (False, n + "ledger check: fixed 01, hardening owed 0"),
+    (False, n + "ledger check: fixed 1"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a.md"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a.md — "),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — \"docs/A — B.md\""),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a\"b.md — desc"),
+    (False, n + "hardening owed " + sl + ":4 — critical — docs-drift — docs/a.md — desc"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a.md — desc\twith a tab"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a.md — desc \x85"),
+    (False, n + "hardening owed " + sl + ":4 — major — docs-drift — docs/a.md — desc — more"),
+    (False, n + "hardening owed gate-c-spec-ledgrec1-pass-1:4 — major — x — docs/a.md — desc"),
+    (False, n + "hardening owed gate-b-quality-ledgrec1-pass-0:4 — major — x — docs/a.md — desc"),
+    (False, n + "hardening owed " + sl + ":0 — major — x — docs/a.md — desc"),
+    (False, n + "hardening " + sl + ":5: rung 7"),
+    (False, n + "hardening " + sl + ":5: rung 0"),
+    (False, n + "hardening " + sl + ":5: pending "),
+    (False, n + "hardening " + sl + ":5: rung 2\r"),
+    (False, "cycle LEDGREC1; hardening " + sl + ":5: rung 2"),
+    (False, n + "hardening owed " + sl + ":4 — major —   — docs/a.md — desc"),
+    (False, n + "hardening owed " + sl + ":4 — major — new class  — docs/a.md — desc"),
+    (False, n + "hardening owed " + sl + ":4 — major — Docs Drift — docs/a.md — desc"),
+    (True, n + "hardening owed " + sl + ":4 — minor — new class exit-code-swallowed — docs/a.md — desc"),
+]
+bad = [repr(l) for want, l in cases if lm.is_ledger_record(l) is not want]
+print("%d cases, %d disagree" % (len(cases), len(bad)))
+for b in bad: print("  " + b)
+' "$SCRIPT" 2>&1)
+expect "is_ledger_record: valid lines accepted, malformed ones refused" "$unit" <<'EOF'
+33 cases, 0 disagree
+EOF
+
 # ---- 5. exit-1 causes -----------------------------------------------------------------
 bad() { # name, expected stderr substring, dir, [ref]
   e=$(run "$3" "$SCRIPT" ${4+"$4"} 2>&1 >/dev/null); s=$?

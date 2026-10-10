@@ -1,0 +1,1 @@
+Find every open hardening obligation recorded in this repository's git history, following CLAUDE.md and .claude/review-gates.md in this repository. For each one, state the dev-workflow:harden-finding intake: the finding text, its source, its severity, and where the defect sat. If the rules in this repository define no such obligations, say so.

@@ -116,7 +116,7 @@ def read_records(sha, lm):
         while j < len(lines):
             line = lines[j]
             j += 1
-            if not lm.CANDIDATE.match(line):
+            if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
                 continue
             parsed = lm.parse_record(line)
             if parsed is None:

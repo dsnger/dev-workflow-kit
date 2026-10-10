@@ -1,0 +1,20 @@
+Remove the --global flag from tool.sh
+
+tool.sh no longer accepts --global and always prints ok. The README
+usage line drops the flag, keeping the AGENTS.md invariant that the
+README documents exactly the flags tool.sh accepts, and the help
+sentence's "mesage" typo is fixed.
+
+Quality battery: sh -n tool.sh, green.
+
+cycle r3pl4yfx01; floor 3 per none; hook reminder threshold absent
+cycle r3pl4yfx01; Gate B (passes 1,2, undetermined): Findings 3,0. Blockers 0,0. Majors 2,0.
+cycle r3pl4yfx01; ledger check: fixed 2, hardening owed 1
+cycle r3pl4yfx01; hardening owed gate-b-spec-r3pl4yfx01-pass-1:1 — major — docs-drift — README.md — usage line still named the removed --global flag
+
+Pass 2 closed the cycle through the zero-finding exit: both branches
+returned NO FINDINGS. No plan contributes a Story: header to this diff,
+so the cited set is empty and the derived floor is 3.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+

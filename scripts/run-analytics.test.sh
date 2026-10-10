@@ -302,6 +302,39 @@ s=importlib.util.spec_from_file_location("ra",sys.argv[1]); m=importlib.util.mod
 p,o=m.cycles_from_history(".",m.load_ledger_parser(sys.argv[2])); print(m.classify("gggggggg",p,o)[0])' "$work/repo/scripts/run-analytics.py" "$work/repo/scripts")
 [ "$cls" = conflicting ] && pass "two skip records with different reasons make the cycle conflicting" || fail "skip reasons: $cls"
 
+# ---- 2c. ledger-check records (dev-workflow 0.22.0) -------------------------------------------------
+# A valid ledger-check, owed or outcome line is set aside; a malformed one is dropped as before.
+# Attribution reads the same with and without the valid lines.
+LN=ledgrec1; LS=gate-b-quality-ledgrec1-pass-1
+LEDG_VALID="cycle $LN; ledger check: fixed 1, hardening owed 1\ncycle $LN; hardening owed $LS:1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code\ncycle $LN; hardening $LS:2: rung 2\ncycle $LN; hardening $LS:3: pending todos.md#ledger\ncycle $LN; hardening $LS:4: rung 0 — no mechanical check fits\n"
+LEDG_BAD="cycle zzzzzzzz; not a record\ncycle $LN; hardening owed $LS:4 — major — docs-drift\ncycle $LN; hardening $LS:5: rung 7\n"
+mkledg() { # dir, 1 = with the valid ledger lines, 0 = without
+  mkdir -p "$work/$1"
+  if [ "$2" = 1 ]; then v=$LEDG_VALID; else v=''; fi
+  (
+    cd "$work/$1" || exit 1
+    gitc init -q --template= .
+    commit "close\n\ncycle $LN; floor 3 per {docs/superpowers/stories/s1-story.md (level 1)}; hook reminder threshold absent\n${v}cycle $LN; Gate B (passes 1-2, codex): Findings 1,0. Blockers 0,0. Majors 0,0.\n$LEDG_BAD"
+  )
+}
+ledg_cycles() { (cd "$work/$1" && python3 -B -c 'import importlib.util,sys
+sys.dont_write_bytecode=True
+s=importlib.util.spec_from_file_location("ra",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+p,o=m.cycles_from_history(".",m.load_ledger_parser(sys.argv[2]))
+for n in sorted(set(p)|set(o)):
+    print(n, *m.classify(n,p,o))
+    for t in sorted(p.get(n,{})): print("  prov", t)
+    for t in sorted(o.get(n,())): print("  other", t)' "$SCRIPT" "$HERE") 2>&1; }
+mkledg ledgw 1; mkledg ledgn 0
+cw=$(ledg_cycles ledgw); cn=$(ledg_cycles ledgn)
+[ "$cw" = "$cn" ] && pass "ledger-check records: attribution equals attribution without the valid lines" ||
+  fail "ledger-check records: the valid lines changed attribution"
+expect "ledger-check records: the cycle keeps its provenance and curve, malformed lines dropped" "$cw" <<EOF
+$LN confirmed ('docs/superpowers/stories/s1-story.md',)
+  prov cycle $LN; floor 3 per {docs/superpowers/stories/s1-story.md (level 1)}; hook reminder threshold absent
+  other cycle $LN; Gate B (passes 1-2, codex): Findings 1,0. Blockers 0,0. Majors 0,0.
+EOF
+
 # ---- 3. second run, deleted sources, retention ------------------------------------------------------
 cp "$STORE" "$work/store1"
 out2=$(run "$work/repo"); st=$?

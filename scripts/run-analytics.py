@@ -543,7 +543,7 @@ def cycles_from_history(cwd, lm):
     for rec in out.decode("utf-8", "replace").split("\0"):
         lines = rec.split("\n")
         for i, line in enumerate(lines):
-            if not lm.CANDIDATE.match(line):
+            if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
                 continue
             parsed = lm.parse_record(line)
             if parsed is None or parsed[0] == "none (pre-rule)":

@@ -218,6 +218,50 @@ def parse_curve(rest):
     return {"kind": kind, "spec": spec, "f": series[0], "b": series[1], "m": series[2]}
 
 
+# The ledger-check records (CLAUDE.md §5 Mechanics, dev-workflow 0.22.0). They start like every
+# other cycle record, so CANDIDATE matches them; the readers set a VALID one aside before parsing,
+# because it is neither a provenance line, a curve nor a skip record. A malformed line in these
+# families is not recognized and keeps the malformed-record handling every reader already has.
+SLOT = r"gate-(?:a-spec|a-plan|b-spec|b-quality)-" + NONCE + r"-pass-[1-9][0-9]*"
+SEP = " \u2014 "  # " — "
+LEDGER_CHECK = re.compile(r"cycle " + NONCE + r"; ledger check: fixed (0|[1-9][0-9]*), "
+                          r"hardening owed (0|[1-9][0-9]*)")
+OWED_HEAD = re.compile(r"cycle " + NONCE + r"; hardening owed " + SLOT + r":[1-9][0-9]*" + SEP)
+OUTCOME = re.compile(r"cycle " + NONCE + r"; hardening " + SLOT + r":[1-9][0-9]*: "
+                     r"(rung [1-4P]|pending \S.*|rung 0" + SEP + r"\S.*)")
+CLASS = re.compile(r"(?:new class )?[a-z0-9][a-z0-9-]*")
+QUOTED = re.compile(r'"(?:[^"\\]|\\["\\])+"')
+
+
+def is_ledger_record(line):
+    """True for a well-formed ledger-check, owed or outcome line; False for anything else."""
+    if any(is_control(c) for c in line):
+        return False
+    if LEDGER_CHECK.fullmatch(line):
+        return True
+    if OUTCOME.fullmatch(line):
+        return True
+    m = OWED_HEAD.match(line)
+    if not m:
+        return False
+    rest = line[m.end():]
+    sev, _, rest = rest.partition(SEP)
+    cls, _, rest = rest.partition(SEP)
+    if sev not in ("blocker", "major", "minor", "nit") or not CLASS.fullmatch(cls) or not rest:
+        return False
+    q = QUOTED.match(rest)
+    if q:  # a quoted target may contain the separator
+        target, rest = q.group(0), rest[q.end():]
+        if not rest.startswith(SEP):
+            return False
+        desc = rest[len(SEP):]
+    else:
+        target, _, desc = rest.partition(SEP)
+        if '"' in target:
+            return False
+    return bool(target) and bool(desc.strip()) and SEP not in desc and desc == desc.strip()
+
+
 def parse_record(line):
     """Return (field, type, data) for a valid record, or None for a malformed candidate."""
     m = re.compile(r"^cycle " + FIELD + r"; ").match(line)
@@ -339,7 +383,7 @@ def git_sections(commits, absence):
             line = lines[i]
             pos = i
             i += 1
-            if not CANDIDATE.match(line):
+            if not CANDIDATE.match(line) or is_ledger_record(line):
                 continue
             parsed = parse_record(line)
             if parsed is None:

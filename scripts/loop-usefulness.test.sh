@@ -492,6 +492,44 @@ if (
     pass "a git replace ref does not change what is read" || fail "a replace ref changed the report"
 else fail "replace-ref fixture could not be built"; fi
 
+# ---- 2b. ledger-check records (dev-workflow 0.22.0) -------------------------------------------------
+# A valid ledger-check, owed or outcome line is set aside; a malformed one is still an unparsed line.
+LN=ledgrec1; LS=gate-b-quality-ledgrec1-pass-1
+LEDG_VALID="cycle $LN; ledger check: fixed 1, hardening owed 1\ncycle $LN; hardening owed $LS:1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code\ncycle $LN; hardening $LS:2: rung 2\ncycle $LN; hardening $LS:3: pending todos.md#ledger\ncycle $LN; hardening $LS:4: rung 0 — no mechanical check fits\n"
+LEDG_BAD="cycle zzzzzzzz; not a record\ncycle $LN; hardening owed $LS:4 — major — docs-drift\ncycle $LN; hardening $LS:5: rung 7\n"
+mkledg() { # dir, 1 = with the valid ledger lines, 0 = without
+  mkdir -p "$work/$1/scripts"; cp "$SCRIPT" "$LEDGER" "$work/$1/scripts/"
+  if [ "$2" = 1 ]; then v=$LEDG_VALID; w="\ncycle ledgskp2; hardening gate-b-quality-ledgskp2-pass-1:1: rung 1"; else v=''; w=''; fi
+  (
+    cd "$work/$1" || exit 1
+    tick=1700000000
+    gitc init -q --template= --object-format=sha1 .
+    printf '.context/\n' > .gitignore
+    rc docs/base.md 'base\n'
+    rc plugins/p/commands/c.md "close\n\n$(prov $LN 3)\n${v}$(curve $LN 'Gate B' 1-2 '1,0' '0,0' '1,0')\n$LEDG_BAD"
+    # the same skip record twice: one copy is followed by a ledger line, and the reason must not change
+    rc plugins/p/commands/c.md "skip a\n\ncycle ledgskp2; Gate B: skipped (see skip reason)\nSkip reason: trivial.${w}\n"
+    rc plugins/p/commands/c.md "skip b\n\ncycle ledgskp2; Gate B: skipped (see skip reason)\nSkip reason: trivial.\n"
+  )
+}
+mkledg lw 1; mkledg ln 0
+outw=$(run "$work/lw"); stw=$?
+outn=$(run "$work/ln"); stn=$?
+[ "$stw" -eq 0 ] && [ "$stn" -eq 0 ] && pass "ledger-check fixture: exit 0 with and without the valid lines" ||
+  fail "ledger-check fixture: exit $stw / $stn"
+hashless() { sed -E 's/[0-9a-f]{12,40}/H/g'; }
+[ "$(printf '%s\n' "$outw" | hashless)" = "$(printf '%s\n' "$outn" | hashless)" ] &&
+  pass "ledger-check records: report equals the report without the valid lines" ||
+  fail "ledger-check records: the valid lines changed the report"
+printf '%s\n' "$outw" | grep -qx 'nonces: closed 1  open or unclosed 0  skipped 1  conflicting or incomplete 0;  pre-rule records 0  unparsed record lines 3' &&
+  pass "ledger-check records: exactly the three malformed lines are unparsed, the skip keeps one reason" ||
+  fail "ledger-check records: header $(printf '%s\n' "$outw" | grep '^nonces:')"
+printf '%s\n' "$outw" | grep -q "^$LN  Gate B  no warning" &&
+  printf '%s\n' "$outw" | grep -q '^  context: closed, commit [0-9a-f]\{12\} [0-9-]\{10\}, floor 3, stories {docs/superpowers/stories/s-story.md (level 1)}' &&
+  printf '%s\n' "$outw" | grep -q '^ledgskp2  skipped — no loop ran, no state' &&
+  pass "ledger-check records: the cycle keeps its provenance and curve, the skip stays a skip" ||
+  fail "ledger-check records: cycle or skip lines"
+
 # ---- 3. negative control ----------------------------------------------------------------------------
 build
 python3 - "$work/repo/scripts/loop-usefulness.py" "$work/repo/scripts/noinc.py" <<'PY'

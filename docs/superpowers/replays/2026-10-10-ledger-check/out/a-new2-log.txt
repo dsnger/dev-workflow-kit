@@ -1,0 +1,2 @@
+f7aa9e4 Remove the --global flag from tool.sh
+3662dda initial

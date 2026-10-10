@@ -708,7 +708,7 @@ backlog.
       - **G3b — a fresh session at a completed unit of work**, after a closing act, as a
         *planned* efficiency step with a checked handover: state, open obligations, nonce and
         evidence paths. It does not override mandatory stops, the interrupted-cycle resume
-        procedure (`.claude/review-gates.md`, "Optional companions") or a human-directed
+        procedure (`.claude/review-gates.md`, "Companions of a findings file") or a human-directed
         handover. Related: vision §7 step 3's complete assignment frame.
       - **G3c — rule consolidation through the existing leaf** (vision: shrinking the gate rules
         is "a separate later leaf"), widened to `AGENTS.md`: a short binding core, details
@@ -1460,6 +1460,15 @@ backlog.
       row stays open because the fix it sketches has not landed.
       *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
+- [ ] **`/workflow-init` CLAUDE.md template: "If that file is missing" can mean the wrong
+      directory** (2026-10-10, CodeRabbit in the SFX Bricks child theme, relayed by Daniel). The
+      §5 pointer says a missing `.claude/review-gates.md` means "this project has no gate rules"
+      and to restore it with `/workflow-init`. A session working outside the checkout root would
+      read the same absence and scaffold the rules into the wrong directory. Fix in the template
+      (`plugins/dev-workflow/commands/workflow-init.md` `### 2.1`, and this repo's `CLAUDE.md`):
+      confirm the checkout root first (`git rev-parse --show-toplevel`), then restore. Downstream
+      copies are not edited by hand; they take it through `/workflow-init`. Its own small change
+      with Gate B.
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
       open PRs.** **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
       finding lines, many Majors repaired, no PRs) also has 0 ledger rows; canvas keeps its

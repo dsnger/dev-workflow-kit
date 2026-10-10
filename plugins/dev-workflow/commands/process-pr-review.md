@@ -179,7 +179,16 @@ be ambiguous, which is not an instruction.
 5. Check accepted **and actionable** findings — those fixed under item 3 — against `docs/hardening-log.md` (anchored column-2 grep,
    per the `harden-finding` skill). If one matches an existing class, or a new class
    is clearly warranted, run `dev-workflow:harden-finding` on it — a bot finding that
-   only gets fixed once will be back.
+   only gets fixed once will be back. **One exception, for findings a review gate already
+   checked:** a bot finding that reports the same occurrence as a `hardening owed` line
+   written by a gate cycle inside this pull request's own range (merge-base to head) is not
+   checked again and is not counted as a new occurrence — that line already carries it as an
+   open obligation (`.claude/review-gates.md`, Mechanics, the ledger check). Same occurrence
+   means the same defect at the same place, still unrepaired or repaired by that cycle; your
+   report names the owed line it matched. A defect reintroduced after that repair, or any
+   doubt about the match, takes the ordinary route above. Only owed lines are matched: a bot
+   finding that duplicates a gate finding which owed nothing is checked here as usual, which
+   costs one repeated check and nothing more, since no ledger row exists for it to miscount.
 6. Report grounded (CLAUDE.md §4): per claim — verdict + reason + action + the tool
    result that verifies it. If code changed: the project's quality command
    (`AGENTS.md § Commands`) green locally **and** the CI quality check green on the

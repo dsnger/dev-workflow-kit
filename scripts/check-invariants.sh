@@ -22,8 +22,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d and 4f), and the size-budget checks 4e and 4g, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f and 4g -- so a scratch
+# below (4a-4d, 4f and 4h), and the size-budget checks 4e and 4g, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f, 4g and 4h -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -31,7 +31,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, then 4g
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, then 4h
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -872,6 +872,104 @@ else
   fi
 fi
 # --- END check 4g ---
+
+# --- BEGIN check 4h ---
+# The ledger-check records (dev-workflow 0.22.0, Finding A) must be stated in BOTH prompt
+# copies: the dispositions line with its closed verdict set, the ledger-check line, the
+# owed line, the three outcome lines and the quoted-target rule. Region and placement
+# follow 4c exactly -- the whole of `.claude/review-gates.md`; in the command file, the
+# `### 2.1a` gate-rules template up to the next numbered heading, which must be `2.2` --
+# because only that region reaches an initialized project.
+#
+# EQUALITY per line, after stripping indentation and one blockquote marker, as 4c does: a
+# line that merely contains a required line can negate it in the same breath. Each line
+# must appear AT LEAST ONCE (not exactly once, unlike 4c): a grammar line may be quoted
+# again in an example without changing what it means.
+#
+# WHAT IT PROVES: these seven lines are present, verbatim, in both copies and in the right
+# region. It does NOT prove an agent follows them, that the prose around them is right or
+# consistent with them, or that a separate line elsewhere does not contradict them.
+# Spec docs/superpowers/specs/2026-10-10-ledger-check-at-cycle-close-design.md §5 states
+# the same limit; the behaviour is covered, as one sample, by the replay package
+# docs/superpowers/replays/2026-10-10-ledger-check/.
+# shellcheck disable=SC2016  # literal Markdown backticks and placeholders, not expansions
+LR_REQ='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `not fixed` | `same as <SLOT>:<m>` — no other token.
+cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
+cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>
+cycle <NONCE>; hardening <SLOT>:<n>: rung <RUNG>
+cycle <NONCE>; hardening <SLOT>:<n>: pending <REF>
+cycle <NONCE>; hardening <SLOT>:<n>: rung 0 — <CHECK>
+A `<TARGET>` containing ` — ` or a double quote is written as a `<quoted>` string, as the provenance line defines it, and a reader splits the fields on ` — ` only outside quotes.'
+
+# Prints "HEADS <n> TERM <t>", then one "MISS<TAB><line>" per required line absent from the
+# whole file and one "MISSTPL<TAB><line>" per required line absent from the `### 2.1a`
+# region. Returns 2 if awk itself failed: empty output is not "nothing missing".
+ledger_record_scan() { # $1 = file
+  LR_REQ="$LR_REQ" awk '                            # ledger-record-scan
+    BEGIN { k = split(ENVIRON["LR_REQ"], req, "\n") }
+    /^### 2\.1a[[:space:]]/ { intpl = 1; heads += 1; next }
+    intpl && /^### [0-9]/  { intpl = 0; term = $2; next }
+    { line = $0
+      sub(/^[ \t]*/, "", line); sub(/^> ?/, "", line); sub(/^[ \t]*/, "", line)
+      for (i = 1; i <= k; i++) if (line == req[i]) { n[i] += 1; if (intpl) t[i] += 1 } }
+    END { printf "HEADS %d TERM %s\n", heads + 0, (term == "" ? "none" : term)
+          for (i = 1; i <= k; i++) {
+            if (!n[i]) printf "MISS\t%s\n", req[i]
+            if (!t[i]) printf "MISSTPL\t%s\n", req[i] } }
+  ' "$1" || return 2
+}
+
+for lr_file in .claude/review-gates.md plugins/dev-workflow/commands/workflow-init.md; do
+  if [ ! -f "$lr_file" ]; then
+    fail "Prompt standards: $lr_file is missing, so the ledger-check record lines cannot be checked." \
+         "both prompt copies are required"
+    continue
+  fi
+  if [ ! -r "$lr_file" ]; then
+    fail "Prompt standards: $lr_file is unreadable, so the ledger-check record lines cannot be checked." \
+         "check permissions"
+    continue
+  fi
+  lr_out=$(ledger_record_scan "$lr_file"); lr_st=$?
+  if [ "$lr_st" -ne 0 ] || [ -z "$lr_out" ]; then
+    fail "Prompt standards: the ledger-check record parser failed; results are not trustworthy." \
+         "awk exited $lr_st on $lr_file"
+    continue
+  fi
+  lr_head=$(printf '%s\n' "$lr_out" | sed -n 1p)
+  # shellcheck disable=SC2086  # word splitting is the point: "HEADS n TERM t"
+  set -- $lr_head
+  lr_heads=${2:-}; lr_term=${4:-}
+  if [ "$lr_file" != .claude/review-gates.md ]; then
+    if [ "$lr_heads" != 1 ]; then
+      fail "Prompt standards: $lr_file has ${lr_heads:-?} '### 2.1a' gate-rules template headings, so the ledger-check record lines' placement cannot be checked." \
+           "expected exactly one"
+      continue
+    elif [ "$lr_term" != 2.2 ]; then
+      fail "Prompt standards: $lr_file's '### 2.1a' section is terminated by '$lr_term', not '2.2', so the ledger-check record lines' placement cannot be checked." \
+           "the range would silently widen past the scaffolded template"
+      continue
+    fi
+  fi
+  # A here-document, not a pipe: `fail` must run in this shell so its status survives.
+  while IFS= read -r lr_line; do
+    case "$lr_line" in
+      "MISS	"*)
+        fail "Prompt standards: $lr_file lacks a ledger-check record line, verbatim on a line of its own." \
+             "${lr_line#MISS	}" ;;
+      "MISSTPL	"*)
+        [ "$lr_file" = .claude/review-gates.md ] && continue
+        # Only reported where the whole-file copy exists: a line absent everywhere is
+        # already named once above.
+        case "$lr_out" in *"MISS	${lr_line#MISSTPL	}"*) continue ;; esac
+        fail "Prompt standards: $lr_file states a ledger-check record line outside the scaffolded gate-rules template, so an initialized project would not receive it." \
+             "${lr_line#MISSTPL	}" ;;
+    esac
+  done <<LR_EOF
+$lr_out
+LR_EOF
+done
+# --- END check 4h ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

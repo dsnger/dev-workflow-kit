@@ -115,6 +115,18 @@ the synonyms a future reader might search for instead.
   permissive state. Grep this one when the sentence is "it didn't fit any state, so it
   counted as nothing to do".
 
+- `mandatory-step-anchored-to-optional-path` — a step the workflow calls mandatory is
+  reachable only through a path that is itself optional or absent for some users, so for
+  them it never runs and nothing reports that it did not. Aliases: duty hidden in an
+  optional route, check only on the PR path, mandatory step behind an opt-in, "everyone
+  runs it" where only some routes reach it. The motivating case: the only mandated ledger
+  check lived in `process-pr-review` step 5, so gate findings, and every project without
+  pull requests, never reached it (Finding A).
+
+  **Not `session-bound-context-not-durable`.** There the step runs and its result is lost
+  with the session; here the step is never reached. Grep this one when the question is
+  "which route actually gets there?".
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project

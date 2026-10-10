@@ -1,0 +1,18 @@
+Remove the --global flag from tool.sh
+
+tool.sh no longer accepts --global and always prints "ok". The README
+usage line drops the flag to keep the AGENTS.md invariant (the README
+documents exactly the flags tool.sh accepts), and the help sentence typo
+"mesage" is corrected.
+
+Evidence: docs/superpowers/stories/2026-10-10-flags-story.md - quality battery `sh -n tool.sh` green (exit 0) on tree 83d38a59bb1d7738cff66640fe7c000f5356e2ed
+
+cycle r3pl4yfx01; floor 1 per {docs/superpowers/stories/2026-10-10-flags-story.md (level 0)}; hook reminder threshold absent
+cycle r3pl4yfx01; Gate B (passes 1,2, undetermined): Findings 3,0. Blockers 0,0. Majors 2,0.
+
+Gate B passes are logical passes, each one spec call plus one quality call
+on base 3721579968dbabd717e94f6b2edb3f75732a0a5f. The reviewing model is not
+recorded in the cycle records, so it is written as undetermined.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+

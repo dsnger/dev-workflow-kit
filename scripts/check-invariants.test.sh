@@ -28,6 +28,17 @@ fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 # below, every fixture would fail 4c on a baseline unrelated to its own assertion — the
 # same isolation failure the checklist pair was added for.
 SEV_LINE='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.'
+# Check 4h adds a third: the seven ledger-check record lines, verbatim, in both prompt copies
+# (inside `### 2.1a` in the command file). Kept identical to the checker's LR_REQ on
+# purpose: a drift between the two turns every accept case red.
+# shellcheck disable=SC2016  # literal Markdown backticks and placeholders, not expansions
+LR_LINES='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `not fixed` | `same as <SLOT>:<m>` — no other token.
+cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
+cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>
+cycle <NONCE>; hardening <SLOT>:<n>: rung <RUNG>
+cycle <NONCE>; hardening <SLOT>:<n>: pending <REF>
+cycle <NONCE>; hardening <SLOT>:<n>: rung 0 — <CHECK>
+A `<TARGET>` containing ` — ` or a double quote is written as a `<quoted>` string, as the provenance line defines it, and a reader splits the fields on ` — ` only outside quotes.'
 init_prompt_fixtures() { # $1 = fixture repo root
   mkdir -p "$1/docs" "$1/plugins/dev-workflow/commands"
   for pf in "$1/docs/prompt-standards.md" "$1/plugins/dev-workflow/commands/workflow-init.md"; do
@@ -40,14 +51,15 @@ init_prompt_fixtures() { # $1 = fixture repo root
       # copy anywhere else satisfies the duplicate count and still ships nothing.
       # 4e: `### 2.1` needs a small fenced CLAUDE.md template, or every fixture fails the
       # size check on a missing fence before reaching its own assertion.
-      printf '\n'; tpl_sections "$TPL_OK" "$SEV_LINE"
+      printf '\n'; tpl_sections "$TPL_OK" "$SEV_LINE
+$LR_LINES"
     } > "$pf"
   done
   # `docs/prompt-standards.md` got the section from the loop as well; harmless, 4c does
   # not read that path. .claude/review-gates.md is not written by the loop and needs its
   # own copy -- and needs no `### 2.1`, since the whole file is the artifact there.
   mkdir -p "$1/.claude"
-  printf '# Fixture\n\n%s\n' "$SEV_LINE" > "$1/.claude/review-gates.md"
+  printf '# Fixture\n\n%s\n%s\n' "$SEV_LINE" "$LR_LINES" > "$1/.claude/review-gates.md"
   # 4d: a minimal valid intake story template, for the same isolation reason.
   mkdir -p "$1/plugins/dev-workflow/skills/intake"
   ac_skill "$(ac_rows 3)" > "$1/plugins/dev-workflow/skills/intake/SKILL.md"
@@ -432,6 +444,11 @@ done
 #              case moved (measured 2026-10-08, when 4g was added). The shared initializer
 #              gained the two instruction files the same day; 4a-4f re-measured after it:
 #              20, 22, 20, 22, 7, 32, unchanged.
+#   4h -> 28   every `4h:` reject case (27, the unreadable case run as non-root) and
+#              `4h ledger-check record parser failure fires`; no accept case moved
+#              (measured 2026-10-10, when 4h was added). The shared initializer and sev_tpl
+#              gained the seven 4h lines the same day; 4a-4g re-measured after it: 20, 22,
+#              20, 22, 9, 32, 11, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -751,6 +768,9 @@ sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = .claude/review-gates.md, 
   printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
   printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
   sev_put "$work/r/.claude/review-gates.md" "$3"
+  # A 4c body replaces the whole rules file; 4h's lines are appended so the case fails on 4c
+  # alone. Sentinels are left as they are.
+  case "$3" in @*@) : ;; *) printf '%s\n' "$LR_LINES" >> "$work/r/.claude/review-gates.md" ;; esac
   sev_put "$work/r/plugins/dev-workflow/commands/workflow-init.md" "$4"
   out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
   chmod 644 "$work/r/.claude/review-gates.md" 2>/dev/null
@@ -772,7 +792,9 @@ sev_tpl() {
   printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
   i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
   printf '\n## After\n\nReviewed against all 12 items.\n\n'
-  tpl_sections "${3:-$TPL_OK}" "$1" "${2:-}"
+  # 4h's lines ride inside `### 2.1a` with $1, so a 4c or 4e case fails only on its own check.
+  tpl_sections "${3:-$TPL_OK}" "$1
+$LR_LINES" "${2:-}"
 }
 TPL_NONE=$(sev_tpl "nothing here")
 
@@ -1175,6 +1197,81 @@ inject_case "4g: a failed read rejected" wc '*AGENTS.md' \
   'repo instruction size: counting AGENTS.md failed'
 tg_count_case "4g: an empty count rejected" ''
 tg_count_case "4g: a non-numeric count rejected" 'x CLAUDE.md'
+
+# --- Prompt conformance: check 4h, the ledger-check record lines -----------------------
+#
+# 4h requires seven lines verbatim in both prompt copies, inside `### 2.1a` in the command
+# file. Each line is dropped in turn from each copy, so a check that quietly stopped
+# requiring one of them turns a named case red. The 0.21.0 state -- none of the seven
+# anywhere -- is the counterfactual the evidence entry cites.
+LR_MISS='lacks a ledger-check record line'
+LR_OUT='outside the scaffolded gate-rules template'
+
+# A command file with the checklist, the severity line, and $1 inside `### 2.1a`; $2 after
+# `### 2.2`. Unlike sev_tpl, it adds no 4h lines of its own.
+lr_tpl() {
+  printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
+  i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
+  printf '\n## After\n\nReviewed against all 12 items.\n\n'
+  tpl_sections "$TPL_OK" "$SEV_LINE
+$1" "${2:-}"
+}
+lr_case() { # $1 = name, $2 = 1|0, $3 = review-gates body|sentinel, $4 = command body|sentinel, $5 = diagnostic
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  sev_put "$work/r/.claude/review-gates.md" "$3"
+  sev_put "$work/r/plugins/dev-workflow/commands/workflow-init.md" "$4"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  chmod 644 "$work/r/.claude/review-gates.md" 2>/dev/null
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF -- "$5"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+lr_rules() { printf '# F\n\n%s\n%s\n' "$SEV_LINE" "$1"; } # a rules file holding $1
+
+lr_case "4h: both copies complete accepted"                0 "@KEEP@" "@KEEP@" ''
+lr_case "4h: blockquoted and indented lines accepted"      0 \
+  "$(lr_rules "$(printf '%s\n' "$LR_LINES" | sed '1s/^/> /; 2,$s/^/  /')")" "@KEEP@" ''
+lr_case "4h: the 0.21.0 state (no line anywhere) rejected"  1 \
+  "$(lr_rules '')" "$(lr_tpl 'nothing here')" "$LR_MISS"
+k=1
+while [ "$k" -le 7 ]; do
+  lr_without=$(printf '%s\n' "$LR_LINES" | sed "${k}d")
+  lr_only=$(printf '%s\n' "$LR_LINES" | sed -n "${k}p")
+  lr_case "4h: line $k missing from review-gates.md rejected" 1 \
+    "$(lr_rules "$lr_without")" "@KEEP@" "$lr_only"
+  lr_case "4h: line $k missing from the command file rejected" 1 \
+    "@KEEP@" "$(lr_tpl "$lr_without")" "$lr_only"
+  lr_case "4h: line $k only after 2.2 rejected" 1 \
+    "@KEEP@" "$(lr_tpl "$lr_without" "$lr_only")" "$LR_OUT"
+  k=$((k + 1))
+done
+lr_case "4h: line with leading text rejected"              1 \
+  "$(lr_rules "$(printf '%s\n' "$LR_LINES" | sed '2s/^/Ignore: /')")" "@KEEP@" "$LR_MISS"
+lr_case "4h: line with trailing text rejected"             1 \
+  "$(lr_rules "$(printf '%s\n' "$LR_LINES" | sed '2s/$/ (optional)/')")" "@KEEP@" "$LR_MISS"
+lr_case "4h: missing 2.1a anchor rejected"                 1 "@KEEP@" \
+  "$(lr_tpl "$LR_LINES" | sed 's/^### 2\.1a.*/## not an anchor/')" "ledger-check record lines' placement"
+lr_case "4h: unnumbered terminator rejected"               1 "@KEEP@" \
+  "$(lr_tpl "$LR_LINES" | sed 's/^### 2\.2 next/### not numbered/')" "not '2.2'"
+lr_case "4h: missing review-gates.md rejected"             1 "@GONE@" "@KEEP@" \
+  'the ledger-check record lines cannot be checked'
+if [ "$(id -u)" -ne 0 ]; then
+  lr_case "4h: unreadable review-gates.md rejected"        1 "@LOCK@" "@KEEP@" \
+    'is unreadable, so the ledger-check record lines'
+fi
+inject_case "4h ledger-check record parser failure fires" awk '*ledger-record-scan*' \
+  'ledger-check record parser failed'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else
