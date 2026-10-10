@@ -1141,6 +1141,40 @@ backlog.
       codebase-memory included — on its real store. This falls under this row's "kit-instructed
       tool and server launches" and "the hook stays within its invariants". Changing the hook text
       is a plugin change with its own story and gates.
+      **2026-10-10 follow-up — sharpen the existing Gate-A/B security lens set (Daniel; recorded
+      only, not implemented, not part of the Finding A cycle).** Source: a comparison with Claude
+      Code's `/security-review`, public prompt
+      `anthropics/claude-code-security-review/.claude/commands/security-review.md` (read
+      2026-10-10). Whether it matches the installed client's version is not checked, and the
+      commands page on code.claude.com was not read here. The owner is the security lens set in
+      `.claude/review-gates.md` § Profiles (and its `/workflow-init` template copy). It asks about
+      assets, trust boundaries, roles, external systems and abuse paths, and only for security
+      `standard`/`high`. That is a §5 and plugin change with its own story and gates. Candidates:
+      1. Trace foreign input to sensitive operations and across permission or trust boundaries.
+         The public prompt's Phase 3 says "Trace data flow from user inputs to sensitive
+         operations" and "privilege boundaries being crossed unsafely". Tracing through
+         **unchanged** helper functions is our addition, not the prompt's.
+      2. Pick concrete attack classes by affected surface, for example injection, path
+         traversal, auth bypass, unsafe deserialization, data exposure. These are the prompt's own
+         categories. They would serve as examples per surface, not as a closed list.
+      3. Validate a security finding against attacker preconditions, a reachable path, existing
+         controls and impact. This sits in the author's existing validation step ("Codex is
+         advisory — validate before applying") and the severity procedure. The reviewer is never
+         asked to filter.
+      4. Benefit first, before any new duty: run a small, sanitized real incident plus a safe
+         counter-example through the existing finding and replay structure. Record extra
+         findings, false alarms and effort. This is the concept's own rule ("new tools only with a
+         concrete purpose and verified benefit"; incident regressions → harden-finding and replay,
+         MCP spec §9).
+      **Not taken over:** the prompt's hard exclusions, which cover Markdown/documentation
+      files, DoS and resource exhaustion, outdated dependencies, and user-controlled content in AI
+      prompts. Also not its early filters (">80% confident", HIGH/MEDIUM only, sub-task
+      confidence < 8 dropped). Here prompts are the product, and `docs/prompt-standards.md` requires
+      "coverage first, filter later". Unchanged: P6 (no standalone security sections), the
+      cross-model gates, and this row's order. Secret, dependency and SAST checks stay with the
+      later `/workflow-init` story (MCP spec §9). *Trigger:* the next story that changes the gates'
+      lens-set text, or the first security-`standard`/`high` story whose gate run misses a defect
+      the candidates would have caught. Item 4 is done before any of 1–3 becomes mandatory text.
 - [ ] **Over-engineering check.** Daniel's assignment of 2026-10-07 18:49, verbatim in
       `.context/intake-inputs/2026-10-07-overengineering-assignment.md` (local to the main
       checkout): how the kit already prevents over-engineering in specs, plans and implementation,
