@@ -1153,10 +1153,13 @@ backlog.
       `.claude/review-gates.md` § Profiles (assets, trust boundaries, roles, external systems,
       abuse paths) for security `standard`/`high`. The public prompt has the same shape: it runs
       on a branch's pending changes.
-      *Open, to be decided by its own story:* the mechanism (command, skill, a step in an existing
-      route such as merge preparation, or a sharper gate lens after all), what is mandatory and for
-      which changes, and the trigger. The first version of this entry (`88099e9`) assigned it to the Gate-A/B
-      lens set and named two triggers. Both were my proposal and are withdrawn as settled facts.
+      *Position vs trigger.* The position is the direction above. Still open, for its own story:
+      the mechanism (a command or skill invoked on purpose, or a step in an existing closing route
+      such as merge preparation); whether it runs manually or automatically; what is mandatory;
+      and for which changes. Going back to a mere gate-lens extension is not one option among
+      these. It would be a change of direction and needs Daniel's explicit decision. The first
+      version of this entry (`88099e9`) assigned the work to the Gate-A/B lens set and named two
+      triggers. Both were my proposal and are withdrawn as settled facts.
       *Candidates:*
       1. Trace foreign input to sensitive operations and across permission or trust boundaries,
          including relevant **unchanged** helper functions. The prompt's Phase 3 says "Trace data
@@ -1173,12 +1176,20 @@ backlog.
       5. Repairs from this check are code changes. Tests and the existing review duties apply to
          them (Gate B: "Re-review after every fix"), and the repaired spots get a security-focused
          re-check afterwards.
-      6. Benefit first, before any new duty: run a small, sanitized real incident plus a safe
-         counter-example through the existing finding and replay structure. Record extra findings
-         compared with the existing reviews, false alarms and effort, and derive from that which
-         changes a duty pays for. This is the concept's own rule ("new tools only with a concrete
-         purpose and verified benefit"; incident regressions → harden-finding and replay, MCP spec
-         §9).
+      6. Benefit first, before any new duty. This is the concept's own rule ("new tools only with
+         a concrete purpose and verified benefit"; incident regressions → harden-finding and
+         replay, MCP spec §9). Sequence, for the later story:
+         - Before the run, write down a provisional check instruction, the exact change state, the
+           relevant environment and the expected observations. These include what would be seen
+           if the check added nothing, so a result cannot be read into it afterwards.
+         - Run it on one sanitized real incident and one safe counter-example, through the
+           existing finding and replay structure.
+         - Compare with the existing reviews' results. Record confirmed extra findings, false
+           alarms and effort separately.
+         - Only then decide the mechanism and duties.
+
+         One small run supports no general claim of effectiveness or saving. Nothing of this is
+         started now.
       **Not taken over:** the prompt's hard exclusions, which cover Markdown/documentation
       files, DoS and resource exhaustion, outdated dependencies, and user-controlled content in AI
       prompts. Also not its early filters (">80% confident", HIGH/MEDIUM only, sub-task
