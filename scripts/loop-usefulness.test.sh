@@ -47,6 +47,10 @@ mkrepo() { # dir
   (
     cd "$work/$1" || exit 1
     gitc init -q --template= --object-format=sha1 .
+    # No automatic packing: the unreadable-history case deletes a loose object, and a commit that
+    # triggers `gc --auto` can pack it first, so the deletion does nothing (inferred from PR #56's CI
+    # failure, which a packed fixture reproduces exactly).
+    gitc config gc.auto 0
     printf '.context/\n' > .gitignore
     rc docs/base.md 'base\n'
     C=plugins/p/commands/c.md; S=scripts/x.sh; D=docs/x.md
@@ -466,7 +470,14 @@ bad "partial clone refused" "partial clones are not supported" "$work/repo"
 build
 base=$(cd "$work/repo" && git rev-list --max-parents=0 HEAD)
 rm -f "$work/repo/.git/objects/$(printf '%s' "$base" | cut -c1-2)/$(printf '%s' "$base" | cut -c3-)"
-bad "history that cannot be read" "history could not be read" "$work/repo"
+# The case is only meaningful if the deletion made the root commit unreadable. If git still
+# finds it (a packed copy, say), report the fixture, not the report, as the failure: a green
+# run would otherwise test nothing, and a red one would blame the wrong file.
+if (cd "$work/repo" && git cat-file -e "$base" 2>/dev/null); then
+  fail "history that cannot be read (fixture: root commit $base still readable after deleting its loose object)"
+else
+  bad "history that cannot be read" "history could not be read" "$work/repo"
+fi
 build; rm -f "$work/repo/.context/telemetry/gate-calls.jsonl"
 out2=$(run "$work/repo")
 printf '%s\n' "$out2" | grep -q '^run-analytics store: not read (absent or unreadable); skipped store lines 0$' &&
@@ -504,6 +515,10 @@ mkledg() { # dir, 1 = with the valid ledger lines, 0 = without
     cd "$work/$1" || exit 1
     tick=1700000000
     gitc init -q --template= --object-format=sha1 .
+    # No automatic packing: the unreadable-history case deletes a loose object, and a commit that
+    # triggers `gc --auto` can pack it first, so the deletion does nothing (inferred from PR #56's CI
+    # failure, which a packed fixture reproduces exactly).
+    gitc config gc.auto 0
     printf '.context/\n' > .gitignore
     rc docs/base.md 'base\n'
     rc plugins/p/commands/c.md "close\n\n$(prov $LN 3)\n${v}$(curve $LN 'Gate B' 1-2 '1,0' '0,0' '1,0')\n$LEDG_BAD"
