@@ -22,6 +22,25 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.23.0
+
+- **intake's change record has a place for a criterion added with no earlier condition.** The
+  record's table holds one row per earlier condition, and nothing named an addition that had
+  none, so agents invented rows such as `| — (new condition: …) | added per the decision: … |`
+  with a fate outside the closed set (strand-C pilot, case D: 1 of 3 runs on 0.22.0; story
+  `docs/superpowers/stories/2026-10-10-change-record-row-for-an-added-story.md`, spec
+  `docs/superpowers/specs/2026-10-10-added-criterion-row-design.md`). In the amendment route of
+  `skills/intake/SKILL.md`:
+  - The template gains `- **Added without an earlier condition:** …`, listing each such
+    addition with its identifier and text (a story) or the quoted condition (a spec), and the
+    quoted passage of the covering decision; `none` covers this category only.
+  - Rules beside the closed sets: replacements stay in the table with their full mapping; a
+    table row exists only for an earlier condition; an addition with no passage to quote goes to
+    *Unaccounted*. The closed sets are unchanged.
+  - Steps 5 and 6 each gain a sentence: list such additions in the field, and place each in the
+    changed artifact as the record names it.
+  - Check 4f now pins 13 lines, nine inside the template fence.
+
 ## 0.22.0
 
 - **Every review cycle checks its repaired findings against the ledger before it closes.** The
