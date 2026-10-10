@@ -36,7 +36,9 @@ AGENTS.md invariant 12 carries the complete list.
     quoted passage of the covering decision; `none` covers this category only.
   - Rules beside the closed sets: replacements stay in the table with their full mapping; a
     table row exists only for an earlier condition; an addition with no passage to quote goes to
-    *Unaccounted*. The closed sets are unchanged.
+    *Unaccounted*; an entry's requirement text holds only what its quoted passage covers, so a
+    detail borrowed from another criterion (a place, a format, a limit) stays out. The closed
+    sets are unchanged.
   - Steps 5 and 6 each gain a sentence: list such additions in the field, and place each in the
     changed artifact as the record names it.
   - Check 4f now pins 13 lines, nine inside the template fence.

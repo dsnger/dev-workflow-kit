@@ -425,8 +425,10 @@ entries are free text and identifiers, and it widens none of the sets above.
   behind it — nothing it replaces, narrows or takes over. In a story each entry carries the new
   identifier and the requirement text as written into §3; in a spec, which has no criterion
   identifiers of its own, the added condition quoted as written into the changed section. Every
-  entry carries the passage of the step-1 decision that covers it. Separate several entries
-  with `;`.
+  entry carries the passage of the step-1 decision that covers it. The requirement text holds
+  only what that passage covers: a detail taken from another criterion or nearby wording — a
+  place, a format, a limit — is not covered by it, so it stays out, or goes to *Unaccounted*
+  when the human should decide it. Separate several entries with `;`.
 - `none` means the change adds nothing of this kind. It says nothing about replacements.
 - A **replacement** — a criterion that replaces an earlier one or receives a moved condition —
   keeps its full mapping and decision passage in that earlier condition's row
