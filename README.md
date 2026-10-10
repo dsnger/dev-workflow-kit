@@ -201,6 +201,22 @@ says `unknown`. `--watch` regenerates it at that interval until you stop it, and
 itself. It writes only `.context/status/`, keeps a cache there so later runs re-read only changed
 logs, and makes no model call. The first run reads every transcript once.
 
+Daily use of the status view:
+- **Where.** Run it from the root of the checkout you want to see. Branch, uncommitted paths
+  and handover come from that checkout; effort counts every worktree sharing its git directory.
+- **Start and open.** Start it in a terminal of its own with
+  `python3 -B scripts/status-view.py --watch 30`, then open `.context/status/index.html` in a
+  browser. It prints nothing while it runs. The first run took about three minutes here
+  (2026-10-10); later runs reuse the cache and took about six seconds.
+- **Stop.** Press Ctrl-C in that terminal; it exits 0 and the page stays. A watcher started in
+  the background with `&` ignores Ctrl-C's signal, so stop it with `kill <pid>`. A second run
+  beside a watcher refuses: `another status-view run holds .context/status/.lock`.
+- **Current or stale.** The top line names the generation time and either `watch every N s` or
+  `one-shot run`. A watch page reloads itself. When no refresh has arrived within three
+  intervals, because the watcher stopped or keeps failing, it shows `stale: no successful
+  refresh observed within three intervals`. A one-shot page never warns, so only its generation
+  time tells you how old it is.
+
 A fifth check runs **on pull requests only**:
 [`scripts/check-version-bump.sh`](scripts/check-version-bump.sh) (invariant 12), which
 needs a base branch to diff against. Its *suite* runs unconditionally with the others;
