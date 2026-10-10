@@ -1,6 +1,6 @@
 # Runner (verbatim, as run)
 
-Kept as text; nothing in CI runs it. `run.sh` is the pilot's (`runner.md` at b348b9c) with one change: the first variant line reads `fix*) PLUG="$S/plugins/fix" ;;`, where `plugins/fix` is `git archive <measured commit> plugins/dev-workflow`. `checks.sh` is new.
+Kept as text; nothing in CI runs it. `run.sh` is the pilot's (`runner.md` at b348b9c) with one change: the first variant line reads `fix*) PLUG="$S/plugins/fix" ;;`, where `plugins/fix` holds the contents of `plugins/dev-workflow` at the measured commit (`git archive <commit> plugins/dev-workflow`, extracted with `--strip-components=2` into `plugins/fix`, or extracted and moved, as the runs did). `checks.sh` is new.
 
 ## run.sh
 

@@ -39,8 +39,10 @@ run. Details per run and per check: `compare.md`.
 
 In a directory outside any git checkout: build `fixture-template/` from `fixture/` with
 `agents-md.md` renamed to `AGENTS.md` and `review-gates.md` moved to `.claude/`; `git init -b main`;
-commit everything once (its id replaces `e2f55ca` in `checks.sh`). Put
-`git archive <commit> plugins/dev-workflow` at `plugins/fix`, save the prompts as `prompts/D1.txt`
+commit everything once (its id replaces `e2f55ca` in `checks.sh`). Put the measured plugin at
+`plugins/fix` with `mkdir -p plugins/fix && git -C <repo> archive <commit> plugins/dev-workflow | tar
+xf - --strip-components=2 -C plugins/fix` (the archive keeps the `plugins/dev-workflow/` prefix;
+the runs used an archive extracted and moved, which yields the same tree), save the prompts as `prompts/D1.txt`
 and `prompts/B1.txt`, then run the invocation in `runner.md` and `sh checks.sh runs`.
 
 ## Limit

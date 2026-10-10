@@ -69,7 +69,9 @@ D4's AC-5 says "in addition to XLSX", which the decision's "add" covers on its o
 format leaves XLSX in place); D4 also quotes the request's "exports should also be offered as
 CSV", which is not the decision and is not what the verdict rests on.
 
-Other observations, none a failure: D2 added a §1 row and B3 a §4 row (baseline text, both kept);
+Other observations, none a failure: D4's grouped row reads `kept (their wording is format-independent
+and already covers CSV files)` — the value `kept` with a remark, the same shape as the skill's own
+example row `kept: on demand; dropped — …`, and counted as `kept` like set 1's D5; D2 added a §1 row and B3 a §4 row (baseline text, both kept);
 D1 recorded "Reviews already run" as pending a human confirmation that no review ran on the
 baseline — a stricter reading than other runs, within the field's shape.
 
