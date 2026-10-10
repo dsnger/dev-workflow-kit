@@ -22,6 +22,39 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.22.0
+
+- **Every review cycle checks its repaired findings against the ledger before it closes.** The
+  only mandated ledger check was `process-pr-review` step 5, which reads PR-bot findings, so
+  findings the gates raised and the author repaired never reached it, with or without pull
+  requests; three projects ran for weeks with an empty `docs/hardening-log.md` (story
+  `docs/superpowers/stories/2026-08-04-ledger-route-without-pull-requests-story.md`, spec
+  `docs/superpowers/specs/2026-10-10-ledger-check-at-cycle-close-design.md`). In
+  `.claude/review-gates.md` and `/workflow-init`'s template `### 2.1a`:
+  - `<slot>-dispositions.md` is owed for every slot of a validated pass that holds a finding,
+    written before the next pass, one line per finding with a closed verdict set (`fixed`,
+    `not fixed`, `same as <SLOT>:<m>`). It is authoritative for the ledger check and for
+    nothing else. The cycle's working record is owed from the first dispositions file.
+  - The closing commit carries `cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>`,
+    with one owed line per finding that warrants hardening, carrying its whole
+    `harden-finding` intake. A check that cannot be established is not written, and the
+    closing act does not complete.
+  - Hardening runs later as its own change and writes an outcome line per owed finding: a
+    rung or `rung 0` closes the obligation, `pending` does not. The new lines are §5 cycle
+    records, part of the one-contract paragraph and of the squash carry.
+  - `process-pr-review` step 5 skips a bot finding only when a gate cycle in the same pull
+    request already owes it; everything else takes the ordinary route.
+  - Check 4h (`scripts/check-invariants.sh`) requires the seven record lines verbatim in both
+    copies. It shows the text is there, not that an agent follows it; one replay sample is in
+    `docs/superpowers/replays/2026-10-10-ledger-check/`.
+  - Adoption is through `/workflow-init`'s diff-and-ask. A cycle already running finishes
+    under the rules it started with.
+- **The findings-file prompt block names its line format.** It said "One finding per line in
+  the format above", but the six-field example sits further down, in the Gate-A bullet, so a
+  reviewer reading the block got no format. It now states
+  `SEVERITY | confidence | location | problem | consequence | suggested fix` in place.
+  Reported from the SFX Bricks child-theme project, 2026-10-10.
+
 ## 0.21.0
 
 - **Gate B's default call shape is two sequential single-branch reviews, and the hook counts

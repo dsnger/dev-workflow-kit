@@ -292,7 +292,7 @@ use, since `CODEX_DEV_REVIEW_MODEL` is stored at `tools.review.model`. If neithe
 model the probe establishes nothing — the CLI then picks its own default, and the only honest
 record is to set an explicit model or record the model as undetermined. Record the result beside
 the finding count in **the cycle's per-pass curve**, which pins a field for it — not the
-evidence entry and not the dispositions file, neither of which is keyed to a pass. The health
+evidence entry, which is not keyed to a pass, and not the dispositions file, which records verdicts per finding, not the model. The health
 probe above is how the value is established; the curve is where it goes. This is
 bookkeeping, not enforcement: nothing checks it, and a wrong entry looks exactly like a right
 one.

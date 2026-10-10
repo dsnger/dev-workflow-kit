@@ -954,6 +954,42 @@ if wanted("c6"):
     gr = section_of(text(G), "Artifact growth")
     check("c6:sha256 repo: unchanged file not modified", "README.md" not in gr and "new.txt" in gr, gr[-400:])
 
+# ledger-check records (dev-workflow 0.22.0): a valid one is set aside, a malformed one dropped as before
+if wanted("c19"):
+    LN, LS = "ledgrec1", "gate-b-quality-ledgrec1-pass-1"
+    VALID = ["cycle %s; ledger check: fixed 1, hardening owed 1" % LN,
+             "cycle %s; hardening owed %s:1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code" % (LN, LS),
+             "cycle %s; hardening %s:2: rung 2" % (LN, LS),
+             "cycle %s; hardening %s:3: pending todos.md#ledger" % (LN, LS),
+             "cycle %s; hardening %s:4: rung 0 — no mechanical check fits" % (LN, LS)]
+    BAD = ["cycle zzzzzzzz; not a record",
+           "cycle %s; hardening owed %s:4 — major — docs-drift" % (LN, LS),
+           "cycle %s; hardening %s:5: rung 7" % (LN, LS)]
+    got = {}
+    for name, extra in (("LW", VALID), ("LN", [])):
+        R = os.path.join(WORK, name)
+        os.makedirs(R)
+        git(R, "init", "-q", "-b", "main")
+        put(R, "README.md", "r\n")
+        base = commit(R, "base")
+        git(R, "commit", "-q", "--allow-empty", "-m", "\n".join(
+            ["close", "", "cycle %s; floor 3 per {%s (level 1)}; hook reminder threshold absent" % (LN, STORY)] + extra
+            + ["cycle %s; Gate B (passes 1-2, gpt-x): Findings 1,0. Blockers 0,0. Majors 1,0." % LN] + BAD))
+        git(R, "commit", "-q", "--allow-empty", "-m", "\n".join(
+            ["skip", "", "cycle ledgskp2; Gate B: skipped (see skip reason)", "Skip reason: trivial."]
+            + (["cycle ledgskp2; hardening gate-b-quality-ledgskp2-pass-1:1: rung 1"] if extra else [])))
+        head = git(R, "rev-parse", "HEAD", date=False)
+        nonces, _data = SV.records_in_range(R, base, head)
+        cyc = SV.cycles(R, base, head)
+        got[name] = ({n: {t: sorted(x) for t, x in r.items()} for n, r in nonces.items()},
+                     {n: (c["state"], c["reason"], c["kind"], c["stories"], c["passes"]) for n, c in cyc.items()})
+    check("c19:valid ledger lines leave records and cycles unchanged", got["LW"] == got["LN"], got)
+    check("c19:the cycle keeps its provenance and curve",
+          got["LW"][1].get(LN) == ("closed", None, "Gate B", [STORY], 2), got["LW"][1])
+    check("c19:the skip record keeps its reason",
+          got["LW"][0].get("ledgskp2") == {"skip": ["cycle ledgskp2; Gate B: skipped (see skip reason) | Skip reason: trivial."]}
+          and got["LW"][1].get("ledgskp2", ("",))[0] == "skipped", got["LW"])
+
 for name, ok, why in results:
     print(("PASS " if ok else "FAIL ") + name + ("" if ok else "  -- " + str(why)[:600].replace("\n", " ")))
 PY

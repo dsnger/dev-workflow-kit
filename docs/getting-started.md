@@ -82,7 +82,12 @@ again). Nothing silently ignored, nothing blindly applied.
 could recur: run `harden-finding`. It becomes the strongest durable guard that
 fits — lint rule, type constraint, test, or documented convention — plus one row in
 `docs/hardening-log.md`. A recurring class escalates one rung harder, so the
-workflow gets stricter exactly where your project actually fails.
+workflow gets stricter exactly where your project actually fails. Findings the gates
+raised (steps 3 and 7) are checked against the ledger when their cycle closes: the
+closing commit records a `ledger check` line and one `hardening owed` line per finding
+that warrants hardening, and the hardening itself then runs as its own change. That
+holds whether or not you open a PR; step 8's bot findings are checked by
+`process-pr-review`.
 
 ## In practice
 

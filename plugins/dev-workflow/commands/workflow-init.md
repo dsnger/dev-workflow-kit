@@ -644,7 +644,10 @@ commit-carry duty, and the further pass an assigned-fix-set change costs — sin
 be established as absent is cheaper to owe than to skip** — the cycle is treated as post-rule, so it
 owes a nonce, owes its provenance line and its curve or skip record, and uses that nonce in every
 cycle record it does write — which changes what a record is named, never whether one is owed, so
-the working record stays optional and a skipped cycle still writes no findings slots. Where it
+the working record stays optional until its first dispositions file and a skipped cycle still writes
+no findings slots — and **the dispositions files, the working record from the first of them and the
+ledger check at close owed**, a cycle that cannot establish its starting rules being unable to
+establish that they waived them. Where it
 cannot recover a nonce it starts a new cycle rather than claiming `none (pre-rule)`, that reserved
 field being unavailable to a cycle whose start cannot be established. Each further rule this change ships adds its own strict
 reading to this list. Not a re-derivation, which could hand a level-0
@@ -726,8 +729,8 @@ findings for holds and answers**, so a Gate-B pass asks twice rather than risk r
 never asked about. **Within one running cycle an answer binds to the finding or question as the
 pass that raised it recorded them** — which is what an agent running the cycle can do with nothing
 written down. Recognising the same finding or question **across a lost session** has no mandatory
-identity, sameness or recovery rule in these rules; the optional `<slot>-dispositions.md` note is
-advisory and authoritative for nothing.
+identity, sameness or recovery rule in these rules; the `<slot>-dispositions.md` file is
+authoritative for one thing only, the ledger check at close (Mechanics), and for nothing here.
 
 **The four branches are named, and a cross-reference anywhere in this section names the branch
 rather than its position**, so reordering them breaks no reference. **They are read once, on the
@@ -1225,7 +1228,8 @@ because the response stops carrying the findings at all. Append to the gate prom
 > all. That rule exists because a bare slot was in fact overwritten once, destroying a previous
 > cycle's findings file.
 >
-> One finding per line in the format above; escape a literal pipe inside a field as
+> One finding per line, in the format
+> `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe inside a field as
 > `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
 > Every line before the terminator is exactly one finding line — no blank lines,
@@ -1248,23 +1252,50 @@ the delete. Run one pass at a time: the slot name has no invocation-unique compo
 two concurrent calls on one slot race. Passes are sequential by construction, so that is
 a stated limitation, not a guarded one.
 
-**Optional companions, from field practice.** Two files may sit beside a findings file.
-Both are advisory human notes: neither is ever the findings file, neither participates in
-pass validation, and either may be deleted or rebuilt. The findings file plus its
-terminator remain the only hard requirement, and a zero-finding pass needs no companion.
+**Companions of a findings file, from field practice.** Two files sit beside a findings file.
+Neither is ever the findings file and neither participates in pass validation: the findings file
+plus its terminator remain the only requirement a **pass** has. What the companions owe is owed to
+the **cycle**, for its ledger check at close (Mechanics), and a zero-finding pass needs neither.
 
-- `<slot>-dispositions.md` — one line per finding: verdict + reason. It makes a dismissal
-  durable, so "we looked at that and why" outlives the session rather than the chat.
-- a **cycle-stable** resume note when a cycle is interrupted — `gate-a-spec-resume.md`,
+- `<slot>-dispositions.md` — **owed for every slot of a validated pass that holds at least one
+  finding**, written when that pass's findings are repaired or dismissed and **before the next pass
+  runs**, not at close: a Gate-B `WIP:` amend replaces intermediate revisions, so a verdict left for
+  the close may have nothing left to be read from. A slot of an incomplete attempt owes none, the
+  attempt being excluded; a pass whose status is unknown — after an interruption, say — is
+  revalidated by the acceptance rules above before anything is owed or excluded, and surfaced
+  where its files no longer allow that, never silently dropped. One line per finding of the slot:
+
+  Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `not fixed` | `same as <SLOT>:<m>` — no other token.
+
+  `<n>` is the finding's line number in its findings file, so `<SLOT>:<n>` names one finding of one
+  cycle, the slot carrying the nonce. The file is **complete** when its `<n>` values are exactly the
+  slot's finding line numbers, 1 to k, each once. `same as <SLOT>:<m>` points only at a `fixed` line
+  of a slot **of the same cycle** reporting **the same occurrence** — the same defect at the same
+  place, fixed by the same repair. A finding this cycle **declined** is `not fixed`, whatever
+  another finding's repair did to the same text: a decline binds, so the ledger check never
+  counts it. A defect repaired and later reintroduced, a duplicate of a finding
+  that was dismissed or declined, and any case of doubt each carry their own verdict, since the
+  absorb paragraph lets two branch lines with the same complaint get different answers. The file
+  makes a dismissal durable, so "we looked at that and why" outlives the session rather than the
+  chat, and it is **authoritative for the ledger check and for nothing else**: holds, answers,
+  resume and recovery read it no more than before. Every slot holding a finding owes one, so an
+  absent file is a lost file, never "nothing was repaired".
+- a **cycle-stable** working record, the resume note — `gate-a-spec-resume.md`,
   `gate-a-plan-resume.md`, `gate-b-resume.md`. Cycle-stable, not pass-named: a note keyed
   to the interrupted pass number is exactly the file a resuming agent will not look for
   once the counter moves or an incomplete pass is discounted. Gate A runs separate spec
   and plan loops, so those are two cycles; Gate B is one cycle with one note even though each pass writes two branch files, because those files are written by Codex's reviewers, and race only under `reviewType: full` — the resume note is written by the outer agent, sequentially, and
   splitting it would create two records able to disagree about one shared recovery budget.
-  Whoever runs the cycle writes it when useful, replaces it as the cycle moves, and
-  deletes it once the cycle closes. Nothing depends on it existing.
+  It is **owed from the cycle's first dispositions file**, so an interrupted cycle with repairs to
+  account for stays findable and adoptable under the recovery rules below; before that, whoever
+  runs the cycle writes it when useful. From then on it lists each pass number of the cycle as
+  `valid` or `incomplete`. Whoever runs the cycle replaces it as the cycle moves and deletes it
+  once the cycle closes. Where recovery fails and a new cycle starts, the old cycle stays open and
+  is a human's to resolve, as the recovery rules say; that resolution includes the old cycle's
+  ledger check over its dispositions files, and until then the handover lists the open cycle as an
+  open obligation. Nothing reaches an abandoned cycle's repairs automatically.
 
-**The cycle nonce.** Both shipped records below carry a **cycle field**, because a record that
+**The cycle nonce.** The cycle records below carry a **cycle field**, because a record that
 cannot be attributed to a cycle cannot be told apart from another cycle's when several are read
 together. That is a limitation rather than a disqualification — a human reading one cycle's
 records knows which cycle they came from; what attribution buys is that a *later* reader
@@ -1284,7 +1315,8 @@ infix and a path component.
 **It appears in every record the cycle writes** — which keeps records apart **as far as distinct
 nonces allow**, and no further — **and that set is named rather than left open**:
 the provenance line, the per-pass curve (including a skip record standing in for one), the
-cycle's findings slots, and its advisory working record. **The working record is a cycle record
+cycle's findings slots, its dispositions files, its working record, its ledger-check and owed lines,
+and the outcome lines that later report on its owed hardening. **The working record is a cycle record
 too**: a cycle holding a nonce names it `gate-a-spec-<nonce>-resume.md`,
 `gate-a-plan-<nonce>-resume.md` or `gate-b-<nonce>-resume.md`, and the bare names above stay
 reserved for the legacy single-cycle case, exactly as the findings slots do. **Because recovery
@@ -1847,7 +1879,7 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   whether a cycle may close **or may terminate without running a pass at all, the Gate-B triviality
   skip being the one such route and its eligibility test therefore a member**, or the production,
   identity or transport of **any §5 cycle record, required or optional** — §5 entire and not the
-  Mechanics subsection this paragraph sits in, record duties being stated in both, and the optional
+  Mechanics subsection this paragraph sits in, record duties being stated in both, and the
   companions' slot rules carrying the nonce that keeps sibling cycles apart.** **Read it on the sentence, never on the section the sentence sits in.**
   A sentence is a member when **it itself** fixes one of those things — what counts as a valid
   finding line, which files or records are owed, what ends a hold. It is not a member when it only
@@ -1877,7 +1909,7 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   what this text lets a reader detect, never what the rule obliges** — a partial adoption is a stop
   however it becomes known, and learning of it from outside this text is learning of it.
 
-  **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves and any skipped cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT in the squash range into the squash body — a skip record carried without its reason is a pointer into a body the squash has made unreachable — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
+  **On squash-merge, copy every evidence entry, every human-exception record, the provenance lines, the curves, every ledger-check, owed and outcome line, and any skipped cycle's skip record TOGETHER WITH THE SKIP REASON IT POINTS AT in the squash range into the squash body — a skip record carried without its reason is a pointer into a body the squash has made unreachable — the squash commit is the only body the merge carries into `main`'s history, so anything left behind is unreachable from it.**
 
   **Every cycle records its own per-pass curve in its own commit body.** Gate B alone would
   leave the dominant cost unrecorded — the loops this rule was built from are Gate-A loops.
@@ -1961,6 +1993,86 @@ like the rest of §5; the detection is a reader comparing the pass against the s
   within** a running one, since the commit does not exist until the cycle closes. And
   **author-written and unchecked** — nothing compares it against the validated pass files, so
   whatever reads it reads a self-reported curve and must not present it as measurement.
+
+  **Every cycle records one ledger check in its closing commit body** — the commit its closing act
+  produces, beside the provenance line and the curve. Its scope is `process-pr-review` step 5's,
+  applied to gate findings: **every accepted, actionable finding the cycle repaired** is checked
+  against `docs/hardening-log.md` by `dev-workflow:harden-finding`'s fingerprint mapping and
+  anchored column-2 grep (its Flow steps 2–3), and hardening is **owed** only when the finding
+  matches an existing class or a new class is clearly warranted. There is no severity filter, as
+  step 5 has none, and a finding dismissed or left unrepaired is not checked. The inputs are the
+  dispositions files of the cycle's validated passes: their `fixed` lines, each `same as` pair
+  counted once.
+
+  cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
+  cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>
+
+  `<N>` counts the distinct repaired findings, `<M>` those of them that owe hardening, and each
+  owed one has its own owed line. `<SEVERITY>` is the reader-normalized severity (`blocker`,
+  `major`, `minor`, `nit`), and the `harden-finding` source is `gate-a` or `gate-b`, read from
+  `<SLOT>`. `<CLASS>` is an existing class or `new class <name>`. `<TARGET>` is the
+  repository-relative file, or the named section or operation, the defect sat in, and
+  `<DESCRIPTION>` is one line naming the defect. Together they are the whole intake
+  `harden-finding` Flow step 1 asks for, so a later session starts hardening from the line alone:
+  the findings file may be untracked, or absent in another checkout. No field contains a line
+  break, and `<DESCRIPTION>` never contains ` — `:
+
+  A `<TARGET>` containing ` — ` or a double quote is written as a `<quoted>` string, as the provenance line defines it, and a reader splits the fields on ` — ` only outside quotes.
+
+  A target containing a line break cannot be represented: stop and surface it. Filled instances —
+  the third quotes a target that contains the separator, and the fourth is a cycle whose findings
+  were all dismissed, because **"checked, nothing owed" is
+  written, never omitted**:
+
+  cycle k3v9q2mx7d; ledger check: fixed 2, hardening owed 2
+  cycle k3v9q2mx7d; hardening owed gate-b-quality-k3v9q2mx7d-pass-2:4 — major — docs-drift — README.md — install section still names the removed --global flag
+  cycle k3v9q2mx7d; hardening owed gate-b-spec-k3v9q2mx7d-pass-1:2 — minor — new class exit-code-swallowed — "scripts/run — all.sh" — a failing step's exit code is dropped by a pipeline
+  cycle p8w2n5rt; ledger check: fixed 0, hardening owed 0
+
+  A **skipped** cycle runs no reviewer, has no gate findings and writes no ledger-check line; a
+  repair made in it for PR-bot findings stays with `process-pr-review` step 5, and findings from any
+  other source gain no route here.
+
+  **A ledger check that cannot be established is not written, and the closing act does not
+  complete.** Where a findings file cannot be read, a dispositions file stays incomplete after the
+  reconstruction and question below, `docs/hardening-log.md` or `docs/hardening-taxonomy.md` is
+  missing or unreadable, or the grep cannot run, the line is never written with a guessed or zero
+  count — `fixed 0` means established, never unknown. Surface which input failed; the closure
+  ordering's rule for an act that does not complete applies. A grep that runs and matches nothing
+  is a successful check, `harden-finding`'s "new". A missing ledger in an initialized project is a
+  setup gap (`/workflow-init`). **Reconstruction:** a missing or incomplete verdict is rebuilt only
+  from durable evidence — the findings file plus a reviewed revision showing the repair (the next
+  pass's request text for Gate A, a commit for Gate B). Where none shows it, ask the human for that
+  finding's verdict and record the answer as its reason. Nothing is filled in from memory.
+
+  **Hardening runs afterwards, as its own change with its own gate.** That change writes one outcome
+  line per owed finding it handles, in the commit that completes it — its cycle's closing message,
+  or the commit of a change that owes no gate:
+
+  cycle <NONCE>; hardening <SLOT>:<n>: rung <RUNG>
+  cycle <NONCE>; hardening <SLOT>:<n>: pending <REF>
+  cycle <NONCE>; hardening <SLOT>:<n>: rung 0 — <CHECK>
+
+  `<RUNG>` is one of `1`, `2`, `3`, `4`, `P`; `<REF>` is the `pending` ledger row's prerequisite
+  ref; `<CHECK>` names the mandatory check that already catches the defect, `harden-finding`
+  logging no row for rung 0. The cycle field and `<SLOT>:<n>` name the **original** cycle, the one
+  that owed the hardening: the line is that cycle's record, carried in a later commit, and the
+  hardening change's own cycle writes its own records as usual. An outcome line counts only in a
+  non-`WIP:` commit. **An obligation closes** once any outcome line for its key reads a rung or
+  `rung 0`; `pending` never closes one and never reopens a closed one, so no order between outcome
+  lines is needed. **Open obligations** are the owed lines with no closing outcome line, a
+  `pending` one being blocked by its `<REF>`, and the handover lists every one. The query reads the
+  history of the current branch and `main`: an obligation recorded only on another unmerged branch
+  is outside it, a stated limit and not a detected state, and in a shallow clone
+  (`git rev-parse --is-shallow-repository`) the result is reported as incomplete, never as "none
+  open". **These identities inherit the nonce's limit**, the residuals stated in the nonce
+  paragraph: two cycles sharing a nonce share every `<SLOT>:<n>`, so an old outcome line can make a
+  new obligation look closed.
+
+  **What the ledger check is worth.** An author-written record, like the curve: nothing compares it
+  against the findings or dispositions files, and nothing here establishes that the check was done
+  well. Gate findings reach the ledger through it whether or not the project opens pull requests;
+  `process-pr-review` step 5 stays the route for PR-bot findings.
 
   **Recording a human exception.** Where a human decides that something **no applicable rule
   required** was nonetheless worth skipping — an optional check this environment cannot run, a

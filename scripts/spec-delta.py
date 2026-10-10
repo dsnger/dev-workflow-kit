@@ -172,7 +172,7 @@ def baseline_block(path, ref, head, lm):
     fields, gate_b = set(), False
     records = []
     for line in body.decode("utf-8", "replace").split("\n"):
-        if not lm.CANDIDATE.match(line):
+        if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
             continue
         parsed = lm.parse_record(line)
         mark = "unparsed"

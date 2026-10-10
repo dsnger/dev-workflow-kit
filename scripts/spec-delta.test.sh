@@ -385,6 +385,43 @@ rm -f "$work/repo/.git/objects/$(printf '%s' "$c" | cut -c1-2)/$(printf '%s' "$c
 bad "history that cannot be read" "history could not be read" --base "$(cat "$work/c_two")" --spec $S/a.md \
   --baseline "$(cat "$work/c_two"):$S/g.md"
 
+# ---- 3c. ledger-check records (dev-workflow 0.22.0) -------------------------------------------------
+# A valid ledger-check, owed or outcome line is set aside; a malformed one is still marked [unparsed].
+LN=ledgrec1; LS=gate-a-spec-ledgrec1-pass-1
+LEDG_VALID="cycle $LN; ledger check: fixed 1, hardening owed 1\ncycle $LN; hardening owed $LS:1 — major — docs-drift — \"docs/A — B.md\" — the claim outran the code\ncycle $LN; hardening $LS:2: rung 2\ncycle $LN; hardening $LS:3: pending todos.md#ledger\ncycle $LN; hardening $LS:4: rung 0 — no mechanical check fits\n"
+LEDG_BAD="cycle zzzzzzzz; not a record\ncycle $LN; hardening owed $LS:4 — major — docs-drift\ncycle $LN; hardening $LS:5: rung 7\n"
+mkledg() { # dir, 1 = with the valid ledger lines, 0 = without
+  mkdir -p "$work/$1/scripts"; cp "$SCRIPT" "$LEDGER" "$work/$1/scripts/"
+  if [ "$2" = 1 ]; then v=$LEDG_VALID; else v=''; fi
+  (
+    cd "$work/$1" || exit 1
+    tick=1700000000
+    gitc init -q --template= --object-format=sha1 .
+    printf '.context/\n' > .gitignore
+    put $S/x.md "# x\\nline one\\n"; cm 'base\n'
+    put $S/x.md "# x\\nline one\\nreviewed\\n"
+    cm "close x\\n\\n$(prov $LN)\\n${v}$(curve $LN 'Gate-A spec')\\n$LEDG_BAD"
+    sha > "$work/$1.close"
+  )
+}
+ledg_run() { (cd "$work/$1" && HOME="$work/home" python3 -B scripts/spec-delta.py --baseline "$(cat "$work/$1.close"):$S/x.md") 2>&1; }
+mkledg ledgw 1; mkledg ledgn 0
+outw=$(ledg_run ledgw); stw=$?
+outn=$(ledg_run ledgn); stn=$?
+[ "$stw" -eq 0 ] && [ "$stn" -eq 0 ] && [ "$(printf '%s\n' "$outw" | mask)" = "$(printf '%s\n' "$outn" | mask)" ] &&
+  pass "ledger-check records: report equals the report without the valid lines" ||
+  fail "ledger-check records: the valid lines changed the report (exit $stw / $stn)"
+expect "ledger-check records: [unparsed] marks every malformed line and no valid one" \
+  "$(printf '%s\n' "$outw" | sed -n '/^records in the baseline commit/,/^ambiguity:/p')" <<EOF
+records in the baseline commit (verbatim):
+  [record] cycle $LN; floor 3 per {docs/superpowers/stories/s-story.md (level 1)}; hook reminder threshold absent
+  [matching kind] cycle $LN; Gate-A spec (passes 1-2, codex): Findings 2,0. Blockers 0,0. Majors 1,0.
+  [unparsed] cycle zzzzzzzz; not a record
+  [unparsed] cycle $LN; hardening owed $LS:4 — major — docs-drift
+  [unparsed] cycle $LN; hardening $LS:5: rung 7
+ambiguity: none found
+EOF
+
 # ---- 4. negative control ----------------------------------------------------------------------------
 build
 python3 - "$work/repo/scripts/spec-delta.py" "$work/repo/scripts/allspec.py" <<'PY'

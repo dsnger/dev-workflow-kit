@@ -708,7 +708,7 @@ backlog.
       - **G3b — a fresh session at a completed unit of work**, after a closing act, as a
         *planned* efficiency step with a checked handover: state, open obligations, nonce and
         evidence paths. It does not override mandatory stops, the interrupted-cycle resume
-        procedure (`.claude/review-gates.md`, "Optional companions") or a human-directed
+        procedure (`.claude/review-gates.md`, "Companions of a findings file") or a human-directed
         handover. Related: vision §7 step 3's complete assignment frame.
       - **G3c — rule consolidation through the existing leaf** (vision: shrinking the gate rules
         is "a separate later leaf"), widened to `AGENTS.md`: a short binding core, details
@@ -786,6 +786,34 @@ backlog.
         them in its project's pilot note (SFX `.context/plan-form-pilot.md`, canvas
         `.context/a6-orchestration.md`).
       AC-12 and AC-14 stay open.
+      **2026-10-10 — SFX read, P5c to P6c1 (Daniel: "Ja, trag das ein").** Source: the SFX
+      checkout at `577f18d` (branch `v2`, read at 08:46 CEST while P6c1's Gate B was still
+      open), cycle lines in commit bodies, `.context/codex-reviews/`, `.context/plan-form-pilot.md`.
+      SFX still runs the 0.16.0 project text, and its running session started before 0.21.0 was
+      installed.
+      - *Compact plan:* every plan since P5b is 12–96 KB (P5a: 660 KB). Gate-A plan cycles, with
+        closing commits: P6a2 `be031c2`, 4 passes; P6r `035f38d`, 3 passes; P6b `f9b08f6`, 6 passes
+        in about 30 min; P6c1 `a6bad01`, 6 passes. 0 Blockers in every pass. P6c1's plan, 96 KB, is
+        the largest compact plan so far.
+      - *Handover per unit:* `.context/handover-p5a.md` … `handover-p6b.md` exist. P6b closed at
+        19:22, and P6c1 ran in a new session started at 19:32.
+      - *Bottleneck moved to execution:* plan start to Gate-B close took about 2 h 40 min for P5d
+        and about 10 h 40 min for P6b. P6c1 had been running about 13 h and was still open:
+        execution 20:52–06:22, with several fix rounds per task. P5c and P5d had approved every
+        task review on the first pass. One browser (e2e) suite run takes about 9.5 min
+        (`.context/p6c1-e2e.txt`). This is an inference from timestamps, not a measurement:
+        further gate savings now buy little. The per-plan recording asked for above was not
+        done: the pilot note ends at P5d.
+      - *Branch duplicates inflate counts:* P6c1 Gate-B pass 1 has 14 finding lines (spec 6,
+        quality 8; 6 Major, 8 Minor). At least 3 complaints appear in both branches
+        (`Segments.tsx:107` freshness, `presenter.tsx:286` findSegment, `RunsPage.tsx:54`
+        NOT_FOUND). So a curve's Findings series counts lines, not distinct defects. Every
+        reading of it (`scripts/loop-usefulness.py`, the tells) inherits that.
+      - *Slot races under the old rules:* P5c's Gate B (`8qt2y7q4st9v`) had the quality branch
+        overwrite the spec slot. P5d's (`d97o17zvmfq6`) had the quality branch append into the spec
+        file. This supports the 0.21.0 default; SFX has not adopted it yet.
+      - *Finding content:* all 14 P6c1 pass-1 lines concern product behaviour (stale data,
+        races, navigation). None is about prose or the test instrument.
 
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
@@ -1113,6 +1141,62 @@ backlog.
       codebase-memory included — on its real store. This falls under this row's "kit-instructed
       tool and server launches" and "the hook stays within its invariants". Changing the hook text
       is a plugin change with its own story and gates.
+      **2026-10-10 follow-up — a targeted security check of the finished change (Daniel; recorded
+      only, not implemented, not part of the Finding A cycle; revised the same day).** Source: a
+      comparison with Claude Code's `/security-review`, public prompt
+      `anthropics/claude-code-security-review/.claude/commands/security-review.md` (read
+      2026-10-10). Whether it matches the installed client's version is not checked, and the
+      commands page on code.claude.com was not read here.
+      *Direction (Daniel):* check the **finished** change once it is implemented, tested and
+      through its existing reviews, and before integration, merge or release. It is not appended
+      to Gate A or Gate B. The existing early questions stay: the security lens set in
+      `.claude/review-gates.md` § Profiles (assets, trust boundaries, roles, external systems,
+      abuse paths) for security `standard`/`high`. The public prompt has the same shape: it runs
+      on a branch's pending changes.
+      *Position vs trigger.* The position is the direction above. Still open, for its own story:
+      the mechanism (a command or skill invoked on purpose, or a step in an existing closing route
+      such as merge preparation); whether it runs manually or automatically; what is mandatory;
+      and for which changes. Going back to a mere gate-lens extension is not one option among
+      these. It would be a change of direction and needs Daniel's explicit decision. The first
+      version of this entry (`88099e9`) assigned the work to the Gate-A/B lens set and named two
+      triggers. Both were my proposal and are withdrawn as settled facts.
+      *Candidates:*
+      1. Trace foreign input to sensitive operations and across permission or trust boundaries,
+         including relevant **unchanged** helper functions. The prompt's Phase 3 says "Trace data
+         flow from user inputs to sensitive operations" and "privilege boundaries being crossed
+         unsafely"; the unchanged helpers are our addition.
+      2. Pick concrete attack classes by affected surface, for example injection, path
+         traversal, auth bypass, unsafe deserialization, data exposure. These are the prompt's
+         categories, used as examples per surface and not as a closed list.
+      3. Validate each finding against attacker preconditions, a reachable path, existing
+         controls and actual impact. This is the author's side, as in the existing "Codex is
+         advisory — validate before applying". The reviewer is never asked to filter.
+      4. Name the exact change state checked and the relevant environment. Gate B already pins a
+         range by full `baseSha`/`headSha`, and this would follow suit. No blanket full audit.
+      5. Repairs from this check are code changes. Tests and the existing review duties apply to
+         them (Gate B: "Re-review after every fix"), and the repaired spots get a security-focused
+         re-check afterwards.
+      6. Benefit first, before any new duty. This is the concept's own rule ("new tools only with
+         a concrete purpose and verified benefit"; incident regressions → harden-finding and
+         replay, MCP spec §9). Sequence, for the later story:
+         - Before the run, write down a provisional check instruction, the exact change state, the
+           relevant environment and the expected observations. These include what would be seen
+           if the check added nothing, so a result cannot be read into it afterwards.
+         - Run it on one sanitized real incident and one safe counter-example, through the
+           existing finding and replay structure.
+         - Compare with the existing reviews' results. Record confirmed extra findings, false
+           alarms and effort separately.
+         - Only then decide the mechanism and duties.
+
+         One small run supports no general claim of effectiveness or saving. Nothing of this is
+         started now.
+      **Not taken over:** the prompt's hard exclusions, which cover Markdown/documentation
+      files, DoS and resource exhaustion, outdated dependencies, and user-controlled content in AI
+      prompts. Also not its early filters (">80% confident", HIGH/MEDIUM only, sub-task
+      confidence < 8 dropped). Here prompts are the product, and `docs/prompt-standards.md` requires
+      "coverage first, filter later". Unchanged: P6 (no standalone security sections), the
+      cross-model gates, and this row's order. Secret, dependency and SAST checks stay with the
+      later `/workflow-init` story (MCP spec §9). Item 6 comes before any duty.
 - [ ] **Over-engineering check.** Daniel's assignment of 2026-10-07 18:49, verbatim in
       `.context/intake-inputs/2026-10-07-overengineering-assignment.md` (local to the main
       checkout): how the kit already prevents over-engineering in specs, plans and implementation,
@@ -1376,8 +1460,19 @@ backlog.
       row stays open because the fix it sketches has not landed.
       *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
+- [ ] **`/workflow-init` CLAUDE.md template: "If that file is missing" can mean the wrong
+      directory** (2026-10-10, CodeRabbit in the SFX Bricks child theme, relayed by Daniel). The
+      §5 pointer says a missing `.claude/review-gates.md` means "this project has no gate rules"
+      and to restore it with `/workflow-init`. A session working outside the checkout root would
+      read the same absence and scaffold the rules into the wrong directory. Fix in the template
+      (`plugins/dev-workflow/commands/workflow-init.md` `### 2.1`, and this repo's `CLAUDE.md`):
+      confirm the checkout root first (`git rev-parse --show-toplevel`), then restore. Downstream
+      copies are not edited by hand; they take it through `/workflow-init`. Its own small change
+      with Gate B.
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
-      open PRs.** **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
+      open PRs.** **2026-10-10: in PR #56** (dev-workflow 0.22.0: ledger check at every review
+      cycle's close; story, spec and plan under `docs/superpowers/`); "shipped" waits for the
+      merge. Its Gate-B cycle `xwgcreppl09z` owes five hardenings (commit body). **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
       finding lines, many Majors repaired, no PRs) also has 0 ledger rows; canvas keeps its
       recurrences and counter-measures in its taxonomy, dispositions and handovers instead, so
       the gap is the merge into the ledger, not the learning. The only mandated ledger check lives in `process-pr-review` step 5, so a
@@ -1412,6 +1507,11 @@ backlog.
       2026-10-06). So an empty ledger is not limited to projects without PRs. Unknown: whether
       `process-pr-review` step 5 ran there, and whether any of those findings qualified for
       hardening (step 5 invokes `harden-finding` only for a matching or clearly warranted class).
+      **2026-10-10 evidence — SFX, counted at `577f18d`:** 23 Gate-B cycle lines in commit bodies.
+      17 ran passes, 6 were skipped, and 9 of the 17 repaired at least one Major. P6c1's cycle
+      `07hfgs3o7mye` was still open with 6 Majors in pass 1. `docs/hardening-log.md` still holds
+      only its table header, unchanged since the scaffold commit `f0c8fe8` (2026-10-03). Story
+      scope since 2026-10-09: every project, with or without PRs (AC-5).
 - [ ] **Escalation trigger for the invariant checker — read this before patching it.**
       The checker asserts only the spellings its fixtures cover. Adding one more regex
       arm per newly-discovered spelling is *not* the ladder working; it is the same
