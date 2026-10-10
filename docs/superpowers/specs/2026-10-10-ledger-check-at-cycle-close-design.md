@@ -16,8 +16,9 @@ The only mandated ledger check is `process-pr-review` step 5
 Findings that the two review gates raise and the author repairs reach no ledger check at all,
 with or without pull requests. Story §1 records three projects where that left
 `docs/hardening-log.md` empty: canvas (51 Gate-A pass files), `sfx-bricks-api-builder` (22
-merges), `sfx-time-tracking-dashboard` (9 closed Gate-B cycles with a repaired Major; its P6c1
-cycle `07hfgs3o7mye` alone recorded 59 findings over 9 passes on 2026-10-10).
+merges), `sfx-time-tracking-dashboard` (9 closed Gate-B cycles with a repaired Major). Since
+then, that project's P6c1 closing commit `fb2ba98` (branch `v2`, read 2026-10-10) records
+Gate-B cycle `07hfgs3o7mye` with Findings 14,12,8,6,4,2,3,9,5 over 9 passes, 63 in all.
 
 The story's inherited conditions name what a durable route needs: identity, deduplication and
 consumption semantics, no reliance on same-session memory (AC-3), and a scope exactly that of
@@ -49,24 +50,48 @@ did not repair is not checked, as in step 5.
 Today `<slot>-dispositions.md` is an optional companion, "advisory and authoritative for
 nothing" (`.claude/review-gates.md`, Optional companions; resume paragraph).
 
-- **New duty:** for every pass with at least one repaired finding, the author writes
-  `<slot>-dispositions.md` before the cycle's closing act, one line per finding of that slot.
-  Each line starts with one verdict from a closed set: `fixed`, `not fixed`, or
-  `same as <slot>:<n>`, then a reason.
-- **Finding identity** is `<slot>:<n>`: the findings file's slot name plus the finding's line
-  number in that file. A findings file is not edited after its pass, so the pair is stable
-  within the checkout. It is a location, not a cross-checkout identity; §3.3 carries what
-  survives.
-- **Deduplication:** the same defect raised in several passes, or by both Gate-B branches, is
-  marked `same as <slot>:<n>` pointing at its first occurrence, and is checked once.
+- **Input set:** the slots of the cycle's **validated** logical passes. An incomplete attempt
+  is excluded, as the gate rules already require, and acquires no dispositions or ledger-check
+  duty. The working record (below) lists each pass number as `valid` or `incomplete`; a pass
+  whose status is unknown is reconstructed by revalidating its files, or surfaced, never silently
+  dropped.
+- **New duty, and when:** for every such slot with at least one finding, the author writes
+  `<slot>-dispositions.md` **when the pass's findings are repaired or dismissed, before the next
+  pass runs** (D1 a: "written
+  during repairs"), not at close. A Gate-B `WIP:` amend replaces intermediate revisions, so a
+  verdict deferred to close may have nothing left to be read from.
+- **Line format:** one line per finding of that slot, `<n> | <verdict> | <reason>`, where `<n>` is
+  the finding's line number in the findings file, and `<verdict>` is one of exactly `fixed`,
+  `not fixed`, or `same as <slot>:<m>`. Complete means the set of `<n>` values is exactly the
+  slot's finding line numbers, 1 to k, each once: a duplicate, missing or out-of-range number makes
+  the file incomplete.
+- **Finding identity** is `<slot>:<n>`. A findings file is not edited after its pass, so the
+  pair is stable within the checkout. The slot carries the cycle's nonce, so the pair also names
+  the cycle. It is a location, not a cross-checkout identity; §3.3 carries what survives.
+- **Deduplication:** `same as <slot>:<m>` may point **only at a `fixed` line of a slot of the same
+  cycle that reports the same occurrence**: the same defect at the same place, fixed by the same
+  repair. The pair is then checked once. A defect repaired and later reintroduced is a new
+  occurrence with its own verdict, and so is any case of doubt. A duplicate of a finding that was
+  dismissed or declined is not a `same as` either: it carries its own verdict, since the gate
+  rules let two branch lines with the same complaint get different membership answers.
 - **Authority, bounded:** the file is authoritative **for the ledger check only**. Its role in
   holds, answers, resume and recovery is unchanged; the resume paragraph's "advisory and
   authoritative for nothing" is narrowed to name that one exception and nothing more.
-- **Missing file at close:** the author writes it then, from the findings files and the diff —
-  durable sources, not memory — before the closing act.
-
-A zero-finding pass, and a pass whose findings were all not repaired, still needs no
-companion.
+- **Which slots owe a file:** every slot with at least one finding, so an absent file always
+  means a lost file, never "nothing was repaired". A zero-finding slot owes none.
+- **The working record becomes mandatory** from the cycle's first dispositions file: the
+  cycle-stable `gate-a-spec-<nonce>-resume.md`, `gate-a-plan-<nonce>-resume.md` or
+  `gate-b-<nonce>-resume.md` the rules already define, with their existing recovery semantics, so
+  an interrupted cycle stays findable and adoptable. Where recovery still fails and a new cycle
+  starts, the old cycle stays open and is a human's to resolve, as the nonce rules already say;
+  that resolution includes the old cycle's ledger check over its dispositions, and until then the
+  handover lists the open cycle as an open obligation. This is a limit, stated: nothing reaches an
+  abandoned cycle's repairs automatically.
+- **Missing or incomplete at close:** a verdict is reconstructed only where durable evidence
+  shows it — the findings file plus a reviewed revision that shows the repair (the next pass's
+  request text for Gate A, a commit for Gate B). Where it cannot be shown, the author asks the
+  human for that finding's verdict and records the answer as its reason. Nothing is filled in
+  from memory.
 
 ### 3.3 The record: one ledger-check line in the closing commit (D2 b)
 
@@ -75,13 +100,28 @@ carries the cycle's provenance line and curve:
 
 ```
 cycle <nonce>; ledger check: fixed <N>, hardening owed <M>
-cycle <nonce>; hardening owed <slot>:<n> — <class, or "new class <name>"> — <one-line defect description>
+cycle <nonce>; hardening owed <slot>:<n> — <severity> — <class, or "new class <name>"> — <path or target> — <one-line defect description>
 ```
 
 - `<N>` counts distinct repaired findings after deduplication; `<M>` how many of them owe
   hardening. One `hardening owed` line per owed finding.
-- The defect description makes the line readable without the findings file, which may be
-  untracked or absent in a later checkout.
+- `<severity>` is the reader-normalized severity from the findings file (`blocker`, `major`,
+  `minor`, `nit`), and the `harden-finding` source is `gate-a` or `gate-b`, read from the slot.
+  `<path or target>` is the repository-relative file, or the named section or operation, the
+  defect sat in. No field may contain the separator ` — ` or a line break: a description is
+  reworded, and a path that contains either is written in double quotes (a path with a line
+  break cannot be represented, and the author stops and surfaces it). Filled:
+  `cycle k3v9q2mx7d; hardening owed gate-b-quality-k3v9q2mx7d-pass-2:4 — major — docs-drift — README.md — install section still names the removed --global flag`.
+  With the description, that is the whole intake `harden-finding` Flow step 1 asks for, so a later
+  session can start hardening from the line alone. The findings file may be untracked or absent
+  in a later checkout.
+- **An undetermined check blocks the closing act.** Where a findings file cannot be read, an
+  owed dispositions file stays incomplete after §3.2's reconstruction and question,
+  `docs/hardening-log.md` or `docs/hardening-taxonomy.md` is missing or unreadable, or the
+  recurrence grep cannot run, the author stops and surfaces which one. A grep that runs and
+  matches nothing is a successful check: no prior row, `harden-finding` Flow step 3's "new". The line is
+  never written with a guessed or zero count; `fixed 0` means established, never unknown. A
+  missing ledger in an initialized project is a setup gap (`/workflow-init`).
 - A cycle with no repaired finding writes `fixed 0, hardening owed 0`, so "checked, nothing
   owed" differs from "not checked".
 - A **skipped** cycle (Gate-B triviality skip) runs no reviewer and so has no gate findings; it
@@ -97,7 +137,10 @@ cycle <nonce>; hardening owed <slot>:<n> — <class, or "new class <name>"> — 
 ### 3.4 Consumption: when an owed hardening is done
 
 Hardening runs afterwards as its own change with its own gate (D2 b). That change writes one
-line per owed finding it handles, in its commit body:
+line per owed finding it handles, in the commit that completes it: the closing message of its
+Gate-A or Gate-B cycle, or the commit of a change that owes no gate (a rung-0 record, say). An
+outcome line counts only in a non-`WIP:` commit; one written into a `WIP:` snapshot is
+provisional and ignored, and the closing amend carries it into the final message:
 
 ```
 cycle <nonce>; hardening <slot>:<n>: rung <1|2|3|4|P>
@@ -105,26 +148,40 @@ cycle <nonce>; hardening <slot>:<n>: pending <ref>
 cycle <nonce>; hardening <slot>:<n>: rung 0 — <the mandatory check that already catches it>
 ```
 
-- `rung 1–4|P` (a ledger row exists) and `rung 0` (no row, by `harden-finding`'s own rule) end
-  the obligation.
-- `pending` does **not** end it: no hardening landed. The `pending` ledger row and its `ref`
-  track it from then on, so it leaves the handover's open list but is not "done".
-- **Open obligations** are the `hardening owed` lines with no matching outcome line in the
-  history. Both kinds of line are squash-carried, so the query works on `main` after a merge and
-  in any checkout (AC-3).
-- The handover (CLAUDE.md §4) lists the open ones as open obligations. It reports them; the
-  commit lines are the record.
+- **Key:** the leading cycle field and `<slot>:<n>` name the **original** cycle that owed the
+  hardening, not the cycle of the hardening change. The line is that original cycle's record,
+  transported in a later commit; the hardening change's own cycle writes its own provenance line
+  and curve as usual.
+- An obligation is **closed** once any outcome line for its key reads `rung 1–4|P` (a ledger row
+  exists) or `rung 0` (no row, by `harden-finding`'s own rule). No ordering between outcome lines
+  is needed: a `pending` line never closes an obligation and never reopens a closed one.
+- `pending` alone does **not** close it: no hardening landed. The obligation stays open, blocked
+  by the `pending` row's `ref`.
+- **Open obligations** are the `hardening owed` lines with no closing outcome line. Both kinds of
+  line are squash-carried, so after a merge the query reads `main`.
+- **What the query covers:** the history of the refs it scans, which are the current branch and
+  `main`. Obligations recorded only on another unmerged branch are outside it, and that is a
+  stated limit, not a detected state. A shallow clone is detected (`git rev-parse
+  --is-shallow-repository`) and the result is then reported as incomplete, never as "none open".
+- The handover (CLAUDE.md §4) lists every open obligation, blocked ones included with their
+  `ref`. It reports them; the commit lines are the record.
 
 `harden-finding` itself does not change: its sources already include `gate-a` and `gate-b`, and
 its rungs, `pending` and rung-0 rules are used as they stand.
 
 ### 3.5 `process-pr-review` step 5
 
-One sentence is added: a bot finding whose defect is already named in a ledger-check line of a
-cycle on this branch is not checked again and is not counted as a new occurrence; the report
-names the cycle line it matched. Matching is the author's judgment against the line's
-description; there is no mechanical identity across bot and gate findings. Step 5 otherwise
-stays as it is.
+One sentence is added: a bot finding that reports **the same occurrence** as a `hardening owed`
+line written by a cycle **inside this pull request's own range** (merge-base to head) is not
+checked again and is not counted as a new occurrence; the report names the line it matched.
+Same occurrence means the same defect at the same place, still unrepaired or repaired by that
+cycle; a defect reintroduced after the repair, or any doubt, takes the ordinary step-5 route.
+Matching is the author's judgment against the line's description; there is no mechanical
+identity across bot and gate findings.
+
+Only owed lines are matched. A bot finding duplicating a gate finding that owed nothing is
+checked again by step 5; that costs one repeated check and nothing else, because a finding with
+no class has no ledger row a second check could miscount. Step 5 otherwise stays as it is.
 
 ### 3.6 History
 
@@ -166,7 +223,7 @@ Floor 3, level 1, no security lens set. Prompt changes pass `docs/prompt-standar
 
 | Criterion | Met by |
 |---|---|
-| AC-3 | §3.2 (file on disk), §3.3–3.4 (lines in git, squash-carried); replay part B |
+| AC-3 | §3.2 (written at repair time, on disk), §3.3–3.4 (lines in git, squash-carried, reachable history); replay parts A and B |
 | AC-4 | §3.1, §3.3 skip case, §3.5 |
 | AC-5 | §3.3: the check sits in every gate cycle, which every project runs; no PR needed |
 
@@ -183,18 +240,25 @@ automated test") a named verification covers the behavioural claim. Package
 (fixture, expected, out, compare):
 
 - **Fixture:** a small project state with a Gate-B cycle ready to close: two passes, three
-  repaired finding lines that are two distinct defects (one raised by both branches), one defect
-  matching a class already in the fixture ledger; dispositions files present; no session context.
-- **Part A, under the new rules:** a fresh agent session is told only to close the cycle.
-  Expected: `fixed 2, hardening owed 1`, the duplicate counted once, the owed line names the
-  matching class.
-- **Part B, interruption:** a second fresh session gets only the fixture repository after the
-  close and is told to find open hardening obligations. Expected: it finds the one owed line
-  from git alone.
+  repaired finding lines that are two distinct defects (one raised by both branches); dispositions
+  files present, as written at repair time; no session context. Defect X matches a class already
+  in the fixture ledger. Defect Y is pinned as owing nothing: a one-off wording slip that matches
+  no class, and the fixture's README states why no new class is warranted.
+- **Part A, interruption before close:** a fresh agent session, with nothing from the session
+  that made the repairs, is told only to close the cycle. Expected: `fixed 2, hardening owed 1`,
+  the duplicate counted once, the owed line names X's class and severity.
+- **Part B, fresh checkout after a squash:** a second fresh session gets a prepared fixture
+  repository **without `.context/codex-reviews/`**, whose `main` holds one squash commit carrying
+  three owed lines and their outcomes: one closed by `rung 2`, one with only `pending <ref>`, one
+  with no outcome. It is told to find open hardening obligations and state the `harden-finding`
+  intake for each. Expected: two open, the pending one marked blocked with its `ref`; each intake
+  with finding text, place, source and severity, from git alone, no question back.
 - **Counterfactual:** the same fixture under the 0.21.0 rules. Expected: no ledger-check line
   and no owed obligation recorded. If the 0.21.0 run also produces one, the claim is false.
 - **Limit:** each part is one sample. It shows the rules can be followed from durable sources;
-  it does not show they always will be.
+  it does not show they always will be. Not exercised: a Gate-A cycle, the recovery of an
+  interrupted cycle through its working record, and the writing of outcome lines through a `WIP:`
+  amend (part B starts from a prepared squash).
 
 ## 6. Out of scope
 
