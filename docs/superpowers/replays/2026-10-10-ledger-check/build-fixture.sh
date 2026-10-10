@@ -18,6 +18,7 @@ set -eu
 part=${1:?part a or b}; rules=${2:?rules dir}; target=${3:?target dir}
 case "$part" in a|b) : ;; *) echo "part must be a or b" >&2; exit 2 ;; esac
 [ -f "$rules/review-gates.md" ] || { echo "no review-gates.md in $rules" >&2; exit 2; }
+rules=$(cd "$rules" && pwd) || exit 2   # absolute, so the cd into the target cannot change it
 [ -d "$target" ] || { echo "target $target is not a directory" >&2; exit 2; }
 [ -z "$(ls -A "$target")" ] || { echo "target $target is not empty" >&2; exit 2; }
 
@@ -28,7 +29,7 @@ g() { GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=f@example.com GIT_COMMITTER_NAME=
       GIT_COMMITTER_DATE='1760000000 +0000' git -c commit.gpgsign=false -c init.defaultBranch=main "$@"; }
 g init -q .
 
-mkdir -p .claude docs/superpowers/stories .context
+mkdir -p .claude docs/superpowers/stories docs/superpowers/plans .context
 cp "$rules/review-gates.md" .claude/review-gates.md
 cat > CLAUDE.md <<'EOF'
 # fixture project
@@ -58,6 +59,13 @@ cat > docs/superpowers/stories/2026-10-10-flags-story.md <<'EOF'
 
 **Date:** 2026-10-10 · **Size:** chore
 **Risk:** trivial · **Security:** none · **Validation:** battery
+EOF
+cat > docs/superpowers/plans/2026-10-10-flags.md <<'EOF'
+# Remove the --global flag — Plan
+
+**Story:** `docs/superpowers/stories/2026-10-10-flags-story.md`
+
+1. Drop `--global` from `tool.sh`; reject any argument. 2. Update the README usage line.
 EOF
 cat > docs/hardening-taxonomy.md <<'EOF'
 # Hardening taxonomy — fixture
@@ -99,7 +107,7 @@ g add -A && g commit -q -m 'initial'
 base=$(git rev-parse HEAD)
 
 # The change under review: drop --global. The repairs from pass 1 are already in it.
-printf '#!/bin/sh\necho ok\n' > tool.sh
+printf '#!/bin/sh\nif [ "$#" -eq 0 ]; then\n  echo ok\nelse\n  echo "unknown argument: $1" >&2\n  exit 2\nfi\n' > tool.sh
 printf '# tool\n\nUsage: `tool.sh`\n\nHelp: prints a message.\n' > README.md
 g add -A && g commit -q -m 'WIP: remove --global'
 

@@ -740,7 +740,9 @@ the **cycle**, for its ledger check at close (Mechanics), and a zero-finding pas
   cycle, the slot carrying the nonce. The file is **complete** when its `<n>` values are exactly the
   slot's finding line numbers, 1 to k, each once. `same as <SLOT>:<m>` points only at a `fixed` line
   of a slot **of the same cycle** reporting **the same occurrence** — the same defect at the same
-  place, fixed by the same repair. A defect repaired and later reintroduced, a duplicate of a finding
+  place, fixed by the same repair. A finding this cycle **declined** is `not fixed`, whatever
+  another finding's repair did to the same text: a decline binds, so the ledger check never
+  counts it. A defect repaired and later reintroduced, a duplicate of a finding
   that was dismissed or declined, and any case of doubt each carry their own verdict, since the
   absorb paragraph lets two branch lines with the same complaint get different answers. The file
   makes a dismissal durable, so "we looked at that and why" outlives the session rather than the

@@ -431,13 +431,15 @@ cases = [
     (False, n + "hardening owed " + sl + ":4 — major — new class  — docs/a.md — desc"),
     (False, n + "hardening owed " + sl + ":4 — major — Docs Drift — docs/a.md — desc"),
     (True, n + "hardening owed " + sl + ":4 — minor — new class exit-code-swallowed — docs/a.md — desc"),
+    (False, n + "hardening owed gate-b-quality-99999999-pass-1:4 — major — docs-drift — docs/a.md — desc"),
+    (False, n + "hardening gate-b-quality-99999999-pass-1:1: rung 2"),
 ]
 bad = [repr(l) for want, l in cases if lm.is_ledger_record(l) is not want]
 print("%d cases, %d disagree" % (len(cases), len(bad)))
 for b in bad: print("  " + b)
 ' "$SCRIPT" 2>&1)
 expect "is_ledger_record: valid lines accepted, malformed ones refused" "$unit" <<'EOF'
-33 cases, 0 disagree
+35 cases, 0 disagree
 EOF
 
 # ---- 5. exit-1 causes -----------------------------------------------------------------

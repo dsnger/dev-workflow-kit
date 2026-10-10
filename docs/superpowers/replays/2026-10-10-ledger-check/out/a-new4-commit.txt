@@ -1,0 +1,14 @@
+Remove the --global flag
+
+tool.sh no longer accepts --global and rejects any argument with exit 2;
+the README usage line drops the flag and the help typo is fixed.
+
+Evidence (docs/superpowers/stories/2026-10-10-flags-story.md): quality battery `sh -n tool.sh` green (exit 0) on the committed tree.
+
+cycle r3pl4yfx01; floor 1 per {docs/superpowers/stories/2026-10-10-flags-story.md (level 0)}; hook reminder threshold absent
+cycle r3pl4yfx01; Gate B (passes 1-2, codex): Findings 3,0. Blockers 0,0. Majors 2,0.
+cycle r3pl4yfx01; ledger check: fixed 2, hardening owed 1
+cycle r3pl4yfx01; hardening owed gate-b-spec-r3pl4yfx01-pass-1:1 — major — docs-drift — README.md — usage line still names the removed --global flag
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+

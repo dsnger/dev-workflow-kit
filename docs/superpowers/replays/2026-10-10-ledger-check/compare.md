@@ -62,7 +62,7 @@ squash carry does.
 
 ## Seen and not part of the claim
 
-- All four committing or drafting sessions appended a `Co-Authored-By` trailer. That comes from
+- Every committing or drafting session appended a `Co-Authored-By` trailer. That comes from
   the client's defaults, not from the rules under test; this repository forbids it in its own
   commits.
 
@@ -76,7 +76,24 @@ empty-cited-set floor reading as run 2. Part B: the same two open obligations, t
 blocked, the rung-2 one closed, all four intake fields each, the quoted target whole, and it
 checked for a shallow clone and other branches. **Matches.**
 
+## Run 4 — all three parts on the rules as repaired after the PR #56 bot review
+
+The bot review (PR #56) found two fixture faults and one prompt fault, all fixed before this
+run: the repaired `tool.sh` accepted any argument, contradicting the fixture's own invariant; the
+fixture had no plan citing the story, so a Gate-B cycle's cited set was empty and its floor 3
+(runs 2 and 3 noticed and closed through the zero-finding exit); and prompt A told the session
+the floor was met, a premise the fixture did not establish. The rules also changed: a declined
+finding is `not fixed`. Parts A (both rule texts) and B were run again with run 2's flags
+(`out/*4-*`).
+
+- **A, new rules:** `fixed 2, hardening owed 1`, the owed line names the spec slot's line,
+  `docs-drift`, `major`, `README.md`; floor 1 read from the plan's `Story:` header; no `WIP:`
+  commit left. **Matches.**
+- **A, 0.21.0 rules:** no ledger-check line, no owed line; floor 1 likewise. **Matches.**
+- **B:** two open obligations, the pending one blocked with its `ref`, the rung-2 one closed;
+  each intake complete from git alone; no question back. **Matches.**
+
 ## Verdict
 
-Every expectation in `expected/` matched, in both parts and in the counterfactual, on both rule texts tested. This is one
+Every expectation in `expected/` matched, in both parts and in the counterfactual, on every rule text tested; run 4 is the one whose rules shipped. This is one
 sample per part; the limits in `README.md` stand.

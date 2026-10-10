@@ -21,8 +21,9 @@ session can follow it from durable sources, and that the old rules do not produc
 found a stale `--global` flag in `README.md` twice (once per branch) and the typo "mesage";
 both were repaired; pass 2 is clean. The dispositions files and the working record are present,
 as written at repair time. The session gets nothing from the session that made the repairs.
-The fixture's story is profiled risk `trivial`, security `none`, so the floor is 1 and pass 2
-may close the cycle.
+The fixture's story is profiled risk `trivial`, security `none`, and a plan cites it in its
+`Story:` header (from run 4), so the floor is 1 and pass 2 may close the cycle. The repaired
+`tool.sh` accepts no argument (from run 4).
 
 **Why Y owes nothing.** The typo is a one-off spelling slip. No base or fixture class covers
 it, and one misspelling does not make a class "clearly warranted": no mechanical check would
@@ -35,6 +36,13 @@ exist.
 
 ## How the runs were made
 
+- **Run 4 is the reference run.** Its new rules are `.claude/review-gates.md` with sha256
+  `292dc6b3d32e6fcac5970de5468d30e294b160c04b2c132c93dd2777b14bc193`: the text as repaired after
+  the PR #56 bot review. Compare that hash with the file in the commit that adds this package;
+  equal hashes mean the shipped text is the tested text. Its counterfactual is `main` at
+  `860e56cf69a0cdd921e40f394ca4fbba62d9322e`, which stays reachable. Runs 1-3 are kept as
+  history: their new rules came from `WIP:` snapshots that later amends replaced, so their bytes
+  are not recoverable from the repository, only their hashes below.
 - Rules: `.claude/review-gates.md` copied by the builder from a full commit ID. The new rules,
   runs 1 and 2: the WIP snapshot `506477aef03cc433b04d567234f7f9aca4830361` (sha256
   `7791bfcb7a92e37703006e7a35d03b146fed8a50584c51d433a5f0dd9758ce5a`); run 3, after the Gate-B

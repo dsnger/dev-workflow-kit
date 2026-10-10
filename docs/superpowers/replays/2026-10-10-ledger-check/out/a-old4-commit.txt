@@ -1,0 +1,19 @@
+Remove the --global flag
+
+tool.sh no longer accepts --global; any argument is rejected with exit 2.
+The README usage line drops the flag, and a typo in the help sentence is
+fixed.
+
+Story: docs/superpowers/stories/2026-10-10-flags-story.md
+
+Evidence (docs/superpowers/stories/2026-10-10-flags-story.md): quality
+battery `sh -n tool.sh` green on f585b9109ff8bb8e336f4370fc091aa32917fb27.
+
+cycle r3pl4yfx01; floor 1 per {docs/superpowers/stories/2026-10-10-flags-story.md (level 0)}; hook reminder threshold absent
+cycle r3pl4yfx01; Gate B (passes 1,2, undetermined): Findings 3,0. Blockers 0,0. Majors 2,0.
+
+Each logical pass ran as two single-branch calls (spec, quality) against
+base d0ca67bbef3eba5baf1945f80dda78606a6928a6.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+

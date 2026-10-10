@@ -222,12 +222,12 @@ def parse_curve(rest):
 # other cycle record, so CANDIDATE matches them; the readers set a VALID one aside before parsing,
 # because it is neither a provenance line, a curve nor a skip record. A malformed line in these
 # families is not recognized and keeps the malformed-record handling every reader already has.
-SLOT = r"gate-(?:a-spec|a-plan|b-spec|b-quality)-" + NONCE + r"-pass-[1-9][0-9]*"
+SLOT = r"gate-(?:a-spec|a-plan|b-spec|b-quality)-(?P<slotnonce>" + NONCE + r")-pass-[1-9][0-9]*"
 SEP = " \u2014 "  # " — "
 LEDGER_CHECK = re.compile(r"cycle " + NONCE + r"; ledger check: fixed (0|[1-9][0-9]*), "
                           r"hardening owed (0|[1-9][0-9]*)")
-OWED_HEAD = re.compile(r"cycle " + NONCE + r"; hardening owed " + SLOT + r":[1-9][0-9]*" + SEP)
-OUTCOME = re.compile(r"cycle " + NONCE + r"; hardening " + SLOT + r":[1-9][0-9]*: "
+OWED_HEAD = re.compile(r"cycle (?P<nonce>" + NONCE + r"); hardening owed " + SLOT + r":[1-9][0-9]*" + SEP)
+OUTCOME = re.compile(r"cycle (?P<nonce>" + NONCE + r"); hardening " + SLOT + r":[1-9][0-9]*: "
                      r"(rung [1-4P]|pending \S.*|rung 0" + SEP + r"\S.*)")
 CLASS = re.compile(r"(?:new class )?[a-z0-9][a-z0-9-]*")
 QUOTED = re.compile(r'"(?:[^"\\]|\\["\\])+"')
@@ -239,10 +239,11 @@ def is_ledger_record(line):
         return False
     if LEDGER_CHECK.fullmatch(line):
         return True
-    if OUTCOME.fullmatch(line):
-        return True
+    m = OUTCOME.fullmatch(line)
+    if m:  # the cycle field and the slot name the same, original cycle
+        return m.group("nonce") == m.group("slotnonce")
     m = OWED_HEAD.match(line)
-    if not m:
+    if not m or m.group("nonce") != m.group("slotnonce"):
         return False
     rest = line[m.end():]
     sev, _, rest = rest.partition(SEP)
