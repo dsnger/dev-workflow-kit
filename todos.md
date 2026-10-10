@@ -1470,7 +1470,9 @@ backlog.
       copies are not edited by hand; they take it through `/workflow-init`. Its own small change
       with Gate B.
 - [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
-      open PRs.** **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
+      open PRs.** **2026-10-10: in PR #56** (dev-workflow 0.22.0: ledger check at every review
+      cycle's close; story, spec and plan under `docs/superpowers/`); "shipped" waits for the
+      merge. Its Gate-B cycle `xwgcreppl09z` owes five hardenings (commit body). **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
       finding lines, many Majors repaired, no PRs) also has 0 ledger rows; canvas keeps its
       recurrences and counter-measures in its taxonomy, dispositions and handovers instead, so
       the gap is the merge into the ledger, not the learning. The only mandated ledger check lives in `process-pr-review` step 5, so a
