@@ -37,8 +37,8 @@ mechanical (`checks.md`), **R** = reading check (made against `evidence/set1-art
 reads `AC-5: "A customer can request an export of their account data as a CSV file from the
 account page." → per the decision: "add CSV to the export story"`. The decision names no place;
 "from the account page" was taken from AC-1. Under the route's own rule ("reading a covering
-decision into nearby wording is the same as having none") the location is not covered. D1 and D3
-left the location out and said why; the pilot accepted the same wording in its baseline runs.
+decision into nearby wording is the same as having none") the location is not covered. D1, D2 and
+D3 left the location out and said why; the pilot accepted the same wording in its baseline runs.
 **Cause:** the field rules said each entry carries a covering passage, but not that the
 requirement text is limited to what the passage covers. **Ruling:** Daniel, 2026-10-10, counted it
 as a failure and chose a one-sentence correction (commit `53a88a4`), reviewed in Gate-B cycle
@@ -65,7 +65,9 @@ D2, D4 and B1 grouped criteria sharing a fate in one row; B2 created a branch be
 All eight runs put the CSV criterion in *Added without an earlier condition* with its ID, text and a
 quoted covering passage; none wrote a placeholder row. None carried AC-1's location into AC-5:
 D1, D3, D4, D5, B2 and B3 recorded the location as an open question, D2 and B1 under *Unaccounted*.
-D4's AC-5 says "in addition to XLSX", which the decision's "add" and the request's "also" cover.
+D4's AC-5 says "in addition to XLSX", which the decision's "add" covers on its own (adding a
+format leaves XLSX in place); D4 also quotes the request's "exports should also be offered as
+CSV", which is not the decision and is not what the verdict rests on.
 
 Other observations, none a failure: D2 added a §1 row and B3 a §4 row (baseline text, both kept);
 D1 recorded "Reviews already run" as pending a human confirmation that no review ran on the

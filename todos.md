@@ -1591,3 +1591,16 @@ backlog.
   makes false — an open question now answered, a status now outdated — counts as dependent,
   not only one whose requirements change. A `plugins/` change, so it needs its own story and
   a version bump; PR #47's story excludes `plugins/` (its AC-9).
+
+## From the added-criterion change (dev-workflow 0.23.0) — backlog only, nothing implemented here
+
+- **Intake change record: three Minors from the final review, deferred because any skill edit
+  re-opens the measurement** (story
+  `docs/superpowers/stories/2026-10-10-change-record-row-for-an-added-story.md`, replay
+  `docs/superpowers/replays/2026-10-10-added-criterion-row/`). In
+  `plugins/dev-workflow/skills/intake/SKILL.md`, "Added without an earlier condition — the rules":
+  (1) `;` separates entries, yet two replay runs used it inside one entry to add a second quoted
+  passage, so entries and extra quotes cannot be told apart; (2) the spec form of the field has
+  no example and no replay case; (3) step 6 points at "the sentence before this one" instead of
+  naming the rule. A `plugins/` change: its own story, Gate B, version bump, and a fresh replay
+  set. Fits the planned intake split (Step 2), which re-measures the route anyway.

@@ -1,5 +1,9 @@
 # Run metrics (from each run's stream-json result record)
 
+One line differs in provenance: set 1 D1 was run alone (the load check) and its runner output went
+to the session, not to a log file; its line was copied by hand from that output afterwards, without
+the `usage` object. Every other line is the runner's own output.
+
 ````text
 == set 1
 B1: {"num_turns":6,"total_cost_usd":0.30591419999999997,"duration_ms":43615,"is_error":false,"usage":{"input_tokens":10,"cache_creation_input_tokens":23904,"cache_read_input_tokens":132711,"output_tokens":4405},"models":["claude-opus-5-5"]}
