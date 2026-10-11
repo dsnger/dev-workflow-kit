@@ -219,4 +219,4 @@ standard and the same checklist it scaffolds into every project. A prompt-qualit
 here is a defect in the shipped product.
 
 Repo layout and the two non-obvious design decisions:
-[`docs/architecture.md`](docs/architecture.md).
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
