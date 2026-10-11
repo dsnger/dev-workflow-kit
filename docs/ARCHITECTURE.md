@@ -70,7 +70,8 @@ their suites (`scripts/check-invariants.{sh,test.sh}` and `scripts/check-version
 plus six Python reports with their suites: `scripts/ledger-metrics.{py,test.sh}`,
 `scripts/loop-usefulness.{py,test.sh}`, `scripts/spec-delta.{py,test.sh}`,
 `scripts/live-effort.{py,test.sh}`, `scripts/run-analytics.{py,test.sh}` and
-`scripts/status-view.{py,test.sh}`. Everything else is text read by a model. What each report may
+`scripts/status-view.{py,test.sh}`. JSON and YAML files are configuration read by their tools
+(Claude Code, the MCP client, CI). Everything else is text read by a model. What each report may
 write, and which of these ship in the plugin, is binding and stated once, in
 [`AGENTS.md` § Boundaries (binding)](../AGENTS.md#boundaries-binding).
 
