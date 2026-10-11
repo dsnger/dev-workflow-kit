@@ -927,7 +927,7 @@ backlog.
       `.claude/review-gates.md`.
 - [ ] **Re-verify invariant 8's `${CLAUDE_PLUGIN_ROOT}` claim.** As of 2026-10-04 the Claude
       Code plugin reference says the variable expands in skill, command and agent markdown;
-      AGENTS.md invariant 8 and `docs/architecture.md` say it does not (verified earlier).
+      AGENTS.md invariant 8 and `docs/ARCHITECTURE.md` say it does not (verified earlier).
       Inline templates stay right either way; the stated reason may be stale. *Trigger:* the
       next change to invariant 8 or the template layout.
 - [x] **Gate-rule storage within the instruction-size limit.** **Shipped in 0.16.0 (PR #41,

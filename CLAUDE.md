@@ -141,6 +141,6 @@ pass, so a canary that reached into artifacts would break the protocol it sits b
 
 ---
 
-Project architecture, stack-specific patterns, and invariants live in @AGENTS.md
-(single source of truth — also read directly by Codex and the PR review bots). The
-Cross-Model Review gates (§5) check against the invariants there.
+Stack-specific patterns, invariants and § Commands live in @AGENTS.md (single source of
+truth — also read directly by Codex and the PR review bots); the project architecture lives
+in `docs/ARCHITECTURE.md`. The Cross-Model Review gates (§5) check against the invariants in @AGENTS.md.

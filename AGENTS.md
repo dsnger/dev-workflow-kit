@@ -1,6 +1,7 @@
 # AGENTS.md — dev-workflow-kit
 
-Single source of truth for architecture and invariants. Read directly by Codex at both
+Single source of truth for invariants and conventions; the architecture lives in
+`docs/ARCHITECTURE.md`. Read directly by Codex at both
 review gates and by the PR review bots. Discipline rules live in @CLAUDE.md.
 
 ## What this project is
@@ -20,75 +21,26 @@ There is no application code, so there is no typechecker to catch a defect; revi
 
 ## Architecture
 
-The tree below is the *meaningful* surface — the files a change is likely to touch or
-break. Ordinary repo furniture (`.gitignore`, `.claude/settings.json`, generated state
-under `.mcp/`) is deliberately absent, not overlooked.
+`docs/ARCHITECTURE.md` holds the repository tree, the components, the scripts' inventory and the
+two design decisions. `docs/PRD.md` holds the product's problem, success measures, non-goals and
+feature map. `docs/TECH-STACK.md` holds the tools the repo runs on and where each version is
+pinned.
 
-```
-README.md                         # what the kit is, setup, daily use, contributing
-MANIFEST.md                       # inventory of source-files/, the frozen extraction seed
-AGENTS.md                         # this file — the invariants both gates check
-CLAUDE.md                         # discipline rules + pointer to the review gates
-.claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
-todos.md                          # backlog; `pending` ledger rows point here by ref
-.gitattributes                    # union merge for the append-only ledger
-.mcp.json                         # the Codex reviewer, pinned
-.claude-plugin/marketplace.json
-.github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
-scripts/check-invariants.sh       # invariants 5, 6 + prompt conformance (rung 2)
-scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
-scripts/check-version-bump.sh     # invariant 12, mechanically — PR-only (rung 2)
-scripts/check-version-bump.test.sh # its regression suite — policy/operational/accept
-scripts/ledger-metrics.py         # read-only report over the ledger + git (vision step 2b)
-scripts/ledger-metrics.test.sh    # its regression suite — fixture repos, expected text
-scripts/run-analytics.py          # gate-call effort from local logs (vision step 2c, part 1)
-scripts/run-analytics.test.sh     # its regression suite — fixture home + repos, expected text
-scripts/loop-usefulness.py        # warning light over recorded review cycles (vision step 2c, part 2)
-scripts/loop-usefulness.test.sh   # its regression suite — fixture repo + store, expected text
-scripts/spec-delta.py             # spec/plan change since a given baseline, for Gate B (vision step 2c, part 3)
-scripts/spec-delta.test.sh        # its regression suite — fixture repo, expected text
-scripts/live-effort.py            # effort of review cycles not yet closed (vision step 2c, part 4a)
-scripts/live-effort.test.sh       # its regression suite — fixture home + repos, expected text
-scripts/status-view.py            # generated HTML status view, one-shot or watch (process monitoring)
-scripts/status-view.test.sh       # its regression suite — fixture home + repos, mutants
-plugins/dev-workflow/
-  .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
-  CHANGELOG.md                    # every manifest version, newest first
-  skills/{intake,harden-finding,sparring}/SKILL.md
-  agents/finding-triage.md        # read-only PR-comment checker (convention-loaded)
-  commands/{workflow-init,process-pr-review,claude-init}.md
-  hooks/{hooks.json,codex-gate.sh,codex-gate.test.sh}
-  hooks/fixtures/                 # captured PostToolUse payloads the suite replays
-  examples/                       # ships, but never scaffolded — one stack's answers
-docs/
-  architecture.md                 # layout + the two non-obvious design decisions
-  coding-workflow.md              # the methodology this plugin encodes
-  getting-started.md              # first story, end to end
-  prompt-standards.md             # the 12-item checklist every prompt must pass
-  hardening-log.md                # append-only findings ledger (union-merged)
-  hardening-taxonomy.md           # this project's fingerprint classes
-  pr-review-bots.md               # the Wait-for routing list + where each bot's findings appear
-  superpowers/{specs,plans,stories}/ # the approved artifacts behind past changes
-  superpowers/replays/            # committed replay packages behind a named verification
-source-files/                     # the extraction seed this repo was built from
-```
+### Boundaries (binding)
 
-**Boundaries.** `skills/`, `commands/`, `agents/` and `hooks/hooks.json` are loaded by convention
-from their paths. The executable artifacts are the hook and its test, plus the two
-repo-local CI checkers and their tests (`scripts/check-invariants.{sh,test.sh}` and
-`scripts/check-version-bump.{sh,test.sh}`), plus six Python reports with their suites:
-`scripts/ledger-metrics.{py,test.sh}`, `scripts/loop-usefulness.{py,test.sh}`,
-`scripts/spec-delta.{py,test.sh}` and `scripts/live-effort.{py,test.sh}` (read-only),
-`scripts/run-analytics.{py,test.sh}` (writes only its own store under
-`.context/telemetry/`), and `scripts/status-view.{py,test.sh}` (writes only its page, cache and
-lock under `.context/status/`) — the hook ships in the plugin, the checkers and the reports do not; everything else is text read by a model. `examples/` is reference material,
-outside the loaded surface: never scaffolded or copied into a user's project, though it
-does ship inside the plugin package.
-
-**Dependency direction.** The plugin depends on superpowers (skills it hands off to)
-and on a Codex MCP server exposing both `exec` and `review` (the gates key on those
-two tool names). Nothing may depend on this repo's internal layout — an installed
-plugin lives under a version-keyed cache path, which is an implementation detail.
+1. `skills/`, `commands/`, `agents/` and `hooks/hooks.json` are loaded by convention from
+   their paths.
+2. `scripts/ledger-metrics.{py,test.sh}`, `scripts/loop-usefulness.{py,test.sh}`,
+   `scripts/spec-delta.{py,test.sh}` and `scripts/live-effort.{py,test.sh}` (read-only)
+3. `scripts/run-analytics.{py,test.sh}` (writes only its own store under
+   `.context/telemetry/`)
+4. `scripts/status-view.{py,test.sh}` (writes only its page, cache and lock under
+   `.context/status/`)
+5. the hook ships in the plugin, the checkers and the reports do not
+6. The plugin depends on superpowers (skills it hands off to) and on a Codex MCP server
+   exposing both `exec` and `review` (the gates key on those two tool names).
+7. Nothing may depend on this repo's internal layout — an installed plugin lives under a
+   version-keyed cache path, which is an implementation detail.
 
 ## Key invariants
 
@@ -240,9 +192,10 @@ reader can judge whether it still holds.
 - **Never state what the manifest declares without reading it.** Any sentence
   describing which components are declared vs. convention-loaded must be checked
   against `plugins/*/.claude-plugin/plugin.json` in the same change. Three sites said
-  it declares `hooks` when it declares nothing at all: `docs/architecture.md` and
-  `MANIFEST.md` shipped that claim, and this file's own layout tree was written with
-  it before being corrected in the same PR. It is the same wrong belief that produced
+  it declares `hooks` when it declares nothing at all: the former `docs/architecture.md`
+  (now `docs/ARCHITECTURE.md`) and `MANIFEST.md` shipped that claim, and this file's own
+  layout tree (since moved to `docs/ARCHITECTURE.md`) was written with it before being
+  corrected in the same PR. It is the same wrong belief that produced
   the 0.2.1 duplicate-hooks load failure, surviving in prose long after the code was
   fixed. `scripts/check-invariants.sh` pins the manifest itself; nothing mechanical
   can tell whether a sentence about it is true, so this rule is the only guard.
@@ -286,7 +239,7 @@ reader can judge whether it still holds.
   that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is
   its most frequent site. Before any rename or delete:
   `grep -rn "<old name/anchor>"` across the repo *and* the inline templates. The same
-  applies to adding files: the layout tree above is part of the surface that drifts.
+  applies to adding files: the layout tree in `docs/ARCHITECTURE.md` is part of the surface that drifts.
 - **Never splice data into shell source a prompt tells the agent to run without bounding it.**
   A value filled into a command or here-document — a directory name, a user's answer — is shell
   text once it is there, and a quoted here-document delimiter stops expansion but not a line that
