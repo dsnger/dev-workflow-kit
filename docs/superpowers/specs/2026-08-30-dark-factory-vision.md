@@ -150,8 +150,9 @@ the inspiration: the adversarial verifier is a different model *family*
    `.context/codex-gate.off` marker beside it is not that declaration: it
    suppresses the hook reminder in one workspace, and shipped CLAUDE.md says
    plainly that with it in place "the gates still apply". (Whether a clone
-   sees the marker depends on the repo: this kit ignores all of `.context/`,
-   while `/workflow-init` has target projects ignore `/.context/codex-reviews/`
+   sees the marker depends on the repo: this kit ignores `.context/` except the
+   adoption marker and `codex-reviews/` (`.gitignore`), so `codex-gate.off` stays
+   local, while `/workflow-init` has target projects ignore `/.context/codex-reviews/`
    specifically — so in a scaffolded project the marker is visible and
    committable.) Neither file authorizes anything. That leaves the
    reviewer-availability question exactly where its own record left it. (Until step 6 of the build path
@@ -509,7 +510,8 @@ proceeds, the breaking part waits on the meta-story).
    the required review fixes, then present the merge decision". Most fields already
    have an owner and are referenced, not redefined: the evidence comes from the story
    profile's validation mode; the budget is §10's token budget per story, plus its round
-   cap per Bau-Loop, which does not apply to review loops [step 3/5]; the escalations are the human presence §8 keeps (mandatory stops,
+   cap per Bau-Loop [step 3/5] — review loops have their own pass cap, a mandatory stop
+   that `.claude/review-gates.md` states (§10 change record, 2026-10-11); the escalations are the human presence §8 keeps (mandatory stops,
    profile confirmations, scope changes, architecture meta-stories); the end point
    respects the merge authority in force (human until 6c). The new part is the requirement that the handoff carries all
    seven fields together, so a session can tell when it is done and when it must
@@ -517,6 +519,10 @@ proceeds, the breaking part waits on the meta-story).
    six parts (goal, verified snapshot, exact scope, boundaries, done-when, escalate-if)
    cover most of these fields but carry no budget, so the budget is part of the new
    requirement.
+   **The sprint mode's rule-sentence moratorium holds until this step is marked shipped**
+   (Daniel, 2026-10-10, D1; §10 change record, 2026-10-11). Its rules live in
+   `.claude/review-gates.md`; the recording rule and the review-loop pass cap stay until the
+   `todos.md` row "Sprint-mode review at step 3 shipped" reviews them when this step ships.
 4. **Story pool and classification** (decisions 2, 4, 6, 7 and 9). An epic, so
    §5's own split rule applies to it; the ordered stories, behind named
    interfaces:
@@ -736,7 +742,7 @@ raise the others. Always-on execution may later be an external operating option.
   and Freigabe. The E2E loop is the first active hook. [owner: 2c
   (events), step 5 (subscriptions)]
 
-## 10. Prior art: godarkfactory.com (reviewed 2026-08-30)
+## 10. Prior art: godarkfactory.com (reviewed 2026-08-30) and the zazencodes Software Factory (reviewed 2026-10-11)
 
 A shipped, self-hosted dark factory (Go binary `godark`, Elastic License 2.0,
 beta): GitHub issues grouped into milestone "phases", topological dependency
@@ -836,8 +842,10 @@ Adopted, with owning step:
   defence against docs drift. [step 4/5]
 - From the video: a hard round cap per Bau-Loop and a token budget per
   story as preventive limits — reaching one is a mandatory stop, never a
-  silent kill; the caps apply to build loops, not to review loops, which
-  keep their floor and tells. [step 3/5] Acceptance criteria with IDs in
+  silent kill; these caps apply to build loops. Review loops keep their
+  floor and tells and, since 2026-10-11, also have a pass cap of their own:
+  a mandatory stop in `.claude/review-gates.md`, never a closing route (change
+  record at the end of this section). [step 3/5] Acceptance criteria with IDs in
   given/when/then form and a per-AC test report as a handoff artifact (the
   machine-checkable goal condition; also what decision 9's fingerprint
   protects). [step 1/4] Reverse traceability (code with no spec behind it)
@@ -876,6 +884,98 @@ construction. Release tags in its own CI (§8) give that project release
 caps on verify output and PR diffs in prompts (unbounded diffs blow context
 and cost). Irrelevant here: per-module monorepo batteries, LangGraph as a
 framework, knowledge-graph disambiguation.
+
+**Second source: the zazencodes Software Factory for Claude Code (reviewed
+2026-10-11).** Repository `zazencodes/zazencodes-season-3`, path
+`src/software-factory-claude-code`, commit `555467c` (2026-10-07), read in full;
+nothing in it was run. File paths below are relative to that path. What it is: one
+Claude Code skill (`.claude/skills/factory/SKILL.md`) acting as the orchestrator,
+and seven Claude subagents (`.claude/agents/`): a spec writer, a builder, four
+review lenses run in parallel (code, security, UX, UI) and an approver whose
+`APPROVE` merges into `main` with no human (`approver.md`). Each job runs in its own
+git worktree; `job.json` holds its stage, and a static `factory/dashboard.html`
+polls the job files. There is no hook, no CI, no ledger and no pinned tool version
+in that tree. It confirms this vision's shape at a smaller scale and with weaker
+gates; the entries below say what we take from it and what we do not.
+
+Adopted, with owning step (each a planning input for that step's story, not an
+implementation):
+- A stage enum with exactly one writer, rewritten whole on every change, and a
+  round that ends only when every reviewer's file exists ("WAIT FOR ALL"); a
+  missing file or a first line that is not a verdict stops for a human
+  (`SKILL.md`). [step 3 for the round contract, 4a for the status state machine]
+- Claim primitives without a server: a job number claimed by `mkdir` without
+  `-p` and a backlog line by one exact-line edit, a failed claim read as another
+  session having won (`SKILL.md`). That reading is theirs: `mkdir` also fails for
+  other causes, and an exact-line edit is not shown to be atomic. A data point for
+  a cheap single-machine claim; the claim contract is the owning leaf's. [4a / 5a]
+- Merge preconditions: a clean main checkout on `main`, `--no-ff`,
+  `merge --abort` on failure, worktree removal reported separately, never push;
+  and `git merge-tree --write-tree` as a conflict check that touches no checkout
+  (`SKILL.md`, `approver.md`). Theirs runs at approval time rather than just
+  before the merge, so a `main` that moved in between is checked only by the merge
+  itself, and a merge that succeeds establishes no semantic compatibility; the queue
+  station's check and smoke run on the candidate it is about to land (§9). [5b]
+- Per-job runtime resources (a port block of `5100 + 10n` and a browser session
+  per job and role, `SKILL.md` and the agent files): a second data point for
+  §9's "Worktrees isolate files, not runtime". [5a]
+- A builder round cap (`MAX_RESUMES = 2`) and a fresh builder on rework
+  (`SKILL.md`): a second data point for the round cap per Bau-Loop and the
+  forced-fresh knob above. Their rework path resets the cap, so a job has no
+  overall round limit; the token budget per story above is what bounds ours.
+  [step 3/5]
+- A per-criterion evidence section in the builder's `build.md`: a second data
+  point for the per-AC test report. [4e]
+- A semantic escalation list beside the mechanical thresholds — money, auth or
+  permissions; deploy, CI, hosting or build scripts; schema, email, production
+  data or a new dependency; a product decision inside an assumption
+  (`approver.md`). Example job 001 shows it firing: all four lenses passed and
+  the approver escalated on one prerender-script line (`decision.md`). [6c]
+- The auditor spot-checks at least one acceptance criterion itself
+  (`approver.md`), as a floor for what a drawn audit inspects. [6b]
+- The loop diagram is the orchestrator's specification and is edited to change
+  it (`BUILD_PROMPT.md`): step 3 carries its diagram as a normative artifact.
+  [step 3]
+
+Redirected: reading a verdict from the first line of an artifact file instead of a
+separate state file (`dashboard.html` does this for earlier rounds; the current
+round comes from `job.json`) goes to the `todos.md` row "Generated status HTML" as
+a data point. The browser-agent safety rules — do not sign in, do not submit forms
+because the dev server may reach real services, close the session and the server
+at the end (`reviewer-ux.md`, `reviewer-ui.md`) — belong in the consumer projects'
+`AGENTS.md`; the kit takes them at most as one report line in Phase 0 (§9).
+
+Deliberately not adopted: same-family review lenses — four Claude lenses are one
+model family, the reason the tier-2 story
+(`docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`) stays
+open and unshipped; both example jobs also show UX and UI lenses passing without
+opening a browser ("Diff review only"). Merge authority with the model — merge
+stays human until 6c ships and holds (decision 5, §7, §8). Runtime state as a
+git-ignored file (`SKILL.md`, README step 3) — our closing records (provenance
+line, curve, ledger check, evidence entries) are carried in commit bodies and
+survive a clone; findings files and resume notes are local working state in a
+project `/workflow-init` scaffolds, which ignores `/.context/codex-reviews/`, while
+this repository tracks that directory on purpose (`.gitignore`). Resuming the same builder with carried context as the
+default — a fresh session at a completed unit is the rule here (CLAUDE.md §4).
+An unpinned `agent-browser` — the README links the tool without a version, and
+invariant 5 pins everything a run executes. Write boundaries as prose only — every
+agent there has Write and Bash, so nothing limits which paths it writes; ours wait
+on the meta-story amending invariant 1 (the write-protection item above).
+
+**Changed 2026-10-11 — changed requirement.** Decided by Daniel, 2026-10-10 20:13, in the decisions log the interim orchestrator session keeps ("D1 sprint mode YES"), accepting D1 as the sparring assessment of 2026-10-10 20:40 states it (§3 and §4 Phase 0 there). Both are working notes outside the repository and are not cited by path, because they do not survive a clone; the passages quoted below are the durable record. Baseline: adf79f6. The largest Gate-A cycle in this checkout left 65 pass files under `.context/codex-reviews/`; D1 makes `floor + 2` a mandatory stop, bounds the sprint mode in time, and folds the queued prior-art task into the same change.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §10 second sweep: "the caps apply to build loops, not to review loops, which keep their floor and tells" | kept: the caps apply to build loops; kept: review loops keep their floor and tells; dropped — "not to review loops", per the decision: "Kappe = Floor + 2 als Pflichtstopp: der Zyklus hält, du entscheidest: Mechanismus löschen, Scope kürzen, oder weiter. Nie ein stiller Abbruch. Widerspricht Vision §10 („caps not for review loops“) → Amendment."; moved → the pass-cap stop in `.claude/review-gates.md`, "How a cycle ends" | none |
+| §7 step 3: "its round cap per Bau-Loop, which does not apply to review loops [step 3/5]" | kept: the round cap per Bau-Loop as part of the budget [step 3/5]; dropped — "which does not apply to review loops", per the same passage; moved → a pointer to the pass cap in `.claude/review-gates.md` | none |
+
+- **Added without an earlier condition:** §7 step 3: "The sprint mode's rule-sentence moratorium holds until this step is marked shipped" → per the decision: "zeitlich begrenzt („bis Schritt 3 im Plugin ist“)"; §10: the zazencodes Software Factory entry above → per the decision: "Der schon eingereihte Prior-Art-Prompt wird Teil dieses Bündels".
+- **Unaccounted:** none.
+- **Intervening changes:** none — the file is unchanged between adf79f6 and this change.
+- **Scope boundary:** in: the two cap sentences, the step-3 sprint-mode sentence, decision 5's aside on what this repository ignores under `.context/` (corrected to match `.gitignore`; a record, no condition changes), the §10 heading (extended to name the second source) and the zazencodes entry; the rules themselves change in `.claude/review-gates.md` in the same change, and the review row in `todos.md`. out: every other §7 step, order and prerequisite; the build-loop round cap and token budget; the experimental one-repair-round cap parked in `todos.md`, which this change does not activate; the `/workflow-init` template, which takes the sprint mode only once it has evidence.
+- **Open questions:** none.
+- **Dependent artifacts:** `.claude/review-gates.md` → updated in this change; `todos.md` → updated in this change.
+- **Reviews already run:** Gate-A spec cycles xhhmnbaflb (closed in 62931c3) and fg0tn8vtxk (closed in adf79f6) on earlier revisions → they stand, a closed cycle's close being valid under the rules current when it closed, per `.claude/review-gates.md`'s opening floor paragraph ("a cycle that has already closed stands"); this text is a new revision no pass has run against, so it runs its own Gate-A spec cycle, per "Gate A's content condition, and its closing act" ("No new revision of the artifact is made to close a Gate-A cycle, a new revision being one no pass has run against").
 
 ## 11. Open questions
 

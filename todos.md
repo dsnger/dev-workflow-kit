@@ -815,6 +815,38 @@ backlog.
       - *Finding content:* all 14 P6c1 pass-1 lines concern product behaviour (stale data,
         races, navigation). None is about prose or the test instrument.
 
+- [ ] **Sprint-mode review at step 3 shipped.** Daniel decided the sprint mode on 2026-10-10
+      (D1; vision §10 change record of 2026-10-11 quotes it); the 2026-10-11 bundle installed it in
+      `.claude/review-gates.md`: the recording rule ("Recording is not amending"), the pass cap
+      (the pass-cap stop in "How a cycle ends") and the rule-sentence moratorium. When vision §7
+      step 3 is marked shipped, review each of the three — keep, adjust or drop — with the
+      old-condition accounting AGENTS.md's Don'ts require, and resolve the `pending` ledger rows
+      collected under the moratorium that name this row as their prerequisite. The moratorium
+      ends with step 3 whatever this review decides; the other two stay until it decides.
+      *Trigger: vision §7 step 3 marked shipped.*
+- [ ] **Story template: an Assumptions block with an escalation rule.** From the zazencodes
+      Software Factory (vision §10, second source): its spec writer lists each assumption with
+      a one-line reason, and its approver escalates when an assumption is a product or business
+      decision (`.claude/agents/spec-writer.md`, `approver.md` there). The intake story
+      template has no Assumptions or out-of-scope section: `grep -inE
+      'assumption|out of scope|out-of-scope|non-goal' plugins/dev-workflow/skills/intake/SKILL.md`
+      finds nothing (checked 2026-10-11). Owner: `dev-workflow:intake`, with vision 4b deciding
+      which assumptions are mandatory stops. A prompt change, so check 4f's pinned lines are
+      compared in the same change. Recording this row authorizes no implementation.
+      *Trigger: Daniel selects it for intake.*
+- [ ] **Agent working rules: check the branch first, lint only changed files, stage explicit
+      paths.** From the zazencodes builder (`.claude/agents/builder.md` there): the first check
+      is that `git branch --show-current` names the expected branch, else stop as blocked; lint
+      only the files changed and never run a command that rewrites files across the repository
+      (a repo-wide `--fix`); stage explicit paths, never `git add -A`. Among this
+      repository's tracked prompts only the intake skill's commit protocol forbids `git add -A`;
+      session handovers repeat the warning by hand. Owner: the
+      `/workflow-init` `CLAUDE.md` template — a prompt change, so full Gate B and a version bump
+      (invariants 8 and 12; check 4e measures its size) — or `docs/coding-workflow.md`, a prose
+      change. Under the sprint mode a
+      new rule sentence in this repository's `CLAUDE.md` waits for the step-3 review row above.
+      Recording this row authorizes no implementation.
+      *Trigger: Daniel selects it for intake.*
 - [ ] **`git commit --amend --no-edit` silently resets a Gate-B cycle, and nothing warns.**
       `plugins/dev-workflow/hooks/codex-gate.sh:763` is
       `is_wip_commit() { printf '%s' "$1" | grep -Eiq -- "-m[[:space:]]*['\"]?[[:space:]]*wip"; }`
@@ -1425,6 +1457,16 @@ backlog.
       Before 0.21.0 the hook counted each call as a pass; it now credits a `full` call or a matched
       `spec` + `quality` pair. Counting is still part of the problem, not a detail of it.
       *Trigger: the tier-2 story being picked up, or a second multi-day reviewer outage.*
+- [ ] **Stack-neutral security checklist as guidance for `+abuse-path`.** From the zazencodes
+      security lens (`.claude/agents/reviewer-security.md` there): access control, input (SQL,
+      shell, path, template), XSS, data exposure, payments and identity, abuse (rate limits),
+      secrets, dependencies — and "don't block on pre-existing issues the change didn't make
+      worse". Candidate use: guidance text for choosing the named abuse scenario that
+      `+abuse-path` requires (`.claude/review-gates.md`, Profiles), not a separate same-family
+      review lens (row above, tier-2 story). A gate-rule change: its own story, Gate A, security
+      `high`; invariant 10 keeps the list stack-neutral, and under the sprint mode its rule text
+      waits for the step-3 review row. Recording this row authorizes no implementation.
+      *Trigger: Daniel selects it for intake.*
 - [ ] **Finding B — a §5 version stamp, so a scaffolded CLAUDE.md can tell it lags the
       installed plugin.** Split out of the canvas-findings round after two Gate-A passes
       showed it is a design, not a sentence. Spec questions: a semantic §5 locator

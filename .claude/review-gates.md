@@ -101,7 +101,7 @@ commit-carry duty, and the further pass an assigned-fix-set change costs — sin
 be established as absent is cheaper to owe than to skip** — the cycle is treated as post-rule, so it
 owes a nonce, owes its provenance line and its curve or skip record, and uses that nonce in every
 cycle record it does write — which changes what a record is named, never whether one is owed, so
-the working record stays optional until its first dispositions file and a skipped cycle still writes
+the working record stays optional until its first dispositions file or pass-cap stop and a skipped cycle still writes
 no findings slots — and **the dispositions files, the working record from the first of them and the
 ledger check at close owed**, a cycle that cannot establish its starting rules being unable to
 establish that they waived them. Where it
@@ -319,10 +319,23 @@ executable rather than asserted, and cleanliness alone never decides it. **What 
 reporting "will not converge" on a loop that converged, and a loop still owing a repair, an answer
 or a closure condition has not converged** — so a mandatory two-tell stop and the clearly-stuck
 reading stay reachable exactly where the loop is still running, which is the only place their
-question means anything. Three suspensions, by the names their
+question means anything. Four suspensions, by the names their
 paragraphs use and read by those paragraphs: the **scope stop**, raised by either trigger above — a
 **membership stop** by the first, a **question stop** by the second; the **clearly-stuck exit**;
-and the **two-tell stop**. A suspension waives nothing. Any non-empty set of them can apply to one
+the **two-tell stop**; and the **pass-cap stop**, read here because no other paragraph owns it. **The
+pass-cap stop applies to every pass this branch reaches once the cycle's count of valid logical
+passes has reached its cap: the derived floor plus two until a pass-cap stop is answered, and
+from then on the count at the latest answer plus the further passes that answer allows.** It
+reads a count, not findings, and it binds wherever a further pass would run, a pass a failed
+closing act owes included: no pass beyond the cap runs before the stop is answered. It asks the user to choose — delete the mechanism the
+findings keep returning to, cut scope, or continue — and every answer names how many further
+passes it allows, at least one, and resumes the loop on the artifact as the answer leaves it. It
+never closes the cycle, credits a pass, skips one or lowers the floor; where the floor cannot be
+derived, neither can the cap, and the cycle stops as that derivation's own source says. Each
+answer is written to the cycle's working record (Companions) with the count it was given at and
+the passes it allows; a run that cannot establish them from that record treats the cap as
+reached and asks again. A suspension
+waives nothing. Any non-empty set of them can apply to one
 pass: **one surface, every reason reported, every question asked**, because a reason left out is a
 decision made by omission. A finding the clearly-stuck reading surfaces that also carries either
 trigger takes the scope stop's answers at that same surface, so it is not asked twice; the two-tell
@@ -442,8 +455,8 @@ readings raise one question between them, not two**, both asking continue or sto
 carrying every reason ends both — an instance of the sentence before it, not an exception. **Two
 pairings cannot occur**, and no rule ranks them: clean completion and a **scope stop**, since that
 stop's triggers are the clean predicate's own second half, so a pass raising one is not clean; and
-a zero-finding pass and any suspension, since it has nothing to surface, nothing regenerating, no
-cluster and no require↔withdraw pair. **Clean completion and the clearly-stuck exit can**, and the
+a zero-finding pass and any suspension but the pass-cap stop, since it has nothing to surface,
+nothing regenerating, no cluster and no require↔withdraw pair. **Clean completion and the clearly-stuck exit can**, and the
 overlap is admitted rather than argued away: the two read different severity fields, as
 Mechanics · Severity sets out, so an **in-set** Blocker or Major the ceiling demotes below Major
 can regenerate across passes on a pass that is clean. **A declined finding is not a route into that
@@ -755,7 +768,8 @@ the **cycle**, for its ledger check at close (Mechanics), and a zero-finding pas
   once the counter moves or an incomplete pass is discounted. Gate A runs separate spec
   and plan loops, so those are two cycles; Gate B is one cycle with one note even though each pass writes two branch files, because those files are written by Codex's reviewers, and race only under `reviewType: full` — the resume note is written by the outer agent, sequentially, and
   splitting it would create two records able to disagree about one shared recovery budget.
-  It is **owed from the cycle's first dispositions file**, so an interrupted cycle with repairs to
+  It is **owed from the cycle's first dispositions file or first pass-cap stop, whichever comes
+  first**, so an interrupted cycle with repairs to
   account for stays findable and adoptable under the recovery rules below; before that, whoever
   runs the cycle writes it when useful. From then on it lists each pass number of the cycle as
   `valid` or `incomplete`. Whoever runs the cycle replaces it as the cycle moves and deletes it
@@ -1041,6 +1055,32 @@ not all of `.context/`, which would strip the committed `codex-gate.on` adoption
   "N/A" — the dangerous direction. The price is that prose under a directory that
   merely shares the name (`docs/commands/reference.md`) fires too, which is the
   redundant reminder invariant 2 accepts by name.
+
+**Recording is not amending — when Gate A runs on a planning text.** CLAUDE.md §4's
+*Local choices* separates a commitment from its implementation; the same line separates
+it from a record. An edit to `todos.md`, the Dark Factory vision
+(`docs/superpowers/specs/2026-08-30-dark-factory-vision.md`) or an approved story, spec or
+plan that only **records** — prior art, an owner, an ordering of backlog items, a
+lesson, a status mark, evidence — runs no Gate A. An edit that changes a **commitment** —
+product behaviour, a shared contract, a security guarantee, scope, an acceptance
+criterion, a trigger, a vision §7 step's order or prerequisite, or a gate rule — still
+takes the amendment route (`dev-workflow:intake`, for a story or spec; a plan's commitment
+changes through the story or spec it serves, and the revised plan then runs its Gate-A plan
+cycle) and its Gate-A cycle; an edit doing both is the second kind, and so is one whose kind
+is in doubt. This decides only whether an edit starts a Gate-A cycle: an open cycle's content
+condition still compares the artifact as it stands, so a record added to an artifact under
+review costs that cycle a further pass.
+
+**Until the vision's §7 step 3 is marked shipped, no new sentence stating a rule — an
+obligation, a prohibition or a permission — is added to `CLAUDE.md`, `AGENTS.md` or this
+file**; deleting one is allowed, and so was the change that introduced this sentence.
+A hardening that would add such a sentence takes rung 2 or higher instead, or is collected
+as a `pending` ledger row whose prerequisite is the `todos.md` row "Sprint-mode
+review at step 3 shipped", which reviews this sentence, the pass cap and the recording rule
+above; rung 0 and every rung that adds no sentence to these files stay as Mechanics and
+`harden-finding` give them. A `pending` row defers hardening only and discharges no repair; where the only repair
+a finding owes is such a sentence, stop and surface it, and the user decides whether that
+change may add it.
 
 ### Profiles — how much review this story gets
 
