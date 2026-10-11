@@ -288,7 +288,7 @@ does not show lands in the closing commit; where the edit changes something a **
 governs — a profile value, cited-set membership, the assigned fix set — **the change has happened
 and that source's own rule applies**, so a further pass is owed and no condition is added here for
 it. **Where it changes a review input no source rule governs** — a cited story's acceptance
-criteria or settled decisions, say — **nothing here reaches it, and nothing in this section does**:
+criteria or settled decisions, say — **nothing here reaches it, and nothing in this ordering does** — whether the edit owes a Gate-A cycle of its own is "Recording is not amending"'s:
 the artifact's own equality condition covers the artifact, and the inputs beside it have only the
 rules their sources give them.
 
@@ -520,8 +520,8 @@ and the next paragraph says why.
 **Its content condition is not an artifact/request equality, and none is written for it.** Gate B
 reviews a **diff** identified by `baseSha` and `headSha` rather than a text handed to the reviewer,
 so there is no reviewed text to compare an artifact against, and **nothing is put in its place**:
-content the final review request did not select can reach the closing commit, and **no rule in this
-section reaches it**. **What this gate does have is every Gate-B duty this section already
+content the final review request did not select can reach the closing commit, and **no Gate-B rule
+reaches it**. **What this gate does have is every Gate-B duty this section already
 states, at the paragraphs that state them, and none of them is summarised here** — a compressed
 inventory is where a load-bearing part goes missing while the list still looks complete.
 
@@ -737,7 +737,7 @@ a stated limitation, not a guarded one.
 **Companions of a findings file, from field practice.** Two files sit beside a findings file.
 Neither is ever the findings file and neither participates in pass validation: the findings file
 plus its terminator remain the only requirement a **pass** has. What the companions owe is owed to
-the **cycle**, for its ledger check at close (Mechanics), and a zero-finding pass needs neither.
+the **cycle**, for its ledger check at close (Mechanics), and a zero-finding pass owes no dispositions file; the working record's own start is stated below.
 
 - `<slot>-dispositions.md` — **owed for every slot of a validated pass that holds at least one
   finding**, written when that pass's findings are repaired or dismissed and **before the next pass

@@ -905,11 +905,12 @@ implementation):
   missing file or a first line that is not a verdict stops for a human
   (`SKILL.md`). [step 3 for the round contract, 4a for the status state machine]
 - Claim primitives without a server: a job number claimed by `mkdir` without
-  `-p` and a backlog line by one exact-line edit, a failed claim read as another
-  session having won (`SKILL.md`). That reading is theirs: `mkdir` also fails for
-  other causes, and an exact-line edit is not shown to be atomic. A data point for
-  a cheap single-machine claim; the claim contract is the owning leaf's. [4a / 5a]
-- Merge preconditions: a clean main checkout on `main`, `--no-ff`,
+  `-p` and a backlog line by one exact-line edit; a claim that fails because
+  another session took the number or changed the line is retried (`SKILL.md`). An
+  exact-line edit is not shown to be atomic. A data point for a cheap
+  single-machine claim; the claim contract is the owning leaf's. [4a / 5a]
+- Merge preconditions: a main checkout on `main` that is clean apart from
+  `factory/backlog.md`, which concurrent sessions edit, `--no-ff`,
   `merge --abort` on failure, worktree removal reported separately, never push;
   and `git merge-tree --write-tree` as a conflict check that touches no checkout
   (`SKILL.md`, `approver.md`). Theirs runs at approval time rather than just
@@ -948,8 +949,8 @@ at the end (`reviewer-ux.md`, `reviewer-ui.md`) — belong in the consumer proje
 Deliberately not adopted: same-family review lenses — four Claude lenses are one
 model family, the reason the tier-2 story
 (`docs/superpowers/stories/2026-08-14-tier-2-same-family-reviewer-story.md`) stays
-open and unshipped; both example jobs also show UX and UI lenses passing without
-opening a browser ("Diff review only"). Merge authority with the model — merge
+open and unshipped; in the example jobs, job 001's UX review and job 002's UI review
+passed while stating that they did not open a browser or run the dev server. Merge authority with the model — merge
 stays human until 6c ships and holds (decision 5, §7, §8). Runtime state as a
 git-ignored file (`SKILL.md`, README step 3) — our closing records (provenance
 line, curve, ledger check, evidence entries) are carried in commit bodies and
