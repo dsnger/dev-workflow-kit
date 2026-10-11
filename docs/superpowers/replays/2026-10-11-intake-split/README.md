@@ -54,6 +54,29 @@ compaction the split never read its route file again (AC-6), with the conditiona
   baseline's own bytes, the 0.13.1 file to `a23aeb3d…f7bc`. The validity rule checks the plugin
   load, not what a run reads afterwards.
 
+## Re-running
+
+The scripts in `runner.md` are kept exactly as run and expect this layout in one scratch
+directory outside any git checkout (so no parent `CLAUDE.md` loads):
+
+1. **Fixture repository.** Build `fixture-template/` from `fixture/`: copy `docs/`, rename
+   `agents-md.md` to `AGENTS.md`, move `review-gates.md` to `.claude/review-gates.md`; then
+   `git init -b main`, `git add -A` and commit once. The as-run start commit was `80b9009`; a
+   rebuilt fixture gets a different id, so replace `BASE = '80b9009'` in `checks.py` with it.
+2. **Plugin copies.** `mkdir -p plugins/baseline && git -C <repo> archive fa5f275
+   plugins/dev-workflow | tar xf - --strip-components=2 -C plugins/baseline`, and the same into
+   `plugins/split` from `344dfda` and `plugins/split2` from `f811cd9` — those WIP commits are not
+   on `main` and may be gone; without them, copy `candidate/` over `skills/intake/` of a
+   `fa5f275` copy for `split2`, and for `split` also put back the set-1 load-rule sentence quoted
+   in `account.md` (the only difference). Raise `plugin.json` to `0.24.0` in both if the version
+   matters to the run. Compare the intake hashes with the table above.
+3. **Prompts.** Save each block of `prompts.md` as `prompts/<name>.txt` (A1 … H3, and `HC.txt`
+   for the `/compact` turn).
+4. **Run.** `sh suite.sh baseline`, `sh suite.sh split`, `sh reps.sh baseline`, `sh reps.sh
+   split`; set 2 as in `compare.md` (`run.sh split2 …`, `run.sh baseline2 …`). Then `python3
+   checks.py <dir> <variant> <case>` per run. Close the checker gaps listed above before relying
+   on its `valid=yes`.
+
 ## AC-2: the old→new account
 
 The full table is `account.md`. The cut followed the pilot's mapping (`git show
