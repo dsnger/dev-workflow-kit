@@ -63,18 +63,22 @@ Any other argument shape stops and asks.
 3. **Capture, evidence first (story AC-3).** Fill observed (with its evidence: command and
    output, log line, failing test, screenshot path), expected (with its source), repro, affected
    feature, severity, first seen (version or commit). Severity reuses the token set
-   `blocker|major|minor|nit` that `harden-finding` uses; their meanings are cited from
-   `.claude/review-gates.md` Mechanics · Severity (blocker: wrong, unsafe or breaks an invariant;
-   major: a design flaw needing rework; minor and nit below that), not redefined. A field the input
+   `blocker|major|minor|nit` that `harden-finding` uses, with the meanings of
+   `.claude/review-gates.md` Mechanics · Severity, which the skill states in one line itself
+   (blocker: wrong, unsafe or breaks an invariant; major: a design flaw needing rework; minor and
+   nit below that) so a run needs nothing else from the project's gate file; the `**Story:**` line
+   form is likewise shown in the skill's template, not looked up. A field the input
    cannot support is written `unknown — <reason>`, severity included; nothing is inferred from a
    similar case.
 4. **Category and state (story AC-4).** Exactly one category (`bug|regression|improvement|docs`)
    and exactly one state (`needs-triage|needs-info|ready|in-progress|done|wontfix`). A new
-   ticket is `ready` when observed with evidence, expected with its source, the commitment and the
-   severity are filled; `needs-info` when any of them is `unknown` (the ticket lists the questions
-   for the reporter); `needs-triage` when a decision is needed. For an `improvement`, the source of
-   the expected behaviour is the request itself (who asked, where), and no target the input does not
-   state is invented. When no category can be grounded, or the input names two categories or two
+   ticket is `ready` when its four **readiness fields** — observed with evidence, expected with its
+   source, the commitment, the severity — are filled; `needs-info` when any of them is `unknown`
+   (the ticket lists the questions for the reporter); `needs-triage` when a decision is needed. The
+   other fields (repro, feature, first seen) may stay `unknown` in a `ready` ticket. For an
+   `improvement`, the expected behaviour's source is the commitment artifact it stays inside (path
+   plus `AC-<n>`, `§` or feature-map row), with the request recorded beside it (who asked, where);
+   no target the input does not state is invented. When no category can be grounded, or the input names two categories or two
    states, the skill asks one question and waits before writing anything, because a category is
    not a field that can be left `unknown`.
 5. **Brief (story AC-12).** Fix scope; out of scope; the feedback loop that goes red on exactly this
@@ -101,16 +105,17 @@ Any other argument shape stops and asks.
    (`git ls-tree --name-only <default branch> docs/superpowers/tickets/`, where that branch exists
    and differs from the current one), plus one; `T-1` when none. Never reused, a `wontfix` or `done`
    ticket keeping its number. Two branches can still take the same `n` (both captured before either
-   merged), and git merges two differently named files without a conflict; so `list` and every
-   `T-<n>` lookup check for two files carrying one `T-<n>`, and on finding them stop and name both
-   paths for a human, who renumbers one and its references — the same answer intake gives a
-   criterion-ID collision. Path
+   merged), and git merges two differently named files without a conflict. So `list` shows any
+   `T-<n>` carried by two files under its `needs repair` heading (§2.6), and a `T-<n>` lookup or
+   state change on such a number stops and names both paths for a human, who renumbers one and its
+   references — the same answer intake gives a criterion-ID collision. Writing never overwrites: if
+   the computed path already exists when the file is about to be written, the skill stops and names
+   it. Path
    `docs/superpowers/tickets/<YYYY-MM-DD>-T<n>-<slug>.md` (the local project date), the slug from
    the title by intake's rule, restated in full in the skill: lowercase; transliterate `ä`→`ae`,
    `ö`→`oe`, `ü`→`ue`, `ß`→`ss` and strip other diacritics; replace every non-`[a-z0-9]` run with
    one hyphen; trim hyphens; cap at 40 characters at the last whole word (a single longer token is
-   hard-truncated to 40, then re-trimmed); an empty result becomes `ticket`. Two branches that took the same `n` collide at merge: stop for
-   a human, as for criterion IDs. No other file records the ticket: the tickets folder and `list`
+   hard-truncated to 40, then re-trimmed); an empty result becomes `ticket`. No other file records the ticket: the tickets folder and `list`
    are the backlog (story AC-6, narrowed 2026-10-11 — the `todos.md` pointer was dropped).
 8. **Commit.** Stop if the index already holds staged changes; stage only the ticket file; verify
    that the staged set is exactly that path and its staged content equals the file, as intake's
@@ -139,7 +144,7 @@ Decision needed: <two readings>   <!-- only in needs-triage -->
 <behaviour> — evidence: <command+output | log line | failing test | screenshot path>
 
 ## Expected
-<behaviour> — source: <path + AC-n / § / feature-map row>
+<behaviour> — source: <path + AC-n / § / feature-map row>; requested by: <who, where>   <!-- requested by: improvements only -->
 
 ## Repro
 1. …
@@ -162,13 +167,14 @@ project's out-of-scope record (story AC-6).
 ### 2.5 State changes
 
 `/dev-workflow:ticket T-<n> <new state> [reason]` rewrites the `**State:**` value and appends a Log
-line; `wontfix` requires the reason. A move to `ready` (from `needs-info` or `needs-triage`) first
-re-runs §2.3 steps 2–4 on the ticket as it now stands, answers included: a commitment change found
-then goes to intake as in step 2 (the ticket becomes `wontfix` with "handed to intake" as its reason),
-and a field still `unknown` keeps the ticket where it was. The change is committed like a capture
-(step 8). The coding session that fixes a ticket sets `in-progress`
-when it starts and `done` in the fix's closing commit. Nothing checks either; they are records the
-agent keeps.
+line; `wontfix` and `done` take a reason or commit. **A move into `ready` or `in-progress`, from any
+state, is a re-capture**: the skill runs §2.3 steps 2–6 on the ticket as it now stands, answers
+included, and rewrites the ticket from the result — commitment, readiness fields, Brief and
+`**Story:**` line alike. The ticket enters the requested state only if that run would have made it
+`ready`; otherwise it takes the state the run gives (`needs-info`, `needs-triage`), or, on a
+commitment change, it becomes `wontfix` with "handed to intake" and the step-2 hand-off is printed.
+Every state change is committed like a capture (step 8). The coding session that fixes a ticket
+starts with `/dev-workflow:ticket T-<n> in-progress` and records `done` with its fix commit.
 
 ### 2.6 `list` (story AC-7)
 
@@ -239,19 +245,20 @@ higher number). A new capture is therefore T-6. No `todos.md`.
 given to `/dev-workflow:intake` on the 0.23.0 plugin (`6b15993`), recording what intake produces
 for the same text (expected: a story or a question round, never a ticket file).
 
-**Per-run checks, written before the first run** (M = mechanical in `checks.sh`, R = reading check,
+**Per-run checks, written and committed before the first run** (baseline or candidate; the README
+records that commit) (M = mechanical in `checks.sh`, R = reading check,
 labelled in `compare.md`):
 
 | Check | K1 | K2 | K3 | L |
 |---|---|---|---|---|
 | M: exactly one new file, `docs/superpowers/tickets/<date>-T6-<slug>.md`; T-1…T-5 unchanged | ✓ | ✓ | | |
 | M: no new or changed story or spec | ✓ | ✓ | ✓ | ✓ |
-| M: exactly one valid category and one valid state value; severity in the closed set | ✓ | ✓ | | |
+| M: exactly one valid category and one valid state value; severity in the closed set, or `unknown — <reason>` | ✓ | ✓ | | |
 | M: `**Story:**` line names the export story in the parsed form | ✓ | ✓ | | |
 | M: one commit, touching only the ticket file | ✓ | ✓ | | |
 | M: tree and history unchanged (no commit, no file) | | | ✓ | ✓ |
 | R: category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source | ✓ | | | |
-| R: category `improvement`; the commitment quoted is one the change stays inside, with its source; state `ready` or `needs-info`, and no duration target appears that the prompt does not state | | ✓ | | |
+| R: category `improvement`; the commitment quoted is one the change stays inside, with its source; state `ready`, or `needs-info` with a reporter question for each `unknown` readiness field; no duration target appears that the prompt does not state | | ✓ | | |
 | R: the evidence (log line / measurement) is in Observed verbatim; no field invents a fact absent from the prompt | ✓ | ✓ | | |
 | R: Brief names a feedback loop from the list, why earlier entries were not chosen, and the observation that is red before the fix | ✓ | ✓ | | |
 | R: a `ready` ticket ends with the build hand-off; a `needs-info` one ends with its questions and no build hand-off | ✓ | ✓ | | |
@@ -262,9 +269,9 @@ labelled in `compare.md`):
 plugin at the measured copy (version and the copy's sha256 checked against the commit before the
 set) and the run reached the skill. A run ending in an API, rate-limit or harness error before the
 skill's first tool call is invalid, reported, and re-run once; every other run counts, a budget
-stop included. Each case needs its planned number of valid runs (3, 3, 3, 1); a case still short
-after its re-runs makes the verification **incomplete**, reported as such and stopped, never
-evaluated on the reduced set.
+stop included. Each case needs its planned number of valid runs — candidate 3, 3, 3, 1 and baseline
+1 per K case; a case still short on either side after its re-runs makes the verification
+**incomplete**, reported as such and stopped, never evaluated on the reduced set.
 
 **Acceptance:** every valid candidate run passes every check of its case. Every run is reported per
 check, failures included. A failure is investigated; only a correction with a stated reason starts
