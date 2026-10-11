@@ -1645,4 +1645,25 @@ backlog.
   passage, so entries and extra quotes cannot be told apart; (2) the spec form of the field has
   no example and no replay case; (3) step 6 points at "the sentence before this one" instead of
   naming the rule. A `plugins/` change: its own story, Gate B, version bump, and a fresh replay
-  set. Fits the planned intake split (Step 2), which re-measures the route anyway.
+  set. (Step 2, the intake split, was not adopted on 2026-10-11 — see the section below — so these
+  stay deferred without a carrier.)
+
+## From the intake split (Step 2) — not adopted, backlog only
+
+- **Step 2 result: the intake split is not adopted** (2026-10-11; story
+  `docs/superpowers/stories/2026-10-11-split-the-intake-skill-into-a-route-story.md`, replay
+  `docs/superpowers/replays/2026-10-11-intake-split/`). The split cut what a run reads by about 27 %
+  and matched 0.23.0 in cases A, C, D, E, F and G, but after a compaction it never read its route
+  file again — with the conditional re-read sentence (set 1) and with an unconditional one (set 2,
+  the one bounded round Daniel decided at 11:21) — so AC-6 failed twice and set 2's bound made
+  non-adoption automatic. The installed-plugin run (AC-5) was not run. `plugins/` is unchanged; the
+  three deferred intake Minors above stay deferred.
+- [ ] **Step 2b candidate: split + compaction re-injection hook.** Measured: after a compaction the
+  split agent did not read its route file again, with either load-rule sentence
+  (`evidence/h-traces.md` in the replay package: two failing H traces); what it still held of the
+  route was not measured. Hypothesis to test, not a diagnosis: a `SessionStart` hook on the `compact` matcher (the plugin already
+  ships `hooks/hooks.json`) that prints the active route file, named by a state file such as
+  `.context/active-route` written when a route starts. Unverified: whether the hook fires on a
+  print-mode `/compact`, and what an agent does with the re-injected text. A `plugins/` change with
+  its own story, gates, version bump and a replay against the same H case. Recording this row
+  authorizes no implementation. *Trigger: Daniel selects it.*
