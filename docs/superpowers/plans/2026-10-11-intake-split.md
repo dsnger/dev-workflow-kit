@@ -2,7 +2,11 @@
 
 **Story:** `docs/superpowers/stories/2026-10-11-split-the-intake-skill-into-a-route-story.md` — read its profile fresh at each pass.
 
-**Spec:** `docs/superpowers/specs/2026-10-11-intake-split-design.md` (Gate-A spec cycle `9bh80tgzjisk`, closed in `a832bfa`).
+**Spec:** `docs/superpowers/specs/2026-10-11-intake-split-design.md` (Gate-A spec cycle `9bh80tgzjisk`, closed in `a832bfa`; amended after replay set 1, Gate-A spec cycle `dud2x4rkegec`, closed in `5c9139c`).
+
+**Revision 2026-10-11 (after set 1).** Tasks 1–5 ran as set 1 on WIP `344dfda`; set 1 failed AC-6
+(spec §4 change record). Task 5b below is the one bounded round Daniel decided; Tasks 6–8 apply
+to its outcome.
 
 **Handover boundary:** the PR is open with CI green and whatever opportunistic bot findings have
 posted processed (`docs/pr-review-bots.md`: the Wait-for list is empty, so an absent bot reply
@@ -36,7 +40,8 @@ Changed: the three intake files, check 4f's path, the 4d/4f test fixture, `AGENT
 **Outcome:** `SKILL.md`, `capture-new-story.md`, `amend-approved-artifact.md` under
 `plugins/dev-workflow/skills/intake/`, cut from the 0.23.0 file by the pilot's mapping (spec §2).
 **Reuse:** the pilot candidate files as the template for new text only (route table, load rule
-in candidate2's wording, N3 line, route-file headers); every other line is taken from 0.23.0.
+in candidate2's wording — its re-read sentence corrected in Task 5b — N3 line, route-file
+headers); every other line is taken from 0.23.0.
 **Decided:** the route-file headers carry `Target model: Claude via Claude Code.` and the sentence
 "This file is a prompt artifact and follows the checklist in `docs/prompt-standards.md`." (check
 4a's phrase). **Implementer's choice:** line wrapping of the new text.
@@ -77,7 +82,8 @@ from AGENTS.md shows no new claim about the manifest.
 
 Battery green (the AGENTS.md quality row; `check-version-bump.sh main` once committed), then
 `git commit -m 'WIP: intake split'`. The replay's `split` variant is that commit's tree; every
-later change to an intake file re-snapshots and re-runs the runs of the route it touches.
+later change to an intake file is governed by Task 5b: its finite matrix is the only re-run, and
+an intake change after set 2 leads to non-adoption (Task 6), never to another replay.
 
 ## Task 5 — Replay package `docs/superpowers/replays/2026-10-11-intake-split/`
 
@@ -137,12 +143,35 @@ invocations. Estimate from the pilot's per-run cost: $8–10; that is an estimat
 an installed run whose init record does not show the project-scoped plugin at the cache path
 (report, do not improvise another install route); a pass/fail verdict the case table does not decide (report to the orchestrator, do not decide).
 
+## Task 5b — Set 2 (the one bounded round)
+
+**Outcome:** in `SKILL.md`, the load rule's sentence "This page stays loaded and the route file
+may not — if the route file is no longer in your context (after a compaction, or in a resumed
+session), read it again before your next step." is replaced by "Read the route file again after
+every compaction, before your next step, whether or not it still seems to be in your context; in a
+resumed session, read it again if it is no longer in your context." The resumed-session half keeps
+set 1's behaviour on purpose: A, E and F resume sessions and are not re-run in set 2. No other
+skill text changes; line coverage and the old→new account are re-run, and the only new difference
+is this sentence. Snapshot: `git commit -m 'WIP: intake split (set 2)'` on the branch tip;
+extract that tree as `split2`.
+**Runs:** H on `split2` and on `baseline` (fresh runs, set 2), B as r1–r3 on both, then the
+installed run (Task 5's procedure, B1, on `split2`). Checks per spec §4 as amended: B's two
+allowed shapes (AC-1 unchanged with CSV as AC-5 in *Added without an earlier condition*; or AC-1
+withdrawn and replaced by AC-5, which then keeps AC-1's obligations and adds CSV); H2's surfaced-and-asked CSV decision, with
+an *Unaccounted* record allowed only where the set-2 baseline H run writes one too.
+**Verdict:** set 2 decides AC-3 for B, AC-5 and AC-6; set 1 stands for the other cases. **Bound:**
+H fails, or a set-2 case regresses against its set-2 baseline, or the installed run cannot be
+produced → non-adoption (Task 6) without a further round or question. **Unavailable evidence in
+set 2:** the one validity repeat of spec §4, then the run counts as not produced — reported, and
+non-adoption applies; no further repeat is offered. Set 1 stays in the package as the failure
+record, set 2 beside it.
+
 ## Task 6 — Verdict
 
 All of AC-3..AC-6 pass → continue. Non-adoption (AC-7, spec §4) follows when any of them fails
 **or** the installed or compaction run cannot be produced (its evidence stays classified
-"unavailable", not "failed"). A persistent validity stop in A–G is reported to the orchestrator
-first, who decides between a further repeat and non-adoption. Non-adoption: revert the skill,
+"unavailable", not "failed"). (Set 1 only, historical: a persistent validity stop in A–G went to
+the orchestrator; set 2 follows Task 5b's rule.) Non-adoption: revert the skill,
 check, test, layout, version and CHANGELOG changes **and the two `todos.md` path names**; keep
 the replay package; add a `todos.md` record of the result; check that the remaining diff against
 `main` is only `docs/` and `todos.md` content (story, spec, plan, package, record); report to the
@@ -151,15 +180,19 @@ orchestrator. Whether that remaining diff owes Gate B is the gate rules' (`.clau
 
 ## Task 7 — Gate B
 
+**Range:** `baseSha` = the merge-base with `main` (`fa5f275`), as a full 40-character name, so the
+range holds the whole change — the implementation from WIP `344dfda`, the set-2 correction, the
+package — and, on non-adoption, shows the implementation paths absent. Every check below is run
+against that same base.
+
 **Before the first call:** stage the complete intended result — the replay package and any
 non-adoption revert — and fold it into the WIP snapshot with
-`git commit --amend -m 'WIP: intake split'`; check that `git diff --name-only <base>..HEAD`
+`git commit --amend -m 'WIP: intake split'`; check that `git diff --name-only fa5f275..HEAD`
 contains the package; on non-adoption also check that `git diff --quiet fa5f275 HEAD --
 plugins scripts AGENTS.md docs/architecture.md` succeeds (the implementation paths equal the
 baseline, so the range no longer lists them) and that the `todos.md` result record is present;
-run the battery on that state; when
-only evidence files changed since Task 4, confirm the intake files' hashes still equal the
-replayed ones. Then resolve `baseSha` and `headSha`.
+run the battery on that state; on adoption, compare the intake files unconditionally with the
+`split2` hashes recorded for set 2, a mismatch taking the non-adoption path. Then resolve `baseSha` and `headSha`.
 
 Evidence entry (story path). **Adoption:** named evidence = the replay package, the 4f
 counterfactual, the size table. **Non-adoption:** named verification = the implementation paths
@@ -167,8 +200,20 @@ equal `fa5f275` (the `git diff --quiet` above) and the replay result recorded in
 `todos.md`; counterfactual = the same `git diff --quiet` against the pre-rollback WIP commit,
 which fails; the split's size and 4f measurements stay in the package as history and are not
 offered as evidence for the final change. Two sequential single-branch calls per pass (`spec`, then `quality`), full
-40-character SHAs, floor 3, cap 5, records per `.claude/review-gates.md` Mechanics. A fix that
-touches an intake file re-runs that route's replay cases (Task 4 rule) before the cycle closes.
+40-character SHAs, floor 3, cap 5, records per `.claude/review-gates.md` Mechanics. A Gate-B
+finding whose repair would change an intake file is not repaired by a new replay round: it takes
+the non-adoption path (Task 6), and the gate then reviews that result.
+
+**Closing act (this branch's shape).** WIP `344dfda` sits below non-WIP commits (`5c9139c`, the
+revised plan's closing commit), so a tip amend would leave it in history. Once the closure ordering
+allows the act: save the tip's name and the full message bodies of every non-WIP commit above
+`7449b15` (the spec amendment `5c9139c` and the revised plan's closing commit); `git reset --soft
+7449b15`; then commit once (`.claude/review-gates.md` Mechanics, "Finishing the cycle"), with the
+real message carrying those Gate-A records verbatim (provenance lines, curves, ledger checks, owed
+lines) together with Gate B's records (provenance, curve, ledger check, evidence entry). Verify:
+the final tree equals the saved tip's (`git diff --quiet <saved tip> HEAD`); `git log --format=%s
+fa5f275..HEAD` has no `WIP` subject; every saved Gate-A record line occurs in the new body; each
+reviewed artifact's sha256 equals its cycle's request.
 
 ## Task 8 — PR and handover
 
