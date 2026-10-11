@@ -1667,3 +1667,14 @@ backlog.
   print-mode `/compact`, and what an agent does with the re-injected text. A `plugins/` change with
   its own story, gates, version bump and a replay against the same H case. Recording this row
   authorizes no implementation. *Trigger: Daniel selects it.*
+
+## From the ticket skill (K8) — backlog only, nothing implemented here
+
+- [ ] **Rule-text candidate: `todos.md` and the prose list.** `.claude/review-gates.md` "What counts
+  as prose" names `docs/**.md`, `README.md` and `MANIFEST.md`; `todos.md` is not on the list, while
+  the gate hook classifies any non-prompt `.md` as docs-only and practice has treated a
+  `todos.md`-only commit as prose (7af9b31: "Gate B: N/A — todos.md only, backlog prose"). Found by
+  Gate-A spec cycle ocgrixmmce pass 1 (K8, story
+  `docs/superpowers/stories/2026-10-11-a-ticket-skill-for-bugs-and-improvements-story.md`); K8
+  dropped its `todos.md` pointer instead of deciding it. Adding a sentence to the gate rules is
+  under the moratorium. *Trigger: "Sprint-mode review at step 3 shipped".*

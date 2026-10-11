@@ -31,7 +31,7 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-3** A ticket records: observed behaviour with its evidence (a command and its output, a log line, a failing test or a screenshot path), expected behaviour with its source (a spec section, a test, or a row of the project's `docs/PRD.md` feature map), repro steps, the affected feature, a severity from `blocker|major|minor|nit`, and first seen (version or commit). A field the input cannot support stays blank with the reason. No new severity vocabulary is introduced.
 - [ ] **AC-4** Every ticket carries exactly one category (`bug|regression|improvement|docs`) and exactly one state (`needs-triage|needs-info|ready|in-progress|done|wontfix`). An input that would give two of either, or none, stops and asks. A `needs-info` ticket lists the questions for the reporter.
 - [ ] **AC-5** ~~The ticket file is the brief a coding agent fixes from: fix scope, what stays out, the feedback loop that goes red on exactly this defect (chosen in a stated order from: failing test at the nearest seam, HTTP or CLI script with fixture, headless-browser script, replayed captured trace, throwaway harness, property or fuzz loop, bisection harness), the review profile (inherited from the touched feature's story where one is recorded, otherwise proposed by the profile rules), and the files to read. It carries no spec and opens no Gate-A cycle.~~ — withdrawn 2026-10-11: replaced by AC-12 (no profile of its own; the story is cited in a `**Story:**` line), see the change record below.
-- [ ] **AC-6** Tickets are written to `docs/superpowers/tickets/<date>-T<n>-<slug>.md`. `T-<n>` is numbered per project and never reused. A `wontfix` ticket keeps its reason and stays in the folder as the project's out-of-scope record; no second file format exists for that. When the project has a `todos.md`, each new ticket gets a one-line pointer there; a project without one gets none.
+- [ ] **AC-6** Tickets are written to `docs/superpowers/tickets/<date>-T<n>-<slug>.md`. `T-<n>` is numbered per project and never reused. A `wontfix` ticket keeps its reason and stays in the folder as the project's out-of-scope record; no second file format exists for that. (narrowed 2026-10-11: the `todos.md` pointer is dropped; the tickets folder and `list` are the backlog, see the second change record below.)
 - [ ] **AC-7** `/dev-workflow:ticket list` reads the tickets folder and shows three buckets, oldest first: `needs-triage`, `needs-info`, `ready`.
 - [ ] **AC-8** The skill's hand-off to build names: a test that goes red before the fix and green after, Gate B on the diff under the ticket's profile, and the closing act per the project's gate rules. A ticket raised from a review finding links that finding's hardening-ledger row; `harden-finding` stays the owner of findings.
 - [ ] **AC-9** Out of scope and absent from the diff: issue-tracker integration (a ticket is a file), any change to `intake` other than accepting the hand-off text, a new severity vocabulary, and a new rule sentence in `.claude/review-gates.md`, `CLAUDE.md` or `AGENTS.md`.
@@ -56,6 +56,23 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - **Open questions:** none.
 - **Dependent artifacts:** `docs/superpowers/specs/2026-10-11-ticket-skill-design.md` → updated in this change.
 - **Reviews already run:** none. No Gate-A cycle has opened on this story's spec; the spec cycle reads the story as amended here (`.claude/review-gates.md`, "Recording is not amending": a changed acceptance criterion "still takes the amendment route … and its Gate-A cycle").
+
+**Changed 2026-10-11 — gap found.** Decided by the orchestrator dev-workflow-kit-d4 under Daniel's sprint instruction (Daniel informed), in a cross-session message to this session on 2026-10-11 (17:35), answering Gate-A spec cycle ocgrixmmce pass 1. Baseline: 083bfdc. Rationale: three pass-1 findings came from the pointer — a ticket commit staging `todos.md` is not plainly covered by `.claude/review-gates.md` "What counts as prose" (which names `docs/**.md`, `README.md`, `MANIFEST.md`); staging `todos.md` can sweep in a user's unrelated edits; and a pointer copying category and state goes stale on every state change. Deleting the mechanism removes all three.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-6: "When the project has a `todos.md`, each new ticket gets a one-line pointer there; a project without one gets none." | dropped — per the decision: "(A): drop the todos.md pointer; the tickets folder plus `list` is the backlog. Amend AC-6 by narrowing (remove its last sentence)" | narrowed |
+| AC-6: path, `T-<n>` numbering never reused, `wontfix` kept as the out-of-scope record, no second file format | kept | none |
+| AC-1 … AC-4, AC-7 … AC-12 | kept | none |
+| §2: "The project keeps its tickets, including the ones it decided not to fix, as files it can list." | kept | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** `docs/superpowers/specs/2026-10-11-ticket-skill-design.md`, edited since the baseline as pass-1 repairs → part of the same Gate-A cycle; it is updated in this change to drop the pointer.
+- **Scope boundary:** in: the `todos.md` pointer; out: the prose-list ambiguity itself (recorded in `todos.md` as a rule-text candidate for after vision step 3, per the decision: "do not fix it in this unit (moratorium)").
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-11-ticket-skill-design.md` → updated in this change.
+- **Reviews already run:** Gate-A spec cycle ocgrixmmce pass 1 → the open cycle reads the spec as it now stands; its content condition compares the artifact with the final pass's request, so this change costs no separate rule (`.claude/review-gates.md`, "Recording is not amending": "an open cycle's content condition still compares the artifact as it stands").
 
 ## 4. Affected AGENTS.md invariants
 - `## Key invariants` › Prompts and scaffolding, 11 — "**Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for any skill, command, agent definition, hook message, or scaffolded template."
