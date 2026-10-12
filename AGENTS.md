@@ -10,7 +10,7 @@ A Claude Code marketplace shipping one plugin, `dev-workflow`, which installs a
 spec-driven workflow for building software with coding agents. It adds three
 mechanisms: two independent cross-model review gates (a different model reviews the
 design at Gate A and the diff at Gate B), a fingerprinted hardening ledger where a
-recurring finding escalates one rung harder (prose → lint → type → test), and one
+recurring finding is hardened with lint or a test, and one
 repo-enforced quality command. Users are developers running Claude Code.
 
 **The product is prompts.** Skills, slash commands, agent definitions, hook reminder

@@ -22,7 +22,7 @@ a copy that can go stale.
 | Measure | How it is read | Source |
 |---|---|---|
 | Maturity stage of the review loops | the stage table | [vision §3](superpowers/specs/2026-08-30-dark-factory-vision.md#3-maturity-ladder) |
-| Review-loop pass curves per cycle | `python3 -B scripts/loop-usefulness.py` over the provenance and curve lines in commit bodies | `.claude/review-gates.md`, Mechanics (the curve form) |
+| Review-loop pass curves per cycle | `python3 -B scripts/loop-usefulness.py` over the provenance and curve lines in commit bodies | `.claude/review-gates.md`, Closing act (the curve form) |
 | Hardening escalation per finding class | `python3 scripts/ledger-metrics.py` | [`hardening-log.md`](hardening-log.md) |
 | Instruction size against its budget | check 4g in `sh scripts/check-invariants.sh` | [`AGENTS.md` § Commands](../AGENTS.md#commands) |
 | Scaffolded `CLAUDE.md` template size against its budget | check 4e in `sh scripts/check-invariants.sh` | `AGENTS.md` invariant 8 |
@@ -35,7 +35,7 @@ a copy that can go stale.
 
 | Feature | Status | Authoritative doc |
 |---|---|---|
-| Review gates (Gate A on spec and plan, Gate B on the diff) | shipped | [`.claude/review-gates.md`](../.claude/review-gates.md) |
+| Review gates (Gate A on every spec and high-risk plans, Gate B on non-docs-only diffs) | shipped | [`.claude/review-gates.md`](../.claude/review-gates.md) |
 | Hardening ledger | shipped | [`harden-finding` skill](../plugins/dev-workflow/skills/harden-finding/SKILL.md), [`hardening-log.md`](hardening-log.md) |
 | Intake (story capture, amendment route) | shipped | [`intake` skill](../plugins/dev-workflow/skills/intake/SKILL.md) |
 | Scaffolding (`/workflow-init`, `/claude-init`) | shipped | [`workflow-init`](../plugins/dev-workflow/commands/workflow-init.md), [`claude-init`](../plugins/dev-workflow/commands/claude-init.md) |
