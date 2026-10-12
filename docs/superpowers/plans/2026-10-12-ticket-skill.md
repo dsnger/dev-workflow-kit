@@ -168,15 +168,20 @@ B closed with that result as its evidence.
 
 - [ ] **Step 1:** Copy `plugins/dev-workflow` at the `WIP:` commit (`git archive`); record its
   skill sha256. Confirm one run's init record lists exactly one `dev-workflow` at that copy, else
-  stop.
+  stop. Durable source: the WIP commit is replaced at close, so the package keeps each measured
+  set's skill text verbatim as `evidence/set<k>-skill.md` with its sha256; the measured plugin is
+  `6b15993`'s `plugins/dev-workflow` plus that file and the 0.24.0 manifest, and the README says so.
 - [ ] **Step 2:** Run the ten runs; re-run an invalid one once. A case still short is
   **incomplete**: fold the runs held so far, their validity causes, the quotas and the verdict
   "incomplete" into the package as step 5 does, link them from the handover, and stop.
 - [ ] **Step 3:** checks.sh plus the reading checks on every valid run. Expected for adoption:
   every valid run passes every check of its case.
 - [ ] **Step 4 (only on failure):** investigate and report in `compare.md`. A correction with a
-  stated reason goes back through Task 2 (new Gate-B cycle) and a fresh full candidate set; the
-  failed set stays. A second failing set, or a cap, stops and goes to Daniel.
+  stated reason is made in place: stage the changed skill by name, `git commit --amend --no-edit`,
+  so one `WIP:` commit stays the tip on the same parent and Gate B's `baseSha` (that parent) keeps
+  covering the whole implementation; then battery and a fresh full candidate set on the amended
+  snapshot. The failed set and its skill text stay in the package. A second failing set, or a cap,
+  stops and goes to Daniel.
 - [ ] **Step 5:** Fold the results into the `WIP:` commit: stage the package files by name, then
   `git commit --amend --no-edit`, so the snapshot stays the tip and Gate B reviews skill and
   evidence together. No separate commit: a non-`WIP` commit here would reset the hook's Gate-B
