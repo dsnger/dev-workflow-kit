@@ -257,7 +257,7 @@ labelled in `compare.md`):
 | M: `**Story:**` line names the export story in the parsed form | ✓ | ✓ | | |
 | M: one commit, touching only the ticket file | ✓ | ✓ | | |
 | M: tree and history unchanged (no commit, no file) | | | ✓ | ✓ |
-| R: category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source | ✓ | | | |
+| R: category `bug` or `regression`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source | ✓ | | | |
 | R: category `improvement`; the commitment quoted is one the change stays inside, with its source; state `ready`, or `needs-info` with a reporter question for each `unknown` readiness field; no duration target appears that the prompt does not state | | ✓ | | |
 | R: the evidence (log line / measurement) is in Observed verbatim; no field invents a fact absent from the prompt | ✓ | ✓ | | |
 | R: Brief names a feedback loop from the list, why earlier entries were not chosen, and the observation that is red before the fix | ✓ | ✓ | | |
@@ -281,6 +281,26 @@ enough pass.
 
 **Limit:** ten candidate samples on four prompts and one fixture; they show the skill can be
 followed in these cases, not that it always is. Reading checks are made by the author.
+
+**Changed 2026-10-12 — gap found.** Decided by the orchestrator dev-workflow-kit-d4 under Daniel's
+sprint instruction (Daniel informed), cross-session message of 2026-10-12 10:00. Baseline: `e4f3071`
+(Gate-A spec cycle ocgrixmmce closed). The K1 prompt states a prior good version ("First seen in
+1.4.2; 1.4.1 did not do this"), so `regression` is the correct category under §2.3 step 4; the R1
+check pinned `bug` alone. Candidate set 1 wrote `regression` in all three K1 runs. This is an oracle
+fix, not a skill change.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §3 Package, Fixture, Cases, Runs, the M rows, the R rows other than K1's first, Run validity, Acceptance, Limit | kept | none |
+| §3 K1 reading row: "R: category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source" | kept: severity `blocker`, state `ready`, the commitment and its source; moved → the same row reading "category `bug` or `regression`", per the decision: "spec §3 R1 → `bug\|regression` for K1 via the amendment route" | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** none (the spec is unchanged between `e4f3071` and this change).
+- **Scope boundary:** in: the K1 category check; out: the skill, every other check, the run counts and acceptance.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/replays/2026-10-11-ticket-skill/checks.md` (row R1) → updated in this change; `docs/superpowers/plans/2026-10-12-ticket-skill.md` → no change (it cites §3 without the row's text).
+- **Reviews already run:** Gate-A spec cycle ocgrixmmce → this edit changes an acceptance check, a commitment, so it takes its own Gate-A cycle, per `.claude/review-gates.md` "Recording is not amending"; Gate-A plan cycle ju8xsvlfbx → the plan is not revised, so no plan cycle runs, per the same paragraph ("the revised plan then runs its Gate-A plan cycle").
 
 ## 4. Lenses
 

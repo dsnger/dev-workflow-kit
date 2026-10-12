@@ -29,7 +29,7 @@ commit (candidate) or `6b15993` (baseline).
 
 | Row | Check | Case |
 |---|---|---|
-| R1 | category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1, with its source | K1 |
+| R1 | category `bug` or `regression` (spec §3, changed 2026-10-12), severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1, with its source | K1 |
 | R2 | category `improvement`; the commitment quoted is one the change stays inside, with its source; state `ready`, or `needs-info` with a reporter question for each `unknown` readiness field; no duration target appears that the prompt does not state | K2 |
 | R3 | the evidence (log line / measurement) is in Observed verbatim; no field invents a fact absent from the prompt | K1, K2 |
 | R4 | Brief names a feedback loop from the list, why earlier entries were not chosen, and the observation that is red before the fix | K1, K2 |
