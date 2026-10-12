@@ -9,16 +9,48 @@ Evidence modes: `battery`, `battery+check`, or `battery+check+verification`, wit
 
 ## Gate-A prompt
 
-Use the superpowers:brainstorming skill to review this spec.
-Check the supplied intent and artifact against settled decisions and the touched AGENTS.md invariants; report contradictions, missing requirements, unhandled state/edge/error/empty/concurrent paths, feasibility risks, and any other finding.
-For a high-risk plan, review whether decisions, dependencies, steps and verification permit implementation.
-Report every finding with severity and confidence to this pass’s file using the findings format below.
+Tool: `mcp__codex__exec` (raw;
+  reviews the TEXT you pass, not the git tree).
+
+The prompt MUST open with
+  *"Use the superpowers:brainstorming skill to review this spec,"* (say "plan" on
+  the plan run), then ask Codex to check it against our settled decisions and
+  surface **contradictions/inconsistencies, missing requirements, unhandled
+  state/edge/error/empty/concurrent paths, and risks to the Key Invariants
+  (@AGENTS.md) — plus anything else** (coverage floor, not a cage).
+
+Ask also what the artifact is for: of a spec, whether its
+  commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
+  proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
+  line between local choices and questions that need a decision.
+
+Report missing code or tests only where
+  their absence has a concrete consequence, and name that consequence; review code a plan does
+  include like any other content.
+
+Append the
+  intent + artifact text + which invariants it touches.
+
+Ask for **every** finding
+  with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
+  every line for everything else**, Codex never filters, because a model told to report only high
+  severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
 
 ## Gate-B prompt
 
-Tool: `mcp__codex__review`. **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
-For the spec branch: compare the diff with the supplied approved spec and plan; report every finding with severity and confidence, using the findings format below.
-For the quality branch: compare the diff with AGENTS.md and ask which existing statements the diff falsifies; report every finding with severity and confidence, using the findings format below.
+Tool: `mcp__codex__review`
+  (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`).
+
+**Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
+
+Check against
+  @AGENTS.md.
+
+Same coverage rule as Gate A: put "report every finding with severity and confidence; write
+  `NO FINDINGS` only when the branch found none" in `additionalContext`, with the same one-line
+  format.
+
+**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
 
 > One finding per line, in the format
 > `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe inside a field as

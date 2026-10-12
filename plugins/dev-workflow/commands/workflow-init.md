@@ -482,8 +482,8 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **The full rules live in `.claude/review-gates.md`. Read that file in full before any
 work it governs: any Gate A or Gate B pass, resuming or closing a cycle, any commit,
-preparing a merge, and deciding a change needs no gate.** Every reference to §5 (its
-Mechanics, Profiles, closure ordering or gate prompt) means that file.
+preparing a merge, and deciding a change needs no gate.** Every reference to §5
+means that file.
 
 **If that file is missing, this project has no gate rules.** Stop before any work they
 govern, and restore it: `/workflow-init` writes it.
@@ -526,16 +526,48 @@ Evidence modes: `battery`, `battery+check`, or `battery+check+verification`, wit
 
 ## Gate-A prompt
 
-Use the superpowers:brainstorming skill to review this spec.
-Check the supplied intent and artifact against settled decisions and the touched AGENTS.md invariants; report contradictions, missing requirements, unhandled state/edge/error/empty/concurrent paths, feasibility risks, and any other finding.
-For a high-risk plan, review whether decisions, dependencies, steps and verification permit implementation.
-Report every finding with severity and confidence to this pass’s file using the findings format below.
+Tool: `mcp__codex__exec` (raw;
+  reviews the TEXT you pass, not the git tree).
+
+The prompt MUST open with
+  *"Use the superpowers:brainstorming skill to review this spec,"* (say "plan" on
+  the plan run), then ask Codex to check it against our settled decisions and
+  surface **contradictions/inconsistencies, missing requirements, unhandled
+  state/edge/error/empty/concurrent paths, and risks to the Key Invariants
+  (@AGENTS.md) — plus anything else** (coverage floor, not a cage).
+
+Ask also what the artifact is for: of a spec, whether its
+  commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
+  proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
+  line between local choices and questions that need a decision.
+
+Report missing code or tests only where
+  their absence has a concrete consequence, and name that consequence; review code a plan does
+  include like any other content.
+
+Append the
+  intent + artifact text + which invariants it touches.
+
+Ask for **every** finding
+  with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
+  every line for everything else**, Codex never filters, because a model told to report only high
+  severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
 
 ## Gate-B prompt
 
-Tool: `mcp__codex__review`. **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
-For the spec branch: compare the diff with the supplied approved spec and plan; report every finding with severity and confidence, using the findings format below.
-For the quality branch: compare the diff with AGENTS.md and ask which existing statements the diff falsifies; report every finding with severity and confidence, using the findings format below.
+Tool: `mcp__codex__review`
+  (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`).
+
+**Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
+
+Check against
+  @AGENTS.md.
+
+Same coverage rule as Gate A: put "report every finding with severity and confidence; write
+  `NO FINDINGS` only when the branch found none" in `additionalContext`, with the same one-line
+  format.
+
+**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
 
 > One finding per line, in the format
 > `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe inside a field as
@@ -590,6 +622,73 @@ is a canonical class — from the base taxonomy in the `harden-finding` skill, o
 this project's `docs/hardening-taxonomy.md`; column 2 is the recurrence-grep target.
 Never edit a row; resolve a `pending` row by appending a new row (same fingerprint,
 `ref` naming the prior row's date + anchor).
+
+A row records a hardening claim as of its date, and its narration may be found wrong or
+made stale later. When a row's text no longer describes reality — falsified by a
+later change, or wrong when it was written — append a `Superseded rows` entry rather
+than editing it. One later change is **excluded**: a hardening that is itself removed,
+for which this convention supplies no move at all (see the end of this paragraph). This
+holds for every row without exception: the existing `Never edit a row` rule is
+absolute, and correcting a row is always an append. The rule is bound to rows, not to
+commits: once text exists as a row it is never edited, committed or not. Drafting
+before a row exists — an editor buffer, a line not yet written — is below the
+rule's resolution, and nothing checks one. Resolving a `pending` row also appends —
+that is a new hardening, not a correction to a row's text. Supersession marks a row's
+**text** and never alters mechanical behaviour, including when the entry records that
+the row's hardening claim was itself false: the row keeps its fingerprint, keeps
+matching the column-2 grep, and keeps counting. A hardening later removed is out of
+scope.
+
+**Correcting a row.** Corrections live in a `Superseded rows` block above the
+`Columns:` paragraph — a `**Superseded rows:**` label carrying one appended line per
+supersession, present only once at least one entry exists:
+
+    - <date> · supersedes <row date> `<fingerprint>` "<row fragment>" · what is false · where the current answer is
+
+`<date>` is the day the entry is written, in `YYYY-MM-DD`. A row is located by date +
+fingerprint. **An entry applies to every row its locator matches** — uniqueness is
+not a requirement, and an entry that matches two rows says the same thing about both.
+To narrow the match, add `"<row fragment>"`, a quoted fragment of that row's `finding`
+carrying no double quote, in the position shown immediately after the fingerprint. **A
+fragment narrows the match set; it singles out one row only where that row has one no
+sibling shares** — a sibling being another row the same date and fingerprint match.
+Where it has none — an identical `finding`, one that is a substring of a sibling's,
+or one whose every unique fragment carries a double quote — the entry marks every
+matching row, its accurate siblings included, and no fragment prevents that. Omit it,
+quotes included, when you mean every row the pair matches — including when the pair
+matches only one. Name the claim that does not hold — saying whether it stopped
+holding or was never true — and cite where the current answer lives; restating that
+answer here only makes the entry the next stale narration. Neither of those two fields
+may contain ` · `: that separator is what divides them, and free text carrying it
+makes an entry parse two ways. A fragment is matched **literally and case-sensitively
+against the row's `finding` as written in the file**, escapes and markup included —
+what you quote is what is in the table, not what a renderer shows you. **An entry
+applies only to matching rows dated on or before the entry's own date** —
+supersession marks the past, so a row dated later never comes under an entry written
+before it. **A row's date is the day it is appended**, and the table is chronological:
+backdating a row is forbidden, which is what makes the date bound mean what it says.
+Nothing can verify the append day itself, and nothing checks that dates never decrease;
+the rule is stated and read. An entry whose locator matches no such row is **inert**:
+it governs nothing and is not an error to repair in place — append a new entry with a
+locator that matches, and leave the inert one standing as history, like every other
+entry. **An entry marks a row, and the last entry for a row is the one that governs**
+— where a row carries more than one, later in the file wins and the earlier ones are
+history. **A later entry must therefore describe the row as it now stands, not only the
+newly found fault**, or it retires a still-accurate earlier entry from a reader's view.
+Entries are never edited, never removed, and never reference one another — and they
+take the same floor as rows: once a line exists as a complete entry it is protected,
+committed or not, while a line that is partial or does not yet carry the shape above is
+still drafting and may be fixed. A mistyped locator in a complete entry is corrected
+the same way everything else is, by appending. If a union merge leaves two `Superseded
+rows:` labels, keep one and keep every entry under it. No standing tool reads this
+block — to every grep and skill scanning the table a superseded row is unchanged,
+including one whose entry says its fingerprint is wrong; prose readers get the
+correction, mechanical readers do not, and nothing checks the difference.
+
+Columns: `date` (YYYY-MM-DD), `fingerprint` (canonical class), `finding` (short,
+escape `\|`, one line), `source` (gate-a|gate-b|bot|manual),
+`severity` (blocker|major|minor|nit), `rung` (e.g. `2 lint`, `4 test`, `1 prose`,
+`P std`, `pending`), `ref` (rule name / test path / AGENTS.md section / prior row).
 
 | date | fingerprint | finding | source | severity | rung | ref |
 |------|-------------|---------|--------|----------|------|-----|

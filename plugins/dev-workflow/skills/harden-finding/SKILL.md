@@ -1,6 +1,6 @@
 ---
 name: harden-finding
-description: Use also when a finding you've seen before recurs.
+description: Use when a review finding (Codex Gate A/B, a PR bot, or manual review) has been surfaced and you want it to never silently return — turning a one-off fix into a lint rule, type constraint, test, or documented convention. Use also when a finding you've seen before recurs.
 ---
 
 # harden-finding

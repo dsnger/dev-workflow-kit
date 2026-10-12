@@ -304,7 +304,7 @@ legitimately N/A per CLAUDE.md §5):
 
 ## Amending an approved story or spec
 
-5. **Assign a fate and an AC operation** to every enumerated condition (one row per
+**Assign a fate and an AC operation** to every enumerated condition (one row per
    condition, or per run of criteria sharing a fate).
    **So every `moved` or `dropped` fate quotes the passage of the decision that covers it**,
    in the row; a fate with no passage to quote is not a fate but an *Unaccounted* entry.
