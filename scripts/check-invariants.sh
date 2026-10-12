@@ -894,7 +894,7 @@ fi
 # the same limit; the behaviour is covered, as one sample, by the replay package
 # docs/superpowers/replays/2026-10-10-ledger-check/.
 # shellcheck disable=SC2016  # literal Markdown backticks and placeholders, not expansions
-LR_REQ='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `not fixed` | `same as <SLOT>:<m>` — no other token.
+LR_REQ='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.
 cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
 cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>
 cycle <NONCE>; hardening <SLOT>:<n>: rung <RUNG>
