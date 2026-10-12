@@ -285,51 +285,25 @@ followed in these cases, not that it always is. Reading checks are made by the a
 **Changed 2026-10-12 — gap found.** Decided by the orchestrator dev-workflow-kit-d4 under Daniel's
 sprint instruction (Daniel informed), cross-session message of 2026-10-12 10:00. Baseline: `e4f3071`
 (Gate-A spec cycle ocgrixmmce closed). The K1 prompt states a prior good version ("First seen in
-1.4.2; 1.4.1 did not do this"), so `regression` is the correct category under §2.3 step 4; the R1
-check pinned `bug` alone. Candidate set 1 wrote `regression` in all three K1 runs. This is an oracle
-fix, not a skill change.
+1.4.2; 1.4.1 did not do this"), and the decision reads: "the K1 prompt states a prior good version,
+so regression is the correct category; the check pinned the wrong one — an oracle fix, not a skill
+change." §2.3 step 4 permits `regression` within its closed set; it holds no rule choosing between
+`bug` and `regression`. Candidate set 1 wrote `regression` in all three K1 runs and failed R1 as
+written; it also failed K2 in all three runs, which the same decision answers by a skill-text
+correction inside §2.3 step 4, outside this spec's text.
 
 | Earlier condition | Fate | AC operation |
 |---|---|---|
-| §3 Package, Fixture, Cases, Runs, the M rows, the R rows other than K1's first, Run validity, Acceptance, Limit | kept | none |
-| §3 K1 reading row: "R: category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source" | kept: severity `blocker`, state `ready`, the commitment and its source; moved → the same row reading "category `bug` or `regression`", per the decision: "spec §3 R1 → `bug\|regression` for K1 via the amendment route" | none |
+| §1, §2 (2.1–2.9), §4, §5, §6 | kept | none |
+| §3 Package, Fixture, Cases, Runs, the M rows, the R rows other than K1's first, Run validity, Limit | kept | none |
+| §3 "Per-run checks, written and committed before the first run (baseline or candidate; the README records that commit)" | kept: the amended checks are committed before set 2's first run, and set 1 stays scored by the checks it ran under, per the decision: "(3) Fresh complete candidate set 2 (10 runs); set 1 stays in the package as the failure record with both causes named" | none |
+| §3 Acceptance: "only a correction with a stated reason starts a fresh, complete candidate set on the corrected skill, the earlier set staying in the report. A second failing set … stops and goes to Daniel" | kept: set 1 is the failing set and is not rescored; set 2 is the one correction set; a set-2 failure on any check stops, per the decision: "(4) Bound: if set 2 fails any check again, stop and report — Daniel decides between non-adoption and redesign; no third set without his word" | none |
+| §3 K1 reading row: "R: category `bug`, severity `blocker`, state `ready`; the commitment quoted is AC-3 or invariant 1 with its source" (serves story AC-4 and AC-11) | kept: severity `blocker`, state `ready`, the commitment and its source; moved → the same row reading "category `bug` or `regression`", per the decision: "spec §3 R1 → `bug\|regression` for K1 via the amendment route" | none |
 
 - **Added without an earlier condition:** none.
 - **Unaccounted:** none.
-- **Intervening changes:** none (the spec is unchanged between `e4f3071` and this change).
-- **Scope boundary:** in: the K1 category check; out: the skill, every other check, the run counts and acceptance.
+- **Intervening changes:** the spec is unchanged between `e4f3071` and this change. `docs/superpowers/replays/2026-10-11-ticket-skill/checks.md` did not exist at `e4f3071`; it was added in `7ce0a03` (before any run) from this section's table, and this change edits only its R1 row, keeping every other row as committed there.
+- **Scope boundary:** in: the K1 category check and the disposition of set 1; out: every other check, the run counts, the acceptance rule's wording. The plan (`docs/superpowers/plans/2026-10-12-ticket-skill.md`) cites §3 without R1's text and its Task 3 step 4 already covers a corrected skill with a fresh set, so it needs no edit.
 - **Open questions:** none.
-- **Dependent artifacts:** `docs/superpowers/replays/2026-10-11-ticket-skill/checks.md` (row R1) → updated in this change; `docs/superpowers/plans/2026-10-12-ticket-skill.md` → no change (it cites §3 without the row's text).
+- **Dependent artifacts:** `docs/superpowers/replays/2026-10-11-ticket-skill/checks.md` → updated in this change.
 - **Reviews already run:** Gate-A spec cycle ocgrixmmce → this edit changes an acceptance check, a commitment, so it takes its own Gate-A cycle, per `.claude/review-gates.md` "Recording is not amending"; Gate-A plan cycle ju8xsvlfbx → the plan is not revised, so no plan cycle runs, per the same paragraph ("the revised plan then runs its Gate-A plan cycle").
-
-## 4. Lenses
-
-Story profile risk `standard`, security `none`: floor 3, cap 5 per cycle; no lens set appended.
-Invariant 11: the skill passes all 12 `docs/prompt-standards.md` items, checked item by item in the
-PR.
-
-## 5. Acceptance mapping
-
-| Story criterion | Met by |
-|---|---|
-| AC-1 | §2.1, §2.2 |
-| AC-2 | §2.3 step 2 |
-| AC-3 | §2.3 step 3 |
-| AC-4 | §2.3 step 4 |
-| AC-5 | withdrawn 2026-10-11, replaced by AC-12 |
-| AC-6 | §2.3 step 7, §2.4 |
-| AC-7 | §2.6, replay case L |
-| AC-8 | §2.7 |
-| AC-9 | §2.8 |
-| AC-10 | §2.9, §4 |
-| AC-11 | §3 |
-| AC-12 | §2.3 steps 5–6, §2.4 |
-
-**Evidence for `battery+check`:** the battery green, and the replay as a named verification; its
-counterfactual is the baseline runs on 0.23.0, where no ticket can be produced because no ticket
-skill exists.
-
-## 6. Out of scope
-
-Tracker import/export; a `/workflow-init` scaffold for tickets; a "changed since triage" signal;
-any change to `intake`, `harden-finding` or `sparring`; the Step 2b compaction hook.
