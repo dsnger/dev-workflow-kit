@@ -43,5 +43,5 @@ question; `compare.md` states how each such run was read.
 
 ## Baseline (counterfactual)
 
-Each baseline run records V, M1 (expected FAIL: no ticket file can be produced on 0.23.0), M2 and
+Each baseline run records V, M1 (expected FAIL: 0.23.0 ships no ticket skill), M2 and
 what intake produced (a story, a question round or something else), quoted in `compare.md`.

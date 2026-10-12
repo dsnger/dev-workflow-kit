@@ -108,4 +108,4 @@ for d in runs/*/*; do c=$(basename "$d" | sed 's/-r[0-9]*$//'); v=$(basename "$(
 ````
 
 Baseline runs are checked for validity and for M2 and M6-style "no ticket": a baseline K1/K2 run is
-expected to fail M1 (no ticket file can be produced on 0.23.0), which is the counterfactual.
+expected to fail M1 (0.23.0 ships no ticket skill), which is the counterfactual.

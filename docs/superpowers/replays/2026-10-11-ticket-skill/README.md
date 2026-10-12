@@ -5,10 +5,22 @@ Named verification for story
 AC-11), per spec `docs/superpowers/specs/2026-10-11-ticket-skill-design.md` §3 and plan
 `docs/superpowers/plans/2026-10-12-ticket-skill.md` Tasks 1 and 3.
 
-**Result:** not measured yet. This README, the fixture, `prompts.md`, `runner.md` and `checks.md`
-were committed before the first run (the checks commit is the one that added this file:
-`git log --diff-filter=A -- docs/superpowers/replays/2026-10-11-ticket-skill/checks.md`). Results,
-per run and per check, follow in `compare.md` and `evidence/`.
+**Result:** set 2 passed every check in every run (10 of 10), against a baseline in which no run
+produced a ticket (three runs; 0.23.0 ships no ticket skill). Set 1 failed (K1 on an oracle defect in R1, K2 on the skill) and stays here as
+the failure record; both causes and their answers are in `compare.md`. The fixture, `prompts.md`,
+`runner.md` and `checks.md` were committed before the first run in `7ce0a03`; R1 was amended in
+`9025003` (spec §3 change record), before set 2's first run.
+
+| | Set 1 | Set 2 |
+|---|---|---|
+| `skills/ticket/SKILL.md` sha256 | `1bdaa56b85ea483743db9b97c72418000bd05a8242a78781d90b0c8ac9eae154` | `52b78e5bbfe1b0f3dd82e2214248d9f59d67788bef480a8803481c3bfe543d64` |
+| Skill text | `evidence/set1-skill.md` | `evidence/set2-skill.md` |
+| Measured snapshot | `WIP:` `6d6ac70` (replaced) | `WIP:` `35d4a72` (replaced at close) |
+| Runs | 3 × K1, K2, K3; 1 × L | 3 × K1, K2, K3; 1 × L |
+| Result | 4 of 10 pass all checks (K3, L) | 10 of 10 |
+| Per run | `evidence/set1-runs.md` | `evidence/set2-runs.md` |
+
+Baseline: `evidence/baseline-runs.md` (3 runs, all valid, no ticket file).
 
 ## What is measured
 

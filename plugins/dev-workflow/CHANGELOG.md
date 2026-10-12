@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.25.0
+
+- **New skill `ticket`** (`skills/ticket/SKILL.md`, one file, convention-loaded). A bug,
+  regression, robustness or wording fix that stays inside an approved commitment becomes a
+  ticket file at `docs/superpowers/tickets/<date>-T<n>-<slug>.md`: it quotes the commitment and
+  its source, records evidence, severity (`blocker|major|minor|nit`), exactly one category and one
+  state, and carries the brief a coding agent fixes from, including the feedback loop that goes red
+  on the defect. A ticket carries no profile of its own: it cites its story in a `**Story:**` line
+  the fix's Gate-B provenance line can name, or says it has none. A change that alters a commitment is not ticketed:
+  the skill prints the hand-off to `intake` (amendment route or Flow) and stops. `list` prints the
+  `needs-triage`, `needs-info` and `ready` buckets plus a `needs repair` heading for malformed
+  tickets; `T-<n> <state>` changes a state, and a move into `ready` or `in-progress` re-captures
+  the ticket. One file because a route file behind a prose pointer is not re-read after
+  compaction (finding F7, #60). Story
+  `docs/superpowers/stories/2026-10-11-a-ticket-skill-for-bugs-and-improvements-story.md`, spec
+  `docs/superpowers/specs/2026-10-11-ticket-skill-design.md`, replay
+  `docs/superpowers/replays/2026-10-11-ticket-skill/`.
+
 ## 0.24.0
 
 - Delete the expanded gate procedures in favor of keep-list B1–B10: Gate A on specs and
