@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.25.2
+
+- **Compaction re-injection** (story S4, 2026-10-12). `hooks/hooks.json` registers
+  `SessionStart` with the matcher `compact`, pointing at the same `codex-gate.sh`; Claude Code
+  adds a SessionStart hook's plain stdout to the model's context, so after an auto or manual
+  compaction the hook prints up to three plain lines and exits 0: the rules-file pointer
+  (always); `Gate cycle: nonce <nonce> · Gate A passes <n>/<floor> · Gate B passes <n>/<floor>
+  · fingerprint <fresh|stale|unavailable>`, each segment only when its source exists — the nonce
+  from the newest regular file under `.context/codex-reviews/gate-*-pass-*.md` whose name carries
+  one (a newer directory or legacy bare slot does not hide it), a count that exists but is not a
+  number as `?`, the recorded fingerprint read exactly as the commit check reads it; and `Open
+  stop: <pass cap reached — answer pending | unknown (unreadable pass count) | none>` whenever
+  line 2 is printed. No JSON; no gate state written (the fingerprint recomputation leaves git
+  objects behind exactly as every commit check does). Silent in a repository that has not
+  adopted the workflow, while `.context/codex-gate.off` exists, and for a `source` other than
+  `compact`. Suite section 44. Replay: `claude -p '/compact' --continue` in a scratch project
+  fired the hook and the transcript carried all three lines (PR body).
+
 ## 0.25.1
 
 - **The pass cap lives in the hook** (story S3, 2026-10-12). §5's pass-cap stop is a count the

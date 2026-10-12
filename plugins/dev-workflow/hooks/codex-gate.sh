@@ -340,8 +340,10 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
   # hookSpecificOutput.additionalContext IS honored on PreToolUse (and PostToolUse):
   # per https://code.claude.com/docs/en/hooks.md the PreToolUse decision-control
   # table lists additionalContext as "String added to Claude's context alongside the
-  # tool result". Plain stdout on exit 0 is NOT surfaced to the model, so this is the
-  # supported channel for a non-blocking reminder the model must actually read.
+  # tool result". On those two events plain stdout on exit 0 is NOT surfaced to the
+  # model, so this is the supported channel for a non-blocking reminder the model must
+  # actually read. SessionStart does add plain stdout to the model's context, which the
+  # compaction branch in the routing below relies on.
   #
   # Per-workspace opt-out: while .context/codex-gate.off exists, stay silent.
   # State tracking (SET/INVALIDATE/RESET) keeps running while off, so re-enabling
@@ -1221,12 +1223,88 @@ is_docs_only() {
   return 0
 }
 
+# --- COMPACTION RE-INJECTION ------------------------------------------------------
+# hooks.json registers SessionStart with the matcher `compact` only, and this checks
+# `source` as well, so a wider registration cannot announce a compaction that did not
+# happen. Claude Code adds a SessionStart hook's PLAIN stdout to the model's context
+# (https://code.claude.com/docs/en/hooks, exit code 0), so this prints text rather than
+# the JSON document the tool events use, and `routed` stays 0 so no buffered note is
+# flushed after it. The opt-out marker silences it like every other output. At most
+# three lines, each segment from state that exists. No gate state is written; the
+# fingerprint recomputation uses tree_hash, which stages into a throwaway index and so
+# leaves blobs and trees in the object database exactly as every commit check does — the
+# effective index and the worktree are untouched. Line 1 names the rules file
+# /workflow-init scaffolds.
+compact_count() { # $1 = label, $2 = count file. Sets `unknown` or `atcap`; `?` where the
+                  # file exists but no number can be read (an unreadable count may hide a
+                  # pending stop, so the open stop then reads `unknown`, never `none`).
+  # Present-but-not-regular (a FIFO, a directory) is unknown and never read: `cat` on a
+  # FIFO blocks until a writer appears.
+  { [ -e "$2" ] || [ -L "$2" ]; } || return 0
+  c=''; [ -f "$2" ] && c=$(cat "$2" 2>/dev/null | tr -d '[:space:]')
+  case "$c" in
+    '' | *[!0-9]*) c='?'; unknown=1 ;;
+    ???????????????????*) atcap=1 ;;      # nineteen digits or more: past any cap, as in cap_check
+    *) [ "$c" -ge "$cap" ] && atcap=1 ;;
+  esac
+  seg="${seg:+$seg · }$1 passes $c/$floor"
+}
+compact_lines() {
+  [ -f "$off_file" ] && return 0
+  case "$(field source)" in compact | '') ;; *) return 0 ;; esac
+  printf '%s\n' 'dev-workflow: context was compacted. Binding rules file: .claude/review-gates.md (read it before gate work).'
+  seg=''; unknown=0; atcap=0
+  # The nonce comes from the newest USABLE findings slot, `gate-<kind>-<nonce>-pass-<p>.md`:
+  # a regular file whose token between the kind and `-pass-` is 8 to 16 of [a-z0-9]. A
+  # legacy bare slot (`gate-b-spec-pass-1.md`) yields its branch name there, which the
+  # length bound rejects, and a directory in the namespace is listed as itself (`-d`) and
+  # skipped; neither hides an older slot that qualifies. Newest by mtime (`-t`), which is
+  # why this is `ls` and not a glob: POSIX `test` has no `-nt`. Listed from INSIDE the
+  # directory so only basenames are split: the checkout path may contain spaces, a usable
+  # slot name cannot, and a name that does split yields pieces the `-f` test rejects.
+  rdir="$state_dir/codex-reviews"
+  # shellcheck disable=SC2012,SC2045  # basenames only; see above
+  for f in $(cd "$rdir" 2>/dev/null && ls -td gate-*-pass-*.md 2>/dev/null); do
+    [ -f "$rdir/$f" ] || continue
+    n=${f%-pass-*}; n=${n##*-}
+    case "$n" in
+      *[!a-z0-9]* | ?????????????????*) continue ;;
+      ????????*) seg="nonce $n"; break ;;
+    esac
+  done
+  compact_count 'Gate A' "$countA_file"
+  compact_count 'Gate B' "$count_file"
+  if [ -e "$state_file" ] || [ -L "$state_file" ]; then
+    # Read exactly as the commit check reads it, so the two can never disagree about the
+    # same bytes; `unavailable` on either side is never fresh. Not read at all when it is
+    # not a regular file, for the FIFO reason above.
+    reviewed=''; [ -f "$state_file" ] && reviewed=$(cat "$state_file" 2>/dev/null || echo '')
+    if [ -z "$reviewed" ] || [ "$reviewed" = unavailable ]; then fp=unavailable
+    else
+      current=$(tree_hash)
+      if [ "$current" = unavailable ]; then fp=unavailable
+      elif [ "$current" = "$reviewed" ]; then fp=fresh
+      else fp=stale
+      fi
+    fi
+    seg="${seg:+$seg · }fingerprint $fp"
+  fi
+  [ -n "$seg" ] || return 0
+  printf 'Gate cycle: %s\n' "$seg"
+  if [ "$atcap" -eq 1 ]; then stop='pass cap reached — answer pending'
+  elif [ "$unknown" -eq 1 ]; then stop='unknown (unreadable pass count)'
+  else stop=none
+  fi
+  printf 'Open stop: %s\n' "$stop"
+}
+
 # `routed` gates the flush below. Spec §3.3: a payload the hook cannot ROUTE produces no
 # output and touches no state — but `flush_notes` used to run unconditionally, so a pending
 # disclosure was emitted (and cleared) on an event no branch here recognized. That is also
 # how an untrusted event name reached the fallback emitter.
 routed=0
 case "$event" in
+  SessionStart) compact_lines ;;
   PostToolUse)
     routed=1
     case "$tool" in
