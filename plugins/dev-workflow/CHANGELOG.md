@@ -22,6 +22,41 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.25.1
+
+- **The pass cap lives in the hook** (story S3, 2026-10-12). §5's pass-cap stop is a count the
+  hook already has, so `codex-gate.sh` now reports it: once a gate's pass count is at or past
+  the cap, every call to that gate and every commit attempt (Gate B) or plan-execution skill
+  call (Gate A) carries one two-line message, `⚠ Codex Gate <A|B>: pass cap reached (<n>/<cap>).
+  STOP and ask the human …`, naming `.context/codex-gate.cap-extra` as where the answer goes.
+  The cap is the reminder threshold plus two; `.context/codex-gate.cap` overrides it (a positive
+  integer, else the default); `cap-extra` adds its positive integer for the current cycle and is
+  removed by the same commit reset that removes the pass counter — no second reset path. Both
+  files are read with their edges trimmed, not with every whitespace deleted as the floor file
+  is, because `2 3` read as `23` would be the gate-off direction. Nothing is blocked (invariant
+  1), and the count keeps rising past the cap (`6/5`). The Gate-A cap is checked on commit
+  attempts as well, since a Gate-A cycle reaches its closing commit through one.
+- **Leading zeros are dropped from the floor, the cap and the cap answer before use.** The
+  floor file has always accepted `08` (`test` reads it as 8); now that the floor enters shell
+  arithmetic (`floor + 2`), `08` is an invalid octal there and the error would have been a
+  non-zero exit — found at this story's Gate B, pass 1, on both branches. The value is read as
+  decimal 8, not refused: refusing it would have dropped a configured floor of 8 to 3, a false ✓
+  (pass 2). The floor's acceptance is otherwise unchanged; a floor too long for the arithmetic
+  is its own cap. The two cap files take at most nine digits, since they are added.
+- **The WIP and docs-only notes now name what they skip** — Gate B's fingerprint and floor
+  checks — because the cap message can stand beside either, and "Gate B is not evaluated
+  here" next to a Gate-B STOP read as a contradiction.
+- **The jq-free emitter escapes a line break.** The cap message is the first reminder with
+  one, and the fallback writer escaped only backslash and quote. It now writes the break as
+  `\n`, so the document stays one line of valid JSON on a host without `jq`.
+- **Three floor reminders shortened to two lines each**: Gate B below floor, Gate A below
+  floor, Gate A floor met (their `additionalContext` was 393, 584 and 300 characters). Their
+  `⚠`/`✓` summaries are unchanged, and the Gate A floor-met text still says the count is a
+  count of calls only.
+- Suite section 43 covers the cap (default, override, `cap-extra`, unusable values, the
+  commit reset, Gate A, once per call), the two-line bound on the five reminders and the
+  jq-free escape.
+
 ## 0.25.0
 
 - **New skill `ticket`** (`skills/ticket/SKILL.md`, one file, convention-loaded). A bug,

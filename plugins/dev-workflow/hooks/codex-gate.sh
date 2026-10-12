@@ -45,6 +45,8 @@ state_file="$state_dir/codex-gate.gateB"          # holds the reviewed tree-hash
 off_file="$state_dir/codex-gate.off"
 on_file="$state_dir/codex-gate.on"                # workflow-adoption marker
 floor_file="$state_dir/codex-gate.floor"          # optional per-project floor override
+cap_file="$state_dir/codex-gate.cap"              # optional per-project pass-cap override
+capextra_file="$state_dir/codex-gate.cap-extra"   # a human's answer: passes allowed past the cap
 tools_file="$state_dir/codex-gate.tools"          # optional Codex tool-name mapping
 noted_file="$state_dir/codex-gate.toolNote"       # marks the unknown-tool note as said
 # Gate-B passes since the last commit: one per `full` call or matched spec+quality pair.
@@ -127,11 +129,41 @@ floor=3
 if [ -f "$floor_file" ]; then
   f=$(cat "$floor_file" 2>/dev/null | tr -d '[:space:]')
   # Positive integer only; anything else (0, -1, "three", empty) keeps the default,
-  # so a typo'd override can't silently disable the gate.
+  # so a typo'd override can't silently disable the gate. Leading zeros are dropped
+  # BEFORE the value is kept: `08` has always been accepted here (`test` reads it as 8),
+  # and the cap derivation below hands the floor to `$(( ))`, which reads `08` as an
+  # invalid octal — a shell error, so a non-zero exit (this story's Gate B, pass 1).
+  # Refusing it instead would drop a configured floor of 8 to 3: a false ✓ (pass 2).
   case "$f" in
     '' | *[!0-9]*) ;;
-    *) [ "$f" -gt 0 ] 2>/dev/null && floor="$f" ;;
+    *) f=${f#"${f%%[!0]*}"}; [ "$f" -gt 0 ] 2>/dev/null && floor="$f" ;;
   esac
+fi
+
+# §5 PASS CAP: the closure ordering's pass-cap stop is a count — the floor plus two, and
+# from a human's answer onward that many more — so the hook reports it the way it reports
+# the floor. Reaching it changes nothing here (invariant 1): the message asks the human,
+# and the answer goes in .context/codex-gate.cap-extra as a positive integer, which raises
+# the cap for the current cycle until the commit reset clears it with the pass counter.
+# Per-project override: .context/codex-gate.cap, a positive integer like the floor file.
+#
+# Where the cap files differ from the floor file, and why. Edges trimmed (surrounding
+# blank lines included), not every whitespace deleted: `2 3` deleted to `23` would allow
+# twenty-three more passes, the gate-off direction, where the same slip on the floor file
+# only asks for more. At most nine digits: these two values are ADDED, and nine digits keep
+# every sum far below any overflow. The floor keeps its wider acceptance; one too long for
+# the arithmetic is its own cap, compared as a string of digits by `test` below.
+pos_int() { # prints $1 as a decimal when it is a positive integer of at most nine digits
+  case "$1" in '' | *[!0-9]*) return 1 ;; esac
+  _p=${1#"${1%%[!0]*}"}
+  case "$_p" in '' | ??????????*) return 1 ;; esac
+  printf '%s' "$_p"
+}
+read_int_file() { pos_int "$(tr '\n\r' '  ' < "$1" 2>/dev/null | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"; }
+case "$floor" in ??????????*) cap=$floor ;; *) cap=$((floor + 2)) ;; esac
+if [ -f "$cap_file" ] && c=$(read_int_file "$cap_file"); then cap="$c"; fi
+if [ -f "$capextra_file" ] && c=$(read_int_file "$capextra_file"); then
+  case "$cap" in ??????????*) ;; *) cap=$((cap + c)) ;; esac
 fi
 
 # Which Codex MCP tools back the gates. The pinned mcp-codex-dev server (written by
@@ -328,8 +360,11 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
     jq -cn --arg ev "$event" --arg ctx "$1" --arg msg "$2" \
       '{hookSpecificOutput:{hookEventName:$ev,additionalContext:$ctx},systemMessage:$msg}' || return 2
   else
-    # Fallback (no jq): escape backslash + quote. The supported reminders are
-    # static and control-char-free, so this is sufficient.
+    # Fallback (no jq): escape backslash, quote and newline. The reminders carry no other
+    # control character, so this is sufficient; the newline is there because the pass-cap
+    # message is two lines, and a raw line break inside a JSON string is invalid JSON.
+    # `$!N` rather than `N` on the last line: POSIX leaves whether a failing N prints the
+    # pattern space to the implementation, and GNU and BSD sed answer it differently.
     #
     # BOTH substitutions are status-checked. A failed one yields an EMPTY field while
     # `printf` still exits 0, so without the check a document reading
@@ -343,9 +378,9 @@ emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
     # refuses to flush an unroutable event, which closes the only route that reached
     # here with a hostile name; this escape is the second of the two, kept because a
     # field interpolated raw next to two escaped ones is a trap for the next editor.
-    ev=$(printf '%s' "$event" | sed 's/\\/\\\\/g; s/"/\\"/g') || return 2
-    ctx=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g') || return 2
-    msg=$(printf '%s' "$2" | sed 's/\\/\\\\/g; s/"/\\"/g') || return 2
+    ev=$(printf '%s' "$event" | sed -e ':a' -e '$!N' -e '$!ba' -e 's/\\/\\\\/g; s/"/\\"/g; s/\n/\\n/g') || return 2
+    ctx=$(printf '%s' "$1" | sed -e ':a' -e '$!N' -e '$!ba' -e 's/\\/\\\\/g; s/"/\\"/g; s/\n/\\n/g') || return 2
+    msg=$(printf '%s' "$2" | sed -e ':a' -e '$!N' -e '$!ba' -e 's/\\/\\\\/g; s/"/\\"/g; s/\n/\\n/g') || return 2
     printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"%s"},"systemMessage":"%s"}\n' "$ev" "$ctx" "$msg" || return 2
   fi
   return 0
@@ -870,9 +905,10 @@ classify() {
 # called from `flush_notes` and nowhere else.
 #
 # A7 — SEPARATORS AND ENCODING. `additionalContext` bodies join with " — " (space, em
-# dash, space); `systemMessage` bodies with a single space. NO NEWLINE anywhere: the
-# jq-free emitter escapes only backslash and quote, so a literal newline would produce an
-# invalid JSON document.
+# dash, space); `systemMessage` bodies with a single space. A body may carry a line break
+# (the pass-cap message is two lines): both emitters write it as the `\n` escape, so the
+# serialized document is always ONE line of JSON. No other control character is allowed
+# in a body, because the jq-free emitter escapes only backslash, quote and newline.
 notes_ctx=''
 notes_msg=''
 have_notes=0
@@ -897,6 +933,23 @@ note_front() { # $1 = additionalContext body, $2 = systemMessage body
     notes_ctx="$1 — $notes_ctx"; notes_msg="$2 $notes_msg"
   fi
   have_notes=1
+}
+
+# The pass-cap message, one per gate call or commit attempt at or past the cap. Two lines
+# on purpose, the same text on both channels: the model has to stop and ask, and the human
+# has to know where the answer goes. The composed document stays one line because `emit`
+# escapes the break (jq does, and the fallback does since this message exists).
+cap_check() { # $1 = gate letter, $2 = that gate's count file
+  _n=$(read_count "$2")
+  case "$_n" in
+    '' | *[!0-9]*) return 0 ;;          # not a count: nothing to compare
+    ???????????????????*) ;;            # nineteen digits or more: past any cap this hook
+                                        # can hold, and past what `test` can compare
+    *) [ "$_n" -ge "$cap" ] || return 0 ;;
+  esac
+  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP and ask the human: delete the mechanism, cut scope, or allow N more passes.
+   Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap)."
+  note "$_m" "$_m"
 }
 
 # --- THE DIAGNOSTIC INTERFACE -------------------------------------------------------
@@ -1190,6 +1243,7 @@ case "$event" in
             review_call "$cls"
             ;;
         esac
+        cap_check B "$count_file"
         ;;
       "$exec_tool")
         cls=$(classify)
@@ -1201,6 +1255,7 @@ case "$event" in
             bump_count "$countA_file"
             ;;
         esac
+        cap_check A "$countA_file"
         ;;
       mcp__codex__*)
         # FINDING F: a Codex server is connected, but under tool names the gates can't
@@ -1234,7 +1289,7 @@ case "$event" in
         # prevent. Revisit if an exit-status field is ever documented.
         if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
-                "$legacy_count" "$legacy_fresh"
+                "$legacy_count" "$legacy_fresh" "$capextra_file"
         fi
         # This call's `-m wip` record belongs to this one command, whatever the decision above was
         if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
@@ -1258,7 +1313,7 @@ case "$event" in
         if is_commit "$cmd"; then
           record_wip_base "$cmd"
           if is_wip_commit_pre "$cmd"; then
-            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B is not evaluated here. Whether your pass counters are kept is decided after the commit, under the conditions $policy states for a WIP commit; where those do not hold they are cleared. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle decided after the commit)"
+            note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B's fingerprint and floor are not evaluated here. Whether your pass counters are kept is decided after the commit, under the conditions $policy states for a WIP commit; where those do not hold they are cleared. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle decided after the commit)"
           else
           # Docs-only commits (spec/plan .md files) carry no code diff,
           # so Gate B (mcp__codex__review reviews a code diff) cannot apply — emit a
@@ -1268,7 +1323,7 @@ case "$event" in
           has_all_flag "$cmd" && files=$(printf '%s\n%s\n' "$files" "$(git -C "$repo_root" diff --name-only 2>/dev/null)")
           files=$(printf '%s\n' "$files" | sed '/^$/d')
           if is_docs_only "$files"; then
-            note "Docs-only commit — no code is staged, so Codex Gate B (mcp__codex__review reviews a code diff) does not apply here. If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
+            note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
           else
             retire "$legacy_count"; retire "$legacy_fresh"   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
@@ -1298,7 +1353,7 @@ case "$event" in
               # was reviewed.
               note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually that means the working tree or the index changed since the review. It can also mean you only staged already-reviewed content — the bytes are fine, but the hook cannot tell staging from editing; that this hook was upgraded and the recorded fingerprint uses the older format (see CHANGELOG); or that the fresh fingerprint could not be computed or could not be stored. A fresh Gate-B pass is the complete remedy for the staging and post-upgrade cases too, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, check the worktree and the index first — the fingerprint moves when either does, staging included, and another hook can stage during the commit attempt. Where neither changed, the fault is in the machinery rather than the code: check that .context/ is writable, that TMPDIR is writable, that a checksum tool (shasum, sha1sum or cksum) runs, that git status works, and that the disk is not full — a store that fails again leaves the hook unable to confirm a fingerprint and may return either fingerprint-state diagnosis. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
             elif [ "$passes" -lt "$floor" ]; then
-              note "Codex Gate B floor NOT met: only $passes/$floor mcp__codex__review pass(es) since the last commit. Per $policy the review is a LOOP with a hard minimum of $floor passes, and what this cycle does next is that policy's closure ordering's, read there entire; $policy's skip rule decides only whether a cycle runs at all, never whether one already running may stop short." "⚠ Codex Gate B below floor ($passes/$floor)"
+              note "Codex Gate B floor NOT met: $passes/$floor mcp__codex__review pass(es) since the last commit. What this cycle does next is $policy's closure ordering's, read there entire; the skip rule never lets a running cycle stop short." "⚠ Codex Gate B below floor ($passes/$floor)"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.
@@ -1314,6 +1369,14 @@ case "$event" in
             gone "$pending_file" || note "$PENDING_AT_COMMIT_CTX" "$PENDING_AT_COMMIT_MSG"
           fi
           fi
+          # Every commit attempt, WIP and docs-only included, and both gates: a cap
+          # reached is a stop wherever a further pass would otherwise run, a Gate-A cycle
+          # reaches its closing commit this way too, and firing on a commit that needed no
+          # Gate B is the redundant reminder invariant 2 accepts. The WIP note and the
+          # docs-only note above say Gate B's fingerprint and floor are not evaluated on
+          # their paths; the cap still is.
+          cap_check A "$countA_file"
+          cap_check B "$count_file"
         fi
         ;;
       Skill)
@@ -1321,14 +1384,15 @@ case "$event" in
           superpowers:executing-plans | superpowers:subagent-driven-development)
             passesA=$(read_count "$countA_file")
             if [ "$passesA" -lt "$floor" ]; then
-              note "Codex Gate A floor NOT met: only $passesA/$floor mcp__codex__exec pass(es) on this spec/plan. Per $policy Gate A is a LOOP with a hard minimum of $floor passes (start each instruction with the superpowers:brainstorming directive; the ONLY early exit is a pass that returned zero findings). Gate A has no content check in this hook; what the gate itself requires of the reviewed artifact is stated in $policy and is instruction-backed. What this cycle does next is that policy's closure ordering's, a further pass being one of its answers and not the only one." "⚠ Codex Gate A below floor ($passesA/$floor)"
+              note "Codex Gate A floor NOT met: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls with no content check. What this cycle does next is $policy's closure ordering's, read there entire." "⚠ Codex Gate A below floor ($passesA/$floor)"
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
               # mcp__codex__exec CALLS, bound to no artifact. Hashing the artifact would
               # be wrong — a spec is SUPPOSED to change between passes — so the hook
               # cannot verify what was reviewed, and must not imply that it did.
-              note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan — floor met by COUNT ONLY. The hook counts calls; it cannot verify what was reviewed or that findings were addressed. Proceed only once this Gate-A cycle has closed under $policy's closure ordering, read there entire." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
+              note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) — floor met by COUNT ONLY; the hook cannot verify what was reviewed or that findings were addressed. Proceed only once this cycle has closed under $policy's closure ordering." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
             fi
+            cap_check A "$countA_file"
             ;;
         esac
         ;;

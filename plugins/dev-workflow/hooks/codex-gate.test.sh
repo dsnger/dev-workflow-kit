@@ -62,6 +62,8 @@ old_count=".context/codex-gate.passCount"
 old_fresh=".context/codex-gate.freshCount"
 countA=".context/codex-gate.passCountA"
 floorf=".context/codex-gate.floor"
+capf=".context/codex-gate.cap"            # per-project cap override (section 43)
+capxf=".context/codex-gate.cap-extra"     # passes a human allowed beyond the cap
 toolsf=".context/codex-gate.tools"
 notedf=".context/codex-gate.toolNote"
 offf=".context/codex-gate.off"
@@ -157,7 +159,8 @@ reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$pendb" "$old_c
 reset_all() {
   rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf" \
         "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.* \
-        "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.*
+        "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.* \
+        "$capf" "$capxf"
 }
 
 # 0. THE jq-FREE PATH IS USABLE. Asserted before anything depends on it: if tree_hash
@@ -2845,6 +2848,191 @@ done
 eq42 "concurrency smoke: no repetition credited more than one pass" "$over42" 0
 reset_all
 eq42 "every section-42 hook invocation exited 0" "$(cat "$rc42f")" ''
+
+# 43. THE PASS CAP LIVES IN THE HOOK (story S3, 2026-10-12). §5's pass-cap stop is a count:
+#     the derived floor plus two, raised by whatever a human's answer allows. The hook
+#     already counts passes per gate, so it reports the cap the same way it reports the
+#     floor — on every gate call and every commit attempt once the count is at or past it,
+#     once per call — and blocks nothing (invariant 1). The cap is floor + 2 by default,
+#     `.context/codex-gate.cap` overrides it like the floor file, and the answer file
+#     `.context/codex-gate.cap-extra` adds its passes until the commit reset clears it
+#     with the pass counter.
+# Occurrences in ONE field of the document (the operator channel): the same text goes to
+# both channels, so counting the whole document would read every message as two.
+ncap() { json_field "$1" systemMessage | grep -o 'pass cap reached' | grep -c ''; }
+skillpre() { run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'; }
+execout() { run "$(payload mcp__codex__exec "$(resp_success)")"; }       # capturing exec call
+cap_line1='STOP and ask the human: delete the mechanism, cut scope, or allow N more passes.'
+cap_line2='Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap).'
+
+# 43a. Gate B at the default cap of 5: four passes are silent, the fifth call carries the
+#      message once, and so does every commit attempt and call after it.
+reset_all; rev; rev; rev
+out=$(revout)
+[ "$(ncap "$out")" = 0 ] && pass "43a: 4/5 Gate-B passes -> no cap message" || fail "43a: 4/5 Gate-B passes -> no cap message"
+out=$(revout)
+[ "$(ncap "$out")" = 1 ] && pass "43a: 5th review call -> cap message once" || fail "43a: 5th review call -> cap message once (got $(ncap "$out"))"
+printf '%s' "$out" | grep -qF "⚠ Codex Gate B: pass cap reached (5/5). $cap_line1" \
+  && pass "43a: cap message line 1 is exact" || fail "43a: cap message line 1 is exact"
+printf '%s' "$out" | grep -qF "$cap_line2" && pass "43a: cap message line 2 is exact" || fail "43a: cap message line 2 is exact"
+out=$(commitpre)
+[ "$(ncap "$out")" = 1 ] && pass "43a: commit attempt at the cap -> cap message once" || fail "43a: commit attempt at the cap -> cap message once (got $(ncap "$out"))"
+one_doc "43a: commit attempt at the cap" "$out"
+rev
+out=$(commitpre)
+printf '%s' "$out" | grep -qF 'pass cap reached (6/5)' && pass "43a: past the cap the count keeps rising (6/5)" || fail "43a: past the cap the count keeps rising (6/5)"
+
+# 43b. cap-extra = 2 raises the cap to 7 for this cycle: silent at 5 and 6, message at 7.
+reset_all; printf '2' > "$capxf"
+rev; rev; rev; rev
+out=$(revout)
+[ "$(ncap "$out")" = 0 ] && pass "43b: cap-extra 2 -> 5/7 silent" || fail "43b: cap-extra 2 -> 5/7 silent"
+rev
+out=$(commitpre)
+[ "$(ncap "$out")" = 0 ] && pass "43b: cap-extra 2 -> commit at 6/7 silent" || fail "43b: cap-extra 2 -> commit at 6/7 silent"
+out=$(revout)
+printf '%s' "$out" | grep -qF 'pass cap reached (7/7)' && pass "43b: cap-extra 2 -> message at 7/7" || fail "43b: cap-extra 2 -> message at 7/7"
+
+# 43c. An unusable cap-extra is ignored, never read as 0 passes or as a silence.
+for bad in two 0 -1 '' '2 3' 99999999999; do
+  reset_all; printf '%s' "$bad" > "$capxf"
+  rev; rev; rev; rev
+  out=$(revout)
+  [ "$(ncap "$out")" = 1 ] && pass "43c: cap-extra [$bad] ignored -> message at 5/5" || fail "43c: cap-extra [$bad] ignored -> message at 5/5"
+done
+
+# 43d. The commit reset that clears the pass counter clears the answer too — one reset
+#      path, so the next cycle starts at the default cap.
+reset_all; printf '2' > "$capxf"; rev
+commitpost
+[ ! -e "$capxf" ] && pass "43d: commit reset clears cap-extra" || fail "43d: commit reset clears cap-extra"
+[ ! -e "$count" ] && pass "43d: commit reset still clears the pass counter" || fail "43d: commit reset still clears the pass counter"
+
+# 43e. Per-project cap override, parsed like the floor file: a positive integer is the cap,
+#      anything else keeps the default.
+reset_all; printf '3' > "$capf"; rev; rev
+out=$(revout)
+printf '%s' "$out" | grep -qF 'pass cap reached (3/3)' && pass "43e: cap override 3 -> message at 3/3" || fail "43e: cap override 3 -> message at 3/3"
+reset_all; printf 'three' > "$capf"; rev; rev; rev; rev
+[ "$(ncap "$(revout)")" = 1 ] && pass "43e: unusable cap override -> default 5" || fail "43e: unusable cap override -> default 5"
+reset_all; printf '3' > "$capf"; printf '1' > "$capxf"; rev; rev; rev
+[ "$(ncap "$(revout)")" = 1 ] && pass "43e: override 3 + extra 1 -> message at 4/4" || fail "43e: override 3 + extra 1 -> message at 4/4"
+
+# 43f. Gate A counts its own cap on exec calls and on the plan-execution skill.
+reset_all; execp; execp; execp; execp
+out=$(execout)
+printf '%s' "$out" | grep -qF '⚠ Codex Gate A: pass cap reached (5/5).' && pass "43f: 5th exec call -> Gate A cap message" || fail "43f: 5th exec call -> Gate A cap message"
+[ "$(ncap "$out")" = 1 ] && pass "43f: Gate A cap message once per call" || fail "43f: Gate A cap message once per call"
+out=$(skillpre)
+[ "$(ncap "$out")" = 1 ] && pass "43f: plan-execution skill at the cap -> cap message once" || fail "43f: plan-execution skill at the cap -> cap message once"
+one_doc "43f: plan-execution skill at the cap" "$out"
+reset_all; execp; execp; execp
+[ "$(ncap "$(skillpre)")" = 0 ] && pass "43f: Gate A below the cap -> no cap message" || fail "43f: Gate A below the cap -> no cap message"
+
+# 43g. Every message the hook prints is at most two lines. The emitted document is JSON, so
+#      a line break inside a field is the two-byte escape \n: at most one per field. The
+#      three floor reminders this story shortened are bounded in length as well, since a
+#      one-line string of 600 characters is not two lines of anything.
+nl_escapes() { printf '%s' "$1" | grep -o '\\n' | grep -c ''; }
+two_lines() { # $1 = label, $2 = captured output, $3 = max additionalContext length
+  _c=$(json_field "$2" additionalContext); _m=$(json_field "$2" systemMessage)
+  [ "$(nl_escapes "$_c")" -le 1 ] && [ "$(nl_escapes "$_m")" -le 1 ] \
+    && pass "43g: $1 -> at most two lines" || fail "43g: $1 -> at most two lines"
+  [ "${#_c}" -le "$3" ] && pass "43g: $1 additionalContext within $3 chars" \
+    || fail "43g: $1 additionalContext within $3 chars (got ${#_c})"
+}
+reset_all; rev
+two_lines "Gate B below floor" "$(commitpre)" 260
+reset_all; execp
+two_lines "Gate A below floor" "$(skillpre)" 260
+reset_all; execp; execp; execp
+two_lines "Gate A floor met" "$(skillpre)" 260
+reset_all; rev; rev; rev; rev; rev
+two_lines "Gate B cap reached" "$(commitpre)" 1000
+reset_all; execp; execp; execp; execp; execp
+two_lines "Gate A cap reached" "$(skillpre)" 1000
+
+# 43h. The cap message carries a real line break, so the jq-free emitter has to escape it:
+#      the document must stay one line of valid JSON, with the break as the \n escape.
+reset_all; nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
+nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
+nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
+nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
+out=$(nojq_run "$(payload mcp__codex__review "$(resp_success)")"); rc=$?
+[ "$rc" = 0 ] && pass "43h: jq-free cap message exits 0" || fail "43h: jq-free cap message exits 0 (got $rc)"
+[ "$(printf '%s\n' "$out" | grep -c '')" = 1 ] && pass "43h: jq-free cap document is one line" || fail "43h: jq-free cap document is one line"
+printf '%s' "$out" | grep -qF 'allow N more passes.\n   Record the answer' && pass "43h: jq-free line break is the \\n escape" || fail "43h: jq-free line break is the \\n escape"
+if command -v jq >/dev/null 2>&1; then
+  printf '%s' "$out" | jq -e . >/dev/null 2>&1 && pass "43h: jq-free cap document parses as JSON" || fail "43h: jq-free cap document parses as JSON"
+fi
+
+# 43i. Leading zeros and huge values (Gate-B passes 1 and 2 of this story): `08` is a
+#      positive integer to `test` and an invalid octal to `$(( ))`, where the error is a
+#      shell error and a shell error is a non-zero exit. The floor file accepted `08` as 8
+#      before the cap existed, so it still does — the value is read as decimal, never
+#      refused, because a refused floor falls to 3 and a lowered floor is a false ✓. A
+#      floor too long for the arithmetic is its own cap, compared as a string of digits.
+for v in 08 010; do
+  reset_all; printf '%s' "$v" > "$floorf"; rev
+  out=$(commitpre); rc=$?
+  [ "$rc" = 0 ] && pass "43i: floor [$v] -> hook exits 0" || fail "43i: floor [$v] -> hook exits 0 (got $rc)"
+  printf '%s' "$out" | grep -qF "below floor (1/${v#0})" && pass "43i: floor [$v] -> read as decimal ${v#0}" || fail "43i: floor [$v] -> read as decimal ${v#0}"
+done
+reset_all; printf '08' > "$floorf"; execp; execp; execp
+printf '%s' "$(skillpre)" | grep -qF 'below floor (3/8)' && pass "43i: floor [08] keeps Gate A below floor at 3 passes" || fail "43i: floor [08] keeps Gate A below floor at 3 passes"
+reset_all; printf '9223372036854775807' > "$floorf"; rev
+out=$(commitpre); rc=$?
+[ "$rc" = 0 ] && pass "43i: floor at the 64-bit maximum -> hook exits 0" || fail "43i: floor at the 64-bit maximum -> hook exits 0 (got $rc)"
+printf '%s' "$out" | grep -qF 'below floor (1/9223372036854775807)' && pass "43i: floor at the 64-bit maximum is kept" || fail "43i: floor at the 64-bit maximum is kept"
+[ "$(ncap "$out")" = 0 ] && pass "43i: floor at the 64-bit maximum -> no cap message" || fail "43i: floor at the 64-bit maximum -> no cap message"
+# The cap files read leading zeros the same way, and a value past nine digits is unusable.
+reset_all; printf '08' > "$capxf"; rev; rev; rev; rev; rev
+out=$(revout); rc=$?
+[ "$rc" = 0 ] && pass "43i: cap-extra [08] -> hook exits 0" || fail "43i: cap-extra [08] -> hook exits 0 (got $rc)"
+[ "$(ncap "$out")" = 0 ] && pass "43i: cap-extra [08] read as 8 -> 6/13 silent" || fail "43i: cap-extra [08] read as 8 -> 6/13 silent"
+reset_all; printf '010' > "$capf"; printf '1' > "$capxf"; rev; rev; rev; rev; rev; rev; rev; rev; rev; rev
+out=$(revout); rc=$?
+[ "$rc" = 0 ] && pass "43i: cap [010] + extra 1 -> hook exits 0" || fail "43i: cap [010] + extra 1 -> hook exits 0 (got $rc)"
+printf '%s' "$out" | grep -qF 'pass cap reached (11/11)' && pass "43i: cap [010] read as 10, extra 1 -> 11/11" || fail "43i: cap [010] read as 10, extra 1 -> 11/11"
+reset_all; printf '9223372036854775807' > "$capxf"; rev; rev; rev; rev
+out=$(revout); rc=$?
+[ "$rc" = 0 ] && pass "43i: cap-extra past nine digits -> hook exits 0" || fail "43i: cap-extra past nine digits -> hook exits 0 (got $rc)"
+[ "$(ncap "$out")" = 1 ] && pass "43i: cap-extra past nine digits ignored -> message at 5/5" || fail "43i: cap-extra past nine digits ignored -> message at 5/5"
+# A COUNT is compared with the effective cap as long as the comparison is representable:
+# two nine-digit values can sum to ten digits, and a count below that sum is below the cap.
+# Nineteen digits or more is past any cap this hook can hold, so it fires (invariant 2).
+reset_all; printf '999999999' > "$capf"; printf '999999999' > "$capxf"; printf 'x' > "$state"
+printf '1000000000' > "$count"
+[ "$(ncap "$(commitpre)")" = 0 ] && pass "43i: ten-digit count below a ten-digit cap -> silent" || fail "43i: ten-digit count below a ten-digit cap -> silent"
+printf '1999999998' > "$count"
+printf '%s' "$(commitpre)" | grep -qF 'pass cap reached (1999999998/1999999998)' && pass "43i: ten-digit count at a ten-digit cap -> message" || fail "43i: ten-digit count at a ten-digit cap -> message"
+reset_all; printf '1000000000000000000' > "$count"; printf 'x' > "$state"
+[ "$(ncap "$(commitpre)")" = 1 ] && pass "43i: nineteen-digit pass count -> cap message" || fail "43i: nineteen-digit pass count -> cap message"
+# Surrounding blank lines are edges too; an internal break is still not.
+reset_all; printf '\n 3 \n' > "$capf"; rev; rev
+printf '%s' "$(revout)" | grep -qF 'pass cap reached (3/3)' && pass "43i: cap file padded with blank lines -> 3" || fail "43i: cap file padded with blank lines -> 3"
+reset_all; printf '2\n3' > "$capxf"; rev; rev; rev; rev
+[ "$(ncap "$(revout)")" = 1 ] && pass "43i: cap-extra with an internal line break ignored" || fail "43i: cap-extra with an internal line break ignored"
+
+# 43j. A Gate-A cycle at its cap reaches its closing commit through a commit attempt, so the
+#      commit attempt carries the Gate-A cap message too (spec branch, pass 1).
+reset_all; execp; execp; execp; execp; execp
+out=$(commitpre)
+printf '%s' "$out" | grep -qF '⚠ Codex Gate A: pass cap reached (5/5).' && pass "43j: commit attempt at the Gate-A cap -> Gate A cap message" || fail "43j: commit attempt at the Gate-A cap -> Gate A cap message"
+one_doc "43j: commit attempt at the Gate-A cap" "$out"
+# The WIP and docs-only notes say what they skip — the fingerprint and floor checks — so
+# the cap message beside them is not a contradiction (pass 2, both branches).
+reset_all; rev; rev; rev; rev; rev
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"wip: snapshot\""}}')
+printf '%s' "$out" | grep -qF 'fingerprint and floor are not evaluated here' && pass "43j: WIP note names what it skips" || fail "43j: WIP note names what it skips"
+[ "$(ncap "$out")" = 1 ] && pass "43j: WIP commit at the cap -> cap message once" || fail "43j: WIP commit at the cap -> cap message once"
+one_doc "43j: WIP commit at the cap" "$out"
+mkdir -p docs && printf 'spec\n' > docs/plan.md && git add docs/plan.md >/dev/null 2>&1
+out=$(commitpre)
+printf '%s' "$out" | grep -qF 'fingerprint and floor checks do not apply' && pass "43j: docs-only note names what it skips" || fail "43j: docs-only note names what it skips"
+[ "$(ncap "$out")" = 1 ] && pass "43j: docs-only commit at the cap -> cap message once" || fail "43j: docs-only commit at the cap -> cap message once"
+git reset -q >/dev/null 2>&1; rm -rf docs
+reset_all
 
 reset_all
 echo "---"
