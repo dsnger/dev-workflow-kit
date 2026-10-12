@@ -9,7 +9,9 @@ shows the skill followed, against an intake-only baseline.
 
 **Architecture:** one new prompt file, a minor version bump with its CHANGELOG entry and three
 inventory rows, and a docs-only replay package whose checks are committed before any run. The
-baseline runs need no skill and may run first; the candidate runs measure the Gate-B-closed skill.
+baseline runs need no skill and run first. The candidate runs measure the skill at the Gate-B
+`WIP:` snapshot, before the first Gate-B call, because `battery+check` evidence is produced before
+Gate B is called (`.claude/review-gates.md`, "Two evidence gaps"): the replay is the check.
 
 **Tech Stack:** Markdown prompt; POSIX `sh` + `git` + `jq` for the runner and mechanical checks,
 kept as text inside the package's `.md` files; `claude -p` replay runner.
@@ -31,7 +33,10 @@ closed in e4f3071).
 - intake, harden-finding, sparring, `/workflow-init`, `CLAUDE.md`, `AGENTS.md` and
   `.claude/review-gates.md` are not changed (story AC-9; sprint-mode moratorium).
 - dev-workflow 0.23.0 → 0.24.0 with a CHANGELOG entry (invariant 12); no manifest key (invariant 6).
-- The skill passes all 12 items of `docs/prompt-standards.md` (invariant 11); `Target model:` once.
+- The skill passes all 12 items of `docs/prompt-standards.md` (invariant 11); `Target model:` once,
+  beside the sentence "This skill is a prompt artifact and follows the checklist in
+  `docs/prompt-standards.md`." — check 4a selects files by the phrase `prompt artifact and follows`,
+  so without it the skill is outside 4a.
 - Never `git add -A`; stage by name. No `Co-Authored-By` trailers.
 - Replay: model `claude-opus-5-5`, `--plugin-dir` a `git archive` copy of `plugins/dev-workflow`,
   `--setting-sources project`, `--strict-mcp-config`, `--permission-mode bypassPermissions`,
@@ -62,8 +67,9 @@ checks.sh as text) and `2026-10-11-intake-split/fixture/`; `README.md` skill tab
 Impact boundary: one new skill, plugin manifest and CHANGELOG, three inventory rows, one new
 replay package. Grep done 2026-10-12: the skill inventory is stated in `README.md` (table),
 `docs/ARCHITECTURE.md:45` (tree) and `docs/PRD.md` (feature map); no "three skills" count exists;
-`MANIFEST.md` line 10 describes the frozen extraction and stays. Check 4a scans the new file by its
-`Target model:` line; no checker lists skills by name. Not read: the hook, other commands.
+`MANIFEST.md` line 10 describes the frozen extraction and stays. Check 4a scans only `.md` files
+containing `prompt artifact and follows` (`scripts/check-invariants.sh` 4a); no checker lists skills
+by name. Not read: the hook, other commands.
 
 ## Handover boundary
 
@@ -97,29 +103,38 @@ the checks script's form.
 
 - [ ] **Step 1:** Write the fixture and the five tickets. Verify: filenames sort to the dates the
   spec gives; T-4 shares T-2's date; T-5 is the oldest.
+- [ ] **Step 1a: Assemble `fixture-template/`** in the scratchpad, outside any git checkout, as the
+  precedent README's "Re-running" does: `agents-md.md` restored to `AGENTS.md`, `review-gates.md`
+  moved to `.claude/`, the story and five tickets in place; `git init -b main`; one commit. The
+  README records the assembly steps and that commit as the fixture base the checks compare
+  against. Preflight: `AGENTS.md`, `.claude/review-gates.md`, the story and T-1…T-5 tracked, one
+  commit, clean index and worktree. Any mismatch stops before a run.
 - [ ] **Step 2:** Write `prompts.md`, `runner.md` (precedent run.sh, variants `baseline` →
   0.23.0 copy at `6b15993`, `candidate` → copy at the measured commit) and `checks.md`: the
   mechanical rows of the spec §3 table scripted per run, the reading rows listed per case.
 - [ ] **Step 3: Dry check of the checker.** Build a throwaway fixture copy in the scratchpad, write
   one hand-made T-6 ticket and commit it; run checks.sh: expected PASS on the K1/K2 rows. Break it
   (second category value; a T-3 edit; a second file in the commit): expected FAIL naming each row.
-  Run it on the untouched copy for K3/L: expected PASS. Nothing from this dry check is kept.
+  Run it on the untouched copy for K3/L: expected PASS; then on three copies with an untracked new
+  ticket, an unstaged edit to T-2, and a new commit: expected FAIL on the K3/L row each time.
+  Nothing from this dry check is kept.
 - [ ] **Step 4:** Commit by name with `docs: K8 replay package — fixture, prompts, checks (before runs)`.
   Before committing confirm every staged path is `docs/**.md`, none named `AGENTS.md`/`CLAUDE.md`
   or under `.claude/`, `plugins/`, `skills/`, `commands/`; the README records this commit as the
   checks commit.
 - [ ] **Step 5: Baseline runs.** 1 × K1, K2, K3 on the 0.23.0 copy via `/dev-workflow:intake`
-  per spec §3 validity rule. Keep every run. Expected: no ticket file in any run.
+  per spec §3 validity rule. Keep every run. Expected: no new ticket file in any run and T-1…T-5
+  unchanged against the fixture base. The per-run evidence goes into the package with Task 3.
 
-### Task 2: The skill, version, inventory — through Gate B
+### Task 2: The skill, version, inventory — to the WIP snapshot
 
 **Files:**
 - Create: `plugins/dev-workflow/skills/ticket/SKILL.md`
 - Modify: `plugins/dev-workflow/.claude-plugin/plugin.json` (version), `plugins/dev-workflow/CHANGELOG.md`,
   `README.md` (one table row), `docs/ARCHITECTURE.md:45`, `docs/PRD.md` (one feature-map row)
 
-**Outcome:** the skill carries spec §2.1–2.8 in the sections §2.1 lists; battery green; Gate B
-closed.
+**Outcome:** the skill carries spec §2.1–2.8 in the sections §2.1 lists; battery green; a `WIP:`
+commit ready for measurement.
 
 **Decided already:** spec §2 entire, including the inline template (§2.4), the slug rule restated
 in full, the severity meanings in one line, the hand-off texts, the `list` format and the stated
@@ -128,24 +143,19 @@ compaction limit (§2.1). Example domain: an invoice PDF service.
 **Implementer's decision space:** wording and order inside each section within spec §2 and
 prompt-standards; the Common mistakes list; CHANGELOG wording in the file's form.
 
-- [ ] **Step 1:** Write the skill. Measure its size (`wc -c`); over 15,000 → note why it was not
-  split, for the PR.
-- [ ] **Step 2:** Run `sh scripts/check-invariants.sh`. Expected: PASS, 4a counting one
-  `Target model:` line in the new file. Probe: a scratch copy with the line removed fails 4a.
+- [ ] **Step 1:** Write the skill. Measure its size in characters (`LC_ALL=en_US.UTF-8 wc -m`);
+  over 15,000 → note why it was not split, for the PR.
+- [ ] **Step 2:** Run `sh scripts/check-invariants.sh`. Expected: PASS. Probe in a scratch clone
+  of the worktree: `grep -rl 'prompt artifact and follows'` lists the new skill, and with its
+  `Target model:` line removed 4a fails naming that file.
 - [ ] **Step 3: Reading checks.** The skill against all 12 prompt-standards items, and against each
   Review Focus line; note results for the PR. Fix before Gate B.
 - [ ] **Step 4:** Bump to 0.24.0, CHANGELOG entry, the three inventory rows.
 - [ ] **Step 5:** Battery (AGENTS.md § Commands, quality row). Expected: exit 0.
-- [ ] **Step 6: Gate B.** `git commit -m 'WIP: ticket skill 0.24.0'` staging the six paths by
-  name; `sh scripts/check-version-bump.sh main` (expected pass); Gate B per
-  `.claude/review-gates.md` — fresh nonce, floor 3 per the story at level 1, cap 5, two sequential
-  single-branch calls per pass, story path carried, evidence entry quoted, dispositions files,
-  standing lens. Evidence entry: battery green and check 4a's probe; the behavioural claim is the
-  named verification of Task 3, pending here, its counterfactual the Task 1 baseline. Close by
-  `git commit --amend` with the real message, provenance line, curve, ledger check and evidence
-  entry.
+- [ ] **Step 6:** `git commit -m 'WIP: ticket skill 0.24.0'` staging the six paths by name;
+  `sh scripts/check-version-bump.sh main`. Expected: pass.
 
-### Task 3: Candidate runs and results
+### Task 3: Candidate runs (the check), then Gate B
 
 **Files:**
 - Create in the package: `evidence/` (per run: the ticket file or output, commit subject and
@@ -153,18 +163,33 @@ prompt-standards; the Common mistakes list; CHANGELOG wording in the file's form
   (per run, per check, verdict linked to evidence; baseline vs candidate); update `README.md`
   (measured commit, skill sha256, run counts).
 
-**Outcome:** 3 × K1, 3 × K2, 3 × K3, 1 × L on the Task 2 closing commit, reported per spec §3.
+**Outcome:** 3 × K1, 3 × K2, 3 × K3, 1 × L on the `WIP:` snapshot, reported per spec §3; then Gate
+B closed with that result as its evidence.
 
-- [ ] **Step 1:** Copy `plugins/dev-workflow` at the Task 2 closing commit; record its skill
-  sha256. Confirm one run's init record lists exactly one `dev-workflow` at that copy, else stop.
-- [ ] **Step 2:** Run the ten runs; re-run an invalid one once; a case still short is
-  **incomplete** — report and stop.
+- [ ] **Step 1:** Copy `plugins/dev-workflow` at the `WIP:` commit (`git archive`); record its
+  skill sha256. Confirm one run's init record lists exactly one `dev-workflow` at that copy, else
+  stop.
+- [ ] **Step 2:** Run the ten runs; re-run an invalid one once. A case still short is
+  **incomplete**: fold the runs held so far, their validity causes, the quotas and the verdict
+  "incomplete" into the package as step 5 does, link them from the handover, and stop.
 - [ ] **Step 3:** checks.sh plus the reading checks on every valid run. Expected for adoption:
   every valid run passes every check of its case.
 - [ ] **Step 4 (only on failure):** investigate and report in `compare.md`. A correction with a
   stated reason goes back through Task 2 (new Gate-B cycle) and a fresh full candidate set; the
   failed set stays. A second failing set, or a cap, stops and goes to Daniel.
-- [ ] **Step 5:** Commit the results by name, with the docs-only path check of Task 1 step 4.
+- [ ] **Step 5:** Fold the results into the `WIP:` commit: stage the package files by name, then
+  `git commit --amend --no-edit`, so the snapshot stays the tip and Gate B reviews skill and
+  evidence together. No separate commit: a non-`WIP` commit here would reset the hook's Gate-B
+  state.
+- [ ] **Step 6: Gate B** per `.claude/review-gates.md` — fresh nonce, floor 3 per the story at
+  level 1, cap 5, two sequential single-branch calls per pass on the `WIP:` commit, story path
+  carried, evidence entry quoted, dispositions files, standing lens, the Review Focus lines named.
+  Evidence entry: the battery green; check 4a's probe; the named verification — the replay result
+  per case on the measured skill sha256, with its counterfactual the Task 1 baseline (no ticket
+  file produced on 0.23.0). **A Gate-B repair that changes `SKILL.md`** makes the entry stale: run
+  a fresh complete candidate set on the repaired text, fold it into the package, revalidate the
+  entry, then re-review; the earlier set stays. Close by `git commit --amend` with the real
+  message, provenance line, curve, ledger check and evidence entry.
 
 ### Task 4: PR
 
@@ -172,7 +197,8 @@ prompt-standards; the Common mistakes list; CHANGELOG wording in the file's form
   prompt-standards result; run results per case; open obligations: the 20 owed hardenings of
   cycle ocgrixmmce (e4f3071) and any from this plan's cycles; the pass-3 Minors collected.
 - [ ] **Step 2:** CI and bots per `docs/pr-review-bots.md`; `/dev-workflow:process-pr-review`.
-- [ ] **Step 3: Measured-revision gate.** The PR head's skill sha256 must equal the README's. A
+- [ ] **Step 3: Measured-revision gate.** The PR head's skill sha256 must equal the README's
+  latest measured set. A
   later skill change needs its own Gate-B cycle and a fresh full candidate set, or goes to Daniel.
 - [ ] **Step 4:** Merge word from the orchestrator. Squash body carries every record of the
   branch: Gate-A spec and plan cycles' provenance, curves, ledger and owed lines; every Gate-B
