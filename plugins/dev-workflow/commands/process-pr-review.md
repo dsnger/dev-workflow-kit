@@ -183,7 +183,7 @@ be ambiguous, which is not an instruction.
    checked:** a bot finding that reports the same occurrence as a `hardening owed` line
    written by a gate cycle inside this pull request's own range (merge-base to head) is not
    checked again and is not counted as a new occurrence — that line already carries it as an
-   open obligation (`.claude/review-gates.md`, Mechanics, the ledger check). Same occurrence
+   open obligation (`.claude/review-gates.md`, Closing act, the ledger check). Same occurrence
    means the same defect at the same place, still unrepaired or repaired by that cycle; your
    report names the owed line it matched. A defect reintroduced after that repair, or any
    doubt about the match, takes the ordinary route above. Only owed lines are matched: a bot

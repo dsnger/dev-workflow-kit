@@ -7,8 +7,7 @@ description: Use when a review finding (Codex Gate A/B, a PR bot, or manual revi
 
 ## Overview
 
-A review finding is only *closed* when the most deterministic tool that fits will
-catch it next time. **What a deterministic tool can catch does not belong in the
+**What a deterministic tool can catch does not belong in the
 Codex gate.** This skill takes one finding, hardens it at the right rung of the
 ladder, verifies, and records it in `docs/hardening-log.md` so recurrence is
 mechanical.
@@ -43,24 +42,12 @@ project's actual config files and commands from `AGENTS.md § Commands`.
 | Rung | Fits when | Where | Verify with |
 |---|---|---|---|
 | 0 · already caught | an existing **required** check already **fails the gate** on it | — | note it, stop |
-| 1 · prose | a convention/judgment call no tool can adjudicate | `AGENTS.md` | grep the rule is present, no contradiction |
 | 2 · lint | a mechanical code pattern | the project's linter/static-analysis config | the project's lint command |
-| 3 · type | expressible in the type system | the project's type config / shared types | the project's typecheck command |
 | 4 · test | a behavioral / logic invariant | the project's test suite, next to the code under test | the project's test command |
-| P · prompt-standard | the finding is in a prompt artifact (skill, gate prompt, hook, command, agent definition) | `docs/prompt-standards.md` | checklist self-review |
 
 - A non-blocking **warning** (a `warn`-level rule, a diagnostic that doesn't fail the
   quality command) is **not** rung 0 — it slipped through because nothing blocked it.
   Making it block (warn→error, zero-tolerance flag) is a rung-2 hardening.
-- Prefer the strongest deterministic rung that fits: a security/ACL finding tries
-  lint/type/test **before** prose, because a tool that fails the build beats a
-  convention someone can forget.
-- **"One rung stronger" for non-mechanical rungs (1, P):** escalation isn't always a
-  higher number. Rung 1 → jump to a mechanical rung if the pattern turned out
-  tool-decidable; else sharpen the `AGENTS.md` wording and record that *no
-  deterministic rung exists* (the log's recurrence count is then the signal). Rung P
-  → sharpen the checklist item / add a concrete example → a spec/plan template or
-  gate-hook enforcement if already in scope.
 
 ## Flow
 
@@ -77,8 +64,6 @@ project's actual config files and commands from `AGENTS.md § Commands`.
    match the `finding`/`ref` columns:
    `grep -nE '^\| *[0-9-]{10} *\| *<fingerprint> *\|' docs/hardening-log.md`
    - no match → new; continue with the fitting rung.
-   - latest matching row is a real rung (1–4/P) → the prior rung didn't hold;
-     propose **one rung stronger**, with reasoning.
    - latest matching row is `pending` → report **blocked by an existing
      prerequisite** (point at its `ref`); do not escalate — no hardening landed yet.
 4. **Propose rung** — state the rung and *why* in one clause. If it's ambiguous (fits
@@ -154,11 +139,7 @@ greps for. New classes are kebab-case `domain-problem-class` and land in
 ## Log format
 
 Append to `docs/hardening-log.md` — its header defines the columns, enums, and
-escaping. You supply: the canonical `fingerprint`, a short one-line escaped `finding`
-(escape any `|` as `\|`), the `rung` short-name (`2 lint`, `4 test`, `1 prose`,
-`P std`, `pending`), and a concrete `ref`. Resolve a `pending` row by appending a new
-row (same fingerprint, `ref` naming the prior row's date + anchor); never edit an
-existing row.
+escaping.
 
 ## Example
 
@@ -185,7 +166,6 @@ access"; source: `gate-b`; severity: `major`.
 
 - Logging a rung-0 already-caught finding (the log is a hardening ledger).
 - Treating a non-blocking warning as rung 0 (making it block is rung 2).
-- Filing an auth/ACL finding as prose when a lint/type/test would catch it.
 - Grepping the whole log line instead of the anchored column-2 pattern (false hits
   on the `finding`/`ref` columns).
 - Escalating a `pending` recurrence instead of reporting blocked-by-prerequisite.

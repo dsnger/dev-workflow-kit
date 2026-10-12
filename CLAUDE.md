@@ -80,8 +80,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 Ground progress claims: before reporting a step as done, audit the claim against a tool result from this session ("tests green" needs a test run to point to). Report unverified work as unverified — this keeps status reports factual on long runs.
 
-The work loop includes the review gates: **spec ready → Gate A (spec) → Gate-A closing act → plan ready → Gate A (plan) → Gate-A closing act → execute → tests green → Gate B → Gate-B closing act** (see §5, which states when each act may be performed and what it is).
-
 ### Spec, plan and code — what each decides
 
 - **Spec:** intended behaviour and scope; boundaries and shared contracts; significant architecture and security decisions; acceptance criteria. Internal implementation stays open where those commitments permit.
@@ -114,7 +112,7 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 **The full rules live in `.claude/review-gates.md`. Read that file in full before any
 work it governs: any Gate A or Gate B pass, resuming or closing a cycle, any commit,
 preparing a merge, and deciding a change needs no gate.** Every reference to
-§5 (its Mechanics, Profiles, closure ordering or gate prompt) means that file.
+§5 means that file.
 
 Why it is separate: inline, it pushed the instruction files past Claude Code's
 150k-character limit. Why under `.claude/`: the gate hook treats that path as a prompt,

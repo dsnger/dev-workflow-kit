@@ -22,6 +22,19 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.24.0
+
+- Delete the expanded gate procedures in favor of keep-list B1–B10: Gate A on specs and
+  high-risk plans, Gate B on non-docs-only diffs, floor 3, cap 5 with a human decision,
+  compact pass/disposition records and the closing ledger records. A cap answer may close.
+- Delete the working-record and replay duties; synchronize the repository and scaffold rules.
+- Delete prose, type and prompt-standard hardening branches; hardening uses lint or tests.
+  Findings fitting neither remain findings without a hardening debt.
+- Delete intake amendment procedure prose and examples, retaining its accounting rule and
+  closed-set template. Align check 4h's dispositions vocabulary with B5.
+- Verbatim pre-shrink archives and the deletion audit are in `docs/history/`;
+  see `docs/history/strike-list-2026-10-12.md`.
+
 ## 0.23.0
 
 - **intake's change record has a place for a criterion added with no earlier condition.** The

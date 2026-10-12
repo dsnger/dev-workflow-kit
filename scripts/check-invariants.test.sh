@@ -32,7 +32,7 @@ SEV_LINE='Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other
 # (inside `### 2.1a` in the command file). Kept identical to the checker's LR_REQ on
 # purpose: a drift between the two turns every accept case red.
 # shellcheck disable=SC2016  # literal Markdown backticks and placeholders, not expansions
-LR_LINES='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `not fixed` | `same as <SLOT>:<m>` — no other token.
+LR_LINES='Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.
 cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
 cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>
 cycle <NONCE>; hardening <SLOT>:<n>: rung <RUNG>
@@ -451,7 +451,8 @@ done
 #              20, 22, 20, 22, 7, 32, unchanged.
 #   4h -> 28   every `4h:` reject case (27, the unreadable case run as non-root) and
 #              `4h ledger-check record parser failure fires`; no accept case moved
-#              (measured 2026-10-10, when 4h was added). The shared initializer and sev_tpl
+#              (re-measured 2026-10-12 after B5 changed the verdict enum; unchanged).
+#              Originally measured 2026-10-10. The shared initializer and sev_tpl
 #              gained the seven 4h lines the same day; 4a-4g re-measured after it: 20, 22,
 #              20, 22, 9, 32, 11, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
