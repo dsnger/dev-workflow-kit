@@ -38,6 +38,7 @@ a copy that can go stale.
 | Review gates (Gate A on every spec and high-risk plans, Gate B on non-docs-only diffs) | shipped | [`.claude/review-gates.md`](../.claude/review-gates.md) |
 | Hardening ledger | shipped | [`harden-finding` skill](../plugins/dev-workflow/skills/harden-finding/SKILL.md), [`hardening-log.md`](hardening-log.md) |
 | Intake (story capture, amendment route) | shipped | [`intake` skill](../plugins/dev-workflow/skills/intake/SKILL.md) |
+| Tickets (bugs and improvements inside approved commitments) | shipped | [`ticket` skill](../plugins/dev-workflow/skills/ticket/SKILL.md) |
 | Scaffolding (`/workflow-init`, `/claude-init`) | shipped | [`workflow-init`](../plugins/dev-workflow/commands/workflow-init.md), [`claude-init`](../plugins/dev-workflow/commands/claude-init.md) |
 | Telemetry reports | shipped in parts | [vision §7](superpowers/specs/2026-08-30-dark-factory-vision.md#7-build-path-each-leaf-is-one-story-numbered-entries-are-ordering-groups) step 2; [`ARCHITECTURE.md` § Components](ARCHITECTURE.md#components) |
 | Orchestrator / lane | planned | [vision §7](superpowers/specs/2026-08-30-dark-factory-vision.md#7-build-path-each-leaf-is-one-story-numbered-entries-are-ordering-groups) step 3 |
