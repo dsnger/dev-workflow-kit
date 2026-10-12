@@ -134,7 +134,7 @@ mk_path() { # $1 = directory name under $sandbox, $2.. = commands to link
 # computes `unavailable` and takes a different branch, so a matrix claiming to compare
 # jq and jq-free would be comparing two different code paths. The oracle for that is
 # asserted below, right after the PATH is built.
-nojq=$(mk_path nojq cat grep sed head tr git mkdir rm mv cp mktemp awk shasum sha1sum cksum)
+nojq=$(mk_path nojq cat grep sed head tr ls git mkdir rm mv cp mktemp awk shasum sha1sum cksum)
 
 # A jq-free PATH whose `sed` fails ONLY for the fallback emitter's escaping pass. Prints
 # nothing when the real sed cannot be located, so the caller can skip its assertions.
@@ -3032,6 +3032,165 @@ out=$(commitpre)
 printf '%s' "$out" | grep -qF 'fingerprint and floor checks do not apply' && pass "43j: docs-only note names what it skips" || fail "43j: docs-only note names what it skips"
 [ "$(ncap "$out")" = 1 ] && pass "43j: docs-only commit at the cap -> cap message once" || fail "43j: docs-only commit at the cap -> cap message once"
 git reset -q >/dev/null 2>&1; rm -rf docs
+reset_all
+
+# 44. COMPACTION RE-INJECTION (story S4, 2026-10-12). hooks.json registers SessionStart with
+#     matcher `compact`; Claude Code adds a SessionStart hook's plain stdout to the model's
+#     context, so the hook prints at most ten plain lines from state that exists and exits 0:
+#     line 1 always (the rules pointer); line 2 the cycle (nonce from the newest findings
+#     slot, both counts over the floor, the fingerprint freshness); line 3 the open stop.
+#     No JSON, no new state file.
+compact() { run '{"hook_event_name":"SessionStart","source":"compact","session_id":"s","cwd":"."}'; }
+nlines() { printf '%s\n' "$1" | grep -c ''; }
+line1='dev-workflow: context was compacted. Binding rules file: .claude/review-gates.md (read it before gate work).'
+reviews=.context/codex-reviews
+mkdir -p "$reviews"
+
+# 44a. no state -> exactly line 1, no JSON, exit 0. The opt-out marker silences this too
+#      (README and the degraded-mode setup promise silence while it exists), a repository
+#      that has not adopted the workflow hears nothing, and a SessionStart that is not a
+#      compaction prints nothing (the registration matches `compact` only; the branch
+#      checks `source` so a wider registration cannot announce a compaction that was not).
+reset_all; rm -f "$reviews"/gate-*
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && pass "44a: compaction with no state exits 0" || fail "44a: compaction with no state exits 0 (got $rc)"
+[ "$out" = "$line1" ] && pass "44a: no state -> exactly line 1" || fail "44a: no state -> exactly line 1 (got [$out])"
+: > "$offf"
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "44a: opt-out marker -> compaction prints nothing" || fail "44a: opt-out marker -> compaction prints nothing (rc $rc, got [$out])"
+rm -f "$offf"
+mv .context/codex-gate.on "$sandbox/on.bak"
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "44a: non-adopted repository -> compaction prints nothing" || fail "44a: non-adopted repository -> compaction prints nothing (rc $rc, got [$out])"
+mv "$sandbox/on.bak" .context/codex-gate.on
+out=$(run '{"hook_event_name":"SessionStart","source":"startup","session_id":"s","cwd":"."}'); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "44a: SessionStart with source startup -> nothing" || fail "44a: SessionStart with source startup -> nothing (rc $rc, got [$out])"
+
+# 44b. full state -> three lines, every segment from its source
+reset_all; rev; rev; execp
+printf 'MAJOR | high | x | y | z | w\nEND OF FINDINGS (1 total)\n' > "$reviews/gate-b-spec-abcdefgh-pass-1.md"
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && pass "44b: compaction with full state exits 0" || fail "44b: compaction with full state exits 0 (got $rc)"
+[ "$(nlines "$out")" = 3 ] && pass "44b: full state -> three lines" || fail "44b: full state -> three lines (got $(nlines "$out"))"
+[ "$(printf '%s\n' "$out" | sed -n 1p)" = "$line1" ] && pass "44b: line 1 is the rules pointer" || fail "44b: line 1 is the rules pointer"
+l2=$(printf '%s\n' "$out" | sed -n 2p)
+[ "$l2" = 'Gate cycle: nonce abcdefgh · Gate A passes 1/3 · Gate B passes 2/3 · fingerprint fresh' ] \
+  && pass "44b: line 2 carries nonce, both counts and a fresh fingerprint" || fail "44b: line 2 carries nonce, both counts and a fresh fingerprint (got [$l2])"
+[ "$(printf '%s\n' "$out" | sed -n 3p)" = 'Open stop: none' ] && pass "44b: line 3 reports no open stop" || fail "44b: line 3 reports no open stop"
+printf '%s' "$out" | grep -q 'hookSpecificOutput' && fail "44b: compaction output is plain text, not JSON" || pass "44b: compaction output is plain text, not JSON"
+
+# 44c. the fingerprint segment: stale after an edit, unavailable when recorded so, and the
+#      recorded value is read exactly as the commit check reads it — a stored hash with a
+#      space in it cannot confirm anything there, so it is stale here, never fresh.
+printf 'edit\n' >> app.ts
+printf '%s' "$(compact)" | grep -q 'fingerprint stale' && pass "44c: edit after review -> fingerprint stale" || fail "44c: edit after review -> fingerprint stale"
+git checkout -- app.ts >/dev/null 2>&1
+h44=$(cat "$state")
+printf ' %s' "$h44" > "$state"
+printf '%s' "$(compact)" | grep -q 'fingerprint stale' && pass "44c: whitespace inside the recorded fingerprint -> stale, as at commit" || fail "44c: whitespace inside the recorded fingerprint -> stale, as at commit"
+printf '%s' "$h44" > "$state"
+printf 'unavailable' > "$state"
+printf '%s' "$(compact)" | grep -q 'fingerprint unavailable' && pass "44c: recorded unavailable -> fingerprint unavailable" || fail "44c: recorded unavailable -> fingerprint unavailable"
+
+# 44d. the newest USABLE slot wins — by mtime, not by name, and a newer directory or legacy
+#      bare slot does not hide an older file that carries a nonce; a legacy slot alone
+#      carries none; partial state prints only the segments it has.
+# The older slot sorts FIRST by name, so a listing that lost its mtime order would pick it.
+rm -f "$reviews"/gate-*
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-zz99zz99zz-pass-2.md"
+touch -t 202601010000 "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
+touch -t 202601020000 "$reviews/gate-b-spec-zz99zz99zz-pass-2.md"
+printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: newest slot by mtime supplies the nonce" || fail "44d: newest slot by mtime supplies the nonce"
+touch -t 202601030000 "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
+printf '%s' "$(compact)" | grep -q 'nonce aa11aa11aa' && pass "44d: touching the name-first slot makes it newest" || fail "44d: touching the name-first slot makes it newest"
+rm -f "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
+mkdir -p "$reviews/gate-b-spec-newdir0000-pass-9.md"
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"
+printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: newer directory and legacy slot do not hide the older nonce" || fail "44d: newer directory and legacy slot do not hide the older nonce"
+rmdir "$reviews/gate-b-spec-newdir0000-pass-9.md"
+rm -f "$reviews"/gate-*
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"
+out=$(compact)
+printf '%s' "$out" | grep -q 'nonce' && fail "44d: legacy bare slot -> no nonce segment" || pass "44d: legacy bare slot -> no nonce segment"
+reset_all; rm -f "$reviews"/gate-*; execp
+l2=$(printf '%s\n' "$(compact)" | sed -n 2p)
+[ "$l2" = 'Gate cycle: Gate A passes 1/3' ] && pass "44d: Gate A count alone -> only that segment" || fail "44d: Gate A count alone -> only that segment (got [$l2])"
+
+# 44e. the open stop: a gate at its cap
+reset_all; rm -f "$reviews"/gate-*; rev; rev; rev; rev; rev
+printf '%s' "$(compact)" | grep -q 'Open stop: pass cap reached — answer pending' && pass "44e: cap reached -> open stop reported" || fail "44e: cap reached -> open stop reported"
+printf '2' > "$capxf"
+printf '%s' "$(compact)" | grep -q 'Open stop: none' && pass "44e: cap-extra on file -> no open stop" || fail "44e: cap-extra on file -> no open stop"
+
+# 44f. corrupt state -> exit 0, prints what it can, never more than ten lines. A count that
+#      exists but cannot be read as a number is `?`, and with one in play the open stop is
+#      `unknown`, never `none`: an unreadable counter may hide a pending cap stop.
+reset_all; rm -f "$reviews"/gate-*
+printf 'garbage\n\n\n' > "$count"; printf '1' > "$countA"; printf '\n' > "$state"
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && pass "44f: corrupt state exits 0" || fail "44f: corrupt state exits 0 (got $rc)"
+[ "$(nlines "$out")" -le 10 ] && pass "44f: corrupt state -> at most ten lines" || fail "44f: corrupt state -> at most ten lines"
+[ "$(printf '%s\n' "$out" | sed -n 1p)" = "$line1" ] && pass "44f: corrupt state -> line 1 still printed" || fail "44f: corrupt state -> line 1 still printed"
+printf '%s' "$out" | grep -q 'Gate B passes ?/3' && pass "44f: unreadable count prints ?" || fail "44f: unreadable count prints ?"
+printf '%s' "$out" | grep -q 'fingerprint unavailable' && pass "44f: blank recorded fingerprint -> unavailable" || fail "44f: blank recorded fingerprint -> unavailable"
+printf '%s' "$out" | grep -q 'Open stop: unknown (unreadable pass count)' && pass "44f: unreadable count -> open stop unknown" || fail "44f: unreadable count -> open stop unknown"
+# A huge numeric count is a number past any cap: it fires, as cap_check does, and the
+# line stays one line.
+reset_all; printf '%s\n' "$(printf '%0400d' 0)" > "$countA"
+out=$(compact); rc=$?
+[ "$rc" = 0 ] && [ "$(nlines "$out")" = 3 ] && pass "44f: a 400-digit count -> three lines, exit 0" || fail "44f: a 400-digit count -> three lines, exit 0 (rc $rc, $(nlines "$out") lines)"
+printf '%s' "$out" | grep -q 'Open stop: pass cap reached' && pass "44f: a 400-digit count -> past the cap" || fail "44f: a 400-digit count -> past the cap"
+reset_all; printf '5' > "$count"; chmod 0000 "$count" 2>/dev/null
+if probe_denies "cat \"$count\""; then
+  out=$(compact); rc=$?
+  [ "$rc" = 0 ] && pass "44f: count file denied -> exits 0" || fail "44f: count file denied -> exits 0 (got $rc)"
+  printf '%s' "$out" | grep -q 'Gate B passes ?/3' && pass "44f: count file denied -> ?, not 0" || fail "44f: count file denied -> ?, not 0"
+  printf '%s' "$out" | grep -q 'Open stop: unknown' && pass "44f: count file denied -> open stop unknown" || fail "44f: count file denied -> open stop unknown"
+else
+  skip "44f: unreadable count file (chmod does not deny reads here — running as root?)"
+fi
+chmod 0644 "$count" 2>/dev/null
+# A FIFO at a state path is never read (cat would block until a writer appears). Bounded
+# wait, so a regression fails instead of hanging the suite.
+reset_all; rm -f "$count" "$state"; mkfifo "$count" "$state" 2>/dev/null
+if [ -p "$count" ] && [ -p "$state" ]; then
+  compact > "$sandbox/fifo.out" 2>/dev/null & fp44=$!
+  i44=0; while kill -0 "$fp44" 2>/dev/null && [ "$i44" -lt 5 ]; do sleep 1; i44=$((i44 + 1)); done
+  if kill -0 "$fp44" 2>/dev/null; then
+    kill "$fp44" 2>/dev/null; : > "$count" 2>/dev/null & : > "$state" 2>/dev/null & wait
+    fail "44f: FIFO at a state path -> hook finishes (it blocked)"
+  else
+    wait "$fp44"; pass "44f: FIFO at a state path -> hook finishes"
+    out=$(cat "$sandbox/fifo.out")
+    printf '%s' "$out" | grep -q 'Gate B passes ?/3' && pass "44f: FIFO count -> ?" || fail "44f: FIFO count -> ?"
+    printf '%s' "$out" | grep -q 'fingerprint unavailable' && pass "44f: FIFO fingerprint -> unavailable" || fail "44f: FIFO fingerprint -> unavailable"
+  fi
+else
+  skip "44f: mkfifo unavailable here"
+fi
+rm -f "$count" "$state" "$sandbox/fifo.out"
+
+# 44h. A checkout path with spaces keeps the nonce: only basenames are word-split.
+sp44="$sandbox/repo with space"
+mkdir -p "$sp44/.context/codex-reviews"
+( cd "$sp44" && git init -q && : > .context/codex-gate.on \
+  && printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > .context/codex-reviews/gate-b-spec-spaced001-pass-1.md \
+  && printf '%s' '{"hook_event_name":"SessionStart","source":"compact","session_id":"s","cwd":"."}' | "$HOOK_SH_BIN" "$HOOK" ) > "$sandbox/sp.out" 2>/dev/null
+grep -q 'nonce spaced001' "$sandbox/sp.out" && pass "44h: checkout path with spaces keeps the nonce" || fail "44h: checkout path with spaces keeps the nonce"
+rm -rf "$sp44" "$sandbox/sp.out"
+
+# 44g. jq-free path: the same first line with no state, and the full three lines with state.
+reset_all; rm -f "$reviews"/gate-*
+out=$(nojq_run '{"hook_event_name":"SessionStart","source":"compact","session_id":"s","cwd":"."}')
+[ "$out" = "$line1" ] && pass "44g: jq-free compaction -> line 1" || fail "44g: jq-free compaction -> line 1 (got [$out])"
+reset_all; rev; rev; execp
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-quality-jqfree001-pass-1.md"
+out=$(nojq_run '{"hook_event_name":"SessionStart","source":"compact","session_id":"s","cwd":"."}')
+[ "$(printf '%s\n' "$out" | sed -n 2p)" = 'Gate cycle: nonce jqfree001 · Gate A passes 1/3 · Gate B passes 2/3 · fingerprint fresh' ] \
+  && pass "44g: jq-free compaction -> full line 2" || fail "44g: jq-free compaction -> full line 2 (got [$(printf '%s\n' "$out" | sed -n 2p)])"
+[ "$(printf '%s\n' "$out" | sed -n 3p)" = 'Open stop: none' ] && pass "44g: jq-free compaction -> line 3" || fail "44g: jq-free compaction -> line 3"
+rm -f "$reviews"/gate-*
 reset_all
 
 reset_all
