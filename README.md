@@ -167,7 +167,7 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 ## Contributing
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
-PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
+PR and push to main: `shellcheck --shell=sh` over the four shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus five prompt-conformance checks) plus
 both checkers' regression suites, [`scripts/check-doc-links.sh`](scripts/check-doc-links.sh)

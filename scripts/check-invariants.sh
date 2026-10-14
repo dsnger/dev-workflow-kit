@@ -1000,10 +1000,13 @@ rg_judge() { # $1 = what was measured, $2 = its byte count (anything else is a f
        fi ;;
   esac
 }
-# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. Returns 2 if awk failed.
+# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. A ````markdown line inside
+# the fence is the next template opening, so the fence was never closed (as in 4e).
+# Returns 2 if awk failed.
 rg_tpl_scan() { # $1 = file
   awk '                                            # gate-rules-size-scan
-    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 } else print; next }
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
+              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
     /^### 2\.1a[[:space:]]/ { heads += 1; in21a = 1; next }
     in21a && /^### / { in21a = 0; next }
     in21a && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }

@@ -457,8 +457,9 @@ done
 #              Originally measured 2026-10-10. The shared initializer and sev_tpl
 #              gained the seven 4h lines the same day; 4a-4g re-measured after it: 20, 22,
 #              20, 22, 9, 32, 11, unchanged.
-#   4i -> 7    every `4i:` reject case (6) and `4i gate-rules size parser failure fires`; no
-#              accept case moved (measured 2026-10-14, when 4i was added). The shared
+#   4i -> 8    every `4i:` reject case (7) and `4i gate-rules size parser failure fires`; no
+#              accept case moved (re-measured 2026-10-14 after the nested-fence case; 7 when
+#              4i was added). The shared
 #              initializer's `### 2.1a` gained a fence and 4e its nested-fence rule the same
 #              day; 4a-4h re-measured after both: 20, 22, 20, 22, 9, 34, 11, 28, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
@@ -1344,6 +1345,11 @@ ti_case "4i: two fences in 2.1a rejected"               1 "@KEEP@" \
   '2 ````markdown fences'
 ti_case "4i: unclosed fence rejected"                   1 "@KEEP@" \
   "$(ti_cmd 100 | sed '/^````$/d')" 'and 0 closed'
+# The real layout: another template follows 2.1a, and its closing line must not close 2.1a's.
+# shellcheck disable=SC2016  # literal Markdown fences, not command substitution
+ti_case "4i: unclosed fence before the next template rejected" 1 "@KEEP@" \
+  "$(ti_cmd 100 | sed '/^````$/d' | awk '{ print } /^### 2\.2 next/ { print "````markdown"; print "x"; print "````" }')" \
+  'and 0 closed'
 inject_case "4i gate-rules size parser failure fires" awk '*gate-rules-size-scan*' \
   'gate rules size: the template parser failed'
 

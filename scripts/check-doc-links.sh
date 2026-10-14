@@ -9,7 +9,8 @@
 # 2026-10-14, 153 distinct ones did not resolve, because they name files in initialized
 # projects, placeholders and future artifacts; nothing tells those apart from a typo),
 # links inside code spans or fences (they are checked like any other line), external URLs,
-# and targets containing a space or parenthesis. Skipped trees: `source-files/` (frozen
+# and targets containing a space or parenthesis (so a link with a title is skipped) or written
+# in angle brackets (`](<path>)`, reported broken). Skipped trees: `source-files/` (frozen
 # archive), `docs/history/` and `docs/superpowers/replays/` (records that cite paths as they
 # were).
 #
