@@ -668,6 +668,11 @@ if wanted("p3"):
     check("p3:plan deleted on disk keeps plan written", "last evidenced phase:  plan written" in section_of(text(R), "Current work"))
     git(R, "rm", "-qf", "docs/superpowers/plans/2026-01-01-s.md")
     git(R, "commit", "-q", "-m", "drop plan")
+    # backdate every file so no source time can fall in the second the page is generated
+    for d, dirs, fs in os.walk(R):
+        dirs[:] = [x for x in dirs if x != ".git"]
+        for f in fs:
+            os.utime(os.path.join(d, f), (tick[0], tick[0]), follow_symlinks=False)
     run(R)
     w = section_of(text(R), "Current work")
     check("p4:committed plan deletion keeps plan written", "last evidenced phase:  plan written" in w, w[:500])

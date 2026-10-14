@@ -1514,7 +1514,8 @@ backlog.
       *Trigger: the first human rejection of an
       over-escalation the 2026-07-26 rows predicted, or the next round touching the skill.*
 - [ ] **`/workflow-init` CLAUDE.md template: "If that file is missing" can mean the wrong
-      directory** (2026-10-10, CodeRabbit in the SFX Bricks child theme, relayed by Daniel). The
+      directory** (2026-10-10, CodeRabbit in the SFX Bricks child theme, relayed by Daniel).
+      **2026-10-14: in the dev-workflow 0.26.0 collect-PR** (issue #66); "shipped" waits for the merge. The
       §5 pointer says a missing `.claude/review-gates.md` means "this project has no gate rules"
       and to restore it with `/workflow-init`. A session working outside the checkout root would
       read the same absence and scaffold the rules into the wrong directory. Fix in the template

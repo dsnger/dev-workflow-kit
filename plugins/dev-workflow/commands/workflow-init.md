@@ -215,6 +215,11 @@ Check, in order:
 
    Why the states are kept apart: each needs a different action, and "absent" must stay a
    complete answer. A project without the server gets no new rules and no new dependency.
+9. **Ponytail plugin** — optional. It decides whether Step 2.16 runs, and nothing else depends on
+   it. Look for `ponytail:ponytail` among the skills available to you right now. Present →
+   `installed`. Absent → `absent (optional)` with the two install commands
+   `claude plugin marketplace add DietrichGebert/ponytail` and
+   `claude plugin install ponytail@ponytail`. Absent is a complete answer, not a blocker.
 
 Print the result as a status block before you write a single file, so the user sees
 what's missing while it is still cheap to fix:
@@ -273,7 +278,9 @@ definitions of the rules, or none — and the rules themselves stop on either.
 2. **Classify §5:**
    - **pointer form** — the body after the heading line is byte-identical to the pointer
      under §5 in the `CLAUDE.md` template below, optionally preceded by exactly the `INACTIVE` notice
-     from 2.13 and one blank line;
+     from 2.13 and one blank line. The pointer written before 0.26.0 counts too: the same text
+     without the paragraph beginning `**Before you conclude that file is missing,**` and the blank
+     line after it. Rule 2 then shows that paragraph as the difference;
    - **mixed** — the body names `.claude/review-gates.md` anywhere but is not pointer form.
      An edited or re-wrapped pointer and a pointer pasted above rules that are still inline
      look the same here, so neither is assumed, and nothing that points at the rules file
@@ -485,6 +492,12 @@ work it governs: any Gate A or Gate B pass, resuming or closing a cycle, any com
 preparing a merge, and deciding a change needs no gate.** Every reference to §5
 means that file.
 
+**Before you conclude that file is missing,** check the checkout: `git rev-parse --show-toplevel`
+must print the root of the project you are working on, and the file is looked for at
+`<that root>/.claude/review-gates.md`. If it prints another directory or fails, stop and say so;
+never run `/workflow-init` into another repository. Why: a file missing from
+another directory says nothing about this project's rules.
+
 **If that file is missing, this project has no gate rules.** Stop before any work they
 govern, and restore it: `/workflow-init` writes it.
 
@@ -606,6 +619,13 @@ To resume, read the cycle nonce and latest pass file and continue there; an inco
 
 Classify a finding as MAJOR only for realistic inputs.
 When a finding class regenerates across passes, shrink the mechanism — use a platform parser, narrow scope, or delete it — instead of another repair.
+
+## Ponytail (optional)
+
+Only when the `ponytail` plugin is installed; otherwise skip this section, and nothing fails.
+Before Gate B pass 1 of a cycle, run `ponytail-review` once on the branch diff, so Codex reads a diff with the obvious cuts made: fix real defects, apply each cut or reject it in one line, and list them under "Ponytail pre-review" in the PR body, or in the closing commit's body when there is no PR.
+It is not a gate and not a pass: not counted, not repeated after Gate B passes, and no replacement for Codex, because it runs in the same model family.
+When a release version is bumped or a milestone handover is written, propose `ponytail-audit` and `ponytail-debt` once; on the user's yes, their findings become tickets through the `ticket` skill. Never run them unasked: each reads the whole repository.
 ````
 
 ### 2.2 `docs/hardening-log.md` — the empty ledger
@@ -1430,6 +1450,30 @@ observations: per role and session, reads attempted/denied/not performed <…> �
 An observation you cannot measure is written `unavailable`. The run gets one verdict per check and
 no overall score.
 
+### 2.16 Ponytail (optional) — the default mode
+
+Runs only when Step 1 item 9 reports `installed`. Without the plugin this step and the Ponytail
+section of `.claude/review-gates.md` are skipped, and nothing fails.
+
+1. **Recommend one mode from the codebase**, with one sentence saying why:
+   - `lite` when any of these holds: more than 500 tracked files that are not Markdown
+     (`git ls-files`), more than 1000 commits (`git rev-list --count HEAD`), more than 100 packages
+     in the lockfile item 6 found; or the user says the core is security or money code. Why: a
+     large or old codebase has patterns a change must follow, and `lite` builds what is asked
+     instead of cutting toward the minimum.
+   - `full` otherwise: a new or empty repository, a prototype, an ordinary running project.
+   - `ultra` is never recommended: it questions the request, and in this workflow the request is
+     settled at Gate A. It is written only when the user picks it; `off` likewise.
+
+   The user confirms or picks another.
+2. **Write** `{"env": {"PONYTAIL_DEFAULT_MODE": "<mode>"}}` into `.claude/settings.json`, merged
+   by Rule 3: a missing file is written with only this; a present file gains the key and keeps
+   everything else; a key already set → show its value and change it only if the user asks. A
+   file that is not valid JSON is not touched, since no merge into it can be shown safe: report
+   `skipped (not valid JSON)`. Ponytail 5.2.0's
+   SessionStart hook reads this variable from the project's `env` (verified: it printed
+   `level: lite`).
+
 ## Step 3 — Walk the user through `AGENTS.md`
 
 `AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the
@@ -1582,6 +1626,7 @@ Prerequisites:
   codex MCP             ok (pinned mcp-codex-dev@1.0.1)
   gh CLI                ok (optional)
   codebase-memory MCP   loaded (codebase-memory-mcp) — 2.14: protected, canary ok
+  ponytail plugin       installed — 2.16: full
   AGENTS.md             absent — written in Step 3
   stack                 pnpm · TypeScript · vitest · GitHub Actions
 
@@ -1596,7 +1641,7 @@ Scaffolded:
   todos.md                         written
   .gitattributes                   merged (union-merge line added)
   .mcp.json                        merged (codex server added)
-  .claude/settings.json            merged (codebase-memory rules — 2.14 only)
+  .claude/settings.json            merged (codebase-memory rules — 2.14; Ponytail mode — 2.16)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)
   pnpm-workspace.yaml              skipped (not a pnpm project — see checklist item 1)
 ```

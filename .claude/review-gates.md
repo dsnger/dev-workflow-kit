@@ -89,3 +89,10 @@ To resume, read the cycle nonce and latest pass file and continue there; an inco
 
 Classify a finding as MAJOR only for realistic inputs.
 When a finding class regenerates across passes, shrink the mechanism — use a platform parser, narrow scope, or delete it — instead of another repair.
+
+## Ponytail (optional)
+
+Only when the `ponytail` plugin is installed; otherwise skip this section, and nothing fails.
+Before Gate B pass 1 of a cycle, run `ponytail-review` once on the branch diff, so Codex reads a diff with the obvious cuts made: fix real defects, apply each cut or reject it in one line, and list them under "Ponytail pre-review" in the PR body, or in the closing commit's body when there is no PR.
+It is not a gate and not a pass: not counted, not repeated after Gate B passes, and no replacement for Codex, because it runs in the same model family.
+When a release version is bumped or a milestone handover is written, propose `ponytail-audit` and `ponytail-debt` once; on the user's yes, their findings become tickets through the `ticket` skill. Never run them unasked: each reads the whole repository.

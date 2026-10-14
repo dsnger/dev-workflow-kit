@@ -66,7 +66,10 @@ Follow in order. Each step says why it exists.
      The human starts intake; this skill does not invoke it, as intake leaves its own hand-off to
      the human.
      - changed commitment of a story or spec:
-       `/dev-workflow:intake Amend the approved <path>. Decision: <the human decision if the input names one; otherwise "none yet — intake will ask">. <captured text>`
+       `/dev-workflow:intake Amend the approved <path>. Decision: <the human decision, quoted>. <captured text>`.
+       When the input names no decision, write `Decision: open — a human decides before running
+       this` and name the open decision above the line. Intake's amendment route starts from a
+       decision already made, so the human decides first.
      - new behaviour, or a change to a commitment only a `docs/PRD.md` row carries (intake's
        amendment route amends only a story or spec): `/dev-workflow:intake <captured text>`
    - **The texts cannot decide it:** write the ticket in state `needs-triage` with a filled
