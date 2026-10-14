@@ -37,7 +37,7 @@ jobs:
           # merge-base. ~50 commits, so the full history costs nothing here.
           fetch-depth: 0
 
-      # The hook, the two checkers, the six Python reports and their nine suites are
+      # The hook, the three checkers, the six Python reports and their ten suites are
       # the only executables here,
       # so lint plus those suites are the only mechanical gates we have. Everything else
       # here is a prompt, and prompts have no typechecker (see README, "Contributing").
