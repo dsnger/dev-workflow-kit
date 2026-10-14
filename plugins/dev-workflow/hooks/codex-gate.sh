@@ -218,7 +218,8 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 # ALL THREE components must exclude it, and each does so a different way. The tracked
 # diff excludes it via a `:(exclude)` pathspec. The index tree excludes it by `git rm
 # --cached` against the throwaway index before that tree is written. The worktree tree
-# excludes it via the same `:(exclude)` pathspec on `add -A`. `.context/` is committed
+# excludes it via the same `:(exclude)` pathspec on `add -A`, plus that `git rm --cached`
+# for the retry an ignored `.context/` needs (see the step). `.context/` is committed
 # in some projects — the adoption marker is meant to be shared, so this is the normal
 # case, not an exotic one — and a tracked state file left in would land in `git diff
 # HEAD`, where the hook's own write would invalidate the review it just recorded and
@@ -255,12 +256,12 @@ bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev
 # GIT_INDEX_FILE keeps this off the real index, so the user's staging area is
 # untouched. `add -A` respects .gitignore, so ignored files stay out.
 tree_hash() {
-  ok=1
+  ok=1; why=''   # `why`: the FIRST component that failed, named in `unavailable <why>`
   # Same fallback order as before; no checksum tool at all is itself a failure.
-  sum_cmd=$(command -v shasum || command -v sha1sum || command -v cksum) || ok=0
+  sum_cmd=$(command -v shasum || command -v sha1sum || command -v cksum) || { ok=0; why=checksum; }
   # mktemp -d, not a predictable "$TMPDIR/name.$$": on a shared /tmp a predictable name
   # is a symlink target an attacker can plant.
-  tmp_dir=$(mktemp -d 2>/dev/null) || { tmp_dir=''; ok=0; }
+  tmp_dir=$(mktemp -d 2>/dev/null) || { tmp_dir=''; ok=0; why=${why:-temp dir}; }
   if [ -n "$tmp_dir" ]; then
     tmp_index="$tmp_dir/index"
     # The component stream is BUFFERED and checksummed only on full success (below).
@@ -273,11 +274,11 @@ tree_hash() {
       # "--verify failed" also covers a corrupt or unreadable HEAD, and emitting the
       # constant `no-head` for those would self-match.
       if git -C "$repo_root" rev-parse --verify -q HEAD >/dev/null 2>&1; then
-        git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null || ok=0
+        git -C "$repo_root" diff HEAD -- . ':(exclude).context' 2>/dev/null || { ok=0; why=${why:-diff}; }
       elif git -C "$repo_root" symbolic-ref -q HEAD >/dev/null 2>&1; then
         printf 'no-head\n'
       else
-        ok=0
+        ok=0; why=${why:-diff}
       fi
 
       # (1) INDEX tree and (2) WORKTREE tree, from one throwaway index.
@@ -311,11 +312,21 @@ tree_hash() {
          { [ ! -e "$eff_index" ] || cp "$eff_index" "$tmp_index" 2>/dev/null; } &&
          GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" rm -rfq --cached \
            --ignore-unmatch -- .context >/dev/null 2>&1 &&
-         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null &&
-         GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
-           -- . ':(exclude).context' >/dev/null 2>&1 &&
          GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
-      then :; else ok=0; fi
+      then
+        # Where `.context/` is gitignored (canvas, Bricks), git reports the exclude
+        # pathspec as naming an ignored path and exits 1, so every pass stored
+        # `unavailable` (S5). The retry without it skips the ignored directory anyway, and
+        # the `rm --cached` drops any tracked `.context` path it re-added. Same tree as the
+        # first form wherever that form works; a real failure fails the retry too.
+        if { GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A \
+               -- . ':(exclude).context' >/dev/null 2>&1 ||
+             GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" add -A -- . >/dev/null 2>&1; } &&
+           GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" rm -rfq --cached \
+             --ignore-unmatch -- .context >/dev/null 2>&1 &&
+           GIT_INDEX_FILE="$tmp_index" git -C "$repo_root" write-tree 2>/dev/null
+        then :; else ok=0; why=${why:-worktree tree}; fi
+      else ok=0; why=${why:-index tree}; fi
     } > "$tmp_dir/stream" 2>/dev/null || ok=0
   fi
 
@@ -333,7 +344,16 @@ tree_hash() {
   # marker is a CONSTANT, not a nonce: `date +%s`+`$$` can repeat under PID reuse inside
   # one second, and two colliding failures would compare equal and report satisfied.
   # Never-matching is enforced at the comparison sites instead.
-  if [ -n "$h" ]; then printf '%s\n' "$h"; else printf 'unavailable\n'; fi
+  if [ -n "$h" ]; then printf '%s\n' "$h"; else printf 'unavailable %s\n' "${why:-checksum}"; fi
+}
+# Runs tree_hash and splits its line: `fp` is the hash or the literal `unavailable` (the
+# only value ever stored or compared), `fp_note` a one-line diagnosis when it failed.
+fingerprint() {
+  fp=$(tree_hash); fp_note=''
+  case "$fp" in unavailable*)
+    fp_note="⚠ Codex Gate B: fingerprint not computable (${fp#unavailable } failed); recorded as unavailable, which never matches."
+    fp=unavailable ;;
+  esac
 }
 
 emit() { # $1 = additionalContext (model-visible), $2 = systemMessage (user)
@@ -728,7 +748,8 @@ claim_pending() {
 
 # Today's counting block, unchanged except that it now runs once per PASS.
 credit_pass() {
-  h=$(tree_hash)
+  fingerprint; h=$fp
+  [ -n "$fp_note" ] && note "$fp_note" "$fp_note"
   prev=$(cat "$state_file" 2>/dev/null || echo '')
   # A pass carrying the SAME fingerprint as the previous pass adds to the fresh
   # count; a pass on a changed fingerprint starts the count over. That is what lets
@@ -745,7 +766,13 @@ credit_pass() {
   else
     { printf '%s' 1 > "$fresh_file"; } 2>/dev/null || true
   fi
-  { printf '%s' "$h" > "$state_file"; } 2>/dev/null || true
+  # A failed write must not leave the previous pass's fingerprint standing as if it were
+  # this one's (S5, F1): remove it, so the commit check reports "no fingerprint" instead.
+  if ! { printf '%s' "$h" > "$state_file"; } 2>/dev/null; then
+    rm -f "$state_file" 2>/dev/null
+    _m='⚠ Codex Gate B: fingerprint could not be stored; .context/ or its state file is not writable.'
+    note "$_m" "$_m"
+  fi
   bump_count "$count_file"
 }
 
@@ -1279,9 +1306,10 @@ compact_lines() {
     # same bytes; `unavailable` on either side is never fresh. Not read at all when it is
     # not a regular file, for the FIFO reason above.
     reviewed=''; [ -f "$state_file" ] && reviewed=$(cat "$state_file" 2>/dev/null || echo '')
-    if [ -z "$reviewed" ] || [ "$reviewed" = unavailable ]; then fp=unavailable
+    # A read-only state file is refused here as at the commit check (S5).
+    if [ -z "$reviewed" ] || [ "$reviewed" = unavailable ] || [ ! -w "$state_file" ]; then fp=unavailable
     else
-      current=$(tree_hash)
+      fingerprint; current=$fp
       if [ "$current" = unavailable ]; then fp=unavailable
       elif [ "$current" = "$reviewed" ]; then fp=fresh
       else fp=stale
@@ -1407,21 +1435,25 @@ case "$event" in
             passes=$(read_count "$count_file")
             fresh=$(read_count "$fresh_file")
             reviewed=$(cat "$state_file" 2>/dev/null || echo '')
-            current=$(tree_hash)
+            fingerprint; current=$fp
+            [ -n "$fp_note" ] && note "$fp_note" "$fp_note"
             if [ -z "$reviewed" ]; then
               # No count ratio here on purpose: no fingerprint is recorded for this
               # cycle, so showing "N/3" would read as floor progress. `-z "$reviewed"`
               # does not mean only "no pass this cycle": a FIRST write that fails (no
               # prior fingerprint to fall back to), or a state file that cannot be read
-              # back, leaves it empty too. A failed REPLACEMENT write is different — it
-              # preserves the older, now-stale fingerprint, which reaches the STALE
-              # branch below, not this one. The message names the absent FINGERPRINT,
+              # back, leaves it empty too, and so does a failed REPLACEMENT write, which
+              # removes the older fingerprint (S5). Where even that removal fails, the
+              # file is read-only and the branch below refuses it as unconfirmable.
+              # The message names the absent FINGERPRINT,
               # not an absent review.
               note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why — no mcp__codex__review has been credited (a single-branch call waiting for its partner, and a call whose request was rejected, write no fingerprint by design), the last credit's fingerprint could not be written or read back, or a non-WIP commit attempt cleared it while the cycle itself stayed open. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.
+            # A read-only state file cannot have taken the last pass's write, so what it
+            # holds may be an older pass's fingerprint: never confirmed (S5).
             elif [ "$current" = unavailable ] || [ "$reviewed" = unavailable ] ||
-                 [ "$reviewed" != "$current" ]; then
+                 [ "$reviewed" != "$current" ] || [ ! -w "$state_file" ]; then
               # Content check, not event check: this fires for a change made through ANY
               # tool — Edit/Write, or a Bash `sed -i` / `eslint --fix` / `git apply`.
               # It names the STATE, never a cause: five states reach here and the hook

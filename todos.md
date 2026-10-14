@@ -165,7 +165,11 @@ driven by recurrence rather than by enthusiasm.
       selected `text` in its original escaped bytes, since the matcher depends on those.
       *Trigger: a serializer observed emitting escaped key or type spellings.*
 - [ ] **Two consumer Gate-B cycles closed with no usable fingerprint persisted, while counting
-      and cycle-recognition worked.** Field-reported from `infinite-portfolio-canvas` (~60+ Gate-B
+      and cycle-recognition worked.** **Status (0.25.3, story S5):** a gitignored `.context/` made
+      the worktree-tree step exit 1 on every pass, which explains a persisted `unavailable` with
+      writes working (canvas 2026-10-11 snapshot: `passes=1`, `gateB=unavailable`); fixed, and a
+      failed state write now removes the old value. (b)'s missing fingerprint is not re-examined.
+      Field-reported from `infinite-portfolio-canvas` (~60+ Gate-B
       cycles, kit 0.8.0 since mid-run); evidence is that repo's `todos.md` § Tooling
       revalidation, which carries four dated measurements, and
       `docs/field-reports/2026-08-16-canvas-a1-a5-field-report.md` item 1. Two shapes, both
@@ -374,7 +378,14 @@ driven by recurrence rather than by enthusiasm.
       is still the shape recurring; excluding it would tune the count to who was watching.
       Four occurrences of the timing gap now, three of them benign; the dangerous `tree_hash`
       consumer above is still the one that decides this row's priority.
-- [ ] **Hook repository context can differ from the operation's target worktree.** A **distinct
+- [ ] **Hook repository context can differ from the operation's target worktree.** **Status
+      (2026-10-14, story S5): reproduced, not fixed.** A session in the main checkout reviewing
+      and committing in a sibling worktree credits, checks and resets the main checkout's state.
+      A fix parsing the target from `workingDirectory`, a leading `cd <dir> &&` and `git -C <dir>
+      commit` drew new Majors in each of three Gate-B passes (wrong target for multi-line and
+      later-`-C` commands, cwd outside any repository, and running a foreign or
+      `config.worktree` repository's git helpers before approval) and was taken out; the pass
+      files are in that cycle's PR. A next attempt should not parse shell text. A **distinct
       cause from the timing row above**, and that row's occurrence count is deliberately left
       unchanged: timing is "the staged set was empty because `git add` had not run yet",
       this is "the staged set was read in the wrong repository". **Reported observation
