@@ -22,8 +22,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f and 4h), and the size-budget checks 4e and 4g, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f, 4g and 4h -- so a scratch
+# below (4a-4d, 4f and 4h), and the size-budget checks 4e, 4g and 4i, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f, 4g, 4h and 4i -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -31,7 +31,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, then 4h
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, then 4i
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -669,10 +669,14 @@ TPL_FILE=plugins/dev-workflow/commands/workflow-init.md
 TPL_BUDGET=20000
 
 # Prints the fence body, then a last line `@@STATUS <anchors> <opened> <closed>`. Headings
-# inside the fence are template text, not section boundaries. Returns 2 if awk itself failed.
+# inside the fence are template text, not section boundaries. A ````markdown line inside the
+# fence is the next template opening (`### 2.1a`), so the fence was never closed: without
+# that rule, the 2.1a closing line closed it and the scan measured both templates as one.
+# Returns 2 if awk itself failed.
 tpl_size_scan() { # $1 = file
   awk '                                            # tpl-size-scan
-    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 } else print; next }
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
+              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
     /^### 2\.1[[:space:]]/ { heads += 1; in21 = 1; next }
     in21 && /^### / { in21 = 0; next }
     in21 && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
@@ -971,6 +975,70 @@ $lr_out
 LR_EOF
 done
 # --- END check 4h ---
+# --- BEGIN check 4i ---
+# Size cap on the gate rules, in BYTES, for two texts: the whole of `.claude/review-gates.md`,
+# and the body of the ````markdown fence inside `### 2.1a` of the command file (what
+# `/workflow-init` writes). The rules grew to 139 kB once and were cut to 6.4 kB in #62;
+# without a cap they regrow sentence by sentence. 10000 is this repository's budget, not a
+# client limit.
+#
+# What it does NOT measure: any other file or section, characters (a non-ASCII character
+# counts two or more), or whether the two copies agree.
+#
+# It fails closed: a missing or unreadable file, a `### 2.1a` heading count other than one,
+# a fence count other than one or an unclosed fence, a failed parser, or a count that is not
+# a number is a failure.
+RG_BUDGET=10000
+rg_judge() { # $1 = what was measured, $2 = its byte count (anything else is a failed count)
+  case "$2" in
+    ''|*[!0-9]*)
+      fail "gate rules size: the count for $1 is not a number; the result is untrustworthy." \
+           "wc printed '$2'" ;;
+    *) if [ "$2" -gt "$RG_BUDGET" ]; then
+         fail "gate rules size: $1 is $2 bytes, over the $RG_BUDGET budget." \
+              "cut the rules, or raise the budget deliberately"
+       fi ;;
+  esac
+}
+# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. Returns 2 if awk failed.
+rg_tpl_scan() { # $1 = file
+  awk '                                            # gate-rules-size-scan
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 } else print; next }
+    /^### 2\.1a[[:space:]]/ { heads += 1; in21a = 1; next }
+    in21a && /^### / { in21a = 0; next }
+    in21a && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
+    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+  ' "$1" || return 2
+}
+rg_file=.claude/review-gates.md
+if [ ! -f "$rg_file" ] || [ ! -r "$rg_file" ]; then
+  fail "gate rules size: $rg_file is missing or unreadable, so the budget cannot be checked." \
+       "the gate rules live there"
+else
+  rg_judge "$rg_file" "$(wc -c < "$rg_file" | tr -d ' ')"
+fi
+rg_cmd=plugins/dev-workflow/commands/workflow-init.md
+if [ ! -f "$rg_cmd" ] || [ ! -r "$rg_cmd" ]; then
+  fail "gate rules size: $rg_cmd is missing or unreadable, so the budget cannot be checked." \
+       "the gate-rules template lives there"
+else
+  rg_out=$(rg_tpl_scan "$rg_cmd"); rg_st=$?
+  if [ "$rg_st" -ne 0 ]; then
+    fail "gate rules size: the template parser failed; results are not trustworthy." \
+         "awk exited $rg_st on $rg_cmd"
+  else
+    # Word splitting is the point: the status line is four space-separated fields.
+    # shellcheck disable=SC2046
+    set -- $(printf '%s\n' "$rg_out" | tail -n 1)
+    if [ "$2" -ne 1 ] || [ "$3" -ne 1 ] || [ "$4" -ne 1 ]; then
+      fail "gate rules size: $rg_cmd has $2 '### 2.1a' headings, $3 \`\`\`\`markdown fences in it and $4 closed, so the template cannot be located." \
+           "expected exactly one of each"
+    else
+      rg_judge "the '### 2.1a' template" "$(printf '%s\n' "$rg_out" | sed '$d' | wc -c | tr -d ' ')"
+    fi
+  fi
+fi
+# --- END check 4i ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

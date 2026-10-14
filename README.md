@@ -56,6 +56,11 @@ old version until you restart it or run `/reload-plugins`.
 
 - **superpowers** — not vendored. The workflow's middle *is* its skills; without it,
   `intake` hands off to nothing and Gate A never fires.
+- **Context7** (MCP, library docs) — `/workflow-init` writes it pinned into your
+  `.mcp.json`. The gate rules require a Context7 lookup, for the version you pin, before a
+  spec, plan or change that uses a third-party library API; without third-party
+  dependencies the rule does not apply, and when Context7 is unavailable the library's own
+  docs stand in.
 - **Codex** — the reviewer behind both gates. Needs the **Codex CLI, authenticated with
   an OpenAI account** — a real external dependency, not just the `.mcp.json` entry
   `/workflow-init` writes for you. It also needs **a Codex MCP server that exposes
@@ -165,7 +170,8 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on 
 PR and push to main: `shellcheck --shell=sh` over the three shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus five prompt-conformance checks) plus
-both checkers' regression suites, the six reports' suites, and
+both checkers' regression suites, [`scripts/check-doc-links.sh`](scripts/check-doc-links.sh)
+(relative Markdown links resolve) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
 
 `python3 scripts/ledger-metrics.py` prints a read-only report over the hardening ledger

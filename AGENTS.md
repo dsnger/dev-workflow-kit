@@ -38,7 +38,10 @@ pinned.
    `.context/status/`)
 5. the hook ships in the plugin, the checkers and the reports do not
 6. The plugin depends on superpowers (skills it hands off to) and on a Codex MCP server
-   exposing both `exec` and `review` (the gates key on those two tool names).
+   exposing both `exec` and `review` (the gates key on those two tool names). Initialized
+   projects that have third-party dependencies also depend on the Context7 MCP server, which
+   `/workflow-init` writes pinned into their `.mcp.json`; the library-API rule in the gate
+   rules needs it, and falls back to the library's own docs when it is unavailable.
 7. Nothing may depend on this repo's internal layout — an installed plugin lives under a
    version-keyed cache path, which is an implementation detail.
 
@@ -257,11 +260,12 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && sh scripts/live-effort.test.sh && sh scripts/status-view.test.sh && claude plugin validate . --strict` |
+| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && sh scripts/live-effort.test.sh && sh scripts/status-view.test.sh && sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh && claude plugin validate . --strict` |
 | typecheck | n/a — no typed sources (shell, six untyped Python reports, markdown) |
-| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh` |
+| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
-| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| docs link check (relative Markdown links resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
 
@@ -294,6 +298,10 @@ CI runs the parts as separate steps for readable failures; the chained form abov
 is the single command a human runs. One difference is deliberate: CI's version-bump
 step is `pull_request`-only, while the local battery always runs it (on `main`, where
 the merge-base is HEAD, it passes trivially).
+
+**Check 4i caps the gate rules at 10,000 bytes**, measured in two texts: `.claude/review-gates.md`
+and the fenced `### 2.1a` template in `workflow-init.md`. The rules grew to 139 kB once (cut to
+6.4 kB in #62); without a cap they regrow sentence by sentence. It measures size only.
 
 **Check 4g measures exactly two files.** It fails when this repository's `CLAUDE.md` plus
 `AGENTS.md` exceed 150,000 characters, a budget set for this repository after `main` went past

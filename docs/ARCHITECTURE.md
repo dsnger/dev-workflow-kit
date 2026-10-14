@@ -20,13 +20,15 @@ CLAUDE.md                         # discipline rules + pointer to the review gat
 .claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
 todos.md                          # backlog; `pending` ledger rows point here by ref
 .gitattributes                    # union merge for the append-only ledger
-.mcp.json                         # the Codex reviewer, pinned
+.mcp.json                         # the Codex reviewer, pinned (no Context7: no library dependencies)
 .claude-plugin/marketplace.json
 .github/workflows/ci.yml          # lint + hook tests + invariant checks + validate
 scripts/check-invariants.sh       # invariants 5, 6 + prompt conformance (rung 2)
 scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
 scripts/check-version-bump.sh     # invariant 12, mechanically — PR-only (rung 2)
 scripts/check-version-bump.test.sh # its regression suite — policy/operational/accept
+scripts/check-doc-links.sh        # relative Markdown links in docs resolve
+scripts/check-doc-links.test.sh   # its regression suite — fixture git repos
 scripts/ledger-metrics.py         # read-only report over the ledger + git (vision step 2b)
 scripts/ledger-metrics.test.sh    # its regression suite — fixture repos, expected text
 scripts/run-analytics.py          # gate-call effort from local logs (vision step 2c, part 1)
@@ -66,8 +68,9 @@ source-files/                     # the extraction seed this repo was built from
 
 ## Components
 
-The executable artifacts are the hook and its test, plus the two repo-local CI checkers and
-their suites (`scripts/check-invariants.{sh,test.sh}` and `scripts/check-version-bump.{sh,test.sh}`),
+The executable artifacts are the hook and its test, plus the three repo-local CI checkers and
+their suites (`scripts/check-invariants.{sh,test.sh}`, `scripts/check-version-bump.{sh,test.sh}`
+and `scripts/check-doc-links.{sh,test.sh}`),
 plus six Python reports with their suites: `scripts/ledger-metrics.{py,test.sh}`,
 `scripts/loop-usefulness.{py,test.sh}`, `scripts/spec-delta.{py,test.sh}`,
 `scripts/live-effort.{py,test.sh}`, `scripts/run-analytics.{py,test.sh}` and
@@ -89,7 +92,8 @@ the convention-loaded file was a duplicate-hooks error that stopped the whole pl
 The plugin is the only thing that ships; the scripts above are this repository's own tooling,
 and `examples/` ships as reference material without being loaded or scaffolded
 ([invariant 7](../AGENTS.md#key-invariants)). Outward, the plugin hands off to superpowers skills
-and calls a Codex MCP server; inward, nothing relies on where an installed copy lives. The
+and calls a Codex MCP server, and `/workflow-init` adds a pinned Context7 server to an initialized
+project for its library-API rule; inward, nothing relies on where an installed copy lives. The
 binding form of each of these statements is in
 [`AGENTS.md` § Boundaries (binding)](../AGENTS.md#boundaries-binding).
 
