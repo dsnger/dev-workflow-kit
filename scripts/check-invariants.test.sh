@@ -75,9 +75,11 @@ TPL_OK='### 2.1 CLAUDE-md
 # T
 ````'
 # The three template sections of a command file: $1 is the whole `### 2.1` section, $2 goes
-# inside `### 2.1a`, and $3, if given, after `### 2.2` (outside both templates).
+# inside the ````markdown fence of `### 2.1a` (4i needs exactly one there), and $3, if given,
+# after `### 2.2` (outside both templates).
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
 tpl_sections() {
-  printf '%s\n\n### 2.1a review-gates\n\n%s\n\n### 2.2 next\n\n%s\n' "$1" "$2" "${3:-}"
+  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n' "$1" "$2" "${3:-}"
 }
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
@@ -455,6 +457,11 @@ done
 #              Originally measured 2026-10-10. The shared initializer and sev_tpl
 #              gained the seven 4h lines the same day; 4a-4g re-measured after it: 20, 22,
 #              20, 22, 9, 32, 11, unchanged.
+#   4i -> 8    every `4i:` reject case (7) and `4i gate-rules size parser failure fires`; no
+#              accept case moved (re-measured 2026-10-14 after the nested-fence case; 7 when
+#              4i was added). The shared
+#              initializer's `### 2.1a` gained a fence and 4e its nested-fence rule the same
+#              day; 4a-4h re-measured after both: 20, 22, 20, 22, 9, 34, 11, 28, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1278,6 +1285,73 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 inject_case "4h ledger-check record parser failure fires" awk '*ledger-record-scan*' \
   'ledger-check record parser failed'
+
+# --- Check 4i, the size cap on the gate rules (both copies, bytes) ---------------------
+#
+# Each case replaces one copy in an otherwise valid fixture. The fixture's own 4c/4h lines
+# stay in both copies, so the padding line is the only thing that moves the count.
+TI='gate rules size'
+ti_case() { # $1 = name, $2 = 1|0 expect reject, $3 = review-gates body|@KEEP@|@GONE@,
+  #          $4 = command file body|@KEEP@, $5 = diagnostic a reject must carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  case "$3" in @KEEP@) ;; @GONE@) rm -f "$work/r/.claude/review-gates.md" ;;
+    *) printf '%s' "$3" > "$work/r/.claude/review-gates.md" ;; esac
+  case "$4" in @KEEP@) ;;
+    *) printf '%s' "$4" > "$work/r/plugins/dev-workflow/commands/workflow-init.md" ;; esac
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF -- "$5"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+# A rules file of exactly $1 bytes: the fixture lines, then padding (no trailing newline).
+ti_rules() {
+  head=$(printf '# F\n%s\n%s\n' "$SEV_LINE" "$LR_LINES"); n=$(( $1 - $(printf '%s\n' "$head" | wc -c) ))
+  printf '%s\n' "$head"; te_body a "$n"
+}
+# A command file whose `### 2.1a` fence body is exactly $1 bytes (lines + newlines).
+ti_cmd() {
+  head=$(printf '%s\n%s' "$SEV_LINE" "$LR_LINES"); n=$(( $1 - $(printf '%s\n' "$head" | wc -c) - 1 ))
+  printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
+  i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
+  printf '\n## After\n\nReviewed against all 12 items.\n\n'
+  tpl_sections "$TPL_OK" "$head
+$(te_body a "$n")"
+}
+ti_case "4i: both copies small accepted"                0 "@KEEP@" "@KEEP@" ''
+ti_case "4i: rules file at the budget accepted"         0 "$(ti_rules 10000)" "@KEEP@" ''
+ti_case "4i: rules file one over the budget rejected"   1 "$(ti_rules 10001)" "@KEEP@" \
+  '.claude/review-gates.md is 10001 bytes, over the 10000 budget'
+ti_case "4i: template at the budget accepted"           0 "@KEEP@" "$(ti_cmd 10000)" ''
+ti_case "4i: template one over the budget rejected"     1 "@KEEP@" "$(ti_cmd 10001)" \
+  "the '### 2.1a' template is 10001 bytes, over the 10000 budget"
+ti_case "4i: missing rules file rejected"               1 "@GONE@" "@KEEP@" \
+  "$TI: .claude/review-gates.md is missing"
+ti_case "4i: no 2.1a heading rejected"                  1 "@KEEP@" \
+  "$(ti_cmd 100 | sed 's/^### 2\.1a.*/## gone/')" "$TI: plugins/dev-workflow/commands/workflow-init.md has 0 '### 2.1a' headings"
+# shellcheck disable=SC2016  # literal Markdown fences, not command substitution
+ti_case "4i: two fences in 2.1a rejected"               1 "@KEEP@" \
+  "$(ti_cmd 100 | awk '/^### 2\.2 next/ { print "````markdown"; print "````" } { print }')" \
+  '2 ````markdown fences'
+ti_case "4i: unclosed fence rejected"                   1 "@KEEP@" \
+  "$(ti_cmd 100 | sed '/^````$/d')" 'and 0 closed'
+# The real layout: another template follows 2.1a, and its closing line must not close 2.1a's.
+# shellcheck disable=SC2016  # literal Markdown fences, not command substitution
+ti_case "4i: unclosed fence before the next template rejected" 1 "@KEEP@" \
+  "$(ti_cmd 100 | sed '/^````$/d' | awk '{ print } /^### 2\.2 next/ { print "````markdown"; print "x"; print "````" }')" \
+  'and 0 closed'
+inject_case "4i gate-rules size parser failure fires" awk '*gate-rules-size-scan*' \
+  'gate rules size: the template parser failed'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else
