@@ -261,7 +261,7 @@ otherwise unchanged.
 - **Scope boundary:** in: the hand-off without a decision, and references to deleted gate-rule sections; out: every commitment.
 - **Open questions:** none.
 - **Dependent artifacts:** `docs/superpowers/stories/2026-10-11-a-ticket-skill-for-bugs-and-improvements-story.md` → updated in this change (AC-12 reworded); `plugins/dev-workflow/skills/ticket/SKILL.md` → updated in this change (the hand-off).
-- **Reviews already run:** "no rule found" (Gate-A spec cycles ocgrixmmce and aavbeacgc3; `.claude/review-gates.md` in full) → human decision: the brief sets "Gate B by Codex on the diff" for this PR and names no Gate-A cycle; no commitment changes.
+- **Reviews already run:** Gate-A spec cycles ocgrixmmce and aavbeacgc3 → this edit is a spec change, so it takes its own Gate-A cycle, per `.claude/review-gates.md` "Gate A reviews every spec": cycle gaticket1014 (passes 1–3, 0 Blockers, 0 Majors).
 
 ## 3. Replay (story AC-11) — the check that fails without the change
 
