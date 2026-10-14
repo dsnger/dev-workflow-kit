@@ -22,6 +22,29 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.25.3
+
+- **Field fingerprint defects** (story S5, 2026-10-14). Causes reproduced against the hook in
+  scratch repositories; the diagnosis is in the pull request.
+  - A gitignored `.context/` (`.context/` or `.context` in `.gitignore` or `info/exclude`) made
+    the worktree-tree step's `git add -A -- . ':(exclude).context'` exit 1 ("paths are ignored"),
+    so every pass stored `unavailable` and every commit check reported "cannot confirm". When
+    that form fails the step retries `add -A -- .` (which skips the ignored directory) and then
+    removes `.context` with the same `rm --cached` the index tree uses. The first form is
+    unchanged, so recorded fingerprints stay valid across the upgrade.
+  - When the fingerprint cannot be computed it is still the literal `unavailable`; the review
+    pass and the commit check now also print one line naming the first component that failed
+    (`diff`, `index tree`, `worktree tree`, `checksum`, `temp dir`).
+  - A state write that fails no longer leaves the previous pass's fingerprint standing: the
+    file is removed and one line says it could not be stored, so the commit check reports "no
+    recorded fingerprint". Where the removal fails too, the file is read-only, and the commit
+    check now refuses a read-only state file as "cannot confirm" (and compaction reports its
+    fingerprint `unavailable`).
+  - Not in this version: resolving the repository from the command's target worktree (S5 F6).
+    It reproduced, but its parsing drew new Majors in each of three Gate-B passes and was taken
+    out; the hook still reads the repository of its own cwd. `todos.md` carries the row.
+  Suite section 45 (45a–45e); section 30a now expects the stale fingerprint to be removed.
+
 ## 0.25.2
 
 - **Compaction re-injection** (story S4, 2026-10-12). `hooks/hooks.json` registers

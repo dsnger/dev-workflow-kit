@@ -1387,10 +1387,11 @@ chmod 0444 "$state" 2>/dev/null
 if probe_denies "printf x >> \"$state\""; then
   printf 'later edit\n' >> app.ts
   rev                                   # hashes fine, but cannot replace the fingerprint
-  [ "$(cat "$state")" = "$before" ] && pass "unwritable state file keeps the old fingerprint" || fail "unwritable state file keeps the old fingerprint"
-  printf '%s' "$(commitpre)" | grep -q 'cannot confirm' \
-    && pass "stale fingerprint after a failed store -> cannot confirm" \
-    || fail "stale fingerprint after a failed store -> cannot confirm"
+  # S5 F1: the old fingerprint is removed, not left standing as if it were current.
+  [ ! -e "$state" ] && pass "unwritable state file -> old fingerprint removed ($before)" || fail "unwritable state file -> old fingerprint removed"
+  printf '%s' "$(commitpre)" | grep -q 'no fingerprint is recorded' \
+    && pass "failed store -> no recorded fingerprint, not a stale one" \
+    || fail "failed store -> no recorded fingerprint, not a stale one"
 else
   skip "unwritable state file (chmod does not deny writes here — running as root?)"
 fi
@@ -3192,6 +3193,85 @@ out=$(nojq_run '{"hook_event_name":"SessionStart","source":"compact","session_id
 [ "$(printf '%s\n' "$out" | sed -n 3p)" = 'Open stop: none' ] && pass "44g: jq-free compaction -> line 3" || fail "44g: jq-free compaction -> line 3"
 rm -f "$reviews"/gate-*
 reset_all
+
+# 45. Field defects (S5). Each case gets its own repo under $sandbox, so the suite repo's
+# fingerprint is untouched.
+mk45() { # $1 = repo dir: an adopted repo with one commit
+  mkdir -p "$1" && ( cd "$1" && git init -q && git config user.email t@t && git config user.name t \
+    && mkdir -p .context && : > .context/codex-gate.on && printf 'v1\n' > app.ts \
+    && git add app.ts && git commit -qm init ) >/dev/null 2>&1
+}
+in45() { ( cd "$1" && printf '%s' "$2" | "$HOOK_SH_BIN" "$HOOK" ) 2>/dev/null; } # $1 = cwd, $2 = payload
+rev45="$(payload mcp__codex__review "$(resp_success)")"
+pre45() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"%s"}}' "$1"; }
+
+# 45a. A gitignored .context/ (canvas, Bricks) made `add -A` with the exclude pathspec fail,
+# so every pass stored `unavailable`. Both ignore spellings and info/exclude.
+for ig in '.context/' '.context' 'exclude'; do
+  r="$sandbox/r45a"; rm -rf "$r"; mk45 "$r"
+  if [ "$ig" = exclude ]; then mkdir -p "$r/.git/info"; printf '.context/\n' >> "$r/.git/info/exclude"
+  else printf '%s\n' "$ig" > "$r/.gitignore"; (cd "$r" && git add .gitignore && git commit -qm ig) >/dev/null 2>&1; fi
+  in45 "$r" "$rev45" >/dev/null
+  h=$(cat "$r/.context/codex-gate.gateB" 2>/dev/null)
+  [ -n "$h" ] && [ "$h" != unavailable ] && pass "45a: ignored .context ($ig) -> pass stores a fingerprint" \
+    || fail "45a: ignored .context ($ig) -> pass stores a fingerprint (got [$h])"
+  out=$(in45 "$r" "$(pre45 'git commit -m x')")
+  case "$out" in *'below floor (1/3)'*) pass "45a: ignored .context ($ig) -> unchanged content is not 'cannot confirm'" ;;
+    *) fail "45a: ignored .context ($ig) -> unchanged content is not 'cannot confirm' (got [$out])" ;; esac
+done
+
+# 45b. An uncomputable fingerprint stays `unavailable` and the hook names the component.
+r="$sandbox/r45b"; rm -rf "$r"; mk45 "$r"; printf 's\n' > "$r/secret"; chmod 000 "$r/secret"
+if [ -r "$r/secret" ]; then
+  skip "45b: chmod 000 does not deny reads here (root?)"
+else
+  out=$(in45 "$r" "$rev45")
+  [ "$(cat "$r/.context/codex-gate.gateB" 2>/dev/null)" = unavailable ] && pass "45b: unreadable file -> state is unavailable" \
+    || fail "45b: unreadable file -> state is unavailable"
+  case "$out" in *'worktree tree'*) pass "45b: review pass names the failing component" ;;
+    *) fail "45b: review pass names the failing component (got [$out])" ;; esac
+  out=$(in45 "$r" "$(pre45 'git commit -m x')")
+  case "$out" in *'worktree tree'*) pass "45b: commit check names the failing component" ;;
+    *) fail "45b: commit check names the failing component (got [$out])" ;; esac
+fi
+chmod 600 "$r/secret" 2>/dev/null
+
+# 45c. A failed state write must not leave the previous fingerprint standing.
+r="$sandbox/r45c"; rm -rf "$r"; mk45 "$r"
+in45 "$r" "$rev45" >/dev/null; printf 'v2\n' > "$r/app.ts"; chmod 444 "$r/.context/codex-gate.gateB"
+out=$(in45 "$r" "$rev45")
+[ ! -e "$r/.context/codex-gate.gateB" ] && pass "45c: unwritable state file -> no stale fingerprint left" \
+  || fail "45c: unwritable state file -> no stale fingerprint left (got [$(cat "$r/.context/codex-gate.gateB")])"
+case "$out" in *'could not be stored'*) pass "45c: failed write is reported" ;;
+  *) fail "45c: failed write is reported (got [$out])" ;; esac
+
+# 45d. A read-only state file in a read-only .context/ keeps an older fingerprint; it is
+# never confirmed, even once the content matches it again.
+r="$sandbox/r45d"; rm -rf "$r"; mk45 "$r"
+in45 "$r" "$rev45" >/dev/null; in45 "$r" "$rev45" >/dev/null; in45 "$r" "$rev45" >/dev/null
+chmod 444 "$r/.context/codex-gate.gateB"; chmod 555 "$r/.context"
+if probe_denies "rm -f \"$r/.context/codex-gate.gateB\""; then
+  printf 'v2\n' > "$r/app.ts"; in45 "$r" "$rev45" >/dev/null; printf 'v1\n' > "$r/app.ts"
+  out=$(in45 "$r" "$(pre45 'git commit -m x')")
+  case "$out" in *'cannot confirm'*) pass "45d: unremovable stale fingerprint -> cannot confirm" ;;
+    *) fail "45d: unremovable stale fingerprint -> cannot confirm (got [$out])" ;; esac
+  out=$(in45 "$r" '{"hook_event_name":"SessionStart","source":"compact","session_id":"s","cwd":"."}')
+  case "$out" in *'fingerprint unavailable'*) pass "45d: compaction agrees: unavailable" ;;
+    *) fail "45d: compaction agrees: unavailable (got [$out])" ;; esac
+else
+  skip "45d: chmod does not deny removal here (root?)"
+fi
+chmod 755 "$r/.context"; chmod 644 "$r/.context/codex-gate.gateB" 2>/dev/null
+
+# 45e. An unreadable file inside a NOT-ignored .context/ does not make the fingerprint
+# uncomputable: .context is excluded before it is read.
+r="$sandbox/r45e"; rm -rf "$r"; mk45 "$r"; printf 'p\n' > "$r/.context/private"; chmod 000 "$r/.context/private"
+in45 "$r" "$rev45" >/dev/null
+h=$(cat "$r/.context/codex-gate.gateB" 2>/dev/null)
+[ -n "$h" ] && [ "$h" != unavailable ] && pass "45e: unreadable .context file -> fingerprint still computed" \
+  || fail "45e: unreadable .context file -> fingerprint still computed (got [$h])"
+chmod 600 "$r/.context/private"
+rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox/r45e"
 
 reset_all
 echo "---"
