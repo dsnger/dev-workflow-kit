@@ -52,8 +52,9 @@ Any other argument shape stops and asks.
      continue.
    - **Alters a commitment, or no commitment can be quoted:** write nothing. Print the hand-off and
      stop: for a changed commitment, `/dev-workflow:intake Amend the approved <path>. Decision:
-     <the human decision if the input names one; otherwise "none yet — intake will ask">.
-     <captured text>`; for new behaviour, and for a change to a commitment that only a `docs/PRD.md`
+     <the human decision, quoted>. <captured text>`, and when the input names no decision,
+     `Decision: open — a human decides before running this` with the open decision named above the
+     line, because intake's amendment route starts from a decision already made; for new behaviour, and for a change to a commitment that only a `docs/PRD.md`
      feature-map row carries (no story or spec stands behind it, and intake's amendment route
      amends only an approved story or spec), `/dev-workflow:intake <captured text>`. The skill does
      not invoke intake: the human starts it, as intake's own hand-off is left to the human.
@@ -63,11 +64,12 @@ Any other argument shape stops and asks.
 3. **Capture, evidence first (story AC-3).** Fill observed (with its evidence: command and
    output, log line, failing test, screenshot path), expected (with its source), repro, affected
    feature, severity, first seen (version or commit). Severity reuses the token set
-   `blocker|major|minor|nit` that `harden-finding` uses, with the meanings of
-   `.claude/review-gates.md` Mechanics · Severity, which the skill states in one line itself
-   (blocker: wrong, unsafe or breaks an invariant; major: a design flaw needing rework; minor and
-   nit below that) so a run needs nothing else from the project's gate file; the `**Story:**` line
-   form is likewise shown in the skill's template, not looked up. A field the input
+   `blocker|major|minor|nit` that `harden-finding` uses, the lowercase spelling of the gate finding
+   format's `BLOCKER|MAJOR|MINOR|NIT`; the
+   skill states the meanings in one line itself (blocker: wrong, unsafe or breaks an invariant;
+   major: a design flaw needing rework; minor and nit below that) so a run needs nothing else from
+   the project's gate file; the `**Story:**` line form is likewise shown in the skill's template,
+   not looked up. A field the input
    cannot support is written `unknown — <reason>`, severity included; nothing is inferred from a
    similar case.
 4. **Category and state (story AC-4).** Exactly one category (`bug|regression|improvement|docs`)
@@ -90,16 +92,15 @@ Any other argument shape stops and asks.
    an approved commitment by construction.
 6. **Review header — decision D1 (story AC-12).** A ticket carries **no profile of its own**. When its
    commitment comes from a story (directly, or through a spec's `**Story:**` line), the ticket
-   carries that story in a `**Story:**` line in the exact form `.claude/review-gates.md` parses
-   (one backticked path per entry). The ticket is the plan for its fix, so Gate B reads that line
-   as it reads a plan's and takes the profile from the story, fresh. When no story stands behind
-   the commitment (a feature-map row only), the ticket has no `**Story:**` line and Gate B runs
-   unprofiled at floor 3. Why: the gate rules make the story header the single writable copy of a
-   profile; a profile written into the ticket would be a second copy no gate reads. This replaced
+   carries that story in a `**Story:**` line, one backticked path per entry, so the fix's Gate-B
+   provenance line (`.claude/review-gates.md`) can name the story and its level. When no story
+   stands behind the commitment (a feature-map row only), the ticket has the `**No story:**` line
+   instead and that provenance line names `none`. Why: the story holds the profile; a profile
+   written into the ticket would be a second copy no gate reads. This replaced
    the story's original AC-5 clause "otherwise proposed by the profile rules" (amended 2026-10-11,
    AC-5 withdrawn, AC-12 added; decided by the orchestrator). The template states which case
    applies (§2.4), so no reader infers it from an absent line. That statement is never written as a
-   `**Story:**` line: a `**Story:**` line that does not parse is malformed and stops the gate.
+   `**Story:**` line, because the provenance line takes story paths, not prose.
 7. **Number and file (story AC-6).** `T-<n>` = the highest `n` among
    `docs/superpowers/tickets/*-T<n>-*.md` in the working tree **and** on every local and
    remote-tracking branch (a superset of the default branch; a gap in numbering is harmless, a
@@ -122,7 +123,7 @@ Any other argument shape stops and asks.
 8. **Commit.** Stop if the index already holds staged changes; stage only the ticket file; verify
    that the staged set is exactly that path and its staged content equals the file, as intake's
    commit protocol does; message `docs(ticket): T-<n> <slug>`. The path is under `docs/` and ends in
-   `.md`, prose under `.claude/review-gates.md` "What counts as prose", so the commit owes no Gate B.
+   `.md`, docs-only under `.claude/review-gates.md` "Docs-only means…", so the commit owes no Gate B.
 9. **Hand off and stop.** A `ready` ticket ends with the build hand-off (§2.7). A `needs-info` or
    `needs-triage` ticket ends with its questions and the line "Not ready to build: answer the
    questions, then `/dev-workflow:ticket T-<n> ready`" — never with the build hand-off.
@@ -158,7 +159,7 @@ was deleted, and pass 4 found this step's text no longer matching the skill.
 
 **Category:** <one> · **State:** <one> · **Severity:** <one> · **First seen:** <version/commit | unknown — reason>
 **Story:** `<path>`            <!-- when a story stands behind the commitment; otherwise the next line -->
-**No story:** the commitment comes from <source>; Gate B runs unprofiled (floor 3)
+**No story:** the commitment comes from <source>; the fix's Gate-B provenance line names `none`
 **Feature:** <affected feature: PRD feature-map row, story or spec section | unknown — reason>
 **From finding:** <hardening-log row, or SLOT:n with "ledger row: none yet — harden-finding owns it">   <!-- only when raised from a review finding -->
 
@@ -219,17 +220,19 @@ reporter channel, and the state is what `list` reads.
 For a `ready` ticket the skill ends with: the ticket path; then the fix route — set `in-progress`;
 make the feedback loop red; fix; green; quality battery; Gate B on the diff, the call carrying the
 ticket path and, when the ticket has a `**Story:**` line, that story path (otherwise the call says
-the ticket has no story and the cycle runs unprofiled); the closing act per `.claude/review-gates.md`; set `done` with the fix
-commit. **A fix whose staged paths are all prose** under `.claude/review-gates.md` "What counts as
-prose" (`docs/**.md`, `README.md`, `MANIFEST.md`) owes no Gate B, and the hand-off says so in
-those words; a `docs`-category ticket whose fix touches a skill, command, template or anything
-under `plugins/` is not prose and owes Gate B like any other. A ticket raised from a review finding keeps the finding's ledger link; `harden-finding`
+the ticket has no story and the provenance line names `none`); the closing act per `.claude/review-gates.md`; set `done` with the fix
+commit. **A fix whose staged paths are all docs-only** under `.claude/review-gates.md` "Docs-only
+means…" (explanatory Markdown under `docs/`, `README.md`, `MANIFEST.md`, `todos.md`) owes no
+Gate B, and the hand-off says so in those words; a `docs`-category ticket whose fix touches a
+skill, command, template or anything under `plugins/` is a prompt change and owes Gate B like any
+other. A ticket raised from a review finding keeps the finding's ledger link; `harden-finding`
 stays its owner and the ticket does not log a ledger row. The skill does not start the fix.
 
 ### 2.8 What does not change (story AC-9)
 
-`intake` is unchanged: its Flow already takes free text and its amendment route already asks for
-a missing decision, so the hand-off of §2.3 step 2 needs nothing from it. No tracker integration,
+`intake` is unchanged: its Flow already takes free text, and its amendment route starts from a
+decision already made, so the hand-off of §2.3 step 2 marks a missing decision as open for the
+human to make before starting intake. No tracker integration,
 no new severity vocabulary, no rule sentence in `CLAUDE.md`, `AGENTS.md` or
 `.claude/review-gates.md`, no change to `/workflow-init` (the tickets folder is created on the
 first ticket).
@@ -242,6 +245,23 @@ in the same change: `README.md` skill table (one row), `docs/ARCHITECTURE.md` tr
 (`skills/{intake,harden-finding,sparring,ticket}`), `docs/PRD.md` feature map (one row, shipped).
 Check 4a covers the new file's `Target model:` line as it covers every skill; 4a and 4f are
 otherwise unchanged.
+
+**Changed 2026-10-14 — gap found.** Decided by Daniel, 2026-10-14 18:09, in the brief for the kit collect-PR (`.context/sparring/20261014-181000-kit-collect-pr-ponytail-prompt.md` in the main checkout, untracked), relayed by the orchestrator dev-workflow-kit-55. Baseline: 891689d. Rationale: the skill's hand-off promised that intake would ask for a missing decision, and #62 removed that; and this spec still described gate-rule sections #62 deleted (Story-header parsing, "What counts as prose", Mechanics · Severity). The skill already followed the surviving rules except for the hand-off.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §2.3 step 2: "Decision: <the human decision if the input names one; otherwise \"none yet — intake will ask\">" | dropped — per the decision: "the ticket names the open human decision and stops for it; it does not promise deleted intake behaviour"; moved → §2.3 step 2 "`Decision: open — a human decides before running this` with the open decision named above the line", per the same passage | none |
+| §2.8: "its amendment route already asks for a missing decision" | dropped — per the same passage; moved → §2.8 "marks a missing decision as open for the human to make before starting intake" | none |
+| §2.3 step 3: "the meanings of `.claude/review-gates.md` Mechanics · Severity"; step 6: "the exact form `.claude/review-gates.md` parses", "Gate B runs unprofiled at floor 3", "a `**Story:**` line that does not parse is malformed and stops the gate"; step 8 and §2.7: "What counts as prose"; §2.4: "Gate B runs unprofiled (floor 3)" | dropped — per the decision: "reconcile §2.3 step 8, §2.7, lines 93–102 and story AC-12 with the surviving gate rules"; moved → the same places, naming the provenance line, "Docs-only means…" and the finding format, as the skill already does | none |
+| everything else | kept | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** #62 shrank `.claude/review-gates.md` and updated the skill, not this spec → this record.
+- **Scope boundary:** in: the hand-off without a decision, and references to deleted gate-rule sections; out: every commitment.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/stories/2026-10-11-a-ticket-skill-for-bugs-and-improvements-story.md` → updated in this change (AC-12 reworded); `plugins/dev-workflow/skills/ticket/SKILL.md` → updated in this change (the hand-off).
+- **Reviews already run:** "no rule found" (Gate-A spec cycles ocgrixmmce and aavbeacgc3; `.claude/review-gates.md` in full) → human decision: the brief sets "Gate B by Codex on the diff" for this PR and names no Gate-A cycle; no commitment changes.
 
 ## 3. Replay (story AC-11) — the check that fails without the change
 

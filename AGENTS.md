@@ -88,8 +88,9 @@ reader can judge whether it still holds.
    *release* — GitHub still refreshes that image weekly, which only a container would
    fix, and this battery doesn't warrant one; and `claude plugin marketplace add
    <owner>/<repo>` takes no version or ref — the CLI offers no pinning syntax, so
-   prerequisite plugins (superpowers, this kit) are addressed by name and revalidated
-   on update, not pinned.
+   prerequisite plugins (superpowers, this kit) and the optional companion Ponytail
+   (`/workflow-init` Step 1 item 9) are addressed by name and revalidated on update, not
+   pinned.
    The fourth applies to **the optional codebase-memory MCP integration only**
    (`/workflow-init` 2.14–2.15), and to no other user-installed MCP server
    (Daniel, 2026-10-07, decision D1 in

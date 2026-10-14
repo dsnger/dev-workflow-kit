@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.26.0
+
+- **Ponytail as an optional companion** (`ponytail@ponytail`, verified against 5.2.0). Without the
+  plugin every step below is skipped and nothing fails; the hard dependencies stay superpowers and
+  Codex.
+  - `/workflow-init` Step 1 item 9 detects it; absent → one line with the two install commands.
+    New Step 2.16 recommends a default mode (`lite` for more than 500 non-Markdown tracked files,
+    more than 1000 commits, more than 100 lockfile packages, or security/money code on the user's
+    word; `full` otherwise; `ultra` and `off` only on the user's choice) and merges
+    `{"env": {"PONYTAIL_DEFAULT_MODE": "<mode>"}}` into `.claude/settings.json`. Verified in a
+    scratch project: Ponytail's SessionStart hook printed `level: lite` with that entry and
+    `level: full` without it.
+  - Gate rules (`.claude/review-gates.md` and template 2.1a, same text): `ponytail-review` once on
+    the branch diff before Gate B pass 1, listed under "Ponytail pre-review" in the PR body; not a
+    gate, not a pass, no replacement for Codex. `ponytail-audit` and `ponytail-debt` are proposed
+    once at a release bump or milestone handover; findings become tickets on the user's yes.
+  - AGENTS.md invariant 5: the no-pin exception for `claude plugin marketplace add` names Ponytail.
+- **Wrong-checkout guard** (issue #66, defect 2). The `CLAUDE.md` template's §5 pointer now has
+  the agent check `git rev-parse --show-toplevel` before concluding `.claude/review-gates.md` is
+  missing, and never run `/workflow-init` into another repository. The pointer from 0.16.0–0.25.3
+  still classifies as pointer form, so a re-run shows the new paragraph as a Rule-2 diff instead of
+  stopping. Defect 1 (`same as` pair counting) left with the shrink in #62.
+- **`ticket` hand-off without a decision.** For a commitment change whose human decision the input
+  does not name, the intake hand-off now reads `Decision: open — a human decides before running
+  this` and names the open decision, instead of promising that intake will ask (intake's amendment
+  route starts from a decision already made). The ticket spec and story
+  AC-12 no longer cite gate-rule sections #62 deleted; change records in both.
+- **Flaky `status-view` test p4.** The "as-of is a source time" case backdates the repository's
+  files first, so a source written in the second the page is generated no longer fails it.
+
 ## 0.25.3
 
 - **Field fingerprint defects** (story S5, 2026-10-14). Causes reproduced against the hook in

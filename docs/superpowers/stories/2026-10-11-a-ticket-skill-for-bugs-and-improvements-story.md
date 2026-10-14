@@ -37,7 +37,7 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-9** Out of scope and absent from the diff: issue-tracker integration (a ticket is a file), any change to `intake` other than accepting the hand-off text, a new severity vocabulary, and a new rule sentence in `.claude/review-gates.md`, `CLAUDE.md` or `AGENTS.md`.
 - [ ] **AC-10** The skill passes all 12 items of `docs/prompt-standards.md` (target model named once). The plugin version is bumped and `CHANGELOG.md` has an entry. The plugin manifest gains no key for the skill. The quality battery passes. Checks 4a and 4f are unchanged, or extended with their limit stated.
 - [ ] **AC-11** A replay of three cases runs before merge: a bug with evidence, an improvement inside a commitment, and a reported "bug" that is a commitment change and must go to `intake`. The baseline is the same input given to `intake` without the skill. The per-case checks and a run-validity rule are written and committed before the first run. The results, pass or fail per case and check, are recorded in the PR.
-- [ ] **AC-12** The ticket file is the brief a coding agent fixes from: fix scope, what stays out, the feedback loop that goes red on exactly this defect (chosen in a stated order from: failing test at the nearest seam, HTTP or CLI script with fixture, headless-browser script, replayed captured trace, throwaway harness, property or fuzz loop, bisection harness), the review profile, inherited from the touched feature's story where one is recorded, and the files to read. The profile is inherited by citing that story in a `**Story:**` line in the form `.claude/review-gates.md` parses, and the ticket carries no profile of its own; when no story stands behind the commitment, the ticket has no `**Story:**` line. It carries no spec and opens no Gate-A cycle.
+- [ ] **AC-12** The ticket file is the brief a coding agent fixes from: fix scope, what stays out, the feedback loop that goes red on exactly this defect (chosen in a stated order from: failing test at the nearest seam, HTTP or CLI script with fixture, headless-browser script, replayed captured trace, throwaway harness, property or fuzz loop, bisection harness), the review profile, inherited from the touched feature's story where one is recorded, and the files to read. The profile is inherited by citing that story in a `**Story:**` line, one backticked path per entry, which the fix's Gate-B provenance line names, and the ticket carries no profile of its own; when no story stands behind the commitment, the ticket has no `**Story:**` line. It carries no spec and opens no Gate-A cycle.
 
 **Changed 2026-10-11 — gap found.** Decided by the orchestrator dev-workflow-kit-d4 under Daniel's sprint instruction (Daniel informed, can object before the Gate-A spec cycle opens), in a cross-session message to this session on 2026-10-11 (17:25). Baseline: c27e238. Rationale: `.claude/review-gates.md` makes the story header "the single writable copy" of a profile; a profile proposed into a ticket would be a second copy no gate reads, and a ticket citing its story in a parsed `**Story:**` line lets Gate B take the profile fresh, as it does for a plan.
 
@@ -73,6 +73,22 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - **Open questions:** none.
 - **Dependent artifacts:** `docs/superpowers/specs/2026-10-11-ticket-skill-design.md` → updated in this change.
 - **Reviews already run:** Gate-A spec cycle ocgrixmmce pass 1 → the open cycle reads the spec as it now stands; its content condition compares the artifact with the final pass's request, so this change costs no separate rule (`.claude/review-gates.md`, "Recording is not amending": "an open cycle's content condition still compares the artifact as it stands").
+
+**Changed 2026-10-14 — gap found.** Decided by Daniel, 2026-10-14 18:09, in the brief for the kit collect-PR (`.context/sparring/20261014-181000-kit-collect-pr-ponytail-prompt.md` in the main checkout, untracked), relayed by the orchestrator dev-workflow-kit-55. Baseline: 891689d. Rationale: since #62 `.claude/review-gates.md` no longer parses a `**Story:**` line; the fix's Gate-B provenance line names the story set instead. The commitment (no profile of its own; the story is cited by path) is unchanged.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-12: "in the form `.claude/review-gates.md` parses" | dropped — per the decision: "reconcile … story AC-12 with the surviving gate rules (they still describe Story-header parsing …)"; moved → AC-12 "one backticked path per entry, which the fix's Gate-B provenance line names", per the same passage | reworded |
+| AC-12: every other clause | kept | none |
+| AC-1 … AC-4, AC-6 … AC-11 | kept | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** #62 deleted the gate rules' Story-header parsing → this record.
+- **Scope boundary:** in: AC-12's reference to the gate rules; out: every commitment of AC-12.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-11-ticket-skill-design.md` → updated in this change.
+- **Reviews already run:** "no rule found" (Gate-A spec cycles ocgrixmmce and aavbeacgc3; `.claude/review-gates.md` in full) → human decision: the brief sets "Gate B by Codex on the diff" for this PR and names no Gate-A cycle; no commitment changes.
 
 ## 4. Affected AGENTS.md invariants
 - `## Key invariants` › Prompts and scaffolding, 11 — "**Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for any skill, command, agent definition, hook message, or scaffolded template."
