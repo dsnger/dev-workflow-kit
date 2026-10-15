@@ -619,7 +619,7 @@ Tool: `mcp__codex__review`
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
-Inside an open cycle, make each commit one line, `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one.
+Inside an open cycle, make each commit before the closing act one line, `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one. The closing act's commit takes a non-WIP subject and its record lines.
 
 Check against
   @AGENTS.md.
