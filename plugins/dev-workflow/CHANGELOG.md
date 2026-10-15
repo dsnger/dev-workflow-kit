@@ -32,8 +32,8 @@ AGENTS.md invariant 12 carries the complete list.
   from an older kit edition. Field evidence: two projects kept 135 kB and 35 kB of old rules after
   following the earlier recommendations.
 - **Gate rules name the WIP commit form** (`.claude/review-gates.md` and template `### 2.1a`,
-  identical). The hook keeps a cycle's pass count only across a one-line `git commit -m 'WIP: …'`;
-  a subject ending in `(WIP)` resets it, which is why PR #69's cycle read "1/3" after three passes.
+  identical): a one-line `git commit -m 'WIP: …'`, across which the hook keeps a cycle's pass count
+  (with `jq`), as it does across `--amend --no-edit` on a WIP commit. A subject ending in `(WIP)` resets it, which is why PR #69's cycle read "1/3" after three passes.
   The hook itself is unchanged; a test pins the reset.
 
 ## 0.27.0

@@ -309,7 +309,8 @@ definitions of the rules, or none — and the rules themselves stop on either.
      against the template's pointer and recommend replacing exactly that range. The user still
      confirms (Rule 2). Why: classified as **mixed**, this pointer stopped the run and left a
      field project on its old rules;
-   - **mixed** — the body names `.claude/review-gates.md` anywhere but is not pointer form.
+   - **mixed** — the body names `.claude/review-gates.md` anywhere but is neither pointer form
+     nor older pointer.
      An edited or re-wrapped pointer and a pointer pasted above rules that are still inline
      look the same here, so neither is assumed, and nothing that points at the rules file
      is ever moved into it as if it were the rules;
@@ -362,7 +363,7 @@ definitions of the rules, or none — and the rules themselves stop on either.
    around them. Why that line: every kit edition from 0.16.0 on and every migration payload
    (step 4) starts with it, and a file the project wrote itself rarely does. A file whose first
    line differs gets Rule 2 unchanged, with no recommendation either way. When the user declines
-   the replacement of either an older pointer or an older kit edition, the report line adds:
+   this replacement, the rules file's report line adds:
    `the project keeps rules from an older kit edition; current kit rules are not in force here`.
 4. **The migration** (inline form, no rules file):
    1. **Preconditions:** `CLAUDE.md` is tracked by git with no uncommitted changes,
@@ -618,7 +619,7 @@ Tool: `mcp__codex__review`
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
-Make each commit inside an open cycle a WIP commit, one line of the form `git commit -m 'WIP: <subject>'` (`-a` allowed), with no `$(…)`, heredoc or chained command; the gate hook keeps the cycle's pass count only across a commit whose subject starts with `WIP` and whose command it recognises, and only where `jq` is installed. Any other commit, a subject ending in `(WIP)` included, resets the count.
+Make each commit inside an open cycle a WIP commit, one line of the form `git commit -m 'WIP: <subject>'` (`-a` allowed), with no `$(…)`, heredoc or chained command; the gate hook keeps the cycle's pass count across that form where `jq` is installed, and across `git commit --amend --no-edit` on a commit whose subject starts with `WIP`. Other commits, a subject ending in `(WIP)` included, reset the count.
 
 Check against
   @AGENTS.md.
