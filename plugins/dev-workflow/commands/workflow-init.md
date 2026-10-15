@@ -280,7 +280,35 @@ definitions of the rules, or none — and the rules themselves stop on either.
      under §5 in the `CLAUDE.md` template below, optionally preceded by exactly the `INACTIVE` notice
      from 2.13 and one blank line. The pointer written before 0.26.0 counts too: the same text
      without the paragraph beginning `**Before you conclude that file is missing,**` and the blank
-     line after it. Rule 2 then shows that paragraph as the difference;
+     line after it. Rule 2 then shows that paragraph as the difference and recommends adding it;
+   - **older pointer** — the body after the heading line, with the same optional `INACTIVE`
+     notice, is byte-identical to the pointer that 0.16.0–0.23.0 wrote, between these fence
+     lines:
+
+     ```text
+
+     **The full rules live in `.claude/review-gates.md`. Read that file in full before any
+     work it governs: any Gate A or Gate B pass, resuming or closing a cycle, any commit,
+     preparing a merge, and deciding a change needs no gate.** Every reference to §5 (its
+     Mechanics, Profiles, closure ordering or gate prompt) means that file.
+
+     **It is longer than one read returns.** Read it in parts, each starting where the last one
+     stopped, until you have seen its last line. A search finds a passage; it does not tell you
+     what the rest of the rules require.
+
+     **If that file is missing, this project has no gate rules.** Stop before any work they
+     govern, and restore it: `/workflow-init` writes it.
+
+     Why it is separate: inline, the rules push the instruction files past Claude Code's size
+     limit.
+
+     ```
+
+     The five leading spaces of each line are indentation here, not part of the text. It acts
+     as pointer form does, except that its pointer is out of date: show the diff of the §5 range
+     against the template's pointer and recommend replacing exactly that range. The user still
+     confirms (Rule 2). Why: classified as **mixed**, this pointer stopped the run and left a
+     field project on its old rules;
    - **mixed** — the body names `.claude/review-gates.md` anywhere but is not pointer form.
      An edited or re-wrapped pointer and a pointer pasted above rules that are still inline
      look the same here, so neither is assumed, and nothing that points at the rules file
@@ -301,6 +329,8 @@ definitions of the rules, or none — and the rules themselves stop on either.
    | §5 absent | missing or usable | offer the append above. **Declined:** skip both files, so no rules file is written that nothing points to. **Accepted:** append, then the rules file by Rule 2 | `skipped (user)` ×2, or per file |
    | pointer form | missing | write the rules file, and say the project had no gate rules until now | `written` + that note |
    | pointer form | usable | each file by Rule 2 | per file |
+   | older pointer | missing | offer the §5 replacement above, then write the rules file, and say the project had no gate rules until now | per file + that note |
+   | older pointer | usable | offer the §5 replacement above, then the rules file by Rule 2 | per file |
    | inline form | missing | offer the migration (step 4) | `migrated`, `skipped (user)` or a failure state |
    | inline form | usable | **stop**: two definitions — show both paths and offer the diff between them; the user chooses | `stopped: two definitions` |
    | mixed | any | **stop**: show §5's line range against the template pointer | `stopped: §5 neither pointer nor rules` |
@@ -322,6 +352,18 @@ definitions of the rules, or none — and the rules themselves stop on either.
      regular file (a directory or a dangling link): move it aside. Then re-run. Nothing
      here is overwritten automatically, because the file may hold the project's only copy
      of its rules.
+
+   **An older kit edition of the rules file.** When Rule 2 reaches a usable
+   `.claude/review-gates.md` that differs from the `### 2.1a` template and whose first line is
+   exactly that template's first line, `# Cross-Model Review (Codex) — TWO MANDATORY GATES`,
+   recommend **overwrite with the template**. Say the file's size before and after, in bytes, and
+   that project-specific content belongs in `AGENTS.md` or `docs/`, not in the rules file. Never
+   recommend merging or appending sections into such a file: the old rules would stay in force
+   around them. Why that line: every kit edition from 0.16.0 on and every migration payload
+   (step 4) starts with it, and a file the project wrote itself rarely does. A file whose first
+   line differs gets Rule 2 unchanged, with no recommendation either way. When the user declines
+   the replacement of either an older pointer or an older kit edition, the report line adds:
+   `the project keeps rules from an older kit edition; current kit rules are not in force here`.
 4. **The migration** (inline form, no rules file):
    1. **Preconditions:** `CLAUDE.md` is tracked by git with no uncommitted changes,
       `.claude/review-gates.md` does not exist, and git would not ignore it
@@ -575,6 +617,8 @@ Tool: `mcp__codex__review`
   (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`).
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
+
+Make each commit inside an open cycle a WIP commit, one line of the form `git commit -m 'WIP: <subject>'` (`-a` allowed), with no `$(…)`, heredoc or chained command; the gate hook keeps the cycle's pass count only across a commit whose subject starts with `WIP` and whose command it recognises, and only where `jq` is installed. Any other commit, a subject ending in `(WIP)` included, resets the count.
 
 Check against
   @AGENTS.md.

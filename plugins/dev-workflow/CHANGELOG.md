@@ -22,6 +22,20 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.28.0
+
+- **`/workflow-init` recommends the current rules over an older kit edition.** 2.1 classifies the
+  §5 pointer that 0.16.0–0.23.0 wrote as **older pointer** (it stopped as **mixed** before) and
+  recommends replacing that range with the current pointer. Rule 2 on a `.claude/review-gates.md`
+  whose first line is the kit's rules heading now recommends overwriting it with the template, with
+  sizes before and after, and never appending sections. A declined replacement is reported as rules
+  from an older kit edition. Field evidence: two projects kept 135 kB and 35 kB of old rules after
+  following the earlier recommendations.
+- **Gate rules name the WIP commit form** (`.claude/review-gates.md` and template `### 2.1a`,
+  identical). The hook keeps a cycle's pass count only across a one-line `git commit -m 'WIP: …'`;
+  a subject ending in `(WIP)` resets it, which is why PR #69's cycle read "1/3" after three passes.
+  The hook itself is unchanged; a test pins the reset.
+
 ## 0.27.0
 
 - **Context7 for library APIs.** `/workflow-init` 2.8 merges a pinned `context7` server
