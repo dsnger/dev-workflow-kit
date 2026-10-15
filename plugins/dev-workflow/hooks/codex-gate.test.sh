@@ -597,6 +597,13 @@ reset_all; rev; rev
 # A real (non-WIP) commit still resets
 commitpost
 [ ! -f "$count" ] && pass "non-WIP commit still resets counters" || fail "non-WIP commit still resets counters"
+# A `(WIP)` suffix is not a WIP commit: the PR #69 cycle read "1/3" after three passes this way
+reset_all; rev; rev
+wip "git commit -m 'pass 1 fixes (WIP)'" >/dev/null
+git commit -q --allow-empty -m 'pass 1 fixes (WIP)' >/dev/null 2>&1
+run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1","tool_input":{"command":"git commit -m \"pass 1 fixes (WIP)\""}}' >/dev/null
+[ ! -f "$count" ] && pass "(WIP) suffix commit resets counters" || fail "(WIP) suffix commit resets counters"
+git reset -q --soft HEAD~1 >/dev/null 2>&1
 
 # 19b. `git commit --amend --no-edit` on a WIP HEAD keeps the WIP message, so it is
 # cycle-internal too — but it carries no `-m`, and a command-string match alone reset it.
