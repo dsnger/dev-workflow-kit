@@ -46,7 +46,7 @@ Tool: `mcp__codex__review`
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
-Make each commit inside an open cycle a WIP commit, one line of the form `git commit -m 'WIP: <subject>'` (`-a` allowed), with no `$(…)`, heredoc or chained command; the gate hook keeps the cycle's pass count across that form where `jq` is installed, and across `git commit --amend --no-edit` on a commit whose subject starts with `WIP`. Other commits, a subject ending in `(WIP)` included, reset the count.
+Inside an open cycle, make each commit one line, `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one.
 
 Check against
   @AGENTS.md.

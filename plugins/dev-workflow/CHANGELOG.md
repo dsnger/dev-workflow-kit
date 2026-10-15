@@ -28,13 +28,14 @@ AGENTS.md invariant 12 carries the complete list.
   §5 pointer that 0.16.0–0.23.0 wrote as **older pointer** (it stopped as **mixed** before) and
   recommends replacing that range with the current pointer. Rule 2 on a `.claude/review-gates.md`
   whose first line is the kit's rules heading now recommends overwriting it with the template, with
-  sizes before and after, and never appending sections. A declined replacement is reported as rules
-  from an older kit edition. Field evidence: two projects kept 135 kB and 35 kB of old rules after
-  following the earlier recommendations.
+  sizes before and after, and never appending sections. A declined rules-file replacement is reported
+  as rules from an older kit edition. Field evidence: two projects kept 135 kB and 35 kB of old rules
+  after following the earlier recommendations.
 - **Gate rules name the WIP commit form** (`.claude/review-gates.md` and template `### 2.1a`,
-  identical): a one-line `git commit -m 'WIP: …'`, across which the hook keeps a cycle's pass count
-  (with `jq`), as it does across `--amend --no-edit` on a WIP commit. A subject ending in `(WIP)` resets it, which is why PR #69's cycle read "1/3" after three passes.
-  The hook itself is unchanged; a test pins the reset.
+  identical): one line, `git commit -m 'WIP: <subject>'`, with a plain subject. The hook keeps the
+  pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one,
+  which is why PR #69's cycle read "1/3" after three passes. The hook itself is unchanged; a test pins
+  the reset.
 
 ## 0.27.0
 
