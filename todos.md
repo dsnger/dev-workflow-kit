@@ -1706,3 +1706,43 @@ backlog.
   quote are recorded. Also: the 0.29.0 rules for A3, E, F1, F2 and the closing-act row carry no
   one-clause why (prompt-standards item 6), cut for the 10,000-byte cap. CodeRabbit Minors on PR #71,
   collected. *Trigger: next change to the gate rules with byte room.*
+
+## From the README refresh (PR #72, docs-only) — backlog only, nothing implemented here
+
+- [ ] **Contributing check inventory.** README "Contributing" still counts "four checks" plus "a fifth
+  PR-only check"; `ci.yml` has five unconditional steps and several check families inside one step.
+  Replace the ordinal counts with the check families. Codex fact-check Minor (passes 1–3), collected.
+  *Trigger: next change to `ci.yml` steps.*
+- [ ] **`check-doc-links.sh` scope in README.** Described as "relative Markdown links resolve"; the
+  script checks file existence for supported inline targets in tracked Markdown, strips fragments and
+  skips reference links. Say so in one clause. Codex Minor, collected. *Trigger: next change to the
+  script or its README sentence.*
+- [ ] **Ruleset claim dated.** README asserts the `protect-main.` ruleset, no bypass actors and no push
+  path into main; verified via `gh api repos/dsnger/dev-workflow-kit/rulesets` on 2026-10-16 but not
+  inspectable from the repository. Label it "last verified <date>" or link evidence. Codex Minor,
+  collected.
+- [ ] **Knob table bounds.** `codex-gate.cap` and `cap-extra` take at most nine digits (`pos_int`), and
+  `cap-extra` is cleared on a recognised non-WIP commit attempt even when the commit fails, not by a
+  Gate-A skill reset. `docs/setup.md` knob rows say "a positive integer" and "the commit that clears
+  the pass counter clears it too". Codex Minors, collected. *Trigger: next hook change touching the cap.*
+- [ ] **Load-flake exception in the user docs.** README How-to and `docs/getting-started.md` step 6
+  require a green local battery without the 0.29.0 exception (untouched test timing out under load,
+  passing alone, green required CI on the head). Add one clause with a link. Codex Minor, collected.
+- [ ] **`docs/getting-started.md` wording Minors.** "doesn't share Claude's blind spots" reads as a
+  guarantee; opt-out item 2 does not repeat the at-any-depth prompt-path exclusion; the "rhythm"
+  paragraph still says two review loops in steps 3–4 (plan loop only at risk `high`); step 8 waits
+  for bot comments before `process-pr-review`, whose Step 2 handles a zero-finding bot without a post.
+  Codex Minors/Nit, collected. *Trigger: next edit of that file.*
+- [ ] **`docs/setup.md` wording Minors.** Step 4 report states omit Rule 5's `migrated` / `migration
+  failed` / `stopped`; "each one is skipped when absent" holds for Ponytail and codebase-memory while a
+  missing `context7` entry is always added; the auto-background paragraph says any rewording of the
+  harness notice is counted, where `classify_block` matches anchors and routing or state writes can
+  still withhold credit. Codex Minors, collected. *Trigger: next edit of that file.*
+- [ ] **Prompt-file drift seen from the docs (needs Gate B).** `skills/harden-finding/SKILL.md` line 3
+  still says "lint rule, type constraint, test, or documented convention" against its 0/2/4 ladder;
+  `skills/intake/SKILL.md` proposes risk `trivial|standard|high` while the gate profile line admits
+  `standard|high`; the `ci.yml` comment says "five prompt-conformance checks" (six). Observed in PR #72,
+  not fixed there.
+- [ ] **Stale gate counters in the `dev-workflow-kit-enh` worktree.** The hook prints `⚠ Codex Gate A:
+  pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
+  those files. Noted in the PR #72 handover.
