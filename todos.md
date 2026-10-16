@@ -1693,3 +1693,11 @@ backlog.
   `docs/superpowers/stories/2026-10-11-a-ticket-skill-for-bugs-and-improvements-story.md`); K8
   dropped its `todos.md` pointer instead of deciding it. Adding a sentence to the gate rules is
   under the moratorium. *Trigger: "Sprint-mode review at step 3 shipped".*
+
+## From the gate bundle (dev-workflow 0.29.0) — backlog only, nothing implemented here
+
+- [ ] **CLAUDE.md §6 canary wording vs. the new Gate-B reply.** §6 says a gate reply "is exactly one
+  line per branch"; since 0.29.0 Codex also reports earlier-finding statuses and the criterion map in
+  its reply, outside the finding lines. Reword §6 to speak of the findings file only. Minor from
+  Gate B cycle kg29bndl1016 pass 2 (both slots), collected, not repaired. *Trigger: next change to
+  CLAUDE.md §6.*
