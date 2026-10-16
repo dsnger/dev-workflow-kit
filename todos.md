@@ -1766,4 +1766,11 @@ backlog.
 - [ ] **Codex CLI install command not documented.** `docs/setup.md` step 1 links the Codex
   repository instead of giving `npm install -g @openai/codex`, because that command was not run
   here (AGENTS.md Don'ts). Run it once on a clean machine and document it. *Reader test, both rounds.*
+- [ ] **`/workflow-init` closing checklist overclaims the `config.toml` block.** Checklist item 5
+  (`plugins/dev-workflow/commands/workflow-init.md` around lines 1663-1670) says the CLI, the project
+  MCP entry and the `~/.codex/config.toml` block are "all required" and both gates are inoperative
+  without them, while the block it points at (§2.9) is a placeholder example for giving the Codex
+  reviewer extra MCP servers, and nothing in the hook or gate rules reads that file. Fix the checklist
+  wording (prompt change, Gate B, version bump). *Surfaced by a CodeRabbit comment on PR #73 that
+  read the checklist literally; the comment itself was dismissed because `docs/setup.md` follows §2.9.*
 
