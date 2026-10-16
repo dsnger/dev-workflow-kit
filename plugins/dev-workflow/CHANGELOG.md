@@ -22,6 +22,31 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.29.0
+
+- **Sharper Gate B prompt** (`.claude/review-gates.md` and template `### 2.1a`, identical). Codex
+  forms 2–4 hypotheses from the acceptance criteria and the diff before it reads
+  `whatWasImplemented`, and checks that summary as claims. From pass 2 on, the call lists the earlier
+  passes' Blocker and Major findings and Codex marks each `fixed | not fixed | no longer applies`; a
+  `not fixed` counts as a finding of that pass. The `spec` call maps each acceptance criterion to the
+  test asserting it, or `none`, and flags a test that cannot fail.
+- **Follow-ups survive a close-out.** The closing commit adds a `todos.md` row per finding
+  dispositioned `accepted, not repaired`; at a unit's boundary (CLAUDE.md template §4) every
+  follow-up found and not done goes to `todos.md`, and the handover links those rows. Field evidence:
+  a handover listed seven follow-ups "not yet in todos.md", and one later needed its own PR.
+- **Context7 fallback covers an unindexed pinned version**: the library's own material for that
+  version (docs, installed type declarations, a probe with the pinned binary) suffices and is no
+  finding. Field evidence: one spec drew the same version finding in all three Gate A passes.
+- **Two stops removed.** A free-text answer to the profile question is mapped to the nearest closed
+  values, with mapping and quote recorded. A timeout in a test the diff did not touch that passes
+  alone is recorded, and the required CI check on the PR head stands as the battery evidence; a red
+  CI still stops.
+- **`process-pr-review`: no review is not no comments.** Before concluding a bot found nothing, it
+  checks the bot reviewed the current head, and names a bot that did not.
+- **`/workflow-init` repo settings.** Step 4 also asks for "Require branches to be up to date before
+  merging", with its limit stated; 2.5 warns that CodeRabbit's free plan skips PRs whose base is not
+  the default branch and posts summaries only.
+
 ## 0.28.0
 
 - **`/workflow-init` recommends the current rules over an older kit edition.** 2.1 classifies the

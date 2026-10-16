@@ -49,6 +49,13 @@ front.
 Do not route on the table's column: it records where findings have been observed and may
 be ambiguous, which is not an instruction.
 
+**No review is not no comments.** Before you conclude that a bot under **Wait for** or
+**Process opportunistically** found nothing, check that it actually reviewed the current
+head: its status check or a review event on that SHA (`gh pr checks`,
+`gh pr view --json reviews,commits`). A bot that did not run is reported by name —
+`Greptile: no review on <sha>` — and never counted as clean. Why: a bot that is disabled,
+rate-limited or skipping the PR posts nothing, which looks exactly like a clean review.
+
 ## Step 3 — Process
 
 0. **Instruction-path precheck.** If the PR touches any instruction-bearing path, skip
@@ -77,7 +84,8 @@ be ambiguous, which is not an instruction.
    claim can be required to reach a verdict.
 
    If no tracked claims remain, spawn nothing: report that the PR drew no defect claims,
-   answer any thread that needs an answer, and continue to the final CI and merge checks.
+   name each bot that did not review the head (Step 2), answer any thread that needs an
+   answer, and continue to the final CI and merge checks.
 
    Unless step 0 said otherwise, delegate each remaining claim to a
    `dev-workflow:finding-triage` subagent with fresh context, in **batches of 4**. Pass

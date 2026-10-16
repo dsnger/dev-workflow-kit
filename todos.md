@@ -557,6 +557,9 @@ backlog.
         It is shown in the live view as a per-story panel. *Excluded:* a QA stage, an E2E
         test per criterion, "production-ready" claims, and upstream's severity scheme.
         *Status:* proposed; it follows P5 light's trigger and 4e's place in the build path.
+        **2026-10-16 (0.29.0):** the light part is done — the Gate B `spec` call maps each
+        criterion to its test or `none` and flags a test that cannot fail (`.claude/review-gates.md`,
+        Gate-B prompt). The per-criterion presentation above stays proposed.
       - **G1c — workflow navigation.** Attached to **P1** (`workflow-status` →
         `workflow-next`, Someday), whose staged rollout and trigger are unchanged.
         *Adds:* a fixed output shape for the status read: current story and revision, the
