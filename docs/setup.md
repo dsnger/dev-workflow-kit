@@ -29,15 +29,19 @@ flowchart TB
 
 ## 1. Check what you need
 
-Do: in your project, run `git rev-parse --show-toplevel`, `claude --version` and
-`npx --version`. Install the Codex CLI (https://github.com/openai/codex) and run
+Do: in your project, run `git rev-parse --show-toplevel`, `git log -1 --oneline`,
+`claude --version` and `npx --version`. Install the Codex CLI (https://github.com/openai/codex) and run
 `codex login` with your OpenAI account. Have a GitHub repository for the project; steps
 8 and 9 need it.
 
-You see: a path, a Claude Code version of 2.1.212 or higher, an npx version, and
-`codex login status` says you are logged in (for example `Logged in using ChatGPT`).
+You see: a path, one commit line, a Claude Code version of 2.1.212 or higher, an npx
+version, and `codex login status` says you are logged in (for example `Logged in using
+ChatGPT`).
 
-If not: `/dev-workflow:workflow-init` stops without a git repository. Step 3 needs that
+If not: `/dev-workflow:workflow-init` stops without a git repository. A repository with
+no commits yet (`git log` says `does not have any commits yet`) needs one before step 7:
+run `git commit --allow-empty -m "Initial commit"`, because Gate B reviews a diff against
+the parent of the WIP commit. Step 3 needs that
 Claude Code version. The `codex` and `context7` (library docs) MCP server entries are
 written for you in step 4 and start through `npx`; for Codex you only need the CLI logged
 in, for Context7 nothing. Optional:
