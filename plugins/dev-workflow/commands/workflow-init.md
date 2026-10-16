@@ -956,9 +956,12 @@ review comments, the PR summary body, or both. Do not guess, and do not assume t
 answer is stable: a bot can post a summary on one PR and inline comments on the next,
 so a column may honestly read `inconsistent`. Record what was observed and when.
 
-Warn the user before they rely on CodeRabbit's free plan: it skips pull requests whose
-base is not the default branch, and posts summaries only. A repo that merges into a
-non-default integration branch gets no CodeRabbit review there.
+Warn the user that CodeRabbit reviews automatically only pull requests whose base is the
+default branch, unless its configuration includes the other base
+(`reviews.auto_review.base_branches`); one project saw "Review skipped — auto reviews are
+disabled on base/target branches other than the default branch" beside a passing check. A
+repo that merges into a non-default integration branch gets no CodeRabbit review there until
+that setting includes it.
 
 ````markdown
 # PR review bots — <project>

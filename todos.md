@@ -1701,3 +1701,8 @@ backlog.
   its reply, outside the finding lines. Reword §6 to speak of the findings file only. Minor from
   Gate B cycle kg29bndl1016 pass 2 (both slots), collected, not repaired. *Trigger: next change to
   CLAUDE.md §6.*
+- [ ] **Profile free-text mapping: order and record place.** `.claude/review-gates.md` says "the
+  stricter where two fit" but defines no order for `evidence`, and does not say where the mapping and
+  quote are recorded. Also: the 0.29.0 rules for A3, E, F1, F2 and the closing-act row carry no
+  one-clause why (prompt-standards item 6), cut for the 10,000-byte cap. CodeRabbit Minors on PR #71,
+  collected. *Trigger: next change to the gate rules with byte room.*

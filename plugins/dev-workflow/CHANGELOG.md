@@ -42,10 +42,11 @@ AGENTS.md invariant 12 carries the complete list.
   alone is recorded, and the required CI check on the PR head stands as the battery evidence; a red
   CI still stops.
 - **`process-pr-review`: no review is not no comments.** Before concluding a bot found nothing, it
-  checks the bot reviewed the current head, and names a bot that did not.
+  checks for a review record on the current head (a green status check alone is no proof), and
+  names a bot that did not.
 - **`/workflow-init` repo settings.** Step 4 also asks for "Require branches to be up to date before
-  merging", with its limit stated; 2.5 warns that CodeRabbit's free plan skips PRs whose base is not
-  the default branch and posts summaries only.
+  merging", with its limit stated; 2.5 warns that CodeRabbit auto-reviews only PRs to the default branch
+  unless `reviews.auto_review.base_branches` includes the other base.
 
 ## 0.28.0
 

@@ -51,8 +51,10 @@ be ambiguous, which is not an instruction.
 
 **No review is not no comments.** Before you conclude that a bot under **Wait for** or
 **Process opportunistically** found nothing, check that it actually reviewed the current
-head: its status check or a review event on that SHA (`gh pr checks`,
-`gh pr view --json reviews,commits`). A bot that did not run is reported by name —
+head: a review record whose `commit_id` is that SHA (`gh api --paginate
+repos/<owner>/<repo>/pulls/<n>/reviews`), or the proof its row in `docs/pr-review-bots.md`
+names. A green status check alone is no proof: some bots pass it without reviewing. A bot
+that did not run is reported by name —
 `Greptile: no review on <sha>` — and never counted as clean. Why: a bot that is disabled,
 rate-limited or skipping the PR posts nothing, which looks exactly like a clean review.
 
