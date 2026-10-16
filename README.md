@@ -5,7 +5,7 @@ model (Codex) reviews the design before code exists and the diff before it lands
 
 ```mermaid
 flowchart TB
-  you((You)) -. approve the story .-> intake
+  you([You]) -. approve the story .-> intake
   you -. confirm risk, judge findings .-> gateA
   you -. judge findings .-> gateB
   idea([Idea]) --> intake["/dev-workflow:intake<br>story + acceptance criteria"]
