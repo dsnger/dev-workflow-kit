@@ -12,11 +12,13 @@ step: [`docs/getting-started.md`](docs/getting-started.md).
 - **Two independent review gates.** A *different model* than the author reviews the
   design before it becomes code (Gate A) and the diff before it lands (Gate B).
 - **A fingerprinted hardening ledger.** A finding you run through `harden-finding` is
-  fingerprinted and logged, so a recurrence of its *class* is a grep away — and it is
-  hardened with a lint rule or a test; one that fits neither stays a finding. A finding
-  never run through it leaves no row.
+  mapped to a class and checked against `docs/hardening-log.md`, so a recurrence is a
+  grep away — and it is hardened with a lint rule or a test, each landed hardening one
+  row. A finding an existing required check already catches gets no row; one blocked by
+  a prerequisite is logged `pending` and stays open; one that fits no rung stays a finding.
 - **Repo-enforced quality.** One quality command runs in CI on every pull request and
-  push to main; once branch protection requires that check, a red PR cannot merge.
+  push to main; once branch protection requires that check, a failing run blocks an
+  ordinary merge, subject to the bypass rules you configure.
 
 Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/coding-workflow.md).
 
@@ -24,7 +26,7 @@ Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/codin
 |---|---|
 | `dev-workflow:intake` | skill — a raw idea or voice transcript (German or English) becomes a reviewable story. Captures WHAT and WHY; refuses to invent the parts that aren't there. Also amends an approved story or spec with a change record that accounts for every earlier condition. |
 | `dev-workflow:ticket` | skill — a bug or improvement that stays inside an approved commitment becomes a ticket file: evidence, the commitment it stays inside, and the brief a coding agent fixes from. `list` shows the ones waiting for triage, information or a start. A change to a commitment is handed to `intake`. |
-| `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule (rung 2) or a test (rung 4), recorded in the ledger; rung 0 means an existing required check already fails on it. |
+| `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule (rung 2) or a test (rung 4), recorded in the ledger, or `pending` when a prerequisite blocks it; rung 0 means an existing required check already fails on it and gets no row. |
 | `dev-workflow:sparring` | skill — invoked by name only, in a chat you open for advice: investigates read-only, checks agent reports against the current files, and drafts bounded prompts for a coding agent to run elsewhere. It advises; it does not implement, commit, or run review gates. |
 | `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues, and names a bot that left no review on the current head (a green status check alone is no proof). |
 | `dev-workflow:finding-triage` | agent — read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
@@ -90,9 +92,10 @@ describe the situation and Claude invokes the fitting one. The full walk-through
    record lines. Planning starts after it.
 4. **Cap stop.** `⚠ Codex Gate A: pass cap reached (5/5). STOP and ask the human` → you
    answer `close`, or one of delete the mechanism the findings return to / cut scope /
-   continue — each naming how many further passes it allows (at least one, written to
-   `.context/codex-gate.cap-extra`); the loop resumes on the artifact as your answer
-   leaves it.
+   continue — each naming how many further passes it allows (at least one); the loop
+   resumes on the artifact as your answer leaves it. `.context/codex-gate.cap-extra`
+   holds the **total** allowance beyond the base cap for the cycle, so a second answer
+   adds to the number already there.
 5. Plan (`superpowers:writing-plans`; Gate A on it only at risk `high`, with its own
    closing act), implement (`superpowers:executing-plans`), run the battery from
    `AGENTS.md § Commands` green.
@@ -120,17 +123,21 @@ describe the situation and Claude invokes the fitting one. The full walk-through
 2. `/dev-workflow:process-pr-review [<pr-number>]` → checks CI first, validates each claim
    (usually via a fresh-context `finding-triage` subagent), replies on every thread, fixes
    accepted regressions (substantial ones through Gate B again), and names a bot that left
-   no review on the head. It reports done when every claim has a verdict and every thread
-   a reply, fixes are committed, CI is green on the final head and the PR's merge state
-   is clean — then merge.
+   no review on the head. It reports done when every claim ends in a fix, a documented
+   dismissal, a `todos.md` row or an escalation you have answered, every thread has a
+   reply, fixes are committed, CI is green on the final head and the PR's merge state is
+   clean — then merge.
 
 **A finding that could recur.**
 
 1. `/dev-workflow:harden-finding` with the finding, its source (`gate-a` / `gate-b` / `bot`
    / `manual`) and severity → it fingerprints the class, greps `docs/hardening-log.md` for
    a recurrence, proposes rung 2 (lint) or 4 (test) and asks when both fit, applies and
-   verifies with the project's command, and appends one ledger row.
-2. A closing commit's `hardening owed` lines are closed by running this once per line.
+   verifies with the project's command, and appends one ledger row — or stops: rung 0
+   (already caught, no row), `pending` (blocked by a prerequisite, row stays open), or
+   a row for the same fingerprint that appeared meanwhile.
+2. A closing commit's `hardening owed` line is closed by the rung line the landed
+   hardening writes; a `pending` record leaves it open.
 
 **Discussing an idea first.**
 

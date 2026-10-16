@@ -45,9 +45,9 @@ collected, never iterated. The floor is three valid passes, a pass with zero fin
 close earlier, and the cap is the floor plus two: there the hook prints `⚠ Codex Gate A:
 pass cap reached (5/5). STOP and ask the human`, and you answer `close`, or one of
 delete the mechanism the findings keep returning to / cut scope / continue — each naming
-how many further passes it allows, at least one (written to
-`.context/codex-gate.cap-extra`), and the loop resumes on the artifact as the answer
-leaves it. A clean pass at the
+how many further passes it allows, at least one, and the loop resumes on the artifact
+as the answer leaves it; `.context/codex-gate.cap-extra` holds the **total** allowance
+beyond the base cap, so a second answer adds to the number already there. A clean pass at the
 floor, or a cap answer of `close`, runs the **closing act** — one commit carrying the
 cycle's record lines. Planning starts after that act. Hook messages like `⚠ Codex Gate A
 below floor (1/3)` are the counter, not an error. Your job: arbitrate disputed findings —
@@ -100,8 +100,11 @@ again). Nothing silently ignored, nothing blindly applied.
 
 **9. Close the class, not the instance.** Any finding from steps 3, 7, or 8 that
 could recur: run `harden-finding`. It becomes the guard that fits — a lint rule
-(rung 2) or a test (rung 4) — plus one row in `docs/hardening-log.md`; a finding that
-fits neither stays a finding without a hardening debt. Findings the gates
+(rung 2) or a test (rung 4) — plus one row in `docs/hardening-log.md`; or the skill
+stops at rung 0 (an existing required check already catches it; no row), records
+`pending` when a prerequisite blocks the guard (the obligation stays open), or writes
+no row when one for the same fingerprint appeared meanwhile. A finding that fits no
+rung stays a finding without a hardening debt. Findings the gates
 raised (steps 3 and 7) are checked against the ledger when their cycle closes: the
 closing commit records a `ledger check` line and one `hardening owed` line per finding
 that warrants hardening, and the hardening itself then runs as its own change. That
@@ -122,10 +125,11 @@ knobs — `.context/codex-gate.floor` moves the hook's reminder threshold,
 re-enable; state keeps tracking while off), and the cap files — are listed in
 [`setup.md`](setup.md#per-workspace-knobs).
 
-The hook is installed once per machine but speaks only in projects you initialized —
-everywhere else it stays quiet, so nothing above happens in a repo where you never ran
-`/workflow-init`. If a project of yours goes unexpectedly silent, that's the first
-thing to check: the gates need `.context/codex-gate.on` or §5 in its `CLAUDE.md`.
+The hook is installed once per machine but speaks only in adopted projects — those
+carrying `.context/codex-gate.on` or a `Cross-Model Review` §5 heading in `CLAUDE.md`,
+whether `/workflow-init` wrote them or a clone brought them along. Elsewhere the hook
+stays quiet; the skills and commands remain callable by name. If a project of yours goes
+unexpectedly silent, that's the first thing to check.
 
 ## Opting out
 

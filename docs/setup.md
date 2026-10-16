@@ -59,8 +59,9 @@ claude plugin install dev-workflow@dev-workflow-kit
 ```
 
 Check: in a fresh Claude Code session, `/dev-workflow:workflow-init` is offered as a
-command. The hook is installed once per machine but stays silent in every project until
-step 4 adopts the workflow there.
+command. The hook is installed once per machine but speaks only in a project carrying
+`.context/codex-gate.on` or a `Cross-Model Review` §5 heading in `CLAUDE.md` — step 4
+writes them, and a clone brings them along.
 
 ## 3. Set `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`
 
@@ -147,8 +148,8 @@ command, run it green locally, then put it in `AGENTS.md § Commands` (`quality`
 in the `TODO(stack)` block of `.github/workflows/quality.yml`, and delete the workflow's
 "Refuse to be a green no-op" step, which greps for `TODO(stack)` and fails while any
 remains (its own text included). Baselines (duplication, coverage) go in their own
-commit. Check: the command exits 0 locally, and the `quality` job goes green on the next
-push.
+commit. Check: the command exits 0 locally; the `quality` job runs on a pull request or
+a push to main, so its first green run is on the PR you open in step 6.
 
 ## 6. CI and branch protection
 
@@ -196,10 +197,14 @@ Each one is skipped when absent, and nothing fails:
   agree, it writes permission rules that deny the server's four write tools and allow its
   reads, adds a task-context block to `CLAUDE.md`, and checks the rules through a canary
   run against an isolated store. The step can stop as unsupported or unproven and then
-  claims nothing; protection is claimed only on an `ok` canary, after a restart, and only
-  on the client paths the canary exercised — not against bypass mode, the server's own
-  CLI, or other clients. Indexing stays yours. Off: decline in `/workflow-init` (nothing
-  is written); removing the rules from `.claude/settings.json` later removes the
+  claims nothing; protection is claimed only on a **current** `ok` canary record, after
+  a restart, and only on the client paths the canary exercised — not against bypass
+  mode, the server's own CLI, or other clients. Current means nothing has changed since
+  that run: client version, permission mode, rules, loaded server names, start
+  configuration, server identity, account, and no new managed setting; after any such
+  change the canary is re-run before the claim is made again. Indexing stays yours.
+  Declining in `/workflow-init` writes nothing on a first run and removes nothing
+  already adopted. Removing the rules from `.claude/settings.json` later removes the
   mechanical protection but leaves the `CLAUDE.md` block and the identity record, and
   neither touches the server you configured yourself.
 
