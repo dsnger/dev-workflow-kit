@@ -13,7 +13,7 @@ break. Ordinary repo furniture (`.gitignore`, `.claude/settings.json`, generated
 under `.mcp/`) is deliberately absent, not overlooked.
 
 ```
-README.md                         # what the kit is, quickstart, how to use, contributing
+README.md                         # what the kit is, the flow diagram, quickstart, what to type when
 MANIFEST.md                       # inventory of source-files/, the frozen extraction seed
 AGENTS.md                         # invariants, binding boundaries, conventions, § Commands
 CLAUDE.md                         # discipline rules + pointer to the review gates
@@ -55,8 +55,9 @@ docs/
   PRD.md                          # problem, success measures, non-goals, feature map
   TECH-STACK.md                   # tools the repo runs on, and where each version is pinned
   coding-workflow.md              # the methodology this plugin encodes
-  setup.md                        # from zero to the first merged feature; the hook's knobs
-  getting-started.md              # first story, end to end
+  setup.md                        # numbered Do / You see / If not steps, from zero
+  getting-started.md              # what to type, situation by situation
+  reference.md                    # every component, option, limit and knob; contributing
   prompt-standards.md             # the 12-item checklist every prompt must pass
   hardening-log.md                # append-only findings ledger (union-merged)
   hardening-taxonomy.md           # this project's fingerprint classes

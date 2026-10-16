@@ -1746,3 +1746,31 @@ backlog.
 - [ ] **Stale gate counters in the `dev-workflow-kit-enh` worktree.** The hook prints `⚠ Codex Gate A:
   pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
   those files. Noted in the PR #72 handover.
+
+## From the plain-steps docs rewrite (PR docs/plain-steps, docs-only) — backlog only, nothing implemented here
+
+- [ ] **Scaffold commit vs Gate B.** `/workflow-init` scaffolds `CLAUDE.md`, `.claude/review-gates.md`
+  and the workflow files, and the gate rules it installs count those paths as prompts, so the commit
+  that adds them owes Gate B. `docs/setup.md` step 7 now routes it through a WIP commit, Gate B and
+  the closing act, which costs a new user three review rounds before the first feature. Decide
+  whether a cheaper route for the unchanged kit templates should exist (prompt change, Gate B).
+  *Found by Codex fact-check passes 1 and 2 (plain1016), MAJOR.*
+- [ ] **First run always asks about Codex.** On a project without a `codex` entry in `.mcp.json`
+  the preflight is state 1, so it asks "set it up now?" although Step 2.8 of the same run is what
+  writes the entry; "yes" stops before that. `docs/setup.md` step 4 tells the reader to answer
+  "not now" and undo degraded mode in step 5. Decide whether the preflight should skip the
+  question in state 1 (prompt change, Gate B). *Found by the fresh-reader test, round 1.*
+- [ ] **README diagram omits the conditional plan Gate A and the battery step.** Kept at 12 nodes on
+  purpose; `docs/getting-started.md` New feature step 5 carries the plan gate. *Codex pass 1 MINOR,
+  accepted, not repaired.*
+- [ ] **Codex CLI install command not documented.** `docs/setup.md` step 1 links the Codex
+  repository instead of giving `npm install -g @openai/codex`, because that command was not run
+  here (AGENTS.md Don'ts). Run it once on a clean machine and document it. *Reader test, both rounds.*
+- [ ] **`/workflow-init` closing checklist overclaims the `config.toml` block.** Checklist item 5
+  (`plugins/dev-workflow/commands/workflow-init.md` around lines 1663-1670) says the CLI, the project
+  MCP entry and the `~/.codex/config.toml` block are "all required" and both gates are inoperative
+  without them, while the block it points at (§2.9) is a placeholder example for giving the Codex
+  reviewer extra MCP servers, and nothing in the hook or gate rules reads that file. Fix the checklist
+  wording (prompt change, Gate B, version bump). *Surfaced by a CodeRabbit comment on PR #73 that
+  read the checklist literally; the comment itself was dismissed because `docs/setup.md` follows §2.9.*
+
