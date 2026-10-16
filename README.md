@@ -153,8 +153,8 @@ cap is the floor plus two, where the agent stops and asks you. From pass 2 on, e
 call lists the earlier passes' Blockers and Majors and Codex marks each `fixed | not
 fixed | no longer applies`; the `spec` call maps each acceptance criterion to the test
 asserting it, or `none`. The hook counts passes and compares a fingerprint; it never
-reads a findings file, so a pass whose file is incomplete is discounted whatever the
-counter says.
+reads a findings file. Judge each pass from its findings file and discount an incomplete
+one yourself, whatever the counter says.
 
 Five things stay yours on purpose — a plausible default nobody verified is worse than an
 honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project)):

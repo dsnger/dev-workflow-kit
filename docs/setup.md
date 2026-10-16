@@ -102,7 +102,8 @@ happens, in order:
 - **Preflight.** It prints a status block before writing anything: git repository,
   superpowers, Codex (`not configured` / `NOT LOADED` with the cause / `ok`), `gh`,
   `AGENTS.md`, stack, existing targets, and the two optional companions (codebase-memory
-  MCP, Ponytail). Only a missing git repository stops it.
+  MCP, Ponytail). Only a missing git repository stops the preflight; choosing to set up
+  Codex now (see "Without Codex" below) also ends the run so you can.
 - **Scaffolding.** Per file: missing → written; identical → `unchanged`; present and
   different → it shows the diff and asks overwrite / merge / skip; additive files
   (`.gitattributes`, `.mcp.json`, `.claude/settings.json`) are merged. It writes

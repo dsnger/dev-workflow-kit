@@ -3,7 +3,9 @@
 One small feature (a CSV export for invoices) through the whole workflow. Setup is
 assumed — see [`setup.md`](setup.md) if not. A bug or small improvement inside an
 approved commitment does not start here: `/dev-workflow:ticket <text or evidence>` writes
-a ticket file with the brief, and the fix then joins at step 5.
+a ticket file with the brief; once it is `ready`, the fix follows the ticket's own
+hand-off (mark it `in-progress`, make the brief's feedback loop red, fix) and rejoins
+this walk-through at step 6.
 
 Up front: you don't operate the workflow like a machine. You talk to Claude
 normally; the skills and gates structure *how Claude works*, and the hook reminds
@@ -48,8 +50,8 @@ delete the mechanism the findings keep returning to / cut scope / continue — e
 how many further passes it allows, at least one, and the loop resumes on the artifact
 as the answer leaves it; `.context/codex-gate.cap-extra` holds the **total** allowance
 beyond the base cap, so a second answer adds to the number already there. A clean pass at the
-floor, or a cap answer of `close`, runs the **closing act** — one commit carrying the
-cycle's record lines. Planning starts after that act. Hook messages like `⚠ Codex Gate A
+floor, a zero-finding pass below it, or a cap answer of `close`, runs the **closing act** —
+one commit carrying the cycle's record lines. Planning starts after that act. Hook messages like `⚠ Codex Gate A
 below floor (1/3)` are the counter, not an error. Your job: arbitrate disputed findings —
 Codex is advisory, and a dismissed finding needs a one-line reason.
 
