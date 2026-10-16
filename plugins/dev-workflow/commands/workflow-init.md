@@ -960,7 +960,7 @@ Warn the user that CodeRabbit reviews automatically only pull requests whose bas
 default branch, unless its configuration includes the other base
 (`reviews.auto_review.base_branches`); one project saw "Review skipped — auto reviews are
 disabled on base/target branches other than the default branch" beside a passing check. A
-repo that merges into a non-default integration branch gets no CodeRabbit review there until
+repo that merges into a non-default integration branch gets no automatic CodeRabbit review there until
 that setting includes it.
 
 ````markdown
