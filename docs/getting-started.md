@@ -1,7 +1,9 @@
 # Getting started — your first story, step by step
 
 One small feature (a CSV export for invoices) through the whole workflow. Setup is
-assumed — see the README if not.
+assumed — see [`setup.md`](setup.md) if not. A bug or small improvement inside an
+approved commitment does not start here: `/dev-workflow:ticket <text or evidence>` writes
+a ticket file with the brief, and the fix then joins at step 5.
 
 Up front: you don't operate the workflow like a machine. You talk to Claude
 normally; the skills and gates structure *how Claude works*, and the hook reminds
@@ -16,35 +18,46 @@ touches, and a **profile** — how risky this is (`trivial|standard|high`), how
 security-relevant (`none|standard|high`), and the validation mode derived from the two.
 It proposes both axes and the derived mode with a reason; you confirm or correct the
 axes, and any change to the mode is an override that carries its own reason and is
-logged. The two axes decide
-which extra questions the review gates ask; the derived mode decides what evidence you
-owe before Gate B, and the levels **accumulate**: a green battery, then a check that
-fails without the change, then a named verification of the risk path on top of both. At
-security `high` one more is added — a named abuse scenario and evidence that the control
-rejects or contains it. Too thin → it asks once and waits; it refuses to invent what you didn't
-say. You approve the draft (the criteria are what "done" will mean), and it lands
-as a committed file under `docs/superpowers/stories/`.
+logged. The derived mode decides what evidence you owe before Gate B, and the levels
+**accumulate**: `battery` (green), `battery+check` (a check that fails without the
+change), `battery+check+verification` (a named verification of the risk path on top of
+both), and at security `high` `+abuse-path` — a named abuse scenario and evidence that
+the control rejects or contains it. Too thin → it asks once and waits; it refuses to
+invent what you didn't say. You approve the draft (the criteria are what "done" will
+mean), and it lands as a committed file under `docs/superpowers/stories/`.
 
 **2. Design.** Proceed with the story (intake names the exact next step).
 `superpowers:brainstorming` explores approaches with you; the output is a **spec** —
-settled decisions with rationale, not a wish list.
+settled decisions with rationale, not a wish list. Where the spec uses a third-party
+library API, Claude looks that API up in Context7 for the version your manifest pins and
+names the lookup; when Context7 is unavailable or that version is not indexed, the
+library's own material for that version stands in, and a spec with neither is a Gate-A
+finding.
 
-**3. Gate A on the spec.** Claude sends the spec text to Codex
-(`mcp__codex__exec`) — a different model family, so it doesn't share Claude's blind
-spots. Blocker/Major findings get fixed and the review reruns — on the revised spec where a
-repair was owed, on the same text where none was. When the cycle may close is `CLAUDE.md`
-§5's closure ordering, not a rule of thumb: an eligible pass (clean at or above the floor
-its profile derives, or a pass with zero findings) with every other closure condition
-holding, then the **Gate-A closing act** — the reviewed spec committed with the cycle's
-records. Planning starts after that act, not after the last clean pass. Hook messages like `⚠ Codex Gate A below floor (1/3)` are
-the counter, not an error. Your job: arbitrate disputed findings — Codex is
-advisory, and a dismissed finding needs a one-line reason.
+**3. Gate A on the spec.** First you confirm one profile line — `risk standard|high;
+security none|standard|high; evidence <mode>`; a free-text answer is mapped to the nearest
+closed values, the stricter where two fit, and the mapping is recorded with your quote.
+Then Claude sends the spec text to Codex (`mcp__codex__exec`) — a different model
+family, so it doesn't share Claude's blind spots. Codex writes one finding per line to
+`.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`, severity `BLOCKER | MAJOR |
+MINOR | NIT`. Blocker/Major findings get fixed and the review reruns; Minors and Nits are
+collected, never iterated. The floor is three valid passes, a pass with zero findings may
+close earlier, and the cap is the floor plus two: there the hook prints `⚠ Codex Gate A:
+pass cap reached (5/5). STOP and ask the human`, and you answer `close`, or one of
+delete the mechanism the findings keep returning to / cut scope / continue — each naming
+how many further passes it allows, at least one (written to
+`.context/codex-gate.cap-extra`), and the loop resumes on the artifact as the answer
+leaves it. A clean pass at the
+floor, or a cap answer of `close`, runs the **closing act** — one commit carrying the
+cycle's record lines. Planning starts after that act. Hook messages like `⚠ Codex Gate A
+below floor (1/3)` are the counter, not an error. Your job: arbitrate disputed findings —
+Codex is advisory, and a dismissed finding needs a one-line reason.
 
-**4. Plan, and Gate A again.** `superpowers:writing-plans` turns the spec into a
-task-by-task plan — outcomes, affected parts, settled decisions and test situations per step,
-with the code left to implementation (`CLAUDE.md` §4); the same loop runs at the derived floor
-on the plan and ends with its own Gate-A closing act before execution starts. A flaw caught
-here never reaches code.
+**4. Plan.** `superpowers:writing-plans` turns the spec into a task-by-task plan —
+outcomes, affected parts, settled decisions and test situations per step, with the code
+left to implementation (`CLAUDE.md` §4). Gate A runs on the plan only when the confirmed
+risk is `high`; then the same loop runs on it and ends with its own closing act before
+execution starts.
 
 **5. Implement.** `superpowers:executing-plans` works through the plan, test-first,
 progress claims backed by test runs. If the hook's own threshold wasn't met, it says
@@ -54,20 +67,27 @@ so right when execution starts.
 code + duplication + tests) must be green locally. CI runs the same command, so
 skipping locally only postpones the red.
 
-**7. Gate B on the diff.** Claude makes a plain `git commit -m 'WIP: …'` (gives Codex a
-range to read; the hook keeps the cycle open across it under the conditions `CLAUDE.md` §5
-Mechanics states), then loops
-`mcp__codex__review` the same way: the derived floor, final clean. Invalidation is by
+**7. Gate B on the diff.** With the Ponytail plugin installed, `ponytail-review` runs
+once on the branch diff first, so Codex reads a diff with the obvious cuts made (not a
+gate, not a pass; skipped without the plugin). Claude makes a plain
+`git commit -m 'WIP: <subject>'` (gives Codex a range to read; the hook keeps the cycle
+open across a commit it recognises as WIP), then loops `mcp__codex__review` as two calls
+per pass, `reviewType: spec` then `quality`, on the same `baseSha` and `headSha`: floor
+three, cap and stop as in step 3. From pass 2 on, each call lists the earlier passes'
+Blockers and Majors and Codex marks each `fixed | not fixed | no longer applies`, a
+`not fixed` counting as a finding again; the `spec` call maps each acceptance criterion
+to the test asserting it, or `none`, and reports a test that cannot fail. Invalidation is by
 **content** — any change to included content present when the hook runs, even from a
 formatter, makes the hook report that it cannot confirm the reviewed content. What that proves is bounded, and the hook's own
 source says so: the current fingerprint matches the one recorded on a credited pass, which
 is not evidence that Codex read those bytes; `.context/` and untracked ignored paths are
 excluded, and staging counts, because the fingerprint covers the index and that is what
-a commit carries. On
-`✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on current fingerprint)` — three different numbers: the passes the hook credited this cycle — one per `full` call or per `spec` + `quality` pair on the same `baseSha` and `headSha` — the hook's own reminder threshold, and the **consecutive** credited passes on the current fingerprint since it last changed. The first is not the calls you made: a single branch counts only together with its partner, and the hook withholds credit for a recognized failure envelope, the backgrounding notice, a result it can get no text from, and a request it cannot read or pair. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges, and the message is what the hook checked, not
-permission to close: §5's closure ordering says when the Gate-B cycle may close, and its
-*Finishing the cycle* operation says how — amend the WIP commit, or, where several `WIP:`
-snapshots piled up, `git reset --soft` to the parent of the first and commit once.
+a commit carries. The message
+`✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on current fingerprint)` carries three different numbers: the passes the hook credited this cycle — one per `full` call or per `spec` + `quality` pair on the same `baseSha` and `headSha` — the hook's own reminder threshold, and the **consecutive** credited passes on the current fingerprint since it last changed. The first is not the calls you made: a single branch counts only together with its partner, and the hook withholds credit for a recognized failure envelope, the backgrounding notice, a result it can get no text from, and a request it cannot read or pair. The third is a streak, not a tally — the hook keeps the last fingerprint and that streak, so a pass on a changed fingerprint restarts it and an earlier matching pass separated by a different fingerprint is not counted. None of the three is the floor §5 obliges, and the message is what the hook checked, not
+permission to close: a clean pass at the floor (or a zero-finding pass, or a cap answer
+of `close`) runs the closing act — one final commit with a non-WIP subject carrying the
+cycle lines, the ledger-check records, and a `todos.md` row per finding dispositioned
+`accepted, not repaired`, so no follow-up is lost at the close.
 
 **8. PR and bots.** Open the PR as usual; once the bots have commented, run
 `/dev-workflow:process-pr-review`. Every comment is validated against code and
@@ -79,10 +99,9 @@ in this PR. Each comment is answered on the thread, and, if accepted and actiona
 again). Nothing silently ignored, nothing blindly applied.
 
 **9. Close the class, not the instance.** Any finding from steps 3, 7, or 8 that
-could recur: run `harden-finding`. It becomes the strongest durable guard that
-fits — lint rule, type constraint, test, or documented convention — plus one row in
-`docs/hardening-log.md`. A recurring class escalates one rung harder, so the
-workflow gets stricter exactly where your project actually fails. Findings the gates
+could recur: run `harden-finding`. It becomes the guard that fits — a lint rule
+(rung 2) or a test (rung 4) — plus one row in `docs/hardening-log.md`; a finding that
+fits neither stays a finding without a hardening debt. Findings the gates
 raised (steps 3 and 7) are checked against the ledger when their cycle closes: the
 closing commit records a `ledger check` line and one `hardening owed` line per finding
 that warrants hardening, and the hardening itself then runs as its own change. That
@@ -93,15 +112,15 @@ holds whether or not you open a PR; step 8's bot findings are checked by
 
 The rhythm: minutes of questions and approval (1–2), two review loops where you
 mostly arbitrate (3–4), hands-off implementation (5–6), one more loop (7), PR
-close-out (8–9). Trivial changes travel lighter, within limits: **Gate B** may be skipped
-only when the change is behaviourally trivial **and** the story is eligible — a profiled
-one at effective level 0 (risk `trivial` *and* security `none`), an unprofiled one by the
-prior judgement call. The profile supplies eligibility, never the skip itself; the battery
-is still owed; Gate A's floor derives from the profile exactly as Gate B's does, and what the axes never subtract is the baseline questions. The caution bias is
-for non-trivial work, judgment is allowed. Two knobs: `.context/codex-gate.floor` (any
-positive integer) moves the hook's reminder threshold, and `touch .context/codex-gate.off`
-silences the reminders in a scratch workspace (delete to re-enable; state keeps
-tracking while off, so nothing goes stale).
+close-out (8–9). Only docs-only commits skip **Gate B** — every staged path explanatory
+Markdown under `docs/`, or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`,
+`AGENTS.md` and anything under `.claude/`, `plugins/`, `skills/` or `commands/` at any
+depth are prompts and take the gate, as does a mixed commit; the hook's own
+docs-only note is a path heuristic and does not establish that eligibility. The battery is always owed. The
+knobs — `.context/codex-gate.floor` moves the hook's reminder threshold,
+`touch .context/codex-gate.off` silences the reminders in a scratch workspace (delete to
+re-enable; state keeps tracking while off), and the cap files — are listed in
+[`setup.md`](setup.md#per-workspace-knobs).
 
 The hook is installed once per machine but speaks only in projects you initialized —
 everywhere else it stays quiet, so nothing above happens in a repo where you never ran
@@ -113,17 +132,15 @@ thing to check: the gates need `.context/codex-gate.on` or §5 in its `CLAUDE.md
 The workflow is opt-in per project, and leaving it has clean levels — pick the
 smallest that matches your intent:
 
-1. **Don't adopt:** never run `/workflow-init` in a project → the plugin does
-   nothing there.
-2. **One trivial change:** the hook warns, it never blocks. What §5 permits depends on
-   the story: an **unprofiled** one keeps the old judgement call, while a **profiled**
-   one may skip Gate B only at effective level 0 (risk `trivial` *and* security `none`),
-   still owes the battery, and records the skip reason, the battery result, the cycle's
-   provenance line, a skip record in place of the curve, and one evidence entry per cited
-   profiled story, in the commit body. Gate A is not
-   skippable at any level.
-3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable;
-   state keeps tracking, so nothing goes stale).
+1. **Don't adopt:** never run `/workflow-init` in a project, and keep
+   `.context/codex-gate.on` and a `Cross-Model Review` §5 heading out of it → the hook
+   stays silent there; the skills and commands remain callable by name.
+2. **One docs-only change:** the hook warns, it never blocks, and a commit whose every
+   staged path is explanatory Markdown under `docs/`, or `README.md`, `MANIFEST.md`,
+   `todos.md`, skips Gate B. Any other diff takes it. Gate A is not skippable for a spec.
+3. **Pause a project:** `touch .context/codex-gate.off` (delete to re-enable; the
+   counters keep their semantics while off, which is not evidence that a review
+   happened).
 4. **Leave for good:** remove §5 from the project's `CLAUDE.md`, delete
    `.claude/review-gates.md` and `.context/codex-gate.on` — the project reads as not
    adopted again. The other

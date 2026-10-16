@@ -2,35 +2,43 @@
 
 A Claude Code marketplace with one plugin, `dev-workflow`, that installs a spec-driven
 workflow for building software with agents. It adds three mechanisms: two independent
-cross-model review gates, a self-hardening findings ledger, and repo-enforced quality.
+cross-model review gates, a fingerprinted hardening ledger, and repo-enforced quality.
+
+Full setup, step by step: [`docs/setup.md`](docs/setup.md). One feature through every
+step: [`docs/getting-started.md`](docs/getting-started.md).
 
 ## What it does
 
 - **Two independent review gates.** A *different model* than the author reviews the
   design before it becomes code (Gate A) and the diff before it lands (Gate B).
-- **A self-hardening ledger.** Every finding is fingerprinted, so recurrence of a
-  *class* is detectable — and a recurrence escalates the response one rung harder:
-  prose note → lint rule → type constraint → test.
-- **Repo-enforced quality.** One quality command runs in CI on every change, so nothing
-  red can merge.
+- **A fingerprinted hardening ledger.** A finding you run through `harden-finding` is
+  fingerprinted and logged, so a recurrence of its *class* is a grep away — and it is
+  hardened with a lint rule or a test; one that fits neither stays a finding. A finding
+  never run through it leaves no row.
+- **Repo-enforced quality.** One quality command runs in CI on every pull request and
+  push to main; once branch protection requires that check, a red PR cannot merge.
 
 Why each of these, and how to adapt them: [`docs/coding-workflow.md`](docs/coding-workflow.md).
 
 | | |
 |---|---|
 | `dev-workflow:intake` | skill — a raw idea or voice transcript (German or English) becomes a reviewable story. Captures WHAT and WHY; refuses to invent the parts that aren't there. Also amends an approved story or spec with a change record that accounts for every earlier condition. |
-| `dev-workflow:ticket` | skill — a bug or improvement that stays inside an approved commitment becomes a ticket file: evidence, the commitment it stays inside, and the brief a coding agent fixes from. `list` shows the open ones. A change to a commitment is handed to `intake`. |
-| `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule, type constraint, test, or documented convention, at the right rung, recorded in the ledger. |
+| `dev-workflow:ticket` | skill — a bug or improvement that stays inside an approved commitment becomes a ticket file: evidence, the commitment it stays inside, and the brief a coding agent fixes from. `list` shows the ones waiting for triage, information or a start. A change to a commitment is handed to `intake`. |
+| `dev-workflow:harden-finding` | skill — one review finding becomes a lint rule (rung 2) or a test (rung 4), recorded in the ledger; rung 0 means an existing required check already fails on it. |
 | `dev-workflow:sparring` | skill — invoked by name only, in a chat you open for advice: investigates read-only, checks agent reports against the current files, and drafts bounded prompts for a coding agent to run elsewhere. It advises; it does not implement, commit, or run review gates. |
-| `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues. |
+| `/dev-workflow:process-pr-review` | command — validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues, and names a bot that left no review on the current head (a green status check alone is no proof). |
 | `dev-workflow:finding-triage` | agent — read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
-| `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. |
+| `/dev-workflow:workflow-init` | command — scaffolds the per-project files, then interviews you to write `AGENTS.md`. Re-run it after a kit update: it shows the diff per file, and for a `CLAUDE.md` §5 pointer or a `.claude/review-gates.md` from an older kit edition it recommends the current template. |
 | `/dev-workflow:claude-init` | command — writes one `CLAUDE.md` of general working rules and nothing else: no review gates, no other files. An existing `CLAUDE.md` is never overwritten; you get a proposal instead. Creating the file needs an already-installed Python 3. |
-| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and verify a Gate-B review against a fingerprint of the effective index plus the included worktree content, as of the hook's invocation — a deliberate superset of any one commit's payload, so the gate errs toward firing. Always exits 0. |
+| codex-gate hook | non-blocking reminders that count Gate A and Gate B passes, and at a commit attempt compare a fingerprint of the effective index plus the included worktree content, as of the hook's invocation — a deliberate superset of any one commit's payload, so the gate errs toward firing — with the one recorded when a Gate-B call was credited. A match says the content is unchanged since that credit, not that Codex read it. After a context compaction it reprints the rules-file pointer and the cycle state. Always exits 0. |
 
-## Setup
+## Quickstart
 
-**1. Install superpowers**, then this plugin:
+Prerequisites: Claude Code 2.1.212 or newer, the Codex CLI authenticated with an OpenAI
+account, and optionally `gh`. Details, checks and the optional companions (Context7,
+Ponytail, codebase-memory) are in [`docs/setup.md`](docs/setup.md).
+
+**1. Install superpowers, then this plugin:**
 
 ```sh
 claude plugin marketplace add obra/superpowers-marketplace
@@ -40,116 +48,109 @@ claude plugin marketplace add dsnger/dev-workflow-kit
 claude plugin install dev-workflow@dev-workflow-kit
 ```
 
-To update later:
-
-```sh
-claude plugin marketplace update dev-workflow-kit
-claude plugin update dev-workflow@dev-workflow-kit   # qualified form is a workaround: the bare
-                                                     # name is documented but errors "Plugin
-                                                     # 'dev-workflow' not found" (CLI 2.1.x)
-```
-
-Updates arrive only when the plugin version is bumped, and a running session keeps the
-old version until you restart it or run `/reload-plugins`.
-
-**2. Prerequisites:**
-
-- **superpowers** — not vendored. The workflow's middle *is* its skills; without it,
-  `intake` hands off to nothing and Gate A never fires.
-- **Context7** (MCP, library docs) — `/workflow-init` writes it pinned into your
-  `.mcp.json`. The gate rules require a Context7 lookup, for the version you pin, before a
-  spec, plan or change that uses a third-party library API; without third-party
-  dependencies the rule does not apply, and when Context7 is unavailable the library's own
-  docs stand in.
-- **Codex** — the reviewer behind both gates. Needs the **Codex CLI, authenticated with
-  an OpenAI account** — a real external dependency, not just the `.mcp.json` entry
-  `/workflow-init` writes for you. It also needs **a Codex MCP server that exposes
-  `exec` and `review`** — the gates key on those two tool names, and the pass counters
-  additionally skip routed calls whose result the hook reads as failed, backgrounded, or
-  yielding no usable text; a result it can read but not interpret still counts, and
-  normally says so once. For Gate B the counter also reads the request: a `spec` and a
-  `quality` call on the same 40-character lowercase `baseSha` and `headSha` count as one pass, and a
-  lone branch counts as none.
-  Use the `mcp-codex-dev` server `/workflow-init` pins, which has both. The official
-  `codex mcp-server` is a *different* server exposing a single `codex` tool, which can't
-  be attributed to Gate A (reviews text) or Gate B (reviews a diff): with it connected,
-  no pass ever counts and Gate B reports "not run" forever (the hook says so, once).
-
-  Both gates have Codex write its findings to a file under `.context/codex-reviews/` and
-  reply with a one-line summary, because a long finding list returned inline can come
-  back cut off — and a cut between findings looks exactly like a short list. Claude Code
-  limits MCP tool output to 25,000 tokens by default; `MAX_MCP_OUTPUT_TOKENS` raises
-  that, which is worth trying as a *secondary* mitigation but is not the fix. It moves
-  the ceiling rather than removing it, and it applies only to tools that don't declare
-  their own text limit via `anthropic/maxResultSizeChars` — whether `mcp-codex-dev`
-  declares one is not established here. The file protocol is what actually keeps
-  findings out of the response.
-- **`gh`** — optional; only `/dev-workflow:process-pr-review` uses it.
-
-**2b. Set `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`** — strongly recommended, and the primary
-defence against a gate call being auto-backgrounded. Claude Code moves a long MCP call to
-the background at a threshold (120 s by default) and fires `PostToolUse` *at that moment*,
-carrying the harness's own notice instead of any Codex result; the eventual real
-completion fires no second `PostToolUse`, so the hook never sees the review's outcome.
-
-Requires **Claude Code 2.1.212 or newer**. Set it in the environment Claude Code is
-**launched from** — it is read at process start, so exporting it inside a tool shell
-leaves the running session unchanged and you must restart Claude Code. Use `0` to disable
-auto-backgrounding, or a positive value that **exceeds** your longest expected gate call;
-a positive value shorter than the call still backgrounds it.
+**2. Keep gate calls in the foreground.** Set this in the environment Claude Code is
+launched from, then restart it ([why](docs/setup.md#3-set-claude_code_mcp_auto_background_ms)):
 
 ```sh
 export CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0   # or e.g. 900000, exceeding your longest gate call
 ```
 
-**Without it, both outcomes are possible, and only one is safe.** While the harness notice
-keeps the wording the hook recognizes, the backgrounded pass is *discarded* — correct, but
-**re-running it is not simply a retry**: the original call may still be running and can still
-write into the findings slot afterwards, leaving a correctly terminated file from the wrong
-run that no downstream check can detect. Stop that task by the id in the tool result — or
-await it if the result carries none — and delete the findings slot first. The hook's own
-backgrounding message carries that procedure; follow it there rather than from memory. If that harness prose ever changes, the hook can no longer recognize
-the notice and the call is *counted* instead — credited as a pass, or recorded as half of one
-for a single branch — with a disclosure that says this was done without inspection. That second outcome is why this setting is the defence rather
-than the hook: the hook fails safe against today's wording, not against every future one.
+**3. Run `/dev-workflow:workflow-init` in each project.** It prints what is missing — git
+repo, superpowers, Codex (not configured / not loaded / ok), `gh`, `AGENTS.md`, stack,
+the optional companions — before writing a file, scaffolds the per-project files with a
+diff-and-ask for anything present, interviews you for `AGENTS.md`, and ends with a
+checklist of what stays yours: the quality battery as one command, baselines, branch
+protection, the Codex config block, the PR-bot routing list.
 
-(`CLAUDE_CODE_AUTO_BACKGROUND_TIMEOUT_MS` appears in the 2.1.220 string table but was
-never exercised here, so it is deliberately not documented — naming the wrong one of two
-similar variables is this project's own docs-drift class.)
+**4. Update later** with `claude plugin update dev-workflow@dev-workflow-kit`, restart
+Claude Code, and re-run `/dev-workflow:workflow-init` in each project to take the changed
+files ([details](docs/setup.md#9-update-the-plugin-later)).
 
-**3. Run `/dev-workflow:workflow-init` in each project.** It verifies the rest and tells
-you what's missing — git repo, superpowers, Codex (not configured / not loaded / ok),
-`gh`, `AGENTS.md`, stack — before writing a single file. Then follow
-[`docs/getting-started.md`](docs/getting-started.md) for your first story.
+**5. First feature:** "New feature" below.
 
-## Daily use
+## How to use
 
-**idea → `intake` → brainstorm → spec → Gate A → plan → Gate A → implement → quality
-battery → Gate B → PR → `process-pr-review` → merge**, running every finding worth
-keeping through `harden-finding`.
+Type a skill or command as `/dev-workflow:<name>`; in an initialized project you can also
+describe the situation and Claude invokes the fitting one. The full walk-through is
+[`docs/getting-started.md`](docs/getting-started.md); the hook's per-workspace knobs are in
+[`docs/setup.md`](docs/setup.md#per-workspace-knobs).
 
-New to the workflow? [`docs/getting-started.md`](docs/getting-started.md) walks one
-feature through every step — what you do, what happens, what you see.
+**New feature.**
 
-The hook only speaks up in **initialized projects** — the ones where `/workflow-init`
-has run (it writes `.context/codex-gate.on`, and its `CLAUDE.md` §5 counts too). The
-plugin is installed once per machine; every other repo you open hears nothing from it.
+1. `/dev-workflow:intake <idea or pasted transcript>` → a story with criteria `AC-1`, `AC-2`,
+   … and a profile proposal; you confirm the axes, and it lands under
+   `docs/superpowers/stories/`.
+2. Say "proceed" → `superpowers:brainstorming` writes the spec with you.
+3. **Gate A.** You confirm one profile line, `risk standard|high; security
+   none|standard|high; evidence <mode>` (free text is mapped and quoted back). Findings
+   land in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`, one per line, severity
+   `BLOCKER | MAJOR | MINOR | NIT`; Blockers and Majors are repaired and the pass rerun,
+   the rest collected. `⚠ Codex Gate A below floor (1/3)` is the counter, not an error.
+   A clean pass at the floor runs the **closing act**: one commit carrying the cycle's
+   record lines. Planning starts after it.
+4. **Cap stop.** `⚠ Codex Gate A: pass cap reached (5/5). STOP and ask the human` → you
+   answer `close`, or one of delete the mechanism the findings return to / cut scope /
+   continue — each naming how many further passes it allows (at least one, written to
+   `.context/codex-gate.cap-extra`); the loop resumes on the artifact as your answer
+   leaves it.
+5. Plan (`superpowers:writing-plans`; Gate A on it only at risk `high`, with its own
+   closing act), implement (`superpowers:executing-plans`), run the battery from
+   `AGENTS.md § Commands` green.
+6. **Gate B.** `git commit -m 'WIP: <subject>'`, then a `spec` and a `quality` review on
+   the same base and head per pass; the same floor, cap and stop as Gate A. On a commit
+   attempt you see `✓ Codex Gate B hook checks passed (3/3 cycle, 1 on current fingerprint)`
+   — what the hook checked, not permission to close.
+7. The closing commit carries the cycle records and a `todos.md` row per finding accepted
+   but not repaired. Open the PR → "PR bot comments".
 
-Per-workspace knobs, all files under `.context/`:
+**Bug or small improvement inside an approved commitment.**
 
-| `codex-gate.floor` | a positive integer; moves the hook's reminder threshold. It does not change the floor §5 obliges, which is derived from the cited story's profile. |
-| `codex-gate.cap` | a positive integer; the pass count at which the hook starts printing its pass-cap reminder ("STOP and ask the human") on every gate call and commit attempt. Default: the reminder threshold plus two. A reminder only: nothing is blocked, and whether your review policy has a pass-cap rule is that policy's business. |
-| `codex-gate.cap-extra` | a positive integer, written by hand after the human answers that reminder: the **total** allowance beyond the base cap for the current cycle, not an increment — a second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
-| `codex-gate.off` | silences the reminders; classification and state tracking keep running, so re-enabling lands on counters carrying the same semantics as gate-on — which is not the same as evidence that a review happened. |
-| `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>` — counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Each mapped name must itself lie in `mcp__codex__*`: the hook's `hooks.json` matcher is `^(Bash\|Skill\|mcp__codex__.*)$`, so an out-of-namespace name is either never delivered (the mapping looks applied and does nothing) or, for the reserved names `Bash`/`Skill`, hijacks a lifecycle event; the hook refuses both — register the server as `codex` to place its tools there. Unparseable, out-of-namespace and reserved (`Bash`/`Skill`) lines are ignored, and the gate keeps its default `exec`/`review` name. A typo **inside** the namespace — `mcp__codex__exce` — is still honoured: the hook does not check that a mapped tool exists, so the gate now counts that name and nothing else. Whether it ever counts depends on whether a tool by that name is actually invoked; for a typo, normally never. |
+1. `/dev-workflow:ticket <text or path to evidence>` → a ticket under
+   `docs/superpowers/tickets/` with the commitment, evidence and brief; an undecidable
+   report lands as `needs-triage`. A change to a commitment is handed to `intake` instead.
+2. `/dev-workflow:ticket list` shows the `needs-triage`, `needs-info` and `ready` buckets
+   (not the ones already in progress); only a `ready` ticket carries the build hand-off.
+   `/dev-workflow:ticket T-<n> in-progress` starts one. Fix from the brief, then battery,
+   Gate B and PR as above (docs-only commits skip Gate B); after the closing act,
+   `/dev-workflow:ticket T-<n> done <fix commit>`.
 
-**Without Codex**, `/workflow-init` degrades honestly instead of scaffolding gates that
-can't run: it silences the hook and marks CLAUDE.md §5 `INACTIVE` with the re-enable
-path. There is deliberately no same-model fallback reviewer — explicitly gateless beats
-implicitly self-reviewed
-([why](docs/coding-workflow.md#the-two-gates-and-why-independence-is-the-point)).
+**PR bot comments.**
+
+1. Wait for the bots in the "wait for" list of `docs/pr-review-bots.md`.
+2. `/dev-workflow:process-pr-review [<pr-number>]` → checks CI first, validates each claim
+   (usually via a fresh-context `finding-triage` subagent), replies on every thread, fixes
+   accepted regressions (substantial ones through Gate B again), and names a bot that left
+   no review on the head. It reports done when every claim has a verdict and every thread
+   a reply, fixes are committed, CI is green on the final head and the PR's merge state
+   is clean — then merge.
+
+**A finding that could recur.**
+
+1. `/dev-workflow:harden-finding` with the finding, its source (`gate-a` / `gate-b` / `bot`
+   / `manual`) and severity → it fingerprints the class, greps `docs/hardening-log.md` for
+   a recurrence, proposes rung 2 (lint) or 4 (test) and asks when both fit, applies and
+   verifies with the project's command, and appends one ledger row.
+2. A closing commit's `hardening owed` lines are closed by running this once per line.
+
+**Discussing an idea first.**
+
+1. In a new chat: `/dev-workflow:sparring <question>` → read-only investigation, options
+   weighed, an agent's report checked against the files, a bounded prompt drafted.
+2. It implements nothing and runs no gate; carry its prompt to the session that does.
 
 ## What to expect
+
+**From the gates.** Gate A sends the text of every spec, and of a plan whose confirmed
+risk is `high`, to Codex `exec`. Gate B sends every non-docs-only diff to Codex `review`
+after the battery passes. The prompt asks Codex to report every finding with severity and
+confidence; Claude filters to Blockers and Majors for repair and reads the rest. The
+floor is three valid passes per cycle, a pass with zero findings may close early, and the
+cap is the floor plus two, where the agent stops and asks you. From pass 2 on, each Gate-B
+call lists the earlier passes' Blockers and Majors and Codex marks each `fixed | not
+fixed | no longer applies`; the `spec` call maps each acceptance criterion to the test
+asserting it, or `none`. The hook counts passes and compares a fingerprint; it never
+reads a findings file, so a pass whose file is incomplete is discounted whatever the
+counter says.
 
 Five things stay yours on purpose — a plausible default nobody verified is worse than an
 honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project)):
@@ -169,7 +170,7 @@ honest gap ([reasoning](docs/coding-workflow.md#adapting-it-to-another-project))
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs four checks on every
 PR and push to main: `shellcheck --shell=sh` over the four shell executables and every
 shell test file, the hook's test suite,
-[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus five prompt-conformance checks) plus
+[`scripts/check-invariants.sh`](scripts/check-invariants.sh) (invariants 5 and 6, plus six prompt-conformance checks and three size budgets) plus
 both checkers' regression suites, [`scripts/check-doc-links.sh`](scripts/check-doc-links.sh)
 (relative Markdown links resolve) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
