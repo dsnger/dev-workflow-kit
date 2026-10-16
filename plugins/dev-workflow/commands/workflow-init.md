@@ -603,7 +603,7 @@ Report missing code or tests only where
   include like any other content.
 
 A spec or plan that uses a third-party library, framework or SDK API without a named Context7
-  (or library-docs) lookup for the version the project pins is a finding.
+  lookup (or a Library APIs fallback) for the version the project pins is a finding.
 
 Append the
   intent + artifact text + which invariants it touches.
@@ -631,8 +631,8 @@ Same coverage rule as Gate A: put "report every finding with severity and confid
 
 **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
 Codex forms 2–4 hypotheses of what could be wrong from the acceptance criteria and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so the summary cannot steer the review.
-From pass 2 on, list that slot's earlier Blocker and Major findings and ask Codex to mark each `fixed | not fixed | no longer applies` with file:line; a `not fixed` counts as a finding of this pass, so no earlier finding drops out unchecked.
-In the `spec` call, Codex maps each acceptance criterion to the test asserting it, or `none`, and flags a test that cannot fail.
+From pass 2 on, list that slot's earlier Blocker and Major findings; Codex marks each `fixed | not fixed | no longer applies` with file:line in its reply outside the finding lines, and each `not fixed` becomes a finding line, so no earlier finding drops out unchecked.
+In the `spec` call, Codex maps each acceptance criterion to the test asserting it, or `none`, the same way, and reports a test that cannot fail as a finding.
 
 > One finding per line, in the format
 > `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe inside a field as

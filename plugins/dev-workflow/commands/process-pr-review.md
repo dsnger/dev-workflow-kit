@@ -201,7 +201,9 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
    result that verifies it. If code changed: the project's quality command
    (`AGENTS.md § Commands`) green locally **and** the CI quality check green on the
    final pushed head (`gh pr checks` after the run completes). CI is the enforced
-   authority; the local run is the fast pre-check.
+   authority; the local run is the fast pre-check. A local timeout in a test the diff did
+   not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
+   (Gate-B prompt): record it, and the green CI check on the head stands in.
 
    Shape of the report — one thread, two claims, showing a verdict that was not acted on:
 
