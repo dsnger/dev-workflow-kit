@@ -100,16 +100,13 @@ again). Nothing silently ignored, nothing blindly applied.
 
 **9. Close the class, not the instance.** Any finding from steps 3, 7, or 8 that
 could recur: run `harden-finding`. It becomes the guard that fits — a lint rule
-(rung 2) or a test (rung 4) — plus one row in `docs/hardening-log.md`; or the skill
-stops at rung 0 (an existing required check already catches it; no row), records
-`pending` when a prerequisite blocks the guard (the obligation stays open), or writes
-no row when one for the same fingerprint appeared meanwhile. A finding that fits no
-rung stays a finding without a hardening debt. Findings the gates
-raised (steps 3 and 7) are checked against the ledger when their cycle closes: the
-closing commit records a `ledger check` line and one `hardening owed` line per finding
-that warrants hardening, and the hardening itself then runs as its own change. That
-holds whether or not you open a PR; step 8's bot findings are checked by
-`process-pr-review`.
+(rung 2) or a test (rung 4) — plus one row in `docs/hardening-log.md`; the cases in
+which it writes no row or leaves the obligation open are in the
+[skill file](../plugins/dev-workflow/skills/harden-finding/SKILL.md). A gate cycle's
+closing commit carries a `ledger check` line and one `hardening owed` line per finding
+it owes ([Closing act](../.claude/review-gates.md#closing-act)); run the skill once per
+owed line, as its own change. Step 8's bot findings go through `process-pr-review`'s
+own ledger check.
 
 ## In practice
 
@@ -125,11 +122,10 @@ knobs — `.context/codex-gate.floor` moves the hook's reminder threshold,
 re-enable; state keeps tracking while off), and the cap files — are listed in
 [`setup.md`](setup.md#per-workspace-knobs).
 
-The hook is installed once per machine but speaks only in adopted projects — those
-carrying `.context/codex-gate.on` or a `Cross-Model Review` §5 heading in `CLAUDE.md`,
-whether `/workflow-init` wrote them or a clone brought them along. Elsewhere the hook
-stays quiet; the skills and commands remain callable by name. If a project of yours goes
-unexpectedly silent, that's the first thing to check.
+The hook is installed once per machine and speaks only where `.context/codex-gate.on` or
+the `Cross-Model Review` §5 heading in `CLAUDE.md` is present
+([knobs](setup.md#per-workspace-knobs)). If a project of yours goes unexpectedly silent,
+check those two first.
 
 ## Opting out
 

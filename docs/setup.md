@@ -59,9 +59,7 @@ claude plugin install dev-workflow@dev-workflow-kit
 ```
 
 Check: in a fresh Claude Code session, `/dev-workflow:workflow-init` is offered as a
-command. The hook is installed once per machine but speaks only in a project carrying
-`.context/codex-gate.on` or a `Cross-Model Review` §5 heading in `CLAUDE.md` — step 4
-writes them, and a clone brings them along.
+command. The hook is installed once per machine; step 4 adopts the workflow per project.
 
 ## 3. Set `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`
 
@@ -196,17 +194,13 @@ Each one is skipped when absent, and nothing fails:
   installs, configures or registers it. When `/workflow-init` finds it loaded and you
   agree, it writes permission rules that deny the server's four write tools and allow its
   reads, adds a task-context block to `CLAUDE.md`, and checks the rules through a canary
-  run against an isolated store. The step can stop as unsupported or unproven and then
-  claims nothing; protection is claimed only on a **current** `ok` canary record, after
-  a restart, and only on the client paths the canary exercised — not against bypass
-  mode, the server's own CLI, or other clients. Current means nothing has changed since
-  that run: client version, permission mode, rules, loaded server names, start
-  configuration, server identity, account, and no new managed setting; after any such
-  change the canary is re-run before the claim is made again. Indexing stays yours.
-  Declining in `/workflow-init` writes nothing on a first run and removes nothing
-  already adopted. Removing the rules from `.claude/settings.json` later removes the
-  mechanical protection but leaves the `CLAUDE.md` block and the identity record, and
-  neither touches the server you configured yourself.
+  run against an isolated store. Indexing stays yours. Read the result it reports, and
+  re-run the canary after any change to the client, the server binary, the permission
+  mode, the rules, the start configuration or the account; when you may claim the
+  protection, and what it never covers, is in
+  [`/workflow-init` 2.14–2.15](../plugins/dev-workflow/commands/workflow-init.md) and the
+  block it writes into your `CLAUDE.md`. Off: decline on the first run (nothing is
+  written); parts already adopted are removed by hand.
 
 ## 9. Update the plugin later
 
@@ -232,10 +226,10 @@ do, what happens, what you see.
 
 ## Per-workspace knobs
 
-The hook only speaks up in **adopted projects** — those with `.context/codex-gate.on` or a
-`Cross-Model Review` §5 heading in `CLAUDE.md`, whether `/workflow-init` wrote them or a
-clone brought them along. The plugin is installed once per machine; in every other repo
-the hook stays silent, while the skills and commands remain callable by name.
+The hook speaks only where `.context/codex-gate.on` or the `Cross-Model Review` §5 heading
+in `CLAUDE.md` is present (`is_adopted` in
+[`codex-gate.sh`](../plugins/dev-workflow/hooks/codex-gate.sh)). To silence it for good,
+delete both; the skills and commands stay callable by name.
 
 All knobs are files under `.context/`:
 
