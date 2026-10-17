@@ -9,6 +9,8 @@ block. What the gates compare, and what each hook message means:
 
 ## New feature
 
+![New feature, read left to right](images/process-feature.svg)
+
 1. Type `/dev-workflow:intake <idea or pasted transcript>` (German is fine).
    You see a story draft: problem, outcome, at least three acceptance criteria numbered
    `AC-1`, `AC-2`, ..., the `AGENTS.md` invariants it touches, and a profile proposal.
@@ -56,6 +58,8 @@ block. What the gates compare, and what each hook message means:
    "PR bot comments".
 
 ## Bug or small fix
+
+![Bug or small fix, read left to right](images/process-ticket.svg)
 
 For a change that stays inside an approved commitment. A change to the commitment
 itself goes through `intake` instead.
