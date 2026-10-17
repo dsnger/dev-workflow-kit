@@ -477,11 +477,18 @@ for p in NOTES.md src/prompts/system.md; do
 done
 rm -rf src
 # A command that stages or names paths itself is judged before they are staged: it fires
+# shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
 for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md extra.ts' 'git commit -m x -- extra.ts' "git commit -m 'x y' extra.ts" \
-         'git commit -mfixit extra.ts' 'git commit -m x --pathspec-from-file=p' 'git -C . add extra.ts && git commit -m x'; do
+         'git commit -mfixit extra.ts' 'git commit -m x --pathspec-from-file=p' 'git -C . add extra.ts && git commit -m x' \
+         "git commit -m \\\"don't\\\" extra.ts -m \\\"don't\\\"" 'git commit -m \"$(git add extra.ts)\"'; do
   out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
   printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
 done
+# jq-free, the reader stops at the first escaped quote, so the paths after it are unseen
+out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"fix\" extra.ts"}}')
+printf '%s' "$out" | grep -q 'docs-only commit' && fail "jq-free: quoted message plus path is not docs-only" || pass "jq-free: quoted message plus path is not docs-only"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"plain docs\""}}')
+printf '%s' "$out" | grep -q 'docs-only commit' && pass "plain quoted message, docs staged -> N/A note" || fail "plain quoted message, docs staged -> N/A note"
 printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B' && pass "mixed staged -> Gate B fires" || fail "mixed staged -> Gate B fires"

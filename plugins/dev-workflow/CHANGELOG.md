@@ -37,7 +37,8 @@ Hook fixes from the 0.30.0 Ponytail audit (findings 1-3; the rest are rows in `t
   Markdown under `docs/`, `README.md`, `MANIFEST.md`, `todos.md` (plus `.context/`), and only for
   a command that is exactly `git commit` plus a fixed list of options. Anything else fires: a
   command that stages or names paths itself (`git add x && git commit`, `git commit -m x a.ts`,
-  `-mx a.ts`, `--pathspec-from-file`) is judged on a staged list read before it runs.
+  `-mx a.ts`, `--pathspec-from-file`) is judged on a staged list read before it runs. So does
+  any `\`, `$` or backtick, and any quote left unpaired after the shell's left-to-right pairing.
 
 ## 0.30.0
 

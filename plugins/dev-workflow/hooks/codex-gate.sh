@@ -1230,9 +1230,13 @@ has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--a
 # x && git commit`) or names paths (`git commit -m x a.ts`) is judged on paths it does
 # not show. Docs-only is therefore offered only to a command that is exactly `git commit`
 # plus the options below, each quoted text counted as one word; any other word (a path,
-# an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires.
+# an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires. So does any
+# `\`, `$` or backtick (escapes, substitutions, and the jq-free reader's cut at `\"`) and
+# any quote left after one left-to-right pass, which is how the shell pairs them.
 names_no_paths() {
-  _r=$(printf '%s' "$1" | tr '\n' ' ' | sed -e "s/'[^']*'/Q/g" -e 's/"[^"]*"/Q/g')
+  case "$1" in *[\\\$\`]*) return 1 ;; esac
+  _r=$(printf '%s' "$1" | tr '\n' ' ' | sed -E "s/'[^']*'|\"[^\"]*\"/Q/g")
+  case "$_r" in *[\'\"]*) return 1 ;; esac
   _r=${_r#"${_r%%[![:space:]]*}"}
   case "$_r" in 'git commit' | 'git commit '*) _r=${_r#git commit} ;; *) return 1 ;; esac
   _v=
