@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="704" height="387" viewBox="0 0 704 387" role="img" aria-label="Bug or small fix (ticket): read left to right">
+<title>Bug or small fix (ticket): read left to right</title>
+<style>
+.bg{fill:#ffffff}.t{fill:#1f2328}.m{fill:#59636e}.ph{fill:#0969da}.phl{stroke:#0969da}
+.you{fill:#ddf4ff}.you-t{fill:#0a3069}.claude{fill:#eef1f4}.claude-t{fill:#1f2328}
+.check{fill:#fff1cf}.check-t{fill:#6b4300}.result{fill:#dafbe1}.result-t{fill:#0f5323}
+.empty{fill:none;stroke:#d1d9e0;stroke-dasharray:3 3}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.t{fill:#e6edf3}.m{fill:#9198a1}.ph{fill:#4493f8}.phl{stroke:#4493f8}
+.you{fill:#0c2d6b}.you-t{fill:#cae8ff}.claude{fill:#212830}.claude-t{fill:#e6edf3}
+.check{fill:#4b3300}.check-t{fill:#f8e3a1}.result{fill:#0f3d1e}.result-t{fill:#aff5b4}
+.empty{stroke:#3d444d}}
+</style>
+<rect x="-8" y="-8" width="720" height="403" class="bg"/>
+<g>
+<text x="0" y="16" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600">Bug or small fix (ticket): read left to right</text>
+<text x="60" y="42" class="ph" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5">CAPTURE</text>
+<line x1="60" y1="49" x2="332" y2="49" class="phl" stroke-width="2"/>
+<text x="336" y="42" class="ph" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5">FIX</text>
+<line x1="336" y1="49" x2="516" y2="49" class="phl" stroke-width="2"/>
+<text x="520" y="42" class="ph" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5">SHIP</text>
+<line x1="520" y1="49" x2="700" y2="49" class="phl" stroke-width="2"/>
+<text x="60" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">1 Ticket</text>
+<text x="148" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="152" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">2 Pick</text>
+<text x="240" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="244" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">3 Start</text>
+<text x="332" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="336" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">4 Fix</text>
+<text x="424" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="428" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">5 Gate B</text>
+<text x="516" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="520" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">6 PR</text>
+<text x="608" y="68" text-anchor="end" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">→</text>
+<text x="612" y="68" class="t" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="600">7 Close</text>
+<text x="0" y="92" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="0.4">YOU</text>
+<rect x="60" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="65" y="92" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">/dev-</tspan></text>
+<text x="65" y="106" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">workflow:</tspan></text>
+<text x="65" y="120" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">ticket</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> &lt;text</tspan></text>
+<text x="65" y="134" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">or</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> evidence&gt;</tspan></text>
+<rect x="152" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="157" y="92" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">/dev-</tspan></text>
+<text x="157" y="106" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">workflow:</tspan></text>
+<text x="157" y="120" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">ticket</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> list</tspan></text>
+<rect x="244" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="249" y="92" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">/dev-</tspan></text>
+<text x="249" y="106" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">workflow:</tspan></text>
+<text x="249" y="120" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">ticket</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> T-&lt;n&gt;</tspan></text>
+<text x="249" y="134" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">in-progress</tspan></text>
+<rect x="336" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="341" y="92" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">ask</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> Claude</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> to</tspan></text>
+<text x="341" y="106" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">implement</tspan></text>
+<text x="341" y="120" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">the</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> brief</tspan></text>
+<rect x="428" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="433" y="92" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">judge</tspan></text>
+<text x="433" y="106" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">disputed</tspan></text>
+<text x="433" y="120" class="you-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">findings</tspan></text>
+<rect x="520" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="525" y="92" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">/dev-</tspan></text>
+<text x="525" y="106" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">workflow:</tspan></text>
+<text x="525" y="120" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">process-pr-</tspan></text>
+<text x="525" y="134" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">review</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> &lt;n&gt;</tspan></text>
+<rect x="612" y="77" width="88" height="62" rx="4" class="you"/>
+<text x="617" y="92" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">/dev-</tspan></text>
+<text x="617" y="106" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">workflow:</tspan></text>
+<text x="617" y="120" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">ticket</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> T-&lt;n&gt;</tspan></text>
+<text x="617" y="134" class="you-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">done</tspan><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5"> &lt;commit&gt;</tspan></text>
+<text x="0" y="158" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="0.4">CLAUDE</text>
+<rect x="60" y="143" width="88" height="76" rx="4" class="claude"/>
+<text x="65" y="158" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">writes</tspan></text>
+<text x="65" y="172" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">commitment,</tspan></text>
+<text x="65" y="186" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">evidence,</tspan></text>
+<text x="65" y="200" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">brief</tspan></text>
+<rect x="152.5" y="143.5" width="87" height="75" rx="4" class="empty"/>
+<rect x="244" y="143" width="88" height="76" rx="4" class="claude"/>
+<text x="249" y="158" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">re-checks</tspan></text>
+<text x="249" y="172" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">that</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> it</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> is</tspan></text>
+<text x="249" y="186" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">ready</tspan></text>
+<rect x="336" y="143" width="88" height="76" rx="4" class="claude"/>
+<text x="341" y="158" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">makes</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> the</tspan></text>
+<text x="341" y="172" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">brief&#x27;s</tspan></text>
+<text x="341" y="186" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">feedback</tspan></text>
+<text x="341" y="200" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">loop</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> red,</tspan></text>
+<text x="341" y="214" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">then</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> fixes</tspan></text>
+<rect x="428" y="143" width="88" height="76" rx="4" class="claude"/>
+<text x="433" y="158" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">WIP</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> commit,</tspan></text>
+<text x="433" y="172" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">fixes,</tspan></text>
+<text x="433" y="186" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">closing</tspan></text>
+<text x="433" y="200" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">commit</tspan></text>
+<rect x="520" y="143" width="88" height="76" rx="4" class="claude"/>
+<text x="525" y="158" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">checks</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> each</tspan></text>
+<text x="525" y="172" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">bot</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> claim,</tspan></text>
+<text x="525" y="186" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">answers</tspan></text>
+<text x="525" y="200" class="claude-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">threads</tspan></text>
+<rect x="612.5" y="143.5" width="87" height="75" rx="4" class="empty"/>
+<text x="0" y="238" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="0.4">CHECKS</text>
+<rect x="60.5" y="223.5" width="87" height="61" rx="4" class="empty"/>
+<rect x="152.5" y="223.5" width="87" height="61" rx="4" class="empty"/>
+<rect x="244.5" y="223.5" width="87" height="61" rx="4" class="empty"/>
+<rect x="336" y="223" width="88" height="62" rx="4" class="check"/>
+<text x="341" y="238" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">your</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> quality</tspan></text>
+<text x="341" y="252" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">command</tspan></text>
+<text x="341" y="266" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">green</tspan></text>
+<rect x="428" y="223" width="88" height="62" rx="4" class="check"/>
+<text x="433" y="238" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Codex</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> reads</tspan></text>
+<text x="433" y="252" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">the</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> diff</tspan></text>
+<text x="433" y="266" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">(docs-only</tspan></text>
+<text x="433" y="280" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">skips)</tspan></text>
+<rect x="520" y="223" width="88" height="62" rx="4" class="check"/>
+<text x="525" y="238" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">CI</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> quality,</tspan></text>
+<text x="525" y="252" class="check-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">review</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> bots</tspan></text>
+<rect x="612.5" y="223.5" width="87" height="61" rx="4" class="empty"/>
+<text x="0" y="304" class="m" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="0.4">RESULT</text>
+<rect x="60" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="65" y="304" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">docs/</tspan></text>
+<text x="65" y="318" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">superpowers/</tspan></text>
+<text x="65" y="332" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">tickets/T-</tspan></text>
+<text x="65" y="346" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">&lt;n&gt;</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">;</tspan></text>
+<text x="65" y="360" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">undecidable:</tspan></text>
+<text x="65" y="374" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">needs-triage</tspan></text>
+<rect x="152" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="157" y="304" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">needs-triage</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">,</tspan></text>
+<text x="157" y="318" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">needs-info</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">,</tspan></text>
+<text x="157" y="332" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">ready</tspan></text>
+<rect x="244" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="249" y="304" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">in-progress</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">,</tspan></text>
+<text x="249" y="318" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">or</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> back</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> to</tspan></text>
+<text x="249" y="332" class="result-t" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9.5">needs-info</tspan></text>
+<rect x="336" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="341" y="304" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">fix</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> and</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> test</tspan></text>
+<rect x="428" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="433" y="304" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">closing</tspan></text>
+<text x="433" y="318" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">commit</tspan></text>
+<rect x="520" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="525" y="304" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">every</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> thread</tspan></text>
+<text x="525" y="318" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">answered</tspan></text>
+<rect x="612" y="289" width="88" height="90" rx="4" class="result"/>
+<text x="617" y="304" class="result-t" xml:space="preserve"><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">ticket</tspan><tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11"> done</tspan></text>
+</g>
+</svg>

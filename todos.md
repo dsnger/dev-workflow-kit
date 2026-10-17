@@ -1760,7 +1760,7 @@ backlog.
   writes the entry; "yes" stops before that. `docs/setup.md` step 4 tells the reader to answer
   "not now" and undo degraded mode in step 5. Decide whether the preflight should skip the
   question in state 1 (prompt change, Gate B). *Found by the fresh-reader test, round 1.*
-- [ ] **README diagram omits the conditional plan Gate A and the battery step.** Kept at 12 nodes on
+- [x] **README diagram omits the conditional plan Gate A and the battery step.** Resolved by the process grids (`docs/images/process-feature.svg`, columns Plan and Build). Was: kept at 12 nodes on
   purpose; `docs/getting-started.md` New feature step 5 carries the plan gate. *Codex pass 1 MINOR,
   accepted, not repaired.*
 - [ ] **Codex CLI install command not documented.** `docs/setup.md` step 1 links the Codex

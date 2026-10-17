@@ -4,28 +4,17 @@ From nothing to a project that runs the workflow. Each step says what to do, wha
 should see, and what to do if not. The short version is the README Quickstart. Every
 detail behind a step, and everything optional, is in [`reference.md`](reference.md).
 
-What ends up where:
+The whole setup at a glance, one column per step:
 
-```mermaid
-flowchart TB
-  subgraph machine["Your machine, once"]
-    plugin["dev-workflow plugin<br>skills, commands, the hook"]
-    sp["superpowers plugin"]
-    codex["Codex CLI, logged in"]
-    env["CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0"]
-  end
-  subgraph project["Each project, by /dev-workflow:workflow-init (steps 4 to 7)"]
-    files["CLAUDE.md, .claude/review-gates.md, AGENTS.md<br>.mcp.json (codex, context7), docs/*, todos.md"]
-    marker[".context/codex-gate.on<br>the hook speaks here"]
-    ci[".github/workflows/quality.yml<br>runs your quality command"]
-  end
-  subgraph github["GitHub (steps 8 and 9)"]
-    req["quality: required check"]
-    bots["review bots, routed by docs/pr-review-bots.md"]
-  end
-  plugin --> files
-  ci --> req
-```
+![Setting up the kit, read left to right: what you do, what Claude does, what checks it, what you get](images/process-setup.svg)
+
+**No code yet?** Start with `git init` and one empty commit (step 1), then do steps 2 to 5.
+Leave steps 6 and 7 for later: there is no stack yet to write a quality command for. Your
+first `/dev-workflow:intake` and its spec decide the stack. After the spec's Gate A, do
+step 6, then step 7 for the setup and the quality command together. The story commit in
+between stages only the story file, so the setup files wait for step 7.
+
+![New project, read left to right: what you do, what Claude does, what checks it, what you get](images/process-new-project.svg)
 
 ## 1. Check what you need
 

@@ -3,21 +3,7 @@
 A Claude Code plugin, `dev-workflow`, for building software with coding agents. A second
 model (Codex) reviews the design before code exists and the diff before it lands.
 
-```mermaid
-flowchart TB
-  you([You]) -. approve the story .-> intake
-  you -. confirm risk, judge findings .-> gateA
-  you -. judge findings .-> gateB
-  idea([Idea]) --> intake["/dev-workflow:intake<br>story + acceptance criteria"]
-  intake --> spec["superpowers:brainstorming<br>spec: settled decisions"]
-  spec --> gateA["Gate A<br>Codex reads the spec: design checked before code exists"]
-  gateA --> plan["superpowers:writing-plans"]
-  plan -- "risk high: Gate A on the plan" --> build["superpowers:executing-plans<br>code, tests, your quality command"]
-  build --> gateB["Gate B<br>Codex reads the diff: code checked before it lands"]
-  gateB --> pr([PR + CI]) --> bots["/dev-workflow:process-pr-review<br>bot findings checked, threads answered"]
-  bots --> merge([Merge])
-  gateA & gateB & bots -.-> harden["/dev-workflow:harden-finding<br>a repeated finding becomes a lint rule or test"]
-```
+![New feature, read left to right: what you do, what Claude does, what checks it, what you get](docs/images/process-feature.svg)
 
 ## Quickstart
 
