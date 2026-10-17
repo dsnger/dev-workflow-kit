@@ -40,6 +40,10 @@ Ask for **every** finding
   every line for everything else**, Codex never filters, because a model told to report only high
   severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
 
+Both gates, from pass 2 on: list each slot's earlier Blocker and Major findings with their dispositions verdict; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
+Each `not fixed` becomes a finding line, except a `declined` one Codex can back with no new evidence, so no earlier finding drops out unchecked and no settled one is re-argued.
+Both gates: Codex reports one cause seen at several places once, as a class whose location field lists every place, and looks for siblings of each finding before reporting it, so one repair covers every place.
+
 ## Gate-B prompt
 
 Tool: `mcp__codex__review`
@@ -58,7 +62,6 @@ Same coverage rule as Gate A: put "report every finding with severity and confid
 
 **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
 Codex forms 2–4 hypotheses of what could be wrong from the acceptance criteria and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so the summary cannot steer the review.
-From pass 2 on, list that slot's earlier Blocker and Major findings; Codex marks each `fixed | not fixed | no longer applies` with file:line in its reply outside the finding lines, and each `not fixed` becomes a finding line, so no earlier finding drops out unchecked.
 In the `spec` call, Codex maps each acceptance criterion to the test asserting it, or `none`, the same way, and reports a test that cannot fail as a finding.
 
 > One finding per line, in the format
@@ -111,7 +114,5 @@ Nothing mechanical proves a lookup happened; the named lookup line is the record
 
 ## Ponytail (optional)
 
-Only when the `ponytail` plugin is installed; otherwise skip this section, and nothing fails.
-Before Gate B pass 1 of a cycle, run `ponytail-review` once on the branch diff, so Codex reads a diff with the obvious cuts made: fix real defects, apply each cut or reject it in one line, and list them under "Ponytail pre-review" in the PR body, or in the closing commit's body when there is no PR.
-It is not a gate and not a pass: not counted, not repeated after Gate B passes, and no replacement for Codex, because it runs in the same model family.
-When a release version is bumped or a milestone handover is written, propose `ponytail-audit` and `ponytail-debt` once; on the user's yes, their findings become tickets through the `ticket` skill. Never run them unasked: each reads the whole repository.
+Only with the `ponytail` plugin installed (otherwise nothing fails): before Gate B pass 1, run `ponytail-review` once on the branch diff; fix real defects, apply or reject each cut in one line, and list them under "Ponytail pre-review" in the PR body, or the closing commit's body when there is no PR.
+It is not a gate and not a pass: never counted or repeated, and no replacement for Codex, since it runs in the same model family.
