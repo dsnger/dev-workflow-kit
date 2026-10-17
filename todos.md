@@ -1745,7 +1745,7 @@ backlog.
 - [ ] **Stale gate counters in the `dev-workflow-kit-enh` worktree.** The hook prints `⚠ Codex Gate A:
   pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
   those files. Noted in the PR #72 handover. *0.30.0: the hook now clears the Gate-A count on a
-  non-WIP commit and on `intake` / `ticket`, so new stale counts stop; files left from before stay
+  non-WIP commit and on `intake`, so new stale counts stop; files left from before stay
   until that next event.*
 
 ## From the plain-steps docs rewrite (PR docs/plain-steps, docs-only) — backlog only, nothing implemented here
@@ -1811,3 +1811,9 @@ backlog.
 - [ ] **Revalidate `docs/prompt-standards.md`** against summary sources [1] and [6] of
   `/Users/daniel/Downloads/2026-10-17-arbeiten-mit-coding-agenten-erkenntnisse.md`. *Gap analysis
   2026-10-17.*
+- [ ] **Ponytail release rule is no longer a standing rule.** 0.30.0 moved "propose `ponytail-audit`
+  and `ponytail-debt` once at a release bump or milestone handover" out of the gate rules (size cap)
+  into `/workflow-init` step 2.16, which only tells the user once. A later release session no
+  longer reads it. Find a persistent home that release sessions read (the handover template, or a
+  release step), keeping the installed-only and user-consent conditions. *Gate B `kit030gb1017`
+  pass 1 quality, MINOR, accepted, not repaired.*

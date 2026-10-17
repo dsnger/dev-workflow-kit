@@ -1404,11 +1404,12 @@ case "$event" in
       Skill)
         case "$(input_field skill)" in
           # Reset the Gate-A pass count at both ends of a spec cycle: plan execution
-          # CLOSES one, and intake / ticket / brainstorming / writing-plans OPEN the next —
-          # so a new spec zeroes any stale count abandoned by a previous (un-executed) one.
+          # CLOSES one, and intake / brainstorming / writing-plans OPEN the next — so a new
+          # spec zeroes any stale count abandoned by a previous (un-executed) one. Not
+          # `ticket`: it never runs Gate A, and its `list` / `T-<n>` forms run mid-cycle.
           superpowers:executing-plans | superpowers:subagent-driven-development \
             | superpowers:brainstorming | superpowers:writing-plans \
-            | dev-workflow:intake | dev-workflow:ticket) rm -f "$countA_file" ;;
+            | dev-workflow:intake) rm -f "$countA_file" ;;
         esac
         ;;
     esac
