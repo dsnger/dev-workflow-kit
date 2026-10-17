@@ -1745,7 +1745,7 @@ backlog.
 - [ ] **Stale gate counters in the `dev-workflow-kit-enh` worktree.** The hook prints `⚠ Codex Gate A:
   pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
   those files. Noted in the PR #72 handover. *0.30.0: the hook now clears the Gate-A count on a
-  non-WIP commit and on `intake`, so new stale counts stop; files left from before stay
+  non-WIP commit, so new stale counts stop; files left from before stay
   until that next event.*
 
 ## From the plain-steps docs rewrite (PR docs/plain-steps, docs-only) — backlog only, nothing implemented here

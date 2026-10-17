@@ -33,10 +33,10 @@ AGENTS.md invariant 12 carries the complete list.
 - **Findings by class, both gates.** One cause seen at several places is reported once, its location
   field listing every place, and Codex looks for siblings of each finding before reporting it. The
   one-line findings format is unchanged.
-- **Hook: the Gate-A count resets** on a non-WIP commit and when `dev-workflow:intake` starts,
-  besides the four superpowers skills. Not on `ticket`: it never runs Gate A, and its `list` and
-  `T-<n>` forms run inside open cycles, where a reset would hide a pending cap stop. Before, only those skills reset
-  it, and stale counts printed `pass cap reached (10/5)` in later cycles. A WIP commit keeps it.
+- **Hook: the Gate-A count resets on a non-WIP commit**, besides the four superpowers skills. Before,
+  only those skills reset it, and stale counts printed `pass cap reached (10/5)` in later cycles. A
+  WIP commit keeps it. `intake` and `ticket` deliberately do not reset it: their change-record,
+  `list` and `T-<n>` forms run inside open cycles, where a reset would hide a pending cap stop.
 - **Ponytail section shortened** to two lines in the gate rules; the release rule
   (`ponytail-audit`, `ponytail-debt`) moves to `/workflow-init` step 2.16, where the user is told it.
 - **`intake` description** names its boundary: a bug or defect inside an approved commitment is

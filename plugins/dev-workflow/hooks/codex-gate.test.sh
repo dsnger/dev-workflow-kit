@@ -525,17 +525,19 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":
 [ ! -f "$countA" ] && pass "plan execution resets Gate A count" || fail "plan execution resets Gate A count"
 
 # 16. Every other Gate-A reset trigger zeroes a stale count
-for s in superpowers:brainstorming superpowers:writing-plans superpowers:subagent-driven-development \
-         dev-workflow:intake; do
+for s in superpowers:brainstorming superpowers:writing-plans superpowers:subagent-driven-development; do
   execp
   [ -f "$countA" ] || fail "setup: exec should create countA for $s"
   run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"$s\"}}" >/dev/null
   [ ! -f "$countA" ] && pass "$s resets stale Gate A count" || fail "$s resets stale Gate A count"
 done
-# 16a. `ticket` keeps the count: its list / show forms run inside an open cycle
-execp
-run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"dev-workflow:ticket","args":"list"}}' >/dev/null
-[ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "ticket keeps Gate A count" || fail "ticket keeps Gate A count"
+# 16a. `intake` and `ticket` keep the count: their change-record, list and show forms run
+#      inside an open cycle, where a reset would hide a pending cap stop
+for s in dev-workflow:intake dev-workflow:ticket; do
+  rm -f "$countA"; execp
+  run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"$s\"}}" >/dev/null
+  [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "$s keeps Gate A count" || fail "$s keeps Gate A count"
+done
 # 16b. A non-WIP commit closes the Gate-A count too (a WIP commit keeps it: see kept() in 19d)
 execp; commitpost
 [ ! -f "$countA" ] && pass "non-WIP commit resets Gate A count" || fail "non-WIP commit resets Gate A count"
