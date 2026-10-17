@@ -1526,10 +1526,9 @@ backlog.
       confirm the checkout root first (`git rev-parse --show-toplevel`), then restore. Downstream
       copies are not edited by hand; they take it through `/workflow-init`. Its own small change
       with Gate B.
-- [ ] **Finding A — a route from a fixed finding to the ledger for projects that never
-      open PRs.** **2026-10-10: in PR #56** (dev-workflow 0.22.0: ledger check at every review
-      cycle's close; story, spec and plan under `docs/superpowers/`); "shipped" waits for the
-      merge. Its Gate-B cycle `xwgcreppl09z` owes five hardenings (commit body). **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
+- [x] **Finding A — a route from a fixed finding to the ledger for projects that never
+      open PRs.** **2026-10-10: shipped in PR #56** (merged as `e98fa4c`; dev-workflow 0.22.0: ledger
+      check at every review cycle's close; story, spec and plan under `docs/superpowers/`). Its Gate-B cycle `xwgcreppl09z` owes five hardenings (commit body). **2026-10-05 evidence:** SFX (`sfx-time-tracking-dashboard`, about 430–490 Gate
       finding lines, many Majors repaired, no PRs) also has 0 ledger rows; canvas keeps its
       recurrences and counter-measures in its taxonomy, dispositions and handovers instead, so
       the gap is the merge into the ledger, not the learning. The only mandated ledger check lives in `process-pr-review` step 5, so a
@@ -1745,7 +1744,9 @@ backlog.
   not fixed there.
 - [ ] **Stale gate counters in the `dev-workflow-kit-enh` worktree.** The hook prints `⚠ Codex Gate A:
   pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
-  those files. Noted in the PR #72 handover.
+  those files. Noted in the PR #72 handover. *0.30.0: the hook now clears the Gate-A count on a
+  non-WIP commit and on `intake` / `ticket`, so new stale counts stop; files left from before stay
+  until that next event.*
 
 ## From the plain-steps docs rewrite (PR docs/plain-steps, docs-only) — backlog only, nothing implemented here
 
@@ -1774,3 +1775,39 @@ backlog.
   wording (prompt change, Gate B, version bump). *Surfaced by a CodeRabbit comment on PR #73 that
   read the checklist literally; the comment itself was dismissed because `docs/setup.md` follows §2.9.*
 
+
+## From kit 0.30.0 (gap analysis 2026-10-17) — backlog only, nothing implemented here
+
+- [ ] **WIP commit written as `cd <dir> && git commit -m 'WIP: …'` is not recognised.** The hook's WIP
+  allow-list refuses `cd`, `&` and chains on purpose (`codex-gate.sh`, comment above
+  `msg_may_be_rewritten`), so such a commit resets the Gate-B count; field: an SFX hook showed 1/3
+  after it. Not fixed in 0.30.0 because it is not small: accepting `cd` means resolving the
+  directory against the repository root in both hook phases, and the same shell-text parsing drew
+  new Majors in three Gate-B passes in story S5 (row "Hook repository context can differ…" above).
+  Cheaper first step: the gate rules already say "one line, `git commit -m 'WIP: <subject>'`"; an
+  eval case (row below) would show whether agents follow it. *Gap analysis 2026-10-17, item 3.*
+- [ ] **Minimal prompt eval.** A `claude plugin eval` suite outside `plugins/`, run by hand before a
+  version bump: skill-trigger cases for `intake`, `ticket` and `harden-finding` (one should-fire and
+  one should-not each), plus one incident case "WIP commit form" (asserts the one-line
+  `git commit -m 'WIP: …'`). Format per the claude-code-guide (2026-10-17, no public doc page, so
+  weak): a case is `<dir>/<case>/prompt.md` plus `graders/*.md` (`type: tool_used`, `tool: Skill`
+  or `Bash`, `input_match` regex); `--eval-dir <dir>` puts the suite outside the plugin; run
+  `claude plugin eval <target> --eval-dir <dir>`. Confirm with one real run before building more.
+  *Gap analysis 2026-10-17, summary §6 rule 8.*
+- [ ] **Project `AGENTS.md` size warning in `/workflow-init`.** Warn when a project's `AGENTS.md`
+  passes Codex's default instruction read limit. The 32 KiB figure comes from summary source [8]
+  only (weak evidence): verify it against Codex's own docs or a probe first. *Gap analysis
+  2026-10-17.*
+- [ ] **"declined" counts in the curve line.** Add the per-pass count of `declined` dispositions to
+  the cycle's curve line, so review noise can be measured, not guessed (rules change, both copies,
+  check 4i size cap). *Gap analysis 2026-10-17.*
+- [ ] **Shorter hook messages.** Each message states the state and the next action; the list of
+  possible causes moves to `docs/reference.md`. Hook change, tests under `sh` and `dash`. *Gap
+  analysis 2026-10-17.*
+- [ ] **Trim this repository's `AGENTS.md`.** 24.5 kB (2026-10-17), below but near the 32 KiB Codex read
+  limit named in the row above (unverified). Move history paragraphs (incident stories under Don'ts)
+  to `docs/ARCHITECTURE.md` or the CHANGELOG and keep each rule with its one-clause why. *Gap
+  analysis 2026-10-17.*
+- [ ] **Revalidate `docs/prompt-standards.md`** against summary sources [1] and [6] of
+  `/Users/daniel/Downloads/2026-10-17-arbeiten-mit-coding-agenten-erkenntnisse.md`. *Gap analysis
+  2026-10-17.*

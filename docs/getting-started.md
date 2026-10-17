@@ -30,6 +30,8 @@ block. What the gates compare, and what each hook message means:
    one per line, severity `BLOCKER | MAJOR | MINOR | NIT`. Blockers and Majors get
    fixed and the review runs again. Minors and Nits are collected, not iterated.
    A review normally takes three rounds; a round with no findings may close earlier.
+   From round 2 on, Codex marks each earlier Blocker and Major `fixed`, `not fixed` or
+   `no longer applies`.
    Hook lines like `⚠ Codex Gate A below floor (1/3)` are the round counter, not an
    error. You answer: which disputed findings stand. A dismissed finding needs a
    one-line reason.

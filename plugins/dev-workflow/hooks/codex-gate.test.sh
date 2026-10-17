@@ -525,12 +525,16 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":
 [ ! -f "$countA" ] && pass "plan execution resets Gate A count" || fail "plan execution resets Gate A count"
 
 # 16. Every other Gate-A reset trigger zeroes a stale count
-for s in superpowers:brainstorming superpowers:writing-plans superpowers:subagent-driven-development; do
+for s in superpowers:brainstorming superpowers:writing-plans superpowers:subagent-driven-development \
+         dev-workflow:intake dev-workflow:ticket; do
   execp
   [ -f "$countA" ] || fail "setup: exec should create countA for $s"
   run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"$s\"}}" >/dev/null
   [ ! -f "$countA" ] && pass "$s resets stale Gate A count" || fail "$s resets stale Gate A count"
 done
+# 16a. A non-WIP commit closes the Gate-A count too (a WIP commit keeps it: see kept() in 19d)
+execp; commitpost
+[ ! -f "$countA" ] && pass "non-WIP commit resets Gate A count" || fail "non-WIP commit resets Gate A count"
 
 # 17. FINDING 6 — per-project floor override via .context/codex-gate.floor
 reset_all
@@ -740,7 +744,7 @@ git config --unset core.hooksPath
 # Commands use single quotes so they embed in the JSON payload as they are.
 base19d=$(git rev-parse HEAD)
 mlife() { # $1 = the command; runs it for real between the two hook events
-  reset_all; rev; rev
+  reset_all; rev; rev; execp
   pre=$(wip "$1")
   before=$(git rev-parse HEAD)
   printf 'x\n' >> wip.txt; git add wip.txt >/dev/null 2>&1
@@ -750,7 +754,7 @@ mlife() { # $1 = the command; runs it for real between the two hook events
   amendpost "$1"
 }
 noted() { printf '%s' "$pre" | grep -q 'Codex cycle decided after'; }
-kept() { [ "$(cat "$count" 2>/dev/null)" = 2 ]; }
+kept() { [ "$(cat "$count" 2>/dev/null)" = 2 ] && [ "$(cat "$countA" 2>/dev/null)" = 1 ]; }
 # (m1) plain `-m 'WIP…'`, no hooks: note before, commit is WIP, cycle kept
 mlife "git commit -q -m 'WIP: next'"
 noted && [ "$moved" = yes ] && [ "$subj" = 'WIP: next' ] && kept && pass "-m wip, no hooks: note, WIP commit, cycle kept" || fail "-m wip, no hooks: note, WIP commit, cycle kept"
@@ -845,7 +849,7 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t1
 [ ! -f "$count" ] && pass "backgrounded -m wip commit: reset" || fail "backgrounded -m wip commit: reset"
 # (m16) overlapping calls, Greptile's order: A's Pre, A's commit, B's Pre, A's Post, B's
 # commit, B's Post. Each call reads its own record, so both valid WIP commits keep the cycle
-reset_all; rev; rev
+reset_all; rev; rev; execp
 wip "git commit -q -m 'WIP: a'" toolu_a >/dev/null
 git commit -q --allow-empty -m 'WIP: a' >/dev/null 2>&1
 wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null

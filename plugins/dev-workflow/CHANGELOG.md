@@ -22,6 +22,27 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.30.0
+
+- **Gate A carries earlier findings forward too** (`.claude/review-gates.md` and template `### 2.1a`,
+  identical). The 0.29.0 Gate-B sentence becomes one rule for both gates: from pass 2 on, the call
+  lists each slot's earlier Blocker and Major findings with their dispositions verdict, and Codex
+  marks each `fixed | not fixed | no longer applies`. A `not fixed` is a finding again, except one the
+  author `declined` and Codex can back with no new evidence. Field evidence: Gate A plan cycles took
+  4–5 passes, one class recurring in passes 2–4.
+- **Findings by class, both gates.** One cause seen at several places is reported once, its location
+  field listing every place, and Codex looks for siblings of each finding before reporting it. The
+  one-line findings format is unchanged.
+- **Hook: the Gate-A count resets** on a non-WIP commit and when `dev-workflow:intake` or
+  `dev-workflow:ticket` starts, besides the four superpowers skills. Before, only those skills reset
+  it, and stale counts printed `pass cap reached (10/5)` in later cycles. A WIP commit keeps it.
+- **Ponytail section shortened** to two lines in the gate rules; the release rule
+  (`ponytail-audit`, `ponytail-debt`) moves to `/workflow-init` step 2.16, where the user is told it.
+- **`intake` description** names its boundary: a bug or defect inside an approved commitment is
+  `ticket`'s.
+- **`Deviations` list** (`CLAUDE.md` template §4, Local choices): each decision the plan left open goes
+  into the handover with what was chosen; when unsure, the conservative option.
+
 ## 0.29.0
 
 - **Sharper Gate B prompt** (`.claude/review-gates.md` and template `### 2.1a`, identical). Codex

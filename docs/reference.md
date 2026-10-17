@@ -263,9 +263,11 @@ Claude filters to Blockers and Majors for repair and reads the rest. Findings la
 `.context/codex-reviews/gate-a-<spec|plan>-<nonce>-pass-<n>.md` (Gate A) one per line, severity
 `BLOCKER | MAJOR | MINOR | NIT`. Minors and Nits are collected, never iterated. The floor
 is three valid passes per cycle, a pass with zero findings may close early, and the cap
-is the floor plus two, where the agent stops and asks you. From pass 2 on, each Gate-B
-call lists the earlier passes' Blockers and Majors and Codex marks each `fixed | not
-fixed | no longer applies`, a `not fixed` counting as a finding again; the `spec` call
+is the floor plus two, where the agent stops and asks you. From pass 2 on, each pass of
+either gate lists the earlier passes' Blockers and Majors and Codex marks each `fixed | not
+fixed | no longer applies`, a `not fixed` counting as a finding again unless you declined it
+and Codex brings no new evidence. One cause at several places is reported once, as a class
+listing every place. In Gate B the `spec` call
 maps each acceptance criterion to the test asserting it, or `none`, and reports a test
 that cannot fail. Codex is advisory: you arbitrate disputed findings, and a dismissed
 finding needs a one-line reason.
@@ -416,4 +418,18 @@ All of these are read-only unless stated.
   its source and age; what the sources cannot establish says `unknown`. `--watch`
   regenerates it at that interval until you stop it, and the page reloads itself. It
   writes only `.context/status/`, keeps a cache there so later runs re-read only changed
-  logs, and makes no model call. The first run reads every transcript once.
+  logs, and makes no model call. The first run reads every transcript once. Daily use:
+  - **Where.** Run it from the root of the checkout you want to see. Branch, uncommitted paths
+    and handover come from that checkout; effort counts every worktree sharing its git directory.
+  - **Start and open.** Start it in a terminal of its own with
+    `python3 -B scripts/status-view.py --watch 30`, then open `.context/status/index.html` in a
+    browser. It prints nothing while it runs. Later runs reuse the cache, so they are much faster
+    than the first.
+  - **Stop.** Press Ctrl-C in that terminal; it exits 0 and the page stays. A watcher started in
+    the background with `&` ignores Ctrl-C's signal, so stop it with `kill <pid>`. A second run
+    beside a watcher refuses: `another status-view run holds .context/status/.lock`.
+  - **Current or stale.** The top line names the generation time and either `watch every N s` or
+    `one-shot run`. A watch page reloads itself. When no refresh has arrived within three
+    intervals, because the watcher stopped or keeps failing, it shows `stale: no successful
+    refresh observed within three intervals`. A one-shot page never warns, so only its generation
+    time tells you how old it is.

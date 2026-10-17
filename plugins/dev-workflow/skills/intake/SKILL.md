@@ -1,6 +1,6 @@
 ---
 name: intake
-description: Use at the very start of the workflow, when a raw idea, voice transcript (German or English), or backlog line needs capturing before superpowers:brainstorming — or later, when an approved story or spec must change after a decision to change it, to write a change record that accounts for every earlier condition. Not for designing the solution.
+description: Use at the very start of the workflow, when a raw idea, voice transcript (German or English), or backlog line needs capturing before superpowers:brainstorming — or later, when an approved story or spec must change after a decision to change it, to write a change record that accounts for every earlier condition. Not for designing the solution, nor for a bug or defect inside an approved commitment (that is `ticket`).
 ---
 
 # intake

@@ -1380,7 +1380,8 @@ case "$event" in
         ;;
       Bash)
         cmd=$(input_field command)
-        # RESET on commit closes the Gate-B cycle. A WIP commit does NOT close it
+        # RESET on commit closes the Gate-B cycle, and the Gate-A count with it, so a
+        # stale count never outlives its cycle. A WIP commit does NOT close it
         # (see is_wip_commit_post).
         #
         # We reset regardless of whether the commit actually SUCCEEDED. The Bash
@@ -1395,7 +1396,7 @@ case "$event" in
         # prevent. Revisit if an exit-status field is ever documented.
         if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
-                "$legacy_count" "$legacy_fresh" "$capextra_file"
+                "$legacy_count" "$legacy_fresh" "$capextra_file" "$countA_file"
         fi
         # This call's `-m wip` record belongs to this one command, whatever the decision above was
         if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
@@ -1403,10 +1404,11 @@ case "$event" in
       Skill)
         case "$(input_field skill)" in
           # Reset the Gate-A pass count at both ends of a spec cycle: plan execution
-          # CLOSES one, and brainstorming / writing-plans OPENS the next — so a new
-          # spec zeroes any stale count abandoned by a previous (un-executed) one.
+          # CLOSES one, and intake / ticket / brainstorming / writing-plans OPEN the next —
+          # so a new spec zeroes any stale count abandoned by a previous (un-executed) one.
           superpowers:executing-plans | superpowers:subagent-driven-development \
-            | superpowers:brainstorming | superpowers:writing-plans) rm -f "$countA_file" ;;
+            | superpowers:brainstorming | superpowers:writing-plans \
+            | dev-workflow:intake | dev-workflow:ticket) rm -f "$countA_file" ;;
         esac
         ;;
     esac
