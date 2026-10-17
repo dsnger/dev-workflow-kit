@@ -1880,3 +1880,15 @@ repos where marked). Numbers are the audit's.
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
   the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
+- [ ] **Docs-only note: shell operators and globs in option values.** `names_no_paths` takes the word
+  after `-m` as the message without checking it, so `git commit -am docs>app.ts` (redirect) and
+  `git commit -m *` (glob) still get "Gate B N/A" with only docs staged (Codex reproduced both). Fire
+  on any unquoted `<>|&;*?[` before the word loop, plus a regression test. *Gate B `kit0301gb1017` pass 3
+  spec 1 + quality 1, MINOR, accepted, not repaired.*
+- [ ] **Positive docs-only test needs jq.** `codex-gate.test.sh` "plain quoted message, docs staged"
+  expects the N/A note, but the jq-free reader cuts at `\"` and the hook (rightly) fires, so the suite
+  fails on a machine without jq. Use a single-quoted message. *Gate B `kit0301gb1017` pass 3 quality 2,
+  MINOR, accepted, not repaired.*
+- [ ] **Reset comment wording.** The comment above the commit reset in `codex-gate.sh` still says the
+  Gate-A count closes with the cycle; since 0.30.1 it is moved to `passCountA.closed` for the floor
+  check. *Gate B `kit0301gb1017` pass 3 quality 3, NIT, accepted, not repaired.*
