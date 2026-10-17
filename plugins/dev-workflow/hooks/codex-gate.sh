@@ -205,7 +205,13 @@ if [ -f "$tools_file" ]; then
   done < "$tools_file" 2>/dev/null
 fi
 
-read_count() { if [ -f "$1" ]; then cat "$1" 2>/dev/null || echo 0; else echo 0; fi; }
+# A count is digits only; anything else (empty after a cut-short write, conflict text)
+# reads as 0, and leading zeros go, so `$(( ))` never sees an invalid octal like `08`
+read_count() {
+  _c=; [ -f "$1" ] && _c=$(cat "$1" 2>/dev/null | tr -d '[:space:]')   # a FIFO would block `cat`
+  case "$_c" in '' | *[!0-9]*) _c=0 ;; *) _c=${_c#"${_c%%[!0]*}"} ;; esac
+  echo "${_c:-0}"
+}
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
 
 # Fingerprint used for the Gate-B comparison, computed at hook invocation: the diff of
@@ -1219,6 +1225,32 @@ is_wip_commit_post() {
 # dashes and never matches, so it isn't mistaken for -a.)
 has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--all)([[:space:]]|$)'; }
 
+# The staged list is read before the command runs, so a command that stages (`git add
+# x && git commit`) or names paths (`git commit -m x a.ts`) is judged on paths it does
+# not show. Docs-only needs a commit whose every word after `commit`, each quoted text one word,
+# is an option or the value of one that takes a value (`-m x`, `-am x`), and no
+# other git subcommand that stages; anything else, an unknown option's value included, fires.
+names_no_paths() {
+  _r=$(printf '%s' "$1" | tr '\n' ' ' | sed -e "s/'[^']*'/Q/g" -e 's/"[^"]*"/Q/g')
+  printf '%s' "$_r" | grep -Eq '(^|[^[:alnum:]])git[[:space:]]+(add|rm|mv|stage)([[:space:]]|$)' && return 1
+  _r=${_r#*commit}
+  _v=
+  set -f
+  for _w in $_r; do
+    if [ -n "$_v" ]; then _v=; continue; fi
+    case "$_w" in
+      --) set +f; return 1 ;;
+      --message | --file | --author | --date | --cleanup | --template | --trailer) _v=1 ;;
+      --*) ;;
+      -*[mFCct]) _v=1 ;;
+      -*) ;;
+      *) set +f; return 1 ;;
+    esac
+  done
+  set +f
+  return 0
+}
+
 # Prompts are Markdown too, and a prompt is product, not documentation: skills,
 # slash commands, plugin content and the instruction files all end in .md. Exempting
 # them would hand a false "N/A" to exactly the change that most needs Gate B — the
@@ -1236,16 +1268,16 @@ is_prompt_path() {
     grep -Eq '(^|/)(CLAUDE|AGENTS)\.md$|(^|/)(\.claude|plugins|skills|commands)/'
 }
 
-# True ONLY when the file list is non-empty AND every path is a doc artifact
-# (*.md anywhere, or under .context/) AND none of them is a prompt. Restricted to
-# the .md extension on purpose: a non-Markdown file under docs/ (e.g. a script) IS
-# code and must still hit Gate B, so we do NOT exempt the docs/ directory
-# wholesale. An empty/undeterminable list returns false, so the caller falls
+# True ONLY when the file list is non-empty AND every path is a doc artifact (the
+# rules' docs-only list: Markdown under docs/, README.md, MANIFEST.md, todos.md, plus
+# .context/) AND none of them is a prompt. Restricted to the .md extension on purpose:
+# a non-Markdown file under docs/ (e.g. a script) IS code and must still hit Gate B,
+# so we do NOT exempt the docs/ directory wholesale. An empty/undeterminable list returns false, so the caller falls
 # through to the loose Gate-B default (fire) — keeping "missed code commit" the
 # safe direction.
 is_docs_only() {
   [ -n "$1" ] || return 1
-  printf '%s\n' "$1" | grep -vE '(\.md$|^\.context/)' | grep -q . && return 1
+  printf '%s\n' "$1" | grep -vE '^docs/.*\.md$|^(README|MANIFEST|todos)\.md$|^\.context/' | grep -q . && return 1
   is_prompt_path "$1" && return 1
   return 0
 }
@@ -1396,7 +1428,10 @@ case "$event" in
         # prevent. Revisit if an exit-status field is ever documented.
         if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
-                "$legacy_count" "$legacy_fresh" "$capextra_file" "$countA_file"
+                "$legacy_count" "$legacy_fresh" "$capextra_file"
+          # The closing act's commit precedes plan execution, which still reads the closed
+          # count for its floor check; the cap check reads only the live one
+          [ -f "$countA_file" ] && mv -f "$countA_file" "$countA_file.closed" 2>/dev/null
         fi
         # This call's `-m wip` record belongs to this one command, whatever the decision above was
         if is_commit "$cmd" && wipbase_file=$(wip_record_path); then rm -f "$wipbase_file" 2>/dev/null; fi
@@ -1409,7 +1444,7 @@ case "$event" in
           # `intake` or `ticket`: their change-record, `list` and `T-<n>` forms run inside
           # an open cycle, where a reset would hide a pending cap stop.
           superpowers:executing-plans | superpowers:subagent-driven-development \
-            | superpowers:brainstorming | superpowers:writing-plans) rm -f "$countA_file" ;;
+            | superpowers:brainstorming | superpowers:writing-plans) rm -f "$countA_file" "$countA_file.closed" ;;
         esac
         ;;
     esac
@@ -1431,7 +1466,7 @@ case "$event" in
           files=$(git -C "$repo_root" diff --cached --name-only 2>/dev/null)
           has_all_flag "$cmd" && files=$(printf '%s\n%s\n' "$files" "$(git -C "$repo_root" diff --name-only 2>/dev/null)")
           files=$(printf '%s\n' "$files" | sed '/^$/d')
-          if is_docs_only "$files"; then
+          if names_no_paths "$cmd" && is_docs_only "$files"; then
             note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
           else
             retire "$legacy_count"; retire "$legacy_fresh"   # best effort; nothing is credited here
@@ -1496,6 +1531,7 @@ case "$event" in
         case "$(input_field skill)" in
           superpowers:executing-plans | superpowers:subagent-driven-development)
             passesA=$(read_count "$countA_file")
+            [ -f "$countA_file" ] || passesA=$(read_count "$countA_file.closed")
             if [ "$passesA" -lt "$floor" ]; then
               note "Codex Gate A floor NOT met: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls with no content check. What this cycle does next is $policy's closure ordering's, read there entire." "⚠ Codex Gate A below floor ($passesA/$floor)"
             else

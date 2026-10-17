@@ -1746,7 +1746,8 @@ backlog.
   pass cap reached (7/5)` from `.context/codex-gate.*` state left by earlier cycles; a human resets
   those files. Noted in the PR #72 handover. *0.30.0: the hook now clears the Gate-A count on a
   non-WIP commit, so new stale counts stop; files left from before stay
-  until that next event.*
+  until that next event. 0.30.1: it moves the count aside to `passCountA.closed` instead, which
+  only the plan-execution floor check reads, so the cap check still stops seeing it.*
 
 ## From the plain-steps docs rewrite (PR docs/plain-steps, docs-only) — backlog only, nothing implemented here
 
@@ -1819,7 +1820,8 @@ backlog.
   pass 1 quality, MINOR, accepted, not repaired.*
 - [ ] **A failed non-WIP commit also clears the Gate-A count.** The hook resets on every commit
   attempt because the Bash payload carries no exit status (comment above the reset in
-  `codex-gate.sh`); 0.30.0 added `passCountA` to that reset. A failed commit at the Gate-A cap
+  `codex-gate.sh`); 0.30.0 added `passCountA` to that reset (0.30.1 moves it aside to
+  `passCountA.closed`, which the cap check does not read). A failed commit at the Gate-A cap
   therefore drops the pending stop for later passes; the attempt itself still shows it (PreToolUse
   `cap_check A`). Fix only with a commit-success signal that does not parse shell text. *PR #75,
   CodeRabbit, filed Major, judged Minor (needs a cap reached plus a failed non-WIP commit inside an
@@ -1828,3 +1830,53 @@ backlog.
   copy) names the list but shows no entry shape, against prompt-standards item 4. Add one line, e.g.
   `- Plan left open: <decision>. Chose: <choice>. Why: <reason>.`, watching check 4e. *PR #75,
   CodeRabbit, Minor.*
+
+## From the 0.30.0 Ponytail audit (2026-10-17) — backlog only; findings 1-3 fixed in 0.30.1
+
+Report: this session's `/ponytail-audit` (three read-only helpers; findings reproduced in scratch
+repos where marked). Numbers are the audit's.
+
+- [ ] **4. Read-only commands clear Gate-B state.** `is_commit` (`codex-gate.sh`) matches `git` then
+  `commit` anywhere, so `git log --oneline | grep -i commit` deletes the pass count, fingerprint and
+  cap-extra file (reproduced). Reset only when `commit` is the git subcommand; keep the loose match
+  for the reminder (invariant 2). *Should.*
+- [ ] **5. Two real commits are not seen.** With jq, a commit split over lines (`git \` newline
+  `commit`) does not match, since grep is line-wise (confirmed); without jq the fallback reader stops
+  at the first `\"` (read, not run). Pass counts then carry into the next cycle. Fold newlines before
+  matching. *Should.*
+- [ ] **6. `accepted, not repaired` findings return every pass.** `.claude/review-gates.md` (carry-
+  forward sentence) exempts only `declined`, so an accepted Major blocks a clean close until the cap.
+  Add the third verdict; both rule copies, check 4i. *Should.*
+- [ ] **7. Codex gets the verdict but not the reason** in the carry-forward list, so it cannot judge
+  "new evidence". "verdict and reason"; both copies. *Should.*
+- [ ] **8. Nothing checks the two gate-rule copies are identical.** `.claude/review-gates.md` vs the
+  `### 2.1a` fence; identical today by hand only. Add a `cmp` check plus a reject fixture to
+  `check-invariants.sh`. *Should.*
+- [ ] **9. Invariant-5 check misses unpinned installs.** `npm install -g <pkg>` without `@x.y.z`,
+  `docker run <img>:latest` and `node-version: 22` in `ci.yml` all passed (observed). Add rules or
+  name the gap in the header and AGENTS.md. *Should.*
+- [ ] **10. `ledger-metrics.py` dies on SHA-256 repos** (`read_commits` header regex `{40}`;
+  reproduced). Accept `{64}` too, one test. *Should.*
+- [ ] **11. `status-view.py --watch` dies when a write fails** and leaves `.tmp.index.html.*` files
+  (`write_atomic`, `watch_loop`; read, not run). Unlink the temp file on error, catch the banner
+  write. *Should.*
+- [ ] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
+  change marks every tracked file deleted, silently. Fail when the match count differs from the
+  entry count. *Should.*
+- [ ] **13. The commit-record reader exists four times** (ledger-metrics, loop-usefulness,
+  status-view, run-analytics; ~90 lines). One generator in `ledger-metrics.py`. *Should, lean.*
+- [ ] **14. Small helpers copied across the reports** (`die`, `git`/`git_env`, `load`, git-version
+  check, `ranges`, `shown`; ~100 lines). The `git` copies already differ (`--no-replace-objects`,
+  `GIT_GRAFT_FILE`), so reports can read different histories. *Nice, lean.*
+- [ ] **15. Hook duplication:** the top-level object walk twice in the awk parser (~15 lines);
+  `retire_legacy` repeated inline; legacy names deleted in three places. *Nice, lean.*
+- [ ] **16. `workflow-init.md` overclaims** "no enforcement at all" for Gate A without superpowers;
+  the pass-cap stop still works. *Nice.*
+- [ ] **17. `check-invariants.sh` near-copies:** `tpl_size_scan` vs `rg_tpl_scan`, the UTF-8 locale
+  probe twice; `ci.yml` says "five" prompt-conformance checks, AGENTS.md lists six. *Nice.*
+- [ ] **18. Partial-clone refusal differs per report** (loop-usefulness refuses on any promisor key,
+  spec-delta accepts `false`; three reports have no check). *Nice.*
+- [ ] **Executing a standard-risk plan always warns "Gate A below floor".** `writing-plans` resets the
+  Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
+  fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
+  the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
