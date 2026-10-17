@@ -1817,3 +1817,14 @@ backlog.
   longer reads it. Find a persistent home that release sessions read (the handover template, or a
   release step), keeping the installed-only and user-consent conditions. *Gate B `kit030gb1017`
   pass 1 quality, MINOR, accepted, not repaired.*
+- [ ] **A failed non-WIP commit also clears the Gate-A count.** The hook resets on every commit
+  attempt because the Bash payload carries no exit status (comment above the reset in
+  `codex-gate.sh`); 0.30.0 added `passCountA` to that reset. A failed commit at the Gate-A cap
+  therefore drops the pending stop for later passes; the attempt itself still shows it (PreToolUse
+  `cap_check A`). Fix only with a commit-success signal that does not parse shell text. *PR #75,
+  CodeRabbit, filed Major, judged Minor (needs a cap reached plus a failed non-WIP commit inside an
+  open cycle).*
+- [ ] **`Deviations` list has no example entry.** The CLAUDE.md template §4 sentence (and this repo's
+  copy) names the list but shows no entry shape, against prompt-standards item 4. Add one line, e.g.
+  `- Plan left open: <decision>. Chose: <choice>. Why: <reason>.`, watching check 4e. *PR #75,
+  CodeRabbit, Minor.*
