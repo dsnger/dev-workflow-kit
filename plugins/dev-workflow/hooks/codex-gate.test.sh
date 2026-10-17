@@ -480,14 +480,15 @@ rm -rf src
 # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
 for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md extra.ts' 'git commit -m x -- extra.ts' "git commit -m 'x y' extra.ts" \
          'git commit -mfixit extra.ts' 'git commit -m x --pathspec-from-file=p' 'git -C . add extra.ts && git commit -m x' \
-         "git commit -m \\\"don't\\\" extra.ts -m \\\"don't\\\"" 'git commit -m \"$(git add extra.ts)\"'; do
+         "git commit -m \\\"don't\\\" extra.ts -m \\\"don't\\\"" 'git commit -m \"$(git add extra.ts)\"' \
+         'git commit -am docs>extra.ts' 'git commit -m *'; do
   out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
   printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
 done
 # jq-free, the reader stops at the first escaped quote, so the paths after it are unseen
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"fix\" extra.ts"}}')
 printf '%s' "$out" | grep -q 'docs-only commit' && fail "jq-free: quoted message plus path is not docs-only" || pass "jq-free: quoted message plus path is not docs-only"
-out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"plain docs\""}}')
+out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'plain docs'\"}}")
 printf '%s' "$out" | grep -q 'docs-only commit' && pass "plain quoted message, docs staged -> N/A note" || fail "plain quoted message, docs staged -> N/A note"
 printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 out=$(commitpre)
@@ -571,6 +572,11 @@ execp; out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_inpu
 printf '%s' "$out" | grep -q '1/3' && pass "a pass after the closing commit counts from zero" || fail "a pass after the closing commit counts from zero"
 run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
 [ ! -f "$countA" ] && [ ! -f "$countA.closed" ] && pass "plan execution clears the closed Gate A count" || fail "plan execution clears the closed Gate A count"
+# A cycle closed AT the cap: the floor check sees it met, and no cap stop reads the closed count
+rm -f "$countA" "$countA.closed"; execp; execp; execp; execp; execp; commitpost
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q 'floor met' && ! printf '%s' "$out" | grep -q 'pass cap reached' && pass "closed at the cap -> floor met, no cap stop" || fail "closed at the cap -> floor met, no cap stop"
+rm -f "$countA.closed"
 # 16d. A count file that is not a number reads as 0: never a false floor-met, never a
 #      shell arithmetic error (exit non-zero) when bumped
 : > "$countA"

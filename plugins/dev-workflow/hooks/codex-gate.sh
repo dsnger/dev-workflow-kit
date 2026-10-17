@@ -1231,12 +1231,13 @@ has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--a
 # not show. Docs-only is therefore offered only to a command that is exactly `git commit`
 # plus the options below, each quoted text counted as one word; any other word (a path,
 # an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires. So does any
-# `\`, `$` or backtick (escapes, substitutions, and the jq-free reader's cut at `\"`) and
-# any quote left after one left-to-right pass, which is how the shell pairs them.
+# `\`, `$` or backtick (escapes, substitutions, and the jq-free reader's cut at `\"`), any
+# quote left after one left-to-right pass, which is how the shell pairs them, and any
+# unquoted operator or glob character, since `-am docs>app.ts` or `-m *` hides a path.
 names_no_paths() {
   case "$1" in *[\\\$\`]*) return 1 ;; esac
   _r=$(printf '%s' "$1" | tr '\n' ' ' | sed -E "s/'[^']*'|\"[^\"]*\"/Q/g")
-  case "$_r" in *[\'\"]*) return 1 ;; esac
+  case "$_r" in *[\'\"\<\>\|\&\;\*\?\[\{\}\(\)]*) return 1 ;; esac
   _r=${_r#"${_r%%[![:space:]]*}"}
   case "$_r" in 'git commit' | 'git commit '*) _r=${_r#git commit} ;; *) return 1 ;; esac
   _v=
@@ -1414,8 +1415,9 @@ case "$event" in
         ;;
       Bash)
         cmd=$(input_field command)
-        # RESET on commit closes the Gate-B cycle, and the Gate-A count with it, so a
-        # stale count never outlives its cycle. A WIP commit does NOT close it
+        # RESET on commit closes the Gate-B cycle, and moves the live Gate-A count aside
+        # to `.closed`, which only the plan-execution floor check reads, so a stale count
+        # never reaches a later cap check. A WIP commit does NOT close it
         # (see is_wip_commit_post).
         #
         # We reset regardless of whether the commit actually SUCCEEDED. The Bash
