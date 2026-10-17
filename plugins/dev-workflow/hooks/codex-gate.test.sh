@@ -477,7 +477,8 @@ for p in NOTES.md src/prompts/system.md; do
 done
 rm -rf src
 # A command that stages or names paths itself is judged before they are staged: it fires
-for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md extra.ts' 'git commit -m x -- extra.ts' "git commit -m 'x y' extra.ts"; do
+for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md extra.ts' 'git commit -m x -- extra.ts' "git commit -m 'x y' extra.ts" \
+         'git commit -mfixit extra.ts' 'git commit -m x --pathspec-from-file=p' 'git -C . add extra.ts && git commit -m x'; do
   out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
   printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
 done
@@ -568,6 +569,9 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":
 : > "$countA"
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
 printf '%s' "$out" | grep -q '0/3' && pass "empty Gate A count -> below floor 0/3" || fail "empty Gate A count -> below floor 0/3"
+printf '1\n2\n' > "$countA"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q '0/3' && pass "two-line Gate A count -> 0, not 12" || fail "two-line Gate A count -> 0, not 12"
 printf '08' > "$countA"; execp; rc=$?
 [ "$rc" = 0 ] && [ "$(cat "$countA")" = 9 ] && pass "count 08 bumps to 9, exit 0" || fail "count 08 bumps to 9, exit 0"
 printf '<<<<<<< HEAD\n3\n' > "$countA"; execp; rc=$?

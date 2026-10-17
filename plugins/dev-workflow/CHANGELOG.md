@@ -34,9 +34,10 @@ Hook fixes from the 0.30.0 Ponytail audit (findings 1-3; the rest are rows in `t
 - **A count file that is not a number reads as 0.** An empty file read as "floor met" (false ✓),
   and `08` or conflict text made `$(( ))` abort the hook with a non-zero exit (invariant 1).
 - **The docs-only note follows the rules' list.** It accepted any `*.md`; it now accepts only
-  Markdown under `docs/`, `README.md`, `MANIFEST.md`, `todos.md` (plus `.context/`), and never a
-  command that stages or names paths itself (`git add x && git commit`, `git commit -m x a.ts`),
-  whose staged list the hook reads before they are staged.
+  Markdown under `docs/`, `README.md`, `MANIFEST.md`, `todos.md` (plus `.context/`), and only for
+  a command that is exactly `git commit` plus a fixed list of options. Anything else fires: a
+  command that stages or names paths itself (`git add x && git commit`, `git commit -m x a.ts`,
+  `-mx a.ts`, `--pathspec-from-file`) is judged on a staged list read before it runs.
 
 ## 0.30.0
 

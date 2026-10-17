@@ -205,10 +205,11 @@ if [ -f "$tools_file" ]; then
   done < "$tools_file" 2>/dev/null
 fi
 
-# A count is digits only; anything else (empty after a cut-short write, conflict text)
-# reads as 0, and leading zeros go, so `$(( ))` never sees an invalid octal like `08`
+# A count is digits only, as bump_count writes it; anything else (empty after a cut-short
+# write, conflict text, `1 2`) reads as 0, and leading zeros go, so `$(( ))` never sees
+# an invalid octal like `08`
 read_count() {
-  _c=; [ -f "$1" ] && _c=$(cat "$1" 2>/dev/null | tr -d '[:space:]')   # a FIFO would block `cat`
+  _c=; [ -f "$1" ] && _c=$(cat "$1" 2>/dev/null)   # a FIFO would block `cat`
   case "$_c" in '' | *[!0-9]*) _c=0 ;; *) _c=${_c#"${_c%%[!0]*}"} ;; esac
   echo "${_c:-0}"
 }
@@ -1227,28 +1228,25 @@ has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--a
 
 # The staged list is read before the command runs, so a command that stages (`git add
 # x && git commit`) or names paths (`git commit -m x a.ts`) is judged on paths it does
-# not show. Docs-only needs a commit whose every word after `commit`, each quoted text one word,
-# is an option or the value of one that takes a value (`-m x`, `-am x`), and no
-# other git subcommand that stages; anything else, an unknown option's value included, fires.
+# not show. Docs-only is therefore offered only to a command that is exactly `git commit`
+# plus the options below, each quoted text counted as one word; any other word (a path,
+# an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires.
 names_no_paths() {
   _r=$(printf '%s' "$1" | tr '\n' ' ' | sed -e "s/'[^']*'/Q/g" -e 's/"[^"]*"/Q/g')
-  printf '%s' "$_r" | grep -Eq '(^|[^[:alnum:]])git[[:space:]]+(add|rm|mv|stage)([[:space:]]|$)' && return 1
-  _r=${_r#*commit}
+  _r=${_r#"${_r%%[![:space:]]*}"}
+  case "$_r" in 'git commit' | 'git commit '*) _r=${_r#git commit} ;; *) return 1 ;; esac
   _v=
   set -f
   for _w in $_r; do
     if [ -n "$_v" ]; then _v=; continue; fi
     case "$_w" in
-      --) set +f; return 1 ;;
-      --message | --file | --author | --date | --cleanup | --template | --trailer) _v=1 ;;
-      --*) ;;
-      -*[mFCct]) _v=1 ;;
-      -*) ;;
+      -m | -am | -F | --message | --file) _v=1 ;;
+      -a | -q | -s | -n | -v | --all | --amend | --no-edit | --no-verify | --quiet | --signoff | --allow-empty) ;;
       *) set +f; return 1 ;;
     esac
   done
   set +f
-  return 0
+  [ -z "$_v" ]
 }
 
 # Prompts are Markdown too, and a prompt is product, not documentation: skills,
