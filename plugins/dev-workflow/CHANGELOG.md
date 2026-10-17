@@ -22,6 +22,25 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.30.1
+
+Hook fixes from the 0.30.0 Ponytail audit (findings 1-3; the rest are rows in `todos.md`).
+
+- **A closed Gate-A cycle no longer reads as below floor.** 0.30.0 deleted the Gate-A count on
+  every non-WIP commit, and the closing act's commit is one, so the next `executing-plans` printed
+  `below floor (0/3)` after a full cycle. The commit now moves the count to `passCountA.closed`:
+  the plan-execution floor check reads it when no live count exists, the cap check never does
+  (stale cap stops stay gone), and the skill resets delete both.
+- **A count file that is not a number reads as 0.** An empty file read as "floor met" (false ✓),
+  and `08` or conflict text made `$(( ))` abort the hook with a non-zero exit (invariant 1).
+- **The docs-only note follows the rules' list.** It accepted any `*.md`; it now accepts only
+  Markdown under `docs/`, `README.md`, `MANIFEST.md`, `todos.md` (plus `.context/`), and only for
+  a command that is exactly `git commit` plus a fixed list of options. Anything else fires: a
+  command that stages or names paths itself (`git add x && git commit`, `git commit -m x a.ts`,
+  `-mx a.ts`, `--pathspec-from-file`) is judged on a staged list read before it runs. So does
+  any `\`, `$` or backtick, any quote left unpaired after the shell's left-to-right pairing, and
+  any unquoted operator or glob character (`-am docs>app.ts`, `-m *`).
+
 ## 0.30.0
 
 - **Gate A carries earlier findings forward too** (`.claude/review-gates.md` and template `### 2.1a`,

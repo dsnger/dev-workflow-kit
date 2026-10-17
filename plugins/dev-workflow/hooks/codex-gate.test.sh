@@ -153,11 +153,11 @@ SH
   printf '%s' "$_sd"
 }
 
-reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$pendb" "$old_count" "$old_fresh"; }
+reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$pendb" "$old_count" "$old_fresh"; }
 # Full reset INCLUDING the opt-out marker and the three diagnostic markers. A section
 # that wants the gate off must set the marker after calling this.
 reset_all() {
-  rm -f "$state" "$count" "$fresh" "$countA" "$floorf" "$toolsf" "$notedf" \
+  rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$floorf" "$toolsf" "$notedf" \
         "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.* \
         "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.* \
         "$capf" "$capxf"
@@ -463,11 +463,33 @@ printf '%s' "$out" | grep -q '2/3' && pass "below-floor reminder shows N/3" || f
 # 14b. Docs-only commit -> gentle N/A note; mixed and undeterminable commits still fire.
 reset_all   # state ABSENT -> would normally emit the no-fingerprint reminder on a code commit
 mkdir -p docs
-printf 'spec\n' > docs/plan.md; printf 'readme\n' > NOTES.md
-git add docs/plan.md NOTES.md >/dev/null 2>&1
+printf 'spec\n' > docs/plan.md; printf 'readme\n' > README.md
+git add docs/plan.md README.md >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'docs-only commit' && pass "docs-only staged -> N/A note" || fail "docs-only staged -> N/A note"
 printf '%s' "$out" | grep -q 'Codex gate state:' && fail "docs-only must not emit the gate-state reminder" || pass "docs-only does not emit the gate-state reminder"
+# Docs-only is the rule's allow-list, not any .md: other Markdown fires
+for p in NOTES.md src/prompts/system.md; do
+  mkdir -p "$(dirname "$p")"; printf 'x\n' > "$p"; git add "$p" >/dev/null 2>&1
+  out=$(commitpre)
+  printf '%s' "$out" | grep -q 'docs-only commit' && fail "$p is not docs-only" || pass "$p is not docs-only"
+  git rm -q --cached "$p" >/dev/null 2>&1; rm -f "$p"
+done
+rm -rf src
+# A command that stages or names paths itself is judged before they are staged: it fires
+# shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
+for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md extra.ts' 'git commit -m x -- extra.ts' "git commit -m 'x y' extra.ts" \
+         'git commit -mfixit extra.ts' 'git commit -m x --pathspec-from-file=p' 'git -C . add extra.ts && git commit -m x' \
+         "git commit -m \\\"don't\\\" extra.ts -m \\\"don't\\\"" 'git commit -m \"$(git add extra.ts)\"' \
+         'git commit -am docs>extra.ts' 'git commit -m *'; do
+  out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
+  printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
+done
+# jq-free, the reader stops at the first escaped quote, so the paths after it are unseen
+out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"fix\" extra.ts"}}')
+printf '%s' "$out" | grep -q 'docs-only commit' && fail "jq-free: quoted message plus path is not docs-only" || pass "jq-free: quoted message plus path is not docs-only"
+out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'plain docs'\"}}")
+printf '%s' "$out" | grep -q 'docs-only commit' && pass "plain quoted message, docs staged -> N/A note" || fail "plain quoted message, docs staged -> N/A note"
 printf 'code\n' > extra.ts; git add extra.ts >/dev/null 2>&1
 out=$(commitpre)
 printf '%s' "$out" | grep -q 'Gate B' && pass "mixed staged -> Gate B fires" || fail "mixed staged -> Gate B fires"
@@ -504,8 +526,8 @@ printf 'changed\n' >> extra.ts   # tracked-unstaged code change swept in by -a
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -am x"}}')
 printf '%s' "$out" | grep -q 'Gate B' && pass "-am with unstaged code -> Gate B fires" || fail "-am with unstaged code -> Gate B fires"
 git checkout -- extra.ts >/dev/null 2>&1
-git rm -q --cached docs/plan.md NOTES.md >/dev/null 2>&1
-rm -f NOTES.md docs/plan.md; rmdir docs 2>/dev/null
+git rm -q --cached docs/plan.md README.md >/dev/null 2>&1
+rm -f README.md docs/plan.md; rmdir docs 2>/dev/null
 git add -A >/dev/null 2>&1; git commit -qm cleanup >/dev/null 2>&1
 reset_all
 
@@ -541,6 +563,36 @@ done
 # 16b. A non-WIP commit closes the Gate-A count too (a WIP commit keeps it: see kept() in 19d)
 execp; commitpost
 [ ! -f "$countA" ] && pass "non-WIP commit resets Gate A count" || fail "non-WIP commit resets Gate A count"
+# 16c. ...but the closing act's commit precedes plan execution, so the floor check still
+#      sees the closed cycle's passes, the cap check does not, and plan execution clears both
+rm -f "$countA" "$countA.closed"; execp; execp; execp; commitpost
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q 'floor met' && pass "closing commit, then executing-plans -> Gate A floor met" || fail "closing commit, then executing-plans -> Gate A floor met"
+execp; out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q '1/3' && pass "a pass after the closing commit counts from zero" || fail "a pass after the closing commit counts from zero"
+run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
+[ ! -f "$countA" ] && [ ! -f "$countA.closed" ] && pass "plan execution clears the closed Gate A count" || fail "plan execution clears the closed Gate A count"
+# A cycle closed AT the cap: the floor check sees it met, and no cap stop reads the closed count
+rm -f "$countA" "$countA.closed"; execp; execp; execp; execp; execp; commitpost
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q 'floor met' && ! printf '%s' "$out" | grep -q 'pass cap reached' && pass "closed at the cap -> floor met, no cap stop" || fail "closed at the cap -> floor met, no cap stop"
+rm -f "$countA.closed"
+# 16d. A count file that is not a number reads as 0: never a false floor-met, never a
+#      shell arithmetic error (exit non-zero) when bumped
+: > "$countA"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q '0/3' && pass "empty Gate A count -> below floor 0/3" || fail "empty Gate A count -> below floor 0/3"
+printf '1\n2\n' > "$countA"
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q '0/3' && pass "two-line Gate A count -> 0, not 12" || fail "two-line Gate A count -> 0, not 12"
+printf '08' > "$countA"; execp; rc=$?
+[ "$rc" = 0 ] && [ "$(cat "$countA")" = 9 ] && pass "count 08 bumps to 9, exit 0" || fail "count 08 bumps to 9, exit 0"
+printf '<<<<<<< HEAD\n3\n' > "$countA"; execp; rc=$?
+[ "$rc" = 0 ] && [ "$(cat "$countA")" = 1 ] && pass "conflict text in count -> bumps from 0, exit 0" || fail "conflict text in count -> bumps from 0, exit 0"
+rm -f "$countA"; mkfifo "$countA"   # never read: `cat` on a FIFO blocks (a hang here is the failure)
+out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q '0/3' && pass "FIFO Gate A count -> not read, below floor 0/3" || fail "FIFO Gate A count -> not read, below floor 0/3"
+rm -f "$countA"
 
 # 17. FINDING 6 — per-project floor override via .context/codex-gate.floor
 reset_all
