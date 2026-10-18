@@ -66,8 +66,9 @@ project's actual config files and commands from `AGENTS.md § Commands`.
    - no match → new; continue with the fitting rung.
    - latest matching row is `pending` → report **blocked by an existing
      prerequisite** (point at its `ref`); do not escalate — no hardening landed yet.
-4. **Propose rung** — state the rung and *why* in one clause. If it's ambiguous (fits
-   two rungs, or unclear whether a tool can decide it), ask rather than guess.
+4. **Propose rung** — state the rung and *why* in one clause. If it fits two rungs, take
+   rung 2, the cheaper check, and say so; if you cannot tell whether a tool can decide it,
+   report it as fitting no rung, with the reason, so it owes no hardening by guess.
 5. **Apply** — implement at the chosen rung. Prefer existing rules/config over new
    dependencies; a new lint plugin obeys the project's dependency-freshness policy
    (`AGENTS.md`) — never lower it. If the plugin is too new to pass, log `pending`
@@ -157,7 +158,6 @@ access"; source: `gate-b`; severity: `major`.
 ## Stop and ask
 
 - Intake is missing the finding text, source, or severity.
-- The finding fits two rungs, or it's unclear whether a tool can decide it.
 - Hardening would break the gate and no prerequisite story exists to reference.
 - `docs/hardening-log.md`, `docs/hardening-taxonomy.md`, or `AGENTS.md § Commands` is
   missing — offer `/dev-workflow:workflow-init`.

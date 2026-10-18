@@ -998,7 +998,7 @@ cap_check() { # $1 = gate letter, $2 = that gate's count file
                                         # can hold, and past what `test` can compare
     *) [ "$_n" -ge "$cap" ] || return 0 ;;
   esac
-  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP: a remaining Blocker goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
+  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
    Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap)."
   note "$_m" "$_m"
 }

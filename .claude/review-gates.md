@@ -4,7 +4,7 @@ Gate A reviews every spec with `mcp__codex__exec`; a plan gets Gate A only when 
 Gate B reviews every code diff with `mcp__codex__review` after tests pass; only docs-only commits may skip it.
 Docs-only means every staged path is explanatory Markdown under `docs/`, or `README.md`, `MANIFEST.md`, or `todos.md`; `CLAUDE.md`, `AGENTS.md`, and paths under `.claude/`, `plugins/`, `skills/`, or `commands/` at any depth are prompts and require Gate B, as do mixed commits.
 
-Before Gate A, take one profile line, `risk standard|high; security none|standard|high; evidence <mode>`, from the cited story (confirmed at intake); with none, derive it as intake does and record it with its reason.
+Before Gate A, take one profile line, `risk standard|high; security none|standard|high; evidence <mode>`, from the cited story; with none, derive it as intake does and record why.
 Evidence modes: `battery`, `battery+check`, or `battery+check+verification`, with `+abuse-path` for security `high`.
 Map a free-text value to the nearest closed values, the stricter where two fit, and record the mapping and the quote.
 
@@ -81,7 +81,7 @@ The floor is 3 valid passes; repair Blockers/Majors and rerun within the cap, bu
 Collect Minors and Nits; never iterate on them.
 A timeout in a test the diff did not touch that passes when run alone is recorded with that evidence (the load, the solo run); the required CI check on the PR head is then the battery evidence, without a stop. A red CI stops.
 Stop before a further pass at cap = floor + 2, or at the count plus the extra passes last authorized.
-A Blocker left there goes to the human; otherwise choose yourself and record why: delete the mechanism the
+A Blocker left there, or a cut to an approved commitment, goes to the human; otherwise choose yourself and record why: delete the mechanism the
 findings keep returning to, cut scope, or continue — every answer names how many further
 passes it allows, at least one, and resumes the loop on the artifact as the answer leaves it.
 

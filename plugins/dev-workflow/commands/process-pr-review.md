@@ -239,8 +239,9 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 
 Squash-merge once all of these hold: every tracked claim has a verdict, a terminal
 disposition and a reply; no item-4 question is unanswered; the required CI check is green
-on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`. Merge
-that head and no other:
+on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
+`headRefOid` equal to the head this run checked CI and claims on. A different head means
+commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other:
 `gh pr merge <n> --squash --match-head-commit <headRefOid>`.
 A bot recorded as `<bot>: no review on <sha>` (Step 2) does not block the merge and is not
 counted as clean; the report keeps that line.

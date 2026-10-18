@@ -264,18 +264,19 @@ Claude filters to Blockers and Majors for repair and reads the rest. Findings la
 `.context/codex-reviews/gate-a-<spec|plan>-<nonce>-pass-<n>.md` (Gate A) one per line, severity
 `BLOCKER | MAJOR | MINOR | NIT`. Minors and Nits are collected, never iterated. The floor
 is three valid passes per cycle, a pass with zero findings may close early, and the cap
-is the floor plus two, where the agent stops and asks you. From pass 2 on, each pass of
+is the floor plus two, where a remaining Blocker or a cut to an approved commitment goes to
+you and the agent decides the rest. From pass 2 on, each pass of
 either gate lists the earlier passes' Blockers and Majors, each with its verdict and reason,
 and Codex marks each `fixed | not fixed | no longer applies`, a `not fixed` counting as a
 finding again unless you declined it or accepted it unrepaired and Codex brings no new
 evidence. One cause at several places is reported once, as a class
 listing every place. In Gate B the `spec` call
 maps each acceptance criterion to the test asserting it, or `none`, and reports a test
-that cannot fail. Codex is advisory: you arbitrate disputed findings, and a dismissed
+that cannot fail. Codex is advisory: Claude arbitrates disputed findings, and a dismissed
 finding needs a one-line reason.
 
-**Cap stop.** `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker goes to
-the human` (same for Gate B). With a Blocker left you answer; otherwise Claude does and
+**Cap stop.** `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker, or a cut
+to an approved commitment, goes to the human` (same for Gate B). Then you answer; otherwise Claude does and
 records why. The answer is `close`, or one of delete the mechanism the findings keep
 returning to / cut scope / continue, each naming how many further passes it allows (at
 least one); the loop resumes on the artifact as your answer leaves it.
@@ -329,8 +330,8 @@ All knobs are files under `.context/`:
 | | |
 |---|---|
 | `codex-gate.floor` | a positive integer; moves the hook's reminder threshold. It does not change the floor the gate rules oblige, which is three valid passes (a zero-finding pass may close earlier). |
-| `codex-gate.cap` | a positive integer of at most nine digits (anything else is ignored); the pass count at which the hook starts printing its pass-cap reminder ("STOP: a remaining Blocker goes to the human") on every gate call and commit attempt. Default: the reminder threshold plus two. A reminder only: nothing is blocked, and whether your review policy has a pass-cap rule is that policy's business. |
-| `codex-gate.cap-extra` | a positive integer of at most nine digits (anything else is ignored), written by hand after the human answers that reminder: the total allowance beyond the base cap for the current cycle, not an increment. A second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
+| `codex-gate.cap` | a positive integer of at most nine digits (anything else is ignored); the pass count at which the hook starts printing its pass-cap reminder ("STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human") on every gate call and commit attempt. Default: the reminder threshold plus two. A reminder only: nothing is blocked, and whether your review policy has a pass-cap rule is that policy's business. |
+| `codex-gate.cap-extra` | a positive integer of at most nine digits (anything else is ignored), written after the cap answer (yours or Claude's): the total allowance beyond the base cap for the current cycle, not an increment. A second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
 | `codex-gate.off` | silences the reminders; classification and state tracking keep running, so re-enabling lands on counters carrying the same semantics as gate-on, which is not the same as evidence that a review happened. |
 | `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>`: counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Each mapped name must itself lie in `mcp__codex__*`: the hook's `hooks.json` matcher is `^(Bash\|Skill\|mcp__codex__.*)$`, so an out-of-namespace name is either never delivered (the mapping looks applied and does nothing) or, for the reserved names `Bash`/`Skill`, hijacks a lifecycle event; the hook refuses both. Register the server as `codex` to place its tools there. Unparseable, out-of-namespace and reserved (`Bash`/`Skill`) lines are ignored, and the gate keeps its default `exec`/`review` name. A typo inside the namespace, `mcp__codex__exce`, is still honoured: the hook does not check that a mapped tool exists, so the gate now counts that name and nothing else. Whether it ever counts depends on whether a tool by that name is actually invoked; for a typo, normally never. |
 
