@@ -437,18 +437,20 @@ if command -v jq >/dev/null 2>&1; then
   [ ! -f "$count" ] && pass "8c: no HEAD record -> reset" || fail "8c: no HEAD record -> reset"
   reset_all
 fi
-# Without jq there is no per-call record, so the spelling decides alone; the loose match still
-# folds newlines and reads past an escaped quote (finding 5).
+# Without jq there is no per-call record, so the loose match decides, as before 0.31.0; it
+# still folds newlines and reads past an escaped quote (finding 5).
 nojq_post() { # $1 = expected (reset|kept), $2 = the command as JSON string bytes
   printf '1\n' > "$count"
   nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
   if [ -f "$count" ]; then _got=kept; else _got=reset; fi
   [ "$_got" = "$1" ] && pass "8c jq-free: $1 after: $2" || fail "8c jq-free: $1 after: $2 (got $_got)"
 }
-nojq_post kept 'git log --oneline | grep -i commit'
-nojq_post reset 'git log --grep=\"git commit\"'   # quotes read through: no HEAD backstop
+nojq_post reset 'git log --oneline | grep -i commit'
+nojq_post reset 'git log --grep=\"git commit\"'
 nojq_post reset 'sh -c \"git commit -m y\"'
-nojq_post kept 'git -C commit status'
+nojq_post reset 'git -C commit status'
+nojq_post reset 'git -c user.name=\"A B\" commit -m y'
+nojq_post reset 'git -C \"/path/my project\" commit -m y'
 nojq_post reset 'git \\\ncommit -m y'
 nojq_post reset 'cd \"a b\" && git commit -m y'
 nojq_post reset 'git -C x commit -m y'
@@ -549,7 +551,7 @@ for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md ext
   out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
   printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
 done
-# jq-free, the reader stops at the first escaped quote, so the paths after it are unseen
+# jq-free, the decoded command keeps the path after the quoted message, so it is not docs-only
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"fix\" extra.ts"}}')
 printf '%s' "$out" | grep -q 'docs-only commit' && fail "jq-free: quoted message plus path is not docs-only" || pass "jq-free: quoted message plus path is not docs-only"
 out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'plain docs'\"}}")
@@ -766,8 +768,8 @@ printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle decid
 amendpost "git commit --amend --no-edit"
 [ ! -f "$count" ] && pass "custom commentChar: resets" || fail "custom commentChar: resets"
 git config --unset core.commentChar
-# Without jq the reader stops at an escaped quote, so `"-m"` would vanish; the leftover
-# backslash must still decline the exemption. (JSON: \" inside the command string.)
+# Without jq the decoded command keeps the quoted `"-m"`, and the quote must still decline
+# the exemption. (JSON: \" inside the command string.)
 reset_all; rev
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}')
 printf '%s' "$out" | grep -q 'Codex cycle decided after' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"

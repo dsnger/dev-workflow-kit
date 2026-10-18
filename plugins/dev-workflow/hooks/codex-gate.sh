@@ -1087,24 +1087,22 @@ flush_notes() {
 # folded first, so a commit split over lines (`git \` newline `commit`) still matches.
 is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
 
-# The reset after the command needs more than that match (0.30.0 audit, finding 4): `commit`
-# as git's subcommand, after only global options, where `-C` and `-c` take their operand, or
-# HEAD moved during the call (head_moved). With jq, quoted text without an escaped quote inside
-# is one opaque word, so `git log --grep="git commit"` keeps the cycle's passes and a commit
-# hidden in quotes (`sh -c "git commit"`) is left to head_moved; without jq, which head_moved
-# needs, quotes are read through and that `--grep` resets. `git log | grep -i commit` keeps the
-# passes either way. It does not check command position: plain text such as `echo git commit`
-# still resets, the safe direction. A line continuation is folded into a space; any other
-# newline separates commands. Without jq an option word built from a variable
-# (`git $opts commit`) keeps the passes; neither sees an alias (`git ci`). Each spelling is a
-# test row.
+# The reset after the command needs more than that match (0.30.0 audit, finding 4), with jq:
+# `commit` as git's subcommand, after only global options, where `-C` and `-c` take their
+# operand, or HEAD moved during the call (head_moved). Quoted text without an escaped quote
+# inside is one opaque word, so `git log --grep="git commit"` and `git log | grep -i commit`
+# keep the cycle's passes, and a commit hidden in quotes (`sh -c "git commit"`) is left to
+# head_moved. It does not check command position: plain text such as `echo git commit` still
+# resets, the safe direction. A line continuation is folded into a space; any other newline
+# separates commands. Neither matcher sees an alias (`git ci`). Without jq there is no
+# head_moved to back the spelling test up, and three repairs in a row each left a real commit
+# it missed, so there the loose match decides, as before 0.31.0: every read-only command
+# naming `git` and `commit` resets.
 runs_git_commit() {
+  command -v jq >/dev/null 2>&1 || { is_commit "$1"; return; }
   _t="[^[:space:];&|()]+"
-  # Quoted text is masked only where head_moved backs it up: without jq, `sh -c "git commit"`
-  # would otherwise keep the passes past a real commit
-  _q="s/'[^']*'|\"[^\"]*\"/Q/g"; command -v jq >/dev/null 2>&1 || _q='s/^//'
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
-    sed -E "$_q" |
+    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g" |
     grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
 }
 
@@ -1221,7 +1219,7 @@ call_record_path() { # $1 = prefix; this call's record path; fails when the id i
 # runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
 # PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
 # `-m wip` record; PostToolUse compares and removes it. Without jq no record can be kept, so
-# it answers "not moved" and the spelling test decides alone. With jq, in doubt it answers
+# it answers "not moved" and runs_git_commit's loose fallback decides. With jq, in doubt it answers
 # "moved", so the caller resets, the safe direction: no usable id, no record, an unreadable
 # one, or a call sent to the background, whose PostToolUse arrives before it has finished.
 record_head() { # PreToolUse; best effort

@@ -1886,6 +1886,12 @@ repos where marked). Numbers are the audit's.
   direction (invariant 2), so accepted in 0.31.0. Fix if it is seen in practice: match `git`
   only at a command position, or rely on `head_moved` alone where jq is present. *Gate B cycle
   kit031gb1018, spec pass 2 #2 and quality pass 2 #1, accepted, not repaired; Minor.*
+- [ ] **Without jq, read-only commands still end the Gate-B cycle.** The 0.31.0 narrow reset
+  (`runs_git_commit`) applies only with jq; without it every loose match resets, as before, because
+  three repairs of a jq-free spelling test each left a real commit it missed (quoted `sh -c`,
+  quoted `-c`/`-C` operands) and there is no HEAD record to back it up. Safe direction. Fix only
+  with a jq-free per-call id, which the fallback reader cannot establish today. *Gate B cycle
+  kit031gb1018, spec pass 2 #1 (jq-free half), accepted, not repaired.*
 
 ## From the Rieseberg analysis (2026-10-18)
 
