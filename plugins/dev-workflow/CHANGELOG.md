@@ -26,16 +26,17 @@ AGENTS.md invariant 12 carries the complete list.
 
 Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
 
-- **Hook: a read-only command no longer ends the Gate-B cycle.** The reset after a Bash call needs
+- **Hook: fewer read-only commands end the Gate-B cycle.** The reset after a Bash call needs
   `commit` as git's subcommand, after only global options (`-C` and `-c` take their operand), with
   quoted text read as one word, so `git log | grep -i commit` and `git log --grep="git commit"` keep
-  the pass count and fingerprint. A failed commit still resets, as before. As a backstop, with jq
-  PreToolUse records HEAD per call (`tool_use_id`), and a call that moved HEAD resets whatever its
-  spelling (`sh -c "git commit"`); without jq every loose match resets, as before. The reminder
-  before a call stays loose (invariant 2).
+  the pass count and fingerprint. It does not check command position, so plain text such as
+  `echo git commit` still resets, as does a quoted pattern holding an escaped quote. A failed
+  commit still resets, as before. As a backstop, with jq PreToolUse records HEAD per call
+  (`tool_use_id`), and a call that moved HEAD resets whatever its spelling (`sh -c "git commit"`);
+  without jq that spelling keeps the passes. The reminder before a call stays loose (invariant 2).
 - **Hook: two missed commit spellings.** A commit split over lines (`git \` newline `commit`) now
   matches, and without jq the command reader no longer stops at the first escaped quote: it reads to
-  the closing quote and decodes the escapes, so the command reads as it does with jq.
+  the closing quote and decodes `\n`, `\t`, `\r`, `\"` and `\\` (a `\u` escape becomes `?`).
 - **Carry-forward, both gates** (`.claude/review-gates.md` and template `### 2.1a`, identical): an
   `accepted, not repaired` finding is exempt like a `declined` one, and the list Codex gets carries
   each finding's verdict and reason, so it can judge "new evidence".

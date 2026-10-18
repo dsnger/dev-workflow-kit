@@ -1014,7 +1014,10 @@ if wanted("a1"):
     def boom_a():
         raise RuntimeError("forced whole failure")
 
+    writes = []
+
     def no_write(dfd, name, data):
+        writes.append(name)
         raise OSError(errno.ENOSPC, "injected")
     hooks_a["between"] = boom_a
     SV.write_atomic = no_write
@@ -1024,7 +1027,7 @@ if wanted("a1"):
     except Exception as e:
         rc, died = None, e
     SV.write_atomic = real_write
-    check("a1:failed banner write does not end the watch loop", died is None and rc == 0, (rc, died))
+    check("a1:failed banner write does not end the watch loop", died is None and rc == 0 and writes == ["index.html", "index.html"], (rc, died, writes))
 
 # the undocumented `ls-files --debug` format: a parse that misses entries is refused, a conflict is not (12)
 if wanted("x1"):

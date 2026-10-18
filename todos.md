@@ -1880,6 +1880,12 @@ repos where marked). Numbers are the audit's.
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
   the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
+- [ ] **Gate-B reset still fires on plain text naming `git commit`.** `runs_git_commit` does not
+  check command position, so `echo git commit` and a quoted pattern holding an escaped quote
+  (`git log --grep="a \" git commit \" b"`) reset the pass count with HEAD unchanged. Safe
+  direction (invariant 2), so accepted in 0.31.0. Fix if it is seen in practice: match `git`
+  only at a command position, or rely on `head_moved` alone where jq is present. *Gate B cycle
+  kit031gb1018, spec pass 2 #2 and quality pass 2 #1, accepted, not repaired; Minor.*
 
 ## From the Rieseberg analysis (2026-10-18)
 

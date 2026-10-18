@@ -437,13 +437,21 @@ if command -v jq >/dev/null 2>&1; then
   [ ! -f "$count" ] && pass "8c: no HEAD record -> reset" || fail "8c: no HEAD record -> reset"
   reset_all
 fi
-# Without jq there is no per-call record, so every match resets, as before 0.31.0; the loose
-# match still folds newlines and reads past an escaped quote (finding 5).
-for c in 'git \\\ncommit -m y' 'cd \"a b\" && git commit -m y'; do
+# Without jq there is no per-call record, so the spelling decides alone; the loose match still
+# folds newlines and reads past an escaped quote (finding 5).
+nojq_post() { # $1 = expected (reset|kept), $2 = the command as JSON string bytes
   printf '1\n' > "$count"
-  nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}" >/dev/null
-  [ ! -f "$count" ] && pass "8c jq-free: reset after: $c" || fail "8c jq-free: reset after: $c"
-done
+  nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
+  if [ -f "$count" ]; then _got=kept; else _got=reset; fi
+  [ "$_got" = "$1" ] && pass "8c jq-free: $1 after: $2" || fail "8c jq-free: $1 after: $2 (got $_got)"
+}
+nojq_post kept 'git log --oneline | grep -i commit'
+nojq_post kept 'git log --grep=\"git commit\"'
+nojq_post kept 'git -C commit status'
+nojq_post reset 'git \\\ncommit -m y'
+nojq_post reset 'cd \"a b\" && git commit -m y'
+nojq_post reset 'git -C x commit -m y'
+reset_all
 for r in run nojq_run; do
   out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git \\\ncommit -m y"}}')
   printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: commit split over lines -> reminder" || fail "8c $r: commit split over lines -> reminder"
