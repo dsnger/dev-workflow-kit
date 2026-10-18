@@ -1138,8 +1138,9 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 # hidden in quotes (`sh -c "git commit"`) or behind another prefix (`xargs git commit`) is
 # left to head_moved. A line continuation is folded into a space; any other newline
 # separates commands. Neither matcher sees an alias (`git ci`). The subcommand test is what
-# still resets a commit that fails, or one sent to the shell background (`git commit &`),
-# whose HEAD has not moved yet when PostToolUse runs.
+# still resets a commit that fails. A command holding a background `&` anywhere, quoted or
+# not (`sh -c 'sleep 2; git commit' &`), resets too (shell_backgrounds): its commit may run
+# after PostToolUse, when an unchanged HEAD proves nothing.
 runs_git_commit() {
   _t="[^[:space:];&|()]+"
   _w="([A-Za-z_][A-Za-z0-9_]*=${_t}[[:space:]]+|(sudo|command|exec|env|nohup|time|nice|then|do|else)[[:space:]]+)*"
@@ -1147,6 +1148,10 @@ runs_git_commit() {
     sed -E "s/'[^']*'|\"[^\"]*\"/Q/g; s/--(git-dir|work-tree|namespace|config-env)[[:space:]]+/--\1=/g" |
     grep -Eq "(^|[;&|({!\`])[[:space:]]*$_w([^[:space:];&|()]*/)?git([[:space:]]+(-C|-c)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
 }
+
+# Any `&` that is not `&&` or part of a redirection (`>&`, `<&`, `&>`): a shell background
+# job, also inside quoted text. Loose on purpose: a `&` in a message (`-m "a & b"`) resets.
+shell_backgrounds() { printf '%s' "$1" | sed -E 's/&&//g; s/[<>]&//g; s/&>//g' | grep -q '&'; }
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
 # to make one so `mcp__codex__review` has a non-empty range to read (baseSha=HEAD is
@@ -1540,9 +1545,10 @@ case "$event" in
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
         #
-        # A reset needs either spelling (runs_git_commit) or effect (head_moved); see both.
+        # A reset needs spelling (runs_git_commit), effect (head_moved) or a background job
+        # whose effect may come later (shell_backgrounds); see each.
         _moved=1; is_commit "$cmd" && head_moved && _moved=0
-        if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd"; } && ! is_wip_commit_post "$cmd"; then
+        if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd" || shell_backgrounds "$cmd"; } && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
                 "$legacy_count" "$legacy_fresh" "$capextra_file"
           # The closing act's commit precedes plan execution, which still reads the closed

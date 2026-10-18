@@ -48,8 +48,8 @@ them merges unreviewed heads.**
 - *The final head was reviewed* — a separate verification, and the one that told you,
   while a bot was under **Wait for** and before kit 0.32.0, whether you could merge. **This is settled behaviour,
   not a hazard that might occur: a green check never establishes that a head was reviewed
-  — the review count is the arbiter.** (What follows from a `0` depends on routing; see
-  the two facts beside the query below.) Five occurrences, the last three caught by
+  — the review count is the arbiter.** (A `0` is reported and blocks no merge; see the
+  two facts beside the query below.) Five occurrences, the last three caught by
   running the count rather than by luck:
   - **#12 and #13** — the check passed while the issue comment read "Review rate
     limited"; on #13 the only CodeRabbit **review record** carried `commit_id` `eed589c`
@@ -86,7 +86,7 @@ them merges unreviewed heads.**
   took exactly that, and its final push had to be dropped and re-landed separately
   because the new head went unreviewed past the point of waiting.
 
-Verify the second before merging — a deterministic boolean, so it can gate rather than be
+Verify the second before merging — a deterministic boolean, so it is read rather than
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
 is diagnostic for every bot: its answer goes into the report and blocks no merge:
 
@@ -110,8 +110,8 @@ why the filter iterates `.[][]`. **Verified against #13, and the two stages repo
 `jq` stage prints the count, `0` for the merged head `92de0d2` and `1` for `eed589c`, the
 commit actually reviewed; the full pipeline prints nothing and communicates through its
 **exit status**, `1` for the merged head and `0` for the reviewed commit. That inversion
-is deliberate — exit 0 means "a qualifying review exists", so the pipeline can gate a
-merge directly. Documenting
+is deliberate — exit 0 means "a qualifying review exists", so the pipeline could gate a
+merge directly (it did, while the exception clause was live). Documenting
 the unrun form broke this repo's own rule against documenting a command nobody ran.
 
 **Four observations now, and the fourth is the one that mattered.** #12 and #13 both

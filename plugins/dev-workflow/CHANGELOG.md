@@ -31,7 +31,9 @@ that needs no Gate A.
   command position, so plain text such as `echo git commit` or `git log --grep="a \" git commit
   \" b"` keeps the cycle's passes. `--git-dir`, `--work-tree`, `--namespace` and `--config-env`
   take their operand when written with a space, so `git --work-tree commit status` keeps them too.
-  A commit the spelling misses still resets when HEAD moved during the call.
+  A commit the spelling misses still resets when HEAD moved during the call, and a command
+  holding a background `&` anywhere (quoted text included) resets whether or not HEAD moved,
+  since its commit may land after the hook ran.
 - **Without jq**, the call's `tool_use_id` is now read by an awk reader of the top-level object
   (same size bound and refusals as the request reader), so the HEAD-moved check and the WIP-commit
   exemption work without jq, and read-only commands no longer end the Gate-B cycle there. A

@@ -443,6 +443,12 @@ for hc in run nojq_run; do
   # shellcheck disable=SC2016  # a literal command substitution, the input under test
   head_case reset stay 'x=$(git commit -m y)'
   head_case reset stay 'git \\\ncommit -m y'
+  # a background job may commit after PostToolUse, when HEAD has not moved yet: reset
+  head_case reset stay 'sh -c \"sleep 2; git commit -m y\" >/dev/null 2>&1 &'
+  head_case reset stay 'sh -c \"git commit -m y &\"'
+  # `&&` and redirections are not background jobs
+  head_case kept stay 'git log 2>&1 | grep commit && echo git commit'
+  head_case kept stay 'git log &>/dev/null; echo git commit'
   # a spelling the subcommand test misses resets when HEAD moved
   head_case reset move 'sh -c \"git commit -m y\"'
   head_case reset move 'echo git commit'
