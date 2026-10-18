@@ -1130,7 +1130,8 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 # `commit` as git's subcommand, or HEAD moved during the call (head_moved). The subcommand
 # test wants `git` at a command position — the start, or after `;`, `&`, `|`, `(`, `{`, `!`
 # or a backtick, past any `VAR=value` words and the wrappers `sudo`, `command`, `exec`,
-# `env`, `nohup`, `time`, `nice` and the keywords `then`, `do`, `else` — and then only global
+# `env`, `nohup`, `time`, `nice` and the keywords `if`, `elif`, `then`, `else`, `while`,
+# `until`, `do` — and then only global
 # options, where `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace` and `--config-env`
 # take their operand, so `echo git commit` and `git --work-tree commit status` keep the
 # cycle's passes. Quoted text without an escaped quote inside is one opaque word, so
@@ -1143,7 +1144,7 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 # after PostToolUse, when an unchanged HEAD proves nothing.
 runs_git_commit() {
   _t="[^[:space:];&|()]+"
-  _w="([A-Za-z_][A-Za-z0-9_]*=${_t}[[:space:]]+|(sudo|command|exec|env|nohup|time|nice|then|do|else)[[:space:]]+)*"
+  _w="([A-Za-z_][A-Za-z0-9_]*=${_t}[[:space:]]+|(sudo|command|exec|env|nohup|time|nice|if|elif|then|else|while|until|do)[[:space:]]+)*"
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
     sed -E "s/'[^']*'|\"[^\"]*\"/Q/g; s/--(git-dir|work-tree|namespace|config-env)[[:space:]]+/--\1=/g" |
     grep -Eq "(^|[;&|({!\`])[[:space:]]*$_w([^[:space:];&|()]*/)?git([[:space:]]+(-C|-c)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"

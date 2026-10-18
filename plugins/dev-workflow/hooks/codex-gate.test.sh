@@ -439,6 +439,11 @@ for hc in run nojq_run; do
   head_case reset stay 'FOO=1 git commit -m y'
   head_case reset stay 'nohup git commit -m y &'
   head_case reset stay 'if true; then git commit -m y; fi'
+  # a failed commit in a condition resets like a bare one (PR #79, Greptile)
+  head_case reset stay 'if git commit -m y; then :; fi'
+  head_case reset stay 'while git commit -m y; do :; done'
+  head_case reset stay 'until git commit -m y; do :; done'
+  head_case reset stay 'if false; then :; elif git commit -m y; then :; fi'
   head_case reset stay '/usr/bin/git commit -m y'
   # shellcheck disable=SC2016  # a literal command substitution, the input under test
   head_case reset stay 'x=$(git commit -m y)'
