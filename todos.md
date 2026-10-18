@@ -1892,6 +1892,11 @@ repos where marked). Numbers are the audit's.
   quoted `-c`/`-C` operands) and there is no HEAD record to back it up. Safe direction. Fix only
   with a jq-free per-call id, which the fallback reader cannot establish today. *Gate B cycle
   kit031gb1018, spec pass 2 #1 (jq-free half), accepted, not repaired.*
+- [ ] **`git --work-tree commit status` resets the Gate-B cycle.** In `runs_git_commit` the generic
+  option alternative also matches an operand-taking long option written with a space
+  (`--work-tree`, `--namespace`, `--git-dir`), so an operand that is the word `commit` reads as the
+  subcommand. Read-only, safe direction. Exclude those options from the generic alternative and
+  add keep-state rows. *Gate B cycle kit031gb1018, spec pass 5 #1, accepted, not repaired; Minor.*
 
 ## From the Rieseberg analysis (2026-10-18)
 
