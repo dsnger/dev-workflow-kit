@@ -60,7 +60,7 @@ off_file="$state_dir/codex-gate.off"
 on_file="$state_dir/codex-gate.on"                # workflow-adoption marker
 floor_file="$state_dir/codex-gate.floor"          # optional per-project floor override
 cap_file="$state_dir/codex-gate.cap"              # optional per-project pass-cap override
-capextra_file="$state_dir/codex-gate.cap-extra"   # a human's answer: passes allowed past the cap
+capextra_file="$state_dir/codex-gate.cap-extra"   # the cap answer: passes allowed past the cap
 tools_file="$state_dir/codex-gate.tools"          # optional Codex tool-name mapping
 noted_file="$state_dir/codex-gate.toolNote"       # marks the unknown-tool note as said
 # Gate-B passes since the last commit: one per `full` call or matched spec+quality pair.
@@ -156,9 +156,9 @@ if [ -f "$floor_file" ]; then
 fi
 
 # §5 PASS CAP: the closure ordering's pass-cap stop is a count — the floor plus two, and
-# from a human's answer onward that many more — so the hook reports it the way it reports
-# the floor. Reaching it changes nothing here (invariant 1): the message asks the human,
-# and the answer goes in .context/codex-gate.cap-extra as a positive integer, which raises
+# from a cap answer onward that many more — so the hook reports it the way it reports
+# the floor. Reaching it changes nothing here (invariant 1): the message asks for the
+# answer (the human's when a Blocker remains, the agent's otherwise), and it goes in .context/codex-gate.cap-extra as a positive integer, which raises
 # the cap for the current cycle until the commit reset clears it with the pass counter.
 # Per-project override: .context/codex-gate.cap, a positive integer like the floor file.
 #
@@ -987,7 +987,7 @@ note_front() { # $1 = additionalContext body, $2 = systemMessage body
 }
 
 # The pass-cap message, one per gate call or commit attempt at or past the cap. Two lines
-# on purpose, the same text on both channels: the model has to stop and ask, and the human
+# on purpose, the same text on both channels: the model has to stop and answer, and the human
 # has to know where the answer goes. The composed document stays one line because `emit`
 # escapes the break (jq does, and the fallback does since this message exists).
 cap_check() { # $1 = gate letter, $2 = that gate's count file
@@ -998,7 +998,7 @@ cap_check() { # $1 = gate letter, $2 = that gate's count file
                                         # can hold, and past what `test` can compare
     *) [ "$_n" -ge "$cap" ] || return 0 ;;
   esac
-  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP and ask the human: delete the mechanism, cut scope, or allow N more passes.
+  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
    Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap)."
   note "$_m" "$_m"
 }

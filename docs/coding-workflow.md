@@ -82,7 +82,9 @@ floor itself derives from the profile, so it is not the same at every level), wh
 mode calibrates
 what evidence the author owes before Gate B. The design ("how") is deliberately left out —
 it belongs to the next stage. The value here is a shared, reviewable definition of done before
-anyone argues about approach.
+anyone argues about approach. From here the run is autonomous by default — a closed gate is
+the approval, through to the merge — and a story opts in to human stops at the spec, the plan
+or the merge with its `Checkpoints` line, set once at intake.
 
 **2. Brainstorming to a spec.** Approaches are explored and decisions are settled
 *explicitly* — each decision recorded with its rationale and the alternatives it
