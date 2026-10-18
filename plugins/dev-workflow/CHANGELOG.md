@@ -26,18 +26,20 @@ AGENTS.md invariant 12 carries the complete list.
 
 Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
 
-- **Hook: only a real commit ends the Gate-B cycle.** The reset after a Bash call now needs
-  `commit` as git's subcommand, after only global options (`git -C x commit`, `cd d && git commit`,
-  `git -c k=v commit`), so `git log | grep -i commit` no longer deletes the pass count and
-  fingerprint. The reminder before a call stays loose (invariant 2). The price is stated in the hook:
-  a spelling only the loose match saw, such as `git $opts commit`, now carries the passes past a
-  real commit.
+- **Hook: a read-only command no longer ends the Gate-B cycle.** The reset after a Bash call needs
+  `commit` as git's subcommand, after only global options (`-C` and `-c` take their operand), with
+  quoted text read as one word, so `git log | grep -i commit` and `git log --grep="git commit"` keep
+  the pass count and fingerprint. A failed commit still resets, as before. As a backstop, with jq
+  PreToolUse records HEAD per call (`tool_use_id`), and a call that moved HEAD resets whatever its
+  spelling (`sh -c "git commit"`); without jq every loose match resets, as before. The reminder
+  before a call stays loose (invariant 2).
 - **Hook: two missed commit spellings.** A commit split over lines (`git \` newline `commit`) now
   matches, and without jq the command reader no longer stops at the first escaped quote: it reads to
   the closing quote and decodes the escapes, so the command reads as it does with jq.
 - **Carry-forward, both gates** (`.claude/review-gates.md` and template `### 2.1a`, identical): an
   `accepted, not repaired` finding is exempt like a `declined` one, and the list Codex gets carries
   each finding's verdict and reason, so it can judge "new evidence".
+
 ## 0.30.1
 
 Hook fixes from the 0.30.0 Ponytail audit (findings 1-3; the rest are rows in `todos.md`).

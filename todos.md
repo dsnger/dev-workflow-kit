@@ -337,7 +337,7 @@ driven by recurrence rather than by enthusiasm.
       counter is still not evidence: classification cannot see whether the findings file
       was written, so an incomplete pass is discounted whatever the counter says.
       C1–C4 in `plugins/dev-workflow/CHANGELOG.md` carry the full residual list.
-- [ ] **jq-free parser stops at an escaped JSON quote.** *(Candidate path, recorded
+- [x] **jq-free parser stops at an escaped JSON quote.** Fixed in 0.31.0 with audit finding 5: `input_field` reads to the closing quote and decodes the escapes; test 8c. *(Candidate path, recorded
       2026-08-01: the result-classification story builds a POSIX awk locator with proper
       string-state and backslash-parity handling. Once that exists and is proven against the
       captured fixtures, this row's fix can likely reuse it rather than inventing a second

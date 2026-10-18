@@ -397,30 +397,54 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
-# 8c. The reset after a Bash call needs `commit` as git's subcommand (audit findings 4
-#     and 5); the reminder before it stays loose. Each row runs with jq and without it.
-#     $1 = runner, $2 = expected (reset|kept), $3 = the command as JSON string bytes.
-post_resets() {
+# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand,
+#     or HEAD moved during the call (audit findings 4 and 5). With jq, PreToolUse records HEAD
+#     under the call's tool_use_id; the test moves HEAD itself where a command would have.
+#     $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string bytes.
+head_case() {
   printf '1\n' > "$count"
-  "$1" "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
+  run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
+  [ "$2" = move ] && git commit -q --allow-empty -m "8c move" >/dev/null 2>&1
+  run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}${4:-}}" >/dev/null
   if [ -f "$count" ]; then _got=kept; else _got=reset; fi
-  [ "$_got" = "$2" ] && pass "8c $1: $2 after: $3" || fail "8c $1: $2 after: $3 (got $_got)"
+  [ "$_got" = "$1" ] && pass "8c: $1 ($2): $3" || fail "8c: $1 ($2): $3 (got $_got)"
+  [ ! -f .context/codex-gate.headPre.toolu__h1 ] && pass "8c: HEAD record removed ($3)" || fail "8c: HEAD record removed ($3)"
 }
-for r in run nojq_run; do
+if command -v jq >/dev/null 2>&1; then
   reset_all
-  post_resets "$r" kept 'git log --oneline | grep -i commit'
-  post_resets "$r" kept 'git commit-tree x'
-  post_resets "$r" kept 'echo git; echo commit'
-  post_resets "$r" kept 'git status\necho commit'
-  post_resets "$r" reset 'git commit -m x'
-  post_resets "$r" reset 'git -C x commit -m y'
-  post_resets "$r" reset 'cd d && git commit -m y'
-  post_resets "$r" reset 'git \\\ncommit -m y'
-  post_resets "$r" reset 'cd \"a b\" && git commit -m y'
-  post_resets "$r" reset 'git -c user.name=\"A B\" commit'
-  post_resets "$r" reset 'git --no-pager commit -m y'
+  head_case kept stay 'git log --oneline | grep -i commit'
+  head_case kept stay 'git log --grep=\"git commit\"'
+  head_case kept stay 'git -C commit status'
+  head_case kept stay 'echo git; echo commit'
+  head_case kept stay 'git status\necho commit'
+  # the subcommand spelling resets whether or not HEAD moved: a failed commit still resets
+  head_case reset stay 'git commit -m x'
+  head_case reset stay 'git -C x commit -m y'
+  head_case reset stay 'cd \"a b\" && git commit -m y'
+  head_case reset stay 'git -c user.name=\"A B\" commit'
+  head_case reset stay 'git --no-pager commit -m y'
   # shellcheck disable=SC2016  # a literal command substitution, the input under test
-  post_resets "$r" reset 'x=$(git commit -m y)'
+  head_case reset stay 'x=$(git commit -m y)'
+  head_case reset stay 'git \\\ncommit -m y'
+  # a spelling the subcommand test misses resets when HEAD moved
+  head_case reset move 'sh -c \"git commit -m y\"'
+  head_case kept stay 'sh -c \"git commit -m y\"'
+  # a call sent to the background reports before its commit has run: reset regardless
+  head_case reset stay 'sh -c \"git commit -m y\"' ',"tool_response":{"backgroundTaskId":"b1"}'
+  # no PreToolUse record for this call: in doubt, reset
+  printf '1\n' > "$count"
+  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h2","tool_input":{"command":"git log | grep commit"}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c: no HEAD record -> reset" || fail "8c: no HEAD record -> reset"
+  reset_all
+fi
+# Without jq there is no per-call record, so every match resets, as before 0.31.0; the loose
+# match still folds newlines and reads past an escaped quote (finding 5).
+for c in 'git \\\ncommit -m y' 'cd \"a b\" && git commit -m y'; do
+  printf '1\n' > "$count"
+  nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}" >/dev/null
+  [ ! -f "$count" ] && pass "8c jq-free: reset after: $c" || fail "8c jq-free: reset after: $c"
+done
+for r in run nojq_run; do
   out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git \\\ncommit -m y"}}')
   printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: commit split over lines -> reminder" || fail "8c $r: commit split over lines -> reminder"
   out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"cd \"a b\" && git commit -m y"}}')

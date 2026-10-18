@@ -79,6 +79,7 @@ bgadv_file="$state_dir/codex-gate.bgAdvice"
 unver_file="$state_dir/codex-gate.unverified"
 pend_file="$state_dir/codex-gate.unverifiedPending"
 wipbase_prefix="$state_dir/codex-gate.wipBase."   # + tool_use_id: one `-m wip` record per tool call
+headpre_prefix="$state_dir/codex-gate.headPre."   # + tool_use_id: HEAD before this commit-matching call
 
 # FINDING G: the plugin is installed globally, but the workflow is adopted per project.
 # A repo that never ran /workflow-init has no gate to enforce, so the hook does NOTHING
@@ -1085,18 +1086,19 @@ flush_notes() {
 # folded first, so a commit split over lines (`git \` newline `commit`) still matches.
 is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
 
-# The reset after the command is narrower: `commit` must be git's subcommand, after only
-# global options (`-C <dir>`, `-c <k=v>`, `--no-pager`, …), so `git log | grep commit`
-# keeps the cycle's passes. A line continuation is folded into a space and any other
-# newline counts as a command separator. Its price is the dangerous direction: a commit
-# the loose matcher above resets on and this one misses carries the passes past it, as
-# with an option word built from a variable (`git $opts commit`) or a global option taking
-# a separate value that is not in the list. Neither matcher sees an alias (`git ci`).
-# Each spelling it handles is a row in the hook's test suite.
+# The reset after the command needs more than that match (0.30.0 audit, finding 4): `commit`
+# as git's subcommand, after only global options, where `-C` and `-c` take their operand, or
+# HEAD moved during the call (head_moved). Quoted text is one opaque word here, so
+# `git log --grep="git commit"` and `git log | grep -i commit` keep the cycle's passes. A
+# line continuation is folded into a space; any other newline separates commands. What it
+# misses (a commit inside quotes, `sh -c "git commit"`, an option word built from a
+# variable) is left to head_moved, which cannot help without jq; there every loose match
+# resets, as before. Neither sees an alias (`git ci`). Each spelling is a test row.
 runs_git_commit() {
-  _t="([^[:space:];&|()\"']|\"[^\"]*\"|'[^']*')+"
+  _t="[^[:space:];&|()]+"
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
-    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-$_t)*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
+    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g" |
+    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`]|\$)"
 }
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
@@ -1195,7 +1197,8 @@ is_wip_amend_cmd() {
   ! msg_may_be_rewritten && head_is_wip
 }
 head_reflog_len() { git -C "$repo_root" reflog show --format=%H HEAD 2>/dev/null | grep -c ''; }
-wip_record_path() { # this call's record path; fails when the id is unusable
+wip_record_path() { call_record_path "$wipbase_prefix"; }
+call_record_path() { # $1 = prefix; this call's record path; fails when the id is unusable
   # jq only: the fallback reader cannot tell a top-level key from a nested one, and a
   # shell capture would strip a trailing newline before any check could see it, so the
   # type, characters and length are checked inside jq on the decoded value
@@ -1204,7 +1207,31 @@ wip_record_path() { # this call's record path; fails when the id is unusable
   # `_` becomes `__` and an upper-case letter `X` becomes `_x`, which decodes uniquely
   _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
   case $_id in '' | *[!a-z0-9_-]*) return 1 ;; esac
-  printf '%s%s' "$wipbase_prefix" "$_id"
+  printf '%s%s' "$1" "$_id"
+}
+
+# Whether the Bash call that matched is_commit moved HEAD: the backstop for a commit that
+# runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
+# PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
+# `-m wip` record; PostToolUse compares and removes it. In doubt it answers "moved", so the
+# caller resets, the safe direction: no jq or no usable id (every loose match then resets,
+# as before 0.31.0), no record, an unreadable one, or a call sent to the background, whose
+# PostToolUse arrives before the command has finished.
+record_head() { # PreToolUse; best effort
+  _f=$(call_record_path "$headpre_prefix") || return 0
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
+  mkdir -p "$state_dir" 2>/dev/null
+  { printf '%s\n' "$_h" > "$_f"; } 2>/dev/null || true
+}
+head_moved() { # PostToolUse
+  _f=$(call_record_path "$headpre_prefix") || return 0
+  [ -f "$_f" ] || return 0
+  _was=; read -r _was 2>/dev/null < "$_f"
+  rm -f "$_f" 2>/dev/null
+  [ -n "$_was" ] || return 0
+  bash_backgrounded && return 0
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
+  [ "$_h" != "$_was" ]
 }
 record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|new>"; best effort
   wipbase_file=$(wip_record_path) || return 0
@@ -1457,7 +1484,10 @@ case "$event" in
         # wrongly judged the commit failed — would carry passes across a real cycle
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
-        if runs_git_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
+        #
+        # A reset needs either spelling (runs_git_commit) or effect (head_moved); see both.
+        _moved=1; is_commit "$cmd" && head_moved && _moved=0
+        if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd"; } && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
                 "$legacy_count" "$legacy_fresh" "$capextra_file"
           # The closing act's commit precedes plan execution, which still reads the closed
@@ -1486,6 +1516,7 @@ case "$event" in
       Bash)
         cmd=$(input_field command)
         if is_commit "$cmd"; then
+          record_head
           record_wip_base "$cmd"
           if is_wip_commit_pre "$cmd"; then
             note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B's fingerprint and floor are not evaluated here. Whether your pass counters are kept is decided after the commit, under the conditions $policy states for a WIP commit; where those do not hold they are cleared. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle decided after the commit)"

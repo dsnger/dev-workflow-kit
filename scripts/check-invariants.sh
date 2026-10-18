@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f and 4h), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by
-# `# --- BEGIN check 4a ---` / `# --- END check 4a ---` markers -- and likewise for 4b-4j -- so a scratch
+# below (4a-4d, 4f and 4h), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4j -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -259,6 +259,7 @@ bad_npx=$(
 bad_node=$(grep -rnE '(^|[[:space:]])node-version[[:space:]]*:' --include='*.yml' --include='*.yaml' . 2>/dev/null |
   grep -v '^\./source-files/' | strip_comment |
   while IFS= read -r rec; do
+    printf '%s' "$rec" | grep -Eq '[[:space:]:]node-version[[:space:]]*:' || continue  # key only in a comment
     v=${rec#*node-version}; v=$(printf '%s' "${v#*:}" | tr -d " \t\"'")
     printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || printf '%s\n' "$rec"
   done)
@@ -992,6 +993,19 @@ $lr_out
 LR_EOF
 done
 # --- END check 4h ---
+# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. A ````markdown line inside
+# the fence is the next template opening, so the fence was never closed (as in 4e).
+# Returns 2 if awk failed. Outside the 4i markers: check 4j uses it too.
+rg_tpl_scan() { # $1 = file
+  awk '                                            # gate-rules-size-scan
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
+              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
+    /^### 2\.1a[[:space:]]/ { heads += 1; in21a = 1; next }
+    in21a && /^### / { in21a = 0; next }
+    in21a && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
+    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+  ' "$1" || return 2
+}
 # --- BEGIN check 4i ---
 # Size cap on the gate rules, in BYTES, for two texts: the whole of `.claude/review-gates.md`,
 # and the body of the ````markdown fence inside `### 2.1a` of the command file (what
@@ -1016,19 +1030,6 @@ rg_judge() { # $1 = what was measured, $2 = its byte count (anything else is a f
               "cut the rules, or raise the budget deliberately"
        fi ;;
   esac
-}
-# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. A ````markdown line inside
-# the fence is the next template opening, so the fence was never closed (as in 4e).
-# Returns 2 if awk failed.
-rg_tpl_scan() { # $1 = file
-  awk '                                            # gate-rules-size-scan
-    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
-              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
-    /^### 2\.1a[[:space:]]/ { heads += 1; in21a = 1; next }
-    in21a && /^### / { in21a = 0; next }
-    in21a && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
-    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
-  ' "$1" || return 2
 }
 rg_file=.claude/review-gates.md
 if [ ! -f "$rg_file" ] || [ ! -r "$rg_file" ]; then
@@ -1064,7 +1065,7 @@ fi
 # the ````markdown fence inside `### 2.1a`, located by 4i's parser. They were kept identical
 # by hand only (0.30.0 audit, finding 8). It compares bytes, nothing else: not whether either
 # copy is right. Fails closed when either copy cannot be read or the template cannot be located.
-# It reuses 4i's parser, so a scratch copy with 4i neutered fails 4j in every case.
+# It reuses rg_tpl_scan, defined above the 4i markers.
 gc_file=.claude/review-gates.md gc_cmd=plugins/dev-workflow/commands/workflow-init.md
 gc_out=$(rg_tpl_scan "$gc_cmd" 2>/dev/null); gc_st=$?
 # shellcheck disable=SC2046  # word splitting is the point: four status fields

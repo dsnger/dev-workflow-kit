@@ -193,6 +193,10 @@ expect_accept "$PINNED
       - uses: actions/setup-node@$SHA
         with:
           node-version-file: package.json" "node-version-file accepted"
+expect_accept "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version-file: .nvmrc # was node-version: 22" "node-version only in a comment accepted"
 expect_reject "$PINNED
       - uses: actions/setup-node@$SHA
         with:
@@ -490,6 +494,12 @@ done
 #              4i was added). The shared
 #              initializer's `### 2.1a` gained a fence and 4e its nested-fence rule the same
 #              day; 4a-4h re-measured after both: 20, 22, 20, 22, 9, 34, 11, 28, unchanged.
+#   4j -> 4    every `4j:` reject case (3) and `4j fires when the template parser fails`; no
+#              accept case moved (measured 2026-10-18, when 4j was added). The shared
+#              initializer's rules file became identical to its `### 2.1a` fence, accept cases
+#              of 4c, 4h and 4i tolerate a lone 4j failure, and 4i's parser moved above the 4i
+#              markers, the same day; 4a-4i re-measured after all three: 20, 22, 20, 22, 9,
+#              34, 11, 28, 8, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
