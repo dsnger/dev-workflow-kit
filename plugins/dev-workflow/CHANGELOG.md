@@ -47,8 +47,8 @@ Autonomous run by default: no human stop between a closed gate and the merge.
   the profile line from the story instead of asking (derived and recorded when no story is
   cited); at the pass cap only a remaining Blocker, or a cut to an approved commitment, goes to
   the human, otherwise the agent chooses and records why. The hook's cap message says the same.
-- **`harden-finding`**: a finding that fits two rungs takes rung 2; one where it is unclear
-  whether a tool can decide it is reported as fitting no rung. Neither asks any more, since
+- **`harden-finding`**: a finding that fits two rungs takes rung 2; one where it stays unclear
+  whether a tool can decide it becomes a `todos.md` row, *rung undetermined*. Neither asks any more, since
   `process-pr-review` runs it inside the autonomous flow.
 
 ## 0.31.0

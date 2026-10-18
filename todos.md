@@ -1896,3 +1896,11 @@ repos where marked). Numbers are the audit's.
   out, ask what expert practice looks like, go to the rawest material, and turn the methods found
   into the brief's Goal and Done-when. Source: Felix Rieseberg, "How to be more ambitious"
   (2026-10-13). Trigger to build it: an observed shallow prompt on a hard task. *Idea.*
+
+## From kit 0.32.0 Gate B (cycle kit032gb1018)
+
+- [ ] **`docs/pr-review-bots.md`: retire the dormant human-exception merge clause.** It still says an
+  absent review from a **Wait for** bot needs a recorded human decision, and that the clause comes
+  back when a bot is promoted; 0.32.0's `process-pr-review` Step 4 records an absent review and does
+  not block. Dormant while **Wait for** is empty. Source: Gate B spec pass 2, finding 1. *Accepted,
+  not repaired.*
