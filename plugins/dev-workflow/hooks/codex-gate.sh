@@ -1088,10 +1088,11 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 # The reset after the command is narrower: `commit` must be git's subcommand, after only
 # global options (`-C <dir>`, `-c <k=v>`, `--no-pager`, …), so `git log | grep commit`
 # keeps the cycle's passes. A line continuation is folded into a space and any other
-# newline counts as a command separator. Its price is the dangerous direction: an
-# unusual spelling it misses (an alias such as `git ci`, an option word built from a
-# variable) carries the passes past a real commit, which the loose matcher above never
-# did. Each spelling it handles is a row in the hook's test suite.
+# newline counts as a command separator. Its price is the dangerous direction: a commit
+# the loose matcher above resets on and this one misses carries the passes past it, as
+# with an option word built from a variable (`git $opts commit`) or a global option taking
+# a separate value that is not in the list. Neither matcher sees an alias (`git ci`).
+# Each spelling it handles is a row in the hook's test suite.
 runs_git_commit() {
   _t="([^[:space:];&|()\"']|\"[^\"]*\"|'[^']*')+"
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |

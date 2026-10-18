@@ -30,7 +30,8 @@ Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
   `commit` as git's subcommand, after only global options (`git -C x commit`, `cd d && git commit`,
   `git -c k=v commit`), so `git log | grep -i commit` no longer deletes the pass count and
   fingerprint. The reminder before a call stays loose (invariant 2). The price is stated in the hook:
-  an alias such as `git ci` carries the passes past a real commit.
+  a spelling only the loose match saw, such as `git $opts commit`, now carries the passes past a
+  real commit.
 - **Hook: two missed commit spellings.** A commit split over lines (`git \` newline `commit`) now
   matches, and without jq the command reader no longer stops at the first escaped quote: it reads to
   the closing quote and decodes the escapes, so the command reads as it does with jq.
