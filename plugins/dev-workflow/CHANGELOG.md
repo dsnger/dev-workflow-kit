@@ -22,6 +22,32 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.32.0
+
+Autonomous run by default: no human stop between a closed gate and the merge.
+
+- **`CLAUDE.md` template §4, "Autonomous run"** (and this repo's own `CLAUDE.md`): the default
+  flow runs intake → spec → Gate A → plan → build → Gate B → PR → `process-pr-review` →
+  squash-merge → handover; a closed gate is the approval. Four stops stay whatever a story
+  says: a Blocker left at a gate's pass cap, a change to an approved commitment, a destructive
+  or irreversible action outside the branch, missing access or licence. Every other question
+  the agent decides itself, recorded under "Decisions" in the spec or PR body.
+  `brainstorming`'s design approval is the closed Gate A; `writing-plans`' execution choice is
+  subagent-driven in the same session. Fresh session at a unit boundary: started by the human,
+  an orchestrator session or another approved mechanism, and ending a unit needs no approval.
+- **`intake`: new `**Checkpoints:**` field** in the story header, `none` (default) or any subset
+  of `spec`, `plan`, `merge`, proposed in the one question round (`spec, plan, merge` only at
+  risk `high` on a security guarantee or irreversible data). Without a `spec` checkpoint the
+  draft is committed without a second wait, and intake continues into `brainstorming`.
+- **`process-pr-review` Step 4, merge**: squash-merges with `--match-head-commit` when CI is
+  green, every claim has a disposition and reply, no escalation is open and
+  `mergeStateStatus` is `CLEAN`, unless a cited story has a `merge` checkpoint. A bot with no
+  review on the head is named and does not block.
+- **Gate rules** (`.claude/review-gates.md` and template `### 2.1a`, identical): Gate A takes
+  the profile line from the story instead of asking (derived and recorded when no story is
+  cited); at the pass cap only a remaining Blocker goes to the human, otherwise the agent
+  chooses and records why. The hook's cap message says the same.
+
 ## 0.31.0
 
 Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).

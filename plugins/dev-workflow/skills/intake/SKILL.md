@@ -72,11 +72,17 @@ Follow in order. Each step names why it exists.
      over `none|trivial → 0`, `standard → 1`, `high → 2` → `battery` /
      `battery+check` / `battery+check+verification`, plus `+abuse-path` when and only
      when security is `high`.
+   - **Checkpoints** — the human stops this story opts in to, from `spec` (the story
+     draft, and the spec once its Gate A closes), `plan` (the plan, before building) and
+     `merge` (before the squash-merge). Propose `none`, the default, unless risk is `high`
+     *and* the change touches a security guarantee (security `high`) or irreversible data
+     (the irreversibility or data-loss trigger); then propose `spec, plan, merge`. Why: a
+     closed gate is the approval, and a stop pays only where a wrong merge is hard to undo.
 
    Triggers match **surfaces, not words**: a doc that mentions auth is not `high`; a
    change to an authorization decision is `high` even if the word never appears.
 
-   Carry all three into the next step's question round with one line of reason each.
+   Carry all four into the next step's question round with one line of reason each.
 4. **One question round, then pause** — ask at most one round, then **wait** for
    the user; a later turn resumes with their answers. Do not proceed on silence —
    this bounds the interaction without barrelling past an unanswered question.
@@ -94,6 +100,8 @@ Follow in order. Each step names why it exists.
      as the first `mode override` entry in the profile log, with its direction and the
      human's reason. **Say in the proposal that an override needs a reason**, since the
      log entry cannot be written without one.
+   - **A checkpoints correction sets the field freely** to `none` or any subset of
+     `spec`, `plan`, `merge`; it changes no axis and no mode.
 
    **State the derivation in the proposal, so one answer settles the whole header.** The
    mode is a function of the axes, not an independent choice: show `max(risk, security)`
@@ -104,12 +112,13 @@ Follow in order. Each step names why it exists.
 
    **An answer that cannot be recorded ends this intake attempt** — an override with no
    reason, an override dropping `+abuse-path` while security is `high`, a mode outside the
-   enums. Say which rule the answer collides with and **stop without writing**; do not
-   hold a pause open waiting for a repair, and do not invent the missing piece. This is
-   the grounding floor's shape, and it is honest about what happens next: the human's
-   corrected answer arrives at a **new intake run**, which opens its own single round with
-   that answer already in hand. What is forbidden is a second round *inside* one run, not
-   the human coming back.
+   enums, a checkpoint other than `none` or a subset of `spec`, `plan`, `merge`. Say which
+   rule the answer collides with and **stop without writing**; do not hold a pause open
+   waiting for a repair, and do not invent the missing piece. This is the grounding
+   floor's shape, and it is honest about what happens next: the human's corrected
+   answer arrives at a **new intake run**, which opens its own single round with that
+   answer already in hand. What is forbidden is a second round *inside* one run, not the
+   human coming back.
 
    "Proceed anyway" or "I don't know" **is** an answer: it accepts the proposal as it
    stands, and the values are recorded as proposed and **never lower** — a redundant lens
@@ -139,17 +148,20 @@ Follow in order. Each step names why it exists.
    calibration, so sizing stays consistent across runs.
 8. **Draft the story** from the template below (in your response — nothing on disk
    yet).
-9. **Present and wait** — show the draft and wait. On requested edits, apply them,
-   **re-validate the edited draft against every constraint** (six sections, the
-   profile header line, no-HOW except §4, grounding floor, ≥3 checkable criteria, the
-   criteria reading `AC-1 … AC-k` in order under the italic ID rule line), and
+9. **Present** — show the draft. Wait for approval only when the settled checkpoints
+   include `spec`; otherwise validate the draft against every constraint below and go on
+   to step 10, since the question round was the human's turn. On requested edits, apply
+   them, **re-validate the edited draft against every constraint** (six sections, the
+   profile header line, the checkpoints field, no-HOW except §4, grounding floor, ≥3
+   checkable criteria, the criteria reading `AC-1 … AC-k` in order under the italic ID rule line), and
    re-present. Never commit unseen or edit-broken text; a user edit can accidentally
    introduce HOW or drop a section.
-10. **On approval, write and commit** — write the **exact approved text** to the
-    computed path (see *Writing the story file*), immediately before staging, then
-    commit via the commit protocol. Writing only after approval means the staged
-    bytes are, by construction, what the user saw.
-11. **Hand off** — name the next step and stop. intake's job ends at capture.
+10. **Write and commit** — on approval, or at once without a `spec` checkpoint, write
+    the **exact shown text** to the computed path (see *Writing the story file*),
+    immediately before staging, then commit via the commit protocol. Writing just
+    before staging means the staged bytes are, by construction, what the user saw.
+11. **Hand off** — name the next step and continue with it (*Hand-off*). intake's job
+    ends at capture.
 
 ## Story template
 
@@ -158,7 +170,7 @@ Write the file with exactly these six `##` sections, in order:
 ```markdown
 # <Title> — Story
 
-**Date:** YYYY-MM-DD · **Size:** chore | story | epic-needs-splitting
+**Date:** YYYY-MM-DD · **Size:** chore | story | epic-needs-splitting · **Checkpoints:** none | <subset of spec, plan, merge>
 **Risk:** trivial | standard | high · **Security:** none | standard | high · **Validation:** <derived mode>
 
 <!-- Profile log: omit this whole block until the first change. On the first one: -->
@@ -366,13 +378,17 @@ The closed sets:
 ## Hand-off
 
 Check that `superpowers:brainstorming` is actually available to you before naming it
-(see *Stop and ask*). If it is, end by naming the next step, and stop:
+(see *Stop and ask*). If it is, name the next step:
 
 > Next: `superpowers:brainstorming` with `docs/superpowers/stories/<file>` as the
 > input document.
 
-Do not invoke brainstorming yourself, and do not start designing a solution —
-intake captures WHAT and WHY; brainstorming decides HOW.
+Then run it in this session. Its design approval is the spec's closed Gate A, and you
+answer its questions yourself with your recommendation, recorded under "Decisions" in the
+spec — unless the story's checkpoints include `spec`, or the question is one that always
+stops (a gate-cap Blocker, a change to an approved commitment, a destructive or
+irreversible action outside the branch, missing access or licence). Do not design a
+solution inside intake — intake captures WHAT and WHY; brainstorming decides HOW.
 
 ## Common mistakes
 
@@ -381,7 +397,8 @@ intake captures WHAT and WHY; brainstorming decides HOW.
 - Looping past one question round instead of pausing for the user.
 - Padding to reach three acceptance criteria when the idea can't ground them.
 - Renumbering the criteria of a committed story, or reusing a withdrawn identifier.
-- Committing with `git add -A`, or, in the Flow, committing text the user hasn't approved.
+- Committing with `git add -A`, or, in the Flow, committing a draft that fails a constraint, or
+  unapproved text under a `spec` checkpoint.
 - Leaving a story's Section 4 or the invariants empty instead of the explicit
   "No AGENTS.md invariants matched".
 - In an amendment: giving an undecided condition a fate instead of listing it under

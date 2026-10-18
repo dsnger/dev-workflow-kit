@@ -3004,7 +3004,7 @@ eq42 "every section-42 hook invocation exited 0" "$(cat "$rc42f")" ''
 ncap() { json_field "$1" systemMessage | grep -o 'pass cap reached' | grep -c ''; }
 skillpre() { run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'; }
 execout() { run "$(payload mcp__codex__exec "$(resp_success)")"; }       # capturing exec call
-cap_line1='STOP and ask the human: delete the mechanism, cut scope, or allow N more passes.'
+cap_line1='STOP: a remaining Blocker goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.'
 cap_line2='Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap).'
 
 # 43a. Gate B at the default cap of 5: four passes are silent, the fifth call carries the

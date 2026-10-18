@@ -2,8 +2,11 @@
 
 Setup is done ([`setup.md`](setup.md)). Type a skill or command as
 `/dev-workflow:<name>`, or describe the situation and Claude invokes the fitting one. The
-skills and gates shape how Claude works. Your job is the decision points: answering questions,
-approving drafts, judging findings. Every message the hook prints is a reminder, never a
+skills and gates shape how Claude works. By default a feature runs from intake to merge
+without stopping for you: your job is intake's one question round, and the stops that
+always apply — a Blocker left at a review's round limit, a change to an approved
+commitment, a destructive action outside the branch, missing access or licence. To approve the spec, the plan or the merge yourself, set the
+story's `Checkpoints` at intake. Every message the hook prints is a reminder, never a
 block. What the gates compare, and what each hook message means:
 [`reference.md`](reference.md#the-review-gates).
 
@@ -16,16 +19,18 @@ block. What the gates compare, and what each hook message means:
    `AC-1`, `AC-2`, ..., the `AGENTS.md` invariants it touches, and a profile proposal.
    The profile is two levels, how risky and how security-relevant, plus the evidence
    you will owe before the diff review. If the idea is too thin, it asks once and waits.
-   You answer: confirm or correct the two levels, then approve the draft. It lands as a
-   committed file under `docs/superpowers/stories/`.
-2. Say "proceed". `superpowers:brainstorming` writes the spec with you: settled
-   decisions with reasons, not a wish list. For a third-party library, Claude looks the
+   It also proposes `Checkpoints: none` — no human stop after this — or, for high-risk
+   work on a security guarantee or irreversible data, `spec, plan, merge`.
+   You answer: confirm or correct the two levels and the checkpoints. The story lands as
+   a committed file under `docs/superpowers/stories/` (with a `spec` checkpoint, after
+   you approve the draft).
+2. Claude continues with `superpowers:brainstorming`, which writes the spec: settled
+   decisions with reasons, not a wish list. Claude answers its questions itself and
+   records them under "Decisions" in the spec; the closed Gate A is the design approval. For a third-party library, Claude looks the
    API up in Context7 for the version you pin and names the lookup; when Context7 is
    unavailable or that version is not indexed, the library's own material for that
    version stands in.
-3. Gate A starts (Codex reads the spec text). You answer one line:
-   `risk standard|high; security none|standard|high; evidence <mode>`. Free text is
-   fine; Claude maps it to those values and quotes the mapping back.
+3. Gate A starts (Codex reads the spec text), with the profile from the story.
    You see Codex findings in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`,
    one per line, severity `BLOCKER | MAJOR | MINOR | NIT`. Blockers and Majors get
    fixed and the review runs again. Minors and Nits are collected, not iterated.
@@ -33,17 +38,17 @@ block. What the gates compare, and what each hook message means:
    From round 2 on, Codex marks each earlier Blocker and Major `fixed`, `not fixed` or
    `no longer applies`.
    Hook lines like `⚠ Codex Gate A below floor (1/3)` are the round counter, not an
-   error. You answer: which disputed findings stand. A dismissed finding needs a
-   one-line reason.
-4. If you see `⚠ Codex Gate A: pass cap reached (5/5). STOP and ask the human`, the
-   review hit its round limit. You answer `close`, or one of: delete the mechanism the
-   findings keep returning to, cut scope, continue. Each of those three names how many
-   more rounds it allows, at least one.
+   error. Claude judges disputed findings; a dismissed finding needs a one-line reason.
+4. If you see `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker goes to
+   the human`, the review hit its round limit. With a Blocker left, you answer `close`,
+   or one of: delete the mechanism the findings keep returning to, cut scope, continue.
+   Each of those three names how many more rounds it allows, at least one. Without a
+   Blocker, Claude picks one of them itself and records why.
 5. The review ends with one commit that records it (the closing act). Then
    `superpowers:writing-plans` writes the plan: outcomes, affected parts and test
    situations per step, code left to implementation. Gate A runs on the plan only when
-   you confirmed risk `high`.
-6. `superpowers:executing-plans` builds it, test first. Then your quality command from
+   the story's risk is `high`.
+6. Subagent-driven development builds it in the same session, test first. Then your quality command from
    `AGENTS.md` must be green; the one exception, a load flake in an untouched test, is in
    the [reference](reference.md#the-review-gates). CI runs the same command later.
 7. Gate B starts (Codex reads the diff). Claude commits `WIP: <subject>`, then runs two
@@ -94,8 +99,10 @@ itself goes through `intake` instead.
    `todos.md`; and a bot named when it left no review on the current head.
 3. You answer: every `escalate-to-user` verdict, and every accepted finding that
    contradicts a settled decision.
-4. Merge when its close-out reports the PR ready. The condition is the Done section of
-   the [command file](../plugins/dev-workflow/commands/process-pr-review.md).
+4. It squash-merges the PR itself once CI is green, every claim has a reply and the PR
+   is mergeable; a bot that left no review is named, not waited for. With `merge` in the
+   story's checkpoints it stops at "ready to merge" and you merge. The condition is
+   Step 4 of the [command file](../plugins/dev-workflow/commands/process-pr-review.md).
 
 ## A finding that keeps coming back
 

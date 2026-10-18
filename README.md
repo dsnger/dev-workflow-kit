@@ -58,7 +58,7 @@ You see: the command exits 0.
 
 Do: `/dev-workflow:intake <your idea>`.
 
-You see: a story draft with acceptance criteria and a risk proposal. Approve it, say "proceed"; Claude starts the spec.
+You see: a story draft with acceptance criteria, a risk proposal and `Checkpoints: none`. Confirm it; by default Claude then runs spec, gates, build, PR review and merge without stopping. For critical work, set `Checkpoints: spec, plan, merge` (any subset) to approve those steps yourself.
 
 ## What do I type when...
 

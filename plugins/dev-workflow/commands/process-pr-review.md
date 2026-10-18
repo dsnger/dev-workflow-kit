@@ -235,10 +235,27 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
    terminal. Claim 1 shows the hardening item 5 requires for a fixed finding; omitting
    it there is the most common way a true finding gets fixed once and returns later.
 
+## Step 4 — Merge
+
+Squash-merge once all of these hold: every tracked claim has a verdict, a terminal
+disposition and a reply; no item-4 question is unanswered; the required CI check is green
+on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`. Merge
+that head and no other:
+`gh pr merge <n> --squash --match-head-commit <headRefOid>`.
+A bot recorded as `<bot>: no review on <sha>` (Step 2) does not block the merge and is not
+counted as clean; the report keeps that line.
+
+Do not merge, and end with the PR ready, when a cited story's `**Checkpoints:**` line
+includes `merge` — the stories resolved as in Step 3 item 3, from the PR body and the
+commit bodies in the range; a story without the line, or no cited story, sets none. Why:
+a closed gate and green checks are the approval by default, and a human stop is opt-in
+per story. After the merge, confirm it with `gh pr view <n> --json state,mergeCommit`
+and write the unit's handover.
+
 ## Done
 
 Every tracked claim has a verdict, every thread has a reply, and each claim ends in
 exactly one of: a fix, a documented dismissal, a valid-but-out-of-scope finding recorded
 in `todos.md`, or an escalation the user has answered. Fixes are committed
-per rule 3, CI checks are green on the final head, `mergeStateStatus` is CLEAN — PR ready
-to merge.
+per rule 3, CI checks are green on the final head, `mergeStateStatus` is CLEAN, and the PR
+is squash-merged — or, under a `merge` checkpoint, ready to merge.
