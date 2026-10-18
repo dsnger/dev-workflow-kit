@@ -1170,8 +1170,8 @@ shell_backgrounds() { printf '%s' "$1" | sed -E 's/&&//g; s/[<>]&//g; s/&>//g' |
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
-# metacharacter or backslash anywhere (without jq the result is never attributed anyway, see
-# the record below). Before the
+# metacharacter or backslash anywhere (the result is attributed through the call's top-level
+# `tool_use_id`, see the record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
 # `wip` AND HEAD is attributable to this command. PreToolUse records HEAD, its parent, the
