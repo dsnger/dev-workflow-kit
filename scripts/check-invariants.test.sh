@@ -75,12 +75,31 @@ TPL_OK='### 2.1 CLAUDE-md
 ````markdown
 # T
 ````'
-# The three template sections of a command file: $1 is the whole `### 2.1` section, $2 goes
-# inside the ````markdown fence of `### 2.1a` (4i needs exactly one there), and $3, if given,
-# after `### 2.2` (outside both templates).
+# 4k: the ten secret deny lines `### 2.17` must carry, verbatim. Kept identical to the
+# checker's SD_REQ on purpose: a drift between the two turns every accept case red.
+SD_LINES='"Read(**/.env*)",
+"Read(!**/.env.example)",
+"Read(**/*.pem)",
+"Read(**/*.key)",
+"Read(**/secrets.*)",
+"Read(./.context/**/secrets*)",
+"Read(**/id_rsa)",
+"Read(**/id_ecdsa)",
+"Read(**/id_ed25519)",
+"Read(~/.ssh/**)"'
+# sd_section [LINES]: a `### 2.17` section holding LINES (default: all ten), indented in a
+# ```json fence as the shipped template is.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+sd_section() {
+  printf '### 2.17 settings\n\n```json\n%s\n```\n' "$(printf '%s\n' "${1-$SD_LINES}" | sed 's/^/      /')"
+}
+# The template sections of a command file: $1 is the whole `### 2.1` section, $2 goes
+# inside the ````markdown fence of `### 2.1a` (4i needs exactly one there), $3, if given,
+# after `### 2.2` (outside both templates), and $4, if given, replaces the valid `### 2.17`
+# section that closes the file (4k).
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
 tpl_sections() {
-  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n' "$1" "$2" "${3:-}"
+  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n\n%s\n' "$1" "$2" "${3:-}" "${4:-$(sd_section)}"
 }
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
@@ -502,6 +521,13 @@ done
 #              of 4c, 4h and 4i tolerate a lone 4j failure, and 4i's parser moved above the 4i
 #              markers, the same day; 4a-4i re-measured after all three: 20, 22, 20, 22, 9,
 #              34, 11, 28, 8, unchanged.
+#   4k -> 29   every `4k:` reject case (28, the unreadable case run as non-root) and
+#              `4k secret deny parser failure fires`; no accept case moved (re-measured
+#              2026-10-18 after the template's two .env lines became one, ten lines; 31 when
+#              4k was added the same day, with eleven). 4a-4j re-measured after it: 20, 22,
+#              20, 22, 9, 34, 11, 28, 8, 4, unchanged. The shared `tpl_sections` gained the `### 2.17`
+#              section the same day; 4a-4j re-measured after it: 20, 22, 20, 22, 9, 34, 11,
+#              28, 8, 4, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1414,6 +1440,80 @@ ti_case "4j: missing rules file rejected"                1 "@GONE@" "@KEEP@" \
   'so the two copies cannot be compared'
 inject_case "4j fires when the template parser fails" awk '*gate-rules-size-scan*' \
   'gate rules copies: .* cannot be compared'
+
+# --- Check 4k, the secret deny rules in `### 2.17` --------------------------------------
+#
+# Each case replaces the command file's `### 2.17` section in an otherwise valid fixture. Each
+# line is dropped in turn, and placed in turn only outside the section, so a check that quietly
+# stopped requiring one of them turns a named case red.
+SD='Secret deny rules:'
+SD_MISS='lacks a deny line'
+# A command file with the checklist and both gate-rules copies' lines; $1 is the `### 2.17`
+# section, $2 goes after `### 2.2` (before `### 2.17`, so outside it).
+sd_cmd() {
+  printf '# Prompt Standards\n\n## Checklist (each item must be verifiably true)\n\n'
+  i=1; while [ "$i" -le 12 ]; do printf '%s. **item %s**\n' "$i" "$i"; i=$((i + 1)); done
+  printf '\n## After\n\nReviewed against all 12 items.\n\n'
+  tpl_sections "$TPL_OK" "$SEV_LINE
+$LR_LINES" "${2:-}" "$1"
+}
+sd_case() { # $1 = name, $2 = 1|0 expect reject, $3 = command file body, @KEEP@, @GONE@ or
+  #          @LOCK@, $4 = diagnostic a reject must carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  cf="$work/r/plugins/dev-workflow/commands/workflow-init.md"
+  sev_put "$cf" "$3"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  [ -f "$cf" ] && chmod 644 "$cf" 2>/dev/null
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF -- "$SD" || ! printf '%s' "$out" | grep -qF -- "$4"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+sd_case "4k: the fixture section accepted"                 0 "@KEEP@" ''
+sd_case "4k: tab-indented lines and an extra entry accepted" 0 \
+  "$(sd_cmd "$(printf '### 2.17 settings\n\n%s\n\t"Read(**/extra)",\n' "$(printf '%s\n' "$SD_LINES" | sed 's/^/\t/')")")" ''
+k=1
+while [ "$k" -le 10 ]; do
+  sd_without=$(printf '%s\n' "$SD_LINES" | sed "${k}d")
+  sd_only=$(printf '%s\n' "$SD_LINES" | sed -n "${k}p")
+  sd_case "4k: line $k missing rejected" 1 "$(sd_cmd "$(sd_section "$sd_without")")" "$sd_only"
+  sd_case "4k: line $k only before the section rejected" 1 \
+    "$(sd_cmd "$(sd_section "$sd_without")" "$sd_only")" "$sd_only"
+  k=$((k + 1))
+done
+sd_case "4k: line only after the section's end rejected"   1 \
+  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed 1d)")
+## Step 3
+
+\"Read(**/.env*)\",")" "$SD_MISS"
+sd_case "4k: line without its trailing comma rejected"     1 \
+  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed '1s/,$//')")")" "$SD_MISS"
+sd_case "4k: line with leading text rejected"              1 \
+  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed '5s/^/x /')")")" "$SD_MISS"
+sd_case "4k: .env.example exemption before .env* rejected" 1 \
+  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | awk 'NR == 1 { h = $0; next } { print } NR == 2 { print h }')")")" \
+  'comes before "Read(**/.env*)"'
+sd_case "4k: no 2.17 heading rejected"                     1 \
+  "$(sd_cmd "$(sd_section | sed 's/^### 2\.17 .*/### 2.18 settings/')")" "has 0 '### 2.17' headings"
+sd_case "4k: two 2.17 headings rejected"                   1 \
+  "$(sd_cmd "$(sd_section)
+$(sd_section)")" "has 2 '### 2.17' headings"
+sd_case "4k: missing command file rejected"                1 "@GONE@" 'is missing, so the'
+if [ "$(id -u)" -ne 0 ]; then
+  sd_case "4k: unreadable command file rejected"           1 "@LOCK@" 'is unreadable, so the'
+fi
+inject_case "4k secret deny parser failure fires" awk '*secret-deny-scan*' \
+  "$SD the '### 2.17' parser failed"
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

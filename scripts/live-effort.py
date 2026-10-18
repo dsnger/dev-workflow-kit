@@ -44,9 +44,7 @@ ra = load("run_analytics", "run-analytics.py")
 
 
 def die(msg):
-    sys.stderr.buffer.write(("live-effort: %s\n" % ra.shown(msg)).encode("utf-8", "backslashreplace"))
-    sys.stderr.flush()
-    sys.exit(1)
+    ra.lm.die(msg, "live-effort")
 
 
 def span(seconds):
@@ -62,16 +60,17 @@ def main(argv):
     if len(argv) > 1:
         die("takes no arguments")
     cwd = os.getcwd()
-    rc, out = ra.git(("--version",), cwd)
-    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
-    if not m or (int(m.group(1)), int(m.group(2))) < (2, 36):
+    if ra.lm.git_too_old(cwd):
         die("git 2.36 or later is required")
     mine = ra.common_dir(cwd)
     if mine is None:
         die("not a git repository")
+    problem = ra.lm.partial_clone(cwd)
+    if problem:
+        die(problem)
 
     problems, invalid = {}, [0]
-    lm = ra.load_ledger_parser(os.path.dirname(os.path.abspath(__file__)))
+    lm = ra.lm
     calls = ra.scan_transcripts(problems)
     sid_users = {}
     for c in calls.values():

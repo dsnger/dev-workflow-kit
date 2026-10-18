@@ -127,6 +127,21 @@ What `/dev-workflow:workflow-init` does, in order:
   `context7` servers in `.mcp.json` (each added only when absent; an existing entry of
   that name is left as it is, so check it yourself), and `.context/codex-gate.on`, the
   marker that makes the hook speak in this project. Commit the marker.
+- **Secret deny rules (2.17).** It merges `permissions.deny` entries into
+  `.claude/settings.json` that stop Claude Code from reading every name starting `.env` (`.env`,
+  `.env.local`, `.envrc`; except `.env.example`), `*.pem`, `*.key`, `secrets.*` at any depth, `secrets*` under
+  `./.context/`, the private keys `id_rsa`, `id_ecdsa` and `id_ed25519` at any depth, and
+  everything under `~/.ssh/`. When entries are missing from an existing file it asks before
+  adding them. Observed with Claude Code 2.1.302 in a fixture repository: the Read tool was
+  refused for a sample file of every entry except `id_rsa`, which was not tried (a `~/.ssh/`
+  path was refused even when absent), `cat .env` in Bash was refused, and `.env.example` was
+  readable at any depth. **What they do not stop**, as observed in the same probes: `grep -r` over the directory, and a script that opens the
+  file itself (`python3 -c 'open(".env")'`). They are Claude Code settings, so other clients
+  (Codex) do not read them; and per the Claude Code permissions docs, `./` is relative to the
+  session's working directory, so a session started elsewhere is not covered by the
+  `.context/` entry. These
+  rules lower the chance of an accidental read; they do not make a secret in the repository
+  safe. Rules for a different name (`id_dsa`, `credentials.json`) are yours to add.
 - **`AGENTS.md` interview.** It asks in batches of 2 to 4 questions (what the project
   is, architecture, key invariants, don'ts, `## Commands`), shows each section before
   moving on, writes `TODO — not yet decided` where you don't know yet, and writes the

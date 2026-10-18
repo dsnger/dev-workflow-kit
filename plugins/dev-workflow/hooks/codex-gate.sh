@@ -477,8 +477,9 @@ UNVERIFIED_MSG='ℹ A gate call was classified as countable without inspection, 
 #
 # SINGLE-QUOTED, so no ASCII apostrophe may appear anywhere below, comments included —
 # one would terminate the quote and leave this hook unparseable.
-# The string, span and whitespace helpers are shared with REQUEST_AWK below, so both scans
-# decide string boundaries the same way.
+# The string, span and whitespace helpers, the whole-input read and the top-level walk are
+# shared with REQUEST_AWK and CALLID_AWK below, so all three scans decide string boundaries
+# and the outer object the same way.
 # shellcheck disable=SC2016  # an awk program, not shell: $0 and $1 are awk fields
 JSON_AWK_FUNCS='
 function skipws(s, i,   c) {
@@ -541,9 +542,6 @@ function skipval(s, i,   c, st, e, j, tok) {
   if (tok ~ /^-?(0|[1-9][0-9]*)([.][0-9]+)?([eE][-+]?[0-9]+)?$/) return j
   return 0
 }
-'
-# shellcheck disable=SC2016  # an awk program, not shell: $0 and $1 are awk fields
-LOCATE_AWK="$JSON_AWK_FUNCS"'
 # Read the WHOLE input by accumulating records; the newline put back is the separator
 # awk stripped. RS="\0" would be shorter and is NOT portable across POSIX awks.
 # CEILING: a payload past the bound is refused rather than SCANNED. It does not bound
@@ -562,29 +560,42 @@ LOCATE_AWK="$JSON_AWK_FUNCS"'
 # Refusal is status 2, which the classifier routes to `unrecognized`: counted, disclosed.
 BEGIN { MAXLEN = 1048576; over = 0; tot = 0 }
 { if (over || tot + length($0) + 1 > MAXLEN) over = 1; else { s = s $0 "\n"; tot += length($0) + 1 } }
-END {
+# THE TOP-LEVEL WALK. Walks the outer object of s once and returns the index where the
+# value of its member named `want` starts, 0 when there is none. Refuses (status 2) a
+# payload past the ceiling, an outer value that is not an object, a malformed member, a
+# repeated `want`, an unclosed object and trailing garbage; with `noesc` set, also any
+# top-level key containing a backslash, since an escaped key might decode to `want`.
+# exit inside a function ends the whole program, the same as it did inline in END.
+function topmember(want, noesc,   i, c, e, key, first, closed, at) {
   if (over) exit 2
-  # ONE length() for the whole scan. Every loop below tests against SLEN rather than
-  # calling length(s) per iteration, and the accumulator above tracks a running total
-  # rather than re-measuring what it just built.
-  SLEN=length(s); n=SLEN; i=skipws(s,1)
+  # ONE length() for the whole scan. Every loop tests against SLEN rather than calling
+  # length(s) per iteration, and the accumulator above tracks a running total rather than
+  # re-measuring what it just built.
+  SLEN=length(s); i=skipws(s,1)
   if (substr(s,i,1) != "{") exit 2
-  i++; found=0; first=1; closed=0
-  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
+  i++; first=1; closed=0; at=0
+  while (i<=SLEN) { i=skipws(s,i); c=substr(s,i,1)
     if (c=="}") { i++; closed=1; break }
     if (!first) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
     first=0
     if (c!="\"") exit 2
     e=readstr(s,i); if(!e) exit 2
     key=RAWSTR; i=skipws(s,e+1)
+    if (noesc && index(key, "\\")) exit 2
     if (substr(s,i,1)!=":") exit 2
     i=skipws(s,i+1)
-    if (key=="tool_response") { if (found) exit 2; found=1; tr=i }
+    if (key==want) { if (at) exit 2; at=i }
     i=skipval(s,i); if(!i) exit 2 }
   if (!closed) exit 2
-  if (skipws(s,i) <= n) exit 2          # trailing garbage after the outer object
-  if (!found) exit 1
-  i=tr
+  if (skipws(s,i) <= SLEN) exit 2          # trailing garbage after the outer object
+  return at
+}
+'
+# shellcheck disable=SC2016  # an awk program, not shell: $0 and $1 are awk fields
+LOCATE_AWK="$JSON_AWK_FUNCS"'
+END {
+  i=topmember("tool_response", 0); n=SLEN
+  if (!i) exit 1
   if (substr(s,i,1)!="[") exit 1        # absent / null / non-array container
   i++; firstel=1
   while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
@@ -648,27 +659,9 @@ locate_result() { printf '%s' "$payload" | awk "$LOCATE_AWK"; }
 REQUEST_AWK="$JSON_AWK_FUNCS"'
 function rtv(p, v) { if (!p) return "absent"; if (v=="spec"||v=="quality"||v=="full") return v; return "other" }
 function shav(p, v) { if (!p) return "absent"; if (length(v)==40 && v !~ /[^0-9a-f]/) return v; return "bad" }
-BEGIN { MAXLEN = 1048576; over = 0; tot = 0 }
-{ if (over || tot + length($0) + 1 > MAXLEN) over = 1; else { s = s $0 "\n"; tot += length($0) + 1 } }
 END {
-  if (over) exit 2
-  SLEN=length(s); n=SLEN; i=skipws(s,1)
-  if (substr(s,i,1) != "{") exit 2
-  i++; found=0; first=1; closed=0
-  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
-    if (c=="}") { i++; closed=1; break }
-    if (!first) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
-    first=0
-    if (c!="\"") exit 2
-    e=readstr(s,i); if(!e) exit 2
-    key=RAWSTR; i=skipws(s,e+1)
-    if (substr(s,i,1)!=":") exit 2
-    i=skipws(s,i+1)
-    if (key=="tool_input") { if (found) exit 2; found=1; ti=i }
-    i=skipval(s,i); if(!i) exit 2 }
-  if (!closed || !found) exit 2
-  if (skipws(s,i) <= n) exit 2
-  i=ti
+  i=topmember("tool_input", 0); n=SLEN
+  if (!i) exit 2
   if (substr(s,i,1)!="{") exit 2
   i++; firstm=1; oclosed=0
   while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
@@ -700,30 +693,11 @@ END {
 # SINGLE-QUOTED, so no ASCII apostrophe may appear below.
 # shellcheck disable=SC2016  # an awk program, not shell
 CALLID_AWK="$JSON_AWK_FUNCS"'
-BEGIN { MAXLEN = 1048576; over = 0; tot = 0 }
-{ if (over || tot + length($0) + 1 > MAXLEN) over = 1; else { s = s $0 "\n"; tot += length($0) + 1 } }
 END {
-  if (over) exit 2
-  SLEN=length(s); n=SLEN; i=skipws(s,1)
-  if (substr(s,i,1) != "{") exit 2
-  i++; found=0; first=1; closed=0
-  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
-    if (c=="}") { i++; closed=1; break }
-    if (!first) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
-    first=0
-    if (c!="\"") exit 2
-    e=readstr(s,i); if(!e) exit 2
-    key=RAWSTR; i=skipws(s,e+1)
-    if (index(key, "\\")) exit 2
-    if (substr(s,i,1)!=":") exit 2
-    i=skipws(s,i+1)
-    if (key=="tool_use_id") { if (found) exit 2; found=1
-      if (substr(s,i,1)!="\"") exit 1
-      e=readstr(s,i); if(!e) exit 2
-      id=RAWSTR; i=e+1; continue }
-    i=skipval(s,i); if(!i) exit 2 }
-  if (!closed || !found) exit 2
-  if (skipws(s,i) <= n) exit 2
+  i=topmember("tool_use_id", 1)
+  if (!i) exit 2
+  if (substr(s,i,1)!="\"") exit 1
+  readstr(s,i); id=RAWSTR
   if (id !~ /^[A-Za-z0-9_-]+$/ || length(id) > 100) exit 1
   o = ""
   for (k = 1; k <= length(id); k++) { c = substr(id, k, 1)
@@ -793,9 +767,12 @@ note_stale() { # $1 = absolute path that survived removal
 # still lets existing files be overwritten), so the test is absence, not a write status.
 gone() { ! { [ -e "$1" ] || [ -L "$1" ]; }; }
 retire() { gone "$1" && return 0; rm -f "$1" 2>/dev/null; gone "$1"; }
-retire_legacy() {
-  retire "$legacy_count" || { note_stale "$legacy_count"; return 1; }
-  retire "$legacy_fresh" || { note_stale "$legacy_fresh"; return 1; }
+retire_legacy() { # $1 = quiet: best effort, no note, carries on past a survivor
+  for _lf in "$legacy_count" "$legacy_fresh"; do
+    retire "$_lf" && continue
+    [ "${1-}" = quiet ] && continue
+    note_stale "$_lf"; return 1
+  done
   return 0
 }
 # CLAIM by rename: one rename(2) inside .context/, so at most one hook process can take a
@@ -1550,8 +1527,8 @@ case "$event" in
         # whose effect may come later (shell_backgrounds); see each.
         _moved=1; is_commit "$cmd" && head_moved && _moved=0
         if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd" || shell_backgrounds "$cmd"; } && ! is_wip_commit_post "$cmd"; then
-          rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
-                "$legacy_count" "$legacy_fresh" "$capextra_file"
+          rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" "$capextra_file"
+          retire_legacy quiet
           # The closing act's commit precedes plan execution, which still reads the closed
           # count for its floor check; the cap check reads only the live one
           [ -f "$countA_file" ] && mv -f "$countA_file" "$countA_file.closed" 2>/dev/null
@@ -1600,7 +1577,7 @@ case "$event" in
           if names_no_paths "$cmd" && is_docs_only "$files"; then
             note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
           else
-            retire "$legacy_count"; retire "$legacy_fresh"   # best effort; nothing is credited here
+            retire_legacy quiet   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
             fresh=$(read_count "$fresh_file")
             reviewed=$(cat "$state_file" 2>/dev/null || echo '')

@@ -19,11 +19,22 @@ import json
 import math
 import os
 import re
-import subprocess
 
-GIT_SELECTORS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
-                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-                 "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM", "GIT_NAMESPACE")
+
+def load_parser(here):
+    spec = importlib.util.spec_from_file_location("ledger_metrics", os.path.join(here, "ledger-metrics.py"))
+    try:
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except (OSError, SyntaxError, AttributeError):
+        sys.stderr.buffer.write(b"loop-usefulness: the record parser scripts/ledger-metrics.py cannot be loaded\n")
+        sys.exit(1)
+    return mod
+
+
+lm = load_parser(os.path.dirname(os.path.abspath(__file__)))
+git, shown, ranges = lm.run_git, lm.shown, lm.ranges
+
 NO_SIG = ("-c", "log.showSignature=false")
 RE_SLOT = re.compile(r"gate-a-(?:spec|plan)(?:-([a-z0-9]{8,16}))?-pass-([1-9][0-9]*)"
                      r"|gate-b-(?:spec|quality)(?:-([a-z0-9]{8,16}))?-pass-([1-9][0-9]*)")
@@ -58,44 +69,8 @@ CANNOT = """== What this report cannot answer
   even where the difference could not change a signal."""
 
 
-def shown(text):
-    return "".join("\\x%02x" % ord(c) if ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F else c for c in str(text))
-
-
 def die(msg):
-    sys.stderr.buffer.write(("loop-usefulness: %s\n" % shown(msg)).encode("utf-8", "backslashreplace"))
-    sys.stderr.flush()
-    sys.exit(1)
-
-
-def git_env():
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_TRACE")}
-    for k in GIT_SELECTORS:
-        env.pop(k, None)
-    env.update(GIT_TRACE2="0", GIT_TRACE2_EVENT="0", GIT_TRACE2_PERF="0")
-    return env
-
-
-def git(args, cwd="."):
-    # --no-replace-objects and an empty graft file, as in P8: read the history the commit names,
-    # not `git replace` substitutes or legacy grafts.
-    env = dict(git_env(), GIT_GRAFT_FILE=os.devnull)
-    try:
-        p = subprocess.run(("git", "--no-replace-objects") + tuple(args), cwd=cwd, env=env,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        return 127, b""
-    return p.returncode, p.stdout
-
-
-def load_parser(here):
-    spec = importlib.util.spec_from_file_location("ledger_metrics", os.path.join(here, "ledger-metrics.py"))
-    try:
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-    except (OSError, SyntaxError, AttributeError):
-        die("the record parser scripts/ledger-metrics.py cannot be loaded")
-    return mod
+    lm.die(msg, "loop-usefulness")
 
 
 # ---- records ---------------------------------------------------------------------------------------
@@ -103,40 +78,23 @@ def load_parser(here):
 def read_records(sha, lm):
     """nonce -> {"curve"|"prov"|"skip": {text: [(ct, sha), ...]}}, plus pre-rule and unparsed counts."""
     rc, out = git(NO_SIG + ("-c", "i18n.logOutputEncoding=UTF-8", "log", "--no-show-signature", "-z",
-                            "--format=%H%x00%ct%n%B", sha))
+                            "--format=%H %ct%n%B", sha))
     if rc != 0:
         die("history could not be read")
-    parts = out.decode("utf-8", "replace").split("\0")
-    nonces, prerule, unparsed = {}, 0, 0
-    for i in range(0, len(parts) - 1, 2):
-        csha = parts[i].lstrip("\n")
-        head, _, body = parts[i + 1].partition("\n")
-        ct = int(head) if head.isdigit() else 0
-        lines, j, seen = body.split("\n"), 0, set()
-        while j < len(lines):
-            line = lines[j]
-            j += 1
-            if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
-                continue
-            parsed = lm.parse_record(line)
-            if parsed is None:
-                unparsed += 1
-                continue
-            field, typ, _data = parsed
-            text = line
-            if typ == "skip":  # the reason after the marker is part of its identity, as in P8
-                reason = []
-                while j < len(lines) and lines[j] != "" and not lm.CANDIDATE.match(lines[j]):
-                    reason.append(lines[j])
-                    j += 1
-                text = line + " | " + " ".join(reason)
-            if field == "none (pre-rule)":
-                prerule += 1
-                continue
-            if (typ, text) in seen:
-                continue
-            seen.add((typ, text))
-            nonces.setdefault(field, {}).setdefault(typ, {}).setdefault(text, []).append((ct, csha))
+    nonces, prerule, unparsed, seen = {}, 0, 0, set()
+    for csha, ct, _pos, parsed, text in lm.commit_records(lm.read_commits(out.decode("utf-8", "replace"),
+                                                                           "loop-usefulness")):
+        if parsed is None:
+            unparsed += 1
+            continue
+        field, typ = parsed[0], parsed[1]
+        if field == "none (pre-rule)":
+            prerule += 1
+            continue
+        if (csha, typ, text) in seen:  # once per commit
+            continue
+        seen.add((csha, typ, text))
+        nonces.setdefault(field, {}).setdefault(typ, {}).setdefault(text, []).append((ct, csha))
     return nonces, prerule, unparsed
 
 
@@ -281,18 +239,6 @@ def read_store():
     return by_nonce, "read", skipped
 
 
-def ranges(nums):
-    out, nums = [], sorted(nums)
-    i = 0
-    while i < len(nums):
-        j = i
-        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
-            j += 1
-        out.append(str(nums[i]) if i == j else "%d-%d" % (nums[i], nums[j]))
-        i = j + 1
-    return ",".join(out) or "-"
-
-
 def total(values, fmt):
     known = [v for v in values if v is not None]
     return "%s (? %d of %d)" % (fmt(sum(known)) if known else "?", len(values) - len(known), len(values))
@@ -324,18 +270,15 @@ def main(argv):
     if len(argv) > 2:
         die("usage: loop-usefulness.py [<ref>]")
     ref = argv[1] if len(argv) == 2 else "HEAD"
-    rc, out = git(("--version",))
-    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
-    if not m or (int(m.group(1)), int(m.group(2))) < (2, 36):
+    if lm.git_too_old():
         die("git 2.36 or later is required")
-    rc, out = git(("config", "--get-regexp", r"^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$"))
-    if out.strip():
-        die("partial clones are not supported (reading history could fetch objects)")
+    problem = lm.partial_clone()
+    if problem:
+        die(problem)
     rc, out = git(("rev-parse", "--verify", "--end-of-options", ref + "^{commit}"))
     if rc != 0 or not out.strip():
         die("the ref does not resolve to a commit: %s" % ref)
     sha = out.decode().strip()
-    lm = load_parser(os.path.dirname(os.path.abspath(__file__)))
     nonces, prerule, unparsed = read_records(sha, lm)
     store, store_status, store_skipped = read_store()
     rc, sh = git(("rev-parse", "--is-shallow-repository"))

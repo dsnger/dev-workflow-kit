@@ -39,9 +39,14 @@ CANNOT = """
 - Cost and duration: that is vision step 2c's telemetry, out of scope here."""
 
 
-def die(msg):
-    sys.stderr.buffer.write(("ledger-metrics: %s\n" % msg).encode("utf-8", "backslashreplace"))
+def complain(msg, prog="ledger-metrics"):
+    """One error line on stderr, prefixed with the report's name; control characters escaped."""
+    sys.stderr.buffer.write(("%s: %s\n" % (prog, shown(msg))).encode("utf-8", "backslashreplace"))
     sys.stderr.flush()
+
+
+def die(msg, prog="ledger-metrics"):
+    complain(msg, prog)
     sys.exit(1)
 
 
@@ -58,6 +63,66 @@ def git(*args):
     except OSError:
         die("git could not be run")
     return p.returncode, p.stdout
+
+
+# ---- shared by the other reports (they load this file) ---------------------------------------
+# This script's own git() keeps the caller's environment (spec §2); the other reports use run_git.
+
+GIT_SELECTORS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+                 "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM", "GIT_NAMESPACE")
+
+
+def git_env():
+    """No repository selectors, no trace sinks, no shallow-file override, and an empty graft file."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_TRACE")}
+    for k in GIT_SELECTORS + ("GIT_SHALLOW_FILE",):
+        env.pop(k, None)
+    env.update(GIT_TRACE2="0", GIT_TRACE2_EVENT="0", GIT_TRACE2_PERF="0",  # overrides trace2.* config
+               GIT_GRAFT_FILE=os.devnull)
+    return env
+
+
+def run_git(args, cwd=None):
+    """(returncode, stdout bytes); 127 when git cannot be run. --no-replace-objects and the empty graft
+    file: read the history the commit names, not `git replace` substitutes or legacy grafts."""
+    try:
+        p = subprocess.run(("git", "--no-replace-objects") + tuple(args), cwd=cwd, env=git_env(),
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError:
+        return 127, b""
+    return p.returncode, p.stdout
+
+
+def git_too_old(cwd=None):
+    rc, out = run_git(("--version",), cwd)
+    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
+    return not m or (int(m.group(1)), int(m.group(2))) < (2, 36)
+
+
+def partial_clone(cwd=None):
+    """None, or why a report must refuse: in a partial clone reading history can fetch objects. Any
+    matching key refuses, whatever its value (a promisor set to false included): the safe direction."""
+    rc, out = run_git(("config", "--get-regexp",
+                       r"^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$"), cwd)
+    if rc not in (0, 1):  # 1 means no such key
+        return "the repository configuration cannot be read"
+    if out.strip():
+        return "partial clones are not supported (reading history could fetch objects)"
+    return None
+
+
+def ranges(nums):
+    """Sorted numbers as runs, e.g. 1-3,5; "-" for none."""
+    out, nums = [], sorted(nums)
+    i = 0
+    while i < len(nums):
+        j = i
+        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
+            j += 1
+        out.append(str(nums[i]) if i == j else "%d-%d" % (nums[i], nums[j]))
+        i = j + 1
+    return ",".join(out) or "-"
 
 
 # ---- grammar (CLAUDE.md §5 Mechanics) ------------------------------------------------------
@@ -292,7 +357,7 @@ def parse_record(line):
 def shown(text):
     """Render a raw line for output: control characters become \\xNN, so a malformed record
     cannot move the cursor or break the report's line structure."""
-    return "".join("\\x%02x" % ord(c) if is_control(c) else c for c in text)
+    return "".join("\\x%02x" % ord(c) if is_control(c) else c for c in str(text))
 
 
 def ledger_section(text):
@@ -360,7 +425,7 @@ def ledger_section(text):
     return out
 
 
-def read_commits(raw):
+def read_commits(raw, prog="ledger-metrics"):
     """Parse `git log -z --format='%H %ct%n%B'` output into (sha, ct, body_lines)."""
     commits = []
     for rec in raw.split("\0"):
@@ -369,16 +434,16 @@ def read_commits(raw):
         head, _, body = rec.lstrip("\n").partition("\n")
         m = re.fullmatch(r"([0-9a-f]{40}|[0-9a-f]{64}) ([0-9]+)", head)  # SHA-1 or SHA-256 repository
         if not m:
-            die("git log produced an unexpected record header")
+            die("git log produced an unexpected record header", prog)
         commits.append((m.group(1), int(m.group(2)), body.split("\n")))
     return commits
 
 
-def git_sections(commits, absence):
-    recs = {}      # key -> record dict (key: line text; pre-rule keys also carry the sha)
-    unparsed = []  # (ct, sha, line)
+def commit_records(commits):
+    """Yield (sha, ct, pos, parsed, text) for each candidate record line of commits, as read_commits
+    returns them. parsed is parse_record's result, None for an unparsed line; text is the line, and for
+    a skip record the line plus " | " and its reason, which is also set as parsed data["reason"]."""
     for sha, ct, lines in commits:
-        seen_here = set()
         i = 0
         while i < len(lines):
             line = lines[i]
@@ -387,26 +452,34 @@ def git_sections(commits, absence):
             if not CANDIDATE.match(line) or is_ledger_record(line):
                 continue
             parsed = parse_record(line)
-            if parsed is None:
-                unparsed.append((ct, sha, line))
-                continue
-            field, typ, data = parsed
             text = line
-            if typ == "skip":  # the reason is the text right after the marker (CLAUDE.md §5)
+            if parsed is not None and parsed[1] == "skip":  # the reason is the text right after the marker (CLAUDE.md §5)
                 reason = []
                 while i < len(lines) and lines[i] != "" and not CANDIDATE.match(lines[i]):
                     reason.append(lines[i])
                     i += 1
-                data["reason"] = " ".join(reason)
-                text = line + " | " + data["reason"]  # identity uses the excerpt as found
-            # pre-rule records identify nothing, so every occurrence stays separate (commit + position)
-            key = (text, sha, pos) if field == "none (pre-rule)" else (text, None, None)
-            if key in seen_here:
-                continue
-            seen_here.add(key)
-            r = recs.setdefault(key, {"field": field, "type": typ, "data": data, "text": text,
-                                      "commits": []})
-            r["commits"].append((ct, sha))
+                parsed[2]["reason"] = " ".join(reason)
+                text = line + " | " + parsed[2]["reason"]  # identity uses the excerpt as found
+            yield sha, ct, pos, parsed, text
+
+
+def git_sections(commits, absence):
+    recs = {}      # key -> record dict (key: line text; pre-rule keys also carry the sha)
+    unparsed = []  # (ct, sha, line)
+    seen = set()   # (sha, key): a record counts once per commit
+    for sha, ct, pos, parsed, text in commit_records(commits):
+        if parsed is None:
+            unparsed.append((ct, sha, text))
+            continue
+        field, typ, data = parsed
+        # pre-rule records identify nothing, so every occurrence stays separate (commit + position)
+        key = (text, sha, pos) if field == "none (pre-rule)" else (text, None, None)
+        if (sha, key) in seen:
+            continue
+        seen.add((sha, key))
+        r = recs.setdefault(key, {"field": field, "type": typ, "data": data, "text": text,
+                                  "commits": []})
+        r["commits"].append((ct, sha))
     for r in recs.values():
         r["commits"].sort()
         r["first"] = r["commits"][0]

@@ -226,39 +226,25 @@ def records_in_range(cwd, base, head):
     rc, out = git(lm_log_args() + ("%s..%s" % (base, head),), cwd)
     if rc != 0:
         raise RuntimeError("history of the range could not be read")
-    parts = out.decode("utf-8", "replace").split("\0")
     nonces, data = {}, {}
-    for i in range(0, len(parts) - 1, 2):
-        csha = parts[i].lstrip("\n")
-        head_line, _, body = parts[i + 1].partition("\n")
-        ct = int(head_line) if head_line.isdigit() else 0
-        lines, j = body.split("\n"), 0
-        while j < len(lines):
-            line = lines[j]
-            j += 1
-            if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
-                continue
-            parsed = lm.parse_record(line)
-            if parsed is None or parsed[0] == "none (pre-rule)":
-                continue
-            field, typ, d = parsed
-            text = line
-            if typ == "skip":
-                reason = []
-                while j < len(lines) and lines[j] != "" and not lm.CANDIDATE.match(lines[j]):
-                    reason.append(lines[j])
-                    j += 1
-                text = line + " | " + " ".join(reason)
-            occ = nonces.setdefault(field, {}).setdefault(typ, {}).setdefault(text, [])
-            if (ct, csha) not in occ:
-                occ.append((ct, csha))
-            data[(field, typ, text)] = d
+    try:
+        commits = lm.read_commits(out.decode("utf-8", "replace"), "status-view")
+    except SystemExit:  # read_commits exits on a bad header; here one source failing must not end --watch
+        raise RuntimeError("history of the range could not be parsed")
+    for csha, ct, _pos, parsed, text in lm.commit_records(commits):
+        if parsed is None or parsed[0] == "none (pre-rule)":
+            continue
+        field, typ, d = parsed
+        occ = nonces.setdefault(field, {}).setdefault(typ, {}).setdefault(text, [])
+        if (ct, csha) not in occ:
+            occ.append((ct, csha))
+        data[(field, typ, text)] = d
     return nonces, data
 
 
 def lm_log_args():
     return ("-c", "log.showSignature=false", "-c", "i18n.logOutputEncoding=UTF-8", "log",
-            "--no-show-signature", "-z", "--format=%H%x00%ct%n%B")
+            "--no-show-signature", "-z", "--format=%H %ct%n%B")
 
 
 def cycle_state(recs):
@@ -1496,21 +1482,15 @@ def main(argv, hooks=None):
         os.environ.pop(k, None)  # --literal-pathspecs on every call: git rejects it beside the glob and icase settings,
         # and the other two are cleared so literal matching is the only pathspec setting in force
     root = os.getcwd()
-    rc, out = git(("--version",), root)
-    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
-    if not m or (int(m.group(1)), int(m.group(2))) < (2, 36):
+    if lm.git_too_old(root):
         return fail("git 2.36 or later is required")
     rc, out = git(("rev-parse", "--show-toplevel"), root)
     if rc != 0:
         return fail("not inside a git checkout")
     root = os.fsdecode(out.rstrip(b"\n"))
-    rc, out = git(("config", "--get-regexp", r"^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$"), root)
-    if rc not in (0, 1):  # 1 means no such key
-        return fail("the repository configuration cannot be read")
-    for line in out.decode("utf-8", "replace").splitlines():
-        key, _, value = line.partition(" ")
-        if not key.endswith(".promisor") or value.strip().lower() not in ("false", "no", "off", "0"):
-            return fail("partial clones are not supported (reading history could fetch objects)")
+    problem = lm.partial_clone(root)
+    if problem:
+        return fail(problem)
     try:
         rfd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
         dfd = open_dir("status", open_dir(".context", rfd))
@@ -1565,8 +1545,7 @@ def watch_loop(state, dfd, hooks, watch):
 
 
 def fail(msg):
-    sys.stderr.buffer.write(("status-view: %s\n" % ra.shown(msg)).encode("utf-8", "backslashreplace"))
-    sys.stderr.flush()
+    lm.complain(msg, "status-view")
     return 1
 
 
