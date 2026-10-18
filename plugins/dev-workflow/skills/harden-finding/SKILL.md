@@ -68,9 +68,10 @@ project's actual config files and commands from `AGENTS.md § Commands`.
      prerequisite** (point at its `ref`); do not escalate — no hardening landed yet.
 4. **Propose rung** — state the rung and *why* in one clause. If it fits two rungs, take
    rung 2, the cheaper check, and say so. If you cannot tell whether a tool can decide it,
-   try the project's lint and test setup on it; if that still settles nothing, write no
-   row and add a `todos.md` row naming the finding as *rung undetermined*, so the
-   obligation stays open instead of being discharged by a guess.
+   try the project's lint and test setup on it; if that still settles nothing, leave
+   `docs/hardening-log.md` unchanged, add a `todos.md` row naming the finding as *rung
+   undetermined*, and end this run there, so the obligation stays open instead of being
+   discharged by a guess.
 5. **Apply** — implement at the chosen rung. Prefer existing rules/config over new
    dependencies; a new lint plugin obeys the project's dependency-freshness policy
    (`AGENTS.md`) — never lower it. If the plugin is too new to pass, log `pending`
