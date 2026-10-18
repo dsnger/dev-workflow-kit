@@ -19,11 +19,16 @@
 # assumes the filename has no colon in it. Both are accepted limits of a ~90-line
 # checker — it raises the floor, it is not a proof.
 #
+# Invariant 5 gaps, named so nobody reads the checks as complete: `npm install -g <pkg>`
+# (any spelling) and `docker run <image>` (an untagged or `:latest` image) are NOT
+# checked anywhere; only `npx -y`, `uses:` refs (docker:// included), `runs-on`/matrix
+# runners and `node-version:` in YAML are. Review is the guard for the rest.
+#
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f and 4h), and the size-budget checks 4e, 4g and 4i, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b, 4c, 4d, 4e, 4f, 4g, 4h and 4i -- so a scratch
+# below (4a-4d, 4f and 4h), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by
+# `# --- BEGIN check 4a ---` / `# --- END check 4a ---` markers -- and likewise for 4b-4j -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -31,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, then 4i
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, then 4j
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -246,6 +251,18 @@ bad_npx=$(
       grep -o "$npx_shell_re"
   } | grep -v "$exact" | sort -u)
 [ -n "$bad_npx" ] && fail "Invariant 5: npx package launched without an exact @version." "$bad_npx"
+
+# `node-version: 22` in a workflow installs whatever 22.x is newest that day. The value
+# must be exactly major.minor.patch; anything else, an expression included, cannot be
+# shown to be pinned and is flagged. YAML files only (`node-version-file:` is a
+# different key and is not matched).
+bad_node=$(grep -rnE '(^|[[:space:]])node-version[[:space:]]*:' --include='*.yml' --include='*.yaml' . 2>/dev/null |
+  grep -v '^\./source-files/' | strip_comment |
+  while IFS= read -r rec; do
+    v=${rec#*node-version}; v=$(printf '%s' "${v#*:}" | tr -d " \t\"'")
+    printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || printf '%s\n' "$rec"
+  done)
+[ -n "$bad_node" ] && fail "Invariant 5: node-version not pinned to an exact major.minor.patch." "$bad_node"
 
 # --- Invariant 6: the manifest never re-declares convention-loaded components ------
 # skills/, commands/, agents/ and hooks/hooks.json load from their paths. A `hooks` key
@@ -983,11 +1000,11 @@ done
 # client limit.
 #
 # What it does NOT measure: any other file or section, characters (a non-ASCII character
-# counts two or more), or whether the two copies agree.
+# counts two or more), or whether the two copies agree (that is 4j).
 #
 # It fails closed: a missing or unreadable file, a `### 2.1a` heading count other than one,
 # a fence count other than one or an unclosed fence, a failed parser, or a count that is not
-# a number is a failure.
+# a number is a failure. Check 4j compares the two copies.
 RG_BUDGET=10000
 rg_judge() { # $1 = what was measured, $2 = its byte count (anything else is a failed count)
   case "$2" in
@@ -1042,6 +1059,24 @@ else
   fi
 fi
 # --- END check 4i ---
+# --- BEGIN check 4j ---
+# The two gate-rules copies must be byte-identical: `.claude/review-gates.md` and the body of
+# the ````markdown fence inside `### 2.1a`, located by 4i's parser. They were kept identical
+# by hand only (0.30.0 audit, finding 8). It compares bytes, nothing else: not whether either
+# copy is right. Fails closed when either copy cannot be read or the template cannot be located.
+# It reuses 4i's parser, so a scratch copy with 4i neutered fails 4j in every case.
+gc_file=.claude/review-gates.md gc_cmd=plugins/dev-workflow/commands/workflow-init.md
+gc_out=$(rg_tpl_scan "$gc_cmd" 2>/dev/null); gc_st=$?
+# shellcheck disable=SC2046  # word splitting is the point: four status fields
+set -- $(printf '%s\n' "$gc_out" | tail -n 1)
+if [ ! -r "$gc_file" ] || [ "$gc_st" -ne 0 ] || [ "${2:-0}" -ne 1 ] || [ "${3:-0}" -ne 1 ] || [ "${4:-0}" -ne 1 ]; then
+  fail "gate rules copies: $gc_file or the '### 2.1a' template of $gc_cmd cannot be read, so the two copies cannot be compared." \
+       "check 4i names the cause"
+elif ! printf '%s\n' "$gc_out" | sed '$d' | cmp -s - "$gc_file"; then
+  fail "gate rules copies: $gc_file differs from the '### 2.1a' template in $gc_cmd." \
+       "make them byte-identical; an initialized project gets the template, this repo runs the file"
+fi
+# --- END check 4j ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

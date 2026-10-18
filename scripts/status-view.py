@@ -166,11 +166,18 @@ def write_atomic(dfd, name, data):
     check_target(dfd, name)
     tmp = ".tmp.%s.%s" % (name, os.urandom(6).hex())
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
-    with os.fdopen(fd, "wb") as fh:
-        fh.write(data)
-        fh.flush()
-        os.fsync(fh.fileno())
-    os.replace(tmp, name, src_dir_fd=dfd, dst_dir_fd=dfd)
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, name, src_dir_fd=dfd, dst_dir_fd=dfd)
+    except BaseException:
+        try:
+            os.unlink(tmp, dir_fd=dfd)  # a failed write leaves no .tmp file behind
+        except OSError:
+            pass
+        raise
 
 
 def read_cache(dfd):
@@ -307,11 +314,18 @@ def worktree_state(ctx):
     rc, raw = git(("ls-files", "-s", "-z", "--debug"), root)
     if rc != 0:
         raise RuntimeError("git ls-files failed")
-    index = {}
+    index, parsed = {}, 0
     for m in RE_INDEX.finditer(raw):
+        parsed += 1  # counted per entry: a conflicted path has one entry per stage
         path = os.fsdecode(m.group(4))
         index[path] = (m.group(1).decode(), m.group(2).decode(), int(m.group(7)), int(m.group(8)), int(m.group(9)),
                        int(m.group(5)), int(m.group(6)))
+    # `--debug` output is undocumented: if a format change drops entries, every tracked file would
+    # read as deleted, so refuse unless every entry parsed. `-z` ends each path, and so each entry,
+    # with the output's only NUL bytes (0.30.0 audit, finding 12)
+    if raw.count(b"\0") != parsed:
+        raise RuntimeError("git ls-files --debug output not understood (%d of %d index entries parsed)"
+                           % (parsed, raw.count(b"\0")))
     ctx["index_modes"] = {p: v[0] for p, v in index.items()}
     try:
         index_mtime = os.stat(os.path.join(root, git_text(("rev-parse", "--git-path", "index"), root).strip())).st_mtime_ns
@@ -1534,7 +1548,12 @@ def watch_loop(state, dfd, hooks, watch):
                 banner = "refresh failed at %s: %s" % (state["last_failure"], e)
                 if state["sections"]:
                     banner += " — the page below is the previous one"
-                write_atomic(dfd, "index.html", render(None, state["sections"], state, banner))
+                try:
+                    write_atomic(dfd, "index.html", render(None, state["sections"], state, banner))
+                except Refused as e2:
+                    return fail(str(e2))
+                except OSError as e2:  # keep watching; the next collection tries again
+                    fail("banner not written: %s" % e2)
             if not watch or (hooks.get("iterations") and n >= hooks["iterations"]):
                 break
             if hooks.get("after_collection"):

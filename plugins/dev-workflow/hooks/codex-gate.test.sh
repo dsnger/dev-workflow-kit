@@ -397,6 +397,37 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
+# 8c. The reset after a Bash call needs `commit` as git's subcommand (audit findings 4
+#     and 5); the reminder before it stays loose. Each row runs with jq and without it.
+#     $1 = runner, $2 = expected (reset|kept), $3 = the command as JSON string bytes.
+post_resets() {
+  printf '1\n' > "$count"
+  "$1" "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
+  if [ -f "$count" ]; then _got=kept; else _got=reset; fi
+  [ "$_got" = "$2" ] && pass "8c $1: $2 after: $3" || fail "8c $1: $2 after: $3 (got $_got)"
+}
+for r in run nojq_run; do
+  reset_all
+  post_resets "$r" kept 'git log --oneline | grep -i commit'
+  post_resets "$r" kept 'git commit-tree x'
+  post_resets "$r" kept 'echo git; echo commit'
+  post_resets "$r" kept 'git status\necho commit'
+  post_resets "$r" reset 'git commit -m x'
+  post_resets "$r" reset 'git -C x commit -m y'
+  post_resets "$r" reset 'cd d && git commit -m y'
+  post_resets "$r" reset 'git \\\ncommit -m y'
+  post_resets "$r" reset 'cd \"a b\" && git commit -m y'
+  post_resets "$r" reset 'git -c user.name=\"A B\" commit'
+  post_resets "$r" reset 'git --no-pager commit -m y'
+  # shellcheck disable=SC2016  # a literal command substitution, the input under test
+  post_resets "$r" reset 'x=$(git commit -m y)'
+  out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git \\\ncommit -m y"}}')
+  printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: commit split over lines -> reminder" || fail "8c $r: commit split over lines -> reminder"
+  out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"cd \"a b\" && git commit -m y"}}')
+  printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: escaped quote before the commit -> reminder" || fail "8c $r: escaped quote before the commit -> reminder"
+done
+reset_all
+
 # 9. jq-absent fallback, on the SHARED $nojq built at the top of this file under
 #    $sandbox. This section used to REASSIGN $nojq to "$work/nojq" — untracked content
 #    inside the test repo, so creating it moved the hook's own worktree tree id

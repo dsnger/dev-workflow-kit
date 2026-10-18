@@ -117,6 +117,11 @@ for you. Chain them into one command and run it. Put it in `AGENTS.md` under
 setup, build if any). Delete the workflow's "Refuse to be a green no-op" step: it fails
 while the file contains the text `TODO(stack)`, and its own line does.
 
+Give the agent the access it needs to verify itself. The quality command and the evidence
+modes only help when the agent can reach the evidence: let it run the app, read logs and
+crash reports, and take screenshots for UI work. A check the agent cannot run, it can only
+claim. (From Felix Rieseberg, "How to be more ambitious", 2026-10-13.)
+
 You see: the command exits 0 locally.
 
 If not: fix it before step 7. Baselines, if a tool needs one:

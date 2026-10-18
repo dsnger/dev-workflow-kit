@@ -40,8 +40,8 @@ Ask for **every** finding
   every line for everything else**, Codex never filters, because a model told to report only high
   severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
 
-Both gates, from pass 2 on: list each slot's earlier Blocker and Major findings with their dispositions verdict; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
-Each `not fixed` becomes a finding line, except a `declined` one Codex can back with no new evidence, so no earlier finding drops out unchecked and no settled one is re-argued.
+Both gates, from pass 2 on: list each slot's earlier Blocker and Major findings with their dispositions verdict and reason; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
+Each `not fixed` becomes a finding line, except a `declined` or `accepted, not repaired` one Codex can back with no new evidence, so no earlier finding drops out unchecked and no settled one is re-argued.
 Both gates: Codex reports one cause seen at several places once, as a class whose location field lists every place, and looks for siblings of each finding before reporting it, so one repair covers every place.
 
 ## Gate-B prompt

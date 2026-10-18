@@ -86,6 +86,9 @@ reader can judge whether it still holds.
    **Scope:** things that *execute* in a run — CI actions and runners, npm packages,
    Docker images, MCP servers. A `$schema` URL is editor metadata that no run reads, so
    it is outside the invariant (pinning one anyway is fine, not required).
+   `scripts/check-invariants.sh` checks `uses:` refs, runners, `npx -y` and YAML
+   `node-version:`; it does not check `npm install -g` or a `docker run` image, so review
+   is the only guard there.
    Four bounded exceptions, stated rather than silent: `source-files/` is a frozen
    extraction archive and is never edited (see MANIFEST.md); `runs-on` pins an Ubuntu
    *release* — GitHub still refreshes that image weekly, which only a container would
@@ -264,7 +267,7 @@ Every command below was run in this session and observed to exit 0.
 | typecheck | n/a — no typed sources (shell, six untyped Python reports, markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
-| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size, gate rules copies identical) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | docs link check (relative Markdown links resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
@@ -302,6 +305,8 @@ the merge-base is HEAD, it passes trivially).
 **Check 4i caps the gate rules at 10,000 bytes**, measured in two texts: `.claude/review-gates.md`
 and the fenced `### 2.1a` template in `workflow-init.md`. The rules grew to 139 kB once (cut to
 6.4 kB in #62); without a cap they regrow sentence by sentence. It measures size only.
+**Check 4j** fails when those two texts are not byte-identical; it compares bytes only, not
+whether either copy is right.
 
 **Check 4g measures exactly two files.** It fails when this repository's `CLAUDE.md` plus
 `AGENTS.md` exceed 150,000 characters, a budget set for this repository after `main` went past

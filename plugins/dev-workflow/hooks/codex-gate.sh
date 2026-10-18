@@ -30,9 +30,22 @@ input_field() { # string field inside tool_input: $1 = key
   else
     # Fallback: strip everything up to "tool_input":{ so a same-named top-level
     # key can't shadow it, then read the key. Stays correct when the value
-    # contains a literal } — the [^"]* run stops at the closing quote, not a brace.
+    # contains a literal } or an escaped quote — the run stops at the first unescaped
+    # quote — and decodes the escapes, so a command reads as it does with jq.
     printf '%s' "$payload" | sed 's/.*"tool_input"[[:space:]]*:[[:space:]]*{//' \
-      | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n1 | sed 's/^.*:[[:space:]]*"\(.*\)"$/\1/'
+      | grep -oE "\"$1\"[[:space:]]*:[[:space:]]*\"([^\"\\\\]|\\\\.)*\"" | head -n1 \
+      | sed 's/^[^:]*:[[:space:]]*"//; s/"$//' \
+      | awk 'BEGIN { RS = "\001" } {
+          s = $0; o = ""
+          while ((i = index(s, "\\")) > 0) {
+            o = o substr(s, 1, i - 1); c = substr(s, i + 1, 1)
+            if (c == "n") o = o "\n"; else if (c == "t") o = o "\t"; else if (c == "r") o = o "\r"
+            else if (c == "u") { o = o "?"; s = substr(s, i + 6); continue }
+            else o = o c
+            s = substr(s, i + 2)
+          }
+          printf "%s", o s
+        }'
   fi
 }
 
@@ -1068,8 +1081,22 @@ flush_notes() {
 
 # Loose by design (a missed commit = false ✓ = the dangerous direction). The
 # leading (^|[^[:alnum:]]) anchors `git` as a word so "digit commit" doesn't
-# false-fire, while still catching `&& git`, `;git`, `/path/git`, etc.
-is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
+# false-fire, while still catching `&& git`, `;git`, `/path/git`, etc. Newlines are
+# folded first, so a commit split over lines (`git \` newline `commit`) still matches.
+is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
+
+# The reset after the command is narrower: `commit` must be git's subcommand, after only
+# global options (`-C <dir>`, `-c <k=v>`, `--no-pager`, …), so `git log | grep commit`
+# keeps the cycle's passes. A line continuation is folded into a space and any other
+# newline counts as a command separator. Its price is the dangerous direction: an
+# unusual spelling it misses (an alias such as `git ci`, an option word built from a
+# variable) carries the passes past a real commit, which the loose matcher above never
+# did. Each spelling it handles is a row in the hook's test suite.
+runs_git_commit() {
+  _t="([^[:space:];&|()\"']|\"[^\"]*\"|'[^']*')+"
+  printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
+    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-$_t)*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
+}
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
 # to make one so `mcp__codex__review` has a non-empty range to read (baseSha=HEAD is
@@ -1088,9 +1115,8 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
-# metacharacter or backslash anywhere (the jq-free reader truncates a double-quoted message at
-# its escaped quote and leaves one; without jq the result is never attributed anyway, see the
-# record below). Before the
+# metacharacter or backslash anywhere (without jq the result is never attributed anyway, see
+# the record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
 # `wip` AND HEAD is attributable to this command. PreToolUse records HEAD, its parent, the
@@ -1231,7 +1257,7 @@ has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--a
 # not show. Docs-only is therefore offered only to a command that is exactly `git commit`
 # plus the options below, each quoted text counted as one word; any other word (a path,
 # an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires. So does any
-# `\`, `$` or backtick (escapes, substitutions, and the jq-free reader's cut at `\"`), any
+# `\`, `$` or backtick (escapes and substitutions), any
 # quote left after one left-to-right pass, which is how the shell pairs them, and any
 # unquoted operator or glob character, since `-am docs>app.ts` or `-m *` hides a path.
 names_no_paths() {
@@ -1430,7 +1456,7 @@ case "$event" in
         # wrongly judged the commit failed — would carry passes across a real cycle
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
-        if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
+        if runs_git_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
                 "$legacy_count" "$legacy_fresh" "$capextra_file"
           # The closing act's commit precedes plan execution, which still reads the closed

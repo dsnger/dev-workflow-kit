@@ -1831,36 +1831,36 @@ backlog.
   `- Plan left open: <decision>. Chose: <choice>. Why: <reason>.`, watching check 4e. *PR #75,
   CodeRabbit, Minor.*
 
-## From the 0.30.0 Ponytail audit (2026-10-17) — backlog only; findings 1-3 fixed in 0.30.1
+## From the 0.30.0 Ponytail audit (2026-10-17) — findings 1-3 fixed in 0.30.1, 4-12 in 0.31.0; 13-18 backlog
 
 Report: this session's `/ponytail-audit` (three read-only helpers; findings reproduced in scratch
 repos where marked). Numbers are the audit's.
 
-- [ ] **4. Read-only commands clear Gate-B state.** `is_commit` (`codex-gate.sh`) matches `git` then
+- [x] **4. Read-only commands clear Gate-B state.** `is_commit` (`codex-gate.sh`) matches `git` then
   `commit` anywhere, so `git log --oneline | grep -i commit` deletes the pass count, fingerprint and
   cap-extra file (reproduced). Reset only when `commit` is the git subcommand; keep the loose match
   for the reminder (invariant 2). *Should.*
-- [ ] **5. Two real commits are not seen.** With jq, a commit split over lines (`git \` newline
+- [x] **5. Two real commits are not seen.** With jq, a commit split over lines (`git \` newline
   `commit`) does not match, since grep is line-wise (confirmed); without jq the fallback reader stops
   at the first `\"` (read, not run). Pass counts then carry into the next cycle. Fold newlines before
   matching. *Should.*
-- [ ] **6. `accepted, not repaired` findings return every pass.** `.claude/review-gates.md` (carry-
+- [x] **6. `accepted, not repaired` findings return every pass.** `.claude/review-gates.md` (carry-
   forward sentence) exempts only `declined`, so an accepted Major blocks a clean close until the cap.
   Add the third verdict; both rule copies, check 4i. *Should.*
-- [ ] **7. Codex gets the verdict but not the reason** in the carry-forward list, so it cannot judge
+- [x] **7. Codex gets the verdict but not the reason** in the carry-forward list, so it cannot judge
   "new evidence". "verdict and reason"; both copies. *Should.*
-- [ ] **8. Nothing checks the two gate-rule copies are identical.** `.claude/review-gates.md` vs the
+- [x] **8. Nothing checks the two gate-rule copies are identical.** `.claude/review-gates.md` vs the
   `### 2.1a` fence; identical today by hand only. Add a `cmp` check plus a reject fixture to
   `check-invariants.sh`. *Should.*
-- [ ] **9. Invariant-5 check misses unpinned installs.** `npm install -g <pkg>` without `@x.y.z`,
+- [x] **9. Invariant-5 check misses unpinned installs.** `npm install -g <pkg>` without `@x.y.z`,
   `docker run <img>:latest` and `node-version: 22` in `ci.yml` all passed (observed). Add rules or
   name the gap in the header and AGENTS.md. *Should.*
-- [ ] **10. `ledger-metrics.py` dies on SHA-256 repos** (`read_commits` header regex `{40}`;
+- [x] **10. `ledger-metrics.py` dies on SHA-256 repos** (`read_commits` header regex `{40}`;
   reproduced). Accept `{64}` too, one test. *Should.*
-- [ ] **11. `status-view.py --watch` dies when a write fails** and leaves `.tmp.index.html.*` files
+- [x] **11. `status-view.py --watch` dies when a write fails** and leaves `.tmp.index.html.*` files
   (`write_atomic`, `watch_loop`; read, not run). Unlink the temp file on error, catch the banner
   write. *Should.*
-- [ ] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
+- [x] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
   change marks every tracked file deleted, silently. Fail when the match count differs from the
   entry count. *Should.*
 - [ ] **13. The commit-record reader exists four times** (ledger-metrics, loop-usefulness,
@@ -1880,3 +1880,10 @@ repos where marked). Numbers are the audit's.
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
   the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
+
+## From the Rieseberg analysis (2026-10-18)
+
+- [ ] **`sparring` § Coding-agent prompts: an opt-in "deeper version" step.** Before a brief goes
+  out, ask what expert practice looks like, go to the rawest material, and turn the methods found
+  into the brief's Goal and Done-when. Source: Felix Rieseberg, "How to be more ambitious"
+  (2026-10-13). Trigger to build it: an observed shallow prompt on a hard task. *Idea.*
