@@ -198,7 +198,7 @@ expect_accept "$PINNED
         with:
           node-version-file: .nvmrc # was node-version: 22" "node-version only in a comment accepted"
 expect_accept "$PINNED
-      - run: echo \"checking node-version: 22\"" "node-version named inside a run step accepted"
+      - run: 'echo \"checking node-version: 22\"'" "node-version named inside a run step accepted"
 expect_reject "$PINNED
       - uses: actions/setup-node@$SHA
         with:
