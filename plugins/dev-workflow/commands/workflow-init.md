@@ -586,35 +586,20 @@ Map a free-text value to the nearest closed values, the stricter where two fit, 
 
 ## Gate-A prompt
 
-Tool: `mcp__codex__exec` (raw;
-  reviews the TEXT you pass, not the git tree).
+Tool: `mcp__codex__exec` (raw; reviews the TEXT you pass, not the git tree).
 
 The prompt MUST open with
-  *"Use the superpowers:brainstorming skill to review this spec,"* (say "plan" on
-  the plan run), then ask Codex to check it against our settled decisions and
-  surface **contradictions/inconsistencies, missing requirements, unhandled
-  state/edge/error/empty/concurrent paths, and risks to the Key Invariants
-  (@AGENTS.md) — plus anything else** (coverage floor, not a cage).
+  *"Use the superpowers:brainstorming skill to review this spec,"* (say "plan" on the plan run), then ask Codex to check it against our settled decisions and surface **contradictions/inconsistencies, missing requirements, unhandled state/edge/error/empty/concurrent paths, and risks to the Key Invariants (@AGENTS.md) — plus anything else** (coverage floor, not a cage).
 
-Ask also what the artifact is for: of a spec, whether its
-  commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can
-  proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear
-  line between local choices and questions that need a decision.
+Ask also what the artifact is for: of a spec, whether its commitments are coherent, sufficiently decided and feasible; of a plan, whether implementation can proceed — adequate decisions and dependencies, realistic steps, meaningful verification, and a clear line between local choices and questions that need a decision.
 
-Report missing code or tests only where
-  their absence has a concrete consequence, and name that consequence; review code a plan does
-  include like any other content.
+Report missing code or tests only where their absence has a concrete consequence, and name that consequence; review code a plan does include like any other content.
 
-A spec or plan that uses a third-party library, framework or SDK API without a named Context7
-  lookup (or a Library APIs fallback) for the version the project pins is a finding.
+A spec or plan that uses a third-party library, framework or SDK API without a named Context7 lookup (or a Library APIs fallback) for the version the project pins is a finding.
 
-Append the
-  intent + artifact text + which invariants it touches.
+Append the intent + artifact text + which invariants it touches.
 
-Ask for **every** finding
-  with severity and confidence — **you filter to Blocker/Major for what must be repaired and read
-  every line for everything else**, Codex never filters, because a model told to report only high
-  severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
+Ask for **every** finding with severity and confidence — **you filter to Blocker/Major for what must be repaired and read every line for everything else**, Codex never filters, because a model told to report only high severity drops real findings silently (`docs/prompt-standards.md`, "coverage first, filter later").
 
 Both gates, from pass 2 on: list each slot's earlier Blocker and Major findings with their dispositions verdict and reason; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
 Each `not fixed` becomes a finding line, except a `declined` or `accepted, not repaired` one Codex can back with no new evidence, so no earlier finding drops out unchecked and no settled one is re-argued.
@@ -622,19 +607,15 @@ Both gates: Codex reports one cause seen at several places once, as a class whos
 
 ## Gate-B prompt
 
-Tool: `mcp__codex__review`
-  (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`).
+Tool: `mcp__codex__review` (args `instruction`, `whatWasImplemented`, `baseSha`, `headSha`, `reviewType`).
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
 Inside an open cycle, make each commit before the closing act one line, `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one. The closing act's commit takes a non-WIP subject and its record lines.
 
-Check against
-  @AGENTS.md.
+Check against @AGENTS.md.
 
-Same coverage rule as Gate A: put "report every finding with severity and confidence; write
-  `NO FINDINGS` only when the branch found none" in `additionalContext`, with the same one-line
-  format.
+Same coverage rule as Gate A: put "report every finding with severity and confidence; write `NO FINDINGS` only when the branch found none" in `additionalContext`, with the same one-line format.
 
 **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
 Codex forms 2–4 hypotheses of what could be wrong from the acceptance criteria and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so the summary cannot steer the review.
@@ -665,7 +646,7 @@ passes it allows, at least one, and resumes the loop on the artifact as the answ
 
 A cap answer may instead be `close`; then, as for a clean pass (no Blocker or Major, at the floor unless zero findings), run the closing act: make one final commit carrying the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4), and leave findings that fit neither as findings without an owed line.
 cycle <NONCE>; floor 3 per <story paths with levels, or none>; hook reminder threshold <absent|positive integer|unusable>
-cycle <NONCE>; <Gate-A spec|Gate-A plan|Gate B> (passes <ascending valid pass numbers>, <model>): Findings <per-pass counts>. Blockers <per-pass counts>. Majors <per-pass counts>.
+cycle <NONCE>; <Gate-A spec|Gate-A plan|Gate B> (passes <ascending valid pass numbers>, <model>): Findings <per-pass counts>. Blockers <per-pass counts>. Majors <per-pass counts>. Declined <per-pass counts>.
 Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.
   cycle <NONCE>; ledger check: fixed <N>, hardening owed <M>
   cycle <NONCE>; hardening owed <SLOT>:<n> — <SEVERITY> — <CLASS> — <TARGET> — <DESCRIPTION>

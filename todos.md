@@ -1779,24 +1779,27 @@ backlog.
   new Majors in three Gate-B passes in story S5 (row "Hook repository context can differ…" above).
   Cheaper first step: the gate rules already say "one line, `git commit -m 'WIP: <subject>'`"; an
   eval case (row below) would show whether agents follow it. *Gap analysis 2026-10-17, item 3.*
-- [ ] **Minimal prompt eval.** A `claude plugin eval` suite outside `plugins/`, run by hand before a
+- [x] **Minimal prompt eval.** A `claude plugin eval` suite outside `plugins/`, run by hand before a
   version bump: skill-trigger cases for `intake`, `ticket` and `harden-finding` (one should-fire and
   one should-not each), plus one incident case "WIP commit form" (asserts the one-line
   `git commit -m 'WIP: …'`). Format per the claude-code-guide (2026-10-17, no public doc page, so
   weak): a case is `<dir>/<case>/prompt.md` plus `graders/*.md` (`type: tool_used`, `tool: Skill`
   or `Bash`, `input_match` regex); `--eval-dir <dir>` puts the suite outside the plugin; run
   `claude plugin eval <target> --eval-dir <dir>`. Confirm with one real run before building more.
-  *Gap analysis 2026-10-17, summary §6 rule 8.*
+  *Gap analysis 2026-10-17, summary §6 rule 8.* Done in 0.35.0 (`evals/`, 7 cases). Observed with
+  Claude Code 2.1.303: `--eval-dir` only accepts a relative path inside the plugin, so the § Commands
+  entry copies the suite into a temporary plugin copy; `not fired` is `min: 0` plus `max: 0`. Run
+  2026-10-19: all 7 cases 1.00 with the plugin, exit 0, $1.70; the three should-fire cases 0.00 without it.
 - [ ] **Project `AGENTS.md` size warning in `/workflow-init`.** Warn when a project's `AGENTS.md`
   passes Codex's default instruction read limit. The 32 KiB figure comes from summary source [8]
   only (weak evidence): verify it against Codex's own docs or a probe first. *Gap analysis
   2026-10-17.*
-- [ ] **"declined" counts in the curve line.** Add the per-pass count of `declined` dispositions to
+- [x] **"declined" counts in the curve line.** Add the per-pass count of `declined` dispositions to
   the cycle's curve line, so review noise can be measured, not guessed (rules change, both copies,
-  check 4i size cap). *Gap analysis 2026-10-17.*
-- [ ] **Shorter hook messages.** Each message states the state and the next action; the list of
+  check 4i size cap). *Gap analysis 2026-10-17.* Done in 0.35.0; `ledger-metrics.py` reads it.
+- [x] **Shorter hook messages.** Each message states the state and the next action; the list of
   possible causes moves to `docs/reference.md`. Hook change, tests under `sh` and `dash`. *Gap
-  analysis 2026-10-17.*
+  analysis 2026-10-17.* Done in 0.35.0 for the five messages that carried cause lists.
 - [ ] **Trim this repository's `AGENTS.md`.** 24.5 kB (2026-10-17), below but near the 32 KiB Codex read
   limit named in the row above (unverified). Move history paragraphs (incident stories under Don'ts)
   to `docs/ARCHITECTURE.md` or the CHANGELOG and keep each rule with its one-clause why. *Gap

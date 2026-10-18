@@ -332,6 +332,75 @@ fingerprint; it never reads a findings file. Judge each pass from its findings f
 discount an incomplete one yourself, whatever the counter says. If the hook's own
 threshold was not met when implementation starts, it says so right then.
 
+## Hook messages
+
+The hook's messages say what happened and what to do next. The possible causes behind five
+of them live here.
+
+**No readable result** (`⚠ Gate call returned no readable result`). Two causes produce
+this shape, and the tool name cannot separate them: a hooks-API payload change, or a
+third-party tool returning empty or non-text content. Such a tool reaches the gates through
+a mapping in `.context/codex-gate.tools`, or as a server registered under the default name
+`codex`, so an absent mapping does not rule it out. Check the mapping file, and check what
+`claude mcp list` shows as the effective server and version, not what `.mcp.json` says:
+scope precedence can make a different entry of the same name effective. These checks narrow
+the cause; they do not prove it. With a mapping or a third-party server in play, unmap it,
+or replace it with a server exposing `exec` and `review`. With the pinned server at its
+pinned version, a payload-contract change is the remaining explanation: record your Claude
+Code version and report it.
+
+**Counted without inspection** (`ℹ A gate call was counted without the hook reading its
+result`). Causes with a check and a fix:
+- a pinned-server envelope whose key order or formatting changed: compare the version in
+  `.mcp.json` with the server actually serving the tools (`claude mcp list`); pinning it
+  back fixes it;
+- a reworded backgrounding notice: see [Background calls](#background-calls);
+- a broken `awk` or `sed`, which classification requires. Check them by function, not by a
+  version flag (`--version` is not POSIX, and BSD `sed` exits nonzero for it on a healthy
+  macOS): `printf "x\n" | awk "{print}"` must print `x` and `printf "x\n" | sed s/x/y/` must
+  print `y`, each exiting 0.
+
+Causes with no user-side fix:
+- a third-party tool whose envelope the hook cannot read. `.context/codex-gate.tools` names
+  it only if it is mapped, and a third-party server registered as `codex` needs no mapping,
+  so an absent mapping does not rule this out. Unmapping removes the gate; it does not fix
+  the envelope;
+- a payload the scan refused. Four families land here: past the 1 Mi-unit size bound, past
+  the 200-frame nesting-depth cap, structure the scan could not walk, and an ambiguity such
+  as a duplicated `tool_response`, `type` or `text` key. Measuring the payload against the
+  first two bounds rules them in or out; the other two produce the same message and state
+  and cannot be told apart, so record them as unresolved rather than guessing;
+- a defect in the hook's parser: the same situation.
+
+For either, keep the payload local and access-restricted. It can contain prompts, absolute
+paths, review content, session identifiers and unrelated concurrent call data, so strip
+those before showing it to anyone, and never attach it unsanitized to a report. The list is
+not exhaustive: unrecognized is the terminal class, so any future unmatched shape lands
+there too.
+
+**Credit withheld** (`⚠ Codex Gate B: credit withheld`). The hook could not remove a state
+path before counting. `.context/` may not be writable, the path may be a directory or
+another non-file, or another writer may have recreated it.
+
+**No recorded fingerprint** (`⚠ Codex Gate B: no recorded fingerprint`). No
+`mcp__codex__review` has been credited (a single-branch call waiting for its partner, and a
+call whose request was rejected, write no fingerprint by design); the last credit's
+fingerprint could not be written or read back; or a non-WIP commit attempt cleared it while
+the cycle stayed open.
+
+**Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
+Usually the working tree or the index changed since the review. Other causes: you only
+staged already-reviewed content (the bytes are fine, but the hook cannot tell staging from
+editing); the hook was upgraded and the recorded fingerprint uses the older format (see the
+CHANGELOG); or the fresh fingerprint could not be computed or stored. A fresh Gate-B pass is
+the whole remedy for the staging and post-upgrade cases too. If a fresh pass leaves the
+message unchanged, check the worktree and the index first: the fingerprint moves when either
+does, staging included, and another hook can stage during the commit attempt. Where neither
+changed, the fault is in the machinery, not the code: check that `.context/` and `TMPDIR`
+are writable, that a checksum tool (`shasum`, `sha1sum` or `cksum`) runs, that `git status`
+works, and that the disk is not full. A store that fails again leaves the hook unable to
+confirm a fingerprint, and it may return either fingerprint-state message.
+
 ## Per-workspace knobs
 
 The hook speaks only where `.context/codex-gate.on` or the `Cross-Model Review` §5 heading

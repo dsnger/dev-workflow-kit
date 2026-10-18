@@ -480,6 +480,15 @@ out=$(report H "$SCRIPT"); st=$?
 [ "$st" -eq 0 ] && printf '%s\n' "$out" | grep -q '^1  alpha-one  lines 7  rungs 1 prose$' &&
   pass "sha256 repository: report runs and counts the ledger" || fail "sha256 repository (exit $st): $out"
 
+# ---- 8. Declined series (dev-workflow 0.35.0) -------------------------------------------
+newrepo K; printf '%s\n' "$LEDGER_HEAD" > "$work/K/docs/hardening-log.md"
+(cd "$work/K" && commit 'ledger\n' && commit 'curves\n\ncycle kkkkkkkk; Gate B (passes 1-2, codex): Findings 3,1. Blockers 0,0. Majors 1,0. Declined 2,?.\ncycle qqqqqqqq; Gate B (passes 1-2, codex): Findings 3,1. Blockers 0,0. Majors 1,0. Declined 2.\n')
+out=$(report K "$SCRIPT"); st=$?
+[ "$st" -eq 0 ] && printf '%s\n' "$out" | grep -qx 'kkkkkkkk  Gate B  passes 1-2  floor -  set -  findings 3,1 (? 0)  blockers 0,0 (? 0)  majors 1,0 (? 0)  declined 2,? (? 1)' &&
+  pass "declined series is parsed and shown" || fail "declined series (exit $st): $out"
+printf '%s\n' "$out" | sed -n '/^== Git: unparsed/,/^$/p' | grep -q 'cycle qqqqqqqq; .*Declined 2\.$' &&
+  pass "declined series with the wrong pass count is unparsed" || fail "declined count mismatch: $out"
+
 set -- "$work"/WROTE.*
 if [ -e "$1" ]; then fail "no-write: a run changed its fixture ($*)"
 else pass "no-write: no run changed its fixture"; fi

@@ -241,7 +241,7 @@ def parse_curve(rest):
     if not m:
         return None
     kind, spec, i = m.group(1), m.group(2), m.end()
-    tail = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.$").search(rest)
+    tail = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.(?: Declined ([^ ]+)\.)?$").search(rest)
     if not tail:
         return None
     passes = expand(spec, len(tail.group(1).split(",")))
@@ -271,16 +271,19 @@ def parse_curve(rest):
         if j is None:
             return None
         i = j
-    m = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.$").match(rest, i)
+    m = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.(?: Declined ([^ ]+)\.)?$").match(rest, i)
     if not m:
         return None
     series = []
     for raw in m.groups():
+        if raw is None:  # Declined is optional: curves written before dev-workflow 0.35.0 lack it
+            series.append(None)
+            continue
         vals = raw.split(",")
         if len(vals) != len(passes) or not all(COUNT.fullmatch(v) for v in vals):
             return None
         series.append(raw)
-    return {"kind": kind, "spec": spec, "f": series[0], "b": series[1], "m": series[2]}
+    return {"kind": kind, "spec": spec, "f": series[0], "b": series[1], "m": series[2], "d": series[3]}
 
 
 # The ledger-check records (CLAUDE.md §5 Mechanics, dev-workflow 0.22.0). They start like every
@@ -524,6 +527,8 @@ def git_sections(commits, absence):
             line = "%s  %s  passes %s  floor %s  set %s  findings %s (? %d)  blockers %s (? %d)  majors %s (? %d)" % (
                 fld, d["kind"], d["spec"], floor, shown(sset), d["f"], d["f"].split(",").count("?"),
                 d["b"], d["b"].split(",").count("?"), d["m"], d["m"].split(",").count("?"))
+            if d["d"] is not None:
+                line += "  declined %s (? %d)" % (d["d"], d["d"].split(",").count("?"))
         if gkey[0] == "pre":
             if not (c and c["type"] == "skip"):  # a skip line already names its commit
                 line += "  commit %s" % rs[0]["first"][1][:12]
