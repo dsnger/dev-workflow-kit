@@ -1218,26 +1218,30 @@ call_record_path() { # $1 = prefix; this call's record path; fails when the id i
 # Whether the Bash call that matched is_commit moved HEAD: the backstop for a commit that
 # runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
 # PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
-# `-m wip` record; PostToolUse compares and removes it. Without jq no record can be kept, so
+# `-m wip` record, with the HEAD reflog's length; PostToolUse compares both and removes it. Without jq no record can be kept, so
 # it answers "not moved" and runs_git_commit's loose fallback decides. With jq, in doubt it answers
 # "moved", so the caller resets, the safe direction: no usable id, no record, an unreadable
 # one, or a call sent to the background, whose PostToolUse arrives before it has finished.
-record_head() { # PreToolUse; best effort
+record_head() { # PreToolUse; best effort. "<HEAD or -> <HEAD reflog length>"
   _f=$(call_record_path "$headpre_prefix") || return 0
   _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
   mkdir -p "$state_dir" 2>/dev/null
-  { printf '%s\n' "$_h" > "$_f"; } 2>/dev/null || true
+  { printf '%s %s\n' "$_h" "$(head_reflog_len)" > "$_f"; } 2>/dev/null || true
 }
 head_moved() { # PostToolUse
   command -v jq >/dev/null 2>&1 || return 1
   _f=$(call_record_path "$headpre_prefix") || return 0
   [ -f "$_f" ] || return 0
-  _was=; read -r _was 2>/dev/null < "$_f"
+  _was='' _wasn=''; read -r _was _wasn 2>/dev/null < "$_f"
   rm -f "$_f" 2>/dev/null
   [ -n "$_was" ] || return 0
   bash_backgrounded && return 0
   _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
-  [ "$_h" != "$_was" ]
+  [ "$_h" != "$_was" ] && return 0
+  # an unchanged HEAD after a commit undone in the same call (`git commit && git reset
+  # --soft HEAD^`) still grew the reflog; without a reflog to compare, in doubt it moved
+  case $_wasn in '' | 0 | *[!0-9]*) return 0 ;; esac
+  [ "$(head_reflog_len)" != "$_wasn" ]
 }
 record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|new>"; best effort
   wipbase_file=$(wip_record_path) || return 0

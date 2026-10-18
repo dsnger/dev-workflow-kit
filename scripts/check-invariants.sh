@@ -254,13 +254,16 @@ bad_npx=$(
 
 # `node-version: 22` in a workflow installs whatever 22.x is newest that day. The value
 # must be exactly major.minor.patch; anything else, an expression included, cannot be
-# shown to be pinned and is flagged. YAML files only (`node-version-file:` is a
-# different key and is not matched).
+# shown to be pinned and is flagged. YAML files only, and only a line that opens with the key
+# (`node-version-file:` is a different key and is not matched).
 bad_node=$(grep -rnE '(^|[[:space:]])node-version[[:space:]]*:' --include='*.yml' --include='*.yaml' . 2>/dev/null |
   grep -v '^\./source-files/' | strip_comment |
   while IFS= read -r rec; do
-    printf '%s' "$rec" | grep -Eq '[[:space:]:]node-version[[:space:]]*:' || continue  # key only in a comment
-    v=${rec#*node-version}; v=$(printf '%s' "${v#*:}" | tr -d " \t\"'")
+    # The text after grep's `./path:line:` prefix must open with the key (a list item may lead):
+    # a path or an `echo` naming node-version is not one, nor is a key left only in a comment
+    line=${rec#*:}; line=${line#*:}
+    printf '%s' "$line" | grep -Eq '^[[:space:]]*(-[[:space:]]+)?node-version[[:space:]]*:' || continue
+    v=${line#*node-version}; v=$(printf '%s' "${v#*:}" | tr -d " \t\"'")
     printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || printf '%s\n' "$rec"
   done)
 [ -n "$bad_node" ] && fail "Invariant 5: node-version not pinned to an exact major.minor.patch." "$bad_node"

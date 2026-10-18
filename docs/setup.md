@@ -119,8 +119,8 @@ while the file contains the text `TODO(stack)`, and its own line does.
 
 Give the agent the access it needs to verify itself. The quality command and the evidence
 modes only help when the agent can reach the evidence: let it run the app, read logs and
-crash reports, and take screenshots for UI work. A check the agent cannot run, it can only
-claim. (From Felix Rieseberg, "How to be more ambitious", 2026-10-13.)
+crash reports, and take screenshots for UI work. A result whose evidence the agent cannot
+reach, whether by running the check or by reading its output (a CI log, say), it can only claim. (From Felix Rieseberg, "How to be more ambitious", 2026-10-13.)
 
 You see: the command exits 0 locally.
 

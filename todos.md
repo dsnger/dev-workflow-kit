@@ -337,16 +337,8 @@ driven by recurrence rather than by enthusiasm.
       counter is still not evidence: classification cannot see whether the findings file
       was written, so an incomplete pass is discounted whatever the counter says.
       C1–C4 in `plugins/dev-workflow/CHANGELOG.md` carry the full residual list.
-- [x] **jq-free parser stops at an escaped JSON quote.** Fixed in 0.31.0 with audit finding 5: `input_field` reads to the closing quote and decodes the escapes; test 8c. *(Candidate path, recorded
-      2026-08-01: the result-classification story builds a POSIX awk locator with proper
-      string-state and backslash-parity handling. Once that exists and is proven against the
-      captured fixtures, this row's fix can likely reuse it rather than inventing a second
-      escape-aware scanner. The scopes stay separate — that story does not touch
-      `input_field` — but whoever takes this row should look there first.)* A payload containing
-      `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
-      wrong direction under invariant 2, and only on machines without `jq`. Needs
-      escape-aware decoding or a conservative raw-payload scan, plus tests for escaped
-      quotes and backslashes.
+- [x] **jq-free parser stops at an escaped JSON quote.** Fixed in 0.31.0 with audit finding 5:
+      `input_field` reads to the closing quote and decodes the escapes; test 8c.
 - [ ] **Compound commands hash the pre-mutation tree.** `printf changed > tracked.txt
       && git commit -am x` is one PreToolUse event: the hook hashes before the mutation
       runs, so the commit carries content the hash never saw. Consider treating any

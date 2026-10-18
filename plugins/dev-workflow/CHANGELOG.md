@@ -30,8 +30,9 @@ Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
   needs `commit` as git's subcommand, after only global options (`-C` and `-c` take their
   operand), with quoted text read as one word, so `git log | grep -i commit` and
   `git log --grep="git commit"` keep the pass count and fingerprint. As a backstop, PreToolUse
-  records HEAD (per `tool_use_id`) for each call the loose match sees, and such a call that moved
-  HEAD resets whatever its spelling (`sh -c "git commit"`). It does not check command position:
+  records HEAD and the length of its reflog (per `tool_use_id`) for each call the loose match
+  sees, and such a call that moved HEAD, or grew its reflog, resets whatever its spelling
+  (`sh -c "git commit"`, a commit undone again in the same call). It does not check command position:
   plain text such as `echo git commit` still resets, as does a quoted pattern holding an escaped
   quote, and a failed commit still resets, as before. Without jq nothing changes: there is no HEAD
   record to back a narrower test, so every loose match resets. The reminder before a call stays

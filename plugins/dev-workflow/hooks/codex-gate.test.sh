@@ -428,6 +428,12 @@ if command -v jq >/dev/null 2>&1; then
   head_case reset stay 'git \\\ncommit -m y'
   # a spelling the subcommand test misses resets when HEAD moved
   head_case reset move 'sh -c \"git commit -m y\"'
+  # a commit undone in the same call leaves HEAD where it was but grows the reflog
+  printf '1\n' > "$count"
+  run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  git commit -q --allow-empty -m "8c undone" >/dev/null 2>&1 && git reset -q --soft HEAD^ >/dev/null 2>&1
+  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c: commit undone in the same call -> reset" || fail "8c: commit undone in the same call -> reset"
   head_case kept stay 'sh -c \"git commit -m y\"'
   # a call sent to the background reports before its commit has run: reset regardless
   head_case reset stay 'sh -c \"git commit -m y\"' ',"tool_response":{"backgroundTaskId":"b1"}'
