@@ -17,11 +17,7 @@ import importlib.util  # noqa: E402
 import os  # noqa: E402
 import posixpath  # noqa: E402
 import re  # noqa: E402
-import subprocess  # noqa: E402
 
-GIT_SELECTORS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
-                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-                 "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM", "GIT_NAMESPACE")
 NO_SIG = ("-c", "log.showSignature=false")
 DIFF_CFG = ("-c", "diff.noprefix=false", "-c", "diff.mnemonicPrefix=false", "-c", "core.quotePath=true")
 DIFF_FLAGS = ("--no-color", "--no-ext-diff", "--no-textconv", "--no-relative", "--text")
@@ -51,17 +47,7 @@ ROOT = [None]  # the repository root, set in main; every git call runs there
 
 
 def git(args):
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_TRACE")}
-    for k in GIT_SELECTORS + ("GIT_SHALLOW_FILE",):
-        env.pop(k, None)
-    env.update(GIT_TRACE2="0", GIT_TRACE2_EVENT="0", GIT_TRACE2_PERF="0", GIT_GRAFT_FILE=os.devnull,
-               GIT_LITERAL_PATHSPECS="1")
-    try:
-        p = subprocess.run(("git", "--no-replace-objects") + NO_SIG + tuple(args), env=env, cwd=ROOT[0],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        return 127, b""
-    return p.returncode, p.stdout
+    return lm.run_git(("--literal-pathspecs",) + NO_SIG + tuple(args), ROOT[0])
 
 
 def must(args):
@@ -101,6 +87,9 @@ def load_parser(here):
     except (OSError, SyntaxError, AttributeError):
         die("the record parser scripts/ledger-metrics.py cannot be loaded")
     return mod
+
+
+lm = load_parser(os.path.dirname(os.path.abspath(__file__)))
 
 
 def parse_args(argv):
@@ -234,21 +223,15 @@ def baseline_block(path, ref, head, lm):
 
 def main(argv):
     o = parse_args(argv[1:])
-    rc, out = git(("--version",))
-    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
-    if not m or (int(m.group(1)), int(m.group(2))) < (2, 36):
+    if lm.git_too_old():
         die("git 2.36 or later is required")
     rc, top = git(("rev-parse", "--show-toplevel"))
     if rc != 0 or not top.strip():
         die("not inside a git working tree")
     ROOT[0] = os.fsdecode(top.rstrip(b"\n"))
-    rc, out = git(("config", "--get-regexp", r"^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$"))
-    if rc not in (0, 1):  # 1 means no such key
-        die("the repository configuration cannot be read")
-    for line in out.decode("utf-8", "replace").splitlines():
-        key, _, value = line.partition(" ")
-        if not key.endswith(".promisor") or value.strip().lower() not in ("false", "no", "off", "0"):
-            die("partial clones are not supported (reading history could fetch objects)")
+    problem = lm.partial_clone(ROOT[0])
+    if problem:
+        die(problem)
     head = resolve(o["head"])
     if head is None:
         die("the ref does not resolve to a commit: %s" % o["head"])
@@ -257,7 +240,6 @@ def main(argv):
         base = resolve(o["base"])
         if base is None:
             die("the ref does not resolve to a commit: %s" % o["base"])
-    lm = load_parser(os.path.dirname(os.path.abspath(__file__)))
 
     changed = []
     if base:

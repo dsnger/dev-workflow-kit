@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f and 4h), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4j -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4k -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, then 4j
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, then 4k
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -284,7 +284,7 @@ done
 
 # Scan domain for checks 4a and 4b: Markdown only, because both rules are about prompt
 # text. NOT 4c or 4d -- those read fixed paths directly and are not part of this scan,
-# so this domain stays a two-check domain even though the file now carries five
+# so this domain stays a two-check domain even though the file now carries seven
 # prompt-conformance checks. Incrementing the number here would claim a scope 4c, 4d and 4f do
 # not use. The wider yml/json/toml domain used by invariant 5 is
 # deliberately NOT reused — a `Target model:` line in a JSON fixture is not a prompt
@@ -668,6 +668,30 @@ else
 fi
 # --- END check 4d ---
 
+# Shared by 4e, 4g, 4i and 4j, so it sits outside every check's markers.
+# Prints the body of the ````markdown fence in the section whose heading matches $2, then a
+# last line `@@STATUS <headings> <opened> <closed>`. Headings inside the fence are template
+# text, not section boundaries. A ````markdown line inside the fence is the next template
+# opening (`### 2.1a`), so the fence was never closed: without that rule, the 2.1a closing
+# line closed it and the scan measured both templates as one. $1 names the caller and is
+# otherwise unused: the suite's PATH wrapper fails one caller's awk by it. Returns 2 if awk
+# itself failed.
+tpl_scan() { # $1 = caller tag, $2 = heading regex (awk -v escapes apply), $3 = file
+  awk -v tag="$1" -v head="$2" '
+    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
+              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
+    $0 ~ head { heads += 1; insec = 1; next }
+    insec && /^### / { insec = 0; next }
+    insec && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
+    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+  ' "$3" || return 2
+}
+# The UTF-8 locale 4e and 4g count characters under; empty when neither is available.
+utf8_loc=''
+for l in C.UTF-8 en_US.UTF-8; do
+  if [ "$(printf '\303\251' | LC_ALL=$l wc -m | tr -d ' ')" = 1 ]; then utf8_loc=$l; break; fi
+done
+
 # --- BEGIN check 4e ---
 # Size budget for the scaffolded CLAUDE.md. Claude Code warns when a project's always-loaded
 # instruction files pass a combined limit (150.0k characters when this was written; its docs
@@ -689,22 +713,6 @@ fi
 TPL_FILE=plugins/dev-workflow/commands/workflow-init.md
 TPL_BUDGET=20000
 
-# Prints the fence body, then a last line `@@STATUS <anchors> <opened> <closed>`. Headings
-# inside the fence are template text, not section boundaries. A ````markdown line inside the
-# fence is the next template opening (`### 2.1a`), so the fence was never closed: without
-# that rule, the 2.1a closing line closed it and the scan measured both templates as one.
-# Returns 2 if awk itself failed.
-tpl_size_scan() { # $1 = file
-  awk '                                            # tpl-size-scan
-    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
-              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
-    /^### 2\.1[[:space:]]/ { heads += 1; in21 = 1; next }
-    in21 && /^### / { in21 = 0; next }
-    in21 && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
-    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
-  ' "$1" || return 2
-}
-
 if [ ! -f "$TPL_FILE" ]; then
   fail "CLAUDE.md template size: $TPL_FILE is missing, so the budget cannot be checked." \
        "the scaffolded template lives there"
@@ -712,7 +720,7 @@ elif [ ! -r "$TPL_FILE" ]; then
   fail "CLAUDE.md template size: $TPL_FILE is unreadable, so the budget cannot be checked." \
        "check permissions"
 else
-  tpl_out=$(tpl_size_scan "$TPL_FILE"); tpl_st=$?
+  tpl_out=$(tpl_scan tpl-size-scan '^### 2\\.1[[:space:]]' "$TPL_FILE"); tpl_st=$?
   if [ "$tpl_st" -ne 0 ]; then
     fail "CLAUDE.md template size parser failed; results are not trustworthy." \
          "awk exited $tpl_st on $TPL_FILE"
@@ -735,15 +743,11 @@ else
       fail "CLAUDE.md template size: the template fence in '### 2.1' is never closed." \
            "expected a line that is exactly \`\`\`\`"
     else
-      tpl_loc=''
-      for l in C.UTF-8 en_US.UTF-8; do
-        if [ "$(printf '\303\251' | LC_ALL=$l wc -m | tr -d ' ')" = 1 ]; then tpl_loc=$l; break; fi
-      done
-      if [ -z "$tpl_loc" ]; then
+      if [ -z "$utf8_loc" ]; then
         fail "CLAUDE.md template size: no UTF-8 locale (C.UTF-8 or en_US.UTF-8), so characters cannot be counted." \
              "a byte count would overstate every non-ASCII character"
       else
-        tpl_chars=$(printf '%s\n' "$tpl_out" | sed '$d' | LC_ALL=$tpl_loc wc -m | tr -d ' ')
+        tpl_chars=$(printf '%s\n' "$tpl_out" | sed '$d' | LC_ALL=$utf8_loc wc -m | tr -d ' ')
         # The pipeline hides wc's status, and `[ "" -gt N ]` is an error that evaluates
         # false — so an empty or non-numeric count must fail here, not pass below.
         case "$tpl_chars" in
@@ -855,11 +859,7 @@ fi
 # count, or a count that is not a number is a failure. An unchecked empty count would
 # pass, because `[ "" -gt N ]` is an error that evaluates false.
 IS_BUDGET=150000
-is_loc=''
-for l in C.UTF-8 en_US.UTF-8; do
-  if [ "$(printf '\303\251' | LC_ALL=$l wc -m | tr -d ' ')" = 1 ]; then is_loc=$l; break; fi
-done
-if [ -z "$is_loc" ]; then
+if [ -z "$utf8_loc" ]; then
   fail "repo instruction size: no UTF-8 locale (C.UTF-8 or en_US.UTF-8), so characters cannot be counted." \
        "a byte count would overstate every non-ASCII character"
 else
@@ -873,7 +873,7 @@ else
       fail "repo instruction size: $f is unreadable, so the budget cannot be checked." "check permissions"
       is_sum=''
     else
-      is_out=$(LC_ALL=$is_loc wc -m "$f"); is_st=$?
+      is_out=$(LC_ALL=$utf8_loc wc -m "$f"); is_st=$?
       # Word splitting is the point: wc prints the count, then the file name.
       # shellcheck disable=SC2086
       set -- $is_out
@@ -996,19 +996,6 @@ $lr_out
 LR_EOF
 done
 # --- END check 4h ---
-# Prints the fence body, then `@@STATUS <headings> <opened> <closed>`. A ````markdown line inside
-# the fence is the next template opening, so the fence was never closed (as in 4e).
-# Returns 2 if awk failed. Outside the 4i markers: check 4j uses it too.
-rg_tpl_scan() { # $1 = file
-  awk '                                            # gate-rules-size-scan
-    infence { if ($0 == "````") { infence = 0; closed += 1; done = 1 }
-              else if ($0 == "````markdown") { infence = 0; done = 1 } else print; next }
-    /^### 2\.1a[[:space:]]/ { heads += 1; in21a = 1; next }
-    in21a && /^### / { in21a = 0; next }
-    in21a && $0 == "````markdown" { opened += 1; if (!done) infence = 1; next }
-    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
-  ' "$1" || return 2
-}
 # --- BEGIN check 4i ---
 # Size cap on the gate rules, in BYTES, for two texts: the whole of `.claude/review-gates.md`,
 # and the body of the ````markdown fence inside `### 2.1a` of the command file (what
@@ -1046,7 +1033,7 @@ if [ ! -f "$rg_cmd" ] || [ ! -r "$rg_cmd" ]; then
   fail "gate rules size: $rg_cmd is missing or unreadable, so the budget cannot be checked." \
        "the gate-rules template lives there"
 else
-  rg_out=$(rg_tpl_scan "$rg_cmd"); rg_st=$?
+  rg_out=$(tpl_scan gate-rules-size-scan '^### 2\\.1a[[:space:]]' "$rg_cmd"); rg_st=$?
   if [ "$rg_st" -ne 0 ]; then
     fail "gate rules size: the template parser failed; results are not trustworthy." \
          "awk exited $rg_st on $rg_cmd"
@@ -1068,9 +1055,9 @@ fi
 # the ````markdown fence inside `### 2.1a`, located by 4i's parser. They were kept identical
 # by hand only (0.30.0 audit, finding 8). It compares bytes, nothing else: not whether either
 # copy is right. Fails closed when either copy cannot be read or the template cannot be located.
-# It reuses rg_tpl_scan, defined above the 4i markers.
+# It reuses tpl_scan, defined above the 4e markers.
 gc_file=.claude/review-gates.md gc_cmd=plugins/dev-workflow/commands/workflow-init.md
-gc_out=$(rg_tpl_scan "$gc_cmd" 2>/dev/null); gc_st=$?
+gc_out=$(tpl_scan gate-rules-size-scan '^### 2\\.1a[[:space:]]' "$gc_cmd" 2>/dev/null); gc_st=$?
 # shellcheck disable=SC2046  # word splitting is the point: four status fields
 set -- $(printf '%s\n' "$gc_out" | tail -n 1)
 if [ ! -r "$gc_file" ] || [ "$gc_st" -ne 0 ] || [ "${2:-0}" -ne 1 ] || [ "${3:-0}" -ne 1 ] || [ "${4:-0}" -ne 1 ]; then
@@ -1081,6 +1068,74 @@ elif ! printf '%s\n' "$gc_out" | sed '$d' | cmp -s - "$gc_file"; then
        "make them byte-identical; an initialized project gets the template, this repo runs the file"
 fi
 # --- END check 4j ---
+# --- BEGIN check 4k ---
+# The secret deny rules `/workflow-init` scaffolds into `.claude/settings.json` (template
+# `### 2.17`). Inside that section of the command file -- from the one `### 2.17` heading to
+# the next `### ` or `## ` heading -- each of the eleven lines below must appear at least once,
+# verbatim after stripping leading whitespace, and the first `Read(**/.env.*)` line must come
+# before the first `Read(!**/.env.example)` line: a `!` entry exempts a path only from the
+# deny entries listed before it.
+#
+# WHAT IT PROVES: those eleven lines are present, verbatim, in that section, and that one pair
+# is in that order. It does NOT prove that the rules work in Claude Code, that the JSON block is
+# valid, that no other line in the section weakens them, or that an agent merges them into a
+# project correctly. The behaviour was observed once, by a `claude -p` probe on Claude Code
+# 2.1.302, recorded in docs/reference.md. This repo's own `.claude/settings.json` is not a copy
+# of the template and is not checked.
+SD_FILE=plugins/dev-workflow/commands/workflow-init.md
+SD_REQ='"Read(**/.env)",
+"Read(**/.env.*)",
+"Read(!**/.env.example)",
+"Read(**/*.pem)",
+"Read(**/*.key)",
+"Read(**/secrets.*)",
+"Read(./.context/**/secrets*)",
+"Read(**/id_rsa)",
+"Read(**/id_ecdsa)",
+"Read(**/id_ed25519)",
+"Read(~/.ssh/**)"'
+
+# Prints "HEADS <n>", one "MISS<TAB><line>" per required line absent from the section, and
+# "ORDER" when the pair is out of order. Returns 2 if awk itself failed.
+secret_deny_scan() { # $1 = file
+  SD_REQ="$SD_REQ" awk '                            # secret-deny-scan
+    BEGIN { k = split(ENVIRON["SD_REQ"], req, "\n") }
+    /^### 2\.17([[:space:]]|$)/ { insec = 1; heads += 1; next }
+    insec && /^###? / { insec = 0 }
+    insec { nr += 1; line = $0; sub(/^[ \t]*/, "", line)
+            for (i = 1; i <= k; i++) if (line == req[i] && !at[i]) at[i] = nr }
+    END { printf "HEADS %d\n", heads + 0
+          for (i = 1; i <= k; i++) if (!at[i]) printf "MISS\t%s\n", req[i]
+          if (at[2] && at[3] && at[2] > at[3]) print "ORDER" }
+  ' "$1" || return 2
+}
+
+if [ ! -f "$SD_FILE" ]; then
+  fail "Secret deny rules: $SD_FILE is missing, so the '### 2.17' deny rules cannot be checked." \
+       "the scaffolded template lives there"
+elif [ ! -r "$SD_FILE" ]; then
+  fail "Secret deny rules: $SD_FILE is unreadable, so the '### 2.17' deny rules cannot be checked." \
+       "check permissions"
+else
+  sd_out=$(secret_deny_scan "$SD_FILE"); sd_st=$?
+  sd_heads=$(printf '%s\n' "$sd_out" | sed -n 's/^HEADS //p')
+  if [ "$sd_st" -ne 0 ] || [ -z "$sd_heads" ]; then
+    fail "Secret deny rules: the '### 2.17' parser failed; results are not trustworthy." \
+         "awk exited $sd_st on $SD_FILE"
+  elif [ "$sd_heads" != 1 ]; then
+    fail "Secret deny rules: $SD_FILE has $sd_heads '### 2.17' headings, so the deny rules cannot be located." \
+         "expected exactly one"
+  else
+    sd_miss=$(printf '%s\n' "$sd_out" | sed -n 's/^MISS	//p')
+    [ -n "$sd_miss" ] &&
+      fail "Secret deny rules: the '### 2.17' section of $SD_FILE lacks a deny line, verbatim on a line of its own." \
+           "$sd_miss"
+    printf '%s\n' "$sd_out" | grep -qx ORDER &&
+      fail "Secret deny rules: in the '### 2.17' section of $SD_FILE, \"Read(!**/.env.example)\" comes before \"Read(**/.env.*)\"." \
+           "a ! entry exempts a path only from the deny entries listed before it"
+  fi
+fi
+# --- END check 4k ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

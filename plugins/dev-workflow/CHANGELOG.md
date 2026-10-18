@@ -22,6 +22,30 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.34.0
+
+`/workflow-init` scaffolds secret deny rules; the reports, the hook and the invariant checker lose
+their duplicated code.
+
+- **Secret deny rules** (`/workflow-init` 2.17): `permissions.deny` entries in
+  `.claude/settings.json` for `.env`/`.env.*` (except `.env.example`), `*.pem`, `*.key`,
+  `secrets.*`, `./.context/**/secrets*`, `id_rsa`/`id_ecdsa`/`id_ed25519` and `~/.ssh/**`. Merged;
+  missing entries in an existing file are asked for, not added silently. Observed with Claude
+  Code 2.1.302: the Read tool and `cat <file>` are refused; `grep -r` and a script opening the
+  file are not. `docs/reference.md` states both. Check 4k pins the eleven lines and one order
+  pair in the template.
+- **Reports** (audit 13, 14, 18): one commit-record reader and one set of helpers in
+  `ledger-metrics.py`. Every report's `git` now ignores replace refs and grafts (run-analytics and
+  live-effort honoured them before). One partial-clone refusal: any `extensions.partialclone` or
+  `remote.*.promisor`/`partialclonefilter` key refuses, `promisor=false` included, as the
+  loop-usefulness spec states; run-analytics and live-effort gain the check, spec-delta and
+  status-view now also refuse `promisor=false`. ledger-metrics keeps its documented
+  partial-clone limit.
+- **Hook** (audit 15): the top-level JSON walk exists once (`topmember`); `retire_legacy` owns the
+  legacy names. No change in firing.
+- **`check-invariants.sh`** (audit 17): one template-fence scanner, one UTF-8 locale probe;
+  `ci.yml` names the right count of prompt-conformance checks.
+
 ## 0.33.0
 
 Gate hook: fewer false resets, with and without jq, and an accurate Gate-A reminder for a plan

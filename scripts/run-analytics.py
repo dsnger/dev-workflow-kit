@@ -17,7 +17,6 @@ import math
 import os
 import re
 import stat
-import subprocess
 import sys
 
 KEEP_DAYS_DEFAULT = 365
@@ -26,9 +25,6 @@ TMP_PREFIX = ".gate-calls.tmp."
 STORE = "gate-calls.jsonl"
 GATE_TOOLS = {"mcp__codex__exec": "exec", "mcp__codex__review": "review"}
 SESSION_KEYS = ("sessionId", "specSessionId", "qualitySessionId")
-GIT_SELECTORS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
-                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-                 "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM", "GIT_NAMESPACE")
 
 RE_ID = re.compile(r"[A-Za-z0-9_-]{1,64}")
 RE_SESSION = re.compile(r"[0-9a-f-]{36}")
@@ -59,32 +55,20 @@ CANNOT = """== What this report cannot answer
 - Renamed or reused story paths: the trace ID is the story path."""
 
 
-def shown(text):
-    return "".join("\\x%02x" % ord(c) if ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F else c for c in str(text))
+def load_ledger_parser(here):
+    sys.dont_write_bytecode = True
+    spec = importlib.util.spec_from_file_location("ledger_metrics", os.path.join(here, "ledger-metrics.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+lm = load_ledger_parser(os.path.dirname(os.path.abspath(__file__)))
+git, shown, ranges = lm.run_git, lm.shown, lm.ranges
 
 
 def die(msg):
-    sys.stderr.buffer.write(("run-analytics: %s\n" % shown(msg)).encode("utf-8", "backslashreplace"))
-    sys.stderr.flush()
-    sys.exit(1)
-
-
-def git_env():
-    """The environment for every git call: no repository selectors and no trace sinks."""
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_TRACE")}
-    for k in GIT_SELECTORS:
-        env.pop(k, None)
-    env.update(GIT_TRACE2="0", GIT_TRACE2_EVENT="0", GIT_TRACE2_PERF="0")  # overrides trace2.* config
-    return env
-
-
-def git(args, cwd):
-    try:
-        p = subprocess.run(("git",) + tuple(args), cwd=cwd, env=git_env(),
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        return 127, b""
-    return p.returncode, p.stdout
+    lm.die(msg, "run-analytics")
 
 
 def common_dir(cwd):
@@ -526,40 +510,21 @@ def write_store(tel_fd, records):
 
 # ---- attribution -----------------------------------------------------------------------------------
 
-def load_ledger_parser(here):
-    sys.dont_write_bytecode = True
-    spec = importlib.util.spec_from_file_location("ledger_metrics", os.path.join(here, "ledger-metrics.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def cycles_from_history(cwd, lm):
     rc, out = git(("-c", "log.showSignature=false", "-c", "i18n.logOutputEncoding=UTF-8", "log", "--all",
                    "--no-show-signature", "-z", "--format=%H %ct%n%B"), cwd)
     if rc != 0:
         die("git log failed")
     provs, others = {}, {}
-    for rec in out.decode("utf-8", "replace").split("\0"):
-        lines = rec.split("\n")
-        for i, line in enumerate(lines):
-            if not lm.CANDIDATE.match(line) or lm.is_ledger_record(line):
-                continue
-            parsed = lm.parse_record(line)
-            if parsed is None or parsed[0] == "none (pre-rule)":
-                continue
-            field, typ, data = parsed
-            if typ == "prov":
-                provs.setdefault(field, {})[line] = data
-                continue
-            if typ == "skip":  # the reason after the marker is part of its identity, as in ledger-metrics
-                reason = []
-                for nxt in lines[i + 1:]:
-                    if nxt == "" or lm.CANDIDATE.match(nxt):
-                        break
-                    reason.append(nxt)
-                line += " | " + " ".join(reason)
-            others.setdefault(field, set()).add(line)
+    for _sha, _ct, _pos, parsed, text in lm.commit_records(lm.read_commits(out.decode("utf-8", "replace"),
+                                                                            "run-analytics")):
+        if parsed is None or parsed[0] == "none (pre-rule)":
+            continue
+        field, typ, data = parsed
+        if typ == "prov":
+            provs.setdefault(field, {})[text] = data
+            continue
+        others.setdefault(field, set()).add(text)  # a skip's text carries its reason, as in ledger-metrics
     return provs, others
 
 
@@ -582,22 +547,11 @@ def total(values, fmt):
     return "%s (? %d of %d)" % (fmt(sum(known)) if known else "?", len(values) - len(known), len(values))
 
 
-def ranges(nums):
-    out, i = [], 0
-    while i < len(nums):
-        j = i
-        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
-            j += 1
-        out.append(str(nums[i]) if i == j else "%d-%d" % (nums[i], nums[j]))
-        i = j + 1
-    return ",".join(out)
-
-
 def group_line(recs, nonce=None):
     """One summary line; with a nonce, only that cycle's slots give pass numbers."""
     passes = sorted({int(m.group(2) or m.group(4)) for r in recs for s in r["slots"]
                      for m in [RE_SLOT.fullmatch(s)] if nonce is None or (m.group(1) or m.group(3)) == nonce})
-    parts = ["calls %d" % len(recs), "passes %s" % (ranges(passes) or "-"),
+    parts = ["calls %d" % len(recs), "passes %s" % ranges(passes),
              "duration_s %s" % total([r["duration_s"] for r in recs], lambda x: "%.1f" % x)]
     for f in TOKEN_FIELDS:
         parts.append("%s %s" % (f, total([r[f] for r in recs], str)))
@@ -618,13 +572,14 @@ def main(argv):
             die("--keep-days must be an integer from 1 to 36500")
         keep = int(args[1])
     cwd = os.getcwd()
-    rc, out = git(("--version",), cwd)
-    m = re.search(rb"(\d+)\.(\d+)", out) if rc == 0 else None
-    if not m or (int(m.group(1)), int(m.group(2))) < (2, 36):
+    if lm.git_too_old(cwd):
         die("git 2.36 or later is required")
     mine = common_dir(cwd)
     if mine is None:
         die("not a git repository")
+    problem = lm.partial_clone(cwd)
+    if problem:
+        die(problem)
     rc, out = git(("worktree", "list", "--porcelain", "-z"), cwd)
     if rc != 0:
         die("git worktree list failed")
@@ -641,7 +596,6 @@ def main(argv):
 
     now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
     problems, invalid = {}, [0]
-    lm = load_ledger_parser(os.path.dirname(os.path.abspath(__file__)))
 
     main_fd = os.open(main_wt, os.O_RDONLY | os.O_DIRECTORY)
     ctx_fd = open_dir(".context", main_fd, 0o755, ".context")

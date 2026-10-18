@@ -1563,6 +1563,45 @@ section of `.claude/review-gates.md` are skipped, and nothing fails.
    findings become tickets through the `ticket` skill. It never runs them unasked: each reads the
    whole repository.
 
+### 2.17 `.claude/settings.json` — deny reading secret files
+
+Always runs. Why: a secret file an agent reads lands in its transcript and context. Merge these
+`permissions.deny` entries into `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(!**/.env.example)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/secrets.*)",
+      "Read(./.context/**/secrets*)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ecdsa)",
+      "Read(**/id_ed25519)",
+      "Read(~/.ssh/**)"
+    ]
+  }
+}
+```
+
+1. **Missing file.** Write it with only this block.
+2. **Present, valid JSON.** Every entry already in `permissions.deny` → `unchanged`. Otherwise show
+   the missing entries and ask: add all / pick / skip. Add only what the user keeps, after the
+   existing entries, with `Read(!**/.env.example)` after `Read(**/.env.*)`: a `!` entry exempts a
+   path only from the deny entries listed before it. Keep every other key and entry as it is.
+   Why ask, unlike Rule 3's silent merge: a project may need one of these files read on purpose,
+   and a re-run must not silently re-add an entry the user removed.
+3. **Not valid JSON.** Touch nothing; report `skipped (not valid JSON)`.
+
+Tell the user what the rules do not stop, in one line: other programs reading the file (`grep -r`,
+a script), and sessions started outside the project root (`./` is relative to the session's
+working directory). Why: a deny rule that reads as complete protection invites a secret in the
+repository.
+
 ## Step 3 — Walk the user through `AGENTS.md`
 
 `AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the
@@ -1733,7 +1772,7 @@ Scaffolded:
   todos.md                         written
   .gitattributes                   merged (union-merge line added)
   .mcp.json                        merged (codex server added)
-  .claude/settings.json            merged (codebase-memory rules — 2.14; Ponytail mode — 2.16)
+  .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)
   pnpm-workspace.yaml              skipped (not a pnpm project — see checklist item 1)
 ```

@@ -1823,7 +1823,7 @@ backlog.
   `- Plan left open: <decision>. Chose: <choice>. Why: <reason>.`, watching check 4e. *PR #75,
   CodeRabbit, Minor.*
 
-## From the 0.30.0 Ponytail audit (2026-10-17) — findings 1-3 fixed in 0.30.1, 4-12 in 0.31.0; 13-18 backlog
+## From the 0.30.0 Ponytail audit (2026-10-17) — findings 1-3 fixed in 0.30.1, 4-12 in 0.31.0; 13-18 in 0.34.0
 
 Report: this session's `/ponytail-audit` (three read-only helpers; findings reproduced in scratch
 repos where marked). Numbers are the audit's.
@@ -1855,19 +1855,34 @@ repos where marked). Numbers are the audit's.
 - [x] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
   change marks every tracked file deleted, silently. Fail when the match count differs from the
   entry count. *Should.*
-- [ ] **13. The commit-record reader exists four times** (ledger-metrics, loop-usefulness,
-  status-view, run-analytics; ~90 lines). One generator in `ledger-metrics.py`. *Should, lean.*
-- [ ] **14. Small helpers copied across the reports** (`die`, `git`/`git_env`, `load`, git-version
+- [x] **13. The commit-record reader exists four times** (ledger-metrics, loop-usefulness,
+  status-view, run-analytics; ~90 lines). One generator in `ledger-metrics.py`. *Should, lean.* **Fixed in 0.34.0:** `commit_records`.
+- [x] **14. Small helpers copied across the reports** (`die`, `git`/`git_env`, `load`, git-version
   check, `ranges`, `shown`; ~100 lines). The `git` copies already differ (`--no-replace-objects`,
-  `GIT_GRAFT_FILE`), so reports can read different histories. *Nice, lean.*
-- [ ] **15. Hook duplication:** the top-level object walk three times in the awk parser (~15 lines each; the third, `CALLID_AWK`, from 0.33.0);
-  `retire_legacy` repeated inline; legacy names deleted in three places. *Nice, lean.*
+  `GIT_GRAFT_FILE`), so reports can read different histories. *Nice, lean.* **Fixed in 0.34.0:** shared helpers in
+  `ledger-metrics.py`; the stricter `git` (no replace refs, no grafts) everywhere, graft test in
+  `run-analytics.test.sh`. ledger-metrics keeps its own `git` (its spec §2).
+- [x] **15. Hook duplication:** the top-level object walk three times in the awk parser (~15 lines each; the third, `CALLID_AWK`, from 0.33.0);
+  `retire_legacy` repeated inline; legacy names deleted in three places. *Nice, lean.* **Fixed in
+  0.34.0:** one `topmember` walk; `retire_legacy` owns the legacy names.
 - [x] **16. `workflow-init.md` overclaims** "no enforcement at all" for Gate A without superpowers;
   the pass-cap stop still works. *Nice.* Fixed in 0.33.0.
-- [ ] **17. `check-invariants.sh` near-copies:** `tpl_size_scan` vs `rg_tpl_scan`, the UTF-8 locale
-  probe twice; `ci.yml` says "five" prompt-conformance checks, AGENTS.md lists six. *Nice.*
-- [ ] **18. Partial-clone refusal differs per report** (loop-usefulness refuses on any promisor key,
-  spec-delta accepts `false`; three reports have no check). *Nice.*
+- [x] **17. `check-invariants.sh` near-copies:** `tpl_size_scan` vs `rg_tpl_scan`, the UTF-8 locale
+  probe twice; `ci.yml` says "five" prompt-conformance checks, AGENTS.md lists six. *Nice.* **Fixed in 0.34.0:**
+  `tpl_scan`, one `utf8_loc` probe.
+- [x] **18. Partial-clone refusal differs per report** (loop-usefulness refuses on any promisor key,
+  spec-delta accepts `false`; three reports have no check). *Nice.* **Fixed in 0.34.0:** one
+  `partial_clone`: any promisor key refuses (the loop-usefulness spec's rule), in every report but
+  ledger-metrics, whose spec accepts the limit.
+- [x] **Secret deny rules in `/workflow-init`** (agenda "next package", 2026-10-17). **Done in
+  0.34.0:** 2.17, check 4k, `docs/reference.md` states what they block and what not (probe on
+  Claude Code 2.1.302).
+- [ ] **run-analytics reads replacement commits through `git log --all`.** Even with
+  `--no-replace-objects`, `--all` lists the commit a `refs/replace/*` ref points at, so it can add
+  records (reproduced in the 0.34.0 refactor). Fix: `--exclude='refs/replace/*'` before `--all`,
+  one test. *Nice.*
+- [ ] **spec-delta has a fifth commit-record reader** (`baseline_block`, one commit, no skip-reason
+  join). Not one of audit 13's four; move it onto `commit_records` if its output allows. *Nice.*
 - [x] **Executing a standard-risk plan always warns "Gate A below floor".** `writing-plans` resets the
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when

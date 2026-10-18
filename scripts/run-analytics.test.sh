@@ -335,6 +335,15 @@ $LN confirmed ('docs/superpowers/stories/s1-story.md',)
   other cycle $LN; Gate B (passes 1-2, codex): Findings 1,0. Blockers 0,0. Majors 0,0.
 EOF
 
+# ---- 2d. a caller's graft file is ignored ----------------------------------------------------------
+mkrepo graft
+(cd "$work/graft" && git rev-parse HEAD) > "$work/grafts"  # would make HEAD a root commit, hiding the earlier records
+cls=$(cd "$work/graft" && GIT_GRAFT_FILE="$work/grafts" python3 -B -c 'import importlib.util,sys
+sys.dont_write_bytecode=True
+s=importlib.util.spec_from_file_location("ra",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+p,o=m.cycles_from_history(".",m.load_ledger_parser(sys.argv[2])); print(m.classify("bbbbbbbb",p,o)[0])' "$SCRIPT" "$HERE" 2>&1)
+[ "$cls" = "no story" ] && pass "a GIT_GRAFT_FILE does not change the history read" || fail "graft file honoured: $cls"
+
 # ---- 3. second run, deleted sources, retention ------------------------------------------------------
 cp "$STORE" "$work/store1"
 out2=$(run "$work/repo"); st=$?
@@ -415,6 +424,10 @@ kill "$holder" 2>/dev/null; wait "$holder" 2>/dev/null
 mkdir -p "$work/norepo"
 rawin() { (cd "$1" && HOME="$work/home" python3 "$2"); }
 bad "not a git repository" "not a git repository" rawin "$work/norepo" "$work/repo/scripts/run-analytics.py"
+build; (cd "$work/repo" && git config remote.origin.promisor false)
+bad "any promisor key refused, false included" "partial clones are not supported" raw "$work/repo"
+build; (cd "$work/repo" && git config extensions.partialClone origin)
+bad "partial clone refused" "partial clones are not supported" raw "$work/repo"
 
 # ---- 5. worktree, inherited GIT_DIR, empty home -----------------------------------------------------
 build
