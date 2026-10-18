@@ -45,8 +45,9 @@ Check, in order:
    is a hard prerequisite, not a nicety: the workflow's whole middle
    (spec → plan → execute) *is* those skills. Without them `intake` hands off to a
    skill that does not exist, and the gate hook's Gate-A floor check — which runs on
-   the plan-execution skill events — silently never fires, so Gate A degrades to no
-   enforcement at all while still *looking* enforced. If they are absent, report
+   the plan-execution skill events — silently never fires, so Gate A loses its floor
+   reminder while still *looking* enforced; the hook still counts `mcp__codex__exec` calls
+   and still says when that count reaches the pass cap. If they are absent, report
    `MISSING` with the install commands:
    `claude plugin marketplace add obra/superpowers-marketplace` then
    `claude plugin install superpowers@superpowers-marketplace`.

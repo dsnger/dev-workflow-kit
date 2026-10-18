@@ -1860,35 +1860,47 @@ repos where marked). Numbers are the audit's.
 - [ ] **14. Small helpers copied across the reports** (`die`, `git`/`git_env`, `load`, git-version
   check, `ranges`, `shown`; ~100 lines). The `git` copies already differ (`--no-replace-objects`,
   `GIT_GRAFT_FILE`), so reports can read different histories. *Nice, lean.*
-- [ ] **15. Hook duplication:** the top-level object walk twice in the awk parser (~15 lines);
+- [ ] **15. Hook duplication:** the top-level object walk three times in the awk parser (~15 lines each; the third, `CALLID_AWK`, from 0.33.0);
   `retire_legacy` repeated inline; legacy names deleted in three places. *Nice, lean.*
-- [ ] **16. `workflow-init.md` overclaims** "no enforcement at all" for Gate A without superpowers;
-  the pass-cap stop still works. *Nice.*
+- [x] **16. `workflow-init.md` overclaims** "no enforcement at all" for Gate A without superpowers;
+  the pass-cap stop still works. *Nice.* Fixed in 0.33.0.
 - [ ] **17. `check-invariants.sh` near-copies:** `tpl_size_scan` vs `rg_tpl_scan`, the UTF-8 locale
   probe twice; `ci.yml` says "five" prompt-conformance checks, AGENTS.md lists six. *Nice.*
 - [ ] **18. Partial-clone refusal differs per report** (loop-usefulness refuses on any promisor key,
   spec-delta accepts `false`; three reports have no check). *Nice.*
-- [ ] **Executing a standard-risk plan always warns "Gate A below floor".** `writing-plans` resets the
+- [x] **Executing a standard-risk plan always warns "Gate A below floor".** `writing-plans` resets the
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
-  the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
-- [ ] **Gate-B reset still fires on plain text naming `git commit`.** `runs_git_commit` does not
+  the plan's confirmed risk is `high`. *Observation, not yet reproduced.* **Fixed in 0.33.0:**
+  `writing-plans` sets the earlier count aside (`passCountA.spec`) and plan execution says the
+  plan had no Gate A (expected at risk standard, floor missed at risk high). An `executing-plans`
+  call with no `writing-plans` before it still reads 0/3.
+- [x] **Gate-B reset still fires on plain text naming `git commit`.** `runs_git_commit` does not
   check command position, so `echo git commit` and a quoted pattern holding an escaped quote
   (`git log --grep="a \" git commit \" b"`) reset the pass count with HEAD unchanged. Safe
   direction (invariant 2), so accepted in 0.31.0. Fix if it is seen in practice: match `git`
   only at a command position, or rely on `head_moved` alone where jq is present. *Gate B cycle
-  kit031gb1018, spec pass 2 #2 and quality pass 2 #1, accepted, not repaired; Minor.*
-- [ ] **Without jq, read-only commands still end the Gate-B cycle.** The 0.31.0 narrow reset
+  kit031gb1018, spec pass 2 #2 and quality pass 2 #1, accepted, not repaired; Minor.* **Fixed in
+  0.33.0:** `git` must sit at a command position; `head_moved` and a background `&` still reset.
+- [x] **Without jq, read-only commands still end the Gate-B cycle.** The 0.31.0 narrow reset
   (`runs_git_commit`) applies only with jq; without it every loose match resets, as before, because
   three repairs of a jq-free spelling test each left a real commit it missed (quoted `sh -c`,
   quoted `-c`/`-C` operands) and there is no HEAD record to back it up. Safe direction. Fix only
   with a jq-free per-call id, which the fallback reader cannot establish today. *Gate B cycle
-  kit031gb1018, spec pass 2 #1 (jq-free half), accepted, not repaired.*
-- [ ] **`git --work-tree commit status` resets the Gate-B cycle.** In `runs_git_commit` the generic
+  kit031gb1018, spec pass 2 #1 (jq-free half), accepted, not repaired.* **Fixed in 0.33.0** for
+  readable payloads: `CALLID_AWK` reads the top-level `tool_use_id`. One it cannot read (over
+  1 MiB, an escaped or repeated key) still resets.
+- [x] **`git --work-tree commit status` resets the Gate-B cycle.** In `runs_git_commit` the generic
   option alternative also matches an operand-taking long option written with a space
   (`--work-tree`, `--namespace`, `--git-dir`), so an operand that is the word `commit` reads as the
   subcommand. Read-only, safe direction. Exclude those options from the generic alternative and
   add keep-state rows. *Gate B cycle kit031gb1018, spec pass 5 #1, accepted, not repaired; Minor.*
+  **Fixed in 0.33.0:** those four options' space-separated operand is joined before matching.
+
+- [ ] **`workflow-init` Step 1 item 2: superpowers "missing" vs "installed, not loaded".** The check
+  reads only the skills loaded in this session and reports `MISSING` with install commands, which
+  is the wrong fix for an installed plugin that is disabled or not loaded. Report the two states
+  separately. Source: PR #79, CodeRabbit (pre-existing, out of scope there). *Minor.*
 
 ## From the Rieseberg analysis (2026-10-18)
 
@@ -1899,7 +1911,7 @@ repos where marked). Numbers are the audit's.
 
 ## From kit 0.32.0 Gate B (cycle kit032gb1018)
 
-- [ ] **`docs/pr-review-bots.md`: retire the dormant human-exception merge clause.** It still says an
+- [x] **`docs/pr-review-bots.md`: retire the dormant human-exception merge clause.** It still says an
   absent review from a **Wait for** bot needs a recorded human decision, and that the clause comes
   back when a bot is promoted; 0.32.0's `process-pr-review` Step 4 records an absent review and does
   not block. Dormant while **Wait for** is empty. Source: Gate B spec pass 2, finding 1. *Accepted,

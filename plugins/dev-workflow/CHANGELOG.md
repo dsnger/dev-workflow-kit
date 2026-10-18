@@ -22,6 +22,32 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.33.0
+
+Gate hook: fewer false resets, with and without jq, and an accurate Gate-A reminder for a plan
+that needs no Gate A.
+
+- **Gate-B reset** (`runs_git_commit`): `commit` counts as git's subcommand only with `git` at a
+  command position, so plain text such as `echo git commit` or `git log --grep="a \" git commit
+  \" b"` keeps the cycle's passes. `--git-dir`, `--work-tree`, `--namespace` and `--config-env`
+  take their operand when written with a space, so `git --work-tree commit status` keeps them too.
+  A commit the spelling misses still resets when HEAD moved during the call, and a command
+  holding a background `&` anywhere (quoted text included) resets whether or not HEAD moved,
+  since its commit may land after the hook ran.
+- **Without jq**, the call's `tool_use_id` is now read by an awk reader of the top-level object
+  (same size bound and refusals as the request reader), so the HEAD-moved check and the WIP-commit
+  exemption work without jq, and read-only commands no longer end the Gate-B cycle there. A
+  payload the reader refuses gets no record and resets, as before.
+- **Gate-A floor check at plan execution**: `writing-plans` sets the earlier Gate-A count aside
+  instead of deleting it. When no `mcp__codex__exec` call ran since then, plan execution says the
+  plan had no Gate A, that this is expected at risk `standard` and a missed floor at risk `high`,
+  and names the earlier cycle's count, instead of "below floor (0/3)". A plan Gate A is checked
+  against the floor as before.
+- **`workflow-init`**: the superpowers prerequisite no longer says Gate A has "no enforcement at
+  all" without it; the floor reminder is lost, the exec count and the pass-cap reminder stay.
+- **`docs/pr-review-bots.md`**: the dormant human-exception merge clause is retired, matching
+  0.32.0's `process-pr-review` Step 4 (an absent review is reported and blocks no merge).
+
 ## 0.32.0
 
 Autonomous run by default: no human stop between a closed gate and the merge.
