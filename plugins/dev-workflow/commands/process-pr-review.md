@@ -237,14 +237,17 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 
 ## Step 4 — Merge
 
-Squash-merge once all of these hold: a last read of both channels of every bot (Step 2)
-shows no claim outside the tracked set — a new one goes through Step 3 first; every tracked
+Squash-merge once all of these hold: a last read of both channels of every bot (Step 2),
+filtered as Step 3 item 1 forms the tracked set, adds no claim — a new one goes through
+Step 3 first; every tracked
 claim has a verdict, a terminal disposition and a reply; no item-4 question is unanswered;
 the required CI check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
 `headRefOid` equal to the head this run checked CI and claims on. A different head means
 commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other:
 `gh pr merge <n> --squash --match-head-commit <headRefOid>`.
 If it fails because the head moved, run Steps 1-3 on the new head before another attempt.
+After three such rounds without a merge, end with the PR unmerged and say why in the report
+and the handover, so late claims or pushes cannot keep the run cycling.
 A bot recorded as `<bot>: no review on <sha>` (Step 2) does not block the merge and is not
 counted as clean; the report keeps that line.
 
