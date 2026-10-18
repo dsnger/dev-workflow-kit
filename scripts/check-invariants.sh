@@ -1071,20 +1071,19 @@ fi
 # --- BEGIN check 4k ---
 # The secret deny rules `/workflow-init` scaffolds into `.claude/settings.json` (template
 # `### 2.17`). Inside that section of the command file -- from the one `### 2.17` heading to
-# the next `### ` or `## ` heading -- each of the eleven lines below must appear at least once,
-# verbatim after stripping leading whitespace, and the first `Read(**/.env.*)` line must come
+# the next `### ` or `## ` heading -- each of the ten lines below must appear at least once,
+# verbatim after stripping leading whitespace, and the first `Read(**/.env*)` line must come
 # before the first `Read(!**/.env.example)` line: a `!` entry exempts a path only from the
 # deny entries listed before it.
 #
-# WHAT IT PROVES: those eleven lines are present, verbatim, in that section, and that one pair
+# WHAT IT PROVES: those ten lines are present, verbatim, in that section, and that one pair
 # is in that order. It does NOT prove that the rules work in Claude Code, that the JSON block is
 # valid, that no other line in the section weakens them, or that an agent merges them into a
 # project correctly. The behaviour was observed once, by a `claude -p` probe on Claude Code
 # 2.1.302, recorded in docs/reference.md. This repo's own `.claude/settings.json` is not a copy
 # of the template and is not checked.
 SD_FILE=plugins/dev-workflow/commands/workflow-init.md
-SD_REQ='"Read(**/.env)",
-"Read(**/.env.*)",
+SD_REQ='"Read(**/.env*)",
 "Read(!**/.env.example)",
 "Read(**/*.pem)",
 "Read(**/*.key)",
@@ -1106,7 +1105,7 @@ secret_deny_scan() { # $1 = file
             for (i = 1; i <= k; i++) if (line == req[i] && !at[i]) at[i] = nr }
     END { printf "HEADS %d\n", heads + 0
           for (i = 1; i <= k; i++) if (!at[i]) printf "MISS\t%s\n", req[i]
-          if (at[2] && at[3] && at[2] > at[3]) print "ORDER" }
+          if (at[1] && at[2] && at[1] > at[2]) print "ORDER" }
   ' "$1" || return 2
 }
 
@@ -1131,7 +1130,7 @@ else
       fail "Secret deny rules: the '### 2.17' section of $SD_FILE lacks a deny line, verbatim on a line of its own." \
            "$sd_miss"
     printf '%s\n' "$sd_out" | grep -qx ORDER &&
-      fail "Secret deny rules: in the '### 2.17' section of $SD_FILE, \"Read(!**/.env.example)\" comes before \"Read(**/.env.*)\"." \
+      fail "Secret deny rules: in the '### 2.17' section of $SD_FILE, \"Read(!**/.env.example)\" comes before \"Read(**/.env*)\"." \
            "a ! entry exempts a path only from the deny entries listed before it"
   fi
 fi

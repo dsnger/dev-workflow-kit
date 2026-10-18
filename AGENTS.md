@@ -182,8 +182,8 @@ reader can judge whether it still holds.
     amendment renumbered anything), and the `intake` amendment route's change-record template
     and its closed sets (not whether the procedure prose is right or any written record
     follows them), the seven ledger-check record lines in both prompt copies (check 4h:
-    not whether the prose around them is right or any agent follows them), and the eleven
-    secret deny lines in `/workflow-init`'s `### 2.17` section, `.env.*` before its
+    not whether the prose around them is right or any agent follows them), and the ten
+    secret deny lines in `/workflow-init`'s `### 2.17` section, `.env*` before its
     `.env.example` exemption (check 4k: not whether the rules work in Claude Code, the JSON is
     valid or an agent merges them correctly) — and they are a floor, not coverage. Every other item is
     judged by a reader.

@@ -1572,8 +1572,7 @@ Always runs. Why: a secret file an agent reads lands in its transcript and conte
 {
   "permissions": {
     "deny": [
-      "Read(**/.env)",
-      "Read(**/.env.*)",
+      "Read(**/.env*)",
       "Read(!**/.env.example)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
@@ -1589,10 +1588,11 @@ Always runs. Why: a secret file an agent reads lands in its transcript and conte
 ```
 
 1. **Missing file.** Write it with only this block.
-2. **Present, valid JSON.** Every entry already in `permissions.deny` → `unchanged`. Otherwise show
-   the missing entries and ask: add all / pick / skip. Add only what the user keeps, after the
-   existing entries, with `Read(!**/.env.example)` after `Read(**/.env.*)`: a `!` entry exempts a
-   path only from the deny entries listed before it. Keep every other key and entry as it is.
+2. **Present, valid JSON.** Every entry already in `permissions.deny`, with `Read(!**/.env.example)`
+   after `Read(**/.env*)` → `unchanged`. Otherwise show the missing entries, or the order to fix,
+   and ask: add all / pick / skip. Add only what the user keeps, after the existing entries, and
+   keep `Read(!**/.env.example)` after `Read(**/.env*)`: a `!` entry exempts a path only from the
+   deny entries listed before it. Keep every other key and entry as it is.
    Why ask, unlike Rule 3's silent merge: a project may need one of these files read on purpose,
    and a re-run must not silently re-add an entry the user removed.
 3. **Not valid JSON.** Touch nothing; report `skipped (not valid JSON)`.

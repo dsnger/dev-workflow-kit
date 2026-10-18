@@ -75,10 +75,9 @@ TPL_OK='### 2.1 CLAUDE-md
 ````markdown
 # T
 ````'
-# 4k: the eleven secret deny lines `### 2.17` must carry, verbatim. Kept identical to the
+# 4k: the ten secret deny lines `### 2.17` must carry, verbatim. Kept identical to the
 # checker's SD_REQ on purpose: a drift between the two turns every accept case red.
-SD_LINES='"Read(**/.env)",
-"Read(**/.env.*)",
+SD_LINES='"Read(**/.env*)",
 "Read(!**/.env.example)",
 "Read(**/*.pem)",
 "Read(**/*.key)",
@@ -88,7 +87,7 @@ SD_LINES='"Read(**/.env)",
 "Read(**/id_ecdsa)",
 "Read(**/id_ed25519)",
 "Read(~/.ssh/**)"'
-# sd_section [LINES]: a `### 2.17` section holding LINES (default: all eleven), indented in a
+# sd_section [LINES]: a `### 2.17` section holding LINES (default: all ten), indented in a
 # ```json fence as the shipped template is.
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
 sd_section() {
@@ -522,9 +521,11 @@ done
 #              of 4c, 4h and 4i tolerate a lone 4j failure, and 4i's parser moved above the 4i
 #              markers, the same day; 4a-4i re-measured after all three: 20, 22, 20, 22, 9,
 #              34, 11, 28, 8, unchanged.
-#   4k -> 31   every `4k:` reject case (30, the unreadable case run as non-root) and
-#              `4k secret deny parser failure fires`; no accept case moved (measured
-#              2026-10-18, when 4k was added). The shared `tpl_sections` gained the `### 2.17`
+#   4k -> 29   every `4k:` reject case (28, the unreadable case run as non-root) and
+#              `4k secret deny parser failure fires`; no accept case moved (re-measured
+#              2026-10-18 after the template's two .env lines became one, ten lines; 31 when
+#              4k was added the same day, with eleven). 4a-4j re-measured after it: 20, 22,
+#              20, 22, 9, 34, 11, 28, 8, 4, unchanged. The shared `tpl_sections` gained the `### 2.17`
 #              section the same day; 4a-4j re-measured after it: 20, 22, 20, 22, 9, 34, 11,
 #              28, 8, 4, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
@@ -1482,7 +1483,7 @@ sd_case "4k: the fixture section accepted"                 0 "@KEEP@" ''
 sd_case "4k: tab-indented lines and an extra entry accepted" 0 \
   "$(sd_cmd "$(printf '### 2.17 settings\n\n%s\n\t"Read(**/extra)",\n' "$(printf '%s\n' "$SD_LINES" | sed 's/^/\t/')")")" ''
 k=1
-while [ "$k" -le 11 ]; do
+while [ "$k" -le 10 ]; do
   sd_without=$(printf '%s\n' "$SD_LINES" | sed "${k}d")
   sd_only=$(printf '%s\n' "$SD_LINES" | sed -n "${k}p")
   sd_case "4k: line $k missing rejected" 1 "$(sd_cmd "$(sd_section "$sd_without")")" "$sd_only"
@@ -1494,14 +1495,14 @@ sd_case "4k: line only after the section's end rejected"   1 \
   "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed 1d)")
 ## Step 3
 
-\"Read(**/.env)\",")" "$SD_MISS"
+\"Read(**/.env*)\",")" "$SD_MISS"
 sd_case "4k: line without its trailing comma rejected"     1 \
   "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed '1s/,$//')")")" "$SD_MISS"
 sd_case "4k: line with leading text rejected"              1 \
   "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | sed '5s/^/x /')")")" "$SD_MISS"
-sd_case "4k: .env.example exemption before .env.* rejected" 1 \
-  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | awk 'NR == 2 { h = $0; next } { print } NR == 3 { print h }')")")" \
-  'comes before "Read(**/.env.*)"'
+sd_case "4k: .env.example exemption before .env* rejected" 1 \
+  "$(sd_cmd "$(sd_section "$(printf '%s\n' "$SD_LINES" | awk 'NR == 1 { h = $0; next } { print } NR == 2 { print h }')")")" \
+  'comes before "Read(**/.env*)"'
 sd_case "4k: no 2.17 heading rejected"                     1 \
   "$(sd_cmd "$(sd_section | sed 's/^### 2\.17 .*/### 2.18 settings/')")" "has 0 '### 2.17' headings"
 sd_case "4k: two 2.17 headings rejected"                   1 \
