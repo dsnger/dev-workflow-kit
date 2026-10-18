@@ -693,6 +693,45 @@ END {
   exit 0
 }
 '
+# The jq-free reader of this call's id (call_record_path): the top-level `tool_use_id` member
+# only, under the same size bound and the same refusals as the request reader above, so a
+# nested key, a key with an escape or a repeated member yields no id. Prints the encoded id
+# call_record_path describes; exit 1 when the value is not usable, 2 when unreadable.
+# SINGLE-QUOTED, so no ASCII apostrophe may appear below.
+# shellcheck disable=SC2016  # an awk program, not shell
+CALLID_AWK="$JSON_AWK_FUNCS"'
+BEGIN { MAXLEN = 1048576; over = 0; tot = 0 }
+{ if (over || tot + length($0) + 1 > MAXLEN) over = 1; else { s = s $0 "\n"; tot += length($0) + 1 } }
+END {
+  if (over) exit 2
+  SLEN=length(s); n=SLEN; i=skipws(s,1)
+  if (substr(s,i,1) != "{") exit 2
+  i++; found=0; first=1; closed=0
+  while (i<=n) { i=skipws(s,i); c=substr(s,i,1)
+    if (c=="}") { i++; closed=1; break }
+    if (!first) { if (c!=",") exit 2; i=skipws(s,i+1); c=substr(s,i,1) }
+    first=0
+    if (c!="\"") exit 2
+    e=readstr(s,i); if(!e) exit 2
+    key=RAWSTR; i=skipws(s,e+1)
+    if (index(key, "\\")) exit 2
+    if (substr(s,i,1)!=":") exit 2
+    i=skipws(s,i+1)
+    if (key=="tool_use_id") { if (found) exit 2; found=1
+      if (substr(s,i,1)!="\"") exit 1
+      e=readstr(s,i); if(!e) exit 2
+      id=RAWSTR; i=e+1; continue }
+    i=skipval(s,i); if(!i) exit 2 }
+  if (!closed || !found) exit 2
+  if (skipws(s,i) <= n) exit 2
+  if (id !~ /^[A-Za-z0-9_-]+$/ || length(id) > 100) exit 1
+  o = ""
+  for (k = 1; k <= length(id); k++) { c = substr(id, k, 1)
+    if (c == "_") o = o "__"; else if (c ~ /[A-Z]/) o = o "_" tolower(c); else o = o c }
+  printf "%s", o
+  exit 0
+}
+'
 # shellcheck disable=SC2016  # a jq program, not shell
 REQUEST_JQ='
 def rt: if has("reviewType") | not then "absent"
@@ -1087,23 +1126,26 @@ flush_notes() {
 # folded first, so a commit split over lines (`git \` newline `commit`) still matches.
 is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
 
-# The reset after the command needs more than that match (0.30.0 audit, finding 4), with jq:
-# `commit` as git's subcommand, after only global options, where `-C` and `-c` take their
-# operand, or HEAD moved during the call (head_moved). Quoted text without an escaped quote
-# inside is one opaque word, so `git log --grep="git commit"` and `git log | grep -i commit`
-# keep the cycle's passes, and a commit hidden in quotes (`sh -c "git commit"`) is left to
-# head_moved. It does not check command position: plain text such as `echo git commit` still
-# resets, the safe direction. A line continuation is folded into a space; any other newline
-# separates commands. Neither matcher sees an alias (`git ci`). Without jq there is no
-# head_moved to back the spelling test up, and three repairs in a row each left a real commit
-# it missed, so there the loose match decides, as before 0.31.0: every read-only command
-# naming `git` and `commit` resets.
+# The reset after the command needs more than that match (0.30.0 audit, finding 4):
+# `commit` as git's subcommand, or HEAD moved during the call (head_moved). The subcommand
+# test wants `git` at a command position — the start, or after `;`, `&`, `|`, `(`, `{`, `!`
+# or a backtick, past any `VAR=value` words and the wrappers `sudo`, `command`, `exec`,
+# `env`, `nohup`, `time`, `nice` and the keywords `then`, `do`, `else` — and then only global
+# options, where `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace` and `--config-env`
+# take their operand, so `echo git commit` and `git --work-tree commit status` keep the
+# cycle's passes. Quoted text without an escaped quote inside is one opaque word, so
+# `git log --grep="git commit"` and `git log | grep -i commit` keep them too, and a commit
+# hidden in quotes (`sh -c "git commit"`) or behind another prefix (`xargs git commit`) is
+# left to head_moved. A line continuation is folded into a space; any other newline
+# separates commands. Neither matcher sees an alias (`git ci`). The subcommand test is what
+# still resets a commit that fails, or one sent to the shell background (`git commit &`),
+# whose HEAD has not moved yet when PostToolUse runs.
 runs_git_commit() {
-  command -v jq >/dev/null 2>&1 || { is_commit "$1"; return; }
   _t="[^[:space:];&|()]+"
+  _w="([A-Za-z_][A-Za-z0-9_]*=${_t}[[:space:]]+|(sudo|command|exec|env|nohup|time|nice|then|do|else)[[:space:]]+)*"
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
-    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g" |
-    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
+    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g; s/--(git-dir|work-tree|namespace|config-env)[[:space:]]+/--\1=/g" |
+    grep -Eq "(^|[;&|({!\`])[[:space:]]*$_w([^[:space:];&|()]*/)?git([[:space:]]+(-C|-c)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
 }
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
@@ -1141,10 +1183,11 @@ runs_git_commit() {
 # PostToolUse arrives before the commit has finished, so an unchanged HEAD proves nothing.
 # The record belongs to one tool call: it is named after the payload's `tool_use_id`, which
 # that call's PreToolUse and PostToolUse share, so overlapping calls cannot read, take or
-# delete each other's record. The id is read with jq only, as a top-level string checked
-# inside jq; a call whose id is missing, not a string, longer than 100 characters or not
-# made of [A-Za-z0-9_-] gets no record and so resets — and so does every call without jq,
-# whose fallback reader cannot establish that the key is the top-level one. The file name
+# delete each other's record. The id is read as a top-level string, by jq
+# or, without jq, by CALLID_AWK, and checked there; a call whose id is missing, not a string,
+# longer than 100 characters or not made of [A-Za-z0-9_-] gets no record and so resets, as
+# does one whose payload the jq-free reader refuses (past its size bound, an escaped or
+# repeated key). The file name
 # encodes the id so that ids differing only in letter case stay apart on a case-insensitive
 # filesystem. PostToolUse removes the call's own
 # record; one whose PostToolUse never arrives stays behind as an inert file in `.context/`,
@@ -1204,13 +1247,16 @@ is_wip_amend_cmd() {
 head_reflog_len() { git -C "$repo_root" reflog show --format=%H HEAD 2>/dev/null | grep -c ''; }
 wip_record_path() { call_record_path "$wipbase_prefix"; }
 call_record_path() { # $1 = prefix; this call's record path; fails when the id is unusable
-  # jq only: the fallback reader cannot tell a top-level key from a nested one, and a
-  # shell capture would strip a trailing newline before any check could see it, so the
-  # type, characters and length are checked inside jq on the decoded value
-  command -v jq >/dev/null 2>&1 || return 1
+  # The top-level member only, read by jq or, without jq, by CALLID_AWK; a shell capture
+  # would strip a trailing newline before any check could see it, so the type, characters
+  # and length are checked inside jq or awk, on the decoded value (awk refuses any escape)
   # and then written as a name no case-insensitive filesystem can merge with another id's:
   # `_` becomes `__` and an upper-case letter `X` becomes `_x`, which decodes uniquely
-  _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
+  if command -v jq >/dev/null 2>&1; then
+    _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
+  else
+    _id=$(printf '%s' "$payload" | awk "$CALLID_AWK" 2>/dev/null) || return 1
+  fi
   case $_id in '' | *[!a-z0-9_-]*) return 1 ;; esac
   printf '%s%s' "$1" "$_id"
 }
@@ -1218,10 +1264,10 @@ call_record_path() { # $1 = prefix; this call's record path; fails when the id i
 # Whether the Bash call that matched is_commit moved HEAD: the backstop for a commit that
 # runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
 # PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
-# `-m wip` record, with the HEAD reflog's length; PostToolUse compares both and removes it. Without jq no record can be kept, so
-# it answers "not moved" and runs_git_commit's loose fallback decides. With jq, in doubt it answers
-# "moved", so the caller resets, the safe direction: no usable id, no record, an unreadable
-# one, or a call sent to the background, whose PostToolUse arrives before it has finished.
+# `-m wip` record, with the HEAD reflog's length; PostToolUse compares both and removes it.
+# In doubt it answers "moved", so the caller resets, the safe direction: no usable id, no
+# record, an unreadable one, or a call sent to the background, whose PostToolUse arrives
+# before it has finished.
 record_head() { # PreToolUse; best effort. "<HEAD or -> <HEAD reflog length>"
   _f=$(call_record_path "$headpre_prefix") || return 0
   _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
@@ -1229,7 +1275,6 @@ record_head() { # PreToolUse; best effort. "<HEAD or -> <HEAD reflog length>"
   { printf '%s %s\n' "$_h" "$(head_reflog_len)" > "$_f"; } 2>/dev/null || true
 }
 head_moved() { # PostToolUse
-  command -v jq >/dev/null 2>&1 || return 1
   _f=$(call_record_path "$headpre_prefix") || return 0
   [ -f "$_f" ] || return 0
   _was='' _wasn=''; read -r _was _wasn 2>/dev/null < "$_f"
@@ -1515,7 +1560,14 @@ case "$event" in
           # `intake` or `ticket`: their change-record, `list` and `T-<n>` forms run inside
           # an open cycle, where a reset would hide a pending cap stop.
           superpowers:executing-plans | superpowers:subagent-driven-development \
-            | superpowers:brainstorming | superpowers:writing-plans) rm -f "$countA_file" "$countA_file.closed" ;;
+            | superpowers:brainstorming) rm -f "$countA_file" "$countA_file.closed" "$countA_file.spec" ;;
+          # writing-plans opens the plan's Gate-A cycle and sets the earlier one's count
+          # aside, so plan execution can tell "no Gate A on this plan" from "below floor"
+          superpowers:writing-plans)
+            rm -f "$countA_file.spec"
+            if [ -f "$countA_file" ]; then mv -f "$countA_file" "$countA_file.spec" 2>/dev/null
+            elif [ -f "$countA_file.closed" ]; then mv -f "$countA_file.closed" "$countA_file.spec" 2>/dev/null; fi
+            rm -f "$countA_file" "$countA_file.closed" ;;
         esac
         ;;
     esac
@@ -1604,7 +1656,12 @@ case "$event" in
           superpowers:executing-plans | superpowers:subagent-driven-development)
             passesA=$(read_count "$countA_file")
             [ -f "$countA_file" ] || passesA=$(read_count "$countA_file.closed")
-            if [ "$passesA" -lt "$floor" ]; then
+            # No exec call since writing-plans: a standard-risk plan needs none (section 5),
+            # so the floor is not reported as missed; the reminder still fires, naming both cases.
+            if [ ! -f "$countA_file" ] && [ ! -f "$countA_file.closed" ] && [ -f "$countA_file.spec" ]; then
+              passesS=$(read_count "$countA_file.spec")
+              note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floor). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floor pass(es), counted as calls with no content check." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floor)"
+            elif [ "$passesA" -lt "$floor" ]; then
               note "Codex Gate A floor NOT met: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls with no content check. What this cycle does next is $policy's closure ordering's, read there entire." "⚠ Codex Gate A below floor ($passesA/$floor)"
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts

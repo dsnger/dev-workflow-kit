@@ -35,8 +35,8 @@ place by a signal that exists and does not mean what it appears to mean.
 **What the routing change does *not* touch: the count itself.** The query below and what
 it measures are exactly as #17 left them, and the count remains the arbiter of whether a
 head was reviewed — for **any** bot, opportunistic or not. What the change does scope is
-the *consequence* the file used to attach to a `0`: the merge-exception clause now binds
-only bots under **Wait for**, which is currently none. Both facts are stated where the
+the *consequence* the file used to attach to a `0`: from kit 0.32.0 a `0` blocks no merge,
+for any bot, and the merge-exception clause is retired. Both facts are stated where the
 query lives, below.
 
 **Completion signal, per bot.** CodeRabbit posts a status — visible in `gh pr checks`,
@@ -45,8 +45,8 @@ them merges unreviewed heads.**
 
 - *The check stopped pending* — a blocking signal, and the reason CodeRabbit looked
   waitable. Nothing is blocked on it now.
-- *The final head was reviewed* — a separate verification, and the one that told you
-  whether you may merge while a bot was under **Wait for**. **This is settled behaviour,
+- *The final head was reviewed* — a separate verification, and the one that told you,
+  while a bot was under **Wait for** and before kit 0.32.0, whether you could merge. **This is settled behaviour,
   not a hazard that might occur: a green check never establishes that a head was reviewed
   — the review count is the arbiter.** (What follows from a `0` depends on routing; see
   the two facts beside the query below.) Five occurrences, the last three caught by
@@ -76,8 +76,8 @@ them merges unreviewed heads.**
   limited" appears on heads that were never reviewed and on heads that were, so it tells
   you nothing either way; there is no interpretation left to do, and nothing to weigh —
   one integer per head decides it. `0` means the head was not reviewed; anything else
-  means it was. Whether a `0` may be merged past is a routing question, answered below —
-  under **Wait for** it may not be, without a recorded human decision. What the green
+  means it was. What a `0` means for the merge is stated below: it is reported and blocks
+  nothing. What the green
   tick establishes is that CodeRabbit's *check* finished, which is a different fact about
   a different thing.
 
@@ -88,7 +88,7 @@ them merges unreviewed heads.**
 
 Verify the second before merging — a deterministic boolean, so it can gate rather than be
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
-gates directly only for a bot under **Wait for**, and is diagnostic for the rest:
+is diagnostic for every bot: its answer goes into the report and blocks no merge:
 
 ```sh
 head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
@@ -123,7 +123,7 @@ delta being a one-word prose correction the reviewer had itself requested. That 
 intended shape — this query is what tells you whether a review actually happened, and
 when it disagrees with the check a human decides. (Written while CodeRabbit was still
 under **Wait for**, when that recorded decision was required; the query still answers the
-same question, but an absent review from an opportunistic bot no longer needs one.) **#17 explains the "re-trigger produced
+same question, but since kit 0.32.0 an absent review from any bot needs no decision.) **#17 explains the "re-trigger produced
 nothing" here:** `@coderabbitai review` is a no-op while automatic reviews are active.
 
 `--paginate` matters: without it only page one is read, so a qualifying review can sit on
@@ -131,27 +131,27 @@ page two and be read as absent. `jq -s` is what slurps the pages — `gh api --s
 do it here, being rejected outright when combined with `--jq`. `DISMISSED` is excluded — a dismissed review is not
 a review of that head.
 
-**Then the two facts separate, and only one of them still binds.**
+**Then the two facts separate, and only the first still binds.**
 
 1. **The count is the arbiter of whether a head was reviewed.** Unchanged, and it applies
    to **any** bot — it is the diagnostic, and being routed opportunistically does not
    make a bot's review record less readable or the answer less true.
-2. **"Merge only on an explicit recorded human decision" applies only to bots under
-   **Wait for**.** An absent review from an *opportunistic* bot blocks nothing and needs
-   no exception. Every head reaching a PR has already passed **Gate B**, the workflow's
+2. **An absent review blocks no merge, for any bot.** From kit 0.32.0
+   `/dev-workflow:process-pr-review` Step 4 reports it as `<bot>: no review on <sha>`,
+   never counts it as clean, and merges; it needs no exception. Every head reaching a PR has already passed **Gate B**, the workflow's
    actual cross-model review; the PR bots are a supplementary third instance, and
    requiring a recorded exception whenever a supplementary reviewer stayed quiet would
    reimpose as ceremony exactly the blocking that routing the bot opportunistically
    removed.
 
-**The clause is dormant.** **Wait for** is empty, so nothing currently triggers it. It is
-kept, not retired: promote a bot back and it reactivates unchanged, for that bot. The
-#12–#18 history above and the #14 precedent are the record of the period when it was
-live — they document a real requirement under the routing of their time, not a
-requirement suspended in the abstract.
+**The human-exception clause is retired.** It required a recorded human decision to merge
+past a `0` from a **Wait for** bot, and lay dormant while **Wait for** was empty. Promoting
+a bot back does not revive it: **Wait for** changes only what Step 2 waits on. The #12–#18
+history above and the #14 precedent are the record of the period when it was live — they
+document a real requirement under the routing of their time.
 
-**Optional, not a step: the re-trigger.** Before invoking the human-exception clause —
-so, for a **Wait for** bot only — a re-trigger may be attempted. It is not part of the
+**Optional, not a step: the re-trigger.** Before reporting a `0`, a re-trigger may be
+attempted. It is not part of the
 verification above, which is why the procedure no longer contains it: `@coderabbitai
 review` is a **no-op while automatic reviews are active** (the bot's own message on #17),
 so it cannot be expected to move the count, and on #14 and #17 it moved nothing. Nothing

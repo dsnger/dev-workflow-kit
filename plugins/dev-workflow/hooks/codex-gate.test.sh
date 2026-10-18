@@ -153,11 +153,11 @@ SH
   printf '%s' "$_sd"
 }
 
-reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$pendb" "$old_count" "$old_fresh"; }
+reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$countA.spec" "$pendb" "$old_count" "$old_fresh"; }
 # Full reset INCLUDING the opt-out marker and the three diagnostic markers. A section
 # that wants the gate off must set the marker after calling this.
 reset_all() {
-  rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$floorf" "$toolsf" "$notedf" \
+  rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$countA.spec" "$floorf" "$toolsf" "$notedf" \
         "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.* \
         "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.* \
         "$capf" "$capxf"
@@ -397,69 +397,82 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
-# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand,
-#     or HEAD moved during the call (audit findings 4 and 5). With jq, PreToolUse records HEAD
-#     under the call's tool_use_id; the test moves HEAD itself where a command would have.
-#     $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string bytes.
+# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand at
+#     a command position, or HEAD moved during the call (audit findings 4 and 5). PreToolUse
+#     records HEAD under the call's tool_use_id, read by jq or, without jq, by the hook's awk
+#     reader; the test moves HEAD itself where a command would have. Every row runs with and
+#     without jq. $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string
+#     bytes, $4 = extra top-level members.
 head_case() {
   printf '1\n' > "$count"
-  run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
+  "$hc" "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
   [ "$2" = move ] && git commit -q --allow-empty -m "8c move" >/dev/null 2>&1
-  run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}${4:-}}" >/dev/null
+  "$hc" "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}${4:-}}" >/dev/null
   if [ -f "$count" ]; then _got=kept; else _got=reset; fi
-  [ "$_got" = "$1" ] && pass "8c: $1 ($2): $3" || fail "8c: $1 ($2): $3 (got $_got)"
-  [ ! -f .context/codex-gate.headPre.toolu__h1 ] && pass "8c: HEAD record removed ($3)" || fail "8c: HEAD record removed ($3)"
+  [ "$_got" = "$1" ] && pass "8c $hc: $1 ($2): $3" || fail "8c $hc: $1 ($2): $3 (got $_got)"
+  [ ! -f .context/codex-gate.headPre.toolu__h1 ] && pass "8c $hc: HEAD record removed ($3)" || fail "8c $hc: HEAD record removed ($3)"
 }
-if command -v jq >/dev/null 2>&1; then
+for hc in run nojq_run; do
   reset_all
   head_case kept stay 'git log --oneline | grep -i commit'
   head_case kept stay 'git log --grep=\"git commit\"'
   head_case kept stay 'git -C commit status'
   head_case kept stay 'echo git; echo commit'
   head_case kept stay 'git status\necho commit'
+  # plain text naming git commit, also past an escaped quote (todos: 0.31.0 kit031gb1018)
+  head_case kept stay 'echo git commit'
+  head_case kept stay 'printf %s git commit'
+  head_case kept stay 'git log --grep=\"a \\\" git commit \\\" b\"'
+  # an operand-taking long option written with a space: its operand is not the subcommand
+  head_case kept stay 'git --work-tree commit status'
+  head_case kept stay 'git --git-dir commit log'
+  head_case kept stay 'git --namespace commit log'
+  head_case kept stay 'git --config-env commit status'
   # the subcommand spelling resets whether or not HEAD moved: a failed commit still resets
   head_case reset stay 'git commit -m x'
   head_case reset stay 'git -C x commit -m y'
+  head_case reset stay 'git --work-tree x commit -m y'
+  head_case reset stay 'git --git-dir=.git commit -m y'
   head_case reset stay 'cd \"a b\" && git commit -m y'
   head_case reset stay 'git -c user.name=\"A B\" commit'
   head_case reset stay 'git --no-pager commit -m y'
+  head_case reset stay 'FOO=1 git commit -m y'
+  head_case reset stay 'nohup git commit -m y &'
+  head_case reset stay 'if true; then git commit -m y; fi'
+  head_case reset stay '/usr/bin/git commit -m y'
   # shellcheck disable=SC2016  # a literal command substitution, the input under test
   head_case reset stay 'x=$(git commit -m y)'
   head_case reset stay 'git \\\ncommit -m y'
   # a spelling the subcommand test misses resets when HEAD moved
   head_case reset move 'sh -c \"git commit -m y\"'
+  head_case reset move 'echo git commit'
   # a commit undone in the same call leaves HEAD where it was but grows the reflog
   printf '1\n' > "$count"
-  run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  "$hc" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
   git commit -q --allow-empty -m "8c undone" >/dev/null 2>&1 && git reset -q --soft HEAD^ >/dev/null 2>&1
-  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
-  [ ! -f "$count" ] && pass "8c: commit undone in the same call -> reset" || fail "8c: commit undone in the same call -> reset"
+  "$hc" '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c $hc: commit undone in the same call -> reset" || fail "8c $hc: commit undone in the same call -> reset"
   head_case kept stay 'sh -c \"git commit -m y\"'
   # a call sent to the background reports before its commit has run: reset regardless
   head_case reset stay 'sh -c \"git commit -m y\"' ',"tool_response":{"backgroundTaskId":"b1"}'
   # no PreToolUse record for this call: in doubt, reset
   printf '1\n' > "$count"
-  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h2","tool_input":{"command":"git log | grep commit"}}' >/dev/null
-  [ ! -f "$count" ] && pass "8c: no HEAD record -> reset" || fail "8c: no HEAD record -> reset"
-  reset_all
-fi
-# Without jq there is no per-call record, so the loose match decides, as before 0.31.0; it
-# still folds newlines and reads past an escaped quote (finding 5).
-nojq_post() { # $1 = expected (reset|kept), $2 = the command as JSON string bytes
-  printf '1\n' > "$count"
-  nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
-  if [ -f "$count" ]; then _got=kept; else _got=reset; fi
-  [ "$_got" = "$1" ] && pass "8c jq-free: $1 after: $2" || fail "8c jq-free: $1 after: $2 (got $_got)"
-}
-nojq_post reset 'git log --oneline | grep -i commit'
-nojq_post reset 'git log --grep=\"git commit\"'
-nojq_post reset 'sh -c \"git commit -m y\"'
-nojq_post reset 'git -C commit status'
-nojq_post reset 'git -c user.name=\"A B\" commit -m y'
-nojq_post reset 'git -C \"/path/my project\" commit -m y'
-nojq_post reset 'git \\\ncommit -m y'
-nojq_post reset 'cd \"a b\" && git commit -m y'
-nojq_post reset 'git -C x commit -m y'
+  "$hc" '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h2","tool_input":{"command":"git log | grep commit"}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c $hc: no HEAD record -> reset" || fail "8c $hc: no HEAD record -> reset"
+  # a call id only jq decodes (repeated, escaped key): the awk reader refuses it, so without
+  # jq there is no record and, in doubt, a reset; jq reads it, so the cycle is kept. A nested
+  # id alone is no id either way.
+  _x=kept; { [ "$hc" = nojq_run ] || ! command -v jq >/dev/null 2>&1; } && _x=reset
+  for ids in '"tool_use_id":"toolu_h1","tool_use_id":"toolu_h1",' '"tool_\u0075se_id":"toolu_h1",' ''; do
+    [ -n "$ids" ] || _x=reset
+    printf '1\n' > "$count"
+    "$hc" "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",$ids\"tool_input\":{\"command\":\"git log | grep commit\"}}" >/dev/null
+    "$hc" "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",$ids\"tool_input\":{\"command\":\"git log | grep commit\"},\"tool_response\":{\"tool_use_id\":\"toolu_h1\"}}" >/dev/null
+    if [ -f "$count" ]; then _got=kept; else _got=reset; fi
+    [ "$_got" = "$_x" ] && pass "8c $hc: call id [$ids] -> $_x" || fail "8c $hc: call id [$ids] -> $_x (got $_got)"
+  done
+  rm -f .context/codex-gate.headPre.*
+done
 reset_all
 for r in run nojq_run; do
   out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git \\\ncommit -m y"}}')
@@ -649,6 +662,35 @@ rm -f "$countA" "$countA.closed"; execp; execp; execp; execp; execp; commitpost
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
 printf '%s' "$out" | grep -q 'floor met' && ! printf '%s' "$out" | grep -q 'pass cap reached' && pass "closed at the cap -> floor met, no cap stop" || fail "closed at the cap -> floor met, no cap stop"
 rm -f "$countA.closed"
+# 16e. writing-plans sets the earlier Gate-A count aside: a plan with no exec call since then
+#      gets the conditional reminder (needed only at risk high), not "below floor"; a plan
+#      Gate A, closed or open, is checked against the floor as before
+planexec() { run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'; }
+writeplans() { run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:writing-plans"}}' >/dev/null; }
+rm -f "$countA" "$countA.closed" "$countA.spec"; execp; execp; execp; commitpost; writeplans
+[ ! -f "$countA" ] && [ ! -f "$countA.closed" ] && [ "$(cat "$countA.spec" 2>/dev/null)" = 3 ] && pass "writing-plans sets the closed spec count aside" || fail "writing-plans sets the closed spec count aside"
+out=$(planexec)
+printf '%s' "$out" | grep -q 'none on this plan' && printf '%s' "$out" | grep -q 'before it 3/3' && ! printf '%s' "$out" | grep -q 'below floor' \
+  && pass "standard plan after a closed spec Gate A -> conditional reminder, not below floor" || fail "standard plan after a closed spec Gate A -> conditional reminder, not below floor"
+printf '%s' "$out" | grep -q 'risk is high' && pass "conditional reminder names the high-risk case" || fail "conditional reminder names the high-risk case"
+execp; out=$(planexec)
+printf '%s' "$out" | grep -q 'below floor (1/3)' && pass "plan Gate A 1/3 after writing-plans -> below floor" || fail "plan Gate A 1/3 after writing-plans -> below floor"
+execp; execp; commitpost; out=$(planexec)
+printf '%s' "$out" | grep -q 'floor met (3/3' && pass "closed plan Gate A 3/3 -> floor met" || fail "closed plan Gate A 3/3 -> floor met"
+run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
+[ ! -f "$countA.spec" ] && pass "plan execution clears the set-aside count" || fail "plan execution clears the set-aside count"
+rm -f "$countA" "$countA.closed" "$countA.spec"; execp; writeplans
+[ "$(cat "$countA.spec" 2>/dev/null)" = 1 ] && pass "writing-plans sets an open count aside" || fail "writing-plans sets an open count aside"
+out=$(planexec)
+printf '%s' "$out" | grep -q 'before it 1/3' && pass "open spec count 1/3 is named in the reminder" || fail "open spec count 1/3 is named in the reminder"
+rm -f "$countA" "$countA.closed" "$countA.spec"; writeplans; out=$(planexec)
+[ ! -f "$countA.spec" ] && printf '%s' "$out" | grep -q 'below floor (0/3)' && pass "no Gate A at all -> below floor 0/3" || fail "no Gate A at all -> below floor 0/3"
+execp; execp; execp; commitpost; writeplans
+out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}')
+printf '%s' "$out" | grep -q 'none on this plan' && printf '%s' "$out" | grep -q 'before it 3/3' && pass "jq-free: conditional plan reminder" || fail "jq-free: conditional plan reminder"
+rm -f "$countA" "$countA.closed" "$countA.spec"
+execp; writeplans; run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:brainstorming"}}' >/dev/null
+[ ! -f "$countA.spec" ] && pass "brainstorming clears the set-aside count" || fail "brainstorming clears the set-aside count"
 # 16d. A count file that is not a number reads as 0: never a false floor-met, never a
 #      shell arithmetic error (exit non-zero) when bumped
 : > "$countA"
@@ -915,13 +957,13 @@ done
 # (m6) an editor could replace the message, so -e gets the reminder (not run: no editor here)
 pre=$(wip "git commit -q -e -m 'WIP: next'")
 ! noted && pass "reminder before: -e with a WIP message" || fail "reminder before: -e with a WIP message"
-# (m7) without jq the call id cannot be read safely, so no record is kept and the WIP commit
-# resets (the safe direction)
+# (m7) without jq the call id is read by the hook's awk reader, so the WIP commit keeps the
+# cycle as it does with jq
 reset_all; rev; rev
 nojq_run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
 git commit -q --allow-empty -m 'WIP: next' >/dev/null 2>&1
 nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -m 'WIP: next'\"}}" >/dev/null
-[ ! -f "$count" ] && pass "jq-free: -m wip resets (no call id without jq)" || fail "jq-free: -m wip resets (no call id without jq)"
+[ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "jq-free: -m wip keeps the cycle (call id read without jq)" || fail "jq-free: -m wip keeps the cycle (call id read without jq)"
 # (m8) a post-commit hook that makes a real commit and then a WIP one: HEAD is WIP, but it
 # no longer sits on the commit that was HEAD when the command started, so reset
 printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m real >/dev/null 2>&1\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
@@ -1018,7 +1060,7 @@ for bad in '"toolu_b\n"' '123'; do
   [ ! -f "$count" ] && [ -f .context/codex-gate.wipBase.toolu__b ] && pass "malformed id $bad: reset, B's record untouched" || fail "malformed id $bad: reset, B's record untouched"
 done
 # (m20) without jq, a nested tool_use_id with no top-level one must not be taken for this
-# call's id (the fallback reader cannot tell the levels apart): reset, B untouched
+# call's id (the awk reader reads the top level only): reset, B untouched
 reset_all; rev; rev
 wip "git commit -q -m 'WIP: b'" toolu_b >/dev/null
 git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
