@@ -1594,8 +1594,9 @@ Always runs. Why: a secret file an agent reads lands in its transcript and conte
    keep `Read(!**/.env.example)` after `Read(**/.env*)`: a `!` entry exempts a path only from the
    deny entries listed before it. Keep every other key and entry as it is. A missing
    `permissions` or `deny` counts as an empty list (2.16 may have written the file without
-   them). A `permissions` that is not an object, or a `deny` that is not an array: touch
-   nothing; report `skipped (permissions.deny is not a list)`.
+   them). A `permissions` that is not an object: touch nothing; report `skipped (permissions is
+   not an object — make it one, then re-run)`. A `deny` that is not an array: likewise,
+   `skipped (permissions.deny is not an array — make it one, then re-run)`.
    Why ask, unlike Rule 3's silent merge: a project may need one of these files read on purpose,
    and a re-run must not silently re-add an entry the user removed.
 3. **Not valid JSON.** Touch nothing; report `skipped (not valid JSON)`.
