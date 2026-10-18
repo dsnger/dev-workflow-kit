@@ -30,9 +30,23 @@ input_field() { # string field inside tool_input: $1 = key
   else
     # Fallback: strip everything up to "tool_input":{ so a same-named top-level
     # key can't shadow it, then read the key. Stays correct when the value
-    # contains a literal } — the [^"]* run stops at the closing quote, not a brace.
+    # contains a literal } or an escaped quote — the run stops at the first unescaped
+    # quote — and decodes \n, \t, \r, \" and \\ as jq does; any other escaped character
+    # stands for itself, and a \u escape becomes `?`.
     printf '%s' "$payload" | sed 's/.*"tool_input"[[:space:]]*:[[:space:]]*{//' \
-      | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n1 | sed 's/^.*:[[:space:]]*"\(.*\)"$/\1/'
+      | grep -oE "\"$1\"[[:space:]]*:[[:space:]]*\"([^\"\\\\]|\\\\.)*\"" | head -n1 \
+      | sed 's/^[^:]*:[[:space:]]*"//; s/"$//' \
+      | awk 'BEGIN { RS = "\001" } {
+          s = $0; o = ""
+          while ((i = index(s, "\\")) > 0) {
+            o = o substr(s, 1, i - 1); c = substr(s, i + 1, 1)
+            if (c == "n") o = o "\n"; else if (c == "t") o = o "\t"; else if (c == "r") o = o "\r"
+            else if (c == "u") { o = o "?"; s = substr(s, i + 6); continue }
+            else o = o c
+            s = substr(s, i + 2)
+          }
+          printf "%s", o s
+        }'
   fi
 }
 
@@ -66,6 +80,7 @@ bgadv_file="$state_dir/codex-gate.bgAdvice"
 unver_file="$state_dir/codex-gate.unverified"
 pend_file="$state_dir/codex-gate.unverifiedPending"
 wipbase_prefix="$state_dir/codex-gate.wipBase."   # + tool_use_id: one `-m wip` record per tool call
+headpre_prefix="$state_dir/codex-gate.headPre."   # + tool_use_id: HEAD before this commit-matching call
 
 # FINDING G: the plugin is installed globally, but the workflow is adopted per project.
 # A repo that never ran /workflow-init has no gate to enforce, so the hook does NOTHING
@@ -1068,8 +1083,28 @@ flush_notes() {
 
 # Loose by design (a missed commit = false ✓ = the dangerous direction). The
 # leading (^|[^[:alnum:]]) anchors `git` as a word so "digit commit" doesn't
-# false-fire, while still catching `&& git`, `;git`, `/path/git`, etc.
-is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
+# false-fire, while still catching `&& git`, `;git`, `/path/git`, etc. Newlines are
+# folded first, so a commit split over lines (`git \` newline `commit`) still matches.
+is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
+
+# The reset after the command needs more than that match (0.30.0 audit, finding 4), with jq:
+# `commit` as git's subcommand, after only global options, where `-C` and `-c` take their
+# operand, or HEAD moved during the call (head_moved). Quoted text without an escaped quote
+# inside is one opaque word, so `git log --grep="git commit"` and `git log | grep -i commit`
+# keep the cycle's passes, and a commit hidden in quotes (`sh -c "git commit"`) is left to
+# head_moved. It does not check command position: plain text such as `echo git commit` still
+# resets, the safe direction. A line continuation is folded into a space; any other newline
+# separates commands. Neither matcher sees an alias (`git ci`). Without jq there is no
+# head_moved to back the spelling test up, and three repairs in a row each left a real commit
+# it missed, so there the loose match decides, as before 0.31.0: every read-only command
+# naming `git` and `commit` resets.
+runs_git_commit() {
+  command -v jq >/dev/null 2>&1 || { is_commit "$1"; return; }
+  _t="[^[:space:];&|()]+"
+  printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
+    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g" |
+    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
+}
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
 # to make one so `mcp__codex__review` has a non-empty range to read (baseSha=HEAD is
@@ -1088,9 +1123,8 @@ is_commit() { printf '%s' "$1" | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commi
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
-# metacharacter or backslash anywhere (the jq-free reader truncates a double-quoted message at
-# its escaped quote and leaves one; without jq the result is never attributed anyway, see the
-# record below). Before the
+# metacharacter or backslash anywhere (without jq the result is never attributed anyway, see
+# the record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
 # `wip` AND HEAD is attributable to this command. PreToolUse records HEAD, its parent, the
@@ -1168,7 +1202,8 @@ is_wip_amend_cmd() {
   ! msg_may_be_rewritten && head_is_wip
 }
 head_reflog_len() { git -C "$repo_root" reflog show --format=%H HEAD 2>/dev/null | grep -c ''; }
-wip_record_path() { # this call's record path; fails when the id is unusable
+wip_record_path() { call_record_path "$wipbase_prefix"; }
+call_record_path() { # $1 = prefix; this call's record path; fails when the id is unusable
   # jq only: the fallback reader cannot tell a top-level key from a nested one, and a
   # shell capture would strip a trailing newline before any check could see it, so the
   # type, characters and length are checked inside jq on the decoded value
@@ -1177,7 +1212,36 @@ wip_record_path() { # this call's record path; fails when the id is unusable
   # `_` becomes `__` and an upper-case letter `X` becomes `_x`, which decodes uniquely
   _id=$(printf '%s' "$payload" | jq -r '.tool_use_id | if type == "string" and test("\\A[A-Za-z0-9_-]{1,100}\\z") then (gsub("_"; "__") | gsub("(?<c>[A-Z])"; "_" + (.c | ascii_downcase))) else empty end' 2>/dev/null) || return 1
   case $_id in '' | *[!a-z0-9_-]*) return 1 ;; esac
-  printf '%s%s' "$wipbase_prefix" "$_id"
+  printf '%s%s' "$1" "$_id"
+}
+
+# Whether the Bash call that matched is_commit moved HEAD: the backstop for a commit that
+# runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
+# PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
+# `-m wip` record, with the HEAD reflog's length; PostToolUse compares both and removes it. Without jq no record can be kept, so
+# it answers "not moved" and runs_git_commit's loose fallback decides. With jq, in doubt it answers
+# "moved", so the caller resets, the safe direction: no usable id, no record, an unreadable
+# one, or a call sent to the background, whose PostToolUse arrives before it has finished.
+record_head() { # PreToolUse; best effort. "<HEAD or -> <HEAD reflog length>"
+  _f=$(call_record_path "$headpre_prefix") || return 0
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
+  mkdir -p "$state_dir" 2>/dev/null
+  { printf '%s %s\n' "$_h" "$(head_reflog_len)" > "$_f"; } 2>/dev/null || true
+}
+head_moved() { # PostToolUse
+  command -v jq >/dev/null 2>&1 || return 1
+  _f=$(call_record_path "$headpre_prefix") || return 0
+  [ -f "$_f" ] || return 0
+  _was='' _wasn=''; read -r _was _wasn 2>/dev/null < "$_f"
+  rm -f "$_f" 2>/dev/null
+  [ -n "$_was" ] || return 0
+  bash_backgrounded && return 0
+  _h=$(git -C "$repo_root" rev-parse -q --verify HEAD 2>/dev/null) || _h=-
+  [ "$_h" != "$_was" ] && return 0
+  # an unchanged HEAD after a commit undone in the same call (`git commit && git reset
+  # --soft HEAD^`) still grew the reflog; without a reflog to compare, in doubt it moved
+  case $_wasn in '' | 0 | *[!0-9]*) return 0 ;; esac
+  [ "$(head_reflog_len)" != "$_wasn" ]
 }
 record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|new>"; best effort
   wipbase_file=$(wip_record_path) || return 0
@@ -1231,7 +1295,7 @@ has_all_flag() { printf '%s' "$1" | grep -Eq '(^|[[:space:]])(-[a-z]*a[a-z]*|--a
 # not show. Docs-only is therefore offered only to a command that is exactly `git commit`
 # plus the options below, each quoted text counted as one word; any other word (a path,
 # an attached value like `-mx`, `--pathspec-from-file`, `&&`, a prefix) fires. So does any
-# `\`, `$` or backtick (escapes, substitutions, and the jq-free reader's cut at `\"`), any
+# `\`, `$` or backtick (escapes and substitutions), any
 # quote left after one left-to-right pass, which is how the shell pairs them, and any
 # unquoted operator or glob character, since `-am docs>app.ts` or `-m *` hides a path.
 names_no_paths() {
@@ -1430,7 +1494,10 @@ case "$event" in
         # wrongly judged the commit failed — would carry passes across a real cycle
         # boundary and produce a false ✓, which is the failure this hook exists to
         # prevent. Revisit if an exit-status field is ever documented.
-        if is_commit "$cmd" && ! is_wip_commit_post "$cmd"; then
+        #
+        # A reset needs either spelling (runs_git_commit) or effect (head_moved); see both.
+        _moved=1; is_commit "$cmd" && head_moved && _moved=0
+        if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd"; } && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" \
                 "$legacy_count" "$legacy_fresh" "$capextra_file"
           # The closing act's commit precedes plan execution, which still reads the closed
@@ -1459,6 +1526,7 @@ case "$event" in
       Bash)
         cmd=$(input_field command)
         if is_commit "$cmd"; then
+          record_head
           record_wip_base "$cmd"
           if is_wip_commit_pre "$cmd"; then
             note "WIP commit — cycle-internal, per $policy: this exists so mcp__codex__review has a non-empty range to read (baseSha = this commit's parent). Gate B's fingerprint and floor are not evaluated here. Whether your pass counters are kept is decided after the commit, under the conditions $policy states for a WIP commit; where those do not hold they are cleared. Use this commit as the review range; whether this cycle runs a review now, and when its closing act may be performed, are both $policy's closure ordering's, read there in full." "ℹ WIP commit (Codex cycle decided after the commit)"

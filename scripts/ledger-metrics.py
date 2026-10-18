@@ -367,7 +367,7 @@ def read_commits(raw):
         if not rec.strip("\n"):
             continue
         head, _, body = rec.lstrip("\n").partition("\n")
-        m = re.fullmatch(r"([0-9a-f]{40}) ([0-9]+)", head)
+        m = re.fullmatch(r"([0-9a-f]{40}|[0-9a-f]{64}) ([0-9]+)", head)  # SHA-1 or SHA-256 repository
         if not m:
             die("git log produced an unexpected record header")
         commits.append((m.group(1), int(m.group(2)), body.split("\n")))

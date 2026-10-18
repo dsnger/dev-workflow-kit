@@ -22,6 +22,28 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.31.0
+
+Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
+
+- **Hook: with jq, fewer read-only commands end the Gate-B cycle.** The reset after a Bash call
+  needs `commit` as git's subcommand, after only global options (`-C` and `-c` take their
+  operand), with quoted text read as one word, so `git log | grep -i commit` and
+  `git log --grep="git commit"` keep the pass count and fingerprint. As a backstop, PreToolUse
+  records HEAD and the length of its reflog (per `tool_use_id`) for each call the loose match
+  sees, and such a call that moved HEAD, or grew its reflog, resets whatever its spelling
+  (`sh -c "git commit"`, a commit undone again in the same call). It does not check command position:
+  plain text such as `echo git commit` still resets, as does a quoted pattern holding an escaped
+  quote, and a failed commit still resets, as before. Without jq nothing changes: there is no HEAD
+  record to back a narrower test, so every loose match resets. The reminder before a call stays
+  loose (invariant 2).
+- **Hook: two missed commit spellings.** A commit split over lines (`git \` newline `commit`) now
+  matches, and without jq the command reader no longer stops at the first escaped quote: it reads to
+  the closing quote and decodes `\n`, `\t`, `\r`, `\"` and `\\` (a `\u` escape becomes `?`).
+- **Carry-forward, both gates** (`.claude/review-gates.md` and template `### 2.1a`, identical): an
+  `accepted, not repaired` finding is exempt like a `declined` one, and the list Codex gets carries
+  each finding's verdict and reason, so it can judge "new evidence".
+
 ## 0.30.1
 
 Hook fixes from the 0.30.0 Ponytail audit (findings 1-3; the rest are rows in `todos.md`).

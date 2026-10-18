@@ -472,6 +472,14 @@ out=$(report shallow "$SCRIPT"); st=$?
 [ "$st" -eq 0 ] && printf '%s\n' "$out" | grep -qx 'history: truncated (shallow clone): absence not established' &&
   pass "shallow clone: header says history is truncated" || fail "shallow clone header"
 
+# ---- 7. SHA-256 repository (0.30.0 audit, finding 10) -------------------------------------
+rm -rf "${work:?}/H"; mkdir -p "$work/H/docs" && (cd "$work/H" && gitc init -q --template= --object-format=sha256 .)
+printf '%s\n' "$LEDGER_HEAD" '| 2026-01-01 | alpha-one | f1 | gate-a | major | 1 prose | r |' > "$work/H/docs/hardening-log.md"
+(cd "$work/H" && commit 'ledger\n' && commit 'cycle h1; Gate B (passes 1, gpt-x): Findings 0. Blockers 0. Majors 0.\n')
+out=$(report H "$SCRIPT"); st=$?
+[ "$st" -eq 0 ] && printf '%s\n' "$out" | grep -q '^1  alpha-one  lines 7  rungs 1 prose$' &&
+  pass "sha256 repository: report runs and counts the ledger" || fail "sha256 repository (exit $st): $out"
+
 set -- "$work"/WROTE.*
 if [ -e "$1" ]; then fail "no-write: a run changed its fixture ($*)"
 else pass "no-write: no run changed its fixture"; fi

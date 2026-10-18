@@ -995,6 +995,70 @@ if wanted("c19"):
           got["LW"][0].get("ledgskp2") == {"skip": ["cycle ledgskp2; Gate B: skipped (see skip reason) | Skip reason: trivial."]}
           and got["LW"][1].get("ledgskp2", ("",))[0] == "skipped", got["LW"])
 
+# a failed atomic write leaves no temp file, and a failed banner write does not end --watch (0.30.0 audit, 11)
+if wanted("a1"):
+    AW = mkrepo("AW")
+    d = os.path.join(AW, ".context", "status")
+    os.makedirs(d, exist_ok=True)
+    dfd = os.open(d, os.O_RDONLY)
+    try:
+        SV.write_atomic(dfd, "index.html", "not bytes")
+        raised = False
+    except TypeError:
+        raised = True
+    os.close(dfd)
+    check("a1:failed write raises and leaves no temp file", raised and not [f for f in os.listdir(d) if f.startswith(".tmp.")], os.listdir(d))
+    real_write = SV.write_atomic
+    hooks_a = {"iterations": 2, "sleep": lambda s: None}
+
+    def boom_a():
+        raise RuntimeError("forced whole failure")
+
+    writes = []
+
+    def no_write(dfd, name, data):
+        writes.append(name)
+        raise OSError(errno.ENOSPC, "injected")
+    hooks_a["between"] = boom_a
+    SV.write_atomic = no_write
+    try:
+        rc = run(AW, "--watch", "5", hooks=hooks_a)
+        died = None
+    except Exception as e:
+        rc, died = None, e
+    SV.write_atomic = real_write
+    check("a1:failed banner write does not end the watch loop", died is None and rc == 0 and writes == ["index.html", "index.html"], (rc, died, writes))
+
+# the undocumented `ls-files --debug` format: a parse that misses entries is refused, a conflict is not (12)
+if wanted("x1"):
+    X = mkrepo("X")
+    head = git(X, "rev-parse", "HEAD", date=False)
+    real_re = SV.RE_INDEX
+    SV.RE_INDEX = re.compile(rb"(?!)")
+    try:
+        SV.worktree_state({"root": X, "head": head, "object_format": "sha1"})
+        refused = False
+    except RuntimeError as e:
+        refused = "not understood" in str(e)
+    SV.RE_INDEX = real_re
+    check("x1:index entries the parser misses are refused", refused)
+    git(X, "checkout", "-q", "-b", "other")
+    put(X, "README.md", "other\n")
+    commit(X, "other")
+    git(X, "checkout", "-q", "feature")
+    put(X, "README.md", "feature\n")
+    commit(X, "feature")
+    subprocess.run(("git", "-c", "user.name=t", "-c", "user.email=t@t", "merge", "-q", "other"), cwd=X,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    head = git(X, "rev-parse", "HEAD", date=False)
+    stages = subprocess.run(("git", "ls-files", "-u"), cwd=X, stdout=subprocess.PIPE).stdout.count(b"\n")
+    try:
+        SV.worktree_state({"root": X, "head": head, "object_format": "sha1"})
+        ok = stages == 3 or "fixture has %d conflict stages, not 3" % stages
+    except RuntimeError as e:
+        ok = e
+    check("x1:a conflicted index (three stages of one path) is not refused", ok is True, ok)
+
 for name, ok, why in results:
     print(("PASS " if ok else "FAIL ") + name + ("" if ok else "  -- " + str(why)[:600].replace("\n", " ")))
 PY

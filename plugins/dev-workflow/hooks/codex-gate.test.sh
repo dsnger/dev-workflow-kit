@@ -397,6 +397,78 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
+# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand,
+#     or HEAD moved during the call (audit findings 4 and 5). With jq, PreToolUse records HEAD
+#     under the call's tool_use_id; the test moves HEAD itself where a command would have.
+#     $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string bytes.
+head_case() {
+  printf '1\n' > "$count"
+  run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}}" >/dev/null
+  [ "$2" = move ] && git commit -q --allow-empty -m "8c move" >/dev/null 2>&1
+  run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$3\"}${4:-}}" >/dev/null
+  if [ -f "$count" ]; then _got=kept; else _got=reset; fi
+  [ "$_got" = "$1" ] && pass "8c: $1 ($2): $3" || fail "8c: $1 ($2): $3 (got $_got)"
+  [ ! -f .context/codex-gate.headPre.toolu__h1 ] && pass "8c: HEAD record removed ($3)" || fail "8c: HEAD record removed ($3)"
+}
+if command -v jq >/dev/null 2>&1; then
+  reset_all
+  head_case kept stay 'git log --oneline | grep -i commit'
+  head_case kept stay 'git log --grep=\"git commit\"'
+  head_case kept stay 'git -C commit status'
+  head_case kept stay 'echo git; echo commit'
+  head_case kept stay 'git status\necho commit'
+  # the subcommand spelling resets whether or not HEAD moved: a failed commit still resets
+  head_case reset stay 'git commit -m x'
+  head_case reset stay 'git -C x commit -m y'
+  head_case reset stay 'cd \"a b\" && git commit -m y'
+  head_case reset stay 'git -c user.name=\"A B\" commit'
+  head_case reset stay 'git --no-pager commit -m y'
+  # shellcheck disable=SC2016  # a literal command substitution, the input under test
+  head_case reset stay 'x=$(git commit -m y)'
+  head_case reset stay 'git \\\ncommit -m y'
+  # a spelling the subcommand test misses resets when HEAD moved
+  head_case reset move 'sh -c \"git commit -m y\"'
+  # a commit undone in the same call leaves HEAD where it was but grows the reflog
+  printf '1\n' > "$count"
+  run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  git commit -q --allow-empty -m "8c undone" >/dev/null 2>&1 && git reset -q --soft HEAD^ >/dev/null 2>&1
+  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"sh -c \"git commit -m y && git reset --soft HEAD^\""}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c: commit undone in the same call -> reset" || fail "8c: commit undone in the same call -> reset"
+  head_case kept stay 'sh -c \"git commit -m y\"'
+  # a call sent to the background reports before its commit has run: reset regardless
+  head_case reset stay 'sh -c \"git commit -m y\"' ',"tool_response":{"backgroundTaskId":"b1"}'
+  # no PreToolUse record for this call: in doubt, reset
+  printf '1\n' > "$count"
+  run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h2","tool_input":{"command":"git log | grep commit"}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c: no HEAD record -> reset" || fail "8c: no HEAD record -> reset"
+  reset_all
+fi
+# Without jq there is no per-call record, so the loose match decides, as before 0.31.0; it
+# still folds newlines and reads past an escaped quote (finding 5).
+nojq_post() { # $1 = expected (reset|kept), $2 = the command as JSON string bytes
+  printf '1\n' > "$count"
+  nojq_run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_h1\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
+  if [ -f "$count" ]; then _got=kept; else _got=reset; fi
+  [ "$_got" = "$1" ] && pass "8c jq-free: $1 after: $2" || fail "8c jq-free: $1 after: $2 (got $_got)"
+}
+nojq_post reset 'git log --oneline | grep -i commit'
+nojq_post reset 'git log --grep=\"git commit\"'
+nojq_post reset 'sh -c \"git commit -m y\"'
+nojq_post reset 'git -C commit status'
+nojq_post reset 'git -c user.name=\"A B\" commit -m y'
+nojq_post reset 'git -C \"/path/my project\" commit -m y'
+nojq_post reset 'git \\\ncommit -m y'
+nojq_post reset 'cd \"a b\" && git commit -m y'
+nojq_post reset 'git -C x commit -m y'
+reset_all
+for r in run nojq_run; do
+  out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git \\\ncommit -m y"}}')
+  printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: commit split over lines -> reminder" || fail "8c $r: commit split over lines -> reminder"
+  out=$("$r" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"cd \"a b\" && git commit -m y"}}')
+  printf '%s' "$out" | grep -q 'Gate B' && pass "8c $r: escaped quote before the commit -> reminder" || fail "8c $r: escaped quote before the commit -> reminder"
+done
+reset_all
+
 # 9. jq-absent fallback, on the SHARED $nojq built at the top of this file under
 #    $sandbox. This section used to REASSIGN $nojq to "$work/nojq" — untracked content
 #    inside the test repo, so creating it moved the hook's own worktree tree id
@@ -485,7 +557,7 @@ for c in 'git add extra.ts && git commit -m x' 'git commit -m x docs/plan.md ext
   out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$c\"}}")
   printf '%s' "$out" | grep -q 'docs-only commit' && fail "'$c' is not docs-only" || pass "'$c' is not docs-only"
 done
-# jq-free, the reader stops at the first escaped quote, so the paths after it are unseen
+# jq-free, the decoded command keeps the path after the quoted message, so it is not docs-only
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m \"fix\" extra.ts"}}')
 printf '%s' "$out" | grep -q 'docs-only commit' && fail "jq-free: quoted message plus path is not docs-only" || pass "jq-free: quoted message plus path is not docs-only"
 out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m 'plain docs'\"}}")
@@ -702,8 +774,8 @@ printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle decid
 amendpost "git commit --amend --no-edit"
 [ ! -f "$count" ] && pass "custom commentChar: resets" || fail "custom commentChar: resets"
 git config --unset core.commentChar
-# Without jq the reader stops at an escaped quote, so `"-m"` would vanish; the leftover
-# backslash must still decline the exemption. (JSON: \" inside the command string.)
+# Without jq the decoded command keeps the quoted `"-m"`, and the quote must still decline
+# the exemption. (JSON: \" inside the command string.)
 reset_all; rev
 out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit \"-m\" \"real\""}}')
 printf '%s' "$out" | grep -q 'Codex cycle decided after' && fail "jq-free: double-quoted -m gets no WIP note" || pass "jq-free: double-quoted -m gets no WIP note"

@@ -264,9 +264,10 @@ Claude filters to Blockers and Majors for repair and reads the rest. Findings la
 `BLOCKER | MAJOR | MINOR | NIT`. Minors and Nits are collected, never iterated. The floor
 is three valid passes per cycle, a pass with zero findings may close early, and the cap
 is the floor plus two, where the agent stops and asks you. From pass 2 on, each pass of
-either gate lists the earlier passes' Blockers and Majors and Codex marks each `fixed | not
-fixed | no longer applies`, a `not fixed` counting as a finding again unless you declined it
-and Codex brings no new evidence. One cause at several places is reported once, as a class
+either gate lists the earlier passes' Blockers and Majors, each with its verdict and reason,
+and Codex marks each `fixed | not fixed | no longer applies`, a `not fixed` counting as a
+finding again unless you declined it or accepted it unrepaired and Codex brings no new
+evidence. One cause at several places is reported once, as a class
 listing every place. In Gate B the `spec` call
 maps each acceptance criterion to the test asserting it, or `none`, and reports a test
 that cannot fail. Codex is advisory: you arbitrate disputed findings, and a dismissed

@@ -337,16 +337,8 @@ driven by recurrence rather than by enthusiasm.
       counter is still not evidence: classification cannot see whether the findings file
       was written, so an incomplete pass is discounted whatever the counter says.
       C1–C4 in `plugins/dev-workflow/CHANGELOG.md` carry the full residual list.
-- [ ] **jq-free parser stops at an escaped JSON quote.** *(Candidate path, recorded
-      2026-08-01: the result-classification story builds a POSIX awk locator with proper
-      string-state and backslash-parity handling. Once that exists and is proven against the
-      captured fixtures, this row's fix can likely reuse it rather than inventing a second
-      escape-aware scanner. The scopes stay separate — that story does not touch
-      `input_field` — but whoever takes this row should look there first.)* A payload containing
-      `echo \"quoted\" && git commit -m x` decodes to nothing, so no reminder fires —
-      wrong direction under invariant 2, and only on machines without `jq`. Needs
-      escape-aware decoding or a conservative raw-payload scan, plus tests for escaped
-      quotes and backslashes.
+- [x] **jq-free parser stops at an escaped JSON quote.** Fixed in 0.31.0 with audit finding 5:
+      `input_field` reads to the closing quote and decodes the escapes; test 8c.
 - [ ] **Compound commands hash the pre-mutation tree.** `printf changed > tracked.txt
       && git commit -am x` is one PreToolUse event: the hook hashes before the mutation
       runs, so the commit carries content the hash never saw. Consider treating any
@@ -1831,36 +1823,36 @@ backlog.
   `- Plan left open: <decision>. Chose: <choice>. Why: <reason>.`, watching check 4e. *PR #75,
   CodeRabbit, Minor.*
 
-## From the 0.30.0 Ponytail audit (2026-10-17) — backlog only; findings 1-3 fixed in 0.30.1
+## From the 0.30.0 Ponytail audit (2026-10-17) — findings 1-3 fixed in 0.30.1, 4-12 in 0.31.0; 13-18 backlog
 
 Report: this session's `/ponytail-audit` (three read-only helpers; findings reproduced in scratch
 repos where marked). Numbers are the audit's.
 
-- [ ] **4. Read-only commands clear Gate-B state.** `is_commit` (`codex-gate.sh`) matches `git` then
+- [x] **4. Read-only commands clear Gate-B state.** `is_commit` (`codex-gate.sh`) matches `git` then
   `commit` anywhere, so `git log --oneline | grep -i commit` deletes the pass count, fingerprint and
   cap-extra file (reproduced). Reset only when `commit` is the git subcommand; keep the loose match
   for the reminder (invariant 2). *Should.*
-- [ ] **5. Two real commits are not seen.** With jq, a commit split over lines (`git \` newline
+- [x] **5. Two real commits are not seen.** With jq, a commit split over lines (`git \` newline
   `commit`) does not match, since grep is line-wise (confirmed); without jq the fallback reader stops
   at the first `\"` (read, not run). Pass counts then carry into the next cycle. Fold newlines before
   matching. *Should.*
-- [ ] **6. `accepted, not repaired` findings return every pass.** `.claude/review-gates.md` (carry-
+- [x] **6. `accepted, not repaired` findings return every pass.** `.claude/review-gates.md` (carry-
   forward sentence) exempts only `declined`, so an accepted Major blocks a clean close until the cap.
   Add the third verdict; both rule copies, check 4i. *Should.*
-- [ ] **7. Codex gets the verdict but not the reason** in the carry-forward list, so it cannot judge
+- [x] **7. Codex gets the verdict but not the reason** in the carry-forward list, so it cannot judge
   "new evidence". "verdict and reason"; both copies. *Should.*
-- [ ] **8. Nothing checks the two gate-rule copies are identical.** `.claude/review-gates.md` vs the
+- [x] **8. Nothing checks the two gate-rule copies are identical.** `.claude/review-gates.md` vs the
   `### 2.1a` fence; identical today by hand only. Add a `cmp` check plus a reject fixture to
   `check-invariants.sh`. *Should.*
-- [ ] **9. Invariant-5 check misses unpinned installs.** `npm install -g <pkg>` without `@x.y.z`,
+- [x] **9. Invariant-5 check misses unpinned installs.** `npm install -g <pkg>` without `@x.y.z`,
   `docker run <img>:latest` and `node-version: 22` in `ci.yml` all passed (observed). Add rules or
   name the gap in the header and AGENTS.md. *Should.*
-- [ ] **10. `ledger-metrics.py` dies on SHA-256 repos** (`read_commits` header regex `{40}`;
+- [x] **10. `ledger-metrics.py` dies on SHA-256 repos** (`read_commits` header regex `{40}`;
   reproduced). Accept `{64}` too, one test. *Should.*
-- [ ] **11. `status-view.py --watch` dies when a write fails** and leaves `.tmp.index.html.*` files
+- [x] **11. `status-view.py --watch` dies when a write fails** and leaves `.tmp.index.html.*` files
   (`write_atomic`, `watch_loop`; read, not run). Unlink the temp file on error, catch the banner
   write. *Should.*
-- [ ] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
+- [x] **12. `status-view.py` parses undocumented `git ls-files --debug` output** (`RE_INDEX`); a format
   change marks every tracked file deleted, silently. Fail when the match count differs from the
   entry count. *Should.*
 - [ ] **13. The commit-record reader exists four times** (ledger-metrics, loop-usefulness,
@@ -1880,3 +1872,27 @@ repos where marked). Numbers are the audit's.
   Gate-A count and a standard plan gets no Gate A, so `executing-plans` then reads 0/3. Found while
   fixing finding 1; pre-existing (0.29.0 too). Decide whether the floor check should apply only when
   the plan's confirmed risk is `high`. *Observation, not yet reproduced.*
+- [ ] **Gate-B reset still fires on plain text naming `git commit`.** `runs_git_commit` does not
+  check command position, so `echo git commit` and a quoted pattern holding an escaped quote
+  (`git log --grep="a \" git commit \" b"`) reset the pass count with HEAD unchanged. Safe
+  direction (invariant 2), so accepted in 0.31.0. Fix if it is seen in practice: match `git`
+  only at a command position, or rely on `head_moved` alone where jq is present. *Gate B cycle
+  kit031gb1018, spec pass 2 #2 and quality pass 2 #1, accepted, not repaired; Minor.*
+- [ ] **Without jq, read-only commands still end the Gate-B cycle.** The 0.31.0 narrow reset
+  (`runs_git_commit`) applies only with jq; without it every loose match resets, as before, because
+  three repairs of a jq-free spelling test each left a real commit it missed (quoted `sh -c`,
+  quoted `-c`/`-C` operands) and there is no HEAD record to back it up. Safe direction. Fix only
+  with a jq-free per-call id, which the fallback reader cannot establish today. *Gate B cycle
+  kit031gb1018, spec pass 2 #1 (jq-free half), accepted, not repaired.*
+- [ ] **`git --work-tree commit status` resets the Gate-B cycle.** In `runs_git_commit` the generic
+  option alternative also matches an operand-taking long option written with a space
+  (`--work-tree`, `--namespace`, `--git-dir`), so an operand that is the word `commit` reads as the
+  subcommand. Read-only, safe direction. Exclude those options from the generic alternative and
+  add keep-state rows. *Gate B cycle kit031gb1018, spec pass 5 #1, accepted, not repaired; Minor.*
+
+## From the Rieseberg analysis (2026-10-18)
+
+- [ ] **`sparring` § Coding-agent prompts: an opt-in "deeper version" step.** Before a brief goes
+  out, ask what expert practice looks like, go to the rawest material, and turn the methods found
+  into the brief's Goal and Done-when. Source: Felix Rieseberg, "How to be more ambitious"
+  (2026-10-13). Trigger to build it: an observed shallow prompt on a hard task. *Idea.*

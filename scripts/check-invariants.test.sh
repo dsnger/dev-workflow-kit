@@ -59,7 +59,8 @@ $LR_LINES"
   # not read that path. .claude/review-gates.md is not written by the loop and needs its
   # own copy -- and needs no `### 2.1`, since the whole file is the artifact there.
   mkdir -p "$1/.claude"
-  printf '# Fixture\n\n%s\n%s\n' "$SEV_LINE" "$LR_LINES" > "$1/.claude/review-gates.md"
+  # 4j: byte-identical to the `### 2.1a` fence body below.
+  printf '%s\n%s\n' "$SEV_LINE" "$LR_LINES" > "$1/.claude/review-gates.md"
   # 4d: a minimal valid intake story template, for the same isolation reason.
   mkdir -p "$1/plugins/dev-workflow/skills/intake"
   ac_skill "$(ac_rows 3)" > "$1/plugins/dev-workflow/skills/intake/SKILL.md"
@@ -177,6 +178,39 @@ PINNED="jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@$SHA # v4.3.1"
+
+# --- Invariant 5: node-version (0.30.0 audit, finding 9) ---------------------------
+NODEV='node-version not pinned'
+expect_accept "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version: 22.23.1" "exact node-version accepted"
+expect_accept "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version: \"22.23.1\" # pinned" "quoted exact node-version with comment accepted"
+expect_accept "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version-file: package.json" "node-version-file accepted"
+expect_accept "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version-file: .nvmrc # was node-version: 22" "node-version only in a comment accepted"
+expect_accept "$PINNED
+      - run: 'echo \"checking node-version: 22\"'" "node-version named inside a run step accepted"
+expect_reject "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version: 22" "major-only node-version rejected" "" "" "$NODEV"
+expect_reject "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version: '22.x'" "x-range node-version rejected" "" "" "$NODEV"
+expect_reject "$PINNED
+      - uses: actions/setup-node@$SHA
+        with:
+          node-version: lts/*" "lts alias node-version rejected" "" "" "$NODEV"
 
 # --- Invariant 5: action refs -----------------------------------------------------
 expect_accept "$PINNED" "40-char SHA ref accepted"
@@ -462,6 +496,12 @@ done
 #              4i was added). The shared
 #              initializer's `### 2.1a` gained a fence and 4e its nested-fence rule the same
 #              day; 4a-4h re-measured after both: 20, 22, 20, 22, 9, 34, 11, 28, unchanged.
+#   4j -> 4    every `4j:` reject case (3) and `4j fires when the template parser fails`; no
+#              accept case moved (measured 2026-10-18, when 4j was added). The shared
+#              initializer's rules file became identical to its `### 2.1a` fence, accept cases
+#              of 4c, 4h and 4i tolerate a lone 4j failure, and 4i's parser moved above the 4i
+#              markers, the same day; 4a-4i re-measured after all three: 20, 22, 20, 22, 9,
+#              34, 11, 28, 8, unchanged.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -767,6 +807,12 @@ SEV='closed severity set'
 
 # $3/$4 are file bodies, or a sentinel a body cannot express:
 #   @KEEP@  leave the initializer's valid copy   @GONE@  delete it   @LOCK@  chmod 000
+# An accept case of 4c, 4h or 4i may change one gate-rules copy only, which 4j then rejects.
+# Such a case still passes when 4j is the only check that failed; any other failure fails it.
+only_copies_differ() { # $1 = checker output
+  printf '%s\n' "$1" | grep -v '^  ' | grep -v '^$' | grep -qv '^gate rules copies: ' && return 1
+  printf '%s\n' "$1" | grep -q '^gate rules copies: '
+}
 sev_put() { # $1 = path, $2 = body-or-sentinel
   case "$2" in
     @KEEP@) : ;; @GONE@) rm -f "$1" ;; @LOCK@) chmod 000 "$1" ;;
@@ -793,7 +839,7 @@ sev_case() { # $1 = name, $2 = 1|0 expect reject, $3 = .claude/review-gates.md, 
       fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
     else pass "$1"; fi
   else
-    if [ "$st" -eq 0 ]; then pass "$1"
+    if [ "$st" -eq 0 ] || only_copies_differ "$out"; then pass "$1"
     else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
   fi
 }
@@ -1246,7 +1292,7 @@ lr_case() { # $1 = name, $2 = 1|0, $3 = review-gates body|sentinel, $4 = command
       fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
     else pass "$1"; fi
   else
-    if [ "$st" -eq 0 ]; then pass "$1"
+    if [ "$st" -eq 0 ] || only_copies_differ "$out"; then pass "$1"
     else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
   fi
 }
@@ -1310,7 +1356,7 @@ ti_case() { # $1 = name, $2 = 1|0 expect reject, $3 = review-gates body|@KEEP@|@
       fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
     else pass "$1"; fi
   else
-    if [ "$st" -eq 0 ]; then pass "$1"
+    if [ "$st" -eq 0 ] || only_copies_differ "$out"; then pass "$1"
     else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
   fi
 }
@@ -1352,6 +1398,22 @@ ti_case "4i: unclosed fence before the next template rejected" 1 "@KEEP@" \
   'and 0 closed'
 inject_case "4i gate-rules size parser failure fires" awk '*gate-rules-size-scan*' \
   'gate rules size: the template parser failed'
+
+# --- Check 4j, the two gate-rules copies byte-identical ----------------------------------
+# The shared initializer writes identical copies, so every other case starts identical.
+# Strict, unlike ti_case's accept branch, which tolerates a lone 4j failure.
+ti_case "4j: identical copies (fixture)"                0 "@KEEP@" "@KEEP@" ''
+out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ) \
+  && pass "4j: identical copies accepted" || fail "4j: identical copies accepted ($(printf '%s' "$out" | tr '\n' ' '))"
+ti_case "4j: rules file one byte longer rejected"        1 \
+  "$(printf '%s\n%s\n ' "$SEV_LINE" "$LR_LINES")" "@KEEP@" \
+  'gate rules copies: .claude/review-gates.md differs from the'
+ti_case "4j: template one line longer rejected"          1 "@KEEP@" "$(ti_cmd 2000)" \
+  'gate rules copies: .claude/review-gates.md differs from the'
+ti_case "4j: missing rules file rejected"                1 "@GONE@" "@KEEP@" \
+  'so the two copies cannot be compared'
+inject_case "4j fires when the template parser fails" awk '*gate-rules-size-scan*' \
+  'gate rules copies: .* cannot be compared'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else
