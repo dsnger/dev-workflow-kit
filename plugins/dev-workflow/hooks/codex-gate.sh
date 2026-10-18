@@ -1089,18 +1089,23 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 
 # The reset after the command needs more than that match (0.30.0 audit, finding 4): `commit`
 # as git's subcommand, after only global options, where `-C` and `-c` take their operand, or
-# HEAD moved during the call (head_moved). Quoted text without an escaped quote inside is one
-# opaque word here, so `git log --grep="git commit"` and `git log | grep -i commit` keep the
-# cycle's passes. It does not check command position: plain text such as `echo git commit`
+# HEAD moved during the call (head_moved). With jq, quoted text without an escaped quote inside
+# is one opaque word, so `git log --grep="git commit"` keeps the cycle's passes and a commit
+# hidden in quotes (`sh -c "git commit"`) is left to head_moved; without jq, which head_moved
+# needs, quotes are read through and that `--grep` resets. `git log | grep -i commit` keeps the
+# passes either way. It does not check command position: plain text such as `echo git commit`
 # still resets, the safe direction. A line continuation is folded into a space; any other
-# newline separates commands. What it misses (a commit inside quotes, `sh -c "git commit"`,
-# an option word built from a variable) is left to head_moved, which needs jq: without it
-# such a commit keeps the passes. Neither sees an alias (`git ci`). Each spelling is a test row.
+# newline separates commands. Without jq an option word built from a variable
+# (`git $opts commit`) keeps the passes; neither sees an alias (`git ci`). Each spelling is a
+# test row.
 runs_git_commit() {
   _t="[^[:space:];&|()]+"
+  # Quoted text is masked only where head_moved backs it up: without jq, `sh -c "git commit"`
+  # would otherwise keep the passes past a real commit
+  _q="s/'[^']*'|\"[^\"]*\"/Q/g"; command -v jq >/dev/null 2>&1 || _q='s/^//'
   printf '%s' "$1" | awk 'BEGIN { RS = "\001" } { gsub(/\\\n/, " "); gsub(/\n/, " ; "); printf "%s", $0 }' |
-    sed -E "s/'[^']*'|\"[^\"]*\"/Q/g" |
-    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`]|\$)"
+    sed -E "$_q" |
+    grep -Eq "(^|[^[:alnum:]])git([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace|--config-env)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
 }
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user

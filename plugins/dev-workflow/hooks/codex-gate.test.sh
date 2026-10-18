@@ -446,7 +446,8 @@ nojq_post() { # $1 = expected (reset|kept), $2 = the command as JSON string byte
   [ "$_got" = "$1" ] && pass "8c jq-free: $1 after: $2" || fail "8c jq-free: $1 after: $2 (got $_got)"
 }
 nojq_post kept 'git log --oneline | grep -i commit'
-nojq_post kept 'git log --grep=\"git commit\"'
+nojq_post reset 'git log --grep=\"git commit\"'   # quotes read through: no HEAD backstop
+nojq_post reset 'sh -c \"git commit -m y\"'
 nojq_post kept 'git -C commit status'
 nojq_post reset 'git \\\ncommit -m y'
 nojq_post reset 'cd \"a b\" && git commit -m y'

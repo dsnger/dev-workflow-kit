@@ -27,13 +27,14 @@ AGENTS.md invariant 12 carries the complete list.
 Findings 4-12 of the 0.30.0 Ponytail audit (13-18 stay rows in `todos.md`).
 
 - **Hook: fewer read-only commands end the Gate-B cycle.** The reset after a Bash call needs
-  `commit` as git's subcommand, after only global options (`-C` and `-c` take their operand), with
-  quoted text read as one word, so `git log | grep -i commit` and `git log --grep="git commit"` keep
-  the pass count and fingerprint. It does not check command position, so plain text such as
-  `echo git commit` still resets, as does a quoted pattern holding an escaped quote. A failed
-  commit still resets, as before. As a backstop, with jq PreToolUse records HEAD per call
-  (`tool_use_id`), and a call that moved HEAD resets whatever its spelling (`sh -c "git commit"`);
-  without jq that spelling keeps the passes. The reminder before a call stays loose (invariant 2).
+  `commit` as git's subcommand, after only global options (`-C` and `-c` take their operand), so
+  `git log | grep -i commit` keeps the pass count and fingerprint. With jq, quoted text is read as
+  one word, so `git log --grep="git commit"` keeps them too, and PreToolUse records HEAD per call
+  (`tool_use_id`): a call that moved HEAD resets whatever its spelling (`sh -c "git commit"`).
+  Without jq quotes are read through, so both of those reset. It does not check command position:
+  plain text such as `echo git commit` still resets, as does a quoted pattern holding an escaped
+  quote. A failed commit still resets, as before. The reminder before a call stays loose
+  (invariant 2).
 - **Hook: two missed commit spellings.** A commit split over lines (`git \` newline `commit`) now
   matches, and without jq the command reader no longer stops at the first escaped quote: it reads to
   the closing quote and decodes `\n`, `\t`, `\r`, `\"` and `\\` (a `\u` escape becomes `?`).
