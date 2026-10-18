@@ -227,8 +227,11 @@ def records_in_range(cwd, base, head):
     if rc != 0:
         raise RuntimeError("history of the range could not be read")
     nonces, data = {}, {}
-    for csha, ct, _pos, parsed, text in lm.commit_records(lm.read_commits(out.decode("utf-8", "replace"),
-                                                                           "status-view")):
+    try:
+        commits = lm.read_commits(out.decode("utf-8", "replace"), "status-view")
+    except SystemExit:  # read_commits exits on a bad header; here one source failing must not end --watch
+        raise RuntimeError("history of the range could not be parsed")
+    for csha, ct, _pos, parsed, text in lm.commit_records(commits):
         if parsed is None or parsed[0] == "none (pre-rule)":
             continue
         field, typ, d = parsed
