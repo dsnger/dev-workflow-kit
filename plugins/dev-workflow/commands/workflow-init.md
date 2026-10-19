@@ -165,7 +165,8 @@ Check, in order:
    needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
 5. **AGENTS.md** — present or not. Absent is normal on a first run (Step 3 writes it);
    present means Step 3 reviews and extends it instead. When present, count its bytes
-   (`wc -c < AGENTS.md`). Over 32768, report `present, <n> bytes — over Codex's default 32 KiB
+   (`wc -c < "$(git rev-parse --show-toplevel)/AGENTS.md"`, so a run from a subdirectory
+   still counts the root file). Over 32768, report `present, <n> bytes — over Codex's default 32 KiB
    read budget` and say why it matters: by default Codex loads at most 32768 bytes of
    `AGENTS.md` files in total and cuts the rest, so a gate may check against a cut copy unless
    `project_doc_max_bytes` is raised in the Codex config. Warn only: never trim or edit the
@@ -1650,8 +1651,8 @@ Cover, in this order:
 End Step 3 by showing the complete `AGENTS.md` and getting the user's explicit
 approval before writing it — same rule as everywhere else: they see the bytes that
 land.
-If the approved text is over 32768 bytes, give the Step 1 item 5 warning before writing
-it; the user decides whether to shorten it. Never shorten it yourself.
+Before writing, count the bytes of the exact approved text, not the existing file. If it
+is over 32768 bytes, give the Step 1 item 5 warning before writing it; the user decides whether to shorten it. Never shorten it yourself.
 
 ## Step 4 — Print the closing checklist
 
