@@ -117,6 +117,13 @@ What `/dev-workflow:workflow-init` does, in order:
   `AGENTS.md`, stack, existing targets, and the two optional companions (codebase-memory
   MCP, Ponytail). Only a missing git repository stops the preflight; choosing to set up
   Codex now (see "Without Codex" below) also ends the run so you can.
+  For an `AGENTS.md` over 32768 bytes it warns and never trims: Codex reads at most
+  that many bytes of `AGENTS.md` files in total (`project_doc_max_bytes`, default 32 KiB) and
+  cuts the rest with only a log warning. Source: Codex `codex-rs/config/defaults.toml` and
+  `codex-rs/core/src/agents_md.rs` at tag `rust-v0.162.1`, and
+  [the Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md)
+  (checked 2026-10-19). The count covers the root file only; nested `AGENTS.md` files share
+  the same budget.
 - **Scaffolding.** Per file: missing, written; identical, `unchanged`; present and
   different, it shows the diff and asks overwrite / merge / skip; additive files
   (`.gitattributes`, `.mcp.json`, `.claude/settings.json`) are merged. It writes
@@ -305,7 +312,7 @@ repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subje
 Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) ends with
 its own.
 
-**Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'` (gives Codex a
+**Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'`, a Bash call of its own (gives Codex a
 range to read; the hook keeps the cycle open across a commit it recognises as WIP), then
 loops `mcp__codex__review` as two calls per pass, `reviewType: spec` then `quality`, on
 the same `baseSha` and `headSha`. Invalidation is by content: any change to included

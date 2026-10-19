@@ -22,6 +22,18 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.36.0
+
+- **WIP commit rule names the Bash call.** Both gate-rule copies (`.claude/review-gates.md`,
+  `/workflow-init` template 2.1a) now say each WIP commit is "a Bash call holding only
+  `git commit -m 'WIP: <subject>'`" instead of "one line": agents read "one line" as one shell
+  line and chained `git add && git commit`, which the hook does not count as WIP. The hook is
+  unchanged.
+- **`AGENTS.md` size warning.** `/workflow-init` warns, and never trims, when a project's
+  `AGENTS.md` is over 32768 bytes, the default limit Codex reads across all `AGENTS.md`
+  files before cutting the rest (verified in Codex source at `rust-v0.162.1` and its docs;
+  `docs/reference.md` § workflow-init).
+
 ## 0.35.0
 
 - **Curve line counts `declined` dispositions.** The closing act's curve line gains
