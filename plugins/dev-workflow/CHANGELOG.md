@@ -22,6 +22,23 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.35.0
+
+- **Curve line counts `declined` dispositions.** The closing act's curve line gains
+  `Declined <per-pass counts>.`, so review noise is measured rather than guessed; both rule
+  copies (`.claude/review-gates.md`, `/workflow-init` template 2.1a) change together, and
+  the Gate-A/Gate-B prompt paragraphs lose their hard line wraps to stay under the
+  10,000-byte cap. `scripts/ledger-metrics.py` reads the series when present; curves
+  written before 0.35.0 still parse.
+- **Shorter hook messages.** Five messages (no readable result, counted without
+  inspection, credit withheld, no recorded fingerprint, cannot confirm reviewed content)
+  now state what happened and the next action; their cause lists moved to
+  `docs/reference.md` § Hook messages, which each message links. The privacy warning for
+  raw payloads stays in the message.
+- **Prompt eval suite** (repository only, not shipped): `evals/`, run by hand before a version
+  bump; the command is in `AGENTS.md` § Commands. Its WIP-commit case currently fails and is
+  tracked in `todos.md`.
+
 ## 0.34.0
 
 `/workflow-init` scaffolds secret deny rules; the reports, the hook and the invariant checker lose

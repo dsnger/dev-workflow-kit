@@ -71,7 +71,10 @@ Living references (consult, don't copy — copies go stale):
     round a loop that never terminates. This is a real failure: `/workflow-init`'s
     preflight reported "restart the session" for every not-loaded Codex, so a
     same-named server winning on scope precedence went undiagnosed through this repo's
-    own initialization. A result the prompt could not fully establish is reported as
+    own initialization. A hook message may instead state the state and the next action
+    and link the page that enumerates the causes, checks and fixes (`docs/reference.md`
+    § Hook messages). Why: it is shown on every matching event, where a cause list buries
+    the next action. A result the prompt could not fully establish is reported as
     undetermined, a state of its own, rather than as "protected", "absent" or
     "permitted"; what follows from it is what the contract for the affected action
     already says. Why: filing an undetermined result under the state that needs no

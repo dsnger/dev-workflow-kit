@@ -41,6 +41,7 @@ scripts/live-effort.py            # effort of review cycles not yet closed (visi
 scripts/live-effort.test.sh       # its regression suite — fixture home + repos, expected text
 scripts/status-view.py            # generated HTML status view, one-shot or watch (process monitoring)
 scripts/status-view.test.sh       # its regression suite — fixture home + repos, mutants
+evals/<case>/{prompt.md,graders/*.md} # `claude plugin eval` suite, run by hand before a version bump; outside the plugin so it does not ship
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
   CHANGELOG.md                    # every manifest version, newest first
