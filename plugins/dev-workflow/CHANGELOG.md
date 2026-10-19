@@ -25,10 +25,10 @@ AGENTS.md invariant 12 carries the complete list.
 ## 0.37.1
 
 - **Below-floor messages name the early close.** The hook's Gate A and Gate B below-floor
-  messages now say that a count below the floor is fine only when the last pass had zero
-  findings, and otherwise ask for a repair and another pass. The hook reads no findings,
-  so it still fires on every commit below the floor; a legal early close read as a hook
-  miscount in the field. `docs/reference.md` explains why.
+  messages now say that a zero-finding last pass may close early, and otherwise point to
+  the closure ordering, normally another pass. The hook reads no findings, so it still
+  fires on every commit that reaches its floor check below the threshold; a legal early
+  close read as a hook miscount in the field. `docs/reference.md` explains why.
 
 ## 0.37.0
 

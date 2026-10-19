@@ -1564,10 +1564,10 @@ reset_all; rev; rev; rev
 # 29d. BELOW-FLOOR branches, Gate B at 1/3 and Gate A at 1/3, each with jq and jq-free.
 #      The hook reads no findings, so these must say a zero-finding last pass may close
 #      early (the field read "floor NOT met 2/3" after a legal early close as a hook defect).
-belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings: close here only if your last pass had zero findings (this project's review policy's early close); otherwise repair and run another pass."
-belowB_msg="⚠ Codex Gate B below floor (1/3): fine only after a zero-finding last pass"
-belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: proceed only if its last pass had zero findings (this project's review policy's early close); otherwise repair and run another pass."
-belowA_msg="⚠ Codex Gate A below floor (1/3): fine only after a zero-finding last pass"
+belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
+belowB_msg="⚠ Codex Gate B below floor (1/3): a zero-finding last pass may close early"
+belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
+belowA_msg="⚠ Codex Gate A below floor (1/3): a zero-finding last pass may close early"
 commitp='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
 skillp='{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'
 exact_pair() { # $1 = label, $2 = output, $3 = expected ctx, $4 = expected msg
@@ -1582,6 +1582,13 @@ reset_all; execp
 exact_pair "Gate A below floor" "$(run "$skillp")" "$belowA_ctx" "$belowA_msg"
 reset_all; nojq_run "$(payload mcp__codex__exec "$(resp_success)")" >/dev/null
 exact_pair "Gate A below floor (jq-free)" "$(nojq_run "$skillp")" "$belowA_ctx" "$belowA_msg"
+# A raised hook threshold is not the rules' floor: at 3/5 the message must not say only a
+# zero-finding pass may close (three valid passes with only Minors may close under the rules).
+reset_all; printf '5' > "$floorf"; rev; rev; rev
+out=$(run "$commitp")
+printf '%s' "$out" | grep -qF 'below floor (3/5): a zero-finding last pass may close early' && ! printf '%s' "$out" | grep -qF 'only if' \
+  && pass "floor override 5 at 3 passes -> no 'only if' closure claim" || fail "floor override 5 at 3 passes -> no 'only if' closure claim"
+rm -f "$floorf"
 reset_all; rev; rev; rev
 
 # 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
