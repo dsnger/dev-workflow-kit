@@ -117,9 +117,9 @@ What `/dev-workflow:workflow-init` does, in order:
   `AGENTS.md`, stack, existing targets, and the two optional companions (codebase-memory
   MCP, Ponytail). Only a missing git repository stops the preflight; choosing to set up
   Codex now (see "Without Codex" below) also ends the run so you can.
-  For an `AGENTS.md` over 32768 bytes it warns and never trims: Codex reads at most
-  that many bytes of `AGENTS.md` files in total (`project_doc_max_bytes`, default 32 KiB) and
-  cuts the rest with only a log warning. Source: Codex `codex-rs/config/defaults.toml` and
+  For an `AGENTS.md` over 32768 bytes it warns and never trims: by default Codex loads at most
+  that many bytes of `AGENTS.md` files in total into its instructions and cuts the rest with
+  only a log warning; `project_doc_max_bytes` in the Codex config raises the budget. Source: Codex `codex-rs/config/defaults.toml` and
   `codex-rs/core/src/agents_md.rs` at tag `rust-v0.162.1`, and
   [the Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md)
   (checked 2026-10-19). The count covers the root file only; nested `AGENTS.md` files share

@@ -165,10 +165,11 @@ Check, in order:
    needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
 5. **AGENTS.md** — present or not. Absent is normal on a first run (Step 3 writes it);
    present means Step 3 reviews and extends it instead. When present, count its bytes
-   (`wc -c < AGENTS.md`). Over 32768, report `present, <n> bytes — over Codex's 32 KiB read
-   limit` and say why it matters: Codex reads at most 32768 bytes of `AGENTS.md` files in
-   total and silently cuts the rest, so both gates check against a cut copy. Warn only: never
-   trim or edit the file for this.
+   (`wc -c < AGENTS.md`). Over 32768, report `present, <n> bytes — over Codex's default 32 KiB
+   read budget` and say why it matters: by default Codex loads at most 32768 bytes of
+   `AGENTS.md` files in total and cuts the rest, so a gate may check against a cut copy unless
+   `project_doc_max_bytes` is raised in the Codex config. Warn only: never trim or edit the
+   file for this.
 6. **Stack** — package manager (`pnpm-lock.yaml` / `package-lock.json` / `bun.lockb` /
    none), language, test runner, CI provider. This resolves the `TODO(stack)` markers.
    Detect, then *state what you detected* — do not silently assume.
