@@ -35,6 +35,9 @@ AGENTS.md invariant 12 carries the complete list.
   now state what happened and the next action; their cause lists moved to
   `docs/reference.md` § Hook messages, which each message links. The privacy warning for
   raw payloads stays in the message.
+- **Prompt eval suite** (repository only, not shipped): `evals/`, run by hand before a version
+  bump; the command is in `AGENTS.md` § Commands. Its WIP-commit case currently fails and is
+  tracked in `todos.md`.
 
 ## 0.34.0
 

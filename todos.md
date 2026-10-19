@@ -1789,7 +1789,15 @@ backlog.
   *Gap analysis 2026-10-17, summary §6 rule 8.* Done in 0.35.0 (`evals/`, 7 cases). Observed with
   Claude Code 2.1.303: `--eval-dir` only accepts a relative path inside the plugin, so the § Commands
   entry copies the suite into a temporary plugin copy; `not fired` is `min: 0` plus `max: 0`. Run
-  2026-10-19: all 7 cases 1.00 with the plugin, exit 0, $1.70; the three should-fire cases 0.00 without it.
+  2026-10-19, final grader: six cases 1.00 with the plugin (the three should-fire cases 0.00 without it);
+  `wip-commit-form` 0.00 with and without, exit 1, $1.69 — see the next row.
+- [ ] **WIP commit rule: its own Bash call.** The eval case `wip-commit-form` (0.35.0) fails: asked for a
+  WIP commit, the agent writes `printf … && git add … && git commit -q -m 'WIP: …'`, one shell line,
+  which the hook's `is_wip_message_cmd` does not recognise, so the pass counter resets. The rule's "one
+  line" reads as one shell line. Say "as its own Bash call, nothing chained" in both rule copies (check
+  4i leaves 17 bytes, so trim elsewhere), or let the hook accept a trailing `&& git commit -m 'WIP: …'`
+  after `git add` (loosens a firing check; invariant 2). Rerun the eval after. *Gate B cycle
+  kit035gb1019, pass 1; observed in the eval run and in this session's own first WIP commit.*
 - [ ] **Project `AGENTS.md` size warning in `/workflow-init`.** Warn when a project's `AGENTS.md`
   passes Codex's default instruction read limit. The 32 KiB figure comes from summary source [8]
   only (weak evidence): verify it against Codex's own docs or a probe first. *Gap analysis

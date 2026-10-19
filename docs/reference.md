@@ -349,8 +349,8 @@ or replace it with a server exposing `exec` and `review`. With the pinned server
 pinned version, a payload-contract change is the remaining explanation: record your Claude
 Code version and report it.
 
-**Counted without inspection** (`ℹ A gate call was counted without the hook reading its
-result`). Causes with a check and a fix:
+**Counted without inspection** (`ℹ A gate call was classified as countable without the hook
+reading its result`). Causes with a check and a fix:
 - a pinned-server envelope whose key order or formatting changed: compare the version in
   `.mcp.json` with the server actually serving the tools (`claude mcp list`); pinning it
   back fixes it;
