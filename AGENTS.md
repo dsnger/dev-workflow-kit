@@ -165,8 +165,9 @@ reader can judge whether it still holds.
     `intake` amendment route's change-record template and closed sets, 4h the seven
     ledger-check record lines, 4k the ten secret deny lines in `/workflow-init` `### 2.17`.
     None establishes that the prose around its lines is right or that an agent or a written
-    story or record follows them (4k: nor that the rules work in Claude Code or the JSON is
-    valid); each check's header comment documents its mechanism and known limits, without
+    story or record follows them (4d: nor the worked example or a later renumbering; 4k: nor
+    that the rules work in Claude Code, the JSON is valid or an agent merges them correctly into a
+    project); each check's header comment documents its mechanism and known limits, without
     claiming the list is exhaustive. They are a floor, not coverage. Every other item is judged by a reader.
 
 ## Don'ts
