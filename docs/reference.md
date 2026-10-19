@@ -393,7 +393,10 @@ another non-file, or another writer may have recreated it.
 `mcp__codex__review` has been credited (a single-branch call waiting for its partner, and a
 call whose request was rejected, write no fingerprint by design); the last credit's
 fingerprint could not be written or read back; or a non-WIP commit attempt cleared it while
-the cycle stayed open.
+the cycle stayed open. It also appears on a spec or plan commit whose command is more than
+`git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
+only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
+passes (`mcp__codex__exec`) are counted by call and never record one.
 
 **Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
 Usually the working tree or the index changed since the review. Other causes: you only

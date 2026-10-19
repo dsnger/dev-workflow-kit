@@ -1555,7 +1555,7 @@ reset_all
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint."
+expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The fingerprint is Gate B's (mcp__codex__review) alone; Gate A (mcp__codex__exec) passes are counted by call and never record one. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next pass the ordering permits record a fingerprint."
 expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 [ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
 [ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
@@ -3298,6 +3298,11 @@ touch -t 202601020000 "$reviews/gate-b-spec-zz99zz99zz-pass-2.md"
 printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: newest slot by mtime supplies the nonce" || fail "44d: newest slot by mtime supplies the nonce"
 touch -t 202601030000 "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
 printf '%s' "$(compact)" | grep -q 'nonce aa11aa11aa' && pass "44d: touching the name-first slot makes it newest" || fail "44d: touching the name-first slot makes it newest"
+# The rules name a pass's dispositions `…-pass-<n>-dispositions.md`; written last, it is the newest
+printf '1 | fixed | x\n' > "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
+touch -t 202601040000 "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
+printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: a newer dispositions file supplies its own slot's nonce" || fail "44d: a newer dispositions file supplies its own slot's nonce"
+rm -f "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
 rm -f "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
 mkdir -p "$reviews/gate-b-spec-newdir0000-pass-9.md"
 printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"

@@ -1490,6 +1490,9 @@ backlog.
       `docs/superpowers/stories/2026-08-04-section-5-version-stamp-story.md`, which carries this
       row's conditions with each marked kept, moved or dropped.
       *Trigger: the next round that touches the §5 template.*
+      **Field input (2026-10-19):** scaffolded rules seen at 0.25.2 (locally edited), 0.28 and 0.29
+      while the kit is 0.36.0; nothing tells a project its rules lag. The hook has no rules
+      revision to compare, and a stamp is the design above, not an advisory line.
 - [ ] **`harden-finding`'s recurrence rule is scope-blind.** Rungs guard *scopes*; the
       skill's recurrence step *does* re-read the ledger, and the defect is that its
       **decision branch** keys on the fingerprint and the latest matching row's rung
@@ -1955,3 +1958,31 @@ repos where marked). Numbers are the audit's.
   back when a bot is promoted; 0.32.0's `process-pr-review` Step 4 records an absent review and does
   not block. Dormant while **Wait for** is empty. Source: Gate B spec pass 2, finding 1. *Accepted,
   not repaired.*
+
+## From the field findings round (kit 0.37.0, 2026-10-19)
+
+Reproduced against 0.36.0 with a replay of the field sequences under `sh` and `dash`, with and
+without `jq` (counters identical in all four runs).
+
+- [x] **Gate-A counter spans cycles** (sfx-bricks-api-builder `3fcf56a`, "cap 6/5"; orchestrator
+  checkout "10/5"). Does not reproduce on 0.36.0: since 0.30.1 a non-WIP commit sets the Gate-A
+  count aside, so a cycle closed by its closing commit leaves the next one at 0 (replay: 4 passes,
+  close, then 2 passes reads 2). The field session ran a 0.29.0 hook, which had no commit reset.
+  The orchestrator's `passCountA.closed` (10, 2026-10-12) is read only by the plan-execution floor
+  check, never by the cap. No change.
+- [x] **"floor NOT met 1/3" / "no fingerprint" after repair commits** (sfx-wp-plugin-skills cycles
+  `partab7q4x`, `std11wpcs`; canvas). On 0.36.0 a plain `git commit -m 'WIP: …'` Bash call keeps
+  the count and the fingerprint (replay: 3/3 at the closing commit). A chained `git add … && git
+  commit` or a `$(cat <<'EOF' …)` message still resets, by design: the 0.36.0 rule names the plain
+  call. Those projects run rules 0.28/0.29 and get the fix by re-running `/workflow-init`. No change.
+- [x] **Gate-A wording in the "no fingerprint" message** (sfx-time-tracking-dashboard
+  `handover-s6.md:9`). Done in 0.37.0: the message and `docs/reference.md` say the fingerprint is
+  Gate B's alone and Gate A is counted by call; the reference also names the non-plain commit
+  command as a reason a spec commit gets this message.
+- [x] **One dispositions file name.** Done in 0.37.0: both rule copies name
+  `…-pass-<n>-dispositions.md` beside the pass file. No report reads dispositions files (the reports
+  take slots from Codex reply lines); the compaction line's nonce reader accepts the name (test 44d).
+- [ ] **No rule decides whether an amended spec re-runs Gate A.** 0.37.0 points a spec change after
+  its Gate A closed at `intake`'s amendment route, whose change record asks what the change means
+  for reviews already run and, with no rule found, hands it to a human. sfx-wp-plugin-skills decided
+  it case by case (its spec §12). *Trigger: the next story that changes the gate rules or intake.*
