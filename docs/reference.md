@@ -284,7 +284,8 @@ rejects or contains it.
 **Passes.** The prompt asks Codex to report every finding with severity and confidence;
 Claude filters to Blockers and Majors for repair and reads the rest. Findings land in
 `.context/codex-reviews/gate-a-<spec|plan>-<nonce>-pass-<n>.md` (Gate A) one per line, severity
-`BLOCKER | MAJOR | MINOR | NIT`. Minors and Nits are collected, never iterated. The floor
+`BLOCKER | MAJOR | MINOR | NIT`. Claude's verdict on each finding goes beside it, in
+`…-pass-<n>-dispositions.md`. Minors and Nits are collected, never iterated. The floor
 is three valid passes per cycle, a pass with zero findings may close early, and the cap
 is the floor plus two, where a remaining Blocker or a cut to an approved commitment goes to
 you and the agent decides the rest. From pass 2 on, each pass of
@@ -310,7 +311,7 @@ of `close` runs the closing act: one commit carrying the cycle's record lines, t
 ledger-check records, and a `todos.md` row per finding dispositioned `accepted, not
 repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject.
 Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) ends with
-its own.
+its own. A spec change after its Gate A closed goes through `intake`'s amendment route.
 
 **Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'`, a Bash call of its own (gives Codex a
 range to read; the hook keeps the cycle open across a commit it recognises as WIP), then
@@ -393,7 +394,10 @@ another non-file, or another writer may have recreated it.
 `mcp__codex__review` has been credited (a single-branch call waiting for its partner, and a
 call whose request was rejected, write no fingerprint by design); the last credit's
 fingerprint could not be written or read back; or a non-WIP commit attempt cleared it while
-the cycle stayed open.
+the cycle stayed open. It also appears on a spec or plan commit whose command is more than
+`git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
+only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
+passes (`mcp__codex__exec`) are counted by call and never record one.
 
 **Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
 Usually the working tree or the index changed since the review. Other causes: you only

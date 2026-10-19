@@ -31,7 +31,8 @@ block. What the gates compare, and what each hook message means:
    unavailable or that version is not indexed, the library's own material for that
    version stands in.
 3. Gate A starts (Codex reads the spec text), with the profile from the story.
-   You see Codex findings in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`,
+   You see Codex findings in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`
+   (Claude's verdicts beside it in `…-pass-<n>-dispositions.md`),
    one per line, severity `BLOCKER | MAJOR | MINOR | NIT`. Blockers and Majors get
    fixed and the review runs again. Minors and Nits are collected, not iterated.
    A review normally takes three rounds; a round with no findings may close earlier.

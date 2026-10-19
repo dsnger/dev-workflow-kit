@@ -22,6 +22,19 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.37.0
+
+- **One dispositions file name.** Both gate-rule copies (`.claude/review-gates.md`,
+  `/workflow-init` template 2.1a) name a pass's dispositions file
+  `…-pass-<n>-dispositions.md`, beside the pass file; the field had three spellings.
+- **Spec amendment pointer.** The same copies say a spec change after its Gate A closed takes
+  `intake`'s amendment route. To stay under the 10,000-byte cap they drop the Library-APIs
+  scope line (the next line already scopes it to a third-party API), "(coverage floor, not a
+  cage)" and a repeated "not instructions".
+- **"No fingerprint" message names its gate.** The hook's message now says the fingerprint is
+  Gate B's alone and Gate A is counted by call, and its recovery step names the next Gate B
+  pass; a field reader had concluded Gate A went uncounted. `docs/reference.md` adds why a spec commit with a non-plain command gets it.
+
 ## 0.36.0
 
 - **WIP commit rule names the Bash call.** Both gate-rule copies (`.claude/review-gates.md`,
