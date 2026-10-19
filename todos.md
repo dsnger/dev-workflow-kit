@@ -1815,10 +1815,16 @@ backlog.
 - [x] **Shorter hook messages.** Each message states the state and the next action; the list of
   possible causes moves to `docs/reference.md`. Hook change, tests under `sh` and `dash`. *Gap
   analysis 2026-10-17.* Done in 0.35.0 for the five messages that carried cause lists.
-- [ ] **Trim this repository's `AGENTS.md`.** 24.5 kB (2026-10-17), below but near the 32 KiB Codex read
+- [x] **Trim this repository's `AGENTS.md`.** 24.5 kB (2026-10-17), below but near the 32 KiB Codex read
   limit named in the row above (verified in 0.36.0). Move history paragraphs (incident stories under Don'ts)
   to `docs/ARCHITECTURE.md` or the CHANGELOG and keep each rule with its one-clause why. *Gap
-  analysis 2026-10-17.*
+  analysis 2026-10-17.* Done in kit-037: 25,506 → about 24 kB; stories now in `docs/ARCHITECTURE.md`
+  § Incidents behind the AGENTS.md rules. The 20 kB target was not met; see the next row.
+- [ ] **`AGENTS.md` is still about 24 kB.** What is left is rules, limit statements and § Commands
+  (about 4.2 kB). The one large candidate is the `| lint |` command repeated inside the quality
+  row; `/workflow-init` asks projects for a literal `| lint |` row and `harden-finding` resolves "the
+  project's lint command" from it, so a shorter form needs that consumption checked first. *kit-037,
+  Gate A agtrim1019a pass 1 finding 4.*
 - [ ] **Revalidate `docs/prompt-standards.md`** against summary sources [1] and [6] of
   `/Users/daniel/Downloads/2026-10-17-arbeiten-mit-coding-agenten-erkenntnisse.md`. *Gap analysis
   2026-10-17.*

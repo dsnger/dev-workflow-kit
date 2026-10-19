@@ -21,8 +21,8 @@ There is no application code, so there is no typechecker to catch a defect; revi
 
 ## Architecture
 
-`docs/ARCHITECTURE.md` holds the repository tree, the components, the scripts' inventory and the
-two design decisions. `docs/PRD.md` holds the product's problem, success measures, non-goals and
+`docs/ARCHITECTURE.md` holds the repository tree, the components, the scripts' inventory, the
+two design decisions and the incidents behind some rules below. `docs/PRD.md` holds the product's problem, success measures, non-goals and
 feature map. `docs/TECH-STACK.md` holds the tools the repo runs on and where each version is
 pinned.
 
@@ -63,12 +63,10 @@ reader can judge whether it still holds.
    **effective index** (`GIT_INDEX_FILE` when set, else the git-dir index), and a tree
    id written from a throwaway index brought up to the worktree — so untracked paths,
    contents and file modes all count, minus `.context/`.
-   The index component exists because `git commit` commits the index: without it, staging
-   a change and reverting the file on disk read as unchanged and reported satisfied. An
-   event-derived check misses a file changed through Bash (`sed -i`, `git apply`,
-   codegen) and leaves a stale ✓ standing; so does a name-only view of untracked files,
-   or any hand-rolled walk that re-derives what `git write-tree` already gets right
-   (symlink targets, exotic path encodings, non-regular files). When the fingerprint
+   The index counts because `git commit` commits the index: without it, staging a change
+   and reverting the file on disk read as satisfied. An event-derived check (it misses a
+   file changed through Bash), a name-only view of untracked files, or a hand-rolled walk
+   instead of `git write-tree` each leave a stale ✓ standing ([why](docs/ARCHITECTURE.md#why-gate-b-verifies-content-not-events)). When the fingerprint
    cannot be computed it is the literal `unavailable`, which never matches — including
    against itself.
 4. **POSIX `sh`, and `jq` is optional.** No bash-isms; correct behaviour via fallback
@@ -102,22 +100,14 @@ reader can judge whether it still holds.
    (Daniel, 2026-10-07, decision D1 in
    `docs/superpowers/specs/2026-10-07-codebase-memory-mcp-bounded-context-design.md`).
    The kit only restricts that server: it never installs, configures or registers it.
-   Its binary is therefore not pinned at launch on these paths:
-   - P1, ordinary sessions starting it from the user's own entry;
-   - P2, the canary session;
-   - P3, the canary's fixture indexing, which runs against an isolated store;
-   - P4, a `claude mcp get` the user runs;
-   - P5, a refresh the user runs;
-   - P6, Codex-preflight health commands, which are left to the user whenever this server is
-     configured.
-
-   **What stands in for a pin:**
-   - its source, version and sha256 are recorded;
-   - before every kit-run launch (P2, P3), the binary is compared against that record;
-   - a mismatch invalidates the earlier evidence, and nothing launches until a human reassesses
-     the binary and re-records it.
-
-   This is detection after a change, not a pin: P1 runs whatever binary the user's entry names.
+   Its binary is therefore not pinned at launch on these paths: P1, ordinary sessions starting
+   it from the user's own entry; P2, the canary session; P3, the canary's fixture indexing,
+   against an isolated store; P4, a `claude mcp get` the user runs; P5, a refresh the user
+   runs; P6, Codex-preflight health commands, left to the user whenever this server is
+   configured. **What stands in for a pin:** its source, version and sha256 are recorded;
+   before every kit-run launch (P2, P3) the binary is compared against that record; a
+   mismatch invalidates the earlier evidence, and nothing launches until a human reassesses
+   the binary and re-records it. This is detection after a change, not a pin: P1 runs whatever binary the user's entry names.
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not
@@ -126,8 +116,7 @@ reader can judge whether it still holds.
    project, never presented as a default — it encodes one stack's answers and will not
    transfer. It *does* ship inside the plugin package (the cache copies the plugin
    directory wholesale), which is why invariant 12 covers it: shipped-but-not-scaffolded
-   is not the same claim as not-shipped, and reading it as the latter once made
-   `examples/` look out of scope for the version-bump rule.
+   is not the same claim as not-shipped.
 12. **A plugin change requires a version bump.** A pull request that changes any path
     under a `plugins/<name>/` directory **that still exists at HEAD** — `examples/`
     included, and no exemptions among the paths inside such a directory — must also
@@ -137,10 +126,8 @@ reader can judge whether it still holds.
     `scripts/check-version-bump.sh`, run **on pull requests only**, with
     `scripts/check-version-bump.test.sh` as its suite. An installed copy lives under a
     version-keyed cache path, so an un-bumped change never reaches it: the machine keeps
-    running the old code with no signal that it is stale. This was a convention first,
-    and it failed twice — a machine ran 0.1.0 while main was at 0.4.0, and the 0.4.0
-    bump had to be asked for during review; main was still carrying two un-released
-    plugin commits when the check was written.
+    running the old code with no signal that it is stale. As a convention it failed twice
+    (the script header tells how).
     **What the check does not catch** — the same list the script header and the ledger
     row carry, because a partial list is an overclaim: it verifies that a bump is
     *present*, not that it is right. It does not check: semantic correctness (a patch
@@ -172,26 +159,21 @@ reader can judge whether it still holds.
 11. **Prompt changes pass `docs/prompt-standards.md`** — all 12 checklist items, for
     any skill, command, agent definition, hook message, or scaffolded template. The
     prompts are the product, and **no comprehensive mechanical checker exists for them**:
-    review is the gate. Seven narrow checks in `scripts/check-invariants.sh` cover one
-    spelling each — a `Target model:` line naming exactly one recognized model in files
-    claiming conformance, a prose checklist-count claim matching the checklist, the
-    finding-severity vocabulary stated as a closed set in both prompt copies (in the
-    scaffolded template's own section, in the command file), the `intake` story
-    template's `AC-<n>` criterion rows under their rule line (not whether the rule prose or
-    the worked example is right, whether any written story follows the rules, or whether an
-    amendment renumbered anything), and the `intake` amendment route's change-record template
-    and its closed sets (not whether the procedure prose is right or any written record
-    follows them), the seven ledger-check record lines in both prompt copies (check 4h:
-    not whether the prose around them is right or any agent follows them), and the ten
-    secret deny lines in `/workflow-init`'s `### 2.17` section, `.env*` before its
-    `.env.example` exemption (check 4k: not whether the rules work in Claude Code, the JSON is
-    valid or an agent merges them correctly) — and they are a floor, not coverage. Every other item is
-    judged by a reader.
+    review is the gate. Seven narrow checks in `scripts/check-invariants.sh` pin one
+    spelling each: 4a the `Target model:` line, 4b a checklist-count claim, 4c the
+    finding-severity closed set, 4d the `intake` story template's `AC-<n>` rows, 4f the
+    `intake` amendment route's change-record template and closed sets, 4h the seven
+    ledger-check record lines, 4k the ten secret deny lines in `/workflow-init` `### 2.17`.
+    None establishes that the prose around its lines is right or that an agent or a written
+    story or record follows them (4d: nor the worked example or a later renumbering; 4k: nor
+    that the rules work in Claude Code, the JSON is valid or an agent merges them correctly into a
+    project); each check's header comment documents its mechanism and known limits, without
+    claiming the list is exhaustive. They are a floor, not coverage. Every other item is judged by a reader.
 
 ## Don'ts
 
-- **No `Co-Authored-By: Claude` / `Generated with` trailers** on commits. Stripped from
-  15 commits once already; settings are configured to prevent recurrence.
+- **No `Co-Authored-By: Claude` / `Generated with` trailers** on commits. Settings are
+  configured to prevent them ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)).
 - **Never `mcp__codex__review` a document.** It reads the git range, not the text you
   pass — a doc "reviewed" that way was not reviewed at all. Docs go to
   `mcp__codex__exec` (Gate A).
@@ -200,15 +182,13 @@ reader can judge whether it still holds.
   resolve their generic command names against it.
 - **Never state what the manifest declares without reading it.** Any sentence
   describing which components are declared vs. convention-loaded must be checked
-  against `plugins/*/.claude-plugin/plugin.json` in the same change. Three sites said
-  it declares `hooks` when it declares nothing at all: the former `docs/architecture.md`
-  (now `docs/ARCHITECTURE.md`) and `MANIFEST.md` shipped that claim, and this file's own
-  layout tree (since moved to `docs/ARCHITECTURE.md`) was written with it before being
-  corrected in the same PR. It is the same wrong belief that produced
-  the 0.2.1 duplicate-hooks load failure, surviving in prose long after the code was
-  fixed. `scripts/check-invariants.sh` pins the manifest itself; nothing mechanical
+  against `plugins/*/.claude-plugin/plugin.json` in the same change: the wrong belief
+  behind the 0.2.1 duplicate-hooks load failure survived in prose long after the code was
+  fixed ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)).
+  `scripts/check-invariants.sh` pins the manifest itself; nothing mechanical
   can tell whether a sentence about it is true, so this rule is the only guard.
-  Before editing any of those three, find every site that makes such a claim:
+  Before editing `docs/ARCHITECTURE.md`, `MANIFEST.md`, this file, or such a sentence anywhere
+  else, find every site that makes such a claim:
   `grep -rniE 'declare[sd]?|convention[- ]load' --include='*.md' . | grep -v source-files/`
   (A narrower pattern like `"manifest declares"` misses the ones phrased as "never
   declared in the manifest" — which is most of them. Note `convention[- ]load` only
@@ -217,11 +197,9 @@ reader can judge whether it still holds.
   contains a form of *declare*, so read the hits rather than trusting the count.)
 - **Never describe what a gate proves without checking what it actually compares.**
   Prose that overstates a mechanism is this repo's most persistent defect, and it
-  regenerates: fixing the index-tree story took four Gate-B rounds because *each
-  correction introduced a subtler version of the same claim* — "the tree-hash proves
-  what was reviewed", then "what is being committed is what was reviewed", then "what a
-  commit would actually carry", then "everything a commit could carry". Every round
-  searched for the previous **phrase**, so a synonym survived. Search for the **claim**:
+  regenerates: each correction tends to introduce a subtler synonym of the same claim, so a
+  search for the previous **phrase** lets the synonym survive
+  ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). Search for the **claim**:
   `grep -rniE '(everything|anything|all content|any change)[^.]{0,80}\b(commit|fingerprint|hash)\b|\b(commit|fingerprint|hash)\b[^.]{0,80}(everything|anything|all content|any change)' --include='*.md' --include='*.sh' . | grep -vE 'source-files/|docs/superpowers/'`
   (The `\b` boundaries matter: without them `commit` matches `committed` and the
   recipe reports its own false positives.) Two things this does NOT do, stated so
@@ -236,25 +214,21 @@ reader can judge whether it still holds.
 - **Never replace a decision procedure without accounting for its old conditions.** List
   what the previous prose required, then mark each one kept, moved, or deliberately
   dropped. A rewrite reliably preserves the condition that motivated it and silently loses
-  the others: in the profiles cycle this happened ten times across `process-pr-review`,
-  §5, the spec and a story criterion — once making an eligible profile *sufficient* for a
-  Gate-B skip, which is the gate-off path that change existed to close. Amending one
+  the others ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). Amending one
   criterion also does not touch the prose that motivated it, so check the surrounding
   paragraphs of any rule you amend. No tool decides this: a dropped condition looks
   exactly like text that was never there.
 
 - **Never rename or delete a doc section without grepping for references first.**
-  `ci.yml` once pointed at a deleted README section; `MANIFEST.md` listed a `CLAUDE.md`
-  that did not exist. Docs-drift is this plugin's own taxonomy class and this repo is
-  its most frequent site. Before any rename or delete:
+  Docs-drift is this plugin's own taxonomy class and this repo is its most frequent site
+  ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). Before any rename or delete:
   `grep -rn "<old name/anchor>"` across the repo *and* the inline templates. The same
   applies to adding files: the layout tree in `docs/ARCHITECTURE.md` is part of the surface that drifts.
 - **Never splice data into shell source a prompt tells the agent to run without bounding it.**
   A value filled into a command or here-document — a directory name, a user's answer — is shell
   text once it is there, and a quoted here-document delimiter stops expansion but not a line that
-  ends the document. State the rule the value must meet, the check, and what happens when it fails.
-  `claude-init`'s project name did not, and one containing a line break could run the rest of the
-  template as commands (PR #27). Nothing mechanical finds this; it is a reading check.
+  ends the document. State the rule the value must meet, the check, and what happens when it fails
+  ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). Nothing mechanical finds this; it is a reading check.
 - **No dependency-freshness policy applies by ecosystem here** — this repo has no
   package manager and no runtime dependencies. Invariant 5 (exact pinning) is its
   equivalent, and it covers the tools CI installs.
@@ -295,10 +269,9 @@ than a false pass. Revisit if `pass`/`fail` ever gain logic that can legitimatel
 
 **`check-version-bump.sh main` has a precondition**, unlike everything else in the
 battery: it compares *commits*, so run it once the work is committed (the Gate-B WIP
-commit is the natural point) and against a base ref that is current. Run mid-loop with
-the plugin edits still in the working tree, it reports clean — correctly, and
-uselessly. CI passes the PR's own base ref instead of `main`. It is in the quality row
-because that row claims to be what CI runs, and as of invariant 12 that includes this.
+commit is the natural point) and against a current base ref; with plugin edits still
+uncommitted it reports clean, uselessly. CI passes the PR's own base ref instead of `main`.
+It is in the quality row because that row claims to be what CI runs.
 
 CI runs the parts as separate steps for readable failures; the chained form above
 is the single command a human runs. One difference is deliberate: CI's version-bump
@@ -306,8 +279,8 @@ step is `pull_request`-only, while the local battery always runs it (on `main`, 
 the merge-base is HEAD, it passes trivially).
 
 **Check 4i caps the gate rules at 10,000 bytes**, measured in two texts: `.claude/review-gates.md`
-and the fenced `### 2.1a` template in `workflow-init.md`. The rules grew to 139 kB once (cut to
-6.4 kB in #62); without a cap they regrow sentence by sentence. It measures size only.
+and the fenced `### 2.1a` template in `workflow-init.md`. Without a cap the rules regrow sentence by
+sentence ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). It measures size only.
 **Check 4j** fails when those two texts are not byte-identical; it compares bytes only, not
 whether either copy is right.
 

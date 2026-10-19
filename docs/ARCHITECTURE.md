@@ -52,7 +52,7 @@ plugins/dev-workflow/
   hooks/fixtures/                 # captured PostToolUse payloads the suite replays
   examples/                       # ships, but never scaffolded — one stack's answers
 docs/
-  ARCHITECTURE.md                 # this file — layout, components, the two design decisions
+  ARCHITECTURE.md                 # this file — layout, components, the two design decisions, rule history
   PRD.md                          # problem, success measures, non-goals, feature map
   TECH-STACK.md                   # tools the repo runs on, and where each version is pinned
   coding-workflow.md              # the methodology this plugin encodes
@@ -160,3 +160,34 @@ Two consequences worth knowing:
   narrower conditions (CHANGELOG 0.13.2). The hook reads the command and the resulting
   commit, not the message alone; any other commit it detects resets. A commit spelled so
   that the hook does not detect it as a commit at all is outside both rules.
+
+## Incidents behind the AGENTS.md rules
+
+The stories that motivated some rules in [`AGENTS.md`](../AGENTS.md); the rules themselves,
+with their one-clause reasons, stay there. Moved out of `AGENTS.md` to keep it small.
+
+- **No attribution trailers.** `Co-Authored-By: Claude` / `Generated with` trailers were
+  stripped from 15 commits once already.
+- **`examples/` is in the version-bump scope** (invariants 7 and 12). Reading
+  "shipped-but-not-scaffolded" as "not shipped" once made `examples/` look out of scope for
+  the version-bump rule.
+- **Reading the manifest before describing it.** Three sites said the manifest declares
+  `hooks` when it declared nothing at all: the former `docs/architecture.md` (now
+  `docs/ARCHITECTURE.md`) and `MANIFEST.md` shipped that claim, and `AGENTS.md`'s own layout
+  tree (since moved here) was written with it before being corrected in the same PR. It is the
+  same wrong belief that produced the 0.2.1 duplicate-hooks load failure.
+- **Searching for the claim, not the phrase.** Fixing the index-tree story took four Gate-B
+  rounds because each correction introduced a subtler version of the same claim: "the
+  tree-hash proves what was reviewed", then "what is being committed is what was reviewed",
+  then "what a commit would actually carry", then "everything a commit could carry". Every
+  round searched for the previous phrase, so a synonym survived.
+- **Accounting for a replaced procedure's conditions.** In the profiles cycle a rewrite lost
+  an earlier condition ten times across `process-pr-review`, §5, the spec and a story
+  criterion — once making an eligible profile *sufficient* for a Gate-B skip, which is the
+  gate-off path that change existed to close.
+- **Grepping before renaming a doc section.** `ci.yml` once pointed at a deleted README
+  section; `MANIFEST.md` listed a `CLAUDE.md` that did not exist.
+- **Bounding data spliced into shell source.** `claude-init`'s project name was not bounded,
+  and one containing a line break could run the rest of the template as commands (PR #27).
+- **The gate-rules size cap (check 4i).** The rules grew to 139 kB once and were cut to
+  6.4 kB in #62.
