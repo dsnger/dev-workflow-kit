@@ -32,8 +32,8 @@ AGENTS.md invariant 12 carries the complete list.
   scope line (the next line already scopes it to a third-party API), "(coverage floor, not a
   cage)" and a repeated "not instructions".
 - **"No fingerprint" message names its gate.** The hook's message now says the fingerprint is
-  Gate B's alone and Gate A is counted by call; a field reader had concluded Gate A went
-  uncounted. `docs/reference.md` adds why a spec commit with a non-plain command gets it.
+  Gate B's alone and Gate A is counted by call, and its recovery step names the next Gate B
+  pass; a field reader had concluded Gate A went uncounted. `docs/reference.md` adds why a spec commit with a non-plain command gets it.
 
 ## 0.36.0
 

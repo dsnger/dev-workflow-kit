@@ -1986,3 +1986,9 @@ without `jq` (counters identical in all four runs).
   its Gate A closed at `intake`'s amendment route, whose change record asks what the change means
   for reviews already run and, with no rule found, hands it to a human. sfx-wp-plugin-skills decided
   it case by case (its spec §12). *Trigger: the next story that changes the gate rules or intake.*
+- [ ] **The commit-check hook messages name no target model.** The seven `note` calls of the
+  PreToolUse commit check and the plan-execution check (`codex-gate.sh`, "Codex gate state: …",
+  "Codex Gate B …", "Codex Gate A …") carry neither the `Claude via Claude Code — gate hook.`
+  prefix the other contexts use nor a `Target model:` comment (`docs/prompt-standards.md` item 1).
+  Pre-existing; changing it touches seven exact-text tests. *CodeRabbit on PR #84, valid but out of
+  scope.*
