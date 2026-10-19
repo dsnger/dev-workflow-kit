@@ -22,6 +22,14 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.37.1
+
+- **Below-floor messages name the early close.** The hook's Gate A and Gate B below-floor
+  messages now say that a zero-finding last pass may close early, and otherwise point to
+  the closure ordering, normally another pass. The hook reads no findings, so it still
+  fires on every commit that reaches its floor check below the threshold; a legal early
+  close read as a hook miscount in the field. `docs/reference.md` explains why.
+
 ## 0.37.0
 
 - **One dispositions file name.** Both gate-rule copies (`.claude/review-gates.md`,
