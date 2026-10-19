@@ -1608,7 +1608,7 @@ case "$event" in
               # was reviewed.
               note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually the working tree or the index changed since the review. Next: a fresh Gate-B pass, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, other causes and checks: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
             elif [ "$passes" -lt "$floor" ]; then
-              note "Codex Gate B floor NOT met: $passes/$floor mcp__codex__review pass(es) since the last commit. What this cycle does next is $policy's closure ordering's, read there entire; the skip rule never lets a running cycle stop short." "⚠ Codex Gate B below floor ($passes/$floor)"
+              note "Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings: close here only if your last pass had zero findings ($policy's early close); otherwise repair and run another pass." "⚠ Codex Gate B below floor ($passes/$floor): fine only after a zero-finding last pass"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.
@@ -1645,7 +1645,7 @@ case "$event" in
               passesS=$(read_count "$countA_file.spec")
               note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floor). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floor pass(es), counted as calls with no content check." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floor)"
             elif [ "$passesA" -lt "$floor" ]; then
-              note "Codex Gate A floor NOT met: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls with no content check. What this cycle does next is $policy's closure ordering's, read there entire." "⚠ Codex Gate A below floor ($passesA/$floor)"
+              note "Codex Gate A below floor: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: proceed only if its last pass had zero findings ($policy's early close); otherwise repair and run another pass." "⚠ Codex Gate A below floor ($passesA/$floor): fine only after a zero-finding last pass"
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
               # mcp__codex__exec CALLS, bound to no artifact. Hashing the artifact would

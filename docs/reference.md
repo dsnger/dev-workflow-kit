@@ -324,8 +324,13 @@ which is not evidence that Codex read those bytes; `.context/` and untracked ign
 paths are excluded, and staging counts, because the fingerprint covers the index and
 that is what a commit carries.
 
-**The hook's messages.** `⚠ Codex Gate A below floor (1/3)` is the counter, not an
-error. `✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on
+**The hook's messages.** `⚠ Codex Gate A below floor (1/3): fine only after a
+zero-finding last pass` is the counter, not an error, and the same holds for Gate B. The
+hook counts passes and never reads a findings file, so it fires on every commit below the
+floor, including the closing commit of a cycle whose last pass had zero findings and
+closed early, which the rules allow. That commit is correct; any other commit below the
+floor owes a repair and another pass. The docs-only skip never lets an open cycle stop
+short. `✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on
 current fingerprint)` carries three different numbers: the passes the hook credited this
 cycle (one per `full` call or per `spec` + `quality` pair on the same `baseSha` and
 `headSha`), the hook's own reminder threshold, and the consecutive credited passes on the

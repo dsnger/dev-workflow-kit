@@ -1561,6 +1561,29 @@ expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 [ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
 reset_all; rev; rev; rev
 
+# 29d. BELOW-FLOOR branches, Gate B at 1/3 and Gate A at 1/3, each with jq and jq-free.
+#      The hook reads no findings, so these must say a zero-finding last pass may close
+#      early (the field read "floor NOT met 2/3" after a legal early close as a hook defect).
+belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings: close here only if your last pass had zero findings (this project's review policy's early close); otherwise repair and run another pass."
+belowB_msg="⚠ Codex Gate B below floor (1/3): fine only after a zero-finding last pass"
+belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: proceed only if its last pass had zero findings (this project's review policy's early close); otherwise repair and run another pass."
+belowA_msg="⚠ Codex Gate A below floor (1/3): fine only after a zero-finding last pass"
+commitp='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
+skillp='{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'
+exact_pair() { # $1 = label, $2 = output, $3 = expected ctx, $4 = expected msg
+  [ "$(json_field "$2" additionalContext)" = "$3" ] && pass "$1 additionalContext matches exactly" || fail "$1 additionalContext matches exactly"
+  [ "$(json_field "$2" systemMessage)" = "$4" ] && pass "$1 systemMessage matches exactly" || fail "$1 systemMessage matches exactly"
+}
+reset_all; rev
+exact_pair "Gate B below floor" "$(run "$commitp")" "$belowB_ctx" "$belowB_msg"
+reset_all; nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
+exact_pair "Gate B below floor (jq-free)" "$(nojq_run "$commitp")" "$belowB_ctx" "$belowB_msg"
+reset_all; execp
+exact_pair "Gate A below floor" "$(run "$skillp")" "$belowA_ctx" "$belowA_msg"
+reset_all; nojq_run "$(payload mcp__codex__exec "$(resp_success)")" >/dev/null
+exact_pair "Gate A below floor (jq-free)" "$(nojq_run "$skillp")" "$belowA_ctx" "$belowA_msg"
+reset_all; rev; rev; rev
+
 # 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
 #     writes with `2>/dev/null || true` because the hook must always exit 0, so a pass can
 #     hash perfectly and still leave the old fingerprint behind. Three shapes, because
