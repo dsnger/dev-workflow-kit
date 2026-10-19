@@ -261,7 +261,7 @@ reader can judge whether it still holds.
 
 ## Commands
 
-Every command below was run in this session and observed to exit 0.
+Every command below was run in this session and observed to exit 0, except the prompt eval, whose row states its exit.
 
 | Role | Command |
 |---|---|
