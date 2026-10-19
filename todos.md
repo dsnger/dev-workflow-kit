@@ -1791,17 +1791,24 @@ backlog.
   entry copies the suite into a temporary plugin copy; `not fired` is `min: 0` plus `max: 0`. Run
   2026-10-19, final grader: six cases 1.00 with the plugin (the three should-fire cases 0.00 without it);
   `wip-commit-form` 0.00 with and without, exit 1, $1.69 — see the next row.
-- [ ] **WIP commit rule: its own Bash call.** The eval case `wip-commit-form` (0.35.0) fails: asked for a
+- [x] **WIP commit rule: its own Bash call.** The eval case `wip-commit-form` (0.35.0) fails: asked for a
   WIP commit, the agent writes `printf … && git add … && git commit -q -m 'WIP: …'`, one shell line,
   which the hook's `is_wip_message_cmd` does not recognise, so the pass counter resets. The rule's "one
   line" reads as one shell line. Say "as its own Bash call, nothing chained" in both rule copies (check
   4i leaves 17 bytes, so trim elsewhere), or let the hook accept a trailing `&& git commit -m 'WIP: …'`
   after `git add` (loosens a firing check; invariant 2). Rerun the eval after. *Gate B cycle
-  kit035gb1019, pass 1; observed in the eval run and in this session's own first WIP commit.*
-- [ ] **Project `AGENTS.md` size warning in `/workflow-init`.** Warn when a project's `AGENTS.md`
+  kit035gb1019, pass 1; observed in the eval run and in this session's own first WIP commit.* Done in
+  0.36.0 with the prompt fix: both rule copies now say "a Bash call holding only `git commit -m
+  'WIP: <subject>'`" (9,998 bytes, under check 4i). The hook stays as it was, because accepting a
+  chain means parsing more shell text, the class that drew Majors before. Eval rerun 2026-10-19: all
+  7 cases pass, `wip-commit-form` 1.00 with and without the plugin (the case carries the rule in
+  its own system prompt, so it tests the wording, not the plugin).
+- [x] **Project `AGENTS.md` size warning in `/workflow-init`.** Warn when a project's `AGENTS.md`
   passes Codex's default instruction read limit. The 32 KiB figure comes from summary source [8]
   only (weak evidence): verify it against Codex's own docs or a probe first. *Gap analysis
-  2026-10-17.*
+  2026-10-17.* Done in 0.36.0: 32768 bytes verified in Codex source (tag `rust-v0.162.1`) and the
+  Codex AGENTS.md guide; one budget for all `AGENTS.md` files, cut silently past it. Figure and
+  sources in `docs/reference.md` § workflow-init. Not probed with a real over-limit file.
 - [x] **"declined" counts in the curve line.** Add the per-pass count of `declined` dispositions to
   the cycle's curve line, so review noise can be measured, not guessed (rules change, both copies,
   check 4i size cap). *Gap analysis 2026-10-17.* Done in 0.35.0; `ledger-metrics.py` reads it.
@@ -1809,7 +1816,7 @@ backlog.
   possible causes moves to `docs/reference.md`. Hook change, tests under `sh` and `dash`. *Gap
   analysis 2026-10-17.* Done in 0.35.0 for the five messages that carried cause lists.
 - [ ] **Trim this repository's `AGENTS.md`.** 24.5 kB (2026-10-17), below but near the 32 KiB Codex read
-  limit named in the row above (unverified). Move history paragraphs (incident stories under Don'ts)
+  limit named in the row above (verified in 0.36.0). Move history paragraphs (incident stories under Don'ts)
   to `docs/ARCHITECTURE.md` or the CHANGELOG and keep each rule with its one-clause why. *Gap
   analysis 2026-10-17.*
 - [ ] **Revalidate `docs/prompt-standards.md`** against summary sources [1] and [6] of

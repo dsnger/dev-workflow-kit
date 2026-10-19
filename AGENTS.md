@@ -261,7 +261,7 @@ reader can judge whether it still holds.
 
 ## Commands
 
-Every command below was run in this session and observed to exit 0, except the prompt eval, whose row states its exit.
+Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
@@ -273,7 +273,7 @@ Every command below was run in this session and observed to exit 0, except the p
 | docs link check (relative Markdown links resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
 | build | n/a — nothing is compiled or bundled |
-| prompt eval (by hand before a version bump, not in CI; costs about $2 per run; exits 1 while any case fails — the one row here not observed to exit 0: on 0.35.0 `wip-commit-form` fails, `todos.md` row "WIP commit rule: its own Bash call") | `d=$(mktemp -d) && cp -R plugins/dev-workflow "$d/" && cp -R evals "$d/dev-workflow/evals" && claude plugin eval "$d/dev-workflow" --runs 1 --allow-tools Bash --no-publish --trust-plugin` — `--eval-dir` only accepts a path inside the plugin, so the suite is copied into a temporary plugin copy |
+| prompt eval (by hand before a version bump, not in CI; costs about $2 per run; exits 1 while any case fails; on 0.36.0 all 7 cases passed and it exited 0) | `d=$(mktemp -d) && cp -R plugins/dev-workflow "$d/" && cp -R evals "$d/dev-workflow/evals" && claude plugin eval "$d/dev-workflow" --runs 1 --allow-tools Bash --no-publish --trust-plugin` — `--eval-dir` only accepts a path inside the plugin, so the suite is copied into a temporary plugin copy |
 
 **Prerequisites and pinning.** The quality command needs `shellcheck` (0.11.0 locally;
 CI runs the pinned image `koalaman/shellcheck:v0.11.0`), the `claude` CLI (CI pins

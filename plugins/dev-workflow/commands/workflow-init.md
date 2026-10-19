@@ -164,7 +164,13 @@ Check, in order:
 4. **`gh` CLI** — `command -v gh`. **Optional**: only `/dev-workflow:process-pr-review`
    needs it. Mark it optional so a missing `gh` doesn't read as a broken setup.
 5. **AGENTS.md** — present or not. Absent is normal on a first run (Step 3 writes it);
-   present means Step 3 reviews and extends it instead.
+   present means Step 3 reviews and extends it instead. When present, count its bytes
+   (`wc -c < "$(git rev-parse --show-toplevel)/AGENTS.md"`, so a run from a subdirectory
+   still counts the root file). Over 32768, report `present, <n> bytes — over Codex's default 32 KiB
+   read budget` and say why it matters: by default Codex loads at most 32768 bytes of
+   `AGENTS.md` files in total and cuts the rest, so a gate may check against a cut copy unless
+   `project_doc_max_bytes` is raised in the Codex config. Warn only: never trim or edit the
+   file for this.
 6. **Stack** — package manager (`pnpm-lock.yaml` / `package-lock.json` / `bun.lockb` /
    none), language, test runner, CI provider. This resolves the `TODO(stack)` markers.
    Detect, then *state what you detected* — do not silently assume.
@@ -611,7 +617,7 @@ Tool: `mcp__codex__review` (args `instruction`, `whatWasImplemented`, `baseSha`,
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase object names before the first call — the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
-Inside an open cycle, make each commit before the closing act one line, `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one. The closing act's commit takes a non-WIP subject and its record lines.
+Inside an open cycle, make each commit before the closing act a Bash call holding only `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, and a subject ending in `(WIP)` is not one. The closing act's commit takes a non-WIP subject and its record lines.
 
 Check against @AGENTS.md.
 
@@ -1645,6 +1651,8 @@ Cover, in this order:
 End Step 3 by showing the complete `AGENTS.md` and getting the user's explicit
 approval before writing it — same rule as everywhere else: they see the bytes that
 land.
+Before writing, count the bytes of the exact approved text, not the existing file. If it
+is over 32768 bytes, give the Step 1 item 5 warning before writing it; the user decides whether to shorten it. Never shorten it yourself.
 
 ## Step 4 — Print the closing checklist
 
