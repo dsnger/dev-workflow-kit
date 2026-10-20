@@ -22,6 +22,21 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.39.0
+
+- **A plan names its long runs and cuts the unit by them.** Decision D16 (Daniel, 2026-10-20). The
+  scaffolded `CLAUDE.md` §4 now has a plan list each run it expects to take 45 minutes or more: its
+  name, what it proves, an estimated duration and how often it runs. The handover boundary falls so
+  that no unit carries more than 2 hours of those runs (duration times expected runs), adding earlier
+  boundaries after completed tasks where needed; a single longer run gets a unit of its own, and a
+  boundary never falls inside a running review cycle. Where `superpowers:writing-plans` runs every
+  task in one session past a handover boundary, the `CLAUDE.md` wording governs. Field evidence: an
+  SFX plan of 10 tasks with one boundary at the end ran one session of over 15 hours with two
+  compactions, most of it on local end-to-end runs of about 52 minutes and screen compares of about
+  45 minutes, two of them rerun after macOS killed them. The 2-hour limit is a choice from that
+  evidence, not a measured optimum: about two such runs per unit, an expected rerun counted
+  toward the total.
+
 ## 0.38.1
 
 - **A codebase-memory marker counts only alone on its own line.** `/workflow-init` sets aside the

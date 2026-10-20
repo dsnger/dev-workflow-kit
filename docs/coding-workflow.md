@@ -113,7 +113,12 @@ expected outcomes (failures included), and the implementer's remaining decision 
 Function bodies and complete tests belong in the code, not the plan; a short sketch or
 a bounded probe is there only to resolve a named uncertainty. Global constraints are
 restated at the top, and the plan names its sources, its impact boundary and its
-handover boundary. Each diff stays traceable to a requirement without the plan
+handover boundary. It also lists each run it expects to take 45 minutes or more (a
+full end-to-end suite, a screenshot compare): what the run proves, its estimated
+duration and how often it runs. The handover boundary then falls so that no unit
+carries more than 2 hours of those runs, with earlier boundaries after completed tasks
+where needed; a single longer run gets a unit of its own, and a boundary that would fall
+inside a running review cycle moves to that cycle's close. Each diff stays traceable to a requirement without the plan
 pre-writing it (scaffolded `CLAUDE.md` §4, "Spec, plan and code").
 
 **5. Gate A on the plan.** The same independent review, now applied to the plan —
