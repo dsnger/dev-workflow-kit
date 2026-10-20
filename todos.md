@@ -2043,8 +2043,8 @@ without `jq` (counters identical in all four runs).
 
 ## From kit 0.39.0 (2026-10-20) — out of scope there, backlog only
 
-Evidence for both rows: the SFX S6e2 plan
-(`/Users/daniel/DEVELOPMENT/APPS/sfx-time-tracking-dashboard-lanes/s6e2/docs/superpowers/plans/2026-10-20-v2-s6e2-datacare-account-access-cleanup.md`)
+Evidence for both rows: the S6e2 plan in the SFX time-tracking dashboard repository
+(`docs/superpowers/plans/2026-10-20-v2-s6e2-datacare-account-access-cleanup.md` there, outside this repo)
 ran one session from 06:40 to past 22:00 CEST, mostly on local runs: full e2e about 52 min, the screens
 compare about 45 min, several of each, two killed by macOS memory pressure and rerun.
 
