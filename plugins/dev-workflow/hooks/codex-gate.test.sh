@@ -3508,6 +3508,7 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one plain git commit -m 'WIP: <subject>' Bash call, run from the repository, with no cd, git -C, chain or heredoc."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
+  # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
   for c in "cd $work; git commit -m 'WIP: a'" \
            "git -C $work commit -m 'WIP: a'" \
            "git add app.ts && git commit -m 'WIP: a'" \
