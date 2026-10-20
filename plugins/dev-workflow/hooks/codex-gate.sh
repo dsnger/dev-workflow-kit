@@ -1102,8 +1102,9 @@ flush_notes() {
 # folded first, so a commit split over lines (`git \` newline `commit`) still matches.
 is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:space:]].*commit'; }
 
-# The reset after the command needs more than that match (0.30.0 audit, finding 4):
-# `commit` as git's subcommand, or HEAD moved during the call (head_moved). The subcommand
+# The reset after the command needs more than that match: HEAD or its reflog moved during
+# the call, or the hook cannot tell (head_moved). runs_git_commit no longer resets on its own
+# (0.37.3); it only decides where PreToolUse adds the not-WIP sentence. Its subcommand
 # test wants `git` at a command position — the start, or after `;`, `&`, `|`, `(`, `{`, `!`
 # or a backtick, past any `VAR=value` words and the wrappers `sudo`, `command`, `exec`,
 # `env`, `nohup`, `time`, `nice` and the keywords `if`, `elif`, `then`, `else`, `while`,
@@ -1114,10 +1115,7 @@ is_commit() { printf '%s' "$1" | tr '\n' ' ' | grep -Eq '(^|[^[:alnum:]])git[[:s
 # `git log --grep="git commit"` and `git log | grep -i commit` keep them too, and a commit
 # hidden in quotes (`sh -c "git commit"`) or behind another prefix (`xargs git commit`) is
 # left to head_moved. A line continuation is folded into a space; any other newline
-# separates commands. Neither matcher sees an alias (`git ci`). The subcommand test is what
-# still resets a commit that fails. A command holding a background `&` anywhere, quoted or
-# not (`sh -c 'sleep 2; git commit' &`), resets too (shell_backgrounds): its commit may run
-# after PostToolUse, when an unchanged HEAD proves nothing.
+# separates commands. Neither matcher sees an alias (`git ci`).
 runs_git_commit() {
   _t="[^[:space:];&|()]+"
   _w="([A-Za-z_][A-Za-z0-9_]*=${_t}[[:space:]]+|(sudo|command|exec|env|nohup|time|nice|if|elif|then|else|while|until|do)[[:space:]]+)*"
@@ -1125,10 +1123,6 @@ runs_git_commit() {
     sed -E "s/'[^']*'|\"[^\"]*\"/Q/g; s/--(git-dir|work-tree|namespace|config-env)[[:space:]]+/--\1=/g" |
     grep -Eq "(^|[;&|({!\`])[[:space:]]*$_w([^[:space:];&|()]*/)?git([[:space:]]+(-C|-c)[[:space:]]+$_t|[[:space:]]+-([^Cc[:space:];&|()]|[^[:space:];&|()]{2,}))*[[:space:]]+commit([[:space:];&|()<>\`\"']|\$)"
 }
-
-# Any `&` that is not `&&` or part of a redirection (`>&`, `<&`, `&>`): a shell background
-# job, also inside quoted text. Loose on purpose: a `&` in a message (`-m "a & b"`) resets.
-shell_backgrounds() { printf '%s' "$1" | sed -E 's/&&//g; s/[<>]&//g; s/&>//g' | grep -q '&'; }
 
 # A WIP commit is cycle-internal, not a cycle boundary. CLAUDE.md §5 tells the user
 # to make one so `mcp__codex__review` has a non-empty range to read (baseSha=HEAD is
@@ -1141,13 +1135,15 @@ shell_backgrounds() { printf '%s' "$1" | sed -E 's/&&//g; s/[<>]&//g; s/&>//g' |
 # commit runs; PostToolUse decides whether to keep the counters, after it ran. A reminder
 # shown in doubt costs nothing, so is_wip_commit_pre refuses whenever anything could change
 # the message; is_wip_commit_post can read the commit that resulted, so it keeps the counters
-# only when that commit is WIP. Everything else resets, the safe direction.
+# only when that commit is WIP. Every other commit resets, the safe direction; a call that
+# made none keeps them (head_moved).
 #
 # `-m "wip…"`: an allow-list again — one line of exactly `git commit`, then only `-a`,
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
-# metacharacter or backslash anywhere (the result is attributed through the call's top-level
+# metacharacter or backslash anywhere, except `(` and `)` inside single quotes, where the
+# shell reads them as text (the result is attributed through the call's top-level
 # `tool_use_id`, see the record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
@@ -1212,12 +1208,14 @@ head_is_wip() { git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '
 is_wip_message_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
-  printf '%s' "$1" | grep -q '[;&|<>$`()\\]' && return 1
+  printf '%s' "$1" | grep -q '[;&|<>$`\\]' && return 1
+  printf '%s' "$1" | sed "s/'[^']*'//g" | grep -q '[()]' && return 1
   _ok='(-a|--all|-q|--quiet|--no-verify|-n|--amend|--allow-empty)'
   printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
 }
 # A commit message that starts with `wip` in a call is_wip_message_cmd refuses (a `cd`,
-# `git -C`, chain or heredoc) and runs_git_commit sees: PreToolUse says the counters will be cleared. Loose on purpose;
+# `git -C`, chain or heredoc) and runs_git_commit sees: PreToolUse says the counters are cleared
+# unless HEAD and its reflog stay unchanged. Loose on purpose;
 # a heredoc body line starting with `wip` matches too, and an extra sentence costs nothing.
 looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*[$]?['\"]?[[:space:]]*wip|^[[:space:]]*['\"]?[[:space:]]*wip"; }
 is_wip_amend_cmd() {
@@ -1247,8 +1245,8 @@ call_record_path() { # $1 = prefix; this call's record path; fails when the id i
   printf '%s%s' "$1" "$_id"
 }
 
-# Whether the Bash call that matched is_commit moved HEAD: the backstop for a commit that
-# runs_git_commit's spelling test misses (`sh -c "git commit"`, an option it does not know).
+# Whether the Bash call that matched is_commit moved HEAD: the reset's only test, so a commit
+# no spelling test sees (`sh -c "git commit"`, an option it does not know) resets as well.
 # PreToolUse records HEAD under this call's tool_use_id, the same per-call naming as the
 # `-m wip` record, with the HEAD reflog's length; PostToolUse compares both and removes it.
 # In doubt it answers "moved", so the caller resets, the safe direction: no usable id, no
@@ -1515,21 +1513,15 @@ case "$event" in
         # never reaches a later cap check. A WIP commit does NOT close it
         # (see is_wip_commit_post).
         #
-        # We reset regardless of whether the commit actually SUCCEEDED. The Bash
-        # tool_response shape is documented as {stdout, stderr, interrupted, isImage}
-        # (https://code.claude.com/docs/en/hooks.md) — it carries NO exit status, so a
-        # failed commit is not reliably distinguishable from a successful one, and
-        # scraping stderr for git's error prose would be a guess that breaks silently.
-        # So we take the safe direction: a failed commit that resets costs only
-        # re-running the passes. The opposite error — skipping a reset because we
-        # wrongly judged the commit failed — would carry passes across a real cycle
-        # boundary and produce a false ✓, which is the failure this hook exists to
-        # prevent. Revisit if an exit-status field is ever documented.
-        #
-        # A reset needs spelling (runs_git_commit), effect (head_moved) or a background job
-        # whose effect may come later (shell_backgrounds); see each.
-        _moved=1; is_commit "$cmd" && head_moved && _moved=0
-        if is_commit "$cmd" && { [ "$_moved" -eq 0 ] || runs_git_commit "$cmd" || shell_backgrounds "$cmd"; } && ! is_wip_commit_post "$cmd"; then
+        # The Bash tool_response is documented as {stdout, stderr, interrupted, isImage}
+        # (https://code.claude.com/docs/en/hooks.md): no exit status. So the hook judges
+        # the effect, not the text: a call that left HEAD and the HEAD reflog unchanged
+        # made no commit here (a failed commit, a heredoc or printf naming `git commit`)
+        # and keeps the counters (0.37.3; before, the spelling alone reset). In doubt
+        # head_moved answers "moved" and the cycle resets, the safe direction.
+        # shortcut: a commit sent off with a shell `&` that lands after the call returns
+        # leaves HEAD unchanged at PostToolUse and keeps the counters; no field case yet.
+        if is_commit "$cmd" && head_moved && ! is_wip_commit_post "$cmd"; then
           rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" "$capextra_file"
           retire_legacy quiet
           # The closing act's commit precedes plan execution, which still reads the closed
@@ -1628,9 +1620,10 @@ case "$event" in
             gone "$pending_file" || note "$PENDING_AT_COMMIT_CTX" "$PENDING_AT_COMMIT_MSG"
           fi
           # Target model: Claude via Claude Code. The causes are in docs/reference.md § Hook messages.
-          # runs_git_commit: PostToolUse then always clears, so the sentence never overstates.
+          # runs_git_commit: only where `git commit` stands as a command of its own; the
+          # sentence states head_moved's rule, so it holds whether or not the commit succeeds.
           if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd" && runs_git_commit "$cmd"; then
-            note "This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared"
+            note "This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves"
           fi
           fi
           # Every commit attempt, WIP and docs-only included, and both gates: a cap

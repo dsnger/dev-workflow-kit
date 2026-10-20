@@ -325,6 +325,15 @@ which is not evidence that Codex read those bytes; `.context/` and untracked ign
 paths are excluded, and staging counts, because the fingerprint covers the index and
 that is what a commit carries.
 
+**When the counters reset.** After a Bash call whose text
+looks like a commit, the hook compares HEAD and the length of HEAD's reflog with what it
+recorded before the call. Both unchanged (a commit that failed, a heredoc or `printf` that only
+names `git commit`): the counters stay. Either one changed: they reset, unless the call is a WIP
+commit the hook recognises. They reset too when the hook cannot compare: no record from before
+the call, an empty or unreadable reflog, or a call sent to the background (`run_in_background`).
+A commit that a shell `&` sends off and that lands after the call returns is not seen, and
+the counters stay.
+
 **The hook's messages.** `⚠ Codex Gate A below floor (1/3): a zero-finding last pass may
 close early` is the counter, not an error, and the same holds for Gate B. The hook counts
 passes and never reads a findings file, so the line appears whenever its floor check runs
@@ -353,18 +362,20 @@ threshold was not met when implementation starts, it says so right then.
 The hook's messages say what happened and what to do next. The possible causes behind six
 of them live here.
 
-**Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared`).
-The commit message starts with `WIP`, but the call is not the plain form, so the hook clears
-the pass counters after it. The reminder then adds: *This call is not
-counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git
+**Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).
+The commit message starts with `WIP`, but the call is not the plain form, so if it commits,
+the hook clears the pass counters after it. The reminder then adds: *This call is not
+counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD
+and its reflog unchanged; a WIP commit is one git
 commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd,
 git -C, chain or heredoc;* then a link here. Why those forms are refused: after the commit the hook checks the new HEAD of the
 repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
 that check cannot tie to the call, so these forms reset, the safe direction. A plain subject
-holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The sentence appears
-only where `git commit` stands as a command of its own, the case in which the counters are
-always cleared; a commit hidden in quotes (`sh -c "git commit …"`) gets none. The match is
+holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The
+one exception is `(` and `)` inside single quotes, where the shell reads them as text:
+`-m 'WIP: fix x (y)'` is the plain form, `-m "WIP: fix x (y)"` is not. The sentence appears
+only where `git commit` stands as a command of its own; a commit hidden in quotes (`sh -c "git commit …"`) gets none. The match is
 loose: a heredoc body line starting with `wip` also adds the sentence. The sentence does not
 appear when the plain form itself is refused because the repository's hooks or settings could
 rewrite the message; that commit gets the ordinary reminder only.
@@ -417,7 +428,7 @@ another non-file, or another writer may have recreated it.
 **No recorded fingerprint** (`⚠ Codex Gate B: no recorded fingerprint`). No
 `mcp__codex__review` has been credited (a single-branch call waiting for its partner, and a
 call whose request was rejected, write no fingerprint by design); the last credit's
-fingerprint could not be written or read back; or a non-WIP commit attempt cleared it while
+fingerprint could not be written or read back; or a non-WIP commit cleared it (see When the counters reset, above) while
 the cycle stayed open. It also appears on a spec or plan commit whose command is more than
 `git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
 only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
