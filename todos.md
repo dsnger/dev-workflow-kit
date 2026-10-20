@@ -2028,3 +2028,15 @@ without `jq` (counters identical in all four runs).
   after a large change; a change on the default branch itself. No closure decision has an eval case
   today, so this is the suite's first. *Gate A pass 1, MINOR. Trigger: a field close that misreads
   the predicate, or the next eval-suite change.*
+
+## From kit 0.38.1 (2026-10-20) — watch only, nothing implemented here
+
+- [ ] **Carry-forward text read as an injection attempt.** In the SFX Dev Factory Kit, giving the
+  reviewer its own earlier findings from pass 2 on led to an injection loop: Codex read quoted text
+  and imperatives as manipulation, and four filter attempts failed; decision D22 there sends no
+  earlier findings to the reviewer. This kit still carries forward, but only its own structured
+  Blocker and Major findings with verdict and reason (`.claude/review-gates.md`, "Both gates, from
+  pass 2 on"). A field search on 2026-10-20 found no such flag in SFX, canvas, sfx-bricks-child or
+  sfx-wp-plugin-skills pass files. Remedy to consider then: change the shape (structured state), do
+  not filter free text. *Trigger: the first pass file here that flags carry-forward text as an
+  injection attempt.*
