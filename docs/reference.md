@@ -314,9 +314,8 @@ Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) 
 its own. A spec change after its Gate A closed goes through `intake`'s amendment route.
 
 **Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'`, a Bash call of its own (gives Codex a
-range to read; the hook keeps the cycle open across a commit it recognises as WIP; a
-WIP-looking `git commit` it does not recognise gets one more sentence before it runs, see
-[Hook messages](#hook-messages)), then
+range to read; the hook keeps the cycle open across a commit it recognises as WIP; for one
+it does not, see [Hook messages](#hook-messages)), then
 loops `mcp__codex__review` as two calls per pass, `reviewType: spec` then `quality`, on
 the same `baseSha` and `headSha`. Invalidation is by content: any change to included
 content present when the hook runs, even from a formatter, makes the hook report that it
