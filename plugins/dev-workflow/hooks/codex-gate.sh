@@ -1219,7 +1219,7 @@ is_wip_message_cmd() {
 # A commit message that starts with `wip` in a call is_wip_message_cmd refuses (a `cd`,
 # `git -C`, chain or heredoc): PreToolUse says the counters will be cleared. Loose on purpose;
 # a heredoc body line starting with `wip` matches too, and an extra sentence costs nothing.
-looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*['\"]?[[:space:]]*wip|^[[:space:]]*wip"; }
+looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*[$]?['\"]?[[:space:]]*wip|^[[:space:]]*['\"]?[[:space:]]*wip"; }
 is_wip_amend_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
@@ -1629,7 +1629,7 @@ case "$event" in
           fi
           # Target model: Claude via Claude Code. The causes are in docs/reference.md § Hook messages.
           if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd"; then
-            note "This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one plain git commit -m 'WIP: <subject>' Bash call, run from the repository, with no cd, git -C, chain or heredoc." "ℹ Not counted as a WIP commit: pass counters cleared"
+            note "This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared"
           fi
           fi
           # Every commit attempt, WIP and docs-only included, and both gates: a cap

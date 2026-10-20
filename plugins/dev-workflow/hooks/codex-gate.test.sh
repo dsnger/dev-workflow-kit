@@ -3505,7 +3505,7 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
-wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one plain git commit -m 'WIP: <subject>' Bash call, run from the repository, with no cd, git -C, chain or heredoc."
+wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
   # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
@@ -3513,7 +3513,9 @@ for r in run nojq_run; do
            "git -C $work commit -m 'WIP: a'" \
            "git add app.ts && git commit -m 'WIP: a'" \
            "git commit -am 'WIP: a' && true" \
-           'git commit -m \"$(cat <<'"'"'EOF'"'"'\nWIP: a\nEOF\n)\"'; do
+           'git commit -m \"$(cat <<'"'"'EOF'"'"'\nWIP: a\nEOF\n)\"' \
+           "git commit -m \$'WIP: a'" \
+           "git commit -m \\\\\n'WIP: a'"; do
     reset_all; rev
     out=$($r "$(pre46 "$c")")
     printf '%s' "$out" | grep -qF "$wipsent" && pass "46 $r: refused WIP form gets the sentence: $c" \

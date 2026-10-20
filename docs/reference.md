@@ -358,11 +358,12 @@ of them live here.
 The commit message starts with `WIP`, but the call is not the plain form, so the hook clears
 the pass counters after it, as for any other commit it detects. The reminder then adds: *This call is not
 counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one plain
-git commit -m 'WIP: <subject>' Bash call, run from the repository, with no cd, git -C, chain
-or heredoc.* Why those forms are refused: after the commit the hook checks the new HEAD of the
+git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd,
+git -C, chain or heredoc,* and links here. Why those forms are refused: after the commit the hook checks the new HEAD of the
 repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
-that check cannot tie to the call, so these forms reset, the safe direction. The match is
+that check cannot tie to the call, so these forms reset, the safe direction. A plain subject
+holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The match is
 loose: a heredoc body line starting with `wip` also adds the sentence. The sentence does not
 appear when the plain form itself is refused because the repository's hooks or settings could
 rewrite the message; that commit gets the ordinary reminder only.
