@@ -2003,3 +2003,15 @@ without `jq` (counters identical in all four runs).
   the rest of a truncated reply. The hook counts calls, bound to no artifact, so it cannot tell a
   re-fetch from a pass. Counting unchanged in 0.37.2. *Trigger: the next field report of a Gate-A
   count above its pass files, or the next story that changes Gate-A counting.*
+
+## From kit 0.37.3 (2026-10-20) — Gate B `k0373gb1020` Minors, accepted, not repaired
+
+- [ ] **A double quote inside a single-quoted WIP subject refuses its parentheses.**
+  `git commit -m 'WIP: fix "x" (y)'` is not counted as WIP: any double quote in the command keeps
+  `(` `)` refused, the price of not tracking quote context (`is_wip_message_cmd`). Documented as
+  "a command with no double quote" in `docs/reference.md`. *Pass 2 spec, MINOR. Trigger: a field
+  report of such a subject.*
+- [ ] **An empty `.git/logs/HEAD` with the branch reflog intact.** `git reflog show HEAD` then falls
+  back to the branch's reflog, so the "empty or unreadable reflog resets" rule does not fire; a commit
+  on the branch still grows that reflog and resets. *Pass 2 spec, MINOR. Trigger: a field report, or
+  the next change to `head_reflog_len`.*

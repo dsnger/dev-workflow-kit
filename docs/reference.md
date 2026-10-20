@@ -363,15 +363,18 @@ The hook's messages say what happened and what to do next. The possible causes b
 of them live here.
 
 **Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).
-The commit message starts with `WIP`, but the call is not the plain form, so if it commits,
-the hook clears the pass counters after it. The reminder then adds: *This call is not
+The commit message starts with `WIP`, but the call is not the plain form, so if it moves this
+repository's HEAD or its reflog, the hook clears the pass counters after it (see When the
+counters reset, above). The reminder then adds: *This call is not
 counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD
 and its reflog unchanged; a WIP commit is one git
 commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd,
 git -C, chain or heredoc;* then a link here. Why those forms are refused: after the commit the hook checks the new HEAD of the
 repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
-that check cannot tie to the call, so these forms reset, the safe direction. A plain subject
+that check cannot tie to the call, so these forms are never kept as WIP: one that moves this
+repository's HEAD resets, the safe direction, and one that commits only in another repository
+leaves the counters alone. A plain subject
 holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The
 one exception is `(` and `)` inside single quotes, where the shell reads them as text, in a
 command with no double quote: `-m 'WIP: fix x (y)'` is the plain form, `-m "WIP: fix x (y)"` is not. The sentence appears
