@@ -1992,3 +1992,11 @@ without `jq` (counters identical in all four runs).
   prefix the other contexts use nor a `Target model:` comment (`docs/prompt-standards.md` item 1).
   Pre-existing; changing it touches seven exact-text tests. *CodeRabbit on PR #84, valid but out of
   scope.*
+
+## From kit 0.37.2 (2026-10-20) — backlog only, nothing implemented here
+
+- [ ] **Gate A counts an `exec` call that only re-fetched truncated output.** Canvas Gate A: the
+  hook counted 4 `mcp__codex__exec` calls against 3 pass files, because one call only fetched
+  the rest of a truncated reply. The hook counts calls, bound to no artifact, so it cannot tell a
+  re-fetch from a pass. Counting unchanged in 0.37.2. *Trigger: the next field report of a Gate-A
+  count above its pass files, or the next story that changes Gate-A counting.*

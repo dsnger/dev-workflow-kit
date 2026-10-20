@@ -314,7 +314,9 @@ Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) 
 its own. A spec change after its Gate A closed goes through `intake`'s amendment route.
 
 **Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'`, a Bash call of its own (gives Codex a
-range to read; the hook keeps the cycle open across a commit it recognises as WIP), then
+range to read; the hook keeps the cycle open across a commit it recognises as WIP; a
+WIP-looking commit it does not recognise gets one more sentence before it runs, see
+[Hook messages](#hook-messages)), then
 loops `mcp__codex__review` as two calls per pass, `reviewType: spec` then `quality`, on
 the same `baseSha` and `headSha`. Invalidation is by content: any change to included
 content present when the hook runs, even from a formatter, makes the hook report that it
@@ -349,8 +351,21 @@ threshold was not met when implementation starts, it says so right then.
 
 ## Hook messages
 
-The hook's messages say what happened and what to do next. The possible causes behind five
+The hook's messages say what happened and what to do next. The possible causes behind six
 of them live here.
+
+**Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared`).
+The commit message starts with `WIP`, but the call is not the plain form, so the hook clears
+the pass counters after it, as for any other commit it detects. The reminder then adds: *This call is not
+counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one plain
+git commit -m 'WIP: <subject>' Bash call, run from the repository, with no cd, git -C, chain
+or heredoc.* Why those forms are refused: after the commit the hook checks the new HEAD of the
+repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
+repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
+that check cannot tie to the call, so these forms reset, the safe direction. The match is
+loose: a heredoc body line starting with `wip` also adds the sentence. The sentence does not
+appear when the plain form itself is refused because the repository's hooks or settings could
+rewrite the message; that commit gets the ordinary reminder only.
 
 **No readable result** (`⚠ Gate call returned no readable result`). Two causes produce
 this shape, and the tool name cannot separate them: a hooks-API payload change, or a
