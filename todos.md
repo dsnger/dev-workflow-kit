@@ -2019,3 +2019,12 @@ without `jq` (counters identical in all four runs).
   `codex-gate.sh` still says the counters stay only if HEAD's subject is WIP and that a missing WIP
   record resets; since 0.37.3 those conditions apply only once `head_moved` says HEAD moved. Scope
   them in the next hook change. *Pass 3 spec, MINOR.*
+
+## From kit 0.38.0 (2026-10-20) — Gate A `pgb1020a`, accepted, not repaired
+
+- [ ] **No prompt-eval case for the small-change Gate-B close.** Cases worth having: a qualifying
+  close at the first pass with only Minors; a remaining Major (no close); Gate A (no exception);
+  197 vs 198 lines; a file only tests use vs production code tests load; a binary file; a small repair
+  after a large change; a change on the default branch itself. No closure decision has an eval case
+  today, so this is the suite's first. *Gate A pass 1, MINOR. Trigger: a field close that misreads
+  the predicate, or the next eval-suite change.*

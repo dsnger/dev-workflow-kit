@@ -133,8 +133,9 @@ is_adopted || exit 0
 policy=$(gate_citation) || policy="this project's review policy"
 
 # §5 HARD FLOOR: minimum Codex passes per gate before exiting it. The hook can't
-# read Codex's findings (so it can't auto-detect the "zero-findings" early exit
-# — that judgment stays with the model per §5), but it CAN count passes and flag
+# read Codex's findings or measure a change's size (so it can't auto-detect the
+# "zero-findings" early exit or Gate B's small-change close — those judgments stay
+# with the model per §5), but it CAN count passes and flag
 # when the floor isn't met. This is what backs Gate A, which has no content check
 # behind it (unlike Gate B, which at least compares a content fingerprint — though
 # that proves the current fingerprint matches the recorded one, not that Codex read
@@ -1605,7 +1606,7 @@ case "$event" in
               # was reviewed.
               note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually the working tree or the index changed since the review. Next: a fresh Gate-B pass, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, other causes and checks: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
             elif [ "$passes" -lt "$floor" ]; then
-              note "Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass." "⚠ Codex Gate B below floor ($passes/$floor): a zero-finding last pass may close early"
+              note "Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: $policy's closure ordering." "⚠ Codex Gate B below floor ($passes/$floor): may close after a zero-finding pass, or a small change's pass with no Blocker or Major"
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.

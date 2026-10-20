@@ -1604,8 +1604,9 @@ reset_all; rev; rev; rev
 # 29d. BELOW-FLOOR branches, Gate B at 1/3 and Gate A at 1/3, each with jq and jq-free.
 #      The hook reads no findings, so these must say a zero-finding last pass may close
 #      early (the field read "floor NOT met 2/3" after a legal early close as a hook defect).
-belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
-belowB_msg="⚠ Codex Gate B below floor (1/3): a zero-finding last pass may close early"
+#      Gate B also names the small-change close (0.38.0), with its condition; Gate A does not.
+belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: this project's review policy's closure ordering."
+belowB_msg="⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass with no Blocker or Major"
 belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
 belowA_msg="⚠ Codex Gate A below floor (1/3): a zero-finding last pass may close early"
 commitp='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
@@ -1626,7 +1627,7 @@ exact_pair "Gate A below floor (jq-free)" "$(nojq_run "$skillp")" "$belowA_ctx" 
 # zero-finding pass may close (three valid passes with only Minors may close under the rules).
 reset_all; printf '5' > "$floorf"; rev; rev; rev
 out=$(run "$commitp")
-printf '%s' "$out" | grep -qF 'below floor (3/5): a zero-finding last pass may close early' && ! printf '%s' "$out" | grep -qF 'only if' \
+printf '%s' "$out" | grep -qF 'below floor (3/5): may close after a zero-finding pass' && ! printf '%s' "$out" | grep -qF 'only if' \
   && pass "floor override 5 at 3 passes -> no 'only if' closure claim" || fail "floor override 5 at 3 passes -> no 'only if' closure claim"
 rm -f "$floorf"
 reset_all; rev; rev; rev
