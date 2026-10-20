@@ -2015,3 +2015,7 @@ without `jq` (counters identical in all four runs).
   back to the branch's reflog, so the "empty or unreadable reflog resets" rule does not fire; a commit
   on the branch still grows that reflog and resets. *Pass 2 spec, MINOR. Trigger: a field report, or
   the next change to `head_reflog_len`.*
+- [ ] **WIP allow-list comment predates the head_moved precedence.** The `-m "wip…"` comment block in
+  `codex-gate.sh` still says the counters stay only if HEAD's subject is WIP and that a missing WIP
+  record resets; since 0.37.3 those conditions apply only once `head_moved` says HEAD moved. Scope
+  them in the next hook change. *Pass 3 spec, MINOR.*
