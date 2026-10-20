@@ -22,6 +22,23 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.37.3
+
+- **Pass counters reset only on a commit that happened.** After a Bash call whose text looks
+  like a commit, the hook now resets the Gate-B cycle only when HEAD or the length of HEAD's
+  reflog changed during the call, compared with the record PreToolUse already takes. A call
+  that left both unchanged keeps the counters, whatever its text: a commit that failed, a
+  heredoc writing a fixture with `git commit … &`, a `printf` naming `` `git commit` ``. Before,
+  `git commit` at a command position or any `&` reset on its own; the field session of 0.37.2
+  lost a cycle's count that way twice. Where the hook cannot compare (no record, an empty or
+  unreadable reflog, a call sent to the background) it still resets. Known limit: a commit a
+  shell `&` sends off that lands after the call returns keeps the counters. The PreToolUse
+  reminder still fires on commit-looking text; the not-WIP sentence and its short message now
+  say the counters are cleared if HEAD moves.
+- **Parentheses in a single-quoted WIP subject.** `git commit -m 'WIP: fix x (y)'` now counts
+  as a WIP commit; `(` and `)` were refused anywhere. They are still refused outside single
+  quotes and in a command holding a double quote, and no other character changed.
+
 ## 0.37.2
 
 - **A WIP-looking commit that is not counted as WIP says so.** When a commit message starts

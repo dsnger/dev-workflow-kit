@@ -397,8 +397,8 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
-# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand at
-#     a command position, or HEAD moved during the call (audit findings 4 and 5). PreToolUse
+# 8c. The reset after a Bash call that matches `commit` needs HEAD or its reflog moved during
+#     the call, or no usable record (0.37.3; before, git's subcommand spelling alone reset). PreToolUse
 #     records HEAD under the call's tool_use_id, read by jq or, without jq, by the hook's awk
 #     reader; the test moves HEAD itself where a command would have. Every row runs with and
 #     without jq. $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string
@@ -428,29 +428,42 @@ for hc in run nojq_run; do
   head_case kept stay 'git --git-dir commit log'
   head_case kept stay 'git --namespace commit log'
   head_case kept stay 'git --config-env commit status'
-  # the subcommand spelling resets whether or not HEAD moved: a failed commit still resets
-  head_case reset stay 'git commit -m x'
-  head_case reset stay 'git -C x commit -m y'
-  head_case reset stay 'git --work-tree x commit -m y'
-  head_case reset stay 'git --git-dir=.git commit -m y'
-  head_case reset stay 'cd \"a b\" && git commit -m y'
-  head_case reset stay 'git -c user.name=\"A B\" commit'
-  head_case reset stay 'git --no-pager commit -m y'
-  head_case reset stay 'FOO=1 git commit -m y'
-  head_case reset stay 'nohup git commit -m y &'
-  head_case reset stay 'if true; then git commit -m y; fi'
-  # a failed commit in a condition resets like a bare one (PR #79, Greptile)
-  head_case reset stay 'if git commit -m y; then :; fi'
-  head_case reset stay 'while git commit -m y; do :; done'
-  head_case reset stay 'until git commit -m y; do :; done'
-  head_case reset stay 'if false; then :; elif git commit -m y; then :; fi'
-  head_case reset stay '/usr/bin/git commit -m y'
+  # since 0.37.3 the spelling alone does not reset: HEAD and its reflog unchanged (a failed
+  # commit, text naming one) keep the counters; the same calls reset when HEAD moved
+  # (field evidence 2026-10-20: a heredoc and a printf naming `git commit` cleared a cycle)
+  for c in 'git commit -m x' 'git -C x commit -m y' 'nohup git commit -m y &' \
+           "cat > f.sh <<'EOF'\\ngit commit -m y &\\nEOF" "printf '%s\\\\n' 'run \`git commit\` here'"; do
+    head_case kept stay "$c"
+  done
+  # an amend replaces HEAD: reset
+  printf '1\n' > "$count"
+  "$hc" '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"git commit --amend -m y"}}' >/dev/null
+  git commit -q --allow-empty --amend -m "8c amend" >/dev/null 2>&1
+  "$hc" '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_h1","tool_input":{"command":"git commit --amend -m y"}}' >/dev/null
+  [ ! -f "$count" ] && pass "8c $hc: amend -> reset" || fail "8c $hc: amend -> reset"
+  head_case reset move 'git commit -m x'
+  head_case reset move 'git -C x commit -m y'
+  head_case reset move 'git --work-tree x commit -m y'
+  head_case reset move 'git --git-dir=.git commit -m y'
+  head_case reset move 'cd \"a b\" && git commit -m y'
+  head_case reset move 'git -c user.name=\"A B\" commit'
+  head_case reset move 'git --no-pager commit -m y'
+  head_case reset move 'FOO=1 git commit -m y'
+  head_case reset move 'nohup git commit -m y &'
+  head_case reset move 'if true; then git commit -m y; fi'
+  head_case reset move 'if git commit -m y; then :; fi'
+  head_case reset move 'while git commit -m y; do :; done'
+  head_case reset move 'until git commit -m y; do :; done'
+  head_case reset move 'if false; then :; elif git commit -m y; then :; fi'
+  head_case reset move '/usr/bin/git commit -m y'
   # shellcheck disable=SC2016  # a literal command substitution, the input under test
-  head_case reset stay 'x=$(git commit -m y)'
-  head_case reset stay 'git \\\ncommit -m y'
-  # a background job may commit after PostToolUse, when HEAD has not moved yet: reset
-  head_case reset stay 'sh -c \"sleep 2; git commit -m y\" >/dev/null 2>&1 &'
-  head_case reset stay 'sh -c \"git commit -m y &\"'
+  head_case reset move 'x=$(git commit -m y)'
+  head_case reset move 'git \\\ncommit -m y'
+  head_case reset move "cat > f.sh <<'EOF'\\ngit commit -m y &\\nEOF"
+  # shortcut kept by design: a shell `&` job is judged by HEAD at PostToolUse, like any call
+  head_case reset move 'sh -c \"sleep 2; git commit -m y\" >/dev/null 2>&1 &'
+  head_case kept stay 'sh -c \"sleep 2; git commit -m y\" >/dev/null 2>&1 &'
+  head_case reset move 'sh -c \"git commit -m y &\"'
   # `&&` and redirections are not background jobs
   head_case kept stay 'git log 2>&1 | grep commit && echo git commit'
   head_case kept stay 'git log &>/dev/null; echo git commit'
@@ -808,8 +821,8 @@ amendpost "git commit --amend --no-edit -m 'real message'"
 # Forms outside the allow-list: message flags (quoted, split, abbreviated, -e/--edit), another
 # repository, a comment, a pathspec decoy, --no-amend cancelling --amend, and any global
 # `git -c` (its operand can expand into `-C <repo>` or strip the WIP subject via cleanup).
-# Each would fail against a rejecting commit-msg hook and leave HEAD WIP, so only the
-# command decides here.
+# Since 0.37.3 a call that leaves HEAD and its reflog unchanged keeps the cycle whatever its
+# text, so each runs with HEAD replaced by an amend; then only the command decides here.
 for c in "git commit --amend --no-edit '-m' 'real'" "git commit --amend --no-edit --mes=real" "git commit --amend --no-edit --edit" \
          "git commit --amend --no-edit -e" "git -C /elsewhere commit --amend --no-edit" "cd /elsewhere && git commit --amend --no-edit" \
          "git commit --amend --no-edit -''m real" "git commit --amend # --no-edit" "git commit ./file--amend--no-edit" \
@@ -817,6 +830,7 @@ for c in "git commit --amend --no-edit '-m' 'real'" "git commit --amend --no-edi
          "git -c core.quotePath=false commit --amend --no-edit"; do
   reset_all; rev
   printf '%s' "$(wip "$c")" | grep -q 'Codex cycle decided after' && fail "not WIP: $c" || pass "not WIP: $c"
+  git commit -q --allow-empty --amend --no-edit >/dev/null 2>&1
   amendpost "$c"
   [ ! -f "$count" ] && pass "resets: $c" || fail "resets: $c"
 done
@@ -824,6 +838,7 @@ done
 git config core.commentChar W
 reset_all; rev
 printf '%s' "$(wip "git commit --amend --no-edit")" | grep -q 'Codex cycle decided after' && fail "custom commentChar: no WIP note" || pass "custom commentChar: no WIP note"
+git commit -q --allow-empty --amend --no-edit >/dev/null 2>&1
 amendpost "git commit --amend --no-edit"
 [ ! -f "$count" ] && pass "custom commentChar: resets" || fail "custom commentChar: resets"
 git config --unset core.commentChar
@@ -882,11 +897,12 @@ rm -f "$(git rev-parse --git-dir)/index.lock"
 printf '%s' "$pre" | grep -q 'Codex cycle decided after' && [ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] \
   && pass "aborted real amend, no hooks: cycle preserved" || fail "aborted real amend, no hooks: cycle preserved"
 # (b2) Before PR #30's review this case expected preservation: a pre-commit hook that
-# aborts. Under the any-hook rule its mere presence refuses the exemption, so it resets.
+# aborts. Under the any-hook rule its mere presence refuses the exemption; since 0.37.3 the
+# aborted amend left HEAD and its reflog unchanged, so the cycle is kept anyway.
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/pre-commit"; chmod +x "$hooksd/pre-commit"
 lifecycle
 { printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "pre-commit hook present: no WIP note" || pass "pre-commit hook present: no WIP note"
-[ "$moved" = no ] && [ ! -f "$count" ] && pass "pre-commit hook present, amend aborted: cycle reset" || fail "pre-commit hook present, amend aborted: cycle reset"
+[ "$moved" = no ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "pre-commit hook present, amend aborted: cycle kept" || fail "pre-commit hook present, amend aborted: cycle kept"
 rm -f "$hooksd/pre-commit"
 # (f) a pre-commit hook that installs a rewriting prepare-commit-msg mid-commit
 printf '%s' "$rewrite_hook" > "$sandbox/rewrite-hook"
@@ -902,11 +918,11 @@ lifecycle
 { printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "message hook: no WIP note before the amend" || pass "message hook: no WIP note before the amend"
 [ "$subj" = 'real subject' ] && [ ! -f "$count" ] && pass "message hook: subject rewritten, cycle reset" || fail "message hook: subject rewritten, cycle reset"
 rm -f "$hooksd/prepare-commit-msg"; git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
-# (d) commit-msg rejects the amend: HEAD stays WIP, but a message hook is present, so reset
+# (d) commit-msg rejects the amend: a message hook is present, but no commit happened, so kept
 printf '#!/bin/sh\nexit 1\n' > "$hooksd/commit-msg"; chmod +x "$hooksd/commit-msg"
 lifecycle
 { printf '%s' "$pre" | grep -q 'Codex cycle decided after'; } && fail "rejecting commit-msg: no WIP note" || pass "rejecting commit-msg: no WIP note"
-[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ ! -f "$count" ] && pass "rejecting commit-msg: HEAD still WIP, cycle reset" || fail "rejecting commit-msg: HEAD still WIP, cycle reset"
+[ "$moved" = no ] && [ "$subj" = 'WIP: snapshot' ] && [ "$(cat "$count" 2>/dev/null)" = 2 ] && pass "rejecting commit-msg: HEAD still WIP, cycle kept" || fail "rejecting commit-msg: HEAD still WIP, cycle kept"
 rm -f "$hooksd/commit-msg"
 # (e) any core.hooksPath refuses the exemption; this one also rewrites the subject
 mkdir -p "$sandbox/hooks"
@@ -956,13 +972,37 @@ rm -f "$hooksd/prepare-commit-msg"; git commit -q --amend -m 'WIP: snapshot' >/d
 mlife "git commit -q -m 'WIP: next'"
 rm -f "$(git rev-parse --git-dir)/index.lock"
 noted && [ "$moved" = no ] && kept && pass "-m wip that fails on a WIP HEAD: cycle kept" || fail "-m wip that fails on a WIP HEAD: cycle kept"
-# (m5) chains either way round, and a first `-m` that is not WIP: reminder before, reset after
+# (m4b) 0.37.3: a non-WIP commit that fails keeps the cycle; one that lands resets
+: > "$(git rev-parse --git-dir)/index.lock"
+mlife "git commit -q -m 'real'"
+rm -f "$(git rev-parse --git-dir)/index.lock"
+[ "$moved" = no ] && kept && pass "non-WIP commit that fails: cycle kept" || fail "non-WIP commit that fails: cycle kept"
+mlife "git commit -q -m 'real'"
+[ "$moved" = yes ] && [ ! -f "$count" ] && pass "non-WIP commit that lands: reset" || fail "non-WIP commit that lands: reset"
+git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+# (m4c) 0.37.3: parentheses inside a single-quoted WIP subject are text, under both readers;
+# inside double quotes they are still refused
+for r in run nojq_run; do
+  reset_all; rev; rev; execp
+  pre=$($r "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -q -m 'WIP: x (y)'\"}}")
+  printf 'x\n' >> wip.txt; git add wip.txt >/dev/null 2>&1; git commit -q -m 'WIP: x (y)' >/dev/null 2>&1
+  $r "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t1\",\"tool_input\":{\"command\":\"git commit -q -m 'WIP: x (y)'\"}}" >/dev/null
+  noted && kept && pass "$r: -m 'WIP: x (y)': note, cycle kept" || fail "$r: -m 'WIP: x (y)': note, cycle kept"
+  git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
+  pre=$($r '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t2","tool_input":{"command":"git commit -q -m \"WIP: x (y)\""}}')
+  ! noted && pass "$r: -m \"WIP: x (y)\" is still refused" || fail "$r: -m \"WIP: x (y)\" is still refused"
+  pre=$($r '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t2","tool_input":{"command":"git commit -q -m \"WIP: x '"'"'(y)'"'"'\""}}')
+  ! noted && pass "$r: apostrophes inside double quotes do not qualify ( )" || fail "$r: apostrophes inside double quotes do not qualify ( )"
+  rm -f .context/codex-gate.headPre.* .context/codex-gate.wipBase.*
+done
+# (m5) chains either way round, and a first `-m` that is not WIP: reminder before; reset after
+# when a commit landed, kept when git refused the command (`-m -m WIP`, `-F -m`)
 for c in "git commit -q -m 'real' && git commit -q --allow-empty -m 'WIP: next'" \
          "git commit -q -m 'WIP: next' && git commit -q --allow-empty -m 'real'" \
          "git commit -q -m 'real' -m 'WIP: next'" "git commit -q -m -m WIP" \
          "git commit -q -m 'WIP: next' --fixup=HEAD" "git commit -q -F -m WIP"; do
   mlife "$c"
-  ! noted && [ ! -f "$count" ] && pass "reminder and reset: $c" || fail "reminder and reset: $c"
+  if [ "$moved" = yes ]; then [ ! -f "$count" ]; else kept; fi && ! noted && pass "reminder, reset only if HEAD moved ($moved): $c" || fail "reminder, reset only if HEAD moved ($moved): $c"
   git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
 done
 # (m6) an editor could replace the message, so -e gets the reminder (not run: no editor here)
@@ -3506,7 +3546,7 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
-wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
+wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
   # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
@@ -3522,7 +3562,8 @@ for r in run nojq_run; do
     printf '%s' "$out" | grep -qF "$wipsent" && pass "46 $r: refused WIP form gets the sentence: $c" \
       || fail "46 $r: refused WIP form gets the sentence: $c [$out]"
   done
-  # A commit hidden in quotes may keep the counters (no runs_git_commit), so no sentence.
+  # The sentence goes only where `git commit` stands as a command of its own (runs_git_commit):
+  # not on a plain WIP form, a non-WIP message, or a commit hidden in quotes.
   for c in "git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'" \
            "sh -c \\\"git commit -m 'WIP: a'\\\""; do
     reset_all; rev
