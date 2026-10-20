@@ -3521,7 +3521,9 @@ for r in run nojq_run; do
     printf '%s' "$out" | grep -qF "$wipsent" && pass "46 $r: refused WIP form gets the sentence: $c" \
       || fail "46 $r: refused WIP form gets the sentence: $c [$out]"
   done
-  for c in "git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'"; do
+  # A commit hidden in quotes may keep the counters (no runs_git_commit), so no sentence.
+  for c in "git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'" \
+           "sh -c \\\"git commit -m 'WIP: a'\\\""; do
     reset_all; rev
     out=$($r "$(pre46 "$c")")
     printf '%s' "$out" | grep -qF 'not counted as a WIP commit' && fail "46 $r: no sentence: $c [$out]" \

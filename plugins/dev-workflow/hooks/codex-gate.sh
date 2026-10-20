@@ -1628,7 +1628,8 @@ case "$event" in
             gone "$pending_file" || note "$PENDING_AT_COMMIT_CTX" "$PENDING_AT_COMMIT_MSG"
           fi
           # Target model: Claude via Claude Code. The causes are in docs/reference.md § Hook messages.
-          if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd"; then
+          # runs_git_commit: PostToolUse then always clears, so the sentence never overstates.
+          if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd" && runs_git_commit "$cmd"; then
             note "This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared"
           fi
           fi
