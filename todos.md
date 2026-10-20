@@ -2040,3 +2040,17 @@ without `jq` (counters identical in all four runs).
   sfx-wp-plugin-skills pass files. Remedy to consider then: change the shape (structured state), do
   not filter free text. *Trigger: the first pass file here that flags carry-forward text as an
   injection attempt.*
+
+## From kit 0.39.0 (2026-10-20) — out of scope there, backlog only
+
+Evidence for both rows: the SFX S6e2 plan
+(`/Users/daniel/DEVELOPMENT/APPS/sfx-time-tracking-dashboard-lanes/s6e2/docs/superpowers/plans/2026-10-20-v2-s6e2-datacare-account-access-cleanup.md`)
+ran one session from 06:40 to past 22:00 CEST, mostly on local runs: full e2e about 52 min, the screens
+compare about 45 min, several of each, two killed by macOS memory pressure and rerun.
+
+- [ ] **A machine-wide lock for heavy runs.** Parallel sessions on one Mac start heavy local runs at
+  the same time, and memory pressure kills them. A lock (one heavy run per machine) would turn a kill
+  and a rerun into a wait. *Trigger: the next heavy run killed by memory pressure.*
+- [ ] **Move project e2e into CI.** The project had no e2e in CI, so every run was local and held a
+  session for its whole duration. *Trigger: per project, when its plan lists a long run that CI could
+  carry.*
