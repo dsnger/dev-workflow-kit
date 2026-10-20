@@ -1216,6 +1216,10 @@ is_wip_message_cmd() {
   _ok='(-a|--all|-q|--quiet|--no-verify|-n|--amend|--allow-empty)'
   printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
 }
+# A commit message that starts with `wip` in a call is_wip_message_cmd refuses (a `cd`,
+# `git -C`, chain or heredoc) and runs_git_commit sees: PreToolUse says the counters will be cleared. Loose on purpose;
+# a heredoc body line starting with `wip` matches too, and an extra sentence costs nothing.
+looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*[$]?['\"]?[[:space:]]*wip|^[[:space:]]*['\"]?[[:space:]]*wip"; }
 is_wip_amend_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
@@ -1622,6 +1626,11 @@ case "$event" in
             # A half pass is never part of the count above; say so beside whichever
             # message that chain printed (spec 2026-10-09 §3.4). Existence is the test.
             gone "$pending_file" || note "$PENDING_AT_COMMIT_CTX" "$PENDING_AT_COMMIT_MSG"
+          fi
+          # Target model: Claude via Claude Code. The causes are in docs/reference.md § Hook messages.
+          # runs_git_commit: PostToolUse then always clears, so the sentence never overstates.
+          if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd" && runs_git_commit "$cmd"; then
+            note "This call is not counted as a WIP commit, so the pass counters are cleared after it; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared"
           fi
           fi
           # Every commit attempt, WIP and docs-only included, and both gates: a cap

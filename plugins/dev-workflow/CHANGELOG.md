@@ -22,6 +22,16 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.37.2
+
+- **A WIP-looking commit that is not counted as WIP says so.** When a commit message starts
+  with `wip` but the call is not one plain `git commit -m 'WIP: …'` (a `cd …;` or `git -C`
+  prefix, a chain, a heredoc), and `git commit` stands as a command of its own, the PreToolUse reminder now adds one sentence: the call is not
+  counted as a WIP commit, the pass counters are cleared after it, and the plain form is
+  named. Field sessions (SFX S6d, canvas PR #44) used those forms, saw only the ordinary
+  reminder and read the reset as a hook fault. The allow-list and the reset are unchanged;
+  causes are in `docs/reference.md` § Hook messages.
+
 ## 0.37.1
 
 - **Below-floor messages name the early close.** The hook's Gate A and Gate B below-floor
