@@ -159,7 +159,7 @@ Plus the tightened lines in §4.
    `codex-gate.test.sh` asserts the new strings (it pins the 0.37.1 strings today, so the old
    assertion turns red first) and that Gate A's are unchanged, under `sh` and `dash`.
    New Gate-B strings:
-   - context: `Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings and measures no size: a zero-finding last pass may close early, and a small change closes at its first pass with no Blocker or Major; otherwise follow $policy's closure ordering, normally another pass.`
+   - context (as shipped; shortened at build because test 43g caps it at 260 characters): `Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: $policy's closure ordering.`
    - short: `⚠ Codex Gate B below floor ($passes/$floor): may close after a zero-finding pass, or a small change's pass with no Blocker or Major`
 3. Docs: `docs/reference.md` (§ Passes, § Closing act, § hook messages, the `codex-gate.floor` row),
    `docs/coding-workflow.md` (Gate B description, if it states the floor), `docs/ARCHITECTURE.md`
