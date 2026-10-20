@@ -322,8 +322,9 @@ last pass is code nobody reviewed; each is declined or goes to `todos.md`. The c
 and the PR body when there is one, carry `small change: <n> lines, <base>..<head>`. Gate A has
 no such exception. The agent decides and records; nothing checks it. A reviewer can re-run the
 count on the recorded range, but the other conditions (which files only tests use, what is a
-shared contract, the profile) are judgement. It does not catch a small diff with a large effect,
-and a rename counts as 0 lines. The design note is
+shared contract, the profile) are judgement. Not caught, and the list is not exhaustive: a small
+diff with a large effect, and a pure rename, which counts as 0 lines (edits in a renamed file
+still count). The design note is
 `docs/superpowers/specs/2026-10-20-proportional-gate-b-design.md`.
 
 **Closing act.** A clean pass at the floor, a zero-finding pass below it, a small change's
