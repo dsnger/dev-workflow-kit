@@ -22,6 +22,26 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.38.0
+
+- **Gate B on a small change closes at its first pass with no Blocker or Major.** An approved
+  change of the gate rules: decision D14 (Daniel, 2026-10-20), recorded in
+  `docs/superpowers/specs/2026-10-20-proportional-gate-b-design.md`. Before, every Gate-B cycle
+  with a Blocker or Major ran to the floor of three passes; a field fix of 197 production lines
+  (sfx-bricks-child PR #66) spent two cycles of three passes each although every Major came in
+  pass 1. Small means: profile `risk standard; security none`; at most 197 lines added plus
+  deleted outside files only tests use, counted from a commit before the whole change; no prompt
+  path, migration, shared contract or path an `AGENTS.md` invariant names; a binary file, a failed
+  count or a missing base means not small. The closing pass's Minors and Nits are not repaired in
+  the cycle, and the closing commit and any PR body carry `small change: <n> lines, <base>..<head>`.
+  Larger changes and Gate A keep the floor of three. The agent judges and records it; nothing
+  checks it. Both rule copies stay byte-identical at 9,997 bytes: the new text was paid for by
+  rewording 23 existing lines without dropping a condition (the design note lists each).
+- **Gate B's below-floor message names the small-change close**, with its condition:
+  `⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass
+  with no Blocker or Major`. The hook still reads no findings and measures no size, and it fires
+  exactly where it fired before. Gate A's message is unchanged.
+
 ## 0.37.3
 
 - **Pass counters reset only on a commit that happened.** After a Bash call whose text looks

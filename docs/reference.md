@@ -287,7 +287,8 @@ Claude filters to Blockers and Majors for repair and reads the rest. Findings la
 `BLOCKER | MAJOR | MINOR | NIT`. Claude's verdict on each finding goes beside it, in
 `…-pass-<n>-dispositions.md`. Minors and Nits are collected, never iterated. The floor
 is three valid passes per cycle, a pass with zero findings may close early, and the cap
-is the floor plus two, where a remaining Blocker or a cut to an approved commitment goes to
+is the floor plus two (see **Small changes in Gate B** below for the one
+exception), where a remaining Blocker or a cut to an approved commitment goes to
 you and the agent decides the rest. From pass 2 on, each pass of
 either gate lists the earlier passes' Blockers and Majors, each with its verdict and reason,
 and Codex marks each `fixed | not fixed | no longer applies`, a `not fixed` counting as a
@@ -306,8 +307,27 @@ least one); the loop resumes on the artifact as your answer leaves it.
 `.context/codex-gate.cap-extra` holds the total allowance beyond the base cap for the
 cycle, so a second answer adds to the number already there.
 
-**Closing act.** A clean pass at the floor, a zero-finding pass below it, or a cap answer
-of `close` runs the closing act: one commit carrying the cycle's record lines, the
+**Small changes in Gate B.** Since 0.38.0 (decision D14, Daniel, 2026-10-20), Gate B on a
+small change closes at its first pass with no Blocker or Major, instead of running to the
+floor of three. Small means all of: the profile reads `risk standard` and `security none`
+(taken from the cited story, or derived as `intake` does); at most 197 lines added plus deleted
+outside files only tests use, counted with `git diff --numstat` from a commit before the whole
+change (the merge-base with the default branch on a feature branch; on the default branch
+itself, the parent of the change's first commit); and no prompt path (`CLAUDE.md`,
+`AGENTS.md`, `.claude/`, `plugins/`, `skills/`, `commands/`), migration, shared contract or path
+an `AGENTS.md` invariant names. A binary file, a failed count or a base that cannot be found
+makes the change not small. 197 is the production diff of the field case D14 was decided on.
+The closing pass's Minors and Nits are not repaired in the cycle, because a fix after the
+last pass is code nobody reviewed; each is declined or goes to `todos.md`. The closing commit,
+and the PR body when there is one, carry `small change: <n> lines, <base>..<head>`. Gate A has
+no such exception. The agent decides and records; nothing checks it. A reviewer can re-run the
+count on the recorded range, but the other conditions (which files only tests use, what is a
+shared contract, the profile) are judgement. It does not catch a small diff with a large effect,
+and a rename counts as 0 lines. The design note is
+`docs/superpowers/specs/2026-10-20-proportional-gate-b-design.md`.
+
+**Closing act.** A clean pass at the floor, a zero-finding pass below it, a small change's
+pass with no Blocker or Major in Gate B, or a cap answer of `close` runs the closing act: one commit carrying the cycle's record lines, the
 ledger-check records, and a `todos.md` row per finding dispositioned `accepted, not
 repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject.
 Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) ends with
@@ -335,11 +355,14 @@ A commit that a shell `&` sends off and that lands after the call returns is not
 the counters stay.
 
 **The hook's messages.** `⚠ Codex Gate A below floor (1/3): a zero-finding last pass may
-close early` is the counter, not an error, and the same holds for Gate B. The hook counts
+close early` is the counter, not an error, and the same holds for Gate B, whose line reads
+`⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass
+with no Blocker or Major`. The hook measures no size either. The hook counts
 passes and never reads a findings file, so the line appears whenever its floor check runs
 below the threshold: Gate B's on a commit (a WIP or docs-only commit skips the check),
 Gate A's when plan execution starts. That includes a cycle whose last pass had zero
-findings and closed early, which the rules allow. The number after the slash is the hook's reminder
+findings and closed early, and a small change's Gate B that closed at its first pass with no
+Blocker or Major, both of which the rules allow. The number after the slash is the hook's reminder
 threshold, which `codex-gate.floor` can raise above the rules' floor of three. Whether a
 cycle closes is the closure ordering's (above), whatever the counter says. The docs-only
 skip never lets an open cycle stop short. `✓ Codex Gate B hook checks passed (<counted>/<threshold> cycle, <fresh> on
@@ -462,7 +485,7 @@ All knobs are files under `.context/`:
 
 | | |
 |---|---|
-| `codex-gate.floor` | a positive integer; moves the hook's reminder threshold. It does not change the floor the gate rules oblige, which is three valid passes (a zero-finding pass may close earlier). |
+| `codex-gate.floor` | a positive integer; moves the hook's reminder threshold. It does not change the floor the gate rules oblige, which is three valid passes (a zero-finding pass may close earlier, and in Gate B so does a small change's pass with no Blocker or Major). |
 | `codex-gate.cap` | a positive integer of at most nine digits (anything else is ignored); the pass count at which the hook starts printing its pass-cap reminder ("STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human") on every gate call and commit attempt. Default: the reminder threshold plus two. A reminder only: nothing is blocked, and whether your review policy has a pass-cap rule is that policy's business. |
 | `codex-gate.cap-extra` | a positive integer of at most nine digits (anything else is ignored), written after the cap answer (yours or Claude's): the total allowance beyond the base cap for the current cycle, not an increment. A second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
 | `codex-gate.off` | silences the reminders; classification and state tracking keep running, so re-enabling lands on counters carrying the same semantics as gate-on, which is not the same as evidence that a review happened. |

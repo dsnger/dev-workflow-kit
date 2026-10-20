@@ -139,7 +139,9 @@ checks is not enforcement.
 reviewer reads the actual *diff* and checks it against the invariants file. It is
 re-run after every fix, because each fix changes the diff and invalidates the
 prior review, and it closes when the review policy's closure ordering says so — never
-on a clean pass alone. Trivial changes may skip it, on terms that depend on the story: an
+on a clean pass alone. A small change (standard risk, no security relevance, at most 197 changed
+lines outside test-only files, no prompt or contract paths) closes at its first pass with no
+Blocker or Major; a larger one keeps the floor of three passes. Trivial changes may skip it, on terms that depend on the story: an
 unprofiled one keeps the judgement call, while a profiled one qualifies only at
 effective level 0 — trivial risk *and* no security relevance — so a trivial-looking
 change on security-relevant surface is not eligible. A skip removes the review, never
