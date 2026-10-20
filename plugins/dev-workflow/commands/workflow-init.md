@@ -1342,8 +1342,8 @@ different → show the diff and ask; additive → merge, keeping any stricter ex
   apply only in a trusted folder, and only matter in auto and default mode.
 - **`CLAUDE.md`.** Insert the block below directly after the "Context, by task" paragraph of §4,
   markers included, each on a line of its own. On later runs, 2.1 compares the file **without** the
-  marked block against its template, so an adopted project reads `unchanged`; there, as here, a
-  marker counts only alone on its line. A block left behind after the server is gone is
+  marked block against its template, so an adopted project reads `unchanged`. A block left behind
+  after the server is gone is
   kept and reported, never offered for overwrite.
 - **`todos.md` § Tooling revalidation.** The identity row from step 3. Beside the human refresh
   command it carries this note: "a `worker crashed` answer from `index_repository` can be a refusal
