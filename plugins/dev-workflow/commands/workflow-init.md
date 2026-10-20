@@ -265,8 +265,10 @@ numbers) and say so in the report.
 
 **An adopted codebase-memory block is not a difference.** Before comparing an existing `CLAUDE.md`
 with this template, set aside the text from `<!-- codebase-memory:start -->` to
-`<!-- codebase-memory:end -->`, markers included. That block is 2.14's adopted content. Report it,
-and never offer it for overwrite. Why: otherwise every re-run of an adopted project would ask to
+`<!-- codebase-memory:end -->`, markers included. A marker counts only on a line of its own,
+whitespace around it allowed; a marker inside a sentence is text. Why: a file that quotes a
+marker in prose would otherwise lose real text from the comparison. That block is 2.14's adopted
+content. Report it, and never offer it for overwrite. Why: otherwise every re-run of an adopted project would ask to
 overwrite kit-generated content.
 
 **The two gate-rules targets.** This template's §5 is only a pointer; the rules are the
@@ -1339,8 +1341,9 @@ different → show the diff and ask; additive → merge, keeping any stricter ex
   Bare tool names, never `mcp__…(…)`: settings files skip MCP rules with parentheses. The allows
   apply only in a trusted folder, and only matter in auto and default mode.
 - **`CLAUDE.md`.** Insert the block below directly after the "Context, by task" paragraph of §4,
-  markers included. On later runs, 2.1 compares the file **without** the marked block against its
-  template, so an adopted project reads `unchanged`. A block left behind after the server is gone is
+  markers included, each on a line of its own. On later runs, 2.1 compares the file **without** the
+  marked block against its template, so an adopted project reads `unchanged`; there, as here, a
+  marker counts only alone on its line. A block left behind after the server is gone is
   kept and reported, never offered for overwrite.
 - **`todos.md` § Tooling revalidation.** The identity row from step 3. Beside the human refresh
   command it carries this note: "a `worker crashed` answer from `index_repository` can be a refusal

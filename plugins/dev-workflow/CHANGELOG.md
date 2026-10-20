@@ -22,6 +22,19 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.38.1
+
+- **A codebase-memory marker counts only alone on its own line.** `/workflow-init` sets aside the
+  text from `<!-- codebase-memory:start -->` to `<!-- codebase-memory:end -->` before comparing
+  `CLAUDE.md` with its template (2.1, 2.14). Now said: whitespace around a marker is allowed, and a
+  marker inside a sentence is text. Before, a `CLAUDE.md` that quoted a marker in prose could have
+  had text set aside that is not the adopted block. No other prompt in the plugin finds a block by
+  markers.
+- **Upper-case secret names: observed, no rule change.** With Claude Code 2.1.207 on macOS, the
+  2.17 deny rules refused the Read tool for `.ENV`, `Secrets.json` and `CERT.PEM`, and
+  `.ENV.EXAMPLE` stayed readable. Recorded in `docs/reference.md`; not tried on a case-sensitive
+  file system. The ten deny lines and check 4k are unchanged.
+
 ## 0.38.0
 
 - **Gate B on a small change closes at its first pass with no Blocker or Major.** An approved

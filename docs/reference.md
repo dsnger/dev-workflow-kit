@@ -142,7 +142,10 @@ What `/dev-workflow:workflow-init` does, in order:
   adding them. Observed with Claude Code 2.1.302 in a fixture repository: the Read tool was
   refused for a sample file of every entry except `id_rsa`, which was not tried (a `~/.ssh/`
   path was refused even when absent), `cat .env` in Bash was refused, and `.env.example` was
-  readable at any depth. **What they do not stop**, as observed in the same probes: `grep -r` over the directory, and a script that opens the
+  readable at any depth. Upper-case names, observed with Claude Code 2.1.207 on macOS (a
+  case-insensitive file system): the Read tool was refused for `.ENV`, `Secrets.json` and
+  `CERT.PEM`, and `.ENV.EXAMPLE` stayed readable, so no extra entries were added. Not tried on a
+  case-sensitive file system (Linux), where `.ENV` is a different file from `.env`. **What they do not stop**, as observed in the same probes: `grep -r` over the directory, and a script that opens the
   file itself (`python3 -c 'open(".env")'`). They are Claude Code settings, so other clients
   (Codex) do not read them; and per the Claude Code permissions docs, `./` is relative to the
   session's working directory, so a session started elsewhere is not covered by the
@@ -229,7 +232,9 @@ added by `/workflow-init` when its entry is missing; only its lookups have a fal
   installs, configures or registers it. When `/workflow-init` finds it loaded and you
   agree, it writes permission rules that deny the server's four write tools and allow its
   reads, adds a task-context block to `CLAUDE.md`, and checks the rules through a canary
-  run against an isolated store. Indexing stays yours. Read the result it reports, and
+  run against an isolated store. The block sits between `<!-- codebase-memory:start -->` and
+  `<!-- codebase-memory:end -->`; a re-run leaves it out of the `CLAUDE.md` comparison, and a
+  marker counts only alone on its own line, so one quoted inside a sentence is ordinary text. Indexing stays yours. Read the result it reports, and
   re-run the canary after any change to the client, the server binary, the permission
   mode, the rules, the start configuration or the account. When you may claim the
   protection, and what it never covers, is in
