@@ -34,7 +34,8 @@ AGENTS.md invariant 12 carries the complete list.
   SFX plan of 10 tasks with one boundary at the end ran one session of over 15 hours with two
   compactions, most of it on local end-to-end runs of about 52 minutes and screen compares of about
   45 minutes, two of them rerun after macOS killed them. The 2-hour limit is a choice from that
-  evidence, not a measured optimum: about two such runs plus one rerun per unit.
+  evidence, not a measured optimum: about two such runs per unit, an expected rerun counted
+  toward the total.
 
 ## 0.38.1
 

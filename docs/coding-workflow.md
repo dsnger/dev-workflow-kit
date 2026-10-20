@@ -117,7 +117,8 @@ handover boundary. It also lists each run it expects to take 45 minutes or more 
 full end-to-end suite, a screenshot compare): what the run proves, its estimated
 duration and how often it runs. The handover boundary then falls so that no unit
 carries more than 2 hours of those runs, with earlier boundaries after completed tasks
-where needed; a single longer run gets a unit of its own. Each diff stays traceable to a requirement without the plan
+where needed; a single longer run gets a unit of its own, and a boundary that would fall
+inside a running review cycle moves to that cycle's close. Each diff stays traceable to a requirement without the plan
 pre-writing it (scaffolded `CLAUDE.md` §4, "Spec, plan and code").
 
 **5. Gate A on the plan.** The same independent review, now applied to the plan —
