@@ -397,8 +397,8 @@ out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"com
 out=$(run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo digit commit"}}')
 [ -z "$out" ] && pass "embedded 'digit commit' -> silent (word boundary)" || fail "embedded 'digit commit' -> silent (word boundary)"
 
-# 8c. The reset after a Bash call that matches `commit` needs `commit` as git's subcommand at
-#     a command position, or HEAD moved during the call (audit findings 4 and 5). PreToolUse
+# 8c. The reset after a Bash call that matches `commit` needs HEAD or its reflog moved during
+#     the call, or no usable record (0.37.3; before, git's subcommand spelling alone reset). PreToolUse
 #     records HEAD under the call's tool_use_id, read by jq or, without jq, by the hook's awk
 #     reader; the test moves HEAD itself where a command would have. Every row runs with and
 #     without jq. $1 = expected (reset|kept), $2 = move|stay, $3 = the command as JSON string
@@ -991,6 +991,8 @@ for r in run nojq_run; do
   git commit -q --amend -m 'WIP: snapshot' >/dev/null 2>&1
   pre=$($r '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t2","tool_input":{"command":"git commit -q -m \"WIP: x (y)\""}}')
   ! noted && pass "$r: -m \"WIP: x (y)\" is still refused" || fail "$r: -m \"WIP: x (y)\" is still refused"
+  pre=$($r '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t2","tool_input":{"command":"git commit -q -m \"WIP: x '"'"'(y)'"'"'\""}}')
+  ! noted && pass "$r: apostrophes inside double quotes do not qualify ( )" || fail "$r: apostrophes inside double quotes do not qualify ( )"
   rm -f .context/codex-gate.headPre.* .context/codex-gate.wipBase.*
 done
 # (m5) chains either way round, and a first `-m` that is not WIP: reminder before; reset after
@@ -3560,7 +3562,8 @@ for r in run nojq_run; do
     printf '%s' "$out" | grep -qF "$wipsent" && pass "46 $r: refused WIP form gets the sentence: $c" \
       || fail "46 $r: refused WIP form gets the sentence: $c [$out]"
   done
-  # A commit hidden in quotes may keep the counters (no runs_git_commit), so no sentence.
+  # The sentence goes only where `git commit` stands as a command of its own (runs_git_commit):
+  # not on a plain WIP form, a non-WIP message, or a commit hidden in quotes.
   for c in "git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'" \
            "sh -c \\\"git commit -m 'WIP: a'\\\""; do
     reset_all; rev

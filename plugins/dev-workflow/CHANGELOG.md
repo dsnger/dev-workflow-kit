@@ -37,7 +37,7 @@ AGENTS.md invariant 12 carries the complete list.
   say the counters are cleared if HEAD moves.
 - **Parentheses in a single-quoted WIP subject.** `git commit -m 'WIP: fix x (y)'` now counts
   as a WIP commit; `(` and `)` were refused anywhere. They are still refused outside single
-  quotes, and no other character changed.
+  quotes and in a command holding a double quote, and no other character changed.
 
 ## 0.37.2
 

@@ -373,8 +373,8 @@ repository it runs in and ties it to this one call. A `cd` or `git -C` can commi
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
 that check cannot tie to the call, so these forms reset, the safe direction. A plain subject
 holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The
-one exception is `(` and `)` inside single quotes, where the shell reads them as text:
-`-m 'WIP: fix x (y)'` is the plain form, `-m "WIP: fix x (y)"` is not. The sentence appears
+one exception is `(` and `)` inside single quotes, where the shell reads them as text, in a
+command with no double quote: `-m 'WIP: fix x (y)'` is the plain form, `-m "WIP: fix x (y)"` is not. The sentence appears
 only where `git commit` stands as a command of its own; a commit hidden in quotes (`sh -c "git commit …"`) gets none. The match is
 loose: a heredoc body line starting with `wip` also adds the sentence. The sentence does not
 appear when the plain form itself is refused because the repository's hooks or settings could

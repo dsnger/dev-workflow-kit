@@ -1716,7 +1716,8 @@ backlog.
   inspectable from the repository. Label it "last verified <date>" or link evidence. Codex Minor,
   collected.
 - [ ] **Knob table bounds.** `codex-gate.cap` and `cap-extra` take at most nine digits (`pos_int`), and
-  `cap-extra` is cleared on a recognised non-WIP commit attempt even when the commit fails, not by a
+  `cap-extra` is cleared after a non-WIP commit-looking call that moved HEAD or its reflog, or whose
+  effect the hook cannot check (0.37.3; before, every attempt), not by a
   Gate-A skill reset. `docs/setup.md` knob rows say "a positive integer" and "the commit that clears
   the pass counter clears it too". Codex Minors, collected. *Trigger: next hook change touching the cap.*
 - [ ] **Load-flake exception in the user docs.** README How-to and `docs/getting-started.md` step 6
@@ -1837,7 +1838,9 @@ backlog.
   longer reads it. Find a persistent home that release sessions read (the handover template, or a
   release step), keeping the installed-only and user-consent conditions. *Gate B `kit030gb1017`
   pass 1 quality, MINOR, accepted, not repaired.*
-- [ ] **A failed non-WIP commit also clears the Gate-A count.** The hook resets on every commit
+- [x] **A failed non-WIP commit also clears the Gate-A count.** *Done in 0.37.3: the reset now
+  needs HEAD or its reflog to move (or no usable record), so a failed commit keeps both counts;
+  the reflog is the commit-success signal, no shell text parsed.* The hook resets on every commit
   attempt because the Bash payload carries no exit status (comment above the reset in
   `codex-gate.sh`); 0.30.0 added `passCountA` to that reset (0.30.1 moves it aside to
   `passCountA.closed`, which the cap check does not read). A failed commit at the Gate-A cap

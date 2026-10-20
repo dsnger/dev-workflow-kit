@@ -1142,8 +1142,8 @@ runs_git_commit() {
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
 # editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
-# metacharacter or backslash anywhere, except `(` and `)` inside single quotes, where the
-# shell reads them as text (the result is attributed through the call's top-level
+# metacharacter or backslash anywhere, except `(` and `)` inside single quotes in a command
+# with no double quote, where the shell reads them as text (the result is attributed through the call's top-level
 # `tool_use_id`, see the record below). Before the
 # commit, a repository whose hooks or settings could rewrite the message gets the Gate-B
 # reminder instead of the note; after it, the counters stay only if HEAD's subject starts with
@@ -1209,7 +1209,8 @@ is_wip_message_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
   printf '%s' "$1" | grep -q '[;&|<>$`\\]' && return 1
-  printf '%s' "$1" | sed "s/'[^']*'//g" | grep -q '[()]' && return 1
+  # a double quote anywhere keeps them refused: an apostrophe pair inside it is no quoting
+  printf '%s' "$1" | sed "/\"/!s/'[^']*'//g" | grep -q '[()]' && return 1
   _ok='(-a|--all|-q|--quiet|--no-verify|-n|--amend|--allow-empty)'
   printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
 }
