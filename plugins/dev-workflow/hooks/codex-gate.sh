@@ -1217,7 +1217,7 @@ is_wip_message_cmd() {
   printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
 }
 # A commit message that starts with `wip` in a call is_wip_message_cmd refuses (a `cd`,
-# `git -C`, chain or heredoc): PreToolUse says the counters will be cleared. Loose on purpose;
+# `git -C`, chain or heredoc) and runs_git_commit sees: PreToolUse says the counters will be cleared. Loose on purpose;
 # a heredoc body line starting with `wip` matches too, and an extra sentence costs nothing.
 looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*[$]?['\"]?[[:space:]]*wip|^[[:space:]]*['\"]?[[:space:]]*wip"; }
 is_wip_amend_cmd() {

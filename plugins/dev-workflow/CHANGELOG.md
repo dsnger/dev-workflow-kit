@@ -26,7 +26,7 @@ AGENTS.md invariant 12 carries the complete list.
 
 - **A WIP-looking commit that is not counted as WIP says so.** When a commit message starts
   with `wip` but the call is not one plain `git commit -m 'WIP: …'` (a `cd …;` or `git -C`
-  prefix, a chain, a heredoc), the PreToolUse reminder now adds one sentence: the call is not
+  prefix, a chain, a heredoc), and `git commit` stands as a command of its own, the PreToolUse reminder now adds one sentence: the call is not
   counted as a WIP commit, the pass counters are cleared after it, and the plain form is
   named. Field sessions (SFX S6d, canvas PR #44) used those forms, saw only the ordinary
   reminder and read the reset as a hook fault. The allow-list and the reset are unchanged;

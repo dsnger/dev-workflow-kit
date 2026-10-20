@@ -3501,7 +3501,8 @@ h=$(cat "$r/.context/codex-gate.gateB" 2>/dev/null)
 chmod 600 "$r/.context/private"
 rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox/r45e"
 
-# 46. A WIP-looking commit the WIP allow-list refuses gets one more sentence before the
+# 46. A WIP-looking commit the WIP allow-list refuses, with `git commit` at a command
+# position, gets one more sentence before the
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
