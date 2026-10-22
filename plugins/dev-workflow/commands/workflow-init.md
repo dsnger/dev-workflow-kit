@@ -604,7 +604,7 @@ Ask also what the artifact is for: of a spec, whether its commitments are cohere
 
 Report missing code or tests only where their absence has a concrete consequence, and name it; review code a plan includes like other content.
 
-A spec or plan that uses a third-party API without a named Context7 lookup (or a Library APIs fallback) for the pinned version is a finding.
+A spec or plan that uses a library API without a named Context7 lookup (or a Library APIs fallback) for the pinned version is a finding.
 
 Append the intent + artifact text + which invariants it touches.
 
@@ -1614,6 +1614,10 @@ is ignored without a re-run; a new setting file then needs its own exception her
 !.context/codex-gate.cap
 !.context/codex-gate.tools
 ```
+
+Run every command in this step from the checkout root (`git rev-parse --show-toplevel`):
+`git ls-files` and `git check-ignore` read their paths relative to the working directory, so a
+run from a subdirectory would look in the wrong `.context/`.
 
 1. **Merge.** Missing `.gitignore`: write it with this block. Its first comment line already
    present → the block was merged before: `unchanged`, and a `!` line the project dropped then is

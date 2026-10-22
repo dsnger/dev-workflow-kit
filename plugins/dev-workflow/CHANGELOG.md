@@ -36,9 +36,9 @@ AGENTS.md invariant 12 carries the complete list.
   "unavailable (not loaded, rate-limited, not indexed)", which the 0.40.0 trim to the 10,000-byte
   cap had dropped (prompt-standards item 10). Field case: sfx-wp-plugin-skills Gate B. Kept as
   0.40.0 dropped them: the examples of the library's own material, and "Nothing mechanical proves
-  a lookup". To fit the cap: "third-party library, framework or SDK API" reads "third-party API",
-  the term the Library APIs section uses, and "the project's pinned version" reads "the pinned
-  version". The file is 9,999 bytes.
+  a lookup". To fit the cap: "third-party library, framework or SDK API" reads "library API",
+  matching the Library APIs section and its fallback to the library's own material, and "the project's pinned version" reads "the pinned
+  version".
 
 ## 0.40.0
 

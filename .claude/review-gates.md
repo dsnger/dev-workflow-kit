@@ -20,7 +20,7 @@ Ask also what the artifact is for: of a spec, whether its commitments are cohere
 
 Report missing code or tests only where their absence has a concrete consequence, and name it; review code a plan includes like other content.
 
-A spec or plan that uses a third-party API without a named Context7 lookup (or a Library APIs fallback) for the pinned version is a finding.
+A spec or plan that uses a library API without a named Context7 lookup (or a Library APIs fallback) for the pinned version is a finding.
 
 Append the intent + artifact text + which invariants it touches.
 
