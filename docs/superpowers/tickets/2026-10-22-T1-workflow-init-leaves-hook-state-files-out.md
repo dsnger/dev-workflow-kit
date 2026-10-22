@@ -1,6 +1,6 @@
 # T-1 — `/workflow-init` leaves the hook's state files out of `.gitignore`
 
-**Category:** improvement · **State:** in-progress · **Severity:** major · **First seen:** unknown — every `/workflow-init` version so far writes no `.gitignore` lines; checked at `35d8596` only
+**Category:** improvement · **State:** done · **Severity:** major · **First seen:** unknown — every `/workflow-init` version so far writes no `.gitignore` lines; checked at `35d8596` only
 **No story:** the commitment comes from `AGENTS.md` invariants 3 and 9 and `/workflow-init` 2.12; the fix's Gate-B provenance line names `none`
 **Feature:** `/workflow-init` Step 2 (scaffolded files), `plugins/dev-workflow/commands/workflow-init.md`
 
@@ -32,3 +32,4 @@ The hook names 20 file names under `.context/` (`grep -noE 'codex-gate\.[A-Za-z0
 ## Log
 - 2026-10-22 · created · ready
 - 2026-10-22 · in-progress · fix on branch kit/0.40.1
+- 2026-10-22 · done · 57351f3 (Gate B cycle k0401gbx closed)
