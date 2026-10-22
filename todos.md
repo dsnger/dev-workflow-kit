@@ -1031,6 +1031,15 @@ backlog.
       0.8.x use. **Deliberately not fixed here** — both are fields in the server's envelope; file
       them against `mcp-codex-dev`, which is Daniel's own server, not this repo's scope.
 
+- **Untrack hook state in the adopted projects** (from ticket T-1, 0.40.1). Trigger: the
+  plugin update to 0.40.1 in SFX, canvas, plugin-skills and API-Builder. Re-run
+  `/dev-workflow:workflow-init` there; 2.18 merges the block and prints `git rm --cached` for
+  any committed `codex-gate.*` state file. The kit does not untrack them for a project.
+- **A new hook setting file needs a 2.18 exception** (from ticket T-1, 0.40.1). Nothing
+  checks that a `.context/codex-gate.*` file the hook only reads appears as a `!` line in the
+  `/workflow-init` 2.18 block; a new one would be ignored in every project. Trigger: the hook
+  gains a sixth setting file; then add the line, or a check in `scripts/check-invariants.sh`.
+
 ## Someday
 
 - [ ] **P1 — `workflow-status` → `workflow-next`, staged.** Report where a story stands

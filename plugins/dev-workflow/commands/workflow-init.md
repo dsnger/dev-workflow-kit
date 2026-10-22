@@ -1596,6 +1596,43 @@ a script), and sessions started outside the project root (`./` is relative to th
 working directory). Why: a deny rule that reads as complete protection invites a secret in the
 repository.
 
+### 2.18 `.gitignore` — the hook's state files
+
+Always runs. Why: the hook writes its pass counters and markers into `.context/codex-gate.*`,
+and a committed pass counter hands every fresh clone a pass nobody ran there. The five
+exceptions are settings a person writes and the hook only reads, so a project may commit them;
+2.12 commits the marker. One pattern instead of names, so a state file a later kit version adds
+is ignored without a re-run; a new setting file then needs its own exception here.
+
+```gitignore
+# dev-workflow gate hook: per-clone state, never committed. The exceptions are
+# settings a person writes and the hook only reads.
+.context/codex-gate.*
+!.context/codex-gate.on
+!.context/codex-gate.off
+!.context/codex-gate.floor
+!.context/codex-gate.cap
+!.context/codex-gate.tools
+```
+
+1. **Merge.** Missing `.gitignore`: write it with this block. All six rule lines already present,
+   in this order → `unchanged`. Otherwise, first run
+   `git check-ignore --no-index -v` on the five exception paths. A hit means the project already
+   ignores that setting on purpose, and the block, appended later, would un-ignore it: show the
+   hit and ask keep the exception or drop that `!` line. Then append the block at the end, so its
+   `!` lines come after the pattern they exempt from.
+2. **Check the marker.** Run `git check-ignore --no-index -v .context/codex-gate.on`. A hit means
+   a rule such as `.context/` ignores the whole directory, and git cannot un-ignore a file inside
+   an ignored directory. Report the hit and both ways out: `git add -f .context/codex-gate.on`,
+   or change that rule to `.context/*`. Change nothing yourself; that rule is the project's.
+3. **Report tracked state.** Run `git ls-files -- '.context/codex-gate.*'`. Every path other than
+   the five exceptions is state already in the repository, which the block does not untrack.
+   Print the paths and the command `git rm --cached -- <paths>`, which untracks them and keeps
+   the files. Leave running it to the user: untracking files is the project's decision.
+
+Report the merge result, the marker check (`ok` or the hit) and the tracked paths (`none`, or
+the list with the command).
+
 ## Step 3 — Walk the user through `AGENTS.md`
 
 `AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the
@@ -1767,6 +1804,7 @@ Scaffolded:
   docs/pr-review-bots.md           written
   todos.md                         written
   .gitattributes                   merged (union-merge line added)
+  .gitignore                       merged (hook state block — 2.18; marker ok; tracked state: none)
   .mcp.json                        merged (codex server added)
   .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)

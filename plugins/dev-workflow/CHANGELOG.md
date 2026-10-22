@@ -22,6 +22,17 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.40.1
+
+- **`/workflow-init` 2.18 ignores the hook's state files.** It merges one block into
+  `.gitignore`: `.context/codex-gate.*`, with `!` exceptions for the five settings a person
+  writes and the hook only reads (`on`, `off`, `floor`, `cap`, `tools`). A pattern rather than
+  names, so a state file a later version adds is ignored without a re-run. It asks when the
+  project already ignores one of the five, reports when a rule such as `.context/` still
+  ignores the marker, and lists already tracked state files with `git rm --cached`, which it
+  never runs itself. Field case: SFX listed five state files by hand and committed
+  `codex-gate.passes` and `codex-gate.freshPasses` inside a cycle (ticket T-1). No hook change.
+
 ## 0.40.0
 
 Five field cases from 2026-10-20 to 2026-10-22 (design note
