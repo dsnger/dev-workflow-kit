@@ -53,13 +53,13 @@ input_field() { # string field inside tool_input: $1 = key
 # tool_input.sessionId is non-empty. The jq-free read looks only between the first "tool_input"
 # and the first "tool_response" key, so a response that names sessionId cannot answer for the
 # input (escaped \"…\" inside a string does not match); a payload listing the response first
-# reads as no sessionId and counts, as before 0.40. grep, not awk: a broken awk must leave
-# the count fail-open (section 39a).
+# reads as no sessionId and counts, as before 0.40. sed and grep, not awk: a broken awk must
+# leave the count fail-open (section 39a); and not ${payload%%…}, which bash 3.2 (macOS sh)
+# evaluates in quadratic time (see the backgrounded classifier). A failed read counts.
 exec_resumed() {
   if command -v jq >/dev/null 2>&1; then [ -n "$(input_field sessionId)" ]; return; fi
-  _h=${payload%%\"tool_response\"*}
-  case "$_h" in *\"tool_input\"*) _h=${_h#*\"tool_input\"} ;; *) return 1 ;; esac
-  printf '%s' "$_h" | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
+  printf '%s' "$payload" | sed -n 's/"tool_response".*//; s/.*"tool_input"//p' \
+    | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
 }
 
 event=$(field hook_event_name)

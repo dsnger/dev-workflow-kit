@@ -63,7 +63,8 @@ spec and plan: the plan is §7 of this note, as in 0.38.0.
   `tool_response` before `tool_input`, the cut leaves no input, the call counts, and the hook behaves as
   in 0.39 (an overcount, never worse than today).
 - **Build deviation (recorded at Gate B pass 1):** the jq-free read does not call `input_field`. It
-  greps the text between the first `"tool_input"` and the first `"tool_response"` key for a
+  greps the text between the last `"tool_input"` before the first `"tool_response"` key (one sed
+  pass) for a
   `"sessionId"` key with a non-empty string value. Why: `input_field`'s jq-free path decodes with awk,
   and with a broken awk (section 39a, partial output) that decoding printed text, which read as a
   `sessionId` and dropped the count; the gate must stay fail-open there. With jq, `input_field` is used.
