@@ -1039,6 +1039,26 @@ backlog.
   checks that a `.context/codex-gate.*` file the hook only reads appears as a `!` line in the
   `/workflow-init` 2.18 block; a new one would be ignored in every project. Trigger: the hook
   gains a sixth setting file; then add the line, or a check in `scripts/check-invariants.sh`.
+  Since 0.41.0 the scratch block in 2.18 item 4 carries the same five `!` lines, so a new
+  setting needs a line in both blocks.
+- **Adopt 0.41.0 in the projects** (from the 0.41.0 field cases). Trigger: the plugin update to
+  0.41.0 in SFX, canvas, plugin-skills and API-Builder. Re-run `/dev-workflow:workflow-init`:
+  2.19 merges `attribution` (SFX and canvas set `includeCoAuthoredBy` by hand; the report notes
+  it), and 2.18 offers the scratch block. In SFX and bricks-api a local `.git/info/exclude` line
+  already ignores `.context/`, so 2.18 reports `already ignored` and offers nothing; to share the
+  rule through `.gitignore` instead, remove those exclude lines first (backup
+  `exclude.bak-20261022`), then re-run.
+- **A leading `cd <dir> &&` or `cd <dir>;` before a WIP commit still resets the count** (field
+  case SFX P0, Gate B `p0gateb22`, 2026-10-22: hook 2 vs 3 pass files; reported during 0.41.0, whose
+  approved spec keeps `cd` refused). Likely safe for the same reason as the 0.41.0 `git add`
+  prefix: the after-commit check reads this repository's HEAD, so a commit elsewhere leaves the
+  counters alone and one here must still be this call's single WIP commit. Needs its own spec:
+  which `cd` targets (plain words only, the checkout root or any path), and `;` as well as `&&`.
+  Trigger: the next kit package.
+- **"Hook count matched" is the orchestrator's term, not the kit's** (from the 0.41.0 field case
+  2). The 0.40.1 session read it as a count of hook state-file names. Trigger: the next
+  orchestrator brief that asks for it; define it there as "the hook's pass count
+  (`docs/reference.md`, Comparing the hook's count) equals the cycle line's, cause if not".
 
 ## Someday
 

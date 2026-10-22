@@ -116,7 +116,9 @@ restated at the top, and the plan names its sources, its impact boundary and its
 handover boundary. It also lists each run it expects to take 45 minutes or more (a
 full end-to-end suite, a screenshot compare): what the run proves, its estimated
 duration and how often it runs; evidence run on the final head counts in the unit that runs
-it. The handover boundary then falls so that no unit
+it. It lists every action outside the repository that needs a human's approval (a file in
+the home directory, an account, a paid run), so they are asked for together when the plan
+closes rather than one at a time mid-build. The handover boundary then falls so that no unit
 carries more than 2 hours of those runs, with earlier boundaries after completed tasks
 where needed; a single longer run gets a unit of its own, and a boundary that would fall
 inside a running review cycle moves to that cycle's close. Each diff stays traceable to a requirement without the plan
@@ -139,7 +141,9 @@ dead-code detector, a duplication/health check against a baseline, and a test
 suite across its relevant environments. Crucially, this same command runs in
 continuous integration on every proposed change and on the main branch, so a red
 result *cannot* merge. Enforcement that depends on a human remembering to run the
-checks is not enforcement.
+checks is not enforcement. When only prose changed after a full green run on a named
+commit, the local rerun covers just the stages that read the changed files, and CI on the
+final head covers the rest.
 
 **8. Gate B on the code.** Before the change is committed, the independent
 reviewer reads the actual *diff* and checks it against the invariants file. It is

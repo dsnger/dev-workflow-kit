@@ -127,6 +127,16 @@ the synonyms a future reader might search for instead.
   with the session; here the step is never reached. Grep this one when the question is
   "which route actually gets there?".
 
+- `rule-held-by-prose-only` — a form the rules forbid keeps appearing in the field although the
+  rule text and a message at the moment both name it, because nothing in the mechanism decides
+  it. Aliases: brief forbids it and it happens anyway, the note fires and the next session does
+  it again, field habit beats the rule. The motivating case: chained `git add … && git commit -m
+  'WIP: …'` reset the gate hook's count three times in one day (canvas, 2026-10-22).
+
+  **Not `unverified-enforcement-claim`.** There the prose says a mechanism enforces something it
+  does not; here the prose is accurate and simply not followed. Harden by making the mechanism
+  decide the form, accepting it where that is provably safe or refusing it, not by more prose.
+
 **Promotion candidate.** These classes are stack-neutral, not project vocabulary, so
 they belong in the `harden-finding` base list rather than here. They live here because
 the skill says to mint into this file (the plugin ships the base classes, the project

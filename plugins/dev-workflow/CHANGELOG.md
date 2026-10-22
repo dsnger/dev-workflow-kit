@@ -22,6 +22,37 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.41.0
+
+Six field cases from 2026-10-21 and 2026-10-22 (design note
+`docs/superpowers/specs/2026-10-22-kit-041-field-cases-design.md`).
+
+- **One chained `git add` before a WIP commit keeps the cycle.** The hook now treats
+  `git add <paths> && git commit -m 'WIP: <subject>'` as a WIP commit when every `git add` word
+  is made only of letters, digits and `._/@+=,:%~-`. `git add` writes no entry to HEAD's reflog,
+  so the after-commit check still proves HEAD is this call's one WIP commit. Any other chain is
+  refused as before; the not-WIP sentence names the exception. Field case: canvas reset its count
+  three times on 2026-10-22 with this form, although the brief and the hook's message forbade it.
+- **Comparing the hook's count with your record** (`docs/reference.md`): where the count shows,
+  where it lives when a docs-only commit prints none, and that a mismatch names its cause or says
+  `cause unknown`. Field case: 0.40.1 reported "no" without a cause; its session had compared hook
+  state-file names, not passes.
+- **`process-pr-review`: a docs-only delta after a full green battery** reruns only the stages
+  that read the changed files, with the baseline SHA named; CI on the final head covers the rest.
+  Field case: canvas declined an 85-minute rerun for three Markdown lines.
+- **No attribution lines.** `/workflow-init` 2.19 merges `"attribution": {"commit": "", "pr": "",
+  "sessionUrl": false}` into `.claude/settings.json` (not the deprecated `includeCoAuthoredBy`),
+  and `process-pr-review` merges with `--body-file`, a body built from the commit messages minus
+  Claude Code's default `Co-Authored-By` trailer; human trailers and cycle record lines stay.
+  The setting is best effort (the model can still write the trailer; an open Claude Code issue),
+  so the squash-body filter is what keeps it off the main branch.
+  Field case: SFX and canvas merges carried the trailer for weeks.
+- **`/workflow-init` 2.18 offers a scratch block**, `/.context/*` with the hook settings kept, so
+  session files stay local. Field case: SFX had 1,120 and bricks-api 5,045 untracked files there.
+- **Plans list the actions outside the repository that need the human**, and the autonomous run
+  asks for them together when the plan closes (CLAUDE.md §4, repo and template). Field case: SFX P0
+  waited about 2 hours mid-build for a `~/.claude.json` approval known at plan time.
+
 ## 0.40.1
 
 - **`/workflow-init` 2.18 ignores the hook's state files.** It merges one block into

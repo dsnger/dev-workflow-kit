@@ -203,9 +203,16 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
    result that verifies it. If code changed: the project's quality command
    (`AGENTS.md § Commands`) green locally **and** the CI quality check green on the
    final pushed head (`gh pr checks` after the run completes). CI is the enforced
-   authority; the local run is the fast pre-check. A local timeout in a test the diff did
-   not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
-   (Gate-B prompt): record it, and the green CI check on the head stands in.
+   authority; the local run is the fast pre-check. Two exceptions. A local timeout in a test
+   the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
+   (Gate-B prompt): record it, and the green CI check on the head stands in. And when the
+   quality command passed in full on a commit you can name (its SHA, from that run's output or
+   record), that commit is an ancestor of the final head, and every path changed between them is
+   docs-only as `.claude/review-gates.md` defines it: rerun only the stages of the quality
+   command that read those paths, and name the stages and that SHA in the report; the green CI
+   check on the final head stands for the rest. Why: rerunning a long battery for a few lines of
+   prose spends the time on stages that never read them. No named commit, one that is not an
+   ancestor (a rebase), or a stage whose inputs you cannot tell: run the full command.
 
    Shape of the report — one thread, two claims, showing a verdict that was not acted on:
 
@@ -243,8 +250,23 @@ Step 3 first; every tracked
 claim has a verdict, a terminal disposition and a reply; no item-4 question is unanswered;
 the required CI check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
 `headRefOid` equal to the head this run checked CI and claims on. A different head means
-commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other:
-`gh pr merge <n> --squash --match-head-commit <headRefOid>`.
+commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other,
+with a squash body you write:
+`gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
+Write the body from the pull request's own commits, as GitHub lists them, so no local ref or
+merge base can add or drop one (`<n>` is the PR number, digits only):
+`gh api --paginate 'repos/{owner}/{repo}/pulls/<n>/commits?per_page=100' --jq '.[] | .commit.message + "\n"'`.
+Remove every line matching
+`^co-authored-by:[[:space:]]*claude[^<]*<noreply@anthropic\.com>[[:space:]]*$` (any case), the
+trailer Claude Code adds by default, and keep every other line. Run these as separate steps. Merge only
+when `gh` succeeded, the body is non-empty, and the number of commits listed
+(the same call with `--jq '.[].sha'`, one per line) equals
+`gh api 'repos/{owner}/{repo}/pulls/<n>' --jq .commits` exactly; otherwise leave the PR unmerged
+and report which of the three checks failed. GitHub lists at most 250 commits of a pull request,
+and a cut list would drop the later commits' lines without an error. Why: GitHub's default squash body
+joins the commit messages, so that trailer reaches the main branch from any commit carrying it,
+while a human co-author's trailer, a project's own attribution and the cycle record lines the
+reports read from the main branch's commit bodies must survive.
 If it fails because the head moved, run Steps 1-3 on the new head before another attempt.
 After three such rounds without a merge, end with the PR unmerged and say why in the report
 and the handover, so late claims or pushes cannot keep the run cycling.
