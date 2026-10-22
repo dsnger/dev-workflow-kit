@@ -137,7 +137,7 @@ What `/dev-workflow:workflow-init` does, in order:
 - **Hook state in `.gitignore` (2.18).** It merges one block into `.gitignore`: the pattern
   `.context/codex-gate.*` ignores the hook's counters and markers, and five `!` lines keep the
   settings `on`, `off`, `floor`, `cap` and `tools` trackable. It asks when the project already
-  ignores one of those five, reports when a rule such as `.context/` still ignores the marker,
+  ignores one of those five, reports a setting a rule such as `.context/` still ignores,
   and lists state files already tracked with the `git rm --cached` command to untrack them; the
   user runs it.
 - **Secret deny rules (2.17).** It merges `permissions.deny` entries into

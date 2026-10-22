@@ -28,8 +28,8 @@ AGENTS.md invariant 12 carries the complete list.
   `.gitignore`: `.context/codex-gate.*`, with `!` exceptions for the five settings a person
   writes and the hook only reads (`on`, `off`, `floor`, `cap`, `tools`). A pattern rather than
   names, so a state file a later version adds is ignored without a re-run. It asks when the
-  project already ignores one of the five, reports when a rule such as `.context/` still
-  ignores the marker, and lists already tracked state files with `git rm --cached`, which it
+  project already ignores one of the five, reports a setting a rule such as `.context/`
+  still ignores, and lists already tracked state files with `git rm --cached`, which it
   never runs itself. Field case: SFX listed five state files by hand and committed
   `codex-gate.passes` and `codex-gate.freshPasses` inside a cycle (ticket T-1). No hook change.
 - **The Context7 fallback names its causes again** (`.claude/review-gates.md` and the 2.1a copy):

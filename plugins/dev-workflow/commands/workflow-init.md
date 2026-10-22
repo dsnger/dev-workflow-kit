@@ -1615,23 +1615,28 @@ is ignored without a re-run; a new setting file then needs its own exception her
 !.context/codex-gate.tools
 ```
 
-1. **Merge.** Missing `.gitignore`: write it with this block. All six rule lines already present,
-   in this order → `unchanged`. Otherwise, first run
-   `git check-ignore --no-index -v` on the five exception paths. A hit means the project already
-   ignores that setting on purpose, and the block, appended later, would un-ignore it: show the
-   hit and ask keep the exception or drop that `!` line. A hit from a rule that ignores the
-   whole `.context/` directory is item 2's case: ask nothing for it. Then append the block at the end, so its
-   `!` lines come after the pattern they exempt from.
-2. **Check the marker.** Run `git check-ignore --no-index -v .context/codex-gate.on`. A hit means
-   a rule such as `.context/` ignores the whole directory, and git cannot un-ignore a file inside
-   an ignored directory. Report the hit and both ways out: `git add -f .context/codex-gate.on`,
-   or change that rule to `.context/*`. Change nothing yourself; that rule is the project's.
+1. **Merge.** Missing `.gitignore`: write it with this block. The line `.context/codex-gate.*`
+   already present → the block was merged before: `unchanged`, and a `!` line the project dropped
+   then is not asked about again. Otherwise, for each of the five settings, run
+   `git check-ignore --no-index -q <path>`: exit 0 means a rule already ignores it, 1 means it
+   does not, anything else is an error to report. For a hit, `git check-ignore --no-index -v
+   <path>` names the rule. A rule naming that setting alone was the project's choice: show it and
+   ask keep the exception or drop that `!` line. A rule covering all of `.context/` is item 2's
+   case: ask nothing. Then append the block, without dropped lines, at the end, so its `!` lines
+   come after the pattern they exempt from.
+2. **Check the settings.** For each setting the block kept, run the same `-q` check; decide on its
+   exit status alone, because `-v` also prints a matching `!` rule and exits 0. A setting still
+   ignored after the merge sits under a rule the block cannot override: git cannot un-ignore a
+   file inside an ignored directory, and a `.gitignore` inside `.context/` wins over the root
+   one. Show the `-v` line, which names the rule and its file, and the ways out:
+   `git add -f <path>`, or change that rule (`.context/` to `.context/*`). Change nothing
+   yourself; that rule is the project's.
 3. **Report tracked state.** Run `git ls-files -- '.context/codex-gate.*'`. Every path other than
    the five exceptions is state already in the repository, which the block does not untrack.
    Print the paths and the command `git rm --cached -- <paths>`, which untracks them and keeps
    the files. Leave running it to the user: untracking files is the project's decision.
 
-Report the merge result, the marker check (`ok` or the hit) and the tracked paths (`none`, or
+Report the merge result, the settings check (`ok` or each hit) and the tracked paths (`none`, or
 the list with the command).
 
 ## Step 3 — Walk the user through `AGENTS.md`
@@ -1805,7 +1810,7 @@ Scaffolded:
   docs/pr-review-bots.md           written
   todos.md                         written
   .gitattributes                   merged (union-merge line added)
-  .gitignore                       merged (hook state block — 2.18; marker ok; tracked state: none)
+  .gitignore                       merged (hook state block — 2.18; settings ok; tracked state: none)
   .mcp.json                        merged (codex server added)
   .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)
