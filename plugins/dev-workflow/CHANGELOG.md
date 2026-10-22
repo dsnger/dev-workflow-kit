@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.40.1
+
+- **`/workflow-init` 2.18 ignores the hook's state files.** It merges one block into
+  `.gitignore`: `.context/codex-gate.*`, with `!` exceptions for the five settings a person
+  writes and the hook only reads (`on`, `off`, `floor`, `cap`, `tools`). A pattern rather than
+  names, so a state file a later version adds is ignored without a re-run. It asks when the
+  project already ignores one of the five, reports a setting a rule such as `.context/`
+  still ignores, and lists already tracked state files with `git rm --cached`, which it
+  never runs itself. Field case: SFX listed five state files by hand and committed
+  `codex-gate.passes` and `codex-gate.freshPasses` inside a cycle (ticket T-1). No hook change.
+- **The Context7 fallback names its causes again** (`.claude/review-gates.md` and the 2.1a copy):
+  "unavailable (not loaded, rate-limited, not indexed)", which the 0.40.0 trim to the 10,000-byte
+  cap had dropped (prompt-standards item 10). Field case: sfx-wp-plugin-skills Gate B. Kept as
+  0.40.0 dropped them: the examples of the library's own material, and "Nothing mechanical proves
+  a lookup". To fit the cap: "third-party library, framework or SDK API" reads "library API",
+  matching the Library APIs section and its fallback to the library's own material, and "the project's pinned version" reads "the pinned
+  version".
+
 ## 0.40.0
 
 Five field cases from 2026-10-20 to 2026-10-22 (design note

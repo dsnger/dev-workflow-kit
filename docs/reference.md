@@ -126,7 +126,7 @@ What `/dev-workflow:workflow-init` does, in order:
   the same budget.
 - **Scaffolding.** Per file: missing, written; identical, `unchanged`; present and
   different, it shows the diff and asks overwrite / merge / skip; additive files
-  (`.gitattributes`, `.mcp.json`, `.claude/settings.json`) are merged. It writes
+  (`.gitattributes`, `.mcp.json`, `.claude/settings.json`, `.gitignore`) are merged. It writes
   `CLAUDE.md` (the discipline rules, with §5 as a pointer), `.claude/review-gates.md`
   (the gate rules), `docs/hardening-log.md`, `docs/hardening-taxonomy.md`,
   `docs/prompt-standards.md`, `docs/pr-review-bots.md`, `todos.md`,
@@ -134,6 +134,12 @@ What `/dev-workflow:workflow-init` does, in order:
   `context7` servers in `.mcp.json` (each added only when absent; an existing entry of
   that name is left as it is, so check it yourself), and `.context/codex-gate.on`, the
   marker that makes the hook speak in this project. Commit the marker.
+- **Hook state in `.gitignore` (2.18).** It merges one block into `.gitignore`: the pattern
+  `.context/codex-gate.*` ignores the hook's counters and markers, and five `!` lines keep the
+  settings `on`, `off`, `floor`, `cap` and `tools` trackable. It asks when the project already
+  ignores one of those five, reports a setting a rule such as `.context/` still ignores,
+  and lists state files already tracked with the `git rm --cached` command to untrack them; the
+  user runs it.
 - **Secret deny rules (2.17).** It merges `permissions.deny` entries into
   `.claude/settings.json` that stop Claude Code from reading every name starting `.env` (`.env`,
   `.env.local`, `.envrc`; except `.env.example`), `*.pem`, `*.key`, `secrets.*` at any depth, `secrets*` under
@@ -512,7 +518,9 @@ in `CLAUDE.md` is present (`is_adopted` in
 goes unexpectedly silent, check those two first. To silence it for good, delete both; the
 skills and commands stay callable by name.
 
-All knobs are files under `.context/`:
+All knobs are files under `.context/`. Every other `codex-gate.*` file there is state the hook
+writes; `/workflow-init` 2.18 ignores those and leaves these knobs trackable, except
+`codex-gate.cap-extra`, which belongs to one cycle and is ignored too:
 
 | | |
 |---|---|
