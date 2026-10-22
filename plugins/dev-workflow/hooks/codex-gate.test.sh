@@ -1133,12 +1133,13 @@ amendpost "git commit -q -m 'WIP: a'" toolu_A
 rm -f .context/codex-gate.wipBase.*
 # (m22) one leading `git add <plain words> &&` before the WIP commit keeps the cycle (0.41.0;
 # canvas 2026-10-22, `34c4405`: the chain reset the count three times). The chain stages its own
-# files; both readers. $1 = runner, $2 = the command
+# files; both readers. A path named `--amend` in the prefix is not the commit's option.
+# $1 = runner, $2 = the command
 clife() {
   reset_all; rev; rev; execp
   pre=$($1 "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t22\",\"tool_input\":{\"command\":\"$2\"}}")
   before=$(git rev-parse HEAD)
-  printf 'x\n' >> wip.txt; printf 'y\n' >> wip2.txt; printf 'z\n' >> 'wip 2.txt'
+  printf 'x\n' >> wip.txt; printf 'y\n' >> wip2.txt; printf 'z\n' >> 'wip 2.txt'; printf 'a\n' >> ./--amend
   sh -c "$2" >/dev/null 2>&1
   [ "$(git rev-parse HEAD)" != "$before" ] && moved=yes || moved=no
   subj=$(git log -1 --format=%s)
@@ -1147,7 +1148,8 @@ clife() {
 for r in run nojq_run; do
   for c in "git add wip.txt && git commit -q -m 'WIP: c1'" "git add -A wip.txt && git commit -q -m 'WIP: c2'" \
            "git add wip.txt wip2.txt && git commit -q -m 'WIP: c3'" \
-           "git add -- wip.txt && git commit -q --amend -m 'WIP: c4'"; do
+           "git add -- wip.txt && git commit -q --amend -m 'WIP: c4'" \
+           "git add -- --amend && git commit -q -m 'WIP: c7'"; do
     clife "$r" "$c"
     noted && [ "$moved" = yes ] && [ "${subj#WIP: c}" != "$subj" ] && kept && pass "m22 $r: note, WIP commit, cycle kept: $c" || fail "m22 $r: note, WIP commit, cycle kept: $c"
   done
@@ -1171,7 +1173,7 @@ for r in run nojq_run; do
   rm -f "$hooksd/post-commit"
 done
 rm -f .context/codex-gate.wipBase.*
-git rm -q --cached wip2.txt 'wip 2.txt' >/dev/null 2>&1; rm -f wip2.txt 'wip 2.txt'
+git rm -q --cached -- wip2.txt 'wip 2.txt' --amend >/dev/null 2>&1; rm -f wip2.txt 'wip 2.txt' ./--amend
 git reset -q --soft "$base19d" >/dev/null 2>&1
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
 rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"

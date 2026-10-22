@@ -1212,12 +1212,13 @@ msg_may_be_rewritten() {
   return 1
 }
 head_is_wip() { git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '^[[:space:]]*wip'; }
+# One leading `git add <plain words> &&` is dropped first (0.41.0, canvas 2026-10-22): `git add`
+# writes no HEAD reflog entry, so is_wip_commit_post still ties HEAD to this call's one commit
+strip_add_prefix() { printf '%s' "$1" | sed -E 's#^[[:space:]]*git[[:space:]]+add([[:space:]]+[A-Za-z0-9._/@+=,:%~-]+)+[[:space:]]*&&##'; }
 is_wip_message_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
-  # One leading `git add <plain words> &&` is dropped first (0.41.0, canvas 2026-10-22): `git add`
-  # writes no HEAD reflog entry, so is_wip_commit_post still ties HEAD to this call's one commit
-  set -- "$(printf '%s' "$1" | sed -E 's#^[[:space:]]*git[[:space:]]+add([[:space:]]+[A-Za-z0-9._/@+=,:%~-]+)+[[:space:]]*&&##')"
+  set -- "$(strip_add_prefix "$1")"
   printf '%s' "$1" | grep -q '[;&|<>$`\\]' && return 1
   # a double quote anywhere keeps them refused: an apostrophe pair inside it is no quoting
   printf '%s' "$1" | sed "/\"/!s/'[^']*'//g" | grep -q '[()]' && return 1
@@ -1292,7 +1293,7 @@ record_wip_base() { # PreToolUse: "<HEAD> <parent or -> <reflog length> <amend|n
   _n=$(head_reflog_len)
   case $_n in '' | 0 | 0* | *[!0-9]* | ??????????*) return 0 ;; esac
   _m=new
-  printf '%s ' "$1" | sed "s/'[^']*'//g; s/\"[^\"]*\"//g" | grep -Eiq '[[:space:]]--amend[[:space:]]' && _m=amend
+  printf '%s ' "$(strip_add_prefix "$1")" | sed "s/'[^']*'//g; s/\"[^\"]*\"//g" | grep -Eiq '[[:space:]]--amend[[:space:]]' && _m=amend
   mkdir -p "$state_dir" 2>/dev/null
   { printf '%s %s %s %s\n' "$_h" "$_p" "$_n" "$_m" > "$wipbase_file"; } 2>/dev/null || true
 }

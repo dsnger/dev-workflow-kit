@@ -255,11 +255,14 @@ with a squash body you write:
 `gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
 Write the body from the pull request's own commits, as GitHub lists them, so no local ref or
 merge base can add or drop one (`<n>` is the PR number, digits only):
-`gh pr view <n> --json commits --jq '.commits[] | .messageHeadline + "\n\n" + .messageBody + "\n"'`.
+`gh api --paginate 'repos/{owner}/{repo}/pulls/<n>/commits?per_page=100' --jq '.[] | .commit.message + "\n"'`.
 Remove every line matching
 `^co-authored-by:[[:space:]]*claude[^<]*<noreply@anthropic\.com>[[:space:]]*$` (any case), the
-trailer Claude Code adds by default, and keep every other line. Run the two as separate steps:
-when `gh` fails, or the body is empty, stop and merge nothing. Why: GitHub's default squash body
+trailer Claude Code adds by default, and keep every other line. Run these as separate steps, and
+stop and merge nothing when `gh` fails, the body is empty, or the number of commits listed
+(the same call with `--jq '.[].sha'`, one per line) differs from
+`gh api 'repos/{owner}/{repo}/pulls/<n>' --jq .commits`: GitHub lists at most 250 commits of a
+pull request, and a cut list would drop the later commits' lines without an error. Why: GitHub's default squash body
 joins the commit messages, so that trailer reaches the main branch from any commit carrying it,
 while a human co-author's trailer, a project's own attribution and the cycle record lines the
 reports read from the main branch's commit bodies must survive.
