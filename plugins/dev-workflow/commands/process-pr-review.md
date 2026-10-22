@@ -260,7 +260,7 @@ Remove every line matching
 `^co-authored-by:[[:space:]]*claude[^<]*<noreply@anthropic\.com>[[:space:]]*$` (any case), the
 trailer Claude Code adds by default, and keep every other line. Run these as separate steps. Merge only
 when `gh` succeeded, the body is non-empty, and the number of commits listed
-(the same call with `--jq '.[].sha'`, one per line) differs from
+(the same call with `--jq '.[].sha'`, one per line) equals
 `gh api 'repos/{owner}/{repo}/pulls/<n>' --jq .commits` exactly; otherwise leave the PR unmerged
 and report which of the three checks failed. GitHub lists at most 250 commits of a pull request,
 and a cut list would drop the later commits' lines without an error. Why: GitHub's default squash body
