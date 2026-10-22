@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
   "displayName": "Cross-Model Review Workflow",
-  "version": "0.39.0",
+  "version": "0.40.0",
   "description": "Spec-driven workflow with two independent cross-model review gates, an append-only hardening ledger for lint and test hardening, and repo-enforced quality. Requires the superpowers plugin.",
   "author": {
     "name": "Daniel Sänger",

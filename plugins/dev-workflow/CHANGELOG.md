@@ -22,6 +22,32 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.40.0
+
+Five field cases from 2026-10-20 to 2026-10-22 (design note
+`docs/superpowers/specs/2026-10-22-kit-040-field-cases-design.md`).
+
+- **A resumed Codex session is not a Gate-A pass.** The hook no longer counts an `mcp__codex__exec`
+  call whose input carries a non-empty `sessionId`, and says so (`ℹ Codex Gate A: resumed session not
+  counted as a pass`). Field case: canvas Gate A, three times, counted the call that only fetched the
+  rest of a truncated reply. Without `jq` the input is read only up to the first `"tool_response"`
+  key, so a `sessionId` in Codex's reply does not count as the input's. A real pass resumed by
+  mistake is undercounted, the direction the hook errs in.
+- **The closing commit's form.** The rules now say: stage, then one plain
+  `git commit -F .context/<msg>` (`--allow-empty` when nothing is staged). A closing commit that
+  stages only `todos.md` then gets the docs-only note instead of "cannot confirm reviewed content",
+  which canvas closing commits made with `git add … && git commit -F - <<EOF` got. The fingerprint is
+  unchanged (invariant 3).
+- **Cycle commits from the main session.** A subagent's chained commit cleared the main session's
+  pass counters, and the hook's sentence about it went to the subagent. The rules have the main
+  session make every commit inside an open cycle; `docs/reference.md` says why.
+- **The 197-line cutoff carries its reason** in the rule: the size of the field fix it was set on.
+- **Final-head evidence counts in the D16 budget.** Scaffolded `CLAUDE.md` §4: evidence run on the
+  final head counts in the unit that runs it. Field case: canvas S4 unit 2 passed 2 hours because the
+  final-head evidence chain came on top of the planned runs.
+- To fit the 10,000-byte cap, the Context7 examples and the sentence that nothing mechanical proves a
+  lookup moved from the rules to `docs/reference.md`; the rules keep every condition.
+
 ## 0.39.0
 
 - **A plan names its long runs and cuts the unit by them.** Decision D16 (Daniel, 2026-10-20). The

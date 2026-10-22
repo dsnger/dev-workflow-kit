@@ -1998,11 +1998,10 @@ without `jq` (counters identical in all four runs).
 
 ## From kit 0.37.2 (2026-10-20) — backlog only, nothing implemented here
 
-- [ ] **Gate A counts an `exec` call that only re-fetched truncated output.** Canvas Gate A: the
+- [x] **Gate A counts an `exec` call that only re-fetched truncated output.** Canvas Gate A: the
   hook counted 4 `mcp__codex__exec` calls against 3 pass files, because one call only fetched
-  the rest of a truncated reply. The hook counts calls, bound to no artifact, so it cannot tell a
-  re-fetch from a pass. Counting unchanged in 0.37.2. *Trigger: the next field report of a Gate-A
-  count above its pass files, or the next story that changes Gate-A counting.*
+  the rest of a truncated reply. Done in 0.40.0: a call whose input carries a `sessionId` (a resumed
+  session, which is how the field re-fetched) is not counted and gets its own note (section 47).
 
 ## From kit 0.37.3 (2026-10-20) — Gate B `k0373gb1020` Minors, accepted, not repaired
 
@@ -2054,3 +2053,22 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **Move project e2e into CI.** The project had no e2e in CI, so every run was local and held a
   session for its whole duration. *Trigger: per project, when its plan lists a long run that CI could
   carry.*
+
+## From kit 0.40.0 (2026-10-22) — open, nothing implemented here
+
+- [ ] **An empty closing commit read as "content not reviewed".** Canvas #46 (2026-10-20, the
+  AGENTS.md trim): the hook reported unreviewed content on an empty closing commit. Not reproduced:
+  an empty commit after an unchanged tree computes the reviewed fingerprint again (section 48 pins
+  the ✓). Cause unknown; the 0.40.0 recipe (message file under `.context/`) removes one candidate, a
+  message file written into the worktree after the review. *Trigger: the next field report, with
+  the commit command and `git status` at the commit.*
+- [ ] **Gate A replies truncated in transport again.** Kit 0.40.0 Gate A pass 1: the pinned server's
+  `output.summary` cut the findings list after the first finding, and resuming the session returned
+  the same cut text; asking Codex to write the findings to the pass file worked. The rules once said
+  "findings go to a FILE, not the response" (ledger row 2026-07-20,
+  `truncated-tool-output-read-as-complete`); the current `.claude/review-gates.md` names the pass
+  file path but not that Codex writes it. Check whether a rule trim dropped that condition.
+  *Trigger: the next rules change with bytes to spare, or a second field case.*
+- [ ] **Gate B's `mcp__codex__review` also takes `sessionId`.** 0.40.0 stops counting a resumed
+  `exec` only; a resumed review call is still credited. No field case yet. *Trigger: a field report
+  of a resumed review counted as a pass.*

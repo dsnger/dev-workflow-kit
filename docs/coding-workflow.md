@@ -115,7 +115,8 @@ a bounded probe is there only to resolve a named uncertainty. Global constraints
 restated at the top, and the plan names its sources, its impact boundary and its
 handover boundary. It also lists each run it expects to take 45 minutes or more (a
 full end-to-end suite, a screenshot compare): what the run proves, its estimated
-duration and how often it runs. The handover boundary then falls so that no unit
+duration and how often it runs; evidence run on the final head counts in the unit that runs
+it. The handover boundary then falls so that no unit
 carries more than 2 hours of those runs, with earlier boundaries after completed tasks
 where needed; a single longer run gets a unit of its own, and a boundary that would fall
 inside a running review cycle moves to that cycle's close. Each diff stays traceable to a requirement without the plan

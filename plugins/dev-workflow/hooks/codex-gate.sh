@@ -50,6 +50,18 @@ input_field() { # string field inside tool_input: $1 = key
   fi
 }
 
+# tool_input.sessionId is non-empty. The jq-free read looks only between the first "tool_input"
+# and the first "tool_response" key, so a response that names sessionId cannot answer for the
+# input (escaped \"…\" inside a string does not match); a payload listing the response first
+# reads as no sessionId and counts, as before 0.40. grep, not awk: a broken awk must leave
+# the count fail-open (section 39a).
+exec_resumed() {
+  if command -v jq >/dev/null 2>&1; then [ -n "$(input_field sessionId)" ]; return; fi
+  _h=${payload%%\"tool_response\"*}
+  case "$_h" in *\"tool_input\"*) _h=${_h#*\"tool_input\"} ;; *) return 1 ;; esac
+  printf '%s' "$_h" | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
+}
+
 event=$(field hook_event_name)
 tool=$(field tool_name)
 
@@ -1485,11 +1497,16 @@ case "$event" in
         cls=$(classify)
         case "$cls" in
           failure | no-result | backgrounded) note_discarded "$cls" ;;
-          *)
+          # A resumed session is no pass of its own (canvas 2026-10-21: re-fetching a truncated
+          # reply counted). Undercounting a pass resumed by mistake fires more, invariant 2's side.
+          # Target model: Claude via Claude Code.
+          *) if exec_resumed; then
+            note "Claude via Claude Code — gate hook. <state>This $exec_tool call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>" "ℹ Codex Gate A: resumed session not counted as a pass"
+          else
             [ "$cls" = unrecognized ] && note_unverified
             mkdir -p "$state_dir" 2>/dev/null
             bump_count "$countA_file"
-            ;;
+          fi ;;
         esac
         cap_check A "$countA_file"
         ;;
