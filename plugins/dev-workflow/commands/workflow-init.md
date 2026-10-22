@@ -1615,9 +1615,10 @@ is ignored without a re-run; a new setting file then needs its own exception her
 !.context/codex-gate.tools
 ```
 
-1. **Merge.** Missing `.gitignore`: write it with this block. The line `.context/codex-gate.*`
-   already present → the block was merged before: `unchanged`, and a `!` line the project dropped
-   then is not asked about again. Otherwise, for each of the five settings, run
+1. **Merge.** Missing `.gitignore`: write it with this block. Its first comment line already
+   present → the block was merged before: `unchanged`, and a `!` line the project dropped then is
+   not asked about again. A `.context/codex-gate.*` line without that comment is the project's
+   own rule and does not count as the block. Otherwise, for each of the five settings, run
    `git check-ignore --no-index -q <path>`: exit 0 means a rule already ignores it, 1 means it
    does not, anything else is an error to report. For a hit, `git check-ignore --no-index -v
    <path>` names the rule. A rule naming that setting alone was the project's choice: show it and
