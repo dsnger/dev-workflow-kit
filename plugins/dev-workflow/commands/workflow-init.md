@@ -1619,7 +1619,8 @@ is ignored without a re-run; a new setting file then needs its own exception her
    in this order → `unchanged`. Otherwise, first run
    `git check-ignore --no-index -v` on the five exception paths. A hit means the project already
    ignores that setting on purpose, and the block, appended later, would un-ignore it: show the
-   hit and ask keep the exception or drop that `!` line. Then append the block at the end, so its
+   hit and ask keep the exception or drop that `!` line. A hit from a rule that ignores the
+   whole `.context/` directory is item 2's case: ask nothing for it. Then append the block at the end, so its
    `!` lines come after the pattern they exempt from.
 2. **Check the marker.** Run `git check-ignore --no-index -v .context/codex-gate.on`. A hit means
    a rule such as `.context/` ignores the whole directory, and git cannot un-ignore a file inside
