@@ -32,6 +32,13 @@ AGENTS.md invariant 12 carries the complete list.
   ignores the marker, and lists already tracked state files with `git rm --cached`, which it
   never runs itself. Field case: SFX listed five state files by hand and committed
   `codex-gate.passes` and `codex-gate.freshPasses` inside a cycle (ticket T-1). No hook change.
+- **The Context7 fallback names its causes again** (`.claude/review-gates.md` and the 2.1a copy):
+  "unavailable (not loaded, rate-limited, not indexed)", which the 0.40.0 trim to the 10,000-byte
+  cap had dropped (prompt-standards item 10). Field case: sfx-wp-plugin-skills Gate B. Kept as
+  0.40.0 dropped them: the examples of the library's own material, and "Nothing mechanical proves
+  a lookup". To fit the cap: "third-party library, framework or SDK API" reads "third-party API",
+  the term the Library APIs section uses, and "the project's pinned version" reads "the pinned
+  version". The file is 9,999 bytes.
 
 ## 0.40.0
 
