@@ -62,12 +62,12 @@ spec and plan: the plan is §7 of this note, as in 0.38.0.
   the jq-free read (an escaped `\"tool_response\"` inside a string does not match). Where a payload put
   `tool_response` before `tool_input`, the cut leaves no input, the call counts, and the hook behaves as
   in 0.39 (an overcount, never worse than today).
-- **Build deviation (recorded at Gate B pass 1):** the jq-free read does not call `input_field`. It
-  greps the text between the last `"tool_input"` before the first `"tool_response"` key (one sed
-  pass) for a
-  `"sessionId"` key with a non-empty string value. Why: `input_field`'s jq-free path decodes with awk,
-  and with a broken awk (section 39a, partial output) that decoding printed text, which read as a
-  `sessionId` and dropped the count; the gate must stay fail-open there. With jq, `input_field` is used.
+- **Build deviation (Gate B, PR 91 review):** the jq-free reader was cut. Three jq-free readers in
+  turn (awk via `input_field`, shell substring trims, a `tr | sed` pipeline) each drew a new boundary,
+  performance or failure-path finding (broken awk read as a sessionId; quadratic time under bash 3.2;
+  a later `"tool_input"` string, multiline payloads, unchecked pipeline stages). Per the rules'
+  shrink-the-mechanism line, `exec_resumed` reads `sessionId` with jq only; without jq every call
+  counts, as before 0.40, so a jq-free re-fetch still overcounts. macOS ships jq (`/usr/bin/jq`).
 - **What it lets through / the direction.** A real pass that resumes a session is not counted, so the
   hook reports fewer passes than were run: the firing direction (invariant 2), never a false ✓. A
   third-party exec tool mapped via `.context/codex-gate.tools` whose input uses another field name for

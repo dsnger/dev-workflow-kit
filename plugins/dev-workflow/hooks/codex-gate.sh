@@ -50,18 +50,10 @@ input_field() { # string field inside tool_input: $1 = key
   fi
 }
 
-# tool_input.sessionId is non-empty. The jq-free read looks only between the first "tool_input"
-# and the first "tool_response" key, so a response that names sessionId cannot answer for the
-# input (escaped \"…\" inside a string does not match); a payload listing the response first
-# reads as no sessionId and counts, as before 0.40. sed and grep, not awk: a broken awk must
-# leave the count fail-open (section 39a); and not ${payload%%…}, which bash 3.2 (macOS sh)
-# evaluates in quadratic time (see the backgrounded classifier). A failed read counts.
-exec_resumed() {
-  if command -v jq >/dev/null 2>&1; then [ -n "$(input_field sessionId)" ]; return; fi
-  # tr: a raw newline is only whitespace between JSON tokens, so one line keeps the boundary
-  _h=$(printf '%s' "$payload" | tr '\n\r' '  ' | sed -n 's/"tool_response".*//; s/.*"tool_input"//p') || return 1
-  printf '%s' "$_h" | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
-}
+# tool_input.sessionId is non-empty, read with jq only. Without jq the call counts, as before
+# 0.40: three jq-free readers in a row drew new boundary or failure-path findings at Gate B
+# (PR 91), so the mechanism was cut rather than repaired again (rules: shrink a regenerating class).
+exec_resumed() { command -v jq >/dev/null 2>&1 && [ -n "$(input_field sessionId)" ]; }
 
 event=$(field hook_event_name)
 tool=$(field tool_name)

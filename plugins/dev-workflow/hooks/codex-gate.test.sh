@@ -3576,49 +3576,37 @@ done
 
 # 47. An exec call whose input carries a sessionId resumes a Codex session (canvas field case
 # 2026-10-21: a call that only re-fetched a truncated reply was counted as a Gate-A pass).
-# $1 = the tool_input body, $2 = a tool_response. Both readers.
+# Read with jq only; without jq every call counts, as before 0.40.
 resumedA_ctx="Claude via Claude Code — gate hook. <state>This mcp__codex__exec call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>"
 resumedA_msg="ℹ Codex Gate A: resumed session not counted as a pass"
 exec47() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{%s},"tool_response":%s}' "$1" "$2"; }
 nA() { cat "$countA" 2>/dev/null || printf '0'; }
-for r in run nojq_run; do
-  reset_all; execp
-  out=$($r "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
-  [ "$(nA)" = 1 ] && pass "47 $r: resumed exec not counted" || fail "47 $r: resumed exec not counted (count $(nA))"
-  exact_pair "47 $r: resumed exec note" "$out" "$resumedA_ctx" "$resumedA_msg"
-  reset_all
-  $r "$(exec47 '"instruction":"more","sessionId":"abc"' "$(unrec)")" >/dev/null
-  [ "$(nA)" = 0 ] && pass "47 $r: resumed unrecognized exec not counted" || fail "47 $r: resumed unrecognized exec not counted (count $(nA))"
-  reset_all
-  $r "$(exec47 '"instruction":"x","sessionId":""' "$(resp_success)")" >/dev/null
-  [ "$(nA)" = 1 ] && pass "47 $r: empty sessionId counts" || fail "47 $r: empty sessionId counts (count $(nA))"
-  reset_all
-  out=$($r "$(exec47 '"instruction":"x","sessionId":"abc"' "$(resp_from shape1-fast-fail)")")
-  [ "$(nA)" = 0 ] && printf '%s' "$out" | grep -qF 'not counted as a gate pass' && ! printf '%s' "$out" | grep -qF 'resumed session' \
-    && pass "47 $r: resumed failure takes the discard note" || fail "47 $r: resumed failure takes the discard note [$out]"
-  # A response that names sessionId must not answer for the input: escaped inside the text
-  # (every real envelope), or as a structured key.
-  reset_all
-  $r "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
-  $r "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
-  [ "$(nA)" = 2 ] && pass "47 $r: a sessionId in the response only counts" || fail "47 $r: a sessionId in the response only counts (count $(nA))"
-  # Pretty-printed payload: the input's sessionId on its own line, and a response-only one.
-  reset_all
-  $r "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
-  $r "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x"\n},\n"tool_response":[{"type":"text","text":"{\\"success\\": true}",\n "sessionId":"z"}]}')" >/dev/null
-  [ "$(nA)" = 1 ] && pass "47 $r: multiline payload keeps the input/response boundary" || fail "47 $r: multiline payload keeps the input/response boundary (count $(nA))"
-done
-# 47, jq-free with a sed that prints matching text and then fails: the read failed, so it counts.
-# Only the reader's script fails; every other sed call runs the real one, so routing still works.
-real_sed=$(command -v sed)
-sed_reader=$(mk_shim sedreader sed "case \"\$*\" in *tool_response*) printf '\"sessionId\":\"a\"'; exit 2 ;; esac; exec $real_sed \"\$@\"")
-if [ -n "$sed_reader" ]; then
-  reset_all
-  printf '%s' "$(exec47 '"instruction":"x"' "$(resp_success)")" | PATH="$sed_reader:$nojq" "$HOOK_SH_BIN" "$HOOK" >/dev/null
-  [ "$(nA)" = 1 ] && pass "47: sed failing after matching output -> counts" || fail "47: sed failing after matching output -> counts (count $(nA))"
-else
-  skip "47: sed shim could not be built"
-fi
+reset_all; execp
+out=$(run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+[ "$(nA)" = 1 ] && pass "47: resumed exec not counted" || fail "47: resumed exec not counted (count $(nA))"
+exact_pair "47: resumed exec note" "$out" "$resumedA_ctx" "$resumedA_msg"
+reset_all
+run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(unrec)")" >/dev/null
+[ "$(nA)" = 0 ] && pass "47: resumed unrecognized exec not counted" || fail "47: resumed unrecognized exec not counted (count $(nA))"
+reset_all
+run "$(exec47 '"instruction":"x","sessionId":""' "$(resp_success)")" >/dev/null
+[ "$(nA)" = 1 ] && pass "47: empty sessionId counts" || fail "47: empty sessionId counts (count $(nA))"
+reset_all
+out=$(run "$(exec47 '"instruction":"x","sessionId":"abc"' "$(resp_from shape1-fast-fail)")")
+[ "$(nA)" = 0 ] && printf '%s' "$out" | grep -qF 'not counted as a gate pass' && ! printf '%s' "$out" | grep -qF 'resumed session' \
+  && pass "47: resumed failure takes the discard note" || fail "47: resumed failure takes the discard note [$out]"
+# A response that names sessionId does not answer for the input: escaped inside the text (every
+# real envelope), or as a structured key; nor does a pretty-printed payload change that.
+reset_all
+run "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
+run "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
+run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
+[ "$(nA)" = 2 ] && pass "47: response-only sessionId counts; multiline input sessionId does not" || fail "47: response-only sessionId counts; multiline input sessionId does not (count $(nA))"
+# Without jq the hook does not read sessionId: the resumed call counts, as before 0.40.
+reset_all
+out=$(nojq_run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+[ "$(nA)" = 1 ] && ! printf '%s' "$out" | grep -qF 'resumed session' && pass "47 nojq: resumed exec counts, no note" \
+  || fail "47 nojq: resumed exec counts, no note (count $(nA)) [$out]"
 
 # 48. The closing-commit recipe the rules prescribe (canvas s4nachl1/s4bau2gb, 2026-10-21): a
 # staged todos.md committed by a plain `git commit -F .context/<msg>` reaches the docs-only

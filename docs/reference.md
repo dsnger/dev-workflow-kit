@@ -429,9 +429,8 @@ uncommitted.
 Codex session and the hook did not count it (since 0.40.0). The usual case is fetching the rest of a
 truncated reply, which belongs to the pass it completes. If the call was a review pass of its own,
 run it again without `sessionId`: the count stays one short until you do, which the below-floor
-reminder will show. Without `jq` the hook reads the input only up to the first `"tool_response"`
-key, so a `sessionId` in Codex's reply never counts as the input's; a payload that listed the
-response before the input would read as no `sessionId`, and the call would count as before 0.40.0.
+reminder will show. The hook reads `sessionId` with `jq` only: without `jq` every call counts, as
+before 0.40.0, so a re-fetch there still shows as an extra pass.
 
 **No readable result** (`⚠ Gate call returned no readable result`). Two causes produce
 this shape, and the tool name cannot separate them: a hooks-API payload change, or a

@@ -30,9 +30,9 @@ Five field cases from 2026-10-20 to 2026-10-22 (design note
 - **A resumed Codex session is not a Gate-A pass.** The hook no longer counts an `mcp__codex__exec`
   call whose input carries a non-empty `sessionId`, and says so (`ℹ Codex Gate A: resumed session not
   counted as a pass`). Field case: canvas Gate A, three times, counted the call that only fetched the
-  rest of a truncated reply. Without `jq` the input is read only up to the first `"tool_response"`
-  key, so a `sessionId` in Codex's reply does not count as the input's. A real pass resumed by
-  mistake is undercounted, the direction the hook errs in.
+  rest of a truncated reply. The field is read with `jq` only; without `jq` every call counts, as
+  before (three jq-free readers drew new findings in turn at Gate B, so that path was cut). A real
+  pass resumed by mistake is undercounted, the direction the hook errs in.
 - **The closing commit's form.** The rules now say: stage, then one plain
   `git commit -F .context/<msg>` (`--allow-empty` when nothing is staged). A closing commit that
   stages only `todos.md` then gets the docs-only note instead of "cannot confirm reviewed content",
