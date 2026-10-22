@@ -339,7 +339,8 @@ ledger-check records, and a `todos.md` row per finding dispositioned `accepted, 
 repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject. Since
 0.40.0 the rules give its form: stage, then one plain `git commit -F .context/<msg>`
 (`--allow-empty` when nothing is staged), so the hook's docs-only check can read a commit that
-stages only `todos.md` (see [Hook messages](#hook-messages)).
+stages only `todos.md` (see [Hook messages](#hook-messages)). An empty commit stages nothing, so it
+gets the ordinary Gate-B check instead, which matches when nothing changed since the last pass.
 Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) ends with
 its own. A spec change after its Gate A closed goes through `intake`'s amendment route.
 

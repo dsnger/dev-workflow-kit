@@ -620,7 +620,7 @@ Tool: `mcp__codex__review` (args `instruction`, `whatWasImplemented`, `baseSha`,
 
 **Default call shape: two sequential single-branch calls per pass**, `reviewType: spec` then `reviewType: quality`, with the same `baseSha` and `headSha`, both resolved to full 40-character lowercase SHAs before the first call, the WIP-parent `baseSha` included; each call's `additionalContext` names only its own slot.
 
-Inside an open cycle, the main session (only it sees the hook's note) makes each commit before the closing act as a Bash call holding only `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, which a subject ending in `(WIP)` is not. The closing act's commit takes a non-WIP subject: stage, then one plain `git commit -F .context/<msg>` (`--allow-empty` if none staged) for the hook's docs-only check.
+Inside an open cycle, the main session (the committer gets the note) makes each commit before the closing act as a Bash call holding only `git commit -m 'WIP: <subject>'`, with a plain subject; the gate hook keeps the pass count only across a commit it recognises as WIP, which a subject ending in `(WIP)` is not. The closing act's commit takes a non-WIP subject: stage, then one plain `git commit -F .context/<msg>`, the form the docs-only check reads (empty: `--allow-empty`).
 
 Check against @AGENTS.md.
 
