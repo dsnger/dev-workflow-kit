@@ -253,11 +253,13 @@ the required CI check is green on the head; and `gh pr view <n> --json mergeStat
 commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other,
 with a squash body you write:
 `gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
-Write the body from the range's commit messages,
-`git log --reverse --format='%s%n%n%b' $(git merge-base origin/<baseRefName> <headRefOid>)..<headRefOid>`
-(after `git fetch`), and remove every line matching
+Write the body from the pull request's own commits, as GitHub lists them, so no local ref or
+merge base can add or drop one (`<n>` is the PR number, digits only):
+`gh pr view <n> --json commits --jq '.commits[] | .messageHeadline + "\n\n" + .messageBody + "\n"'`.
+Remove every line matching
 `^co-authored-by:[[:space:]]*claude[^<]*<noreply@anthropic\.com>[[:space:]]*$` (any case), the
-trailer Claude Code adds by default; keep every other line. Why: GitHub's default squash body
+trailer Claude Code adds by default, and keep every other line. Run the two as separate steps:
+when `gh` fails, or the body is empty, stop and merge nothing. Why: GitHub's default squash body
 joins the commit messages, so that trailer reaches the main branch from any commit carrying it,
 while a human co-author's trailer, a project's own attribution and the cycle record lines the
 reports read from the main branch's commit bodies must survive.

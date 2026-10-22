@@ -1138,14 +1138,14 @@ clife() {
   reset_all; rev; rev; execp
   pre=$($1 "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t22\",\"tool_input\":{\"command\":\"$2\"}}")
   before=$(git rev-parse HEAD)
-  printf 'x\n' >> wip.txt; printf 'y\n' >> wip2.txt
+  printf 'x\n' >> wip.txt; printf 'y\n' >> wip2.txt; printf 'z\n' >> 'wip 2.txt'
   sh -c "$2" >/dev/null 2>&1
   [ "$(git rev-parse HEAD)" != "$before" ] && moved=yes || moved=no
   subj=$(git log -1 --format=%s)
   $1 "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t22\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
 }
 for r in run nojq_run; do
-  for c in "git add wip.txt && git commit -q -m 'WIP: c1'" "git add -u && git commit -q -m 'WIP: c2'" \
+  for c in "git add wip.txt && git commit -q -m 'WIP: c1'" "git add -A wip.txt && git commit -q -m 'WIP: c2'" \
            "git add wip.txt wip2.txt && git commit -q -m 'WIP: c3'" \
            "git add -- wip.txt && git commit -q --amend -m 'WIP: c4'"; do
     clife "$r" "$c"
@@ -1154,23 +1154,24 @@ for r in run nojq_run; do
   # git add fails, so && skips the commit: HEAD and its reflog stay, so does the cycle
   clife "$r" "git add missing.ts && git commit -q -m 'WIP: c5'"
   noted && [ "$moved" = no ] && kept && pass "m22 $r: failed add, no commit, cycle kept" || fail "m22 $r: failed add, no commit, cycle kept"
-  # refused: reminder before, reset only where HEAD moved
+  # refused: reminder before; each commits, so each resets
   # shellcheck disable=SC2016  # the $( ) is command text for the hook and sh -c
   for c in "git add 'wip 2.txt' && git commit -q -m 'WIP: r1'" "git add wip.txt; git commit -q -m 'WIP: r2'" \
            "git add wip.txt && git commit -q -m 'WIP: r3' && true" "git commit -q -am 'WIP: r4' && git add wip2.txt" \
            "git -C . add wip.txt && git commit -q -m 'WIP: r5'" "git add \$(echo wip.txt) && git commit -q -m 'WIP: r6'" \
            "git add wip.txt && git add wip2.txt && git commit -q -m 'WIP: r7'"; do
     clife "$r" "$c"
-    if [ "$moved" = yes ]; then [ ! -f "$count" ]; else kept; fi && ! noted && pass "m22 $r: refused, reset only if HEAD moved ($moved): $c" || fail "m22 $r: refused, reset only if HEAD moved ($moved): $c"
+    [ "$moved" = yes ] && [ ! -f "$count" ] && ! noted && pass "m22 $r: refused, commit landed, reset: $c" || fail "m22 $r: refused, commit landed, reset: $c"
   done
+  # a post-commit hook adds a second commit after the chained WIP one: the reflog grew by two, reset
+  printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
+  chmod +x "$hooksd/post-commit"
+  clife "$r" "git add wip.txt && git commit -q -m 'WIP: c6'"
+  [ "$subj" = 'WIP: from a hook' ] && [ ! -f "$count" ] && pass "m22 $r: chained WIP, then a hook commits again: reset" || fail "m22 $r: chained WIP, then a hook commits again: reset"
+  rm -f "$hooksd/post-commit"
 done
-# a post-commit hook adds a second commit after the chained WIP one: the reflog grew by two, reset
-printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
-chmod +x "$hooksd/post-commit"
-clife run "git add wip.txt && git commit -q -m 'WIP: c6'"
-[ "$subj" = 'WIP: from a hook' ] && [ ! -f "$count" ] && pass "m22: chained WIP, then a hook commits again: reset" || fail "m22: chained WIP, then a hook commits again: reset"
-rm -f "$hooksd/post-commit" .context/codex-gate.wipBase.*
-git rm -q --cached wip2.txt >/dev/null 2>&1; rm -f wip2.txt
+rm -f .context/codex-gate.wipBase.*
+git rm -q --cached wip2.txt 'wip 2.txt' >/dev/null 2>&1; rm -f wip2.txt 'wip 2.txt'
 git reset -q --soft "$base19d" >/dev/null 2>&1
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
 rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
