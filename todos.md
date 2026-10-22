@@ -2002,6 +2002,7 @@ without `jq` (counters identical in all four runs).
   hook counted 4 `mcp__codex__exec` calls against 3 pass files, because one call only fetched
   the rest of a truncated reply. Done in 0.40.0: a call whose input carries a `sessionId` (a resumed
   session, which is how the field re-fetched) is not counted and gets its own note (section 47).
+  With `jq` only: without it every call counts, as before.
 
 ## From kit 0.37.3 (2026-10-20) — Gate B `k0373gb1020` Minors, accepted, not repaired
 
@@ -2070,5 +2071,5 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   file path but not that Codex writes it. Check whether a rule trim dropped that condition.
   *Trigger: the next rules change with bytes to spare, or a second field case.*
 - [ ] **Gate B's `mcp__codex__review` also takes `sessionId`.** 0.40.0 stops counting a resumed
-  `exec` only; a resumed review call is still credited. No field case yet. *Trigger: a field report
+  `exec` only, and only where `jq` is installed; a resumed review call is still credited. No field case yet. *Trigger: a field report
   of a resumed review counted as a pass.*

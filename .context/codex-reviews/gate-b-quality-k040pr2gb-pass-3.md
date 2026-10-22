@@ -1,0 +1,2 @@
+MINOR | high | docs/reference.md:487; todos.md:2003-2004; todos.md:2072-2073 | Existing summaries still say resumed exec calls are excluded from the count without qualifying this by jq availability; the closed todo also promises a resumed-session note | These statements now overstate the jq-free hook, which counts a successful resumed call and emits no resumed-session note | Qualify these summaries with the jq-only limit or link to the updated resumed-session documentation
+END OF FINDINGS (1 total)

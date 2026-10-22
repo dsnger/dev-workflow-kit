@@ -484,7 +484,7 @@ fingerprint could not be written or read back; or a non-WIP commit cleared it (s
 the cycle stayed open. It also appears on a spec or plan commit whose command is more than
 `git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
 only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
-passes (`mcp__codex__exec`) are counted by call, a resumed session excepted, and never record one.
+passes (`mcp__codex__exec`) are counted by call, a resumed session excepted where `jq` is installed, and never record one.
 
 **Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
 Usually the working tree or the index changed since the review. A closing commit that stages
