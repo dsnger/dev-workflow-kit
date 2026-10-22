@@ -3581,6 +3581,8 @@ resumedA_ctx="Claude via Claude Code — gate hook. <state>This mcp__codex__exec
 resumedA_msg="ℹ Codex Gate A: resumed session not counted as a pass"
 exec47() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{%s},"tool_response":%s}' "$1" "$2"; }
 nA() { cat "$countA" 2>/dev/null || printf '0'; }
+# The detection cases need jq on this host; the jq-free case at the end runs everywhere.
+if command -v jq >/dev/null 2>&1; then
 reset_all; execp
 out=$(run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
 [ "$(nA)" = 1 ] && pass "47: resumed exec not counted" || fail "47: resumed exec not counted (count $(nA))"
@@ -3602,6 +3604,9 @@ run "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
 run "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
 run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
 [ "$(nA)" = 2 ] && pass "47: response-only sessionId counts; multiline input sessionId does not" || fail "47: response-only sessionId counts; multiline input sessionId does not (count $(nA))"
+else
+  skip "47: sessionId detection cases — no jq on this host; the jq-free case below still runs"
+fi
 # Without jq the hook does not read sessionId: the resumed call counts, as before 0.40.
 reset_all
 out=$(nojq_run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
