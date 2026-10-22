@@ -44,6 +44,8 @@ Six field cases from 2026-10-21 and 2026-10-22 (design note
   "sessionUrl": false}` into `.claude/settings.json` (not the deprecated `includeCoAuthoredBy`),
   and `process-pr-review` merges with `--body-file`, a body built from the commit messages minus
   Claude Code's default `Co-Authored-By` trailer; human trailers and cycle record lines stay.
+  The setting is best effort (the model can still write the trailer; an open Claude Code issue),
+  so the squash-body filter is what keeps it off the main branch.
   Field case: SFX and canvas merges carried the trailer for weeks.
 - **`/workflow-init` 2.18 offers a scratch block**, `/.context/*` with the hook settings kept, so
   session files stay local. Field case: SFX had 1,120 and bricks-api 5,045 untracked files there.

@@ -145,8 +145,10 @@ What `/dev-workflow:workflow-init` does, in order:
   settings, lists the tracked paths and asks otherwise, and skips it when a rule already
   ignores all of `.context/`.
 - **No attribution lines (2.19).** It merges `"attribution": {"commit": "", "pr": "",
-  "sessionUrl": false}` into `.claude/settings.json`, so Claude Code adds no `Co-Authored-By`
-  trailer to commits and no attribution text to pull requests. It asks before replacing an
+  "sessionUrl": false}` into `.claude/settings.json`, which removes Claude Code's instruction to
+  add a `Co-Authored-By` trailer to commits and attribution text to pull requests. Best effort: the
+  model can still write the trailer from habit (an open Claude Code issue, seen on 2.1.296 and
+  2.1.301), so the squash-body filter in `process-pr-review` is what keeps it off the main branch. It asks before replacing an
   `attribution` the project set itself. Not `includeCoAuthoredBy`, which Claude Code deprecated
   in 2.0.62; not `"attribution": false`, which clients before 2.1.281 reject together with the
   whole file. `process-pr-review` also strips that default trailer from the squash body.

@@ -1704,8 +1704,10 @@ skips the whole settings file, the deny rules of 2.17 included. Take the first c
    `skipped (attribution is neither an object nor false)`.
 
 An `includeCoAuthoredBy` key stays as it is; report that it is deprecated and that Claude Code
-ignores it once `attribution.commit` is set. `/dev-workflow:process-pr-review` also removes the
-default trailer from the squash body, for commits made before this key existed.
+ignores it once `attribution.commit` is set. The key removes Claude Code's instruction to add the
+trailer; the model can still write one from habit (Claude Code issue reported against 2.1.296 and
+2.1.301, open), so tell the user it is best effort. `/dev-workflow:process-pr-review` removes the
+default trailer from the squash body, which keeps it off the main branch either way.
 
 ## Step 3 — Walk the user through `AGENTS.md`
 
