@@ -1039,6 +1039,17 @@ backlog.
   checks that a `.context/codex-gate.*` file the hook only reads appears as a `!` line in the
   `/workflow-init` 2.18 block; a new one would be ignored in every project. Trigger: the hook
   gains a sixth setting file; then add the line, or a check in `scripts/check-invariants.sh`.
+  Since 0.41.0 the scratch block in 2.18 item 4 carries the same five `!` lines, so a new
+  setting needs a line in both blocks.
+- **Adopt 0.41.0 in the projects** (from the 0.41.0 field cases). Trigger: the plugin update to
+  0.41.0 in SFX, canvas, plugin-skills and API-Builder. Re-run `/dev-workflow:workflow-init`:
+  2.19 merges `attribution` (SFX and canvas set `includeCoAuthoredBy` by hand; the report notes
+  it), and 2.18 offers the scratch block, which replaces the local `.git/info/exclude` lines SFX
+  and bricks-api use today.
+- **"Hook count matched" is the orchestrator's term, not the kit's** (from the 0.41.0 field case
+  2). The 0.40.1 session read it as a count of hook state-file names. Trigger: the next
+  orchestrator brief that asks for it; define it there as "the hook's pass count
+  (`docs/reference.md`, Comparing the hook's count) equals the cycle line's, cause if not".
 
 ## Someday
 

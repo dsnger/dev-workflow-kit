@@ -522,7 +522,7 @@ Ground progress claims: before reporting a step as done, audit the claim against
 ### Spec, plan and code — what each decides
 
 - **Spec:** intended behaviour and scope; boundaries and shared contracts; significant architecture and security decisions; acceptance criteria. Internal implementation stays open where those commitments permit.
-- **Plan**, per meaningful step: the outcome; affected components and existing implementation to reuse; prerequisites, order and the decisions that must already be settled; concrete test situations with expected outcomes, including relevant failures; the implementer's remaining decision space. The plan also lists each run it expects to take 45 minutes or more (its name, what it proves, an estimated duration and how often it runs; evidence run on the final head counts in the unit that runs it), names its handover boundary and carries a short **Sources and impact boundary** note.
+- **Plan**, per meaningful step: the outcome; affected components and existing implementation to reuse; prerequisites, order and the decisions that must already be settled; concrete test situations with expected outcomes, including relevant failures; the implementer's remaining decision space. The plan also lists each run it expects to take 45 minutes or more (its name, what it proves, an estimated duration and how often it runs; evidence run on the final head counts in the unit that runs it), names its handover boundary, carries a short **Sources and impact boundary** note and lists every action outside the repository that needs the human (a file under the home directory, an account, a paid run).
 - **Code:** function bodies, complete tests and routine local choices. A short algorithm sketch or a bounded feasibility probe belongs in a plan only where it resolves a named uncertainty.
 
 Why: code written into a plan is written and reviewed twice, and a plan review then spends its passes on that code instead of on missing decisions.
@@ -531,7 +531,7 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **Local choices.** Decide locally within approved commitments. A change to an approved commitment about product behaviour, a shared contract, a security guarantee or scope goes through the decision and amendment route; implementing approved behaviour does not. Record each decision the plan left open, with what you chose, in a `Deviations` list in the handover, so the next reader sees what review did not settle; when unsure, take the conservative option. Why: review settled the commitments, not every line that realises them.
 
-**Autonomous run.** By default the work runs from intake to merge without a human stop: intake → spec → Gate A → plan (Gate A when its risk is `high`) → build → Gate B → pull request → `/dev-workflow:process-pr-review` → squash-merge → handover. A closed gate is the approval. The story header's `**Checkpoints:**` line, set once at intake, opts in to human stops: `spec` (the story draft, and the spec once its Gate A closes, before planning), `plan` (the plan, before building), `merge` (before the squash-merge); `none`, the default, and a story without the line set none. These stop whatever that line says: a Blocker left at a gate's pass cap; a change to an approved commitment (the amendment route); a destructive or irreversible action outside the branch; missing access or licence. Decide every other question yourself, take your own recommendation, and record it under "Decisions" in the spec, or in the pull request body when there is no spec; in a run, §1's "ask" and "stop" mean exactly this, and only these stops and a set checkpoint wait for the human. Where a superpowers skill asks the human, `brainstorming`'s design approval is the spec's closed Gate A and `writing-plans`' execution choice is subagent-driven development in this session. Why: a stop with nothing left for a human to decide only delays the merge, and the gates already reviewed what it would approve.
+**Autonomous run.** By default the work runs from intake to merge without a human stop: intake → spec → Gate A → plan (Gate A when its risk is `high`) → build → Gate B → pull request → `/dev-workflow:process-pr-review` → squash-merge → handover. A closed gate is the approval. The story header's `**Checkpoints:**` line, set once at intake, opts in to human stops: `spec` (the story draft, and the spec once its Gate A closes, before planning), `plan` (the plan, before building), `merge` (before the squash-merge); `none`, the default, and a story without the line set none. These stop whatever that line says: a Blocker left at a gate's pass cap; a change to an approved commitment (the amendment route); a destructive or irreversible action outside the branch; missing access or licence; the plan's actions outside the repository, asked for together once its Gate A closes, or once it is written when it gets none. Why that one: an approval knowable at plan time and asked mid-build stalls the run for hours. Decide every other question yourself, take your own recommendation, and record it under "Decisions" in the spec, or in the pull request body when there is no spec; in a run, §1's "ask" and "stop" mean exactly this, and only these stops and a set checkpoint wait for the human. Where a superpowers skill asks the human, `brainstorming`'s design approval is the spec's closed Gate A and `writing-plans`' execution choice is subagent-driven development in this session. Why: a stop with nothing left for a human to decide only delays the merge, and the gates already reviewed what it would approve.
 
 **Context, by task.** Read the applicable binding instructions, the current task and its approved artifacts, and what this kind of task needs — a dependency change: the tech-stack description and the affected manifests; a use of a third-party library API: its docs for the pinned version, through Context7 (`.claude/review-gates.md`, "Library APIs"); an interface change: its contracts and their users — plus the relevant components, dependencies, configuration, realistic data volumes and target environments. Read further while a material uncertainty or a possible impact stays open. Load a historical record when you need it to understand a decision, constraint or open obligation; following one link does not mean loading everything it links to. Binding reading duties stay until changed through their route, and calling a document "reference" does not make its binding conditions optional. Note the sources and the impact boundary in the plan, or in the task's existing work record when there is no plan. Why: reading by task keeps context small without dropping a binding condition, and the note lets a reviewer see what was and was not looked at.
 
@@ -1641,8 +1641,71 @@ run from a subdirectory would look in the wrong `.context/`.
    Print the paths and the command `git rm --cached -- <paths>`, which untracks them and keeps
    the files. Leave running it to the user: untracking files is the project's decision.
 
-Report the merge result, the settings check (`ok` or each hit) and the tracked paths (`none`, or
-the list with the command).
+4. **Offer the scratch block.** Sessions also write handovers, review files and logs into
+   `.context/`; projects collected thousands of untracked files there, and one `git add -A` would
+   commit them all. This block keeps all of `.context/` local except the settings:
+
+   ```gitignore
+   # dev-workflow: session scratch in .context/ stays local. The exceptions are
+   # the hook settings.
+   /.context/*
+   !/.context/codex-gate.on
+   !/.context/codex-gate.off
+   !/.context/codex-gate.floor
+   !/.context/codex-gate.cap
+   !/.context/codex-gate.tools
+   ```
+
+   Its `!` lines are the ones the block above kept: leave out a setting whose `!` line item 1
+   dropped. `/.context/*`, not `.context/`, because git cannot re-include a file inside an
+   ignored directory. Take the first case that fits:
+   - Its first comment line already present → `unchanged`.
+   - Run `git check-ignore --no-index -v .context/dwk-scratch-probe`. Exit 0 with a rule whose
+     pattern is `.context`, `.context/`, `.context/*` or `.context/**`, with or without a leading
+     `/` → a rule already keeps `.context/` local: ask nothing, report `already ignored`. Exit 0
+     with any other rule, or exit 1 → go on. Any other exit → report the error and offer nothing.
+   - Run `git ls-files -- .context`. Nothing, or only kept settings → offer the block and
+     recommend it. Other paths → list them and ask; say that they stay tracked but a new file
+     beside them would be ignored, so a project that commits handovers there adds its own `!`
+     line for them.
+
+   On yes, append it at the end, after the block above, then run item 2's check again for the
+   kept settings.
+
+Report the merge result, the settings check (`ok` or each hit), the tracked paths (`none`, or
+the list with the command) and the scratch block (`merged`, `declined`, `unchanged`,
+`already ignored`, or the error).
+
+### 2.19 `.claude/settings.json` — no attribution lines
+
+Always runs. Why: by default Claude Code adds a `Co-Authored-By` trailer to each commit it makes,
+and the squash merge joins the commit messages, so the trailer reaches the main branch. Merge this
+key into `.claude/settings.json`:
+
+```json
+{
+  "attribution": { "commit": "", "pr": "", "sessionUrl": false }
+}
+```
+
+Empty strings rather than `"attribution": false`: a client older than 2.1.281 rejects `false` and
+skips the whole settings file, the deny rules of 2.17 included. Take the first case that fits:
+
+1. **Missing file.** Write it with only this key; `merged`.
+2. **Not valid JSON.** Touch nothing; `skipped (not valid JSON)`.
+3. **The top level is not an object.** Touch nothing; `skipped (not an object)`.
+4. **No `attribution` key.** Add it, keep every other key; `merged`.
+5. **`attribution` equal to this value.** `unchanged`.
+6. **`attribution` is `false`.** Show it and ask keep or replace; say that a client older than
+   2.1.281 skips this whole file while it stays.
+7. **`attribution` is another object.** Show it and ask keep or replace: a project may want its
+   own trailer.
+8. **Anything else** (null, a string, an array, a number). Touch nothing;
+   `skipped (attribution is neither an object nor false)`.
+
+An `includeCoAuthoredBy` key stays as it is; report that it is deprecated and that Claude Code
+ignores it once `attribution.commit` is set. `/dev-workflow:process-pr-review` also removes the
+default trailer from the squash body, for commits made before this key existed.
 
 ## Step 3 — Walk the user through `AGENTS.md`
 
@@ -1815,9 +1878,9 @@ Scaffolded:
   docs/pr-review-bots.md           written
   todos.md                         written
   .gitattributes                   merged (union-merge line added)
-  .gitignore                       merged (hook state block — 2.18; settings ok; tracked state: none)
+  .gitignore                       merged (hook state block — 2.18; settings ok; tracked state: none; scratch block merged)
   .mcp.json                        merged (codex server added)
-  .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16)
+  .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16; attribution — 2.19)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)
   pnpm-workspace.yaml              skipped (not a pnpm project — see checklist item 1)
 ```

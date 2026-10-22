@@ -1147,7 +1147,8 @@ runs_git_commit() {
 # `-m "wip…"`: an allow-list again — one line of exactly `git commit`, then only `-a`,
 # `--all`, `-q`, `--quiet`, `--no-verify`, `-n`, `--amend` or `--allow-empty`, and exactly one
 # `-m` whose single-quoted, double-quoted or bare value starts with `wip`; nothing else, so no
-# editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain or redirect, and no shell
+# editor (`-e`), `--fixup`, `-F`, second `-m`, `cd`, `git -C`, chain (but one leading `git add
+# <plain words> &&`, dropped first) or redirect, and no shell
 # metacharacter or backslash anywhere, except `(` and `)` inside single quotes in a command
 # with no double quote, where the shell reads them as text (the result is attributed through the call's top-level
 # `tool_use_id`, see the record below). Before the
@@ -1214,6 +1215,9 @@ head_is_wip() { git -C "$repo_root" log -1 --format=%s 2>/dev/null | grep -Eiq '
 is_wip_message_cmd() {
   case $1 in *'
 '*) return 1 ;; esac
+  # One leading `git add <plain words> &&` is dropped first (0.41.0, canvas 2026-10-22): `git add`
+  # writes no HEAD reflog entry, so is_wip_commit_post still ties HEAD to this call's one commit
+  set -- "$(printf '%s' "$1" | sed -E 's#^[[:space:]]*git[[:space:]]+add([[:space:]]+[A-Za-z0-9._/@+=,:%~-]+)+[[:space:]]*&&##')"
   printf '%s' "$1" | grep -q '[;&|<>$`\\]' && return 1
   # a double quote anywhere keeps them refused: an apostrophe pair inside it is no quoting
   printf '%s' "$1" | sed "/\"/!s/'[^']*'//g" | grep -q '[()]' && return 1
@@ -1221,7 +1225,7 @@ is_wip_message_cmd() {
   printf '%s' "$1" | grep -Eiq -- "^[[:space:]]*git[[:space:]]+commit([[:space:]]+$_ok)*[[:space:]]+-m[[:space:]]*('[[:space:]]*wip[^']*'|\"[[:space:]]*wip[^\"]*\"|wip[^[:space:]'\"]*)([[:space:]]+$_ok)*[[:space:]]*$"
 }
 # A commit message that starts with `wip` in a call is_wip_message_cmd refuses (a `cd`,
-# `git -C`, chain or heredoc) and runs_git_commit sees: PreToolUse says the counters are cleared
+# `git -C`, other chain or heredoc) and runs_git_commit sees: PreToolUse says the counters are cleared
 # unless HEAD and its reflog stay unchanged. Loose on purpose;
 # a heredoc body line starting with `wip` matches too, and an extra sentence costs nothing.
 looks_wip_cmd() { printf '%s\n' "$1" | grep -Eiq -- "(-[[:alpha:]]*m|--message)[[:space:]=]*[$]?['\"]?[[:space:]]*wip|^[[:space:]]*['\"]?[[:space:]]*wip"; }
@@ -1635,7 +1639,7 @@ case "$event" in
           # runs_git_commit: only where `git commit` stands as a command of its own; the
           # sentence states head_moved's rule, so it holds whether or not the commit succeeds.
           if looks_wip_cmd "$cmd" && ! is_wip_message_cmd "$cmd" && runs_git_commit "$cmd"; then
-            note "This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves"
+            note "This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, heredoc, or chain other than one leading git add <paths> &&; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages." "ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves"
           fi
           fi
           # Every commit attempt, WIP and docs-only included, and both gates: a cap

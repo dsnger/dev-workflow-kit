@@ -1131,6 +1131,46 @@ git commit -q --allow-empty -m 'WIP: b' >/dev/null 2>&1
 amendpost "git commit -q -m 'WIP: a'" toolu_A
 [ ! -f "$count" ] && [ -f .context/codex-gate.wipBase.toolu__a ] && pass "ids differing in case stay apart: A resets, B's record kept" || fail "ids differing in case stay apart: A resets, B's record kept"
 rm -f .context/codex-gate.wipBase.*
+# (m22) one leading `git add <plain words> &&` before the WIP commit keeps the cycle (0.41.0;
+# canvas 2026-10-22, `34c4405`: the chain reset the count three times). The chain stages its own
+# files; both readers. $1 = runner, $2 = the command
+clife() {
+  reset_all; rev; rev; execp
+  pre=$($1 "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t22\",\"tool_input\":{\"command\":\"$2\"}}")
+  before=$(git rev-parse HEAD)
+  printf 'x\n' >> wip.txt; printf 'y\n' >> wip2.txt
+  sh -c "$2" >/dev/null 2>&1
+  [ "$(git rev-parse HEAD)" != "$before" ] && moved=yes || moved=no
+  subj=$(git log -1 --format=%s)
+  $1 "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Bash\",\"tool_use_id\":\"toolu_t22\",\"tool_input\":{\"command\":\"$2\"}}" >/dev/null
+}
+for r in run nojq_run; do
+  for c in "git add wip.txt && git commit -q -m 'WIP: c1'" "git add -u && git commit -q -m 'WIP: c2'" \
+           "git add wip.txt wip2.txt && git commit -q -m 'WIP: c3'" \
+           "git add -- wip.txt && git commit -q --amend -m 'WIP: c4'"; do
+    clife "$r" "$c"
+    noted && [ "$moved" = yes ] && [ "${subj#WIP: c}" != "$subj" ] && kept && pass "m22 $r: note, WIP commit, cycle kept: $c" || fail "m22 $r: note, WIP commit, cycle kept: $c"
+  done
+  # git add fails, so && skips the commit: HEAD and its reflog stay, so does the cycle
+  clife "$r" "git add missing.ts && git commit -q -m 'WIP: c5'"
+  noted && [ "$moved" = no ] && kept && pass "m22 $r: failed add, no commit, cycle kept" || fail "m22 $r: failed add, no commit, cycle kept"
+  # refused: reminder before, reset only where HEAD moved
+  # shellcheck disable=SC2016  # the $( ) is command text for the hook and sh -c
+  for c in "git add 'wip 2.txt' && git commit -q -m 'WIP: r1'" "git add wip.txt; git commit -q -m 'WIP: r2'" \
+           "git add wip.txt && git commit -q -m 'WIP: r3' && true" "git commit -q -am 'WIP: r4' && git add wip2.txt" \
+           "git -C . add wip.txt && git commit -q -m 'WIP: r5'" "git add \$(echo wip.txt) && git commit -q -m 'WIP: r6'" \
+           "git add wip.txt && git add wip2.txt && git commit -q -m 'WIP: r7'"; do
+    clife "$r" "$c"
+    if [ "$moved" = yes ]; then [ ! -f "$count" ]; else kept; fi && ! noted && pass "m22 $r: refused, reset only if HEAD moved ($moved): $c" || fail "m22 $r: refused, reset only if HEAD moved ($moved): $c"
+  done
+done
+# a post-commit hook adds a second commit after the chained WIP one: the reflog grew by two, reset
+printf '#!/bin/sh\ngit -c core.hooksPath=/dev/null commit -q --allow-empty -m "WIP: from a hook" >/dev/null 2>&1\n' > "$hooksd/post-commit"
+chmod +x "$hooksd/post-commit"
+clife run "git add wip.txt && git commit -q -m 'WIP: c6'"
+[ "$subj" = 'WIP: from a hook' ] && [ ! -f "$count" ] && pass "m22: chained WIP, then a hook commits again: reset" || fail "m22: chained WIP, then a hook commits again: reset"
+rm -f "$hooksd/post-commit" .context/codex-gate.wipBase.*
+git rm -q --cached wip2.txt >/dev/null 2>&1; rm -f wip2.txt
 git reset -q --soft "$base19d" >/dev/null 2>&1
 git reset -q --soft HEAD~1 >/dev/null 2>&1; git rm -q --cached wip.txt >/dev/null 2>&1; rm -f wip.txt
 rm -rf "$hooksd"; { [ -e "$sandbox/orig-hooks" ] || [ -L "$sandbox/orig-hooks" ]; } && mv "$sandbox/orig-hooks" "$hooksd"
@@ -3547,13 +3587,13 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
-wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, chain or heredoc; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
+wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, heredoc, or chain other than one leading git add <paths> &&; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
   # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
   for c in "cd $work; git commit -m 'WIP: a'" \
            "git -C $work commit -m 'WIP: a'" \
-           "git add app.ts && git commit -m 'WIP: a'" \
+           "git add app.ts && git add b.ts && git commit -m 'WIP: a'" \
            "git commit -am 'WIP: a' && true" \
            'git commit -m \"$(cat <<'"'"'EOF'"'"'\nWIP: a\nEOF\n)\"' \
            "git commit -m \$'WIP: a'" \
@@ -3564,8 +3604,8 @@ for r in run nojq_run; do
       || fail "46 $r: refused WIP form gets the sentence: $c [$out]"
   done
   # The sentence goes only where `git commit` stands as a command of its own (runs_git_commit):
-  # not on a plain WIP form, a non-WIP message, or a commit hidden in quotes.
-  for c in "git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'" \
+  # not on a plain WIP form (one leading git add included), a non-WIP message, or a commit hidden in quotes.
+  for c in "git commit -m 'WIP: a'" "git add app.ts && git commit -m 'WIP: a'" "git commit -m 'fix: a'" "cd $work; git commit -m 'fix: a'" \
            "sh -c \\\"git commit -m 'WIP: a'\\\""; do
     reset_all; rev
     out=$($r "$(pre46 "$c")")

@@ -139,7 +139,17 @@ What `/dev-workflow:workflow-init` does, in order:
   settings `on`, `off`, `floor`, `cap` and `tools` trackable. It asks when the project already
   ignores one of those five, reports a setting a rule such as `.context/` still ignores,
   and lists state files already tracked with the `git rm --cached` command to untrack them; the
-  user runs it.
+  user runs it. Since 0.41.0 it then offers a second block, `/.context/*` with the same `!`
+  lines, so session scratch (handovers, review files, logs) stays local and a `git add -A`
+  cannot sweep it in. It recommends the block when `.context/` tracks nothing but those
+  settings, lists the tracked paths and asks otherwise, and skips it when a rule already
+  ignores all of `.context/`.
+- **No attribution lines (2.19).** It merges `"attribution": {"commit": "", "pr": "",
+  "sessionUrl": false}` into `.claude/settings.json`, so Claude Code adds no `Co-Authored-By`
+  trailer to commits and no attribution text to pull requests. It asks before replacing an
+  `attribution` the project set itself. Not `includeCoAuthoredBy`, which Claude Code deprecated
+  in 2.0.62; not `"attribution": false`, which clients before 2.1.281 reject together with the
+  whole file. `process-pr-review` also strips that default trailer from the squash body.
 - **Secret deny rules (2.17).** It merges `permissions.deny` entries into
   `.claude/settings.json` that stop Claude Code from reading every name starting `.env` (`.env`,
   `.env.local`, `.envrc`; except `.env.example`), `*.pem`, `*.key`, `secrets.*` at any depth, `secrets*` under
@@ -276,9 +286,12 @@ battery passes. Docs-only means every staged path is explanatory Markdown under 
 or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`, `AGENTS.md` and anything under
 `.claude/`, `plugins/`, `skills/` or `commands/` at any depth are prompts and take the
 gate, as does a mixed commit. The hook's own docs-only note is a path heuristic and does
-not establish that eligibility. The battery is always owed, with one exception: a timeout in a test the diff did
+not establish that eligibility. The battery is always owed, with two exceptions. A timeout in a test the diff did
 not touch that passes when run alone is recorded with that evidence, and the green
-required CI check on the PR head then stands as the battery evidence. The rules have no
+required CI check on the PR head then stands as the battery evidence. And when the battery passed
+in full on a named commit and every path changed since then is docs-only, `process-pr-review`
+reruns only the stages that read those paths; that full run plus the required CI check on the final
+head is the battery evidence (since 0.41.0). The rules have no
 exemption for the commit that adds the scaffolded prompt files; setup step 7 runs Gate B
 on it.
 
@@ -397,6 +410,16 @@ fingerprint; it never reads a findings file. Judge each pass from its findings f
 discount an incomplete one yourself, whatever the counter says. If the hook's own
 threshold was not met when implementation starts, it says so right then.
 
+**Comparing the hook's count with your record.** The hook's count is the first number of the ✓
+line. A WIP or docs-only commit prints no ✓ line, so a cycle closed with a docs-only closing commit
+shows none; the current values are in `.context/codex-gate.passes` (Gate B; a commit that resets
+the counters removes it) and `.context/codex-gate.passCountA` (Gate A; that commit moves it to
+`codex-gate.passCountA.closed`). Read them before the closing commit and compare them with the pass count in the cycle line. A report that says
+they differ names the cause: one of the hook's messages earlier in the cycle (a commit not counted as
+WIP, a review branch whose `headSha` is not a full SHA, an unpaired branch, a resumed `exec`, a
+withheld result), or `cause unknown`. Kit 0.40.1 reported "no" with no cause; its session had
+compared hook state-file names, not passes.
+
 ## Hook messages
 
 The hook's messages say what happened and what to do next. The possible causes behind seven
@@ -409,12 +432,18 @@ counters reset, above). The reminder then adds: *This call is not
 counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD
 and its reflog unchanged; a WIP commit is one git
 commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd,
-git -C, chain or heredoc;* then a link here. Why those forms are refused: after the commit the hook checks the new HEAD of the
+git -C, heredoc, or chain other than one leading git add <paths> &&;* then a link here. Why those forms are refused: after the commit the hook checks the new HEAD of the
 repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
 that check cannot tie to the call, so these forms are never kept as WIP: one that moves this
 repository's HEAD resets, the safe direction, and one that commits only in another repository
-leaves the counters alone. A plain subject
+leaves the counters alone. One chain is kept since 0.41.0, because the field kept using it (canvas,
+2026-10-22: three resets in one day): `git add <paths> && git commit -m 'WIP: <subject>'`, where
+every `git add` word is made only of letters, digits and `._/@+=,:%~-` (no quote, space inside a
+path, glob or `$`). `git add` writes no entry to HEAD's reflog, so the after-commit check still
+proves HEAD is this call's one WIP commit; a failed `git add` skips the commit and the counters
+stay. The rules still prescribe the plain form, and a chain in any other shape is refused as
+before. A plain subject
 holds no shell metacharacter or backslash: `-m 'WIP: fix a & b'` is refused for its `&`. The
 one exception is `(` and `)` inside single quotes, where the shell reads them as text, in a
 command with no double quote: `-m 'WIP: fix x (y)'` is the plain form, `-m "WIP: fix x (y)"` is not. The sentence appears
