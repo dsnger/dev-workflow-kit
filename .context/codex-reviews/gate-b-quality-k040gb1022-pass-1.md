@@ -1,0 +1,2 @@
+MINOR | high | plugins/dev-workflow/hooks/codex-gate.sh:59-62; docs/superpowers/specs/2026-10-22-kit-040-field-cases-design.md:59-62 | The jq-free implementation uses grep after the first tool_input key, but the design still prescribes input_field and describes its last-tool_input anchor; the justified deviation is not recorded in the design | Future maintenance following the design could restore the broken-awk behavior this implementation deliberately avoids | Record the implemented parser and broken-awk rationale as a deviation in design section 2
+END OF FINDINGS (1 total)
