@@ -58,8 +58,9 @@ input_field() { # string field inside tool_input: $1 = key
 # evaluates in quadratic time (see the backgrounded classifier). A failed read counts.
 exec_resumed() {
   if command -v jq >/dev/null 2>&1; then [ -n "$(input_field sessionId)" ]; return; fi
-  printf '%s' "$payload" | sed -n 's/"tool_response".*//; s/.*"tool_input"//p' \
-    | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
+  # tr: a raw newline is only whitespace between JSON tokens, so one line keeps the boundary
+  _h=$(printf '%s' "$payload" | tr '\n\r' '  ' | sed -n 's/"tool_response".*//; s/.*"tool_input"//p') || return 1
+  printf '%s' "$_h" | grep -Eq '"sessionId"[[:space:]]*:[[:space:]]*"[^"]'
 }
 
 event=$(field hook_event_name)

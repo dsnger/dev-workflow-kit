@@ -3602,7 +3602,23 @@ for r in run nojq_run; do
   $r "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
   $r "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
   [ "$(nA)" = 2 ] && pass "47 $r: a sessionId in the response only counts" || fail "47 $r: a sessionId in the response only counts (count $(nA))"
+  # Pretty-printed payload: the input's sessionId on its own line, and a response-only one.
+  reset_all
+  $r "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
+  $r "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x"\n},\n"tool_response":[{"type":"text","text":"{\\"success\\": true}",\n "sessionId":"z"}]}')" >/dev/null
+  [ "$(nA)" = 1 ] && pass "47 $r: multiline payload keeps the input/response boundary" || fail "47 $r: multiline payload keeps the input/response boundary (count $(nA))"
 done
+# 47, jq-free with a sed that prints matching text and then fails: the read failed, so it counts.
+# Only the reader's script fails; every other sed call runs the real one, so routing still works.
+real_sed=$(command -v sed)
+sed_reader=$(mk_shim sedreader sed "case \"\$*\" in *tool_response*) printf '\"sessionId\":\"a\"'; exit 2 ;; esac; exec $real_sed \"\$@\"")
+if [ -n "$sed_reader" ]; then
+  reset_all
+  printf '%s' "$(exec47 '"instruction":"x"' "$(resp_success)")" | PATH="$sed_reader:$nojq" "$HOOK_SH_BIN" "$HOOK" >/dev/null
+  [ "$(nA)" = 1 ] && pass "47: sed failing after matching output -> counts" || fail "47: sed failing after matching output -> counts (count $(nA))"
+else
+  skip "47: sed shim could not be built"
+fi
 
 # 48. The closing-commit recipe the rules prescribe (canvas s4nachl1/s4bau2gb, 2026-10-21): a
 # staged todos.md committed by a plain `git commit -F .context/<msg>` reaches the docs-only
