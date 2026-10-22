@@ -50,6 +50,11 @@ input_field() { # string field inside tool_input: $1 = key
   fi
 }
 
+# tool_input.sessionId is non-empty, read with jq only. Without jq the call counts, as before
+# 0.40: three jq-free readers in a row drew new boundary or failure-path findings at Gate B
+# (PR 91), so the mechanism was cut rather than repaired again (rules: shrink a regenerating class).
+exec_resumed() { command -v jq >/dev/null 2>&1 && [ -n "$(input_field sessionId)" ]; }
+
 event=$(field hook_event_name)
 tool=$(field tool_name)
 
@@ -1485,11 +1490,16 @@ case "$event" in
         cls=$(classify)
         case "$cls" in
           failure | no-result | backgrounded) note_discarded "$cls" ;;
-          *)
+          # A resumed session is no pass of its own (canvas 2026-10-21: re-fetching a truncated
+          # reply counted). Undercounting a pass resumed by mistake fires more, invariant 2's side.
+          # Target model: Claude via Claude Code.
+          *) if exec_resumed; then
+            note "Claude via Claude Code — gate hook. <state>This $exec_tool call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>" "ℹ Codex Gate A: resumed session not counted as a pass"
+          else
             [ "$cls" = unrecognized ] && note_unverified
             mkdir -p "$state_dir" 2>/dev/null
             bump_count "$countA_file"
-            ;;
+          fi ;;
         esac
         cap_check A "$countA_file"
         ;;

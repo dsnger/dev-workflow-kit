@@ -3574,6 +3574,72 @@ for r in run nojq_run; do
   done
 done
 
+# 47. An exec call whose input carries a sessionId resumes a Codex session (canvas field case
+# 2026-10-21: a call that only re-fetched a truncated reply was counted as a Gate-A pass).
+# Read with jq only; without jq every call counts, as before 0.40.
+resumedA_ctx="Claude via Claude Code — gate hook. <state>This mcp__codex__exec call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>"
+resumedA_msg="ℹ Codex Gate A: resumed session not counted as a pass"
+exec47() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{%s},"tool_response":%s}' "$1" "$2"; }
+nA() { cat "$countA" 2>/dev/null || printf '0'; }
+# The detection cases need jq on this host; the jq-free case at the end runs everywhere.
+if command -v jq >/dev/null 2>&1; then
+reset_all; execp
+out=$(run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+[ "$(nA)" = 1 ] && pass "47: resumed exec not counted" || fail "47: resumed exec not counted (count $(nA))"
+exact_pair "47: resumed exec note" "$out" "$resumedA_ctx" "$resumedA_msg"
+reset_all
+run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(unrec)")" >/dev/null
+[ "$(nA)" = 0 ] && pass "47: resumed unrecognized exec not counted" || fail "47: resumed unrecognized exec not counted (count $(nA))"
+reset_all
+run "$(exec47 '"instruction":"x","sessionId":""' "$(resp_success)")" >/dev/null
+[ "$(nA)" = 1 ] && pass "47: empty sessionId counts" || fail "47: empty sessionId counts (count $(nA))"
+reset_all
+out=$(run "$(exec47 '"instruction":"x","sessionId":"abc"' "$(resp_from shape1-fast-fail)")")
+[ "$(nA)" = 0 ] && printf '%s' "$out" | grep -qF 'not counted as a gate pass' && ! printf '%s' "$out" | grep -qF 'resumed session' \
+  && pass "47: resumed failure takes the discard note" || fail "47: resumed failure takes the discard note [$out]"
+# A response that names sessionId does not answer for the input: escaped inside the text (every
+# real envelope), or as a structured key; nor does a pretty-printed payload change that.
+reset_all
+run "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
+run "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
+run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
+[ "$(nA)" = 2 ] && pass "47: response-only sessionId counts; multiline input sessionId does not" || fail "47: response-only sessionId counts; multiline input sessionId does not (count $(nA))"
+else
+  skip "47: sessionId detection cases — no jq on this host; the jq-free case below still runs"
+fi
+# Without jq the hook does not read sessionId: the resumed call counts, as before 0.40.
+reset_all
+out=$(nojq_run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+[ "$(nA)" = 1 ] && ! printf '%s' "$out" | grep -qF 'resumed session' && pass "47 nojq: resumed exec counts, no note" \
+  || fail "47 nojq: resumed exec counts, no note (count $(nA)) [$out]"
+
+# 48. The closing-commit recipe the rules prescribe (canvas s4nachl1/s4bau2gb, 2026-10-21): a
+# staged todos.md committed by a plain `git commit -F .context/<msg>` reaches the docs-only
+# note; the chained form the field used does not. Behaviour is unchanged; this pins the recipe.
+pre48() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"%s"}}' "$1"; }
+for r in run nojq_run; do
+  reset_all; rev; rev; rev
+  printf 'cycle lines\n' > .context/msg
+  printf 'row\n' > todos.md; git add todos.md
+  out=$($r "$(pre48 'git commit -F .context/msg')")
+  printf '%s' "$out" | grep -qF 'Codex Gate B N/A (docs-only commit)' && pass "48 $r: staged todos.md + plain -F -> docs-only" \
+    || fail "48 $r: staged todos.md + plain -F -> docs-only [$out]"
+  out=$($r "$(pre48 'git add todos.md && git commit -F .context/msg')")
+  printf '%s' "$out" | grep -qF 'cannot confirm reviewed content' && pass "48 $r: chained form -> cannot confirm" \
+    || fail "48 $r: chained form -> cannot confirm [$out]"
+  printf 'v2\n' > app.ts; git add app.ts
+  out=$($r "$(pre48 'git commit -F .context/msg')")
+  printf '%s' "$out" | grep -qF 'cannot confirm reviewed content' && pass "48 $r: todos.md + code -> full check" \
+    || fail "48 $r: todos.md + code -> full check [$out]"
+  git rm -q --cached todos.md; rm -f todos.md; git checkout -q HEAD -- app.ts
+  reset_all; rev; rev; rev
+  printf 'cycle lines, written after the review\n' > .context/msg
+  out=$($r "$(pre48 'git commit --allow-empty -F .context/msg')")
+  printf '%s' "$out" | grep -qF '✓ Codex Gate B hook checks passed (3/3 cycle' && pass "48 $r: empty closing commit, message in .context/ -> ✓" \
+    || fail "48 $r: empty closing commit, message in .context/ -> ✓ [$out]"
+  rm -f .context/msg
+done
+
 reset_all
 echo "---"
 [ "$fails" -eq 0 ] && { echo "all passed"; exit 0; } || { echo "$fails failed"; exit 1; }

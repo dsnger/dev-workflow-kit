@@ -210,9 +210,10 @@ added by `/workflow-init` when its entry is missing; only its lookups have a fal
 - **Context7** (MCP, library docs). `/workflow-init` writes it pinned into your
   `.mcp.json`. The gate rules require a Context7 lookup, for the version you pin, before
   a spec, plan or change that uses a third-party library API. Without third-party
-  dependencies the rule does not apply, and when Context7 is unavailable, or your pinned
-  version is not indexed, the library's own material for that version stands in (docs,
-  installed type declarations, a probe with the pinned binary). It runs without an API
+  dependencies the rule does not apply, and when Context7 is unavailable (not loaded,
+  rate-limited) or your pinned version is not indexed, the library's own material for that
+  version stands in (docs, installed type declarations, a probe with the pinned binary).
+  Nothing mechanical proves a lookup; the line naming library and version is the record. It runs without an API
   key, rate-limited; `CONTEXT7_API_KEY` in your own environment raises the limit. Off:
   remove the `context7` entry; the fallback then applies to every lookup.
 - **Ponytail** (`ponytail@ponytail`). A lazy-senior-developer mode. Worth it when you
@@ -335,7 +336,11 @@ still count). The design note is
 **Closing act.** A clean pass at the floor, a zero-finding pass below it, a small change's
 pass with no Blocker or Major in Gate B, or a cap answer of `close` runs the closing act: one commit carrying the cycle's record lines, the
 ledger-check records, and a `todos.md` row per finding dispositioned `accepted, not
-repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject.
+repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject. Since
+0.40.0 the rules give its form: stage, then one plain `git commit -F .context/<msg>`
+(`--allow-empty` when nothing is staged), so the hook's docs-only check can read a commit that
+stages only `todos.md` (see [Hook messages](#hook-messages)). An empty commit stages nothing, so it
+gets the ordinary Gate-B check instead, with the messages listed under Hook messages.
 Planning starts after Gate A's closing act; Gate A on a plan (risk `high` only) ends with
 its own. A spec change after its Gate A closed goes through `intake`'s amendment route.
 
@@ -388,7 +393,7 @@ threshold was not met when implementation starts, it says so right then.
 
 ## Hook messages
 
-The hook's messages say what happened and what to do next. The possible causes behind six
+The hook's messages say what happened and what to do next. The possible causes behind seven
 of them live here.
 
 **Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).
@@ -411,6 +416,21 @@ only where `git commit` stands as a command of its own; a commit hidden in quote
 loose: a heredoc body line starting with `wip` also adds the sentence. The sentence does not
 appear when the plain form itself is refused because the repository's hooks or settings could
 rewrite the message; that commit gets the ordinary reminder only.
+
+The hook also runs for a subagent's tool calls and keeps one cycle state per repository, so a
+subagent's commit that it does not recognise as WIP (a `cd … &&` chain is the usual one) clears the
+main session's counters, and the sentence above lands in the subagent's context, not the main
+session's (canvas S4, 2026-10-21: the hook saw 2 of 3 passes). Since 0.40.0 the rules have the main
+session make every commit inside an open cycle; implementer subagents leave their changes
+uncommitted.
+
+**Resumed session not counted** (`ℹ Codex Gate A: resumed session not counted as a pass`). The
+`mcp__codex__exec` call carried a non-empty `sessionId` in its input, so it continued an earlier
+Codex session and the hook did not count it (since 0.40.0). The usual case is fetching the rest of a
+truncated reply, which belongs to the pass it completes. If the call was a review pass of its own,
+run it again without `sessionId`: the count stays one short until you do, which the below-floor
+reminder will show. The hook reads `sessionId` with `jq` only: without `jq` every call counts, as
+before 0.40.0, so a re-fetch there still shows as an extra pass.
 
 **No readable result** (`⚠ Gate call returned no readable result`). Two causes produce
 this shape, and the tool name cannot separate them: a hooks-API payload change, or a
@@ -464,10 +484,15 @@ fingerprint could not be written or read back; or a non-WIP commit cleared it (s
 the cycle stayed open. It also appears on a spec or plan commit whose command is more than
 `git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
 only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
-passes (`mcp__codex__exec`) are counted by call and never record one.
+passes (`mcp__codex__exec`) are counted by call, a resumed session excepted where `jq` is installed, and never record one.
 
 **Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
-Usually the working tree or the index changed since the review. Other causes: you only
+Usually the working tree or the index changed since the review. A closing commit that stages
+`todos.md` and is made with a chain or a heredoc (`git add todos.md && git commit -F - <<'EOF'`)
+lands here too: only a plain `git commit` is offered the docs-only note, so the hook compares the
+fingerprint and sees `todos.md` changed after the last pass. The rules' form avoids it: stage in
+one call, then `git commit -F .context/<msg>` (`--allow-empty` when nothing is staged), with the
+message file under `.context/`, which the fingerprint excludes. Other causes: you only
 staged already-reviewed content (the bytes are fine, but the hook cannot tell staging from
 editing); the hook was upgraded and the recorded fingerprint uses the older format (see the
 CHANGELOG); or the fresh fingerprint could not be computed or stored. A fresh Gate-B pass is
