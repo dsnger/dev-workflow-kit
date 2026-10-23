@@ -1,5 +1,5 @@
 #!/bin/sh
-# Internal link check for the docs: every relative Markdown link `](target)` in a tracked
+# Internal link check for the docs: every relative inline Markdown link (`]` then `(target)`) in a tracked
 # *.md file must name a path that exists in this checkout, and a `#fragment` on a Markdown
 # target (or a bare `#fragment`, meaning the linking file) must name a heading there.
 #
@@ -7,7 +7,7 @@
 # file whose path starts with a skip prefix (for example `docs/history/`) is not checked as a
 # linking file; links into it still are.
 #
-# WHAT IT CHECKS: inline links of the form `](target)` whose target has no scheme. The part
+# WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
 # the slug of one of its ATX headings (`#` to `######`, outside fenced code blocks) or an
@@ -22,7 +22,7 @@
 # (they name files in other projects, placeholders and future artifacts; nothing tells those
 # apart from a typo); links inside code spans or fences (they are checked like any other
 # line); external URLs; targets containing a space or parenthesis (so a link with a title is
-# skipped) or written in angle brackets (`](<path>)`, reported broken).
+# skipped) or written in angle brackets (`(<path>)`, reported broken).
 #
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.

@@ -152,6 +152,27 @@ What `/dev-workflow:workflow-init` does, in order:
   `attribution` the project set itself. Not `includeCoAuthoredBy`, which Claude Code deprecated
   in 2.0.62; not `"attribution": false`, which clients before 2.1.281 reject together with the
   whole file. `process-pr-review` also strips that default trailer from the squash body.
+- **Living docs (2.20, 2.21), asked.** When `.claude/living-docs.md` is absent it asks once
+  whether the project takes living docs (recommended yes); the file's presence is the only
+  switch, and a later run asks again after a no. Taken, it writes `.claude/living-docs.md` and
+  `scripts/check-doc-links.sh`. The rules say where each kind of content lives (`AGENTS.md`
+  § Documentation map as the signpost; `docs/PRD.md` with the feature map; `docs/ARCHITECTURE.md`;
+  `docs/TECH-STACK.md`; one `docs/features/<name>.md` per feature), that these documents describe
+  and link their binding sources, and that every change ends with a **build record**: one line
+  `changed`, `checked, unchanged` or `absent` for every feature doc whose behaviour or `Planned`
+  section the change affects (neighbours included), each top-level home, and always `CLAUDE.md`
+  and `AGENTS.md`; a missing line is a finding. The record goes into Gate B's
+  `whatWasImplemented`, the pull request body and the handover, with a size soft alarm past
+  10,000 bytes (never a failure) and effort stamped per piece. The checker resolves relative links
+  and their heading fragments; take it into the quality command. Nothing is written as an empty
+  template, and nothing is deleted: to switch off, remove `.claude/living-docs.md` and its map
+  line. It reports `living docs: incomplete — <part>` when the rules file, the `CLAUDE.md`
+  paragraph, the map line or the checker differs from what the kit writes. **Not covered**, because
+  the pilot that tested the rest did not exercise them
+  ([report](field-reports/2026-10-23-living-docs-pilot-report.md#recommendation-ac-8)): naming a
+  story's features at intake, map-guided builder context, cross-feature flows, the impact check
+  along dependencies, conflict and composed-candidate checks, removing a feature, the splitting
+  decision, capability levels.
 - **Secret deny rules (2.17).** It merges `permissions.deny` entries into
   `.claude/settings.json` that stop Claude Code from reading every name starting `.env` (`.env`,
   `.env.local`, `.envrc`; except `.env.example`), `*.pem`, `*.key`, `secrets.*` at any depth, `secrets*` under
@@ -171,13 +192,13 @@ What `/dev-workflow:workflow-init` does, in order:
   rules lower the chance of an accidental read; they do not make a secret in the repository
   safe. Rules for a different name (`id_dsa`, `credentials.json`) are yours to add.
 - **`AGENTS.md` interview.** It asks in batches of 2 to 4 questions (what the project
-  is, architecture, key invariants, don'ts, `## Commands`), shows each section before
+  is, architecture, the documentation map, key invariants, don'ts, `## Commands`), shows each section before
   moving on, writes `TODO — not yet decided` where you don't know yet, and writes the
   file only after you approve the whole text. A `## Commands` row is filled only with a
   command it ran in that session and saw exit 0.
 - **Closing checklist.** It ends with the items it deliberately did not scaffold: the
   battery, baselines, custom lint rules, branch protection, Codex, superpowers, the
-  prompt-standards date, and codebase-memory if found. It also prints the optional
+  prompt-standards date, codebase-memory if found, and living docs if taken. It also prints the optional
   `~/.codex/config.toml` example block (see Codex above).
 
 **Without Codex**, the preflight asks whether to set it up now; on yes it stops and lets
@@ -591,8 +612,10 @@ PR and push to main: `shellcheck --shell=sh` over the four shell executables and
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](../scripts/check-invariants.sh) (invariants 5 and 6, plus
 six prompt-conformance checks and three size budgets) plus both checkers' regression
-suites, [`scripts/check-doc-links.sh`](../scripts/check-doc-links.sh) (relative Markdown
-links resolve) and its suite, the six reports' suites, and
+suites, [`scripts/check-doc-links.sh`](../scripts/check-doc-links.sh) (inline relative
+Markdown links in tracked files resolve, and a fragment on a Markdown target names a heading
+there; reference-style links and the other limits its header lists are not checked; `/workflow-init` 2.21 ships the same bytes to
+projects, and check 4l keeps the two copies identical) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
 
 A fifth check runs on pull requests only:

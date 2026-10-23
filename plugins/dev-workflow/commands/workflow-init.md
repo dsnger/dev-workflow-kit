@@ -535,6 +535,8 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **Context, by task.** Read the applicable binding instructions, the current task and its approved artifacts, and what this kind of task needs — a dependency change: the tech-stack description and the affected manifests; a use of a third-party library API: its docs for the pinned version, through Context7 (`.claude/review-gates.md`, "Library APIs"); an interface change: its contracts and their users — plus the relevant components, dependencies, configuration, realistic data volumes and target environments. Read further while a material uncertainty or a possible impact stays open. Load a historical record when you need it to understand a decision, constraint or open obligation; following one link does not mean loading everything it links to. Binding reading duties stay until changed through their route, and calling a document "reference" does not make its binding conditions optional. Note the sources and the impact boundary in the plan, or in the task's existing work record when there is no plan. Why: reading by task keeps context small without dropping a binding condition, and the note lets a reviewer see what was and was not looked at.
 
+**Living docs.** When `.claude/living-docs.md` exists, read it before any work on a project document, before changing behaviour one describes, and before Gate B: it says where each kind of content lives and holds the build record every change ends with. Why: a document nobody checks in the change that alters its subject goes stale unnoticed.
+
 **Splitting.** Before a large spec, check whether the work holds independently reviewable outcomes with identifiable shared contracts. Touching several features is a reason to examine the scope, not by itself to split. File size is a warning signal, not a limit. Why: a split decided by size alone separates what belongs together.
 
 **Fresh session at a completed unit.** The plan names its handover boundary: normally the completed story or an independently executable sub-plan; a closed review cycle may be chosen as an earlier one; never inside a running cycle. Place it, adding earlier boundaries after completed tasks where needed, so that no unit carries more than 2 hours of the plan's listed long runs (estimated duration times expected runs); a run longer than that gets a unit of its own, and a boundary the limit would put inside a running cycle moves to that cycle's close. Why the limit: one unit with several runs of 45–52 minutes, two of them rerun after the machine killed them, took a session of over 15 hours and two compactions. At the boundary, add every follow-up found and not done in this unit — findings outside a review cycle's limit, collected Minors — to `todos.md` in the closing commit, write the handover, which links those rows instead of holding them, and stop; the next unit starts in a fresh session, started by the human, by an orchestrator session or by another approved mechanism; ending the unit this way needs no approval. The handover is a current summary: verified state and next task; every open obligation and unresolved decision, including any still recorded only in an earlier state; authoritative artifact and evidence paths; review-cycle identity and status. It links earlier states instead of appending full status reports. Use the project's existing handover file, otherwise `.context/handover-<unit>.md`, one per unit; that is enough when the next unit continues in the same checkout. When the next checkout is another one or not yet known, save the compact handover — summary, open obligations, the source paths needed to continue — in the tracked location the project designates for handovers, and before continuing confirm it is present in the target checkout; a local commit alone does not make it so. This creates no obligation to publish session logs or the rest of `.context/`. An interrupted review cycle follows the resume rules in §5, not this paragraph. Why: a long session carries context the next unit does not need, and a summary that carries every obligation lets the fresh session lose none.
@@ -564,9 +566,10 @@ limit.
 
 ---
 
-Project architecture, stack-specific patterns, and invariants live in @AGENTS.md
-(single source of truth — also read directly by Codex and the PR review bots). The
-Cross-Model Review gates (§5) check against the invariants there.
+Stack-specific patterns, invariants and § Commands live in @AGENTS.md (single source of
+truth — also read directly by Codex and the PR review bots); its § Documentation map says
+where the architecture and the other project documents live. The Cross-Model Review gates
+(§5) check against the invariants there.
 ````
 
 ### 2.1a `.claude/review-gates.md` — the gate rules
@@ -1822,7 +1825,7 @@ archived records that cite paths as they were).
 
 ````sh
 #!/bin/sh
-# Internal link check for the docs: every relative Markdown link `](target)` in a tracked
+# Internal link check for the docs: every relative inline Markdown link (`]` then `(target)`) in a tracked
 # *.md file must name a path that exists in this checkout, and a `#fragment` on a Markdown
 # target (or a bare `#fragment`, meaning the linking file) must name a heading there.
 #
@@ -1830,7 +1833,7 @@ archived records that cite paths as they were).
 # file whose path starts with a skip prefix (for example `docs/history/`) is not checked as a
 # linking file; links into it still are.
 #
-# WHAT IT CHECKS: inline links of the form `](target)` whose target has no scheme. The part
+# WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
 # the slug of one of its ATX headings (`#` to `######`, outside fenced code blocks) or an
@@ -1845,7 +1848,7 @@ archived records that cite paths as they were).
 # (they name files in other projects, placeholders and future artifacts; nothing tells those
 # apart from a typo); links inside code spans or fences (they are checked like any other
 # line); external URLs; targets containing a space or parenthesis (so a link with a title is
-# skipped) or written in angle brackets (`](<path>)`, reported broken).
+# skipped) or written in angle brackets (`(<path>)`, reported broken).
 #
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
@@ -1918,8 +1921,16 @@ Cover, in this order:
 1. **What the project is** — one paragraph: domain, users, what it does. Enough that
    a reviewer with no context can judge whether a change fits.
 2. **Architecture** — the components, the boundaries between them, and the direction
-   dependencies are allowed to point.
-3. **Key invariants** — the heart of the file, and what Gate A/B check. These are the
+   dependencies are allowed to point. With living docs taken (2.20), this goes to
+   `docs/ARCHITECTURE.md` instead, and `AGENTS.md` keeps only the binding rules.
+3. **`## Documentation map`** — always written: one line per project document, with its link
+   and when to read it, and nothing repeated from it. The architecture line names where the
+   architecture lives (`AGENTS.md` § Architecture, or `docs/ARCHITECTURE.md`); the scaffolded
+   `CLAUDE.md` sends readers here for it. With living docs taken, add a line naming
+   `.claude/living-docs.md` as the rule every change's build record follows: Codex and the PR
+   bots read `AGENTS.md`, so this line is how they learn the duty. A home with no document yet
+   is marked `not yet written`.
+4. **Key invariants** — the heart of the file, and what Gate A/B check. These are the
    non-negotiables: every rule whose violation is a bug regardless of what the ticket
    said. Push for *specific and checkable*, not aspirational. Prompt them with the
    classes that most often belong here:
@@ -1932,9 +1943,9 @@ Cover, in this order:
    - **Concurrency:** optimistic locking, idempotency keys, ordering guarantees.
    For each one they give: write the rule, and write *why* in one clause. A rule with
    its reason survives a reviewer asking "is this still true?"; a bare rule doesn't.
-4. **Don'ts** — the forbidden patterns, including the dependency-freshness policy
+5. **Don'ts** — the forbidden patterns, including the dependency-freshness policy
    from §2.11 and anything the team has already been burned by.
-5. **`## Commands`** — the concrete commands, because `harden-finding`,
+6. **`## Commands`** — the concrete commands, because `harden-finding`,
    `process-pr-review` and the quality gate all resolve their generic "the project's
    lint/typecheck/test/quality command" against this section:
 
@@ -2040,6 +2051,13 @@ Remaining — stack-specific, yours to decide:
        other clients;
      · a "worker crashed" answer from index_repository can be a refusal or a
        technical failure, so it is no evidence that any boundary works.
+
+9. Living docs — only if .claude/living-docs.md is present. Repeat every
+   "living docs: incomplete" line from 2.20. If scripts/check-doc-links.sh is
+   present, add `sh scripts/check-doc-links.sh` (with any skip prefixes) to the
+   quality command in AGENTS.md § Commands and to CI, once it has run clean here.
+   The structure documents are written when they get content, never as empty
+   templates; the Documentation map marks a missing one `not yet written`.
 ```
 
 Then stop. Do not start using the workflow in the same turn — the user should read
@@ -2074,6 +2092,8 @@ Scaffolded:
   .gitignore                       merged (hook state block — 2.18; settings ok; tracked state: none; scratch block merged)
   .mcp.json                        merged (codex server added)
   .claude/settings.json            merged (secret deny rules — 2.17; codebase-memory rules — 2.14; Ponytail mode — 2.16; attribution — 2.19)
+  .claude/living-docs.md           written (living docs taken — 2.20)
+  scripts/check-doc-links.sh       written (2.21)
   .github/workflows/quality.yml    written (2 TODO(stack) blocks)
   pnpm-workspace.yaml              skipped (not a pnpm project — see checklist item 1)
 ```

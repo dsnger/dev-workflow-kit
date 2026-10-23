@@ -1736,7 +1736,9 @@ backlog.
   PR-only check"; `ci.yml` has five unconditional steps and several check families inside one step.
   Replace the ordinal counts with the check families. Codex fact-check Minor (passes 1–3), collected.
   *Trigger: next change to `ci.yml` steps.*
-- [ ] **`check-doc-links.sh` scope in README.** Described as "relative Markdown links resolve"; the
+- [x] **`check-doc-links.sh` scope in README.** Done 2026-10-23 (kit 0.42.0): `docs/reference.md` names
+  the supported inline links, the fragment check and the header's limits.
+  Was: Described as "relative Markdown links resolve"; the
   script checks file existence for supported inline targets in tracked Markdown, strips fragments and
   skips reference links. Say so in one clause. Codex Minor, collected. *Trigger: next change to the
   script or its README sentence.*
@@ -2105,7 +2107,8 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 
 ## From the living-docs pilot report (2026-10-23) — backlog only, nothing implemented here
 
-- [ ] **Adopt the living-docs model into the kit — a separate story (pilot story AC-9).** Input:
+- [x] **Adopt the living-docs model into the kit — a separate story (pilot story AC-9).** Done 2026-10-23
+  (kit 0.42.0): `docs/superpowers/stories/2026-10-23-kit-living-docs-adoption-story.md`. Was: Input:
   `docs/field-reports/2026-10-23-living-docs-pilot-report.md`, recommendation *adapt*, limited to the
   elements the pilot exercised, with its four named changes (a build-record line for every affected feature
   doc, neighbours included; the build record covers `CLAUDE.md`; a kept link check with fragments; effort
@@ -2113,7 +2116,8 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   map-guided builder context, flows, impact-check end, composed-candidate check, removal, splitting
   decision) are not covered by the report; testing them needs a further measurement run with the
   prerequisites the report names. *Trigger: Daniel selects it for intake.*
-- [ ] **`/workflow-init`'s `CLAUDE.md` template still says architecture lives in `@AGENTS.md`**
+- [x] Done 2026-10-23 (kit 0.42.0, same story): the template sentence now points to `AGENTS.md`
+  § Documentation map. Was: **`/workflow-init`'s `CLAUDE.md` template still says architecture lives in `@AGENTS.md`**
   (`plugins/dev-workflow/commands/workflow-init.md:567`), while this repo's `CLAUDE.md` and the SFX pilot
   point to `docs/ARCHITECTURE.md`. SFX's 0.39.0 adoption (`e8d1e06`) put the old sentence back over the
   pilot's. Fix with the adoption story above, or earlier as a ticket. *Trigger: the adoption story, or the
