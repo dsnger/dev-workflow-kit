@@ -1709,6 +1709,197 @@ trailer; the model can still write one from habit (Claude Code issue reported ag
 2.1.301, open), so tell the user it is best effort. `/dev-workflow:process-pr-review` removes the
 default trailer from the squash body, which keeps it off the main branch either way.
 
+### 2.20 `.claude/living-docs.md` — the living-docs rules (asked)
+
+The documentation model a pilot exercised (`docs/field-reports/2026-10-23-living-docs-pilot-report.md`
+in the kit repository): living documents that say what the software is today, kept current in the
+change that alters them, with a build record at the end. Under `.claude/` like the gate rules, so an
+edit to it is a prompt change and fires Gate B.
+
+**The switch: this file is the only activation signal.** Take the first case that fits:
+
+1. **`.claude/living-docs.md` absent.** Ask once whether the project takes living docs (recommend
+   yes), whatever else exists. Yes → write it, then run 2.21. No → `skipped (user)`, skip 2.21, and
+   leave every other file alone; a later run asks again.
+2. **Present.** No question; it follows Rule 2, then run 2.21.
+
+`/workflow-init` never deletes this file or the checker. To switch living docs off, the user removes
+`.claude/living-docs.md` and its line in `AGENTS.md` § Documentation map; the `CLAUDE.md` paragraph
+is then inert.
+
+**Completeness**, judged after every file decision of this run and only when this file is present.
+Report each part that fails as `living docs: incomplete — <part>`: this file differs from the template
+(an older edition kept); `CLAUDE.md` lacks the **Living docs** paragraph of §4 (its update declined);
+`AGENTS.md` § Documentation map does not name `.claude/living-docs.md` (reviewers are not pointed to
+the rules); `scripts/check-doc-links.sh` differs from the 2.21 template (not the kit's checker,
+fragment coverage not verified).
+
+````markdown
+# Living docs
+
+Read this file before any work on a project document, before changing behaviour one describes, and
+before Gate B. It says where each kind of content lives and what a change must record. The documents
+it governs describe; binding rules stay in `AGENTS.md` and the approved specs.
+
+## Homes
+
+One home per kind of content. `AGENTS.md` § Documentation map is the signpost: one line per document,
+with its link and when to read it, and no content repeated.
+
+- **Product** — `docs/PRD.md`: problem, success measures, non-goals, boundaries, and the **feature
+  map**: `Feature | Behaviour | Status | Last changed | Doc | Last story/plan`, one sentence of
+  behaviour per row; status is exactly `planned`, `partial` (the row says which part is built) or
+  `built`.
+- **Architecture** — `docs/ARCHITECTURE.md`: components, boundaries, the path a request takes, shared
+  contracts by reference, cross-cutting rules with links to what binds them.
+- **Tech stack** — `docs/TECH-STACK.md`: each technology's job, why it was chosen, its constraints. No
+  version numbers: manifests and lockfiles hold them. A version that constrains behaviour and that no
+  manifest or lockfile records may be stated as a constraint, with its source.
+- **Feature** — `docs/features/<name>.md`, one per feature, with these headings: purpose and triggers;
+  current behaviour; planned; business rules, including failure, empty, concurrent and recovery paths;
+  surfaces; borders to neighbour features; contracts used; records (the stories, specs and plans).
+
+A suitable existing document may stay where it is; the signpost names it. Write a document when it
+gets content, never as an empty template; until then the signpost marks its home `not yet written`.
+Why one home: a statement kept in two places drifts in one of them.
+
+## Authority and provenance
+
+- A restated rule links its binding source. Where a document and its source disagree, the source
+  wins: fix the document, or write `DISCREPANCY (<source> vs <source>)` when only a decision can
+  resolve it.
+- Each document names what it was last checked against: `as of <base commit> + <story or pull
+  request>`. Never its own commit's hash: it does not exist yet, and a squash merge changes it.
+- Built behaviour is written as current; a commitment not yet built is labelled `planned`.
+- A derived statement carries `INFERRED (source: <path or section>)`. A fact no source records is
+  written `not recorded`, never filled in from plausibility.
+
+## In every change
+
+1. **Same change.** A change that alters behaviour a document describes updates that document in the
+   same change.
+2. **Build record**, one line per document: `<path> | <status> — <what was checked>`, with status
+   exactly one of `changed`, `checked, unchanged`, or `absent` (a home marked `not yet written`).
+   Example: `docs/features/billing.md | checked, unchanged — refund rules still match`. It holds a
+   line for:
+   - every feature doc whose current behaviour or `Planned` section the change affects, neighbour
+     features included — not only the docs the change edited;
+   - each top-level home the signpost names;
+   - `CLAUDE.md` and `AGENTS.md`, always, after checking that every sentence in them about where
+     something lives agrees with the Documentation map. A moved document can falsify them without
+     editing them, and a kit template taken into them can bring back an old sentence.
+
+   A missing line is a finding, whoever finds it: the author before the closing commit, Gate B, or a
+   pull-request review. Write the record before the first Gate B pass and put it in every Gate B
+   call's `whatWasImplemented`, where Gate B checks it as claims; copy it into the pull request body
+   and the unit's handover. Why: the record that lists only the edited docs lets an affected
+   neighbour go stale unnoticed.
+3. **Link check.** Run `sh scripts/check-doc-links.sh` before the record is closed; it resolves
+   relative links and their heading fragments, and belongs in the quality command. Why: a checker
+   kept outside the repository is lost, and one without fragments misses renamed headings.
+4. **Size soft alarm.** A living document past 10,000 bytes gets a line `size alarm: <path> <bytes>`
+   in the build record. It puts splitting up for decision and never fails a check; coverage is never
+   cut to meet a size.
+5. **Effort per piece.** Each piece of documentation work — writing one document, the upkeep in one
+   change — gets a line in the build record: start and end (`date` stamps), tokens where the harness
+   reports them, each with how it was captured, and `unknown` where it was not. Never an estimate.
+
+## Not covered
+
+These rules do not cover naming a story's features at intake, assembling a builder's context from the
+map, cross-feature flow sections, the impact check along dependencies, conflict checks on shared
+contracts, removing a feature, the splitting decision itself, or capability and child-feature levels.
+They were not exercised in the pilot, and silence here is not a rule.
+````
+
+### 2.21 `scripts/check-doc-links.sh` — the docs link check
+
+Runs only when 2.20 left `.claude/living-docs.md` present; otherwise this file is left untouched.
+Then Rules 1–2 apply as to any target. Write the script byte for byte as below; the kit runs the
+same file on its own docs, and its check 4l keeps the two identical. Run it from the repository root
+as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip (for example a directory of
+archived records that cite paths as they were).
+
+````sh
+#!/bin/sh
+# Internal link check for the docs: every relative Markdown link `](target)` in a tracked
+# *.md file must name a path that exists in this checkout, and a `#fragment` on a Markdown
+# target (or a bare `#fragment`, meaning the linking file) must name a heading there.
+#
+# Usage: sh scripts/check-doc-links.sh [skip-prefix ...], from the repository root. A tracked
+# file whose path starts with a skip prefix (for example `docs/history/`) is not checked as a
+# linking file; links into it still are.
+#
+# WHAT IT CHECKS: inline links of the form `](target)` whose target has no scheme. The part
+# before `#` is resolved against the linking file's directory (a leading `/` against the
+# repository root) and must exist. When that path is a `.md` file, the fragment must equal
+# the slug of one of its ATX headings (`#` to `######`, outside fenced code blocks) or an
+# `id="…"`/`name="…"` attribute in it. Slug, as GitHub writes it for plain headings:
+# lowercase; ASCII punctuation except `-` and `_` removed; `—` `–` `§` `·` `…` and curly
+# quotes removed; each space a `-`; a repeated slug gets `-1`, `-2`, ….
+# WHAT IT DOES NOT: setext headings; other Unicode punctuation, non-ASCII capitals, and link
+# or emphasis syntax inside a heading are not slugged as GitHub does; two different headings
+# that slug alike, or a generated `-1` colliding with a literal heading, are not
+# disambiguated as GitHub does — such a link can be reported broken or accepted.
+# Fragments on non-Markdown targets; reference-style links (`[x]: path`); backticked paths
+# (they name files in other projects, placeholders and future artifacts; nothing tells those
+# apart from a typo); links inside code spans or fences (they are checked like any other
+# line); external URLs; targets containing a space or parenthesis (so a link with a title is
+# skipped) or written in angle brackets (`](<path>)`, reported broken).
+#
+# POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
+# scripts/check-doc-links.test.sh in the kit repository.
+set -u
+# One anchor per line for the Markdown file $1.
+anchors() {
+  # shellcheck disable=SC1112  # the curly quotes below are awk regex text, not shell quotes
+  awk '
+    { line = $0; sub(/^ ? ? ?/, "", line) }
+    fl == 0 && match(line, /^(```+|~~~+)/) { fl = RLENGTH; fc = substr(line, 1, 1); next }
+    fl > 0 { t = line; sub(/[ \t]+$/, "", t)
+             if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
+             next }
+    {
+      s = $0
+      while (match(s, /(id|name)="[^"]*"/)) {
+        a = substr(s, RSTART, RLENGTH); sub(/^[a-z]*="/, "", a); sub(/"$/, "", a); print a
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+    /^##?#?#?#?#?[ \t]/ {
+      h = $0; sub(/^#+[ \t]+/, "", h); sub(/[ \t]+#+[ \t]*$/, "", h); sub(/[ \t]+$/, "", h)
+      h = tolower(h)
+      gsub(/[]!"#$%&'\''()*+,.\/:;<=>?@[\\^`{|}~]/, "", h)
+      gsub(/—|–|§|·|…|“|”|‘|’/, "", h)
+      gsub(/ /, "-", h)
+      if (seen[h]++) print h "-" (seen[h] - 1); else print h
+    }
+  ' "$1"
+}
+files=$(git -c core.quotePath=false ls-files -- '*.md') || { echo "doc links: git ls-files failed" >&2; exit 1; }
+broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  skip=0
+  for s in "$@"; do case "$f" in ("$s"*) skip=1 ;; esac; done
+  [ "$skip" -eq 0 ] || continue
+  [ -r "$f" ] || { printf '%s: unreadable, links not checked\n' "$f"; continue; }
+  d=$(dirname "$f")
+  # One record per link: `<line>:<target>`.
+  grep -no '](\([^)( ]*\))' "$f" | sed 's/:](/:/; s/)$//' | while IFS= read -r m; do
+    t=${m#*:}
+    case "$t" in (''|*:*) continue ;; esac
+    p=${t%%#*}
+    case "$p" in ('') p=$f ;; (/*) p=".$p" ;; (*) p="$d/$p" ;; esac
+    if [ ! -e "$p" ]; then printf '%s:%s: broken link: %s\n' "$f" "${m%%:*}" "$t"; continue; fi
+    case "$t" in (*\#*) ;; (*) continue ;; esac
+    case "$p" in (*.md) [ -f "$p" ] || continue ;; (*) continue ;; esac
+    anchors "$p" | grep -qxF -- "${t#*#}" || printf '%s:%s: broken fragment: %s\n' "$f" "${m%%:*}" "$t"
+  done
+done)
+if [ -n "$broken" ]; then printf '%s\n' "$broken"; exit 1; fi
+printf 'doc links: ok\n'
+````
+
 ## Step 3 — Walk the user through `AGENTS.md`
 
 `AGENTS.md` is the one file that **cannot** be scaffolded from a template: it is the

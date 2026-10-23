@@ -128,7 +128,7 @@ jobs:
           sh scripts/live-effort.test.sh
           sh scripts/status-view.test.sh
           sh scripts/check-doc-links.test.sh
-          sh scripts/check-doc-links.sh
+          sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/
 
       # Invariant 12 itself needs a base to diff against, so it runs only on pull
       # requests — a push to main has no PR base, and diffing the push range would just
