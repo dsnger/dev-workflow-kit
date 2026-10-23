@@ -22,6 +22,37 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.42.0
+
+Living docs, adopted from the SFX pilot (story
+`docs/superpowers/stories/2026-10-23-kit-living-docs-adoption-story.md`, design
+`docs/superpowers/specs/2026-10-23-kit-living-docs-adoption-design.md`, input
+`docs/field-reports/2026-10-23-living-docs-pilot-report.md`). Only the elements the pilot exercised,
+with its four changes.
+
+- **`/workflow-init` 2.20 writes `.claude/living-docs.md`, asked.** The file is the only switch: when
+  it is absent the command asks once (recommended yes). The rules: one home per kind of content,
+  with `AGENTS.md` § Documentation map as the signpost, `docs/PRD.md` with the feature map,
+  `docs/ARCHITECTURE.md`, `docs/TECH-STACK.md` and `docs/features/<name>.md`; descriptive authority
+  and provenance labels; docs updated in the same change; no empty templates.
+- **Build record at the end of every change**, one line `changed`, `checked, unchanged` or `absent`
+  per document. It now covers every feature doc whose behaviour or `Planned` section the change
+  affects, neighbours included (the pilot left three such docs stale), and always `CLAUDE.md` and
+  `AGENTS.md`, checked against the Documentation map. A missing line is a finding; the record goes
+  into Gate B's `whatWasImplemented`, the pull request body and the handover. A size soft alarm past
+  10,000 bytes never fails a check; effort is stamped per piece, `unknown` when not captured.
+- **`/workflow-init` 2.21 writes `scripts/check-doc-links.sh`**, the kit's own checker, which now
+  also checks heading fragments (GitHub-style slugs, `%XX` escapes decoded except control bytes, with its limits in the header) and takes the
+  trees to skip as arguments. Check 4l keeps the template byte-identical to the repository copy.
+- **The `CLAUDE.md` template no longer says architecture lives in `@AGENTS.md`**: it points to
+  `AGENTS.md` § Documentation map, which the `AGENTS.md` interview now always writes. §4 gains a
+  **Living docs** paragraph that sends readers to the rules file when it exists. Re-running
+  `/workflow-init` shows this as a diff to accept or skip; it reports `living docs: incomplete —
+  <part>` when a piece is missing or differs.
+- **Not adopted**, because the pilot did not exercise them: features named at intake, map-guided
+  builder context, cross-feature flows, the impact-check end, conflict and composed-candidate
+  checks, removal, the splitting decision, capability levels.
+
 ## 0.41.0
 
 Six field cases from 2026-10-21 and 2026-10-22 (design note

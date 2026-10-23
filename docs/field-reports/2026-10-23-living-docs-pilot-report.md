@@ -88,7 +88,7 @@ records go):
 | 2026-10-16 12:17 | Daniel | intake answers: profile, scope option (b), goals/non-goals to `docs/PRD.md`, measurement file location | the lane stopped at intake for them (lane log) |
 | 2026-10-16 14:45 | Daniel via the orchestrator | spec approved; `CLAUDE.md` sentence amendment | brainstorming's spec review stop (lane log) |
 | 2026-10-22 | Daniel | D1: approved the foundation §12 amendment P7 builds on | P7 plan header |
-| P7 build | the orchestrator | unknown whether a go for the heavy live-demo run was given: Unit 1's handover asks the next session to send the orchestrator the heavy-run line first (Next 2); no answer is recorded | P7 unit 1 handover |
+| 2026-10-22 23:16 | the orchestrator | gave the go for the heavy live-demo run that Unit 1's handover asked the next session to request first (Next 2) | orchestrator board `.context/sparring/orchestrator-board.md` (untracked, kit main checkout), line "sfx P7 u2 go for p7-demo"; corrected 2026-10-23 by the adoption story |
 
 Other human contact in P7 is not recorded; this inventory is complete only as far as the logs and handovers
 are.

@@ -67,6 +67,8 @@ $LR_LINES"
   # 4g: small instruction files, or every fixture fails the size check on a missing file.
   printf '# C\n' > "$1/CLAUDE.md"
   printf '# A\n' > "$1/AGENTS.md"
+  # 4l: identical to the `### 2.21` fence body tpl_sections writes.
+  mkdir -p "$1/scripts"; printf 'x\n' > "$1/scripts/check-doc-links.sh"
 }
 # A valid `### 2.1` section: a heading and a small fenced CLAUDE.md template.
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
@@ -99,8 +101,16 @@ sd_section() {
 # section that closes the file (4k).
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
 tpl_sections() {
-  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n\n%s\n' "$1" "$2" "${3:-}" "${4:-$(sd_section)}"
+  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n\n%s\n\n%s\n' "$1" "$2" "${3:-}" "${4:-$(sd_section)}" "$DL_SECTION"
 }
+# 4l: a `### 2.21` section whose ````sh fence body is byte-identical to the fixture's
+# scripts/check-doc-links.sh, which init_prompt_fixtures writes as the single line `x`.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+DL_SECTION='### 2.21 doc links
+
+````sh
+x
+````'
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
 AC_RULE_LINE='_IDs are permanent once the story is committed: never renumber or reuse one; a new criterion takes the next number unused here and on the branch it merges into, and a collision stops for a human; a removed one stays, struck through and dated; a narrowed one keeps its ID with a dated note; cite as `<story path> AC-<n>`; full rules: dev-workflow:intake, "Acceptance-criterion IDs"._'
@@ -528,6 +538,9 @@ done
 #              20, 22, 9, 34, 11, 28, 8, 4, unchanged. The shared `tpl_sections` gained the `### 2.17`
 #              section the same day; 4a-4j re-measured after it: 20, 22, 20, 22, 9, 34, 11,
 #              28, 8, 4, unchanged.
+#   4l -> 5    every `4l:` reject case (5); no accept case moved (measured 2026-10-23, when
+#              4l was added). The shared initializer and `tpl_sections` gained the script and
+#              the `### 2.21` section the same day; 4a-4k were not re-measured after it.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1514,6 +1527,42 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 inject_case "4k secret deny parser failure fires" awk '*secret-deny-scan*' \
   "$SD the '### 2.17' parser failed"
+
+# --- Check 4l, the doc-link checker and its `### 2.21` template byte-identical -----------
+DL='doc-link checker copies:'
+dl_case() { # $1 = name, $2 = 1|0 expect reject, $3 = script body or @GONE@,
+  #          $4 = command file body or @KEEP@, $5 = diagnostic a reject must carry
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows" \
+    "$work/r/plugins/p/.claude-plugin"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' '{"name": "p", "version": "1.0.0"}' > "$work/r/plugins/p/.claude-plugin/plugin.json"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  if [ "$3" = @GONE@ ]; then rm -f "$work/r/scripts/check-doc-links.sh"
+  else printf '%s\n' "$3" > "$work/r/scripts/check-doc-links.sh"; fi
+  [ "$4" = @KEEP@ ] || printf '%s\n' "$4" > "$work/r/plugins/dev-workflow/commands/workflow-init.md"
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF -- "$DL" || ! printf '%s' "$out" | grep -qF -- "$5"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+dl_case "4l: identical copies accepted"                   0 x "@KEEP@" ''
+dl_case "4l: script one line longer rejected"             1 "x
+y" "@KEEP@" 'differs from the'
+dl_case "4l: missing script rejected"                     1 "@GONE@" "@KEEP@" 'cannot be compared'
+dl_case "4l: no 2.21 heading rejected"                    1 x \
+  "$(sd_cmd "$(sd_section)" | sed 's/^### 2\.21.*/### 2.22 other/')" 'cannot be compared'
+# shellcheck disable=SC2016  # literal Markdown fences, not command substitution
+dl_case "4l: two fences in 2.21 rejected"                 1 x \
+  "$(sd_cmd "$(sd_section)"; printf '\n````sh\nx\n````\n')" 'cannot be compared'
+dl_case "4l: unclosed fence rejected"                     1 x \
+  "$(sd_cmd "$(sd_section)" | sed '$d')" 'cannot be compared'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

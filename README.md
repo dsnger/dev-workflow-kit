@@ -40,7 +40,7 @@ You see: `echo $CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` prints `0`.
 
 Do: in Claude Code at the project root, type `/dev-workflow:workflow-init`. When it asks to set up Codex now, say "not now".
 
-You see: a status block, one line per written file, an interview for `AGENTS.md`, and a closing checklist.
+You see: a status block, one line per written file, an interview for `AGENTS.md`, and a closing checklist. It also asks whether the project takes living docs (documents that stay current with every change, [reference](docs/reference.md#workflow-init)); yes is recommended.
 
 **5. Connect Codex.**
 

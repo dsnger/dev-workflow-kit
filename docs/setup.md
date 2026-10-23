@@ -73,7 +73,9 @@ A positive value works too, if it is longer than your longest review call. Detai
 Do: open Claude Code at the project root and type `/dev-workflow:workflow-init`. In a
 project with no `codex` entry in `.mcp.json` yet (the normal first run) the status block
 shows Codex as `MISSING`, because this command writes that entry itself, and it asks
-whether to set Codex up now. Answer "not now". Answer its other questions. It writes
+whether to set Codex up now. Answer "not now". It also asks whether the project takes living
+docs (rules for project documents that stay current with each change; recommended yes).
+Answer its other questions. It writes
 `AGENTS.md` only after you approve the whole text.
 
 You see, in order: a status block (git repository, superpowers, Codex, `gh`, `AGENTS.md`,
@@ -114,7 +116,7 @@ with the tools you already run; fill a role later, once a tool has caught someth
 for you. Chain them into one command and run it. Put it in `AGENTS.md` under
 `## Commands` in the `quality` row, and in the quality-command `TODO(stack)` block of
 `.github/workflows/quality.yml`; fill the other `TODO(stack)` blocks there (toolchain
-setup, build if any). Delete the workflow's "Refuse to be a green no-op" step: it fails
+setup, build if any). With living docs taken, add `sh scripts/check-doc-links.sh` to it. Delete the workflow's "Refuse to be a green no-op" step: it fails
 while the file contains the text `TODO(stack)`, and its own line does.
 
 Give the agent the access it needs to verify itself. The quality command and the evidence

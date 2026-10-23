@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, and the copy check 4j, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4k -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, and the copy checks 4j and 4l, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4l -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, then 4k
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, then 4l
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -1135,6 +1135,31 @@ else
   fi
 fi
 # --- END check 4k ---
+# --- BEGIN check 4l ---
+# The docs link checker and its `/workflow-init` template must be byte-identical:
+# `scripts/check-doc-links.sh` and the body of the ````sh fence inside `### 2.21` of the command
+# file (what an initialized project gets). It compares bytes only: not whether the checker is
+# right (its own suite is the guard there). Fails closed when the script is missing or
+# unreadable, or the template cannot be located: a `### 2.21` heading count other than one, a
+# ````sh fence count other than one in it, an unclosed fence, or a failed parser.
+dl_file=scripts/check-doc-links.sh dl_cmd=plugins/dev-workflow/commands/workflow-init.md
+dl_out=$(awk '
+  infence { if ($0 == "````") { infence = 0; closed += 1 } else print; next }
+  /^### 2\.21[[:space:]]/ { heads += 1; insec = 1; next }
+  insec && /^##/ { insec = 0; next }
+  insec && $0 == "````sh" { opened += 1; if (opened == 1) infence = 1; next }
+  END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+' "$dl_cmd" 2>/dev/null); dl_st=$?
+# shellcheck disable=SC2046  # word splitting is the point: four status fields
+set -- $(printf '%s\n' "$dl_out" | tail -n 1)
+if [ ! -r "$dl_file" ] || [ "$dl_st" -ne 0 ] || [ "${2:-0}" -ne 1 ] || [ "${3:-0}" -ne 1 ] || [ "${4:-0}" -ne 1 ]; then
+  fail "doc-link checker copies: $dl_file or the '### 2.21' template of $dl_cmd cannot be read, so the two copies cannot be compared." \
+       "expected the script, one '### 2.21' heading and one closed \`\`\`\`sh fence in it"
+elif ! printf '%s\n' "$dl_out" | sed '$d' | cmp -s - "$dl_file"; then
+  fail "doc-link checker copies: $dl_file differs from the '### 2.21' template in $dl_cmd." \
+       "make them byte-identical; an initialized project gets the template, this repo runs the file"
+fi
+# --- END check 4l ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

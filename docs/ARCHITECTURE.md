@@ -27,7 +27,7 @@ scripts/check-invariants.sh       # invariants 5, 6 + prompt conformance (rung 2
 scripts/check-invariants.test.sh  # its regression suite — reject/accept pairs
 scripts/check-version-bump.sh     # invariant 12, mechanically — PR-only (rung 2)
 scripts/check-version-bump.test.sh # its regression suite — policy/operational/accept
-scripts/check-doc-links.sh        # relative Markdown links in docs resolve
+scripts/check-doc-links.sh        # relative Markdown links and heading fragments resolve; = workflow-init 2.21 (check 4l)
 scripts/check-doc-links.test.sh   # its regression suite — fixture git repos
 scripts/ledger-metrics.py         # read-only report over the ledger + git (vision step 2b)
 scripts/ledger-metrics.test.sh    # its regression suite — fixture repos, expected text
@@ -94,7 +94,8 @@ the convention-loaded file was a duplicate-hooks error that stopped the whole pl
 
 ## Boundaries and dependency direction
 
-The plugin is the only thing that ships; the scripts above are this repository's own tooling,
+The plugin is the only thing that ships; the scripts above are this repository's own tooling
+(the docs link checker reaches projects only as the text of `/workflow-init`'s 2.21 template),
 and `examples/` ships as reference material without being loaded or scaffolded
 ([invariant 7](../AGENTS.md#key-invariants)). Outward, the plugin hands off to superpowers skills
 and calls a Codex MCP server, and `/workflow-init` adds a pinned Context7 server to an initialized
