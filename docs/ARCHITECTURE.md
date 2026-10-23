@@ -65,6 +65,7 @@ docs/
   hardening-taxonomy.md           # this project's fingerprint classes
   pr-review-bots.md               # the Wait-for routing list + where each bot's findings appear
   history/                       # non-binding pre-shrink archives, strike-list and verification
+  field-reports/                  # dated reports from consumer projects and pilots (evidence, not rules)
   superpowers/{specs,plans,stories}/ # the approved artifacts behind past changes
   superpowers/replays/            # committed replay packages behind a named verification
 source-files/                     # the extraction seed this repo was built from
