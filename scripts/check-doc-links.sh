@@ -10,8 +10,9 @@
 # WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
-# the slug of one of its ATX headings (`#` to `######`, outside fenced code blocks) or an
-# `id="…"`/`name="…"` attribute in it. Slug, as GitHub writes it for plain headings:
+# the slug of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
+# fenced code blocks) or an `id="…"`/`name="…"` attribute in it (not `data-id=` and the like;
+# an attribute written in a code span still counts). Slug, as GitHub writes it for plain headings:
 # lowercase; ASCII punctuation except `-` and `_` removed; `—` `–` `§` `·` `…` and curly
 # quotes removed; each space a `-`; a repeated slug gets `-1`, `-2`, ….
 # WHAT IT DOES NOT: setext headings; other Unicode punctuation, non-ASCII capitals, and link
@@ -31,20 +32,20 @@ set -u
 anchors() {
   # shellcheck disable=SC1112  # the curly quotes below are awk regex text, not shell quotes
   awk '
-    { line = $0; sub(/^ ? ? ?/, "", line) }
+    { line = $0; sub(/\r$/, "", line); sub(/^ ? ? ?/, "", line) }
     fl == 0 && match(line, /^(```+|~~~+)/) { fl = RLENGTH; fc = substr(line, 1, 1); next }
     fl > 0 { t = line; sub(/[ \t]+$/, "", t)
              if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
              next }
     {
-      s = $0
-      while (match(s, /(id|name)="[^"]*"/)) {
-        a = substr(s, RSTART, RLENGTH); sub(/^[a-z]*="/, "", a); sub(/"$/, "", a); print a
+      s = line
+      while (match(s, /(^|[ \t<])(id|name)="[^"]*"/)) {
+        a = substr(s, RSTART, RLENGTH); sub(/^[^"]*"/, "", a); sub(/"$/, "", a); print a
         s = substr(s, RSTART + RLENGTH)
       }
     }
-    /^##?#?#?#?#?[ \t]/ {
-      h = $0; sub(/^#+[ \t]+/, "", h); sub(/[ \t]+#+[ \t]*$/, "", h); sub(/[ \t]+$/, "", h)
+    line ~ /^##?#?#?#?#?[ \t]/ {
+      h = line; sub(/^#+[ \t]+/, "", h); sub(/[ \t]+#+[ \t]*$/, "", h); sub(/[ \t]+$/, "", h)
       h = tolower(h)
       gsub(/[]!"#$%&'\''()*+,.\/:;<=>?@[\\^`{|}~]/, "", h)
       gsub(/—|–|§|·|…|“|”|‘|’/, "", h)

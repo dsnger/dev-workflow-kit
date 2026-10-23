@@ -198,7 +198,7 @@ What `/dev-workflow:workflow-init` does, in order:
   command it ran in that session and saw exit 0.
 - **Closing checklist.** It ends with the items it deliberately did not scaffold: the
   battery, baselines, custom lint rules, branch protection, Codex, superpowers, the
-  prompt-standards date, codebase-memory if found, and living docs if taken. It also prints the optional
+  prompt-standards date, codebase-memory if found, living docs if taken, and the docs link check when its script is present. It also prints the optional
   `~/.codex/config.toml` example block (see Codex above).
 
 **Without Codex**, the preflight asks whether to set it up now; on yes it stops and lets

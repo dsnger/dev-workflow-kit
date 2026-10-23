@@ -1797,8 +1797,9 @@ Why one home: a statement kept in two places drifts in one of them.
    call's `whatWasImplemented`, where Gate B checks it as claims; copy it into the pull request body
    and the unit's handover. Why: the record that lists only the edited docs lets an affected
    neighbour go stale unnoticed.
-3. **Link check.** Run `sh scripts/check-doc-links.sh` before the record is closed; it resolves
-   relative links and their heading fragments, and belongs in the quality command. Why: a checker
+3. **Link check.** Run the docs link-check command from `AGENTS.md` § Commands
+   (`sh scripts/check-doc-links.sh`, plus any skip prefixes) before the record is closed; it
+   resolves relative links and their heading fragments, and belongs in the quality command. Why: a checker
    kept outside the repository is lost, and one without fragments misses renamed headings.
 4. **Size soft alarm.** A living document past 10,000 bytes gets a line `size alarm: <path> <bytes>`
    in the build record. It puts splitting up for decision and never fails a check; coverage is never
@@ -1811,7 +1812,7 @@ Why one home: a statement kept in two places drifts in one of them.
 
 These rules do not cover naming a story's features at intake, assembling a builder's context from the
 map, cross-feature flow sections, the impact check along dependencies, conflict checks on shared
-contracts, removing a feature, the splitting decision itself, or capability and child-feature levels.
+contracts, the composed-candidate check, removing a feature, the splitting decision itself, or capability and child-feature levels.
 They were not exercised in the pilot, and silence here is not a rule.
 ````
 
@@ -1821,7 +1822,10 @@ Runs only when 2.20 left `.claude/living-docs.md` present; otherwise this file i
 Then Rules 1–2 apply as to any target. Write the script byte for byte as below; the kit runs the
 same file on its own docs, and its check 4l keeps the two identical. Run it from the repository root
 as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip (for example a directory of
-archived records that cite paths as they were).
+archived records that cite paths as they were). A skip prefix goes into a shell command, so it must
+match `^[A-Za-z0-9._/-]+$`: check each one the user names before writing it into `AGENTS.md`
+§ Commands or CI, and leave out and report any that fails, asking the user to choose a plainer path.
+Why: anything else in that position is shell source, not a path.
 
 ````sh
 #!/bin/sh
@@ -1836,8 +1840,9 @@ archived records that cite paths as they were).
 # WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
-# the slug of one of its ATX headings (`#` to `######`, outside fenced code blocks) or an
-# `id="…"`/`name="…"` attribute in it. Slug, as GitHub writes it for plain headings:
+# the slug of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
+# fenced code blocks) or an `id="…"`/`name="…"` attribute in it (not `data-id=` and the like;
+# an attribute written in a code span still counts). Slug, as GitHub writes it for plain headings:
 # lowercase; ASCII punctuation except `-` and `_` removed; `—` `–` `§` `·` `…` and curly
 # quotes removed; each space a `-`; a repeated slug gets `-1`, `-2`, ….
 # WHAT IT DOES NOT: setext headings; other Unicode punctuation, non-ASCII capitals, and link
@@ -1857,20 +1862,20 @@ set -u
 anchors() {
   # shellcheck disable=SC1112  # the curly quotes below are awk regex text, not shell quotes
   awk '
-    { line = $0; sub(/^ ? ? ?/, "", line) }
+    { line = $0; sub(/\r$/, "", line); sub(/^ ? ? ?/, "", line) }
     fl == 0 && match(line, /^(```+|~~~+)/) { fl = RLENGTH; fc = substr(line, 1, 1); next }
     fl > 0 { t = line; sub(/[ \t]+$/, "", t)
              if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
              next }
     {
-      s = $0
-      while (match(s, /(id|name)="[^"]*"/)) {
-        a = substr(s, RSTART, RLENGTH); sub(/^[a-z]*="/, "", a); sub(/"$/, "", a); print a
+      s = line
+      while (match(s, /(^|[ \t<])(id|name)="[^"]*"/)) {
+        a = substr(s, RSTART, RLENGTH); sub(/^[^"]*"/, "", a); sub(/"$/, "", a); print a
         s = substr(s, RSTART + RLENGTH)
       }
     }
-    /^##?#?#?#?#?[ \t]/ {
-      h = $0; sub(/^#+[ \t]+/, "", h); sub(/[ \t]+#+[ \t]*$/, "", h); sub(/[ \t]+$/, "", h)
+    line ~ /^##?#?#?#?#?[ \t]/ {
+      h = line; sub(/^#+[ \t]+/, "", h); sub(/[ \t]+#+[ \t]*$/, "", h); sub(/[ \t]+$/, "", h)
       h = tolower(h)
       gsub(/[]!"#$%&'\''()*+,.\/:;<=>?@[\\^`{|}~]/, "", h)
       gsub(/—|–|§|·|…|“|”|‘|’/, "", h)
@@ -1921,8 +1926,9 @@ Cover, in this order:
 1. **What the project is** — one paragraph: domain, users, what it does. Enough that
    a reviewer with no context can judge whether a change fits.
 2. **Architecture** — the components, the boundaries between them, and the direction
-   dependencies are allowed to point. With living docs taken (2.20), this goes to
-   `docs/ARCHITECTURE.md` instead, and `AGENTS.md` keeps only the binding rules.
+   dependencies are allowed to point. With living docs taken (2.20), a new architecture
+   description goes to `docs/ARCHITECTURE.md`, and `AGENTS.md` keeps only the binding rules; a
+   suitable existing home stays where it is, and the map names it.
 3. **`## Documentation map`** — always written: one line per project document, with its link
    and when to read it, and nothing repeated from it. The architecture line names where the
    architecture lives (`AGENTS.md` § Architecture, or `docs/ARCHITECTURE.md`); the scaffolded
@@ -2053,11 +2059,14 @@ Remaining — stack-specific, yours to decide:
        technical failure, so it is no evidence that any boundary works.
 
 9. Living docs — only if .claude/living-docs.md is present. Repeat every
-   "living docs: incomplete" line from 2.20. If scripts/check-doc-links.sh is
-   present, add `sh scripts/check-doc-links.sh` (with any skip prefixes) to the
-   quality command in AGENTS.md § Commands and to CI, once it has run clean here.
-   The structure documents are written when they get content, never as empty
-   templates; the Documentation map marks a missing one `not yet written`.
+   "living docs: incomplete" line from 2.20. The structure documents are
+   written when they get content, never as empty templates; the Documentation
+   map marks a missing one `not yet written`.
+
+10. Docs link check — only if scripts/check-doc-links.sh is present, whether or
+   not living docs are taken: add `sh scripts/check-doc-links.sh` (with any skip
+   prefixes that pass the 2.21 rule) to the quality command in AGENTS.md
+   § Commands and to CI, once it has run clean here.
 ```
 
 Then stop. Do not start using the workflow in the same turn — the user should read

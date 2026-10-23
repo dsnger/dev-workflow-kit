@@ -16,7 +16,7 @@ trap 'rm -rf "$work"' EXIT HUP INT TERM
 dl_case() {
   rm -rf "$work/r"; mkdir -p "$work/r/docs" "$work/r/$(dirname "$3")"
   # shellcheck disable=SC2016  # the backticks are fixture text
-  printf '# real\n\n## Same\n\n## Same\n\n## Gate — `x` (y) §2\n\n<a id="anc"></a>\n\n```sh\n# fenced\n```\n' > "$work/r/docs/real.md"
+  printf '# real\n\n## Same\n\n## Same\n\n## Gate — `x` (y) §2\n\n<a id="anc"></a> <a name="nm"></a> <div data-id="dat"></div>\n\n  ## Indented\n\n    ## Code block\n\n## Crlf\r\n\n```sh\n# fenced\n```\n' > "$work/r/docs/real.md"
   printf '%s\n' "$4" > "$work/r/$3"
   ( cd "$work/r" && git init -q && git add -A ) || { fail "$1 (fixture)"; return; }
   out=$( cd "$work/r" && sh "$CHECKER" ${6:+"$6"} 2>&1 ); st=$?
@@ -44,6 +44,11 @@ dl_case "repeated heading gets -1"                  0 README.md '[a](docs/real.m
 dl_case "third slug of a repeated heading absent"   1 README.md '[a](docs/real.md#same-2)' 'broken fragment: docs/real.md#same-2'
 dl_case "dash, backticks, parens and § slugged"     0 README.md '[a](docs/real.md#gate--x-y-2)' ''
 dl_case "id attribute counts as anchor"             0 README.md '[a](docs/real.md#anc)' ''
+dl_case "name attribute counts as anchor"           0 README.md '[a](docs/real.md#nm)' ''
+dl_case "data-id attribute not counted"             1 README.md '[a](docs/real.md#dat)' 'broken fragment: docs/real.md#dat'
+dl_case "heading indented up to three spaces counts" 0 README.md '[a](docs/real.md#indented)' ''
+dl_case "four-space indented code not a heading"    1 README.md '[a](docs/real.md#code-block)' 'broken fragment: docs/real.md#code-block'
+dl_case "CRLF heading slugged without the CR"       0 README.md '[a](docs/real.md#crlf)' ''
 dl_case "heading inside a code fence not counted"   1 README.md '[a](docs/real.md#fenced)' 'broken fragment: docs/real.md#fenced'
 dl_case "fragment on a non-Markdown target ignored" 0 README.md '[a](docs/#L3)' ''
 dl_case "broken relative link rejected"              1 README.md '[a](docs/gone.md)' 'README.md:1: broken link: docs/gone.md'
