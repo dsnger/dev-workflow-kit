@@ -52,6 +52,8 @@ dl_case "CRLF heading slugged without the CR"       0 README.md '[a](docs/real.m
 dl_case "percent-encoded fragment decoded"          0 README.md '[a](docs/real.md#caf%C3%A9-100)' ''
 dl_case "raw non-ASCII fragment accepted"           0 README.md '[a](docs/real.md#café-100)' ''
 dl_case "encoded fragment starting with - decoded"  0 README.md '[a](docs/real.md#-caf%C3%A9)' ''
+dl_case "encoded newline cannot split the pattern"  1 README.md '[a](docs/real.md#real%0Agone)' 'broken fragment: docs/real.md#real%0Agone'
+dl_case "encoded NUL cannot cut the pattern"        1 README.md '[a](docs/real.md#real%00gone)' 'broken fragment: docs/real.md#real%00gone'
 dl_case "encoded fragment still checked"            1 README.md '[a](docs/real.md#caf%C3%A9-200)' 'broken fragment: docs/real.md#caf%C3%A9-200'
 dl_case "heading inside a code fence not counted"   1 README.md '[a](docs/real.md#fenced)' 'broken fragment: docs/real.md#fenced'
 dl_case "fragment on a non-Markdown target ignored" 0 README.md '[a](docs/#L3)' ''

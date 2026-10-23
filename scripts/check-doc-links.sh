@@ -61,7 +61,9 @@ pct_decode() {
     while (match(s, /%[0-9A-Fa-f][0-9A-Fa-f]/)) {
       v = index("0123456789abcdef", tolower(substr(s, RSTART + 1, 1))) * 16 - 16 \
         + index("0123456789abcdef", tolower(substr(s, RSTART + 2, 1))) - 1
-      out = out substr(s, 1, RSTART - 1) sprintf("\\0%03o", v); s = substr(s, RSTART + 3)
+      # A control byte stays encoded: decoded, a newline would split the grep pattern below.
+      out = out substr(s, 1, RSTART - 1) (v < 32 ? substr(s, RSTART, 3) : sprintf("\\0%03o", v))
+      s = substr(s, RSTART + 3)
     }
     print out s
   }')"
