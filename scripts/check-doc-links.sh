@@ -10,7 +10,7 @@
 # WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
-# the slug (after `%XX` escapes in the fragment are decoded) of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
+# the slug (after `%XX` escapes in the fragment are decoded, except control bytes `%00`-`%1F`) of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
 # fenced code blocks) or an `id="…"`/`name="…"` attribute in it (not `data-id=` and the like;
 # an attribute written in a code span still counts). Slug, as GitHub writes it for plain headings:
 # lowercase; ASCII punctuation except `-` and `_` removed; `—` `–` `§` `·` `…` and curly
@@ -54,7 +54,7 @@ anchors() {
     }
   ' "$1"
 }
-# $1 with each %XX escape decoded to its byte, as a browser decodes a fragment.
+# $1 with each %XX escape decoded to its byte, as a browser decodes a fragment, except %00-%1F.
 pct_decode() {
   printf '%b' "$(printf '%s' "$1" | sed 's/\\/\\\\/g' | awk '{
     out = ""; s = $0

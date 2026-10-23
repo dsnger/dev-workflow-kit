@@ -42,7 +42,7 @@ with its four changes.
   into Gate B's `whatWasImplemented`, the pull request body and the handover. A size soft alarm past
   10,000 bytes never fails a check; effort is stamped per piece, `unknown` when not captured.
 - **`/workflow-init` 2.21 writes `scripts/check-doc-links.sh`**, the kit's own checker, which now
-  also checks heading fragments (GitHub-style slugs, `%XX` escapes decoded, with its limits in the header) and takes the
+  also checks heading fragments (GitHub-style slugs, `%XX` escapes decoded except control bytes, with its limits in the header) and takes the
   trees to skip as arguments. Check 4l keeps the template byte-identical to the repository copy.
 - **The `CLAUDE.md` template no longer says architecture lives in `@AGENTS.md`**: it points to
   `AGENTS.md` § Documentation map, which the `AGENTS.md` interview now always writes. §4 gains a
