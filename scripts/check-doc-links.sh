@@ -56,16 +56,14 @@ anchors() {
 }
 # $1 with each %XX escape decoded to its byte, as a browser decodes a fragment.
 pct_decode() {
-  # shellcheck disable=SC2059  # the format is built from octal escapes on purpose
-  printf "$(printf '%s' "$1" | sed 's/\\/\\\\/g' | awk '{
+  printf '%b' "$(printf '%s' "$1" | sed 's/\\/\\\\/g' | awk '{
     out = ""; s = $0
     while (match(s, /%[0-9A-Fa-f][0-9A-Fa-f]/)) {
       v = index("0123456789abcdef", tolower(substr(s, RSTART + 1, 1))) * 16 - 16 \
         + index("0123456789abcdef", tolower(substr(s, RSTART + 2, 1))) - 1
-      pre = substr(s, 1, RSTART - 1); gsub(/%/, "%%", pre)
-      out = out pre sprintf("\\%03o", v); s = substr(s, RSTART + 3)
+      out = out substr(s, 1, RSTART - 1) sprintf("\\0%03o", v); s = substr(s, RSTART + 3)
     }
-    gsub(/%/, "%%", s); print out s
+    print out s
   }')"
 }
 files=$(git -c core.quotePath=false ls-files -- '*.md') || { echo "doc links: git ls-files failed" >&2; exit 1; }
