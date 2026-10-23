@@ -2102,3 +2102,23 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **Gate B's `mcp__codex__review` also takes `sessionId`.** 0.40.0 stops counting a resumed
   `exec` only, and only where `jq` is installed; a resumed review call is still credited. No field case yet. *Trigger: a field report
   of a resumed review counted as a pass.*
+
+## From the living-docs pilot report (2026-10-23) — backlog only, nothing implemented here
+
+- [ ] **Adopt the living-docs model into the kit — a separate story (pilot story AC-9).** Input:
+  `docs/field-reports/2026-10-23-living-docs-pilot-report.md`, recommendation *adapt*, limited to the
+  elements the pilot exercised, with its four named changes (a build-record line for every affected feature
+  doc, neighbours included; the build record covers `CLAUDE.md`; a kept link check with fragments; effort
+  stamped per piece). The unexercised elements (features named at intake,
+  map-guided builder context, flows, impact-check end, composed-candidate check, removal, splitting
+  decision) are not covered by the report; testing them needs a further measurement run with the
+  prerequisites the report names. *Trigger: Daniel selects it for intake.*
+- [ ] **`/workflow-init`'s `CLAUDE.md` template still says architecture lives in `@AGENTS.md`**
+  (`plugins/dev-workflow/commands/workflow-init.md:567`), while this repo's `CLAUDE.md` and the SFX pilot
+  point to `docs/ARCHITECTURE.md`. SFX's 0.39.0 adoption (`e8d1e06`) put the old sentence back over the
+  pilot's. Fix with the adoption story above, or earlier as a ticket. *Trigger: the adoption story, or the
+  next `/workflow-init` template change.*
+- [ ] **SFX follow-ups (outside this repo):** link the report from SFX (pilot story AC-10, the
+  orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
+  left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
+  *Trigger: the orchestrator's next SFX instruction.*
