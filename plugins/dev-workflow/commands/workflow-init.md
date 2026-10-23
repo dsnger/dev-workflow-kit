@@ -1722,8 +1722,9 @@ edit to it is a prompt change and fires Gate B.
 **The switch: this file is the only activation signal.** Take the first case that fits:
 
 1. **`.claude/living-docs.md` absent.** Ask once whether the project takes living docs (recommend
-   yes), whatever else exists. Yes → write it, then run 2.21. No → `skipped (user)`, skip 2.21, and
-   leave every other file alone; a later run asks again.
+   yes), whatever else exists. Yes → write it, then run 2.21. No → `skipped (user)` and skip 2.21; an
+   existing `scripts/check-doc-links.sh` is left as it is, the rest of Step 2 and Step 3 run as
+   usual, and a later run asks again.
 2. **Present.** No question; it follows Rule 2, then run 2.21.
 
 `/workflow-init` never deletes this file or the checker. To switch living docs off, the user removes
@@ -1823,7 +1824,8 @@ Then Rules 1–2 apply as to any target. Write the script byte for byte as below
 same file on its own docs, and its check 4l keeps the two identical. Run it from the repository root
 as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip (for example a directory of
 archived records that cite paths as they were). A skip prefix goes into a shell command, so it must
-match `^[A-Za-z0-9._/-]+$`: check each one the user names before writing it into `AGENTS.md`
+match `^[A-Za-z0-9._/-]+$`, and it is compared with paths as `git ls-files` prints them, so it must
+not begin with `/` or `./` (write `docs/history/`, not `./docs/history/`): check each one the user names before writing it into `AGENTS.md`
 § Commands or CI, and leave out and report any that fails, asking the user to choose a plainer path.
 Why: anything else in that position is shell source, not a path.
 
@@ -1840,7 +1842,7 @@ Why: anything else in that position is shell source, not a path.
 # WHAT IT CHECKS: inline links, `]` directly followed by `(target)`, whose target has no scheme. The part
 # before `#` is resolved against the linking file's directory (a leading `/` against the
 # repository root) and must exist. When that path is a `.md` file, the fragment must equal
-# the slug of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
+# the slug (after `%XX` escapes in the fragment are decoded) of one of its ATX headings (`#` to `######`, up to three spaces of indent, outside
 # fenced code blocks) or an `id="…"`/`name="…"` attribute in it (not `data-id=` and the like;
 # an attribute written in a code span still counts). Slug, as GitHub writes it for plain headings:
 # lowercase; ASCII punctuation except `-` and `_` removed; `—` `–` `§` `·` `…` and curly
@@ -1884,6 +1886,20 @@ anchors() {
     }
   ' "$1"
 }
+# $1 with each %XX escape decoded to its byte, as a browser decodes a fragment.
+pct_decode() {
+  # shellcheck disable=SC2059  # the format is built from octal escapes on purpose
+  printf "$(printf '%s' "$1" | sed 's/\\/\\\\/g' | awk '{
+    out = ""; s = $0
+    while (match(s, /%[0-9A-Fa-f][0-9A-Fa-f]/)) {
+      v = index("0123456789abcdef", tolower(substr(s, RSTART + 1, 1))) * 16 - 16 \
+        + index("0123456789abcdef", tolower(substr(s, RSTART + 2, 1))) - 1
+      pre = substr(s, 1, RSTART - 1); gsub(/%/, "%%", pre)
+      out = out pre sprintf("\\%03o", v); s = substr(s, RSTART + 3)
+    }
+    gsub(/%/, "%%", s); print out s
+  }')"
+}
 files=$(git -c core.quotePath=false ls-files -- '*.md') || { echo "doc links: git ls-files failed" >&2; exit 1; }
 broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
   [ -n "$f" ] || continue
@@ -1901,7 +1917,9 @@ broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
     if [ ! -e "$p" ]; then printf '%s:%s: broken link: %s\n' "$f" "${m%%:*}" "$t"; continue; fi
     case "$t" in (*\#*) ;; (*) continue ;; esac
     case "$p" in (*.md) [ -f "$p" ] || continue ;; (*) continue ;; esac
-    anchors "$p" | grep -qxF -- "${t#*#}" || printf '%s:%s: broken fragment: %s\n' "$f" "${m%%:*}" "$t"
+    fr=${t#*#}
+    case "$fr" in (*%*) fr=$(pct_decode "$fr") ;; esac
+    anchors "$p" | grep -qxF -- "$fr" || printf '%s:%s: broken fragment: %s\n' "$f" "${m%%:*}" "$t"
   done
 done)
 if [ -n "$broken" ]; then printf '%s\n' "$broken"; exit 1; fi
