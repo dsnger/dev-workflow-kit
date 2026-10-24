@@ -100,6 +100,14 @@ dl_case "link after a list fence checked"           1 README.md '1. x
 dl_case "escaped backticks are no code span"        1 README.md '\`[a](gone.md)\`' 'README.md:1: broken link: gone.md'
 dl_case "escaped backslash before a span opener"    0 README.md '\\`[a](gone.md)`' ''
 dl_case "removed span cannot join a link"           0 README.md '[a]`code`(gone.md)' ''
+dl_case "quoted fence inside a top-level fence"     0 README.md '```markdown
+> ```
+[a](gone.md)
+```' ''
+dl_case "unclosed quoted fence ends with the quote" 1 README.md '> ```
+> x
+
+[a](gone.md)' 'README.md:4: broken link: gone.md'
 dl_case "runs of unequal length do not close"       1 README.md '``x` [a](gone.md)' 'broken link: gone.md'
 }
 dl_case "untracked file not checked"                 0 README.md '' ''

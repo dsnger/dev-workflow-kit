@@ -470,8 +470,8 @@ The commit message starts with `WIP`, but the call is not the plain form, so if 
 repository's HEAD or its reflog, the hook clears the pass counters after it (see When the
 counters reset, above). The reminder then adds: *This call is not
 counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD
-and its reflog unchanged. From then on the hook count is lower than your cycle passes; when you
-compare the two, name this call as the cause. A WIP commit is one git commit -m 'WIP: <subject>'
+and its reflog unchanged. If they are cleared, the hook count is from then on lower than your
+cycle passes; when you compare the two, name this call as the cause. A WIP commit is one git commit -m 'WIP: <subject>'
 Bash call with a plain subject, run from the repository, and nothing else in the call but one
 leading git add <paths> &&: a command chained before or after it (x && git commit ..., git
 commit ...; y), a second line, cd, git -C or a heredoc is not, so stage in the call before;* then a

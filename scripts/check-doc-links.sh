@@ -60,15 +60,20 @@ anchors() {
 # The Markdown file $1 with fenced code blocks blanked and one-line code spans replaced by a
 # space, one output line per input line, so grep's line numbers stay right. A fence is found
 # after any leading blockquote `>` and list markers and any indent, so one inside a list or quote
-# counts too (and an indented code line made of backticks is taken for a fence).
+# counts too (and an indented code line made of backticks is taken for a fence). A fence in a list
+# item that is never closed runs on past the list's end.
 strip_code() {
   awk '
-    { t = $0; sub(/\r$/, "", t); while (sub(/^[ \t]*(>|[-*+][ \t]|[0-9]+[.)][ \t])/, "", t)) ; sub(/^[ \t]+/, "", t) }
+    { t = $0; sub(/\r$/, "", t); q = (t ~ /^[ \t]*>/); w = t; sub(/^[ \t]+/, "", w)
+      while (sub(/^[ \t]*(>|[-*+][ \t]|[0-9]+[.)][ \t])/, "", t)) ; sub(/^[ \t]+/, "", t) }
+    # a fence opened in a blockquote ends with the quote; one opened outside a quote closes only
+    # on a fence line without a `>`, so a quoted fence inside a code sample stays sample text
+    fl > 0 && fq && !q { fl = 0 }
     # a backtick fence has no backtick after its opening run; with one, the line is a code span
     fl == 0 && match(t, /^(```+|~~~+)/) && !(t ~ /^`/ && index(substr(t, RLENGTH + 1), "`")) {
-      fl = RLENGTH; fc = substr(t, 1, 1); print ""; next }
-    fl > 0 { sub(/[ \t]+$/, "", t)
-             if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
+      fl = RLENGTH; fc = substr(t, 1, 1); fq = q; print ""; next }
+    fl > 0 { c = fq ? t : w; sub(/[ \t]+$/, "", c)
+             if (c ~ /^(```+|~~~+)$/ && substr(c, 1, 1) == fc && length(c) >= fl) fl = 0
              print ""; next }
     {
       out = ""; s = $0

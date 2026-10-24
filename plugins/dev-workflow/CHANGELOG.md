@@ -29,9 +29,10 @@ Field cases from the 0.42 rollout (2026-10-23/24). Minor, not patch: the scaffol
 again.
 
 - **Link checker skips code.** `scripts/check-doc-links.sh`, and its 2.21 copy, ignore links inside
-  fenced code blocks and inside a code span that opens and closes on one line. Field: 20 false hits
+  fenced code blocks (also in a list or blockquote) and inside a code span that opens and closes on
+  one line. Field: 20 false hits
   from code samples in plans in one project, 7 in another, all inside code. A code span over several
-  lines and indented code blocks are still checked. Nine new suite cases.
+  lines and indented code blocks are still checked. Seventeen new suite cases.
 - **Skip dated records.** 2.21 now asks which folders hold dated or historical records and passes
   each as a skip prefix. Field: 31 hits in one project, all in such records.
 - **Hook count, said while it can be read.** Every non-WIP commit check prints
@@ -40,7 +41,7 @@ again.
 - **Chained WIP commit, named plainly.** The hook still does not keep the count across a WIP commit
   chained with anything but one leading `git add` (invariant 2: in doubt, reset). Its sentence now
   names the shapes (`x && git commit …`, `git commit …; y`, a second line) and says the hook count
-  will then be lower than the cycle's passes. Field: two cycles each lost one pass this way. New
+  is lower than the cycle's passes once a reset follows. Field: two cycles each lost one pass this way. New
   suite cases m23 pin the three shapes.
 - **Empty Codex failure.** The failure note tells the session to probe `codex exec` directly from
   the same session and to `echo $CODEX_HOME`; a usage-limit answer is the missing-access stop.
