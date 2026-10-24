@@ -2128,6 +2128,10 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   fenced sample ends the fence; a link sample after it is reported and the real closer opens a new
   fence. Fix: read closers with indent relative to the opener (CommonMark: up to three spaces), add the
   regression, keep 4l identical. *Trigger: a field report of a false hit or missed link from it.*
+- [ ] **CHANGELOG 0.43.0: the backtick-target limit is stated more loosely than the script header**
+  (Gate B cycle k0421p3, pass 3 spec #1, Minor, accepted, not repaired). The entry omits "one-line" and
+  that an unmatched backtick stays literal and is checked; `scripts/check-doc-links.sh`'s header has the
+  exact wording. *Trigger: the next CHANGELOG edit.*
 - [x] Done 2026-10-24 (SFX #64). **SFX follow-ups (outside this repo):** link the report from SFX (pilot story AC-10, the
   orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
   left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
