@@ -22,6 +22,33 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.43.0
+
+Field cases from the 0.42 rollout (2026-10-23/24). Minor, not patch: the scaffolded link checker
+(`/workflow-init` 2.21) changes behaviour, and a project gets it only by running `/workflow-init`
+again.
+
+- **Link checker skips code.** `scripts/check-doc-links.sh`, and its 2.21 copy, ignore links inside
+  fenced code blocks (also in a list or blockquote) and inside a code span that opens and closes on
+  one line. Field: 20 false hits
+  from code samples in plans in one project, 7 in another, all inside code. A code span over several
+  lines and indented code blocks are still checked. A link whose target holds a closed code span (a backtick pair in a file name) is not checked (documented limit). Twenty new suite cases.
+- **Skip dated records.** 2.21 now asks which folders hold dated or historical records and passes
+  each as a skip prefix ending in `/`. Field: 31 hits in one project, all in such records.
+- **Hook count, said while it can be read.** Every non-WIP commit check prints
+  `ℹ Gate-B hook count before this commit: <n> (a commit that lands may clear it)` while the cycle has a count
+  (`unknown` when the count file cannot be read). Field: a report said "unverified" because it read the state after the closing commit removed it.
+- **Chained WIP commit, named plainly.** The hook still does not keep the count across a WIP commit
+  chained with anything but one leading `git add` (invariant 2: in doubt, reset). Its sentence now
+  names the shapes (`x && git commit …`, `git commit …; y`, a second line) and says the hook count
+  is lower than the cycle's passes once a reset follows. Field: two cycles each lost one pass this way. New
+  suite cases m23 pin the three shapes.
+- **Empty Codex failure.** The failure note tells the session to probe `codex exec` directly from
+  the same session and to `echo $CODEX_HOME`; a usage-limit answer is the missing-access stop.
+  Field: an empty `success:false` three times was a usage limit on a per-account `CODEX_HOME`.
+  `docs/reference.md` § Hook messages has the new entry. The gate rules are unchanged (9,995 of
+  10,000 bytes).
+
 ## 0.42.0
 
 Living docs, adopted from the SFX pilot (story

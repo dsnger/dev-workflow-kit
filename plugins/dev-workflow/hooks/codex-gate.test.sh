@@ -1171,6 +1171,22 @@ for r in run nojq_run; do
   clife "$r" "git add wip.txt && git commit -q -m 'WIP: c6'"
   [ "$subj" = 'WIP: from a hook' ] && [ ! -f "$count" ] && pass "m22 $r: chained WIP, then a hook commits again: reset" || fail "m22 $r: chained WIP, then a hook commits again: reset"
   rm -f "$hooksd/post-commit"
+  # (m23) the field shapes (2026-10-23/24: a chained WIP commit, hook count one short): a command
+  # before the commit, one after it, and two lines. Each lands and resets; the sentence before it
+  # names the shape and the consequence, and the count note gives the count still readable.
+  for c in "true && git commit -q --allow-empty -m 'WIP: s1'" "git commit -q --allow-empty -m 'WIP: s2'; true"; do
+    clife "$r" "$c"
+    [ "$moved" = yes ] && [ ! -f "$count" ] && printf '%s' "$pre" | grep -qF 'a command chained before or after it' \
+      && printf '%s' "$pre" | grep -qF 'Gate-B hook count before this commit: 2 credited' \
+      && pass "m23 $r: chained WIP lands, reset, shape and count said: $c" || fail "m23 $r: chained WIP lands, reset, shape and count said: $c"
+  done
+  reset_all; rev; rev; execp
+  pre=$($r '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t23","tool_input":{"command":"git add wip.txt\ngit commit -q -m '"'"'WIP: s3'"'"'"}}')
+  before=$(git rev-parse HEAD); printf 'x\n' >> wip.txt
+  git add wip.txt >/dev/null 2>&1; git commit -q -m 'WIP: s3' >/dev/null 2>&1
+  $r '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"toolu_t23","tool_input":{"command":"git add wip.txt\ngit commit -q -m '"'"'WIP: s3'"'"'"}}' >/dev/null
+  [ "$(git rev-parse HEAD)" != "$before" ] && [ ! -f "$count" ] && printf '%s' "$pre" | grep -qF 'a second line' \
+    && pass "m23 $r: two-line WIP commit lands, reset, shape said" || fail "m23 $r: two-line WIP commit lands, reset, shape said"
 done
 rm -f .context/codex-gate.wipBase.*
 git rm -q --cached -- wip2.txt 'wip 2.txt' --amend >/dev/null 2>&1; rm -f wip2.txt 'wip 2.txt' ./--amend
@@ -1604,6 +1620,10 @@ json_field() { # $1 = json text, $2 = key -> prints the string value. No jq requ
   printf '%s' "$1" | grep -o "\"$2\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n1 | sed 's/^.*:[[:space:]]*"\(.*\)"$/\1/'
 }
 
+# The count note every non-WIP commit check adds while the cycle has a Gate-B count (0.43.0)
+cnote_ctx() { printf ' — Gate-B hook count before this commit: %s credited pass(es). A commit that lands and is not kept as WIP clears it, so take the count for any comparison with your cycle line from this message: afterwards it may be gone.' "$1"; }
+cnote_msg() { printf ' ℹ Gate-B hook count before this commit: %s (a commit that lands may clear it)' "$1"; }
+
 # 29a. STALE branch: 1 recorded pass this cycle, default floor 3, no CLAUDE.md (so the
 #      generic policy phrase), a change made through the Edit tool.
 # A `rev` baseline is required before the edit: without one, `reviewed` is empty and
@@ -1617,8 +1637,8 @@ ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
 expected_ctx="Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw (1 recorded pass(es) this cycle). Usually the working tree or the index changed since the review. Next: a fresh Gate-B pass, and when this cycle may run one is this project's review policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, other causes and checks: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. Per this project's review policy you MUST re-review after every fix."
 expected_msg="⚠ Codex Gate B: cannot confirm reviewed content"
-[ "$ctx" = "$expected_ctx" ] && pass "stale additionalContext matches exactly" || fail "stale additionalContext matches exactly"
-[ "$msg" = "$expected_msg" ] && pass "stale systemMessage matches exactly" || fail "stale systemMessage matches exactly"
+[ "$ctx" = "$expected_ctx$(cnote_ctx 1)" ] && pass "stale additionalContext matches exactly" || fail "stale additionalContext matches exactly"
+[ "$msg" = "$expected_msg$(cnote_msg 1)" ] && pass "stale systemMessage matches exactly" || fail "stale systemMessage matches exactly"
 git checkout -- app.ts >/dev/null 2>&1
 
 # 29b. HOOK-CHECKS-PASSED branch: 3/3 passes this cycle, all 3 fresh (unchanged tree). The hook
@@ -1630,8 +1650,8 @@ ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
 expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them."
 expected_msg="✓ Codex Gate B hook checks passed (3/3 cycle, 3 on current fingerprint)"
-[ "$ctx" = "$expected_ctx" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-checks-passed additionalContext matches exactly"
-[ "$msg" = "$expected_msg" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-passed systemMessage matches exactly"
+[ "$ctx" = "$expected_ctx$(cnote_ctx 3)" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-checks-passed additionalContext matches exactly"
+[ "$msg" = "$expected_msg$(cnote_msg 3)" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-passed systemMessage matches exactly"
 
 # 29c. EMPTY-STATE branch: no fingerprint recorded this cycle, default floor 3.
 reset_all
@@ -1659,9 +1679,9 @@ exact_pair() { # $1 = label, $2 = output, $3 = expected ctx, $4 = expected msg
   [ "$(json_field "$2" systemMessage)" = "$4" ] && pass "$1 systemMessage matches exactly" || fail "$1 systemMessage matches exactly"
 }
 reset_all; rev
-exact_pair "Gate B below floor" "$(run "$commitp")" "$belowB_ctx" "$belowB_msg"
+exact_pair "Gate B below floor" "$(run "$commitp")" "$belowB_ctx$(cnote_ctx 1)" "$belowB_msg$(cnote_msg 1)"
 reset_all; nojq_run "$(payload mcp__codex__review "$(resp_success)")" >/dev/null
-exact_pair "Gate B below floor (jq-free)" "$(nojq_run "$commitp")" "$belowB_ctx" "$belowB_msg"
+exact_pair "Gate B below floor (jq-free)" "$(nojq_run "$commitp")" "$belowB_ctx$(cnote_ctx 1)" "$belowB_msg$(cnote_msg 1)"
 reset_all; execp
 exact_pair "Gate A below floor" "$(run "$skillp")" "$belowA_ctx" "$belowA_msg"
 reset_all; nojq_run "$(payload mcp__codex__exec "$(resp_success)")" >/dev/null
@@ -1673,6 +1693,15 @@ out=$(run "$commitp")
 printf '%s' "$out" | grep -qF 'below floor (3/5): may close after a zero-finding pass' && ! printf '%s' "$out" | grep -qF 'only if' \
   && pass "floor override 5 at 3 passes -> no 'only if' closure claim" || fail "floor override 5 at 3 passes -> no 'only if' closure claim"
 rm -f "$floorf"
+reset_all; rev; rev; rev
+# A malformed count file is reported as unknown by the count note, never as 0 (PR #96)
+for bad in 'x\n' '3 \n' '1 2'; do
+  reset_all; rev; printf '%b' "$bad" > "$count"
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'Gate-B hook count before this commit: unknown (the count file cannot be read) credited' \
+    && ! printf '%s' "$out" | grep -qF 'before this commit: 0' \
+    && pass "count note: malformed count file ($bad) -> unknown, not 0" || fail "count note: malformed count file ($bad) -> unknown, not 0"
+done
 reset_all; rev; rev; rev
 
 # 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
@@ -2569,7 +2598,8 @@ golden() { # $1 = label, $2 = document, $3 = expected ctx, $4 = expected msg
   [ "$_g" = "$4" ] && pass "$1: msg exact" || fail "$1: msg exact (got [$_g])"
 }
 
-G_FAILURE_CTX='Claude via Claude Code — gate hook. <state>this Codex call returned an envelope reporting failure.</state> <consequence>Not counted as a gate pass, no review fingerprint stored, does not count toward the floor.</consequence> <next>Read error.code in the tool result. CODEX_EXECUTION_FAILED is the pinned server generic failure code and does NOT tell you whether the call started, so check the accompanying error message and any session artifacts before assuming nothing ran; a call that did start may have left work behind. CODEX_TIMEOUT means the executor gave up mid-run: re-run the SAME call with the SAME scope. Any other code, or no code at all, is unclassified: this state covers every envelope the hook managed to route AND read as carrying success false as its first property, which is not limited to the two codes named here — routing, locating the result text and the raw key spelling each gate it, and an envelope failing any of those lands in a different state instead. So re-run once with the same scope and, if it repeats, report the code and message verbatim together with the effective server name and version from claude mcp list — an unfamiliar code is itself evidence about which server answered. Never retry with a narrower instruction or a smaller range, because that would count a pass for less than the artifact or diff the gate requires. Report one line: \"gate pass discarded | error-code | started yes/no/unknown\". Before re-running, delete the target findings file for the pass and confirm it is gone — both branch files for a full Gate-B re-run, only the failed branch for a single-branch resume. The checks on that file establish its structure — terminator present, count matching, nothing but finding lines — and not which run produced it.</next> <stop>One retry per pass is the whole recovery budget under CLAUDE.md section 5. If the retry also fails, stop and surface that line; the operator note carries the configuration remedy.</stop>'
+# shellcheck disable=SC2016  # $CODEX_HOME is text for the reader to run, not expanded here
+G_FAILURE_CTX='Claude via Claude Code — gate hook. <state>this Codex call returned an envelope reporting failure.</state> <consequence>Not counted as a gate pass, no review fingerprint stored, does not count toward the floor.</consequence> <next>Read error.code in the tool result. CODEX_EXECUTION_FAILED is the pinned server generic failure code and does NOT tell you whether the call started, so check the accompanying error message and any session artifacts before assuming nothing ran; a call that did start may have left work behind. CODEX_TIMEOUT means the executor gave up mid-run: re-run the SAME call with the SAME scope. Any other code, or no code at all, is unclassified: this state covers every envelope the hook managed to route AND read as carrying success false as its first property, which is not limited to the two codes named here — routing, locating the result text and the raw key spelling each gate it, and an envelope failing any of those lands in a different state instead. When the message is empty, run a direct probe from this same session before the retry: codex exec --skip-git-repo-check \"Reply with OK\" </dev/null, and echo $CODEX_HOME (empty means the default home, ~/.codex). A usage-limit answer is missing access: stop and tell the human, naming that home, because a probe from another session can use another account and say OK. Otherwise re-run once with the same scope and, if it repeats, report the code and message verbatim together with the effective server name and version from claude mcp list — an unfamiliar code is itself evidence about which server answered. Never retry with a narrower instruction or a smaller range, because that would count a pass for less than the artifact or diff the gate requires. Report one line: \"gate pass discarded | error-code | started yes/no/unknown\". Before re-running, delete the target findings file for the pass and confirm it is gone — both branch files for a full Gate-B re-run, only the failed branch for a single-branch resume. The checks on that file establish its structure — terminator present, count matching, nothing but finding lines — and not which run produced it.</next> <stop>One retry per pass is the whole recovery budget under CLAUDE.md section 5. If the retry also fails, stop and surface that line; the operator note carries the configuration remedy.</stop>'
 G_FAILURE_MSG='⚠ Codex call failed — not counted as a gate pass. If the code was CODEX_TIMEOUT, the fix is configuration and only you can apply it: raise the executor timeout for the Codex MCP server, or reduce load outside the review. Do not ask for a smaller review scope — a narrower pass is worth less than a slow one.'
 G_NORESULT_CTX='Claude via Claude Code — gate hook. <state>this gate call carried no result text the hook could read.</state> <consequence>Not counted as a gate pass, no review fingerprint stored.</consequence> <next>Treat the pass as not run and report it. Report one line: \"gate call unreadable | mapped yes/no from .context/codex-gate.tools | claude-code version\". Before re-running, delete the target findings file for the pass and confirm it is gone — both branch files for a full Gate-B re-run, only the failed branch for a single-branch resume. The checks on that file establish its structure — terminator present, count matching, nothing but finding lines — and not which run produced it.</next> <stop>One retry per pass is the whole recovery budget under CLAUDE.md section 5. A repeat is configuration or contract, not a transient failure, so stop and surface it; the operator note carries both checks.</stop>'
 # shellcheck disable=SC2016  # a literal copy of a shipped prompt; the backticks are its own
@@ -3250,7 +3280,9 @@ two_lines() { # $1 = label, $2 = captured output, $3 = max additionalContext len
     || fail "43g: $1 additionalContext within $3 chars (got ${#_c})"
 }
 reset_all; rev
-two_lines "Gate B below floor" "$(commitpre)" 260
+# the count note (0.43.0) is a message of its own beside the reminder, so its length is added
+cn=$(cnote_ctx 1)
+two_lines "Gate B below floor" "$(commitpre)" $((260 + ${#cn}))
 reset_all; execp
 two_lines "Gate A below floor" "$(skillpre)" 260
 reset_all; execp; execp; execp
@@ -3590,7 +3622,7 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
-wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, heredoc, or chain other than one leading git add <paths> &&; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
+wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged. If they are cleared, the hook count is from then on lower than your cycle passes; when you compare the two, name this call as the cause. A WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, and nothing else in the call but one leading git add <paths> &&: a command chained before or after it (x && git commit ..., git commit ...; y), a second line, cd, git -C or a heredoc is not, so stage in the call before. Causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
   # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here

@@ -1,0 +1,1 @@
+1 | fixed | class regenerating across bot and gate passes (backticks in link targets); mechanism deleted: the guard is removed, and a backtick inside a link target is a documented limit in the script header

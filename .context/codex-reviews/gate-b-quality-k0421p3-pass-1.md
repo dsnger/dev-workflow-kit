@@ -1,0 +1,2 @@
+MINOR | high | scripts/check-doc-links.sh:99; plugins/dev-workflow/commands/workflow-init.md:1936 | The new label regex rejects nested or escaped closing brackets: `[API [v1]](docs/notes`old`.md)` is checked at base but silently skipped at head | Backticks in these valid link targets become code spans, hiding broken links | Recognize nested and escaped label brackets while retaining the bare `](` regression; add coverage for both label forms
+END OF FINDINGS (1 total)

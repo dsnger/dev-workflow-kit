@@ -1,0 +1,2 @@
+MINOR | high | scripts/check-doc-links.sh:99; plugins/dev-workflow/commands/workflow-init.md:1936 | The narrowed guard rejects nested bracket labels: `[array[index]](notes`old`.md)` loses its backtick span | Head silently accepts this missing target; base correctly reports it broken, contradicting the retained filename-preservation claim | Recognize nested bracket labels while excluding bare `](`, and add a regression test.
+END OF FINDINGS (1 total)
