@@ -2122,6 +2122,12 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   point to `docs/ARCHITECTURE.md`. SFX's 0.39.0 adoption (`e8d1e06`) put the old sentence back over the
   pilot's. Fix with the adoption story above, or earlier as a ticket. *Trigger: the adoption story, or the
   next `/workflow-init` template change.*
+- [ ] **Link checker: an indented backtick line inside a fence closes it** (Gate B cycle k0421fc, pass 4
+  quality #1, Minor, accepted, not repaired). `strip_code` in `scripts/check-doc-links.sh` (and the 2.21
+  copy) drops all indent before reading a closer, so a four-space-indented ```` ``` ```` line inside a
+  fenced sample ends the fence; a link sample after it is reported and the real closer opens a new
+  fence. Fix: read closers with indent relative to the opener (CommonMark: up to three spaces), add the
+  regression, keep 4l identical. *Trigger: a field report of a false hit or missed link from it.*
 - [x] Done 2026-10-24 (SFX #64). **SFX follow-ups (outside this repo):** link the report from SFX (pilot story AC-10, the
   orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
   left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
