@@ -83,6 +83,8 @@ dl_case "link inside a code span skipped"           0 README.md 'see `[a](gone.m
 dl_case "double-backtick span holding a backtick"   0 README.md '``[a](gone.md) ` x``' ''
 dl_case "link after a code span checked"            1 README.md '`x` [a](gone.md)' 'README.md:1: broken link: gone.md'
 dl_case "unclosed backtick is text, link checked"   1 README.md '`x [a](gone.md)' 'README.md:1: broken link: gone.md'
+dl_case "one-line triple-backtick span is no fence"  1 README.md '```x``` y
+[a](gone.md)' 'README.md:2: broken link: gone.md'
 dl_case "runs of unequal length do not close"       1 README.md '``x` [a](gone.md)' 'broken link: gone.md'
 }
 dl_case "untracked file not checked"                 0 README.md '' ''

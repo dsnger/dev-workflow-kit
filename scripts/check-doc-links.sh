@@ -61,7 +61,9 @@ anchors() {
 strip_code() {
   awk '
     { t = $0; sub(/\r$/, "", t); sub(/^ ? ? ?/, "", t) }
-    fl == 0 && match(t, /^(```+|~~~+)/) { fl = RLENGTH; fc = substr(t, 1, 1); print ""; next }
+    # a backtick fence has no backtick after its opening run; with one, the line is a code span
+    fl == 0 && match(t, /^(```+|~~~+)/) && !(t ~ /^`/ && index(substr(t, RLENGTH + 1), "`")) {
+      fl = RLENGTH; fc = substr(t, 1, 1); print ""; next }
     fl > 0 { sub(/[ \t]+$/, "", t)
              if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
              print ""; next }
