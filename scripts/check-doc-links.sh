@@ -96,7 +96,7 @@ strip_code() {
         if (k % 2) { out = pre "`"; s = substr(s, RSTART + 1); continue }
         n = RLENGTH; out = pre; run = substr(s, RSTART, n)
         # inside a link target a backtick is part of the file name, not a code span
-        if (pre ~ /[]][(][^)( ]*$/) { out = pre run; s = substr(s, RSTART + n); continue }
+        if (pre ~ /[[][^]]*[]][(][^)( ]*$/) { out = pre run; s = substr(s, RSTART + n); continue }
         s = substr(s, RSTART + n); r = s; c = 0
         while (match(r, /`+/)) { if (RLENGTH == n) { c = 1; break }; r = substr(r, RSTART + RLENGTH) }
         # a run with no closing run of the same length is literal text, as CommonMark reads it
