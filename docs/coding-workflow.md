@@ -116,7 +116,11 @@ restated at the top, and the plan names its sources, its impact boundary and its
 handover boundary. It also lists each run it expects to take 45 minutes or more (a
 full end-to-end suite, a screenshot compare): what the run proves, its estimated
 duration and how often it runs; evidence run on the final head counts in the unit that runs
-it. It lists every action outside the repository that needs a human's approval (a file in
+it. Each such run also names a time limit per stage, cleans up its helper processes on any exit,
+and, where its stages are independent, records every failure in one run rather than stopping at
+the first. Why, from the field: a stage hung 6 h 24 min at 0 % CPU with no limit; CPU-burning
+helpers outlived their test until a trap was added, at a load of 330; and a measurement run stopped
+at its first setup error four times in a row, 16 to 75 minutes each. It lists every action outside the repository that needs a human's approval (a file in
 the home directory, an account, a paid run), so they are asked for together when the plan
 closes rather than one at a time mid-build. The handover boundary then falls so that no unit
 carries more than 2 hours of those runs, with earlier boundaries after completed tasks

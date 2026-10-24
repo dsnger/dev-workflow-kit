@@ -83,7 +83,7 @@ Ground progress claims: before reporting a step as done, audit the claim against
 ### Spec, plan and code — what each decides
 
 - **Spec:** intended behaviour and scope; boundaries and shared contracts; significant architecture and security decisions; acceptance criteria. Internal implementation stays open where those commitments permit.
-- **Plan**, per meaningful step: the outcome; affected components and existing implementation to reuse; prerequisites, order and the decisions that must already be settled; concrete test situations with expected outcomes, including relevant failures; the implementer's remaining decision space. The plan also lists each run it expects to take 45 minutes or more (its name, what it proves, an estimated duration and how often it runs; evidence run on the final head counts in the unit that runs it), names its handover boundary, carries a short **Sources and impact boundary** note and lists every action outside the repository that needs the human (a file under the home directory, an account, a paid run).
+- **Plan**, per meaningful step: the outcome; affected components and existing implementation to reuse; prerequisites, order and the decisions that must already be settled; concrete test situations with expected outcomes, including relevant failures; the implementer's remaining decision space. The plan also lists each run it expects to take 45 minutes or more (its name, what it proves, an estimated duration and how often it runs; a time limit per stage, cleanup of its helper processes on any exit, and, where stages are independent, every failure recorded in one run; evidence run on the final head counts in the unit that runs it), names its handover boundary, carries a short **Sources and impact boundary** note and lists every action outside the repository that needs the human (a file under the home directory, an account, a paid run). Why the long-run items: a stage with no limit hung for hours, leftover helpers overloaded the machine, and a run that stopped at its first error took four reruns.
 - **Code:** function bodies, complete tests and routine local choices. A short algorithm sketch or a bounded feasibility probe belongs in a plan only where it resolves a named uncertainty.
 
 Why: code written into a plan is written and reviewed twice, and a plan review then spends its passes on that code instead of on missing decisions.
@@ -120,6 +120,14 @@ Why it is separate: inline, it pushed the instruction files past Claude Code's
 150k-character limit. Why under `.claude/`: the gate hook treats that path as a prompt,
 so editing the rules fires Gate B. Under `docs/` the edit would read as prose and get
 no gate.
+
+**Before the session's first Codex call,** run `echo $CODEX_HOME` (empty means `~/.codex`) and
+`codex exec --skip-git-repo-check "Reply with OK" </dev/null` in this session, with a two-minute
+timeout. Exit 0 with `OK` is access. A usage-limit or authentication reply is missing access, a
+stop in §4: quote it and name that home. Any other result (`codex` not found, an empty reply, a
+timeout) is undetermined: say so with the output
+and go on; an empty gate error then follows the gate hook's message for it. Why: an account at its limit
+showed only as empty gate failures, and another session may use another account.
 
 ## 6. Context Canary
 

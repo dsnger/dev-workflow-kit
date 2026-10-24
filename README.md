@@ -40,7 +40,7 @@ You see: `echo $CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS` prints `0`.
 
 Do: in Claude Code at the project root, type `/dev-workflow:workflow-init`. When it asks to set up Codex now, say "not now".
 
-You see: a status block, one line per written file, an interview for `AGENTS.md`, and a closing checklist. It also asks whether the project takes living docs (documents that stay current with every change, [reference](docs/reference.md#workflow-init)); yes is recommended. With yes, it also asks which folders hold old dated records (plans, reports, archives), so its link check skips them.
+You see: a status block, one line per written file, an interview for `AGENTS.md`, and a closing checklist. It also asks whether the project takes living docs (documents that stay current with every change, [reference](docs/reference.md#workflow-init)); yes is recommended. With yes, it also asks which folders hold only old dated records (reports, replays, archives; not a folder that also holds current specs), so its link check skips them.
 
 **5. Connect Codex.**
 
@@ -69,6 +69,7 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | PR bot comments | `/dev-workflow:process-pr-review <pr-number>` | [guide](docs/getting-started.md#pr-bot-comments) |
 | Recurring finding | `/dev-workflow:harden-finding` | [guide](docs/getting-started.md#a-finding-that-keeps-coming-back) |
 | Discuss an idea | `/dev-workflow:sparring <question>`, in a new chat | [guide](docs/getting-started.md#discuss-an-idea-first) |
+| Old worktrees pile up | `sh scripts/worktree-cleanup.sh <repo>` from a kit checkout; `--remove` deletes only merged, clean worktrees without a live session. Run it yourself or from the orchestrator, never from a session inside one of them | [reference](docs/reference.md#reports) |
 | Update the plugin | `claude plugin marketplace update dev-workflow-kit`, then `claude plugin update dev-workflow@dev-workflow-kit` | [setup step 10](docs/setup.md#10-update-the-plugin-later) |
 
 More: [why](docs/coding-workflow.md), [reference](docs/reference.md), [layout](docs/ARCHITECTURE.md).
