@@ -24,7 +24,7 @@
 # apart from a typo); links inside fenced code blocks (also inside a list or blockquote) or
 # inside a code span that opens and closes on one line (both skipped, since they are code
 # samples, not links); a code span over several lines and indented code blocks (checked like
-# any other line); external URLs; targets
+# any other line); a link whose target holds a backtick (read as a code span, so not checked); external URLs; targets
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
@@ -95,8 +95,6 @@ strip_code() {
         while (k < length(pre) && substr(pre, length(pre) - k, 1) == "\\") k++
         if (k % 2) { out = pre "`"; s = substr(s, RSTART + 1); continue }
         n = RLENGTH; out = pre; run = substr(s, RSTART, n)
-        # inside a link target a backtick is part of the file name, not a code span
-        if (pre ~ /[[][^]]*[]][(][^)( ]*$/) { out = pre run; s = substr(s, RSTART + n); continue }
         s = substr(s, RSTART + n); r = s; c = 0
         while (match(r, /`+/)) { if (RLENGTH == n) { c = 1; break }; r = substr(r, RSTART + RLENGTH) }
         # a run with no closing run of the same length is literal text, as CommonMark reads it

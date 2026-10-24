@@ -32,7 +32,7 @@ again.
   fenced code blocks (also in a list or blockquote) and inside a code span that opens and closes on
   one line. Field: 20 false hits
   from code samples in plans in one project, 7 in another, all inside code. A code span over several
-  lines and indented code blocks are still checked. A backtick inside a link target stays part of the file name. Twenty-one new suite cases.
+  lines and indented code blocks are still checked. A link whose target holds a backtick is not checked (documented limit). Twenty new suite cases.
 - **Skip dated records.** 2.21 now asks which folders hold dated or historical records and passes
   each as a skip prefix ending in `/`. Field: 31 hits in one project, all in such records.
 - **Hook count, said while it can be read.** Every non-WIP commit check prints

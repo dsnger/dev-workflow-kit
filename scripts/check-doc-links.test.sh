@@ -116,7 +116,6 @@ dl_case "closed list-and-quote fence, link after"  1 README.md '- > ```
   > ```
 
 [a](gone.md)' 'README.md:5: broken link: gone.md'
-dl_case "backticks in a link target are a file name" 1 README.md '[a](docs/notes`old`.md)' 'broken link: docs/notes`old`.md'
 dl_case "bare ]( before a code span is no target"   0 README.md '](`[a](gone.md)`)' ''
 dl_case "runs of unequal length do not close"       1 README.md '``x` [a](gone.md)' 'broken link: gone.md'
 }
