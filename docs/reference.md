@@ -165,8 +165,10 @@ What `/dev-workflow:workflow-init` does, in order:
   `whatWasImplemented`, the pull request body and the handover, with a size soft alarm past
   10,000 bytes (never a failure) and effort stamped per piece. The checker resolves relative links
   and their heading fragments, and skips links inside fenced code blocks and one-line code spans
-  (code samples, not links; since 0.43.0). It asks which folders hold dated or historical records and
-  passes each as a skip prefix, since those cite paths as they were. Take it into the quality command. Nothing is written as an empty
+  (code samples, not links; since 0.43.0). It asks which folders hold only dated or historical records
+  and passes each as a skip prefix, since those cite paths as they were; a folder that also holds
+  current specs, plans or feature docs is named by its dated subfolder instead (since 0.44.0:
+  `docs/superpowers/` holds current specs, and skipping it hid their broken links in one project). Take it into the quality command. Nothing is written as an empty
   template, and nothing is deleted: to switch off, remove `.claude/living-docs.md` and its map
   line. It reports `living docs: incomplete — <part>` when the rules file, the `CLAUDE.md`
   paragraph, the map line or the checker differs from what the kit writes. **Not covered**, because
@@ -465,6 +467,8 @@ usage limit … try again at …" is missing access, one of the stops in `CLAUDE
 the human, naming that home. Why
 the same session: a tool that starts sessions per account (Orca, for example) sets `CODEX_HOME` to
 a per-account home, so a probe from another session can use another account and answer OK.
+Since 0.44.0 every session also runs this probe once before its first gate call (scaffolded
+`CLAUDE.md` §5), so a usage limit shows before the first gate instead of as empty failures.
 
 **Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).
 The commit message starts with `WIP`, but the call is not the plain form, so if it moves this
@@ -709,3 +713,27 @@ All of these are read-only unless stated.
     intervals, because the watcher stopped or keeps failing, it shows `stale: no successful
     refresh observed within three intervals`. A one-shot page never warns, so only its generation
     time tells you how old it is.
+- `sh scripts/worktree-cleanup.sh [--remove [--discard-ignored]] [--root <dir>]... [<repo>]`
+  reports the linked worktrees and local branches of any repository (not only this one): merged
+  (`ancestor`, or `pr#<n>` when a merged PR's head equals the tip, asked of `gh`), dirty, ignored
+  files outside `.context/`, commits not on any remote, age, and a live session (a process whose
+  working directory is inside, from `lsof`). Without `gh` or `lsof` those answers read `unknown`.
+  Report mode changes nothing but a lock directory under the git common dir. `--remove` deletes
+  only rows marked `removable`: inside `<main>/.claude/worktrees/`, `<main>/.worktrees/` or a
+  `--root`, merged, clean, no session, no ignored files unless `--discard-ignored`. It first copies
+  the worktree's `.context/` to `<main>/.context/archive-worktree-<name>`, rechecks, removes the
+  worktree without `--force`, then deletes the branch only if it still points at the reported
+  commit. Remote branches are never touched. Run `git fetch --prune` first.
+  - **Who runs it.** The orchestrator or the human, after closing the sessions in those worktrees;
+    never the session working in one of them. A session whose worktree is removed under it keeps
+    running plugin hooks, which then write into a deleted path or fall back to the main checkout
+    (field case 2026-10-22: a hook committed the main checkout's files after its worktree was gone).
+  - **Keep the repository still during `--remove`.** Close the sessions in the worktrees it will
+    remove, and let nothing else check out or move branches until it ends. Two moments stay open,
+    each between two adjacent `git` calls: a process starting in a worktree, or a file written
+    there, after the recheck and before the removal (the process loses its directory, the file is
+    deleted); and a checkout of the branch in another worktree after the last checkout check and
+    before the branch is deleted (that worktree is left on a branch with no ref; its commits are
+    kept, since the tip is merged). A path with bytes outside printable ASCII or a backslash reads
+    `session=unknown`, because `lsof` prints such names escaped. The script header lists its other
+    limits.

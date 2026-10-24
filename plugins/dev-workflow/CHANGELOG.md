@@ -22,6 +22,33 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.44.0
+
+Field cases from 2026-10-22 to 2026-10-24 (design
+`docs/superpowers/specs/2026-10-24-kit-044-field-cases-design.md`). Minor: the scaffolded
+`CLAUDE.md` gains two rules and 2.21 a narrower question; a project gets them by running
+`/workflow-init` again.
+
+- **Long runs.** The `CLAUDE.md` template's Plan bullet now asks each listed run of 45 minutes or
+  more for a time limit per stage, cleanup of its helper processes on any exit, and, where stages
+  are independent, every failure recorded in one run. Field: a stage hung 6 h 24 min; helpers
+  outlived their test at load 330; a measurement run stopped at its first setup error four times.
+- **Codex preflight.** `CLAUDE.md` §5 (template and this repo): before the session's first gate
+  call, `echo $CODEX_HOME` and a direct `codex exec` probe; a usage-limit or authentication reply
+  is the missing-access stop. Field: an account at its limit showed only as empty gate failures.
+  The gate rules are unchanged (9,995 of 10,000 bytes).
+- **Skip prefixes.** 2.21 asks for folders that hold only dated records, with examples, and says a
+  folder that also holds current specs or feature docs is named by its dated subfolder instead.
+  Field: one project skipped all of `docs/superpowers/`, current specs included.
+- **Worktree cleanup (repository script, does not ship).** `scripts/worktree-cleanup.sh` reports a
+  repository's worktrees and branches and, with `--remove`, deletes only merged, clean worktrees
+  with no live session inside the repository's worktree roots, archiving each `.context/` first.
+  It never removes a worktree holding the default branch, deletes a symbolic branch ref without
+  following it, and counts untracked and ignored files whatever `status.showUntrackedFiles` says.
+  Run by the orchestrator or the human, never the session inside. Field: cleanup was a script in a
+  scratch directory; one project held 24 stale worktrees. Not in the plugin package, so no
+  installed copy changes; listed here because the release carries it.
+
 ## 0.43.0
 
 Field cases from the 0.42 rollout (2026-10-23/24). Minor, not patch: the scaffolded link checker
@@ -32,7 +59,7 @@ again.
   fenced code blocks (also in a list or blockquote) and inside a code span that opens and closes on
   one line. Field: 20 false hits
   from code samples in plans in one project, 7 in another, all inside code. A code span over several
-  lines and indented code blocks are still checked. A link whose target holds a closed code span (a backtick pair in a file name) is not checked (documented limit). Twenty new suite cases.
+  lines and indented code blocks are still checked. A link whose target holds a closed one-line code span (a backtick pair in a file name) is not checked, while an unmatched backtick stays literal and is checked (documented limit). Twenty new suite cases.
 - **Skip dated records.** 2.21 now asks which folders hold dated or historical records and passes
   each as a skip prefix ending in `/`. Field: 31 hits in one project, all in such records.
 - **Hook count, said while it can be read.** Every non-WIP commit check prints

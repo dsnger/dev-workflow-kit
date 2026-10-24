@@ -1,0 +1,1 @@
+1 | fixed | session_of returns unknown for a path holding bytes outside printable ASCII or a backslash (lsof escapes those), in report and recheck; cases café and a\b; mutation (guard removed) fails both. Real-lsof integration case not added: CI does not guarantee lsof, and the guard does not depend on lsof's escape format.

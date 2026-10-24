@@ -1060,6 +1060,15 @@ backlog.
   orchestrator brief that asks for it; define it there as "the hook's pass count
   (`docs/reference.md`, Comparing the hook's count) equals the cycle line's, cause if not".
 
+- **Adopt 0.44.0 in the projects** (from the 0.44.0 field cases). Trigger: the plugin update to
+  0.44.0 in each project. Re-run `/dev-workflow:workflow-init` so the scaffolded `CLAUDE.md` gets the
+  long-run clause and the Codex preflight; a project that skips a mixed folder (all of
+  `docs/superpowers/`, as plugin-skills does since 2026-10-24) narrows it to its dated subfolders.
+- **Worktree cleanup backlog** (from the 0.44.0 field case 1). Trigger: the orchestrator's next
+  cleanup. Run `sh scripts/worktree-cleanup.sh <repo>` in each project, close the sessions it
+  reports, then `--remove`; this repo's two `agent-*` worktrees are unmerged (2026-10-24 report),
+  so they stay until their owner decides.
+
 ## Someday
 
 - [ ] **P1 — `workflow-status` → `workflow-next`, staged.** Report where a story stands
@@ -2128,7 +2137,7 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   fenced sample ends the fence; a link sample after it is reported and the real closer opens a new
   fence. Fix: read closers with indent relative to the opener (CommonMark: up to three spaces), add the
   regression, keep 4l identical. *Trigger: a field report of a false hit or missed link from it.*
-- [ ] **CHANGELOG 0.43.0: the backtick-target limit is stated more loosely than the script header**
+- [x] Done in 0.44.0. **CHANGELOG 0.43.0: the backtick-target limit is stated more loosely than the script header**
   (Gate B cycle k0421p3, pass 3 spec #1, Minor, accepted, not repaired). The entry omits "one-line" and
   that an unmatched backtick stays literal and is checked; `scripts/check-doc-links.sh`'s header has the
   exact wording. *Trigger: the next CHANGELOG edit.*

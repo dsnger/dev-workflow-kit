@@ -1,0 +1,2 @@
+MINOR | high | scripts/worktree-cleanup.sh:160 | The new bare .context exclusion also suppresses an ignored regular file named .context, while the archive guard only copies directories | Reproduced --remove reporting ignored=0, deleting the worktree and regular file without an archive or --discard-ignored; this regresses the ignored-file protection for this uncommon file shape | Exclude the bare .context entry only when it is a symlink; keep regular files in the ignored count and add a regression assertion
+END OF FINDINGS (1 total)

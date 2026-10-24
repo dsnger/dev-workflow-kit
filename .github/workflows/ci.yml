@@ -96,6 +96,11 @@ jobs:
             --shell=sh scripts/check-doc-links.sh
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh
+          # The worktree cleanup report and its suite.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh scripts/worktree-cleanup.sh
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh
 
       # Two runs, because the hook has to be correct under both shells and the runner's
       # /bin/sh is dash while a contributor's may be bash. HOOK_SH selects the shell the
@@ -128,6 +133,7 @@ jobs:
           sh scripts/live-effort.test.sh
           sh scripts/status-view.test.sh
           sh scripts/check-doc-links.test.sh
+          sh scripts/worktree-cleanup.test.sh
           sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/
 
       # Invariant 12 itself needs a base to diff against, so it runs only on pull
