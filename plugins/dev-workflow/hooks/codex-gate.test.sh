@@ -3271,7 +3271,9 @@ two_lines() { # $1 = label, $2 = captured output, $3 = max additionalContext len
     || fail "43g: $1 additionalContext within $3 chars (got ${#_c})"
 }
 reset_all; rev
-two_lines "Gate B below floor" "$(commitpre)" 260
+# the count note (0.43.0) is a message of its own beside the reminder, so its length is added
+cn=$(cnote_ctx 1)
+two_lines "Gate B below floor" "$(commitpre)" $((260 + ${#cn}))
 reset_all; execp
 two_lines "Gate A below floor" "$(skillpre)" 260
 reset_all; execp; execp; execp
@@ -3611,7 +3613,7 @@ rm -rf "$sandbox/r45a" "$sandbox/r45b" "$sandbox/r45c" "$sandbox/r45d" "$sandbox
 # commit (field evidence 2026-10-19/20: `cd …;` and `git -C` WIP commits read as kept).
 # $1 = the command as a JSON string body. Both readers, every refused form, and neither
 # the plain WIP form nor a non-WIP commit.
-wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged; a WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd, git -C, heredoc, or chain other than one leading git add <paths> &&; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
+wipsent="This call is not counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD and its reflog unchanged. If they are cleared, the hook count is from then on lower than your cycle passes; when you compare the two, name this call as the cause. A WIP commit is one git commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, and nothing else in the call but one leading git add <paths> &&: a command chained before or after it (x && git commit ..., git commit ...; y), a second line, cd, git -C or a heredoc is not, so stage in the call before. Causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages."
 pre46() { printf '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_t46","tool_input":{"command":"%s"}}' "$1"; }
 for r in run nojq_run; do
   # shellcheck disable=SC2016  # the $( ) is payload text for the hook, never expanded here
