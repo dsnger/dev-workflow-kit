@@ -228,6 +228,8 @@ br_exists m1 && rc_is 1 && has "cannot list worktrees" && pass "unreadable workt
 fixture; add_wt w1 b1; merge_ff b1; mkdir -p "$work/outside"; echo o > "$work/outside/o"
 ln -s "$work/outside" "$work/r/.claude/worktrees/w1/.context"; printf '.context\n' >> "$work/r/.git/info/exclude"; run --remove
 [ ! -e "$work/r/.context/archive-worktree-w1" ] && [ -f "$work/outside/o" ] && ! wt_exists w1 && pass "symlinked .context/ not archived, its target kept" || fail "symlink source: $(cat "$work/out")"
+fixture; add_wt w1 b1; merge_ff b1; echo f > "$work/r/.claude/worktrees/w1/.context"; printf '.context\n' >> "$work/r/.git/info/exclude"; run
+row "an ignored regular file named .context counts as ignored" "keep: ignored files (1)" "worktrees/w1"
 fixture; add_wt w1 b1; merge_ff b1; mkdir -p "$work/outside2" "$work/r/.claude/worktrees/w1/.context"; echo x > "$work/r/.claude/worktrees/w1/.context/x"
 rm -rf "$work/r/.context"; ln -s "$work/outside2" "$work/r/.context"; run --remove
 wt_exists w1 && [ ! -e "$work/outside2/archive-worktree-w1" ] && has "failed" && pass "symlinked main .context/ fails the row" || fail "symlink dest: $(cat "$work/out")"

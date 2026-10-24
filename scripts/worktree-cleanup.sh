@@ -157,7 +157,12 @@ dirty_of() {
 # Ignored entries of worktree $1 outside .context/, written to $2; prints the count or unknown.
 ignored_of() {
   git -C "$1" status --porcelain --untracked-files=normal --ignored=matching > "$2.all" 2>/dev/null || { echo unknown; return; }
-  sed -n 's/^!! //p' "$2.all" | grep -v -e '^\.context/' -e '^\.context$' > "$2"
+  # A bare `.context` entry is left out only when it is a symlink (removal deletes just the link).
+  if [ -L "$1/.context" ]; then
+    sed -n 's/^!! //p' "$2.all" | grep -v -e '^\.context/' -e '^\.context$' > "$2"
+  else
+    sed -n 's/^!! //p' "$2.all" | grep -v '^\.context/' > "$2"
+  fi
   wc -l < "$2" | tr -d ' '
 }
 inside_root() {
