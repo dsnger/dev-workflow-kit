@@ -1,0 +1,2 @@
+MINOR | high | scripts/check-doc-links.sh:27; plugins/dev-workflow/commands/workflow-init.md:1864; plugins/dev-workflow/CHANGELOG.md:35 | The new limit incorrectly says every target containing a backtick is unchecked; a target with one unmatched backtick still produces a broken-link error because the backtick is unmatched | Documentation overstates the removed behavior | Describe targets containing a matched one-line code span as skipped; retain the guard deletion
+END OF FINDINGS (1 total)

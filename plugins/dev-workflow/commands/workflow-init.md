@@ -1861,7 +1861,8 @@ Why: anything else in that position is shell source, not a path.
 # apart from a typo); links inside fenced code blocks (also inside a list or blockquote) or
 # inside a code span that opens and closes on one line (both skipped, since they are code
 # samples, not links); a code span over several lines and indented code blocks (checked like
-# any other line); a link whose target holds a backtick (read as a code span, so not checked); external URLs; targets
+# any other line); a link whose target holds a closed one-line code span (removed as code, so the
+# link is not checked; an unmatched backtick stays literal); external URLs; targets
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #

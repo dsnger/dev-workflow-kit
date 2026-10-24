@@ -1,0 +1,2 @@
+MINOR | high | scripts/check-doc-links.sh:27; plugins/dev-workflow/commands/workflow-init.md:1864; plugins/dev-workflow/CHANGELOG.md:35 | The new claim that every target containing a backtick is skipped is false: a target with one unmatched backtick still reports a broken link and exits 1 | The documented limitation misstates which links are checked | State that backticks receive ordinary code-span processing; unmatched backticks remain literal. Preserve the intentional guard deletion.
+END OF FINDINGS (1 total)
