@@ -164,7 +164,9 @@ What `/dev-workflow:workflow-init` does, in order:
   and `AGENTS.md`; a missing line is a finding. The record goes into Gate B's
   `whatWasImplemented`, the pull request body and the handover, with a size soft alarm past
   10,000 bytes (never a failure) and effort stamped per piece. The checker resolves relative links
-  and their heading fragments; take it into the quality command. Nothing is written as an empty
+  and their heading fragments, and skips links inside fenced code blocks and one-line code spans
+  (code samples, not links; since 0.43.0). It asks which folders hold dated or historical records and
+  passes each as a skip prefix, since those cite paths as they were. Take it into the quality command. Nothing is written as an empty
   template, and nothing is deleted: to switch off, remove `.claude/living-docs.md` and its map
   line. It reports `living docs: incomplete — <part>` when the rules file, the `CLAUDE.md`
   paragraph, the map line or the checker differs from what the kit writes. **Not covered**, because
@@ -437,7 +439,12 @@ threshold was not met when implementation starts, it says so right then.
 line. A WIP or docs-only commit prints no ✓ line, so a cycle closed with a docs-only closing commit
 shows none; the current values are in `.context/codex-gate.passes` (Gate B; a commit that resets
 the counters removes it) and `.context/codex-gate.passCountA` (Gate A; that commit moves it to
-`codex-gate.passCountA.closed`). Read them before the closing commit and compare them with the pass count in the cycle line. A report that says
+`codex-gate.passCountA.closed`). Read them before the closing commit and compare them with the pass count in the cycle line.
+Since 0.43.0 every commit check that is not a WIP commit also prints the Gate-B count on a line of its
+own while the cycle has one, docs-only closing commits included:
+`ℹ Gate-B hook count before this commit: <n> (cleared once it lands)`. Take the count from that
+line: once the commit lands the file is gone, and a report written afterwards finds nothing to read
+(field case, 2026-10-23: a report said "unverified" for that reason). A report that says
 they differ names the cause: one of the hook's messages earlier in the cycle (a commit not counted as
 WIP, a review branch whose `headSha` is not a full SHA, an unpaired branch, a resumed `exec`, a
 withheld result), or `cause unknown`. Kit 0.40.1 reported "no" with no cause; its session had
@@ -445,17 +452,31 @@ compared hook state-file names, not passes.
 
 ## Hook messages
 
-The hook's messages say what happened and what to do next. The possible causes behind seven
+The hook's messages say what happened and what to do next. The possible causes behind eight
 of them live here.
+
+**Codex call failed** (`⚠ Codex call failed — not counted as a gate pass`). The Codex server
+answered with `success: false`. When the error message is empty (seen 2026-10-23: three times,
+session `abandoned`, nothing else), the hook tells the session to probe Codex directly from the
+same session before its one retry: `codex exec --skip-git-repo-check "Reply with OK" </dev/null`,
+and `echo $CODEX_HOME`. An answer like "You've hit your usage limit … try again at …" is missing
+access, one of the stops in `CLAUDE.md` §4: stop and tell the human, naming that `CODEX_HOME`. Why
+the same session: a tool that starts sessions per account (Orca, for example) sets `CODEX_HOME` to
+a per-account home, so a probe from another session can use another account and answer OK.
 
 **Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).
 The commit message starts with `WIP`, but the call is not the plain form, so if it moves this
 repository's HEAD or its reflog, the hook clears the pass counters after it (see When the
 counters reset, above). The reminder then adds: *This call is not
 counted as a WIP commit, so the pass counters are cleared after it unless the hook sees HEAD
-and its reflog unchanged; a WIP commit is one git
-commit -m 'WIP: <subject>' Bash call with a plain subject, run from the repository, with no cd,
-git -C, heredoc, or chain other than one leading git add <paths> &&;* then a link here. Why those forms are refused: after the commit the hook checks the new HEAD of the
+and its reflog unchanged. From then on the hook count is lower than your cycle passes; when you
+compare the two, name this call as the cause. A WIP commit is one git commit -m 'WIP: <subject>'
+Bash call with a plain subject, run from the repository, and nothing else in the call but one
+leading git add <paths> &&: a command chained before or after it (x && git commit ..., git
+commit ...; y), a second line, cd, git -C or a heredoc is not, so stage in the call before;* then a
+link here. Since 0.43.0 it names those shapes and the count consequence plainly, because two
+field cycles (2026-10-23/24) each lost one pass to a commit chained in one Bash call, and found out
+only when comparing at the end. Why those forms are refused: after the commit the hook checks the new HEAD of the
 repository it runs in and ties it to this one call. A `cd` or `git -C` can commit in another
 repository, and a chain, heredoc or shell metacharacter can change HEAD or the message in ways
 that check cannot tie to the call, so these forms are never kept as WIP: one that moves this
@@ -614,7 +635,7 @@ shell test file, the hook's test suite,
 six prompt-conformance checks and three size budgets) plus both checkers' regression
 suites, [`scripts/check-doc-links.sh`](../scripts/check-doc-links.sh) (inline relative
 Markdown links in tracked files resolve, and a fragment on a Markdown target names a heading
-there; reference-style links and the other limits its header lists are not checked; `/workflow-init` 2.21 ships the same bytes to
+there; links inside code fences and one-line code spans, reference-style links and the other limits its header lists are not checked; `/workflow-init` 2.21 ships the same bytes to
 projects, and check 4l keeps the two copies identical) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
 

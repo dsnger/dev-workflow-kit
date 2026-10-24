@@ -2122,7 +2122,7 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   point to `docs/ARCHITECTURE.md`. SFX's 0.39.0 adoption (`e8d1e06`) put the old sentence back over the
   pilot's. Fix with the adoption story above, or earlier as a ticket. *Trigger: the adoption story, or the
   next `/workflow-init` template change.*
-- [ ] **SFX follow-ups (outside this repo):** link the report from SFX (pilot story AC-10, the
+- [x] Done 2026-10-24 (SFX #64). **SFX follow-ups (outside this repo):** link the report from SFX (pilot story AC-10, the
   orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
   left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
   *Trigger: the orchestrator's next SFX instruction.*

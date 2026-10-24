@@ -1822,8 +1822,12 @@ They were not exercised in the pilot, and silence here is not a rule.
 Runs only when 2.20 left `.claude/living-docs.md` present; otherwise this file is left untouched.
 Then Rules 1–2 apply as to any target. Write the script byte for byte as below; the kit runs the
 same file on its own docs, and its check 4l keeps the two identical. Run it from the repository root
-as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip (for example a directory of
-archived records that cite paths as they were). A skip prefix goes into a shell command, so it must
+as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip. Before the first run, ask
+the user which folders hold dated or historical records (old plans, specs, reviews, handovers,
+reports, archives) and pass each as a skip prefix: such a record cites paths as they were when it
+was written, and fixing them would rewrite history, so unskipped they fill the report with hits
+nobody will repair. Links inside fenced code blocks and one-line code spans are skipped by the
+script itself. A skip prefix goes into a shell command, so it must
 match `^[A-Za-z0-9._/-]+$`, and it is compared with paths as `git ls-files` prints them, so it must
 not begin with `/` or `./` (write `docs/history/`, not `./docs/history/`): check each one the user names before writing it into `AGENTS.md`
 § Commands or CI, and leave out and report any that fails, asking the user to choose a plainer path.
@@ -1853,9 +1857,11 @@ Why: anything else in that position is shell source, not a path.
 # disambiguated as GitHub does — such a link can be reported broken or accepted.
 # Fragments on non-Markdown targets; reference-style links (`[x]: path`); backticked paths
 # (they name files in other projects, placeholders and future artifacts; nothing tells those
-# apart from a typo); links inside code spans or fences (they are checked like any other
-# line); external URLs; targets containing a space or parenthesis (so a link with a title is
-# skipped) or written in angle brackets (`(<path>)`, reported broken).
+# apart from a typo); links inside fenced code blocks or inside a code span that opens and
+# closes on one line (both skipped, since they are code samples, not links); a code span over
+# several lines and indented code blocks (checked like any other line); external URLs; targets
+# containing a space or parenthesis (so a link with a title is skipped) or written in angle
+# brackets (`(<path>)`, reported broken).
 #
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
@@ -1886,6 +1892,28 @@ anchors() {
     }
   ' "$1"
 }
+# The Markdown file $1 with fenced code blocks blanked and one-line code spans removed, one
+# output line per input line, so grep's line numbers stay right.
+strip_code() {
+  awk '
+    { t = $0; sub(/\r$/, "", t); sub(/^ ? ? ?/, "", t) }
+    fl == 0 && match(t, /^(```+|~~~+)/) { fl = RLENGTH; fc = substr(t, 1, 1); print ""; next }
+    fl > 0 { sub(/[ \t]+$/, "", t)
+             if (t ~ /^(```+|~~~+)$/ && substr(t, 1, 1) == fc && length(t) >= fl) fl = 0
+             print ""; next }
+    {
+      out = ""; s = $0
+      while (match(s, /`+/)) {
+        n = RLENGTH; out = out substr(s, 1, RSTART - 1); run = substr(s, RSTART, n)
+        s = substr(s, RSTART + n); r = s; c = 0
+        while (match(r, /`+/)) { if (RLENGTH == n) { c = 1; break }; r = substr(r, RSTART + RLENGTH) }
+        # a run with no closing run of the same length is literal text, as CommonMark reads it
+        if (c) s = substr(r, RSTART + n); else out = out run
+      }
+      print out s
+    }
+  ' "$1"
+}
 # $1 with each %XX escape decoded to its byte, as a browser decodes a fragment, except %00-%1F.
 pct_decode() {
   printf '%b' "$(printf '%s' "$1" | sed 's/\\/\\\\/g' | awk '{
@@ -1909,7 +1937,7 @@ broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
   [ -r "$f" ] || { printf '%s: unreadable, links not checked\n' "$f"; continue; }
   d=$(dirname "$f")
   # One record per link: `<line>:<target>`.
-  grep -no '](\([^)( ]*\))' "$f" | sed 's/:](/:/; s/)$//' | while IFS= read -r m; do
+  strip_code "$f" | grep -no '](\([^)( ]*\))' | sed 's/:](/:/; s/)$//' | while IFS= read -r m; do
     t=${m#*:}
     case "$t" in (''|*:*) continue ;; esac
     p=${t%%#*}

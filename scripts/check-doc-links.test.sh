@@ -66,6 +66,25 @@ dl_case "non-ASCII file name checked, not unreadable" 1 'docs/café.md' '[a](gon
 dl_case "glob-like target not expanded"              1 README.md '[a](docs/*.md)' 'docs/*.md'
 dl_case "skip prefix argument skips a tree"          0 docs/history/old.md '[a](gone.md)' '' docs/history/
 dl_case "no skip prefix: that tree is checked"      1 docs/history/old.md '[a](gone.md)' 'docs/history/old.md:1: broken link'
+# shellcheck disable=SC2016  # the backticks are fixture text
+{
+dl_case "link inside a backtick fence skipped"      0 README.md '```md
+[a](gone.md)
+```' ''
+dl_case "link inside a tilde fence skipped"         0 README.md '  ~~~~
+[a](gone.md)
+~~~
+~~~~' ''
+dl_case "link after a closed fence checked"         1 README.md '```
+x
+```
+[a](gone.md)' 'README.md:4: broken link: gone.md'
+dl_case "link inside a code span skipped"           0 README.md 'see `[a](gone.md)` here' ''
+dl_case "double-backtick span holding a backtick"   0 README.md '``[a](gone.md) ` x``' ''
+dl_case "link after a code span checked"            1 README.md '`x` [a](gone.md)' 'README.md:1: broken link: gone.md'
+dl_case "unclosed backtick is text, link checked"   1 README.md '`x [a](gone.md)' 'README.md:1: broken link: gone.md'
+dl_case "runs of unequal length do not close"       1 README.md '``x` [a](gone.md)' 'broken link: gone.md'
+}
 dl_case "untracked file not checked"                 0 README.md '' ''
 printf '[a](gone.md)\n' > "$work/r/untracked.md"
 out=$( cd "$work/r" && sh "$CHECKER" 2>&1 ) && pass "untracked file still not checked" || fail "untracked file checked: $out"
