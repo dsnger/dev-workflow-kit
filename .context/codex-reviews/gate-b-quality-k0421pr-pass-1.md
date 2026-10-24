@@ -1,0 +1,2 @@
+MINOR | high | plugins/dev-workflow/hooks/codex-gate.sh:1644-1645 | Validation strips whitespace, but read_count rereads the original content; `3 ` followed by newline therefore reports 0 instead of unknown | Some malformed counts still produce a misleading zero; reproduced under sh and dash | Validate the raw content consistently with read_count and add a whitespace-corruption regression test.
+END OF FINDINGS (1 total)

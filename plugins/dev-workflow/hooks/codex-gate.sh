@@ -1641,7 +1641,7 @@ case "$event" in
           # lands removes its file, so read afterwards it is gone (T-9, 2026-10-23).
           if [ -e "$count_file" ] || [ -L "$count_file" ]; then
             # read_count reads a malformed file as 0; this note reports it as unknown instead
-            _n=''; [ -f "$count_file" ] && _n=$(cat "$count_file" 2>/dev/null | tr -d '[:space:]')
+            _n=''; [ -f "$count_file" ] && _n=$(cat "$count_file" 2>/dev/null)
             case $_n in '' | *[!0-9]*) _n='unknown (the count file cannot be read)' ;; *) _n=$(read_count "$count_file") ;; esac
             note "Gate-B hook count before this commit: $_n credited pass(es). A commit that lands and is not kept as WIP clears it, so take the count for any comparison with your cycle line from this message: afterwards it may be gone." "ℹ Gate-B hook count before this commit: $_n (a commit that lands may clear it)"
           fi

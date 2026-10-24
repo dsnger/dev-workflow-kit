@@ -1,0 +1,2 @@
+MINOR | high | plugins/dev-workflow/hooks/codex-gate.sh:1644-1645 | Missing: whitespace-containing malformed counts still report zero. Validation strips whitespace, but read_count rejects the original contents. | Confirmed under sh and dash: `1 2` and `3 ` report 0 instead of the required unknown, misrepresenting cycle evidence. | Validate the unmodified contents using read_count's digits-only rule; add whitespace-malformed regression cases.
+END OF FINDINGS (1 total)

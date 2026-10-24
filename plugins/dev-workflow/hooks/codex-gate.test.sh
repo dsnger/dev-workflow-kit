@@ -1695,11 +1695,13 @@ printf '%s' "$out" | grep -qF 'below floor (3/5): may close after a zero-finding
 rm -f "$floorf"
 reset_all; rev; rev; rev
 # A malformed count file is reported as unknown by the count note, never as 0 (PR #96)
-reset_all; rev; printf 'x\n' > "$count"
-out=$(commitpre)
-printf '%s' "$out" | grep -qF 'Gate-B hook count before this commit: unknown (the count file cannot be read) credited' \
-  && ! printf '%s' "$out" | grep -qF 'before this commit: 0' \
-  && pass "count note: malformed count file -> unknown, not 0" || fail "count note: malformed count file -> unknown, not 0"
+for bad in 'x\n' '3 \n' '1 2'; do
+  reset_all; rev; printf '%b' "$bad" > "$count"
+  out=$(commitpre)
+  printf '%s' "$out" | grep -qF 'Gate-B hook count before this commit: unknown (the count file cannot be read) credited' \
+    && ! printf '%s' "$out" | grep -qF 'before this commit: 0' \
+    && pass "count note: malformed count file ($bad) -> unknown, not 0" || fail "count note: malformed count file ($bad) -> unknown, not 0"
+done
 reset_all; rev; rev; rev
 
 # 30. UNSTORABLE STATE (spec §5 test 11). Cause 5 lives OUTSIDE tree_hash: the store path
