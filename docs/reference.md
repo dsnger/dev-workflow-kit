@@ -728,6 +728,12 @@ All of these are read-only unless stated.
     never the session working in one of them. A session whose worktree is removed under it keeps
     running plugin hooks, which then write into a deleted path or fall back to the main checkout
     (field case 2026-10-22: a hook committed the main checkout's files after its worktree was gone).
-  - **What it cannot prevent.** A process starting in a worktree, or a branch being checked out
-    elsewhere, in the moment between the recheck and the removal. The script header lists this
-    and its other limits.
+  - **Keep the repository still during `--remove`.** Close the sessions in the worktrees it will
+    remove, and let nothing else check out or move branches until it ends. Two moments stay open,
+    each between two adjacent `git` calls: a process starting in a worktree, or a file written
+    there, after the recheck and before the removal (the process loses its directory, the file is
+    deleted); and a checkout of the branch in another worktree after the last checkout check and
+    before the branch is deleted (that worktree is left on a branch with no ref; its commits are
+    kept, since the tip is merged). A path with bytes outside printable ASCII or a backslash reads
+    `session=unknown`, because `lsof` prints such names escaped. The script header lists its other
+    limits.

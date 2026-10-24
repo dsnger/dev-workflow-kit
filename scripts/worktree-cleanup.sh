@@ -40,7 +40,8 @@
 #
 # WHAT IT DOES NOT: fetch (run `git fetch --prune` first; a stale or rewritten default ref is
 # trusted as it is); see processes lsof cannot see (another user's) or sessions without a process
-# whose cwd is inside; detect squash merges without gh, for a remote not named origin or not on
+# whose cwd is inside, or compare a path holding bytes outside printable ASCII or a backslash with
+# lsof's escaped names (session then reads unknown); detect squash merges without gh, for a remote not named origin or not on
 # github.com, or beyond 100 merged PRs for one branch name (those read unknown); handle paths
 # containing a tab or newline; judge whether a kept row is still wanted.
 #
@@ -123,9 +124,12 @@ snapshot() {
   lsof -w -nP -d cwd -Fn </dev/null > "$1.raw" 2>/dev/null || return 1
   sed -n 's/^n//p' "$1.raw" | grep '^/' > "$1" || return 1
 }
-# Session state of physical path $1 against snapshot file $2 (empty name: no snapshot).
+# Session state of physical path $1 against snapshot file $2 (empty name: no snapshot). lsof
+# escapes bytes outside printable ASCII (and so writes a backslash as an escape), so a path holding
+# any of them cannot be compared literally and reads unknown.
 session_of() {
   [ -n "$2" ] || { echo unknown; return; }
+  case $1 in *[!\ -~]*|*\\*) echo unknown; return ;; esac
   if P=$1 awk 'BEGIN { p = ENVIRON["P"] } $0 == p || index($0, p "/") == 1 { f = 1; exit } END { exit !f }' "$2"
   then echo yes; else echo no; fi
 }
@@ -140,10 +144,9 @@ merged_of() {
   out=$(cd "$main" && gh pr list -R "github.com/$slug" --state merged --base "$defname" --head "$1" \
         --json number,headRefOid --limit 100 --jq '.[] | "\(.number) \(.headRefOid)"' </dev/null 2>/dev/null) || {
     echo unknown; return; }
+  [ "$(printf '%s\n' "$out" | grep -c .)" -ge 100 ] && { echo unknown; return; }
   m=$(printf '%s\n' "$out" | awk -v t="$2" '$2 == t { print $1; exit }')
-  if [ -n "$m" ]; then echo "pr#$m"
-  elif [ "$(printf '%s\n' "$out" | grep -c .)" -ge 100 ]; then echo unknown
-  else echo "$anc"; fi
+  if [ -n "$m" ]; then echo "pr#$m"; else echo "$anc"; fi
 }
 # dirty state of worktree $1: yes | no | unknown.
 dirty_of() {

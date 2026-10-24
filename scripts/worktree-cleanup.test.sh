@@ -4,6 +4,8 @@
 # what --remove did. Spec: docs/superpowers/specs/2026-10-24-kit-044-field-cases-design.md §2.
 set -u
 SCRIPT="$(cd "$(dirname "$0")" && pwd)/worktree-cleanup.sh"
+# CLEANUP_SH selects the shell the SCRIPT runs under (as HOOK_SH does for the hook suite).
+CLEANUP_SH=${CLEANUP_SH:-sh}
 pass_n=0; fail_n=0
 pass() { pass_n=$((pass_n + 1)); printf 'ok   - %s\n' "$1"; }
 fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
@@ -31,16 +33,20 @@ echo "$n" > "$STUB_DIR/lsof.calls"
 [ -f "$STUB_DIR/lsof.out" ] && cat "$STUB_DIR/lsof.out"
 exit "$(cat "$STUB_DIR/lsof.rc" 2>/dev/null || echo 0)"
 EOF
-chmod +x "$work/stub/gh" "$work/stub/lsof"
+# cp: fails when $work/cp.fail exists, otherwise runs the real cp.
+real_cp=$(command -v cp)
+# shellcheck disable=SC2016  # $STUB_DIR and $@ expand when the stub runs
+printf '#!/bin/sh\n[ -f "$STUB_DIR/cp.fail" ] && { echo "cp: stub failure" >&2; exit 1; }\nexec %s "$@"\n' "$real_cp" > "$work/stub/cp"
+chmod +x "$work/stub/gh" "$work/stub/lsof" "$work/stub/cp"
 # A PATH without gh and lsof: links to the other tools the script and stubs need.
-for t in git sh sed awk grep mkdir cp date basename cat rm rmdir mktemp tr wc head chmod; do
-  p=$(command -v "$t") && ln -s "$p" "$work/bare/$t"
+for t in git sh "$CLEANUP_SH" sed awk grep mkdir cp date basename cat rm rmdir mktemp tr wc head chmod; do
+  [ -e "$work/bare/$t" ] || { p=$(command -v "$t") && ln -s "$p" "$work/bare/$t"; }
 done
 export STUB_DIR="$work"
 
 # Fresh fixture: origin (bare), clone r with main pushed, worktree roots present.
 fixture() {
-  rm -rf "$work/o.git" "$work/r" "$work/out" "$work"/gh.* "$work"/lsof.* "$work/elsewhere"
+  rm -rf "$work/o.git" "$work/r" "$work/out" "$work"/gh.* "$work"/lsof.* "$work/cp.fail" "$work/elsewhere"
   git init -q --bare -b main "$work/o.git"
   git clone -q "$work/o.git" "$work/r" 2>/dev/null
   ( cd "$work/r" && git config user.email t@t && git config user.name t &&
@@ -62,8 +68,8 @@ add_wt() {
 # Merge branch $1 into main by fast-forward and move origin/main there.
 merge_ff() { ( cd "$work/r" && git merge -q --ff-only "$1" && git update-ref refs/remotes/origin/main main ); }
 tip() { git -C "$work/r" rev-parse "$1"; }
-run() { ( cd "$work/r" && PATH="$work/stub:$PATH" sh "$SCRIPT" "$@" ) > "$work/out" 2>&1; echo $? > "$work/rc"; }
-run_bare() { ( cd "$work/r" && PATH="$work/bare" sh "$SCRIPT" ) > "$work/out" 2>&1; echo $? > "$work/rc"; }
+run() { ( cd "$work/r" && PATH="$work/stub:$PATH" "$CLEANUP_SH" "$SCRIPT" "$@" ) > "$work/out" 2>&1; echo $? > "$work/rc"; }
+run_bare() { ( cd "$work/r" && PATH="$work/bare" "$CLEANUP_SH" "$SCRIPT" ) > "$work/out" 2>&1; echo $? > "$work/rc"; }
 has() { grep -qF -- "$1" "$work/out"; }
 rc_is() { [ "$(cat "$work/rc")" = "$1" ]; }
 # $1 name, $2 text the row line for worktree/branch $3 must contain.
@@ -108,6 +114,8 @@ printf '7 %s\n' "$(tip main)" > "$work/gh.out"; run
 row "merged PR head different from the tip reads no" "merged=no" "worktrees/w2"
 : > "$work/gh.out"; i=1; while [ $i -le 100 ]; do printf '%s 0000\n' "$i" >> "$work/gh.out"; i=$((i + 1)); done; run
 row "100 PRs without a match read unknown" "merged=unknown" "worktrees/w2"
+printf '7 %s\n' "$(tip b2)" >> "$work/gh.out"; run
+row "101 PRs with a match still read unknown" "merged=unknown" "worktrees/w2"
 echo 1 > "$work/gh.rc"; : > "$work/gh.out"; run
 row "failing gh reads unknown" "merged=unknown" "worktrees/w2"
 run_bare
@@ -146,6 +154,10 @@ rm -f "$work/lsof.rc"; printf 'p1\nfcwd\n' > "$work/lsof.out"; run
 row "lsof without an n/ line reads unknown" "keep: session (unknown)" "worktrees/w1"
 run_bare
 row "missing lsof reads unknown" "session=unknown" "worktrees/w1"
+fixture; ( cd "$work/r" && git worktree add -q -b bc ".claude/worktrees/café" main 2>/dev/null ); merge_ff bc; run
+row "non-ASCII path reads session unknown (lsof escapes it)" "keep: session (unknown)" "worktrees/caf"
+fixture; ( cd "$work/r" && git worktree add -q -b bs '.claude/worktrees/a\b' main 2>/dev/null ); merge_ff bs; run
+row "backslash path reads session unknown" "keep: session (unknown)" "worktrees/a"
 
 # --- roots ---
 fixture; add_wt w1 b1; merge_ff b1
@@ -188,6 +200,7 @@ rc_is 1 && has "failed" && pass "  ... reported failed, exit 1" || fail "moved b
 # --- inspection failures ---
 fixture; add_wt w1 b1; merge_ff b1; echo 'gitdir: /nonexistent' > "$work/r/.claude/worktrees/w1/.git"; run --remove
 row "failing status reads dirty=unknown" "dirty=unknown" "worktrees/w1"
+row "  ... and ignored=unknown" "ignored=unknown" "worktrees/w1"
 wt_exists w1 && br_exists b1 && pass "  ... and nothing destructive ran" || fail "broken worktree touched"
 fixture; add_wt w1 b1; merge_ff b1
 printf 'cp "%s/.git" "%s/git.bak"; echo "gitdir: /nonexistent" > "%s/.git"\n' \
@@ -195,15 +208,14 @@ printf 'cp "%s/.git" "%s/git.bak"; echo "gitdir: /nonexistent" > "%s/.git"\n' \
 has "skipped" && wt_exists w1 && br_exists b1 && pass "status failing at the recheck skips the row" || fail "recheck status: $(cat "$work/out")"
 
 # --- archive copy failure, continuation ---
-if [ "$(id -u)" -ne 0 ]; then
-  fixture; add_wt w1 b1; merge_ff b1; add_wt w2 b2; merge_ff b2
-  mkdir -p "$work/r/.claude/worktrees/w1/.context"; echo s > "$work/r/.claude/worktrees/w1/.context/secret"
-  chmod 000 "$work/r/.claude/worktrees/w1/.context/secret"; run --remove
-  chmod 644 "$work/r/.claude/worktrees/w1/.context/secret"
-  if wt_exists w1 && br_exists b1 && ! wt_exists w2 && rc_is 1 && has "failed"; then
-    pass "failing archive copy keeps that row, next row still removed, exit 1"
-  else fail "copy failure: $(cat "$work/out")"; fi
-else pass "archive copy failure (skipped as root: chmod does not stop root)"; fi
+fixture; add_wt w1 b1; merge_ff b1; add_wt w2 b2; merge_ff b2
+mkdir -p "$work/r/.claude/worktrees/w1/.context"; echo s > "$work/r/.claude/worktrees/w1/.context/s"
+: > "$work/cp.fail"
+# Only w1 has a .context/, so only its archive copy calls cp.
+run --remove
+if wt_exists w1 && br_exists b1 && ! wt_exists w2 && rc_is 1 && has "failed"; then
+  pass "failing archive copy keeps that row, next row still removed, exit 1"
+else fail "copy failure: $(cat "$work/out")"; fi
 fixture; add_wt w1 b1; merge_ff b1; rm -rf "$work/r/.context"; mkdir -p "$work/r/.claude/worktrees/w1/.context"; echo n > "$work/r/.claude/worktrees/w1/.context/n"
 run --remove
 [ -f "$work/r/.context/archive-worktree-w1/n" ] && pass "main checkout without .context/ gets one" || fail "no main .context: $(cat "$work/out")"
@@ -214,7 +226,7 @@ rc_is 1 && has "a killed run left it" && pass "held lock exits 1 with the recove
 fixture; run --bogus; rc_is 2 && pass "unknown option exits 2" || fail "usage rc $(cat "$work/rc")"
 run --discard-ignored; rc_is 2 && pass "--discard-ignored without --remove exits 2" || fail "discard alone rc $(cat "$work/rc")"
 run --root relative/dir; rc_is 2 && pass "relative --root exits 2" || fail "relative root rc $(cat "$work/rc")"
-( cd "$work" && PATH="$work/stub:$PATH" sh "$SCRIPT" "$work/o.git" ) > "$work/out" 2>&1; echo $? > "$work/rc"
+( cd "$work" && PATH="$work/stub:$PATH" "$CLEANUP_SH" "$SCRIPT" "$work/o.git" ) > "$work/out" 2>&1; echo $? > "$work/rc"
 rc_is 2 && has "bare repository" && pass "bare repository exits 2" || fail "bare: $(cat "$work/out")"
 [ -e "$work/o.git/worktree-cleanup.lock" ] && fail "bare run left a lock" || pass "bare run takes no lock"
 fixture; run; [ ! -e "$(git -C "$work/r" rev-parse --path-format=absolute --git-common-dir)/worktree-cleanup.lock" ] &&
