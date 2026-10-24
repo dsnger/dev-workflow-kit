@@ -121,9 +121,9 @@ Why it is separate: inline, it pushed the instruction files past Claude Code's
 so editing the rules fires Gate B. Under `docs/` the edit would read as prose and get
 no gate.
 
-**Before the session's first Codex call,** run `echo $CODEX_HOME` (empty means `~/.codex`) and
-`codex exec --skip-git-repo-check "Reply with OK" </dev/null` in this session, with a two-minute
-timeout. Exit 0 with `OK` is access. A usage-limit or authentication reply is missing access, a
+**Before the session's first Gate A or Gate B call,** run `echo $CODEX_HOME` (empty means
+`~/.codex`) and `codex exec --skip-git-repo-check "Reply with OK" </dev/null` in this session, as a
+Bash call with a two-minute timeout; the probe is not a gate pass. Exit 0 with `OK` is access. A usage-limit or authentication reply is missing access, a
 stop in §4: quote it and name that home. Any other result (`codex` not found, an empty reply, a
 timeout) is undetermined: say so with the output
 and go on; an empty gate error then follows the gate hook's message for it. Why: an account at its limit

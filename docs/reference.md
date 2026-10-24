@@ -467,7 +467,7 @@ usage limit … try again at …" is missing access, one of the stops in `CLAUDE
 the human, naming that home. Why
 the same session: a tool that starts sessions per account (Orca, for example) sets `CODEX_HOME` to
 a per-account home, so a probe from another session can use another account and answer OK.
-Since 0.44.0 every session also runs this probe once before its first Codex call (scaffolded
+Since 0.44.0 every session also runs this probe once before its first gate call (scaffolded
 `CLAUDE.md` §5), so a usage limit shows before the first gate instead of as empty failures.
 
 **Not counted as a WIP commit** (`ℹ Not counted as a WIP commit: pass counters cleared if HEAD moves`).

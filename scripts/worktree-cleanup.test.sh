@@ -12,7 +12,8 @@ fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 work=$(mktemp -d) || exit 1
 [ -n "$work" ] && [ -d "$work" ] || exit 1
 work=$(cd "$work" && pwd -P)
-trap 'chmod -R u+rwx "$work" 2>/dev/null; rm -rf "$work"' EXIT HUP INT TERM
+trap 'chmod -R u+rwx "$work" 2>/dev/null; rm -rf "$work"' EXIT
+trap 'exit 1' HUP INT TERM
 
 # Stubs. gh: records its arguments, prints $work/gh.out, exits with $work/gh.rc (default 0).
 # lsof: counts its calls; on call <n> it first runs $work/lsof.on<n> when present, then prints
@@ -37,7 +38,10 @@ EOF
 real_cp=$(command -v cp)
 # shellcheck disable=SC2016  # $STUB_DIR and $@ expand when the stub runs
 printf '#!/bin/sh\n[ -f "$STUB_DIR/cp.fail" ] && { echo "cp: stub failure" >&2; exit 1; }\nexec %s "$@"\n' "$real_cp" > "$work/stub/cp"
-chmod +x "$work/stub/gh" "$work/stub/lsof" "$work/stub/cp"
+real_git=$(command -v git)
+# shellcheck disable=SC2016  # expands when the stub runs
+printf '#!/bin/sh\ncase " $* " in *" worktree list "*)\n  n=$(( $(cat "$STUB_DIR/git.wl" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$STUB_DIR/git.wl"\n  [ "$n" = "$(cat "$STUB_DIR/git.failnth" 2>/dev/null)" ] && { echo "stub: worktree list failed" >&2; exit 128; } ;;\nesac\nexec %s "$@"\n' "$real_git" > "$work/stub/git"
+chmod +x "$work/stub/gh" "$work/stub/lsof" "$work/stub/cp" "$work/stub/git"
 # A PATH without gh and lsof: links to the other tools the script and stubs need.
 for t in git sh "$CLEANUP_SH" sed awk grep mkdir cp date basename cat rm rmdir mktemp tr wc head chmod; do
   [ -e "$work/bare/$t" ] || { p=$(command -v "$t") && ln -s "$p" "$work/bare/$t"; }
@@ -46,7 +50,7 @@ export STUB_DIR="$work"
 
 # Fresh fixture: origin (bare), clone r with main pushed, worktree roots present.
 fixture() {
-  rm -rf "$work/o.git" "$work/r" "$work/out" "$work"/gh.* "$work"/lsof.* "$work/cp.fail" "$work/elsewhere"
+  rm -rf "$work/o.git" "$work/r" "$work/out" "$work"/gh.* "$work"/lsof.* "$work"/git.* "$work/cp.fail" "$work/elsewhere"
   git init -q --bare -b main "$work/o.git"
   git clone -q "$work/o.git" "$work/r" 2>/dev/null
   ( cd "$work/r" && git config user.email t@t && git config user.name t &&
@@ -125,6 +129,11 @@ row "  ... and is kept" "keep: not merged (unknown)" "worktrees/w2"
 # --- dirty, ignored, submodules, locked, detached ---
 fixture; add_wt w1 b1; merge_ff b1; echo u > "$work/r/.claude/worktrees/w1/untracked.txt"; run
 row "untracked file makes it dirty and kept" "keep: dirty (yes)" "worktrees/w1"
+git -C "$work/r" config status.showUntrackedFiles no; run
+row "  ... also with status.showUntrackedFiles=no" "keep: dirty (yes)" "worktrees/w1"
+fixture; add_wt w1 b1; merge_ff b1; mkdir -p "$work/r/.claude/worktrees/w1/.worktrees"; echo e > "$work/r/.claude/worktrees/w1/.worktrees/env"
+git -C "$work/r" config status.showUntrackedFiles no; run
+row "ignored files counted with status.showUntrackedFiles=no" "keep: ignored files (1)" "worktrees/w1"
 fixture; add_wt w1 b1; merge_ff b1
 mkdir -p "$work/r/.claude/worktrees/w1/.context"; echo x > "$work/r/.claude/worktrees/w1/.context/keep"
 mkdir -p "$work/r/.claude/worktrees/w1/.worktrees"; echo e > "$work/r/.claude/worktrees/w1/.worktrees/env"
@@ -178,6 +187,11 @@ fixture; ( cd "$work/r" && git branch m1 main && git checkout -q -b u1 && echo u
 br_exists m1 && fail "merged branch without worktree not deleted: $(cat "$work/out")" || pass "merged branch without worktree deleted"
 br_exists u1 && pass "unmerged branch kept" || fail "unmerged branch deleted"
 br_exists main && pass "default branch never listed" || fail "main deleted"
+fixture; ( cd "$work/r" && git checkout -q -b side && git worktree add -q .claude/worktrees/wm main 2>/dev/null ); run --remove
+row "worktree holding the default branch kept" "keep: default branch" "worktrees/wm"
+br_exists main && [ -d "$work/r/.claude/worktrees/wm" ] && pass "  ... and neither it nor main removed" || fail "default worktree removed"
+fixture; ( cd "$work/r" && git symbolic-ref refs/heads/alias refs/heads/main ); run --remove
+br_exists main && pass "symbolic branch ref deleted without its target" || fail "alias deletion removed main: $(cat "$work/out")"
 fixture; ( cd "$work/r" && git checkout -q -b side ); run --remove
 br_exists main && ! grep -q '^branch main ' "$work/out" && pass "default branch not checked out is still never listed" || fail "main listed: $(cat "$work/out")"
 
@@ -206,6 +220,18 @@ fixture; add_wt w1 b1; merge_ff b1
 printf 'cp "%s/.git" "%s/git.bak"; echo "gitdir: /nonexistent" > "%s/.git"\n' \
   "$work/r/.claude/worktrees/w1" "$work" "$work/r/.claude/worktrees/w1" > "$work/lsof.on2"; run --remove
 has "skipped" && wt_exists w1 && br_exists b1 && pass "status failing at the recheck skips the row" || fail "recheck status: $(cat "$work/out")"
+
+# git stub: the <n>th `git ... worktree list` call fails when $work/git.failnth holds <n>. With
+# only a branch row, call 1 is the report's and call 2 is delete_branch's checkout check.
+fixture; ( cd "$work/r" && git branch m1 main ); echo 2 > "$work/git.failnth"; run --remove
+br_exists m1 && rc_is 1 && has "cannot list worktrees" && pass "unreadable worktree list keeps the branch, exit 1" || fail "list failure: $(cat "$work/out")"
+fixture; add_wt w1 b1; merge_ff b1; mkdir -p "$work/outside"; echo o > "$work/outside/o"
+ln -s "$work/outside" "$work/r/.claude/worktrees/w1/.context"; printf '.context\n' >> "$work/r/.git/info/exclude"; run --remove
+[ ! -e "$work/r/.context/archive-worktree-w1" ] && [ -f "$work/outside/o" ] && ! wt_exists w1 && pass "symlinked .context/ not archived, its target kept" || fail "symlink source: $(cat "$work/out")"
+fixture; add_wt w1 b1; merge_ff b1; mkdir -p "$work/outside2" "$work/r/.claude/worktrees/w1/.context"; echo x > "$work/r/.claude/worktrees/w1/.context/x"
+rm -rf "$work/r/.context"; ln -s "$work/outside2" "$work/r/.context"; run --remove
+wt_exists w1 && [ ! -e "$work/outside2/archive-worktree-w1" ] && has "failed" && pass "symlinked main .context/ fails the row" || fail "symlink dest: $(cat "$work/out")"
+rm -f "$work/r/.context"
 
 # --- archive copy failure, continuation ---
 fixture; add_wt w1 b1; merge_ff b1; add_wt w2 b2; merge_ff b2

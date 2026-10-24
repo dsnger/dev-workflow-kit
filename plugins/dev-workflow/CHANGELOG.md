@@ -33,7 +33,7 @@ Field cases from 2026-10-22 to 2026-10-24 (design
   more for a time limit per stage, cleanup of its helper processes on any exit, and, where stages
   are independent, every failure recorded in one run. Field: a stage hung 6 h 24 min; helpers
   outlived their test at load 330; a measurement run stopped at its first setup error four times.
-- **Codex preflight.** `CLAUDE.md` §5 (template and this repo): before the session's first Codex
+- **Codex preflight.** `CLAUDE.md` §5 (template and this repo): before the session's first gate
   call, `echo $CODEX_HOME` and a direct `codex exec` probe; a usage-limit or authentication reply
   is the missing-access stop. Field: an account at its limit showed only as empty gate failures.
   The gate rules are unchanged (9,995 of 10,000 bytes).
@@ -43,6 +43,8 @@ Field cases from 2026-10-22 to 2026-10-24 (design
 - **Worktree cleanup (repository script, does not ship).** `scripts/worktree-cleanup.sh` reports a
   repository's worktrees and branches and, with `--remove`, deletes only merged, clean worktrees
   with no live session inside the repository's worktree roots, archiving each `.context/` first.
+  It never removes a worktree holding the default branch, deletes a symbolic branch ref without
+  following it, and counts untracked and ignored files whatever `status.showUntrackedFiles` says.
   Run by the orchestrator or the human, never the session inside. Field: cleanup was a script in a
   scratch directory; one project held 24 stale worktrees. Not in the plugin package, so no
   installed copy changes; listed here because the release carries it.

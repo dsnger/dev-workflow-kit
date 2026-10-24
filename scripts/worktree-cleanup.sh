@@ -39,7 +39,8 @@
 # repository-wide lock exists to close them.
 #
 # WHAT IT DOES NOT: fetch (run `git fetch --prune` first; a stale or rewritten default ref is
-# trusted as it is); see processes lsof cannot see (another user's) or sessions without a process
+# trusted as it is); archive a .context/ that is a symlink (removal deletes only the link) or into
+# a main .context/ that is one (that row fails); see processes lsof cannot see (another user's) or sessions without a process
 # whose cwd is inside, or compare a path holding bytes outside printable ASCII or a backslash with
 # lsof's escaped names (session then reads unknown); detect squash merges without gh, for a remote not named origin or not on
 # github.com, or beyond 100 merged PRs for one branch name (those read unknown); handle paths
@@ -150,13 +151,13 @@ merged_of() {
 }
 # dirty state of worktree $1: yes | no | unknown.
 dirty_of() {
-  s=$(git -C "$1" status --porcelain 2>/dev/null) || { echo unknown; return; }
+  s=$(git -C "$1" status --porcelain --untracked-files=normal 2>/dev/null) || { echo unknown; return; }
   if [ -n "$s" ]; then echo yes; else echo no; fi
 }
 # Ignored entries of worktree $1 outside .context/, written to $2; prints the count or unknown.
 ignored_of() {
-  git -C "$1" status --porcelain --ignored=matching > "$2.all" 2>/dev/null || { echo unknown; return; }
-  sed -n 's/^!! //p' "$2.all" | grep -v '^\.context/' > "$2"
+  git -C "$1" status --porcelain --untracked-files=normal --ignored=matching > "$2.all" 2>/dev/null || { echo unknown; return; }
+  sed -n 's/^!! //p' "$2.all" | grep -v -e '^\.context/' -e '^\.context$' > "$2"
   wc -l < "$2" | tr -d ' '
 }
 inside_root() {
@@ -202,6 +203,7 @@ while IFS="$tab" read -r p h b d l <&3; do
   if [ -z "$(inside_root "$phys")" ]; then verdict='keep: outside worktree roots'
   elif [ "$l" = 1 ]; then verdict='keep: locked'
   elif [ "$d" = 1 ] || [ -z "$b" ]; then verdict='keep: detached'
+  elif [ "$b" = "$defname" ]; then verdict='keep: default branch'
   elif [ -e "$p/.gitmodules" ]; then verdict='keep: submodules'
   else
     case $merged in ancestor|pr#*) ;; *) verdict="keep: not merged ($merged)" ;; esac
@@ -236,16 +238,22 @@ done 3< "$tmp/brs"
 failed=0
 # Delete branch $1 when checked out nowhere and still at tip $2.
 delete_branch() {
-  if git -C "$main" worktree list --porcelain 2>/dev/null | grep -qxF -- "branch refs/heads/$1"; then
+  if [ "$1" = "$defname" ]; then printf 'skipped branch %s: default branch\n' "$1"; return; fi
+  if ! cur=$(git -C "$main" worktree list --porcelain 2>&1); then
+    printf 'failed branch %s: cannot list worktrees: %s\n' "$1" "$cur"; failed=1; return
+  fi
+  if printf '%s\n' "$cur" | grep -qxF -- "branch refs/heads/$1"; then
     printf 'skipped branch %s: checked out again\n' "$1"; return
   fi
-  if msg=$(git -C "$main" update-ref -d "refs/heads/$1" "$2" 2>&1); then printf 'removed branch %s\n' "$1"
+  # --no-deref: a symbolic branch ref is deleted itself, never the branch it points to.
+  if msg=$(git -C "$main" update-ref --no-deref -d "refs/heads/$1" "$2" 2>&1); then printf 'removed branch %s\n' "$1"
   else printf 'failed branch %s: %s\n' "$1" "$msg"; failed=1; fi
 }
 while IFS="$tab" read -r p phys b h <&3; do
-  if [ -d "$p/.context" ]; then
+  # A symlinked .context/ is not archived: removal deletes only the link, not what it points to.
+  if [ -d "$p/.context" ] && [ ! -L "$p/.context" ]; then
     base="$main/.context/archive-worktree-$(basename "$p")"; dest=$base; i=1; ok=1
-    mkdir -p "$main/.context" 2>/dev/null || ok=0
+    { [ ! -L "$main/.context" ] && mkdir -p "$main/.context" 2>/dev/null; } || ok=0
     while [ "$ok" -eq 1 ] && ! mkdir "$dest" 2>/dev/null; do
       if { [ -e "$dest" ] || [ -L "$dest" ]; } && [ "$i" -lt 1000 ]; then i=$((i + 1)); dest="$base-$i"; else ok=0; fi
     done
