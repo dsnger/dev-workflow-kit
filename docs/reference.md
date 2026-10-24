@@ -440,10 +440,11 @@ line. A WIP or docs-only commit prints no ✓ line, so a cycle closed with a doc
 shows none; the current values are in `.context/codex-gate.passes` (Gate B; a commit that resets
 the counters removes it) and `.context/codex-gate.passCountA` (Gate A; that commit moves it to
 `codex-gate.passCountA.closed`). Read them before the closing commit and compare them with the pass count in the cycle line.
-Since 0.43.0 every commit check that is not a WIP commit also prints the Gate-B count on a line of its
+Since 0.43.0 every commit check that does not show the WIP note also prints the Gate-B count on a line of its
 own while the cycle has one, docs-only closing commits included:
-`ℹ Gate-B hook count before this commit: <n> (cleared once it lands)`. Take the count from that
-line: once the commit lands the file is gone, and a report written afterwards finds nothing to read
+`ℹ Gate-B hook count before this commit: <n> (a commit that lands may clear it)`. Take the count from that
+line: once a commit that resets the counters lands (see When the counters reset, above), the file
+is gone, and a report written afterwards finds nothing to read
 (field case, 2026-10-23: a report said "unverified" for that reason). A report that says
 they differ names the cause: one of the hook's messages earlier in the cycle (a commit not counted as
 WIP, a review branch whose `headSha` is not a full SHA, an unpaired branch, a resumed `exec`, a

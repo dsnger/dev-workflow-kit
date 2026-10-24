@@ -35,7 +35,7 @@ again.
 - **Skip dated records.** 2.21 now asks which folders hold dated or historical records and passes
   each as a skip prefix. Field: 31 hits in one project, all in such records.
 - **Hook count, said while it can be read.** Every non-WIP commit check prints
-  `ℹ Gate-B hook count before this commit: <n> (cleared once it lands)` while the cycle has a count.
+  `ℹ Gate-B hook count before this commit: <n> (a commit that lands may clear it)` while the cycle has a count.
   Field: a report said "unverified" because it read the state after the closing commit removed it.
 - **Chained WIP commit, named plainly.** The hook still does not keep the count across a WIP commit
   chained with anything but one leading `git add` (invariant 2: in doubt, reset). Its sentence now

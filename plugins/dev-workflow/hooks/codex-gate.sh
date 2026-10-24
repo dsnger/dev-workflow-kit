@@ -1640,7 +1640,7 @@ case "$event" in
           # Target model: Claude via Claude Code. The count is said here because a commit that
           # lands removes its file, so read afterwards it is gone (T-9, 2026-10-23).
           if [ -f "$count_file" ]; then
-            note "Gate-B hook count before this commit: $(read_count "$count_file") credited pass(es). If this commit lands, the hook clears it, so take the count for any comparison with your cycle line from this message: afterwards it cannot be read." "ℹ Gate-B hook count before this commit: $(read_count "$count_file") (cleared once it lands)"
+            note "Gate-B hook count before this commit: $(read_count "$count_file") credited pass(es). A commit that lands and is not kept as WIP clears it, so take the count for any comparison with your cycle line from this message: afterwards it may be gone." "ℹ Gate-B hook count before this commit: $(read_count "$count_file") (a commit that lands may clear it)"
           fi
           # Target model: Claude via Claude Code. The causes are in docs/reference.md § Hook messages.
           # runs_git_commit: only where `git commit` stands as a command of its own; the

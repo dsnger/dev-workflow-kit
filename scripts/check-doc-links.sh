@@ -21,9 +21,10 @@
 # disambiguated as GitHub does — such a link can be reported broken or accepted.
 # Fragments on non-Markdown targets; reference-style links (`[x]: path`); backticked paths
 # (they name files in other projects, placeholders and future artifacts; nothing tells those
-# apart from a typo); links inside fenced code blocks or inside a code span that opens and
-# closes on one line (both skipped, since they are code samples, not links); a code span over
-# several lines and indented code blocks (checked like any other line); external URLs; targets
+# apart from a typo); links inside fenced code blocks (also inside a list or blockquote) or
+# inside a code span that opens and closes on one line (both skipped, since they are code
+# samples, not links); a code span over several lines and indented code blocks (checked like
+# any other line); external URLs; targets
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
@@ -56,11 +57,13 @@ anchors() {
     }
   ' "$1"
 }
-# The Markdown file $1 with fenced code blocks blanked and one-line code spans removed, one
-# output line per input line, so grep's line numbers stay right.
+# The Markdown file $1 with fenced code blocks blanked and one-line code spans replaced by a
+# space, one output line per input line, so grep's line numbers stay right. A fence is found
+# after any leading blockquote `>` and list markers and any indent, so one inside a list or quote
+# counts too (and an indented code line made of backticks is taken for a fence).
 strip_code() {
   awk '
-    { t = $0; sub(/\r$/, "", t); sub(/^ ? ? ?/, "", t) }
+    { t = $0; sub(/\r$/, "", t); while (sub(/^[ \t]*(>|[-*+][ \t]|[0-9]+[.)][ \t])/, "", t)) ; sub(/^[ \t]+/, "", t) }
     # a backtick fence has no backtick after its opening run; with one, the line is a code span
     fl == 0 && match(t, /^(```+|~~~+)/) && !(t ~ /^`/ && index(substr(t, RLENGTH + 1), "`")) {
       fl = RLENGTH; fc = substr(t, 1, 1); print ""; next }
@@ -70,11 +73,15 @@ strip_code() {
     {
       out = ""; s = $0
       while (match(s, /`+/)) {
-        n = RLENGTH; out = out substr(s, 1, RSTART - 1); run = substr(s, RSTART, n)
+        # a backtick after an odd number of backslashes is an escaped, literal one
+        pre = out substr(s, 1, RSTART - 1); k = 0
+        while (k < length(pre) && substr(pre, length(pre) - k, 1) == "\\") k++
+        if (k % 2) { out = pre "`"; s = substr(s, RSTART + 1); continue }
+        n = RLENGTH; out = pre; run = substr(s, RSTART, n)
         s = substr(s, RSTART + n); r = s; c = 0
         while (match(r, /`+/)) { if (RLENGTH == n) { c = 1; break }; r = substr(r, RSTART + RLENGTH) }
         # a run with no closing run of the same length is literal text, as CommonMark reads it
-        if (c) s = substr(r, RSTART + n); else out = out run
+        if (c) { s = substr(r, RSTART + n); out = out " " } else out = out run
       }
       print out s
     }

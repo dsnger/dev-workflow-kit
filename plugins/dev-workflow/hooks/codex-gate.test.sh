@@ -1621,8 +1621,8 @@ json_field() { # $1 = json text, $2 = key -> prints the string value. No jq requ
 }
 
 # The count note every non-WIP commit check adds while the cycle has a Gate-B count (0.43.0)
-cnote_ctx() { printf ' — Gate-B hook count before this commit: %s credited pass(es). If this commit lands, the hook clears it, so take the count for any comparison with your cycle line from this message: afterwards it cannot be read.' "$1"; }
-cnote_msg() { printf ' ℹ Gate-B hook count before this commit: %s (cleared once it lands)' "$1"; }
+cnote_ctx() { printf ' — Gate-B hook count before this commit: %s credited pass(es). A commit that lands and is not kept as WIP clears it, so take the count for any comparison with your cycle line from this message: afterwards it may be gone.' "$1"; }
+cnote_msg() { printf ' ℹ Gate-B hook count before this commit: %s (a commit that lands may clear it)' "$1"; }
 
 # 29a. STALE branch: 1 recorded pass this cycle, default floor 3, no CLAUDE.md (so the
 #      generic policy phrase), a change made through the Edit tool.
