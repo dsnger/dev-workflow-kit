@@ -108,6 +108,14 @@ dl_case "unclosed quoted fence ends with the quote" 1 README.md '> ```
 > x
 
 [a](gone.md)' 'README.md:4: broken link: gone.md'
+dl_case "nested quote fence ends with its quote"    1 README.md '> > ```
+> > x
+> [a](gone.md)' 'README.md:3: broken link: gone.md'
+dl_case "closed list-and-quote fence, link after"  1 README.md '- > ```
+  > [b](gone.md)
+  > ```
+
+[a](gone.md)' 'README.md:5: broken link: gone.md'
 dl_case "runs of unequal length do not close"       1 README.md '``x` [a](gone.md)' 'broken link: gone.md'
 }
 dl_case "untracked file not checked"                 0 README.md '' ''

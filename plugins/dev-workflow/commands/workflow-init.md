@@ -1896,19 +1896,31 @@ anchors() {
 # The Markdown file $1 with fenced code blocks blanked and one-line code spans replaced by a
 # space, one output line per input line, so grep's line numbers stay right. A fence is found
 # after any leading blockquote `>` and list markers and any indent, so one inside a list or quote
-# counts too (and an indented code line made of backticks is taken for a fence). A fence in a list
-# item that is never closed runs on past the list's end.
+# counts too (and an indented code line made of backticks is taken for a fence). A fence ends at
+# its closing fence or when the blockquote it opened in ends; one in a list item that is never
+# closed runs on past the list's end.
 strip_code() {
   awk '
-    { t = $0; sub(/\r$/, "", t); q = (t ~ /^[ \t]*>/); w = t; sub(/^[ \t]+/, "", w)
-      while (sub(/^[ \t]*(>|[-*+][ \t]|[0-9]+[.)][ \t])/, "", t)) ; sub(/^[ \t]+/, "", t) }
-    # a fence opened in a blockquote ends with the quote; one opened outside a quote closes only
-    # on a fence line without a `>`, so a quoted fence inside a code sample stays sample text
-    fl > 0 && fq && !q { fl = 0 }
+    # x without its leading indent, list markers (when lists is set) and up to maxq quote markers;
+    # sets qd to the number of quote markers removed
+    function pfx(x, maxq, lists) {
+      qd = 0
+      while (1) {
+        sub(/^[ \t]+/, "", x)
+        if (x ~ /^>/ && qd < maxq) { x = substr(x, 2); qd++ }
+        else if (lists && match(x, /^([-*+]|[0-9]+[.)])[ \t]/)) x = substr(x, RLENGTH + 1)
+        else return x
+      }
+    }
+    { t = $0; sub(/\r$/, "", t); o = pfx(t, 1000, 1); d = qd }
+    # a fence ends with its blockquote: a line with fewer quote markers than its opener had
+    fl > 0 && d < fd { fl = 0 }
     # a backtick fence has no backtick after its opening run; with one, the line is a code span
-    fl == 0 && match(t, /^(```+|~~~+)/) && !(t ~ /^`/ && index(substr(t, RLENGTH + 1), "`")) {
-      fl = RLENGTH; fc = substr(t, 1, 1); fq = q; print ""; next }
-    fl > 0 { c = fq ? t : w; sub(/[ \t]+$/, "", c)
+    fl == 0 && match(o, /^(```+|~~~+)/) && !(o ~ /^`/ && index(substr(o, RLENGTH + 1), "`")) {
+      fl = RLENGTH; fc = substr(o, 1, 1); fd = d; print ""; next }
+    # a closer is read with only as many quote markers removed as the opener had, so a quoted
+    # fence inside a code sample stays sample text
+    fl > 0 { c = pfx(t, fd, 0); sub(/[ \t]+$/, "", c)
              if (c ~ /^(```+|~~~+)$/ && substr(c, 1, 1) == fc && length(c) >= fl) fl = 0
              print ""; next }
     {
