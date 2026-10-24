@@ -1824,7 +1824,8 @@ Then Rules 1–2 apply as to any target. Write the script byte for byte as below
 same file on its own docs, and its check 4l keeps the two identical. Run it from the repository root
 as `sh scripts/check-doc-links.sh`, followed by any tree prefixes to skip. Before the first run, ask
 the user which folders hold dated or historical records (old plans, specs, reviews, handovers,
-reports, archives) and pass each as a skip prefix: such a record cites paths as they were when it
+reports, archives) and pass each as a skip prefix ending in `/` (`docs/archive/`, so that
+`docs/archive-notes.md` is still checked): such a record cites paths as they were when it
 was written, and fixing them would rewrite history, so unskipped they fill the report with hits
 nobody will repair. Links inside fenced code blocks and one-line code spans are skipped by the
 script itself. A skip prefix goes into a shell command, so it must
@@ -1931,6 +1932,8 @@ strip_code() {
         while (k < length(pre) && substr(pre, length(pre) - k, 1) == "\\") k++
         if (k % 2) { out = pre "`"; s = substr(s, RSTART + 1); continue }
         n = RLENGTH; out = pre; run = substr(s, RSTART, n)
+        # inside a link target a backtick is part of the file name, not a code span
+        if (pre ~ /[]][(][^)( ]*$/) { out = pre run; s = substr(s, RSTART + n); continue }
         s = substr(s, RSTART + n); r = s; c = 0
         while (match(r, /`+/)) { if (RLENGTH == n) { c = 1; break }; r = substr(r, RSTART + RLENGTH) }
         # a run with no closing run of the same length is literal text, as CommonMark reads it

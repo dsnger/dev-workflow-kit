@@ -460,8 +460,9 @@ of them live here.
 answered with `success: false`. When the error message is empty (seen 2026-10-23: three times,
 session `abandoned`, nothing else), the hook tells the session to probe Codex directly from the
 same session before its one retry: `codex exec --skip-git-repo-check "Reply with OK" </dev/null`,
-and `echo $CODEX_HOME`. An answer like "You've hit your usage limit … try again at …" is missing
-access, one of the stops in `CLAUDE.md` §4: stop and tell the human, naming that `CODEX_HOME`. Why
+and `echo $CODEX_HOME` (empty means the default home, `~/.codex`). An answer like "You've hit your
+usage limit … try again at …" is missing access, one of the stops in `CLAUDE.md` §4: stop and tell
+the human, naming that home. Why
 the same session: a tool that starts sessions per account (Orca, for example) sets `CODEX_HOME` to
 a per-account home, so a probe from another session can use another account and answer OK.
 
