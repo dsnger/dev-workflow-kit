@@ -202,7 +202,8 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 6. Report grounded (CLAUDE.md §4): per claim — verdict + reason + action + the tool
    result that verifies it. If code changed: the project's quality command
    (`AGENTS.md § Commands`) green locally **and** the CI quality check green on the
-   final pushed head (`gh pr checks` after the run completes). CI is the enforced
+   final pushed head (`gh pr checks` after the run completes, within CLAUDE.md §4's limit for waiting on
+   external work). CI is the enforced
    authority; the local run is the fast pre-check. Two exceptions. A local timeout in a test
    the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
    (Gate-B prompt): record it, and the green CI check on the head stands in. And when the

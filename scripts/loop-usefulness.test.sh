@@ -560,5 +560,21 @@ printf '%s\n' "$mut" | grep -q '^prodinc4  Gate B  no warning' &&
   pass "negative control: ignoring increases turns the four-increase cycle from red into no warning" ||
   fail "negative control not caught"
 
+# The field writes ", " between pass numbers and counts and a bare model of several words
+# (kit-044 and sfx-time-tracking-dashboard, 2026-10-26); before 0.45.0 such a cycle read "not determinable".
+rm -rf "${work:?}/field"; mkdir -p "$work/field/scripts"; cp "$SCRIPT" "$LEDGER" "$work/field/scripts/"
+(
+  cd "$work/field" || exit 1
+  gitc init -q --template= --object-format=sha1 . && gitc config gc.auto 0
+  printf '.context/\n' > .gitignore
+  rc docs/base.md 'base\n'
+  rc docs/x.md "f\n\n$(prov fieldsp1 3)\ncycle fieldsp1; Gate-A spec (passes 1, 2, 3, 4, gpt-6-astra per \$CODEX_HOME/config.toml): Findings 14, 7, 3, 3. Blockers 0, 0, 0, 0. Majors 6, 3, 1, 0. Declined 1, 1, 0, 0.\n"
+) || fail "field fixture not built"
+outfs=$(run "$work/field")
+printf '%s\n' "$outfs" | grep -q '^fieldsp1  Gate-A spec  ' &&
+  ! printf '%s\n' "$outfs" | grep -q '^fieldsp1 .*not determinable' &&
+  pass "spaced field curve with a model of several words: determinable" ||
+  { fail "spaced field curve"; printf '%s\n' "$outfs" | grep fieldsp1 | sed 's/^/    /'; }
+
 printf '\n%d passed, %d failed\n' "$pass_n" "$fail_n"
 [ "$fail_n" -eq 0 ]

@@ -134,6 +134,7 @@ CANDIDATE = re.compile(r"^cycle (none \(pre-rule\)|[^ ;]*);")
 BARE_PATH = re.compile(r"[A-Za-z0-9._/-]+")
 BARE_MODEL = re.compile(r"[!#-'*\-./0-9<-~]+")  # printable ASCII minus space " ( ) + , : ;
 COUNT = re.compile(r"0|[1-9][0-9]*|\?")
+SERIES = r"([^ ]+(?:, [^ ]+)*)"  # a count series, "1,2" or "1, 2"; split and checked by COUNT afterwards
 
 
 def is_control(c):
@@ -206,7 +207,11 @@ def parse_model(s, i):
         q = read_quoted(s, i)
         return None if q is None else q[1]
     m = BARE_MODEL.match(s, i)
-    return m.end() if m else None
+    if not m:
+        return None
+    while s.startswith(" ", m.end()) and BARE_MODEL.match(s, m.end() + 1):  # the field writes "gpt-6-astra per <path>"
+        m = BARE_MODEL.match(s, m.end() + 1)
+    return m.end()
 
 
 def expand(spec, limit):
@@ -237,11 +242,12 @@ def expand(spec, limit):
 
 def parse_curve(rest):
     """rest is the text after '<field>; '. Return dict or None."""
-    m = re.compile(KIND + r" \(passes ([0-9,-]+), ").match(rest)
+    m = re.compile(KIND + r" \(passes ([0-9,-]+(?:, [0-9,-]+)*), ").match(rest)
     if not m:
         return None
-    kind, spec, i = m.group(1), m.group(2), m.end()
-    tail = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.(?: Declined ([^ ]+)\.)?$").search(rest)
+    kind, spec, i = m.group(1), m.group(2).replace(", ", ","), m.end()  # the field writes "1, 2, 3"
+    tail = re.compile(r"\): Findings " + SERIES + r"\. Blockers " + SERIES + r"\. Majors " + SERIES
+                      + r"\.(?: Declined " + SERIES + r"\.)?$").search(rest)
     if not tail:
         return None
     passes = expand(spec, len(tail.group(1).split(",")))
@@ -271,7 +277,8 @@ def parse_curve(rest):
         if j is None:
             return None
         i = j
-    m = re.compile(r"\): Findings ([^ ]+)\. Blockers ([^ ]+)\. Majors ([^ ]+)\.(?: Declined ([^ ]+)\.)?$").match(rest, i)
+    m = re.compile(r"\): Findings " + SERIES + r"\. Blockers " + SERIES + r"\. Majors " + SERIES
+                   + r"\.(?: Declined " + SERIES + r"\.)?$").match(rest, i)
     if not m:
         return None
     series = []
@@ -279,6 +286,7 @@ def parse_curve(rest):
         if raw is None:  # Declined is optional: curves written before dev-workflow 0.35.0 lack it
             series.append(None)
             continue
+        raw = raw.replace(", ", ",")
         vals = raw.split(",")
         if len(vals) != len(passes) or not all(COUNT.fullmatch(v) for v in vals):
             return None

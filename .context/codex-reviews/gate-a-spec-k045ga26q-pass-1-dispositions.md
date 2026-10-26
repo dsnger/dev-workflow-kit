@@ -1,0 +1,7 @@
+1 | fixed | Target selection by highest number dropped. The prompt now names its target with the fixed label `Findings file: <path>`, prescribed by the rules sentence; the hook takes the labelled paths only, and two different labelled paths leave the call uncounted. Historical paths without the label are ignored. Test added: an old cycle's complete file named beside the current label.
+2 | fixed | jq-free contract stated: instruction is a required input of the exec tool, so the fallback reads tool_input's own key; a path written with a \u escape decodes to ? and is not counted (the safe side). Test added for the escaped path without jq.
+3 | fixed | The check is now described as exactly what it compares: terminator, count, and each body line's severity prefix; the six fields are named as outside it.
+4 | fixed | Wait rule: clock starts at the trigger (push or manual start); a run already finished is seen and its result read; waiting for approval counts as waiting under the same limit; an unreadable status is reported, not retried forever.
+5 | fixed | Resumed-call exception qualified as jq-present; the jq-free fixture keeps counting a resumed call, now with a complete file.
+6 | fixed | Replaced with a grep -F comparison of the new paragraph in CLAUDE.md and workflow-init 2.1.
+7 | fixed | Inventory includes the no-plan Gate A note (codex-gate.sh:1674) and the fault-test comment (test:2518).

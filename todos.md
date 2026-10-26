@@ -1393,7 +1393,9 @@ backlog.
       an optional UI on `127.0.0.1:9749` (vendor statement). Launch env: none. Store: `~/.cache/codebase-memory-mcp`.
       Human refresh: `codebase-memory-mcp cli index_repository --repo-path <checkout root>` — run by a
       human only. A `worker crashed` answer from `index_repository` can be a refusal or a technical
-      failure; it is no evidence that any boundary works. Recheck with the 2.15 canary after any change
+      failure; it is no evidence that any boundary works. Watcher: `auto_watch` false, set by Daniel
+      2026-10-25 after the watcher overload (`config get auto_watch` → `false`, read 2026-10-26; the 0.9.0
+      default is `true`); keep it off and refresh by hand. Recheck with the 2.15 canary after any change
       to client, binary, permission mode, rules, start configuration or account.
       Protects against: accidental or instructed agent misuse, on the client paths the canary showed. Not
       against: deliberate bypass, a manipulated binary, the server's own store changes, other clients.
@@ -2042,7 +2044,8 @@ without `jq` (counters identical in all four runs).
   hook counted 4 `mcp__codex__exec` calls against 3 pass files, because one call only fetched
   the rest of a truncated reply. Done in 0.40.0: a call whose input carries a `sessionId` (a resumed
   session, which is how the field re-fetched) is not counted and gets its own note (section 47).
-  With `jq` only: without it every call counts, as before.
+  With `jq` only: without it every call counts, as before. Follow-up in 0.45.0: a call that left no
+  complete labelled findings file is not counted either (section 49).
 
 ## From kit 0.37.3 (2026-10-20) — Gate B `k0373gb1020` Minors, accepted, not repaired
 
@@ -2103,7 +2106,10 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   the ✓). Cause unknown; the 0.40.0 recipe (message file under `.context/`) removes one candidate, a
   message file written into the worktree after the review. *Trigger: the next field report, with
   the commit command and `git status` at the commit.*
-- [ ] **Gate A replies truncated in transport again.** Kit 0.40.0 Gate A pass 1: the pinned server's
+- [x] **Gate A replies truncated in transport again.** Done in 0.45.0: the gate rules name the target as
+  `Findings file: <path>`, which Codex writes, and the hook counts a Gate A call only when that file is
+  complete (story `docs/superpowers/stories/2026-10-26-kit-045-field-cases-story.md` AC-1, AC-2; field
+  cases kit-044 `k044ga7q` and canvas S4). Was: Kit 0.40.0 Gate A pass 1: the pinned server's
   `output.summary` cut the findings list after the first finding, and resuming the session returned
   the same cut text; asking Codex to write the findings to the pass file worked. The rules once said
   "findings go to a FILE, not the response" (ledger row 2026-07-20,
@@ -2145,3 +2151,12 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
   left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
   *Trigger: the orchestrator's next SFX instruction.*
+
+## From kit 0.45.0 PR #98 review (2026-10-26) — backlog only, nothing implemented here
+- [ ] **"Waiting on external work" names one cause for a missing run** (CodeRabbit, PR #98, `CLAUDE.md` §4
+  and the `/workflow-init` template copy, Minor, accepted, not repaired). Prompt standards item 10 asks a
+  failure state to list its causes with a check and fix each; the rule names only an invalid workflow file.
+  Other causes: trigger or path filters, a disabled workflow, missing permissions, an unreadable status
+  (API or auth). Fix: list them briefly with a check each, or point to a troubleshooting section in
+  `docs/reference.md`; mind check 4e/4g sizes. *Trigger: the next edit of that rule, or a field case where
+  a session misread the cause.*

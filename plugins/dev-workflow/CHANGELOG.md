@@ -22,6 +22,33 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.45.0
+
+Field cases from 2026-10-21 to 2026-10-26 (story
+`docs/superpowers/stories/2026-10-26-kit-045-field-cases-story.md`, design
+`docs/superpowers/specs/2026-10-26-kit-045-field-cases-design.md`). Minor: the hook counts Gate A
+differently, the gate rules and the scaffolded `CLAUDE.md` gain a rule each; a project gets the template
+changes by running `/workflow-init` again.
+
+- **Gate A counts only a complete findings file.** The hook credits an `mcp__codex__exec` call only when
+  its `instruction` labels one findings file, `Findings file: <path>`, and that file is complete
+  (terminator, matching count, a severity at the start of each body line); otherwise it says why
+  (`ℹ Codex Gate A: not counted — <cause>`). The gate rules now say Codex writes that file and a reply
+  alone is no pass. Field: kit 0.44 Gate A `k044ga7q` asked for the findings in the reply, the server cut
+  it, and the hook counted 5 calls for 4 passes; canvas S4 had the same mismatch. With a broken `awk`
+  a Gate A call is no longer counted. The check does not establish which run wrote the file.
+- **codebase-memory watcher.** `/workflow-init` 2.14 and AGENTS.md invariant 5 warn that `auto_watch`
+  (default `true` on 0.9.0) gives every session its own git watcher: one pull that renamed hundreds of
+  files made about 27 instances re-index one repository at once (load 70 on 16 cores). The step
+  recommends `config set auto_watch false` and a deliberate refresh; the kit sets nothing itself.
+- **Waiting on external work.** `CLAUDE.md` §4 (template and this repo): before waiting on a CI run, a
+  deploy or a remote job, confirm it exists; wait at most twice its usual duration (60 minutes when
+  unknown), and report instead of waiting on. `process-pr-review` Step 6 points at it. Field: a session
+  waited 15 hours on a CI run GitHub never started (invalid workflow file).
+- **Spaced curve lines** (repo scripts, not shipped). `scripts/ledger-metrics.py`, and through it
+  `loop-usefulness.py` and `spec-delta.py`, read curves written with `, ` and a bare model of several
+  words. Field: 66 cycles in one project and 32 in another read "not determinable".
+
 ## 0.44.0
 
 Field cases from 2026-10-22 to 2026-10-24 (design

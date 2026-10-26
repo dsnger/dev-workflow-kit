@@ -53,7 +53,53 @@ input_field() { # string field inside tool_input: $1 = key
 # tool_input.sessionId is non-empty, read with jq only. Without jq the call counts, as before
 # 0.40: three jq-free readers in a row drew new boundary or failure-path findings at Gate B
 # (PR 91), so the mechanism was cut rather than repaired again (rules: shrink a regenerating class).
+# The findings-file check below applies without jq too; only this exclusion needs jq.
 exec_resumed() { command -v jq >/dev/null 2>&1 && [ -n "$(input_field sessionId)" ]; }
+
+# 0.45: a Gate A call counts only when its instruction labels one findings file, `Findings file: <path>`,
+# and that file is complete (kit-044 k044ga7q: a reply-only call, cut by the server, counted as a pass).
+# Prints the failed condition, or nothing. It checks structure only — the terminator, the count, each
+# body line's severity prefix — not the six fields, not which run wrote the file, not what it reviewed.
+# Without jq, input_field's fallback reads `instruction` (a required input of the exec tool); a path
+# written with a \u escape decodes to `?` and does not match, so the call is not counted.
+exec_findings() {
+  _t=''; _two=''
+  # Plain shell past grep: no sed here, so a broken sed (section 39b) does not change the count.
+  # shellcheck disable=SC2016  # the backticks are a literal label quote, not a command
+  while IFS= read -r _l; do
+    _l=${_l#Findings file: }
+    case "$_l" in '`'*) _l=${_l#?} ;; esac
+    # The match ends in the delimiter after `.md` (so `x.md.tmp` is no `x.md`); drop it again.
+    while :; do case "$_l" in *.md | '') break ;; *) _l=${_l%?} ;; esac; done
+    if [ -z "$_t" ]; then _t=$_l; elif [ "$_l" != "$_t" ]; then _two=1; fi
+  done <<EOF_FINDINGS
+$(input_field instruction | grep -oE 'Findings file: `?[^[:space:]`]*\.context/codex-reviews/gate-a-(spec|plan)-[a-z0-9]{8,16}-pass-[1-9][0-9]*\.md([[:space:]`),;]|\.([[:space:]]|$)|$)')
+EOF_FINDINGS
+  [ -n "$_t" ] || { echo 'names no findings file'; return; }
+  [ -z "$_two" ] || { echo 'names two findings files'; return; }
+  _n=${_t##*/}
+  case "$_t" in
+    .context/codex-reviews/"$_n" | "$repo_root"/.context/codex-reviews/"$_n") ;;
+    *) echo 'findings file elsewhere'; return ;;
+  esac
+  _f="$repo_root/.context/codex-reviews/$_n"
+  if [ -L "$_f" ] || [ ! -f "$_f" ]; then echo 'findings file missing'; return; fi
+  _r=$(awk '{ l[NR] = $0 }
+    END {
+      n = NR
+      if (n < 2 || l[n] !~ /^END OF FINDINGS \([0-9]+ total\)$/) { print "incomplete"; exit }
+      t = l[n]; sub(/^END OF FINDINGS \(/, "", t); sub(/ total\)$/, "", t); t = t + 0
+      if (t == 0) { print ((n == 2 && l[1] == "NO FINDINGS") ? "ok" : "incomplete"); exit }
+      if (n - 1 != t) { print "incomplete"; exit }
+      for (i = 1; i < n; i++) if (l[i] !~ /^(BLOCKER|MAJOR|MINOR|NIT) \| /) { print "incomplete"; exit }
+      print "ok"
+    }' "$_f" 2>/dev/null)
+  case "$_r" in
+    ok) ;;
+    incomplete) echo 'findings file incomplete' ;;
+    *) echo 'findings file unreadable' ;;
+  esac
+}
 
 event=$(field hook_event_name)
 tool=$(field tool_name)
@@ -1501,6 +1547,16 @@ case "$event" in
           # Target model: Claude via Claude Code.
           *) if exec_resumed; then
             note "Claude via Claude Code — gate hook. <state>This $exec_tool call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>" "ℹ Codex Gate A: resumed session not counted as a pass"
+          elif why=$(exec_findings) && [ -n "$why" ]; then
+            case "$why" in
+              'names no findings file') what='its instruction names no findings file (a line Findings file: <path>)' ;;
+              'names two findings files') what='its instruction names two different findings files' ;;
+              'findings file elsewhere') what="the findings file it names is outside this checkout's .context/codex-reviews/" ;;
+              'findings file missing') what='the findings file it names is missing, or is a symbolic link' ;;
+              'findings file incomplete') what='the findings file it names is incomplete: its terminator, its count or a severity prefix is wrong' ;;
+              *) what='the findings file it names could not be checked (awk failed)' ;;
+            esac
+            note "Claude via Claude Code — gate hook. <state>This $exec_tool call was not counted as a Gate A pass: $what.</state> <consequence>It counts toward neither the floor nor the cap.</consequence> <next>A call that leaves no complete labelled findings file is an incomplete pass that counts for nothing; a cut-off reply alone does not invalidate a complete file. Repair the cause first, then re-run the pass with Codex writing the labelled file, deleting a partial file before; one retry per pass is the budget. Causes, checks and fixes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The check reads the file's structure only (terminator, count, severity prefixes), not which run wrote it.</next> <stop>Said on every such call.</stop>" "ℹ Codex Gate A: not counted — $why"
           else
             [ "$cls" = unrecognized ] && note_unverified
             mkdir -p "$state_dir" 2>/dev/null
@@ -1606,7 +1662,7 @@ case "$event" in
               # file is read-only and the branch below refuses it as unconfirmable.
               # The message names the absent FINGERPRINT,
               # not an absent review.
-              note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The fingerprint is Gate B's (mcp__codex__review) alone; Gate A (mcp__codex__exec) passes are counted by call and never record one. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next Gate B pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
+              note "Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The fingerprint is Gate B's (mcp__codex__review) alone; Gate A (mcp__codex__exec) passes are counted per call that left its labelled findings file complete, and never record one. What this cycle does next, the floor it owes included, is $policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next Gate B pass the ordering permits record a fingerprint." "⚠ Codex Gate B: no recorded fingerprint"
             # `unavailable` on EITHER side is never a match: an uncomputable fingerprint
             # must read as unverified, and two of them must not cancel out.
             # A read-only state file cannot have taken the last pass's write, so what it
@@ -1671,12 +1727,12 @@ case "$event" in
             # so the floor is not reported as missed; the reminder still fires, naming both cases.
             if [ ! -f "$countA_file" ] && [ ! -f "$countA_file.closed" ] && [ -f "$countA_file.spec" ]; then
               passesS=$(read_count "$countA_file.spec")
-              note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floor). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floor pass(es), counted as calls with no content check." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floor)"
+              note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floor). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floor pass(es), counted as calls that left a complete findings file, with no check of what was reviewed." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floor)"
             elif [ "$passesA" -lt "$floor" ]; then
-              note "Codex Gate A below floor: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass." "⚠ Codex Gate A below floor ($passesA/$floor): a zero-finding last pass may close early"
+              note "Codex Gate A below floor: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass." "⚠ Codex Gate A below floor ($passesA/$floor): a zero-finding last pass may close early"
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
-              # mcp__codex__exec CALLS, bound to no artifact. Hashing the artifact would
+              # mcp__codex__exec calls that left a complete findings file, bound to no artifact. Hashing the artifact would
               # be wrong — a spec is SUPPOSED to change between passes — so the hook
               # cannot verify what was reviewed, and must not imply that it did.
               note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) — floor met by COUNT ONLY; the hook cannot verify what was reviewed or that findings were addressed. Proceed only once this cycle has closed under $policy's closure ordering." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"

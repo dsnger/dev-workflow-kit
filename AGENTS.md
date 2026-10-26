@@ -114,6 +114,10 @@ reader can judge whether it still holds.
    before every kit-run launch (P2, P3) the binary is compared against that record; a
    mismatch invalidates the earlier evidence, and nothing launches until a human reassesses
    the binary and re-records it. This is detection after a change, not a pin: P1 runs whatever binary the user's entry names.
+   P1 also carries a load risk: with the server's `auto_watch` on (the 0.9.0 default), every session's
+   instance registers a git watcher, and one pull that renamed hundreds of files made about 27 instances
+   re-index one repository at once (2026-10-25). `/workflow-init` 2.14 therefore recommends that the user
+   turns it off and refreshes by hand (P5); the kit itself sets nothing.
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not
