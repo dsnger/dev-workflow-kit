@@ -37,6 +37,21 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-6** This repository's `todos.md` § Tooling revalidation identity row records the watcher setting.
 - [ ] **AC-7** CLAUDE.md §4 and its `/workflow-init` 2.1 template require that any wait on external work (a CI run, a deploy) first confirms the run exists (its id seen, status queued or in progress), has a time limit, and reports at that limit or when no run appears instead of waiting on. The template stays within check 4e's budget.
 - [ ] **AC-8** The plugin version is 0.45.0, with a CHANGELOG entry and README/docs updates in the same PR, and the quality battery is green.
+- [ ] **AC-9** `scripts/ledger-metrics.py` and `scripts/loop-usefulness.py` read a cycle curve written as the field writes it — `, ` between pass numbers and between counts, and an unquoted model text with spaces (`gpt-6-astra per $CODEX_HOME/config.toml`) — as they read the compact form. Each script's suite has a case with the field line, failing on 0.44.0.
+
+**Changed 2026-10-26 — gap found.** Decided by the orchestrator session `dev-workflow-kit-50`, peer message of 2026-10-26 11:20, under Daniel's delegation of this run (D49). Baseline: `9ee2229`. A fourth field case of the same kind: on 2026-10-26 `loop-usefulness` reported "not determinable" for 66 cycles in sfx-time-tracking-dashboard (88 unparsed lines) and 32 in infinite-portfolio-canvas (172 unparsed), and `ledger-metrics` "no curve" for the same. Reproduced here: the kit-044 curve line parses as `None`, and the same line without the spaces parses.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-1 … AC-8 | kept | none |
+
+- **Added without an earlier condition:** AC-9: "read a cycle curve written as the field writes it" → per the decision: "scripts/loop-usefulness.py und scripts/ledger-metrics.py lesen das neuere Cycle-Record-Format nicht … Bitte Parser anpassen + Testfall im jeweiligen .test.sh, Doku/CHANGELOG mit."
+- **Unaccounted:** none.
+- **Intervening changes:** none.
+- **Scope boundary:** in: the two readers' curve parsing and their suites; out: the other cycle-record families (provenance, ledger check, skip), and any change to the rules' line format.
+- **Open questions:** none.
+- **Dependent artifacts:** none — no spec existed at the baseline.
+- **Reviews already run:** none.
 
 ## 4. Affected AGENTS.md invariants
 - `## Key invariants` › `### Hook` — "1. **The hook always exits 0.**" and "2. **Loose in the firing direction.** On uncertainty, fire."
