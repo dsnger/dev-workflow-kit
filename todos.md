@@ -2151,3 +2151,12 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   orchestrator's), SFX restores its own `CLAUDE.md` architecture sentence, and SFX updates the three slice docs P7
   left `planned` (`timer.md`, `runs-and-tokens.md`, `master-data.md`; report, AC-12).
   *Trigger: the orchestrator's next SFX instruction.*
+
+## From kit 0.45.0 PR #98 review (2026-10-26) — backlog only, nothing implemented here
+- [ ] **"Waiting on external work" names one cause for a missing run** (CodeRabbit, PR #98, `CLAUDE.md` §4
+  and the `/workflow-init` template copy, Minor, accepted, not repaired). Prompt standards item 10 asks a
+  failure state to list its causes with a check and fix each; the rule names only an invalid workflow file.
+  Other causes: trigger or path filters, a disabled workflow, missing permissions, an unreadable status
+  (API or auth). Fix: list them briefly with a check each, or point to a troubleshooting section in
+  `docs/reference.md`; mind check 4e/4g sizes. *Trigger: the next edit of that rule, or a field case where
+  a session misread the cause.*

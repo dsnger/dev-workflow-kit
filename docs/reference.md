@@ -415,7 +415,8 @@ the counters stay.
 close early` is the counter, not an error, and the same holds for Gate B, whose line reads
 `⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass
 with no Blocker or Major`. The hook measures no size either. The hook counts
-passes and never reads a findings file, so the line appears whenever its floor check runs
+passes and never judges a pass's findings (for Gate A it checks only that the labelled findings
+file is complete, see **Gate A call not counted** below), so the line appears whenever its floor check runs
 below the threshold: Gate B's on a commit (a WIP or docs-only commit skips the check),
 Gate A's when plan execution starts. That includes a cycle whose last pass had zero
 findings and closed early, and a small change's Gate B that closed at its first pass with no
@@ -432,8 +433,8 @@ recognized failure envelope, the backgrounding notice, a result it can get no te
 and a request it cannot read or pair. The third is a streak, not a tally: a pass on a
 changed fingerprint restarts it, and an earlier matching pass separated by a different
 fingerprint is not counted. None of the three is the floor §5 obliges, and the message
-is what the hook checked, not permission to close. The hook counts passes and compares a
-fingerprint; it never reads a findings file. Judge each pass from its findings file and
+is what the hook checked, not permission to close. For Gate B the hook counts passes and
+compares a fingerprint; it never reads a findings file. Judge each pass from its findings file and
 discount an incomplete one yourself, whatever the counter says. If the hook's own
 threshold was not met when implementation starts, it says so right then.
 
