@@ -53,6 +53,7 @@ input_field() { # string field inside tool_input: $1 = key
 # tool_input.sessionId is non-empty, read with jq only. Without jq the call counts, as before
 # 0.40: three jq-free readers in a row drew new boundary or failure-path findings at Gate B
 # (PR 91), so the mechanism was cut rather than repaired again (rules: shrink a regenerating class).
+# The findings-file check below applies without jq too; only this exclusion needs jq.
 exec_resumed() { command -v jq >/dev/null 2>&1 && [ -n "$(input_field sessionId)" ]; }
 
 # 0.45: a Gate A call counts only when its instruction labels one findings file, `Findings file: <path>`,
@@ -68,9 +69,11 @@ exec_findings() {
   while IFS= read -r _l; do
     _l=${_l#Findings file: }
     case "$_l" in '`'*) _l=${_l#?} ;; esac
+    # The match ends in the delimiter after `.md` (so `x.md.tmp` is no `x.md`); drop it again.
+    while :; do case "$_l" in *.md | '') break ;; *) _l=${_l%?} ;; esac; done
     if [ -z "$_t" ]; then _t=$_l; elif [ "$_l" != "$_t" ]; then _two=1; fi
   done <<EOF_FINDINGS
-$(input_field instruction | grep -oE 'Findings file: `?[^[:space:]`]*\.context/codex-reviews/gate-a-(spec|plan)-[a-z0-9]{8,16}-pass-[1-9][0-9]*\.md')
+$(input_field instruction | grep -oE 'Findings file: `?[^[:space:]`]*\.context/codex-reviews/gate-a-(spec|plan)-[a-z0-9]{8,16}-pass-[1-9][0-9]*\.md([[:space:]`),;]|\.([[:space:]]|$)|$)')
 EOF_FINDINGS
   [ -n "$_t" ] || { echo 'names no findings file'; return; }
   [ -z "$_two" ] || { echo 'names two findings files'; return; }
@@ -1553,7 +1556,7 @@ case "$event" in
               'findings file incomplete') what='the findings file it names is incomplete: its terminator, its count or a severity prefix is wrong' ;;
               *) what='the findings file it names could not be checked (awk failed)' ;;
             esac
-            note "Claude via Claude Code — gate hook. <state>This $exec_tool call was not counted as a Gate A pass: $what.</state> <consequence>It counts toward neither the floor nor the cap.</consequence> <next>A call that only replies, or whose reply was cut off, is an incomplete pass that counts for nothing. Repair the cause first, then re-run the pass with Codex writing the labelled file, deleting a partial file before; one retry per pass is the budget. Causes, checks and fixes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The check reads the file's structure only (terminator, count, severity prefixes), not which run wrote it.</next> <stop>Said on every such call.</stop>" "ℹ Codex Gate A: not counted — $why"
+            note "Claude via Claude Code — gate hook. <state>This $exec_tool call was not counted as a Gate A pass: $what.</state> <consequence>It counts toward neither the floor nor the cap.</consequence> <next>A call that leaves no complete labelled findings file is an incomplete pass that counts for nothing; a cut-off reply alone does not invalidate a complete file. Repair the cause first, then re-run the pass with Codex writing the labelled file, deleting a partial file before; one retry per pass is the budget. Causes, checks and fixes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The check reads the file's structure only (terminator, count, severity prefixes), not which run wrote it.</next> <stop>Said on every such call.</stop>" "ℹ Codex Gate A: not counted — $why"
           else
             [ "$cls" = unrecognized ] && note_unverified
             mkdir -p "$state_dir" 2>/dev/null

@@ -514,8 +514,9 @@ uncommitted.
 Codex session and the hook did not count it (since 0.40.0). The usual case is fetching the rest of a
 truncated reply, which belongs to the pass it completes. If the call was a review pass of its own,
 run it again without `sessionId`: the count stays one short until you do, which the below-floor
-reminder will show. The hook reads `sessionId` with `jq` only: without `jq` every call counts, as
-before 0.40.0, so a re-fetch there still shows as an extra pass.
+reminder will show. The hook reads `sessionId` with `jq` only: without `jq` a resumed call counts like any
+other, so a re-fetch there still shows as an extra pass when it names a complete findings file (since 0.45.0
+every call needs one).
 
 **Gate A call not counted** (`ℹ Codex Gate A: not counted — <cause>`). Since 0.45.0 the hook counts an
 `mcp__codex__exec` call as a Gate A pass only when its `instruction` labels one findings file,
@@ -538,6 +539,9 @@ Causes, each with its check and fix:
   lines, or a body line without a severity. Delete it and re-run the pass with Codex writing it.
 - `findings file unreadable` — `awk` failed. Check that `printf 'x\n' | awk '{print}'` prints `x`.
 
+The path is a relative `.context/codex-reviews/…` path, or this checkout's absolute path without spaces; it
+ends at whitespace, a backtick, `)`, `,`, `;` or a sentence's full stop, so `x.md.tmp` is not `x.md`. An
+absolute path containing a space is not recognized (`names no findings file`): use the relative form.
 Without `jq` the instruction is read by the hook's fallback reader: a path character written as a `\u` escape
 becomes `?`, so that path does not match; write the path in plain ASCII, or install `jq`. A Codex server whose
 exec tool takes its prompt under another key than `instruction` never counts: install the pinned server

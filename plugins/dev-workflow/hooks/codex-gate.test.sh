@@ -3666,7 +3666,7 @@ done
 
 # 47. An exec call whose input carries a sessionId resumes a Codex session (canvas field case
 # 2026-10-21: a call that only re-fetched a truncated reply was counted as a Gate-A pass).
-# Read with jq only; without jq every call counts, as before 0.40.
+# Read with jq only; without jq a resumed call counts like any other (the findings-file check still applies).
 resumedA_ctx="Claude via Claude Code — gate hook. <state>This mcp__codex__exec call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>"
 resumedA_msg="ℹ Codex Gate A: resumed session not counted as a pass"
 I47="\"instruction\":\"$EXEC_INSTR\""
@@ -3698,7 +3698,7 @@ run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","
 else
   skip "47: sessionId detection cases — no jq on this host; the jq-free case below still runs"
 fi
-# Without jq the hook does not read sessionId: the resumed call counts, as before 0.40.
+# Without jq the hook does not read sessionId: a resumed call with a complete findings file counts.
 reset_all
 out=$(nojq_run "$(exec47 "$I47,\"sessionId\":\"abc\"" "$(resp_success)")")
 [ "$(nA)" = 1 ] && ! printf '%s' "$out" | grep -qF 'resumed session' && pass "47 nojq: resumed exec counts, no note" \
@@ -3786,6 +3786,17 @@ for r in run nojq_run; do
   reset_all; put49 "$f49" "$two49"
   $r "$(ex49 "Findings file: $f49 and again Findings file: $f49")" >/dev/null
   [ "$(nA)" = 1 ] && pass "49 $r: the same label twice -> counted" || fail "49 $r: same label twice"
+  reset_all; put49 "$f49" "$two49"
+  for sfx in .tmp .stopped /missing.md; do
+    $r "$(ex49 "Findings file: $f49$sfx")" >/dev/null
+  done
+  [ "$(nA)" = 0 ] && pass "49 $r: a suffixed label (.md.tmp, .md.stopped, .md/missing.md) gets no credit from the .md file" \
+    || fail "49 $r: suffixed label (count $(nA))"
+  reset_all
+  for end in '.' ')' ',' ';' '. More text.'; do
+    $r "$(ex49 "(Findings file: $f49$end")" >/dev/null
+  done
+  [ "$(nA)" = 5 ] && pass "49 $r: label ended by . ) , ; or a sentence -> counted" || fail "49 $r: delimiters (count $(nA))"
   reset_all; rm -f "$f49"; put49 .context/codex-reviews/real49.md "$two49"; ln -s real49.md "$f49"
   $r "$(ex49 "Findings file: $f49")" >/dev/null
   [ "$(nA)" = 0 ] && pass "49 $r: symbolic link to a complete file -> not counted" || fail "49 $r: symlink"
