@@ -1,0 +1,2 @@
+NIT | high | plugins/dev-workflow/hooks/codex-gate.test.sh:1681 | The section 29d comment covers both Gate A and Gate B but still says the hook reads no findings; AC-3 and design section 2 require current count explanations, including comments, to match the new mechanism. | This remaining explanation contradicts Gate A reading the labelled findings file to validate its terminator, count and severity prefixes. | Say that Gate A validates file structure but does not judge findings or decide early closure, while Gate B does not read findings.
+END OF FINDINGS (1 total)

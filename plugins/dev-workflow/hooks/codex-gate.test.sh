@@ -1678,7 +1678,8 @@ expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 reset_all; rev; rev; rev
 
 # 29d. BELOW-FLOOR branches, Gate B at 1/3 and Gate A at 1/3, each with jq and jq-free.
-#      The hook reads no findings, so these must say a zero-finding last pass may close
+#      The hook judges no findings (Gate A checks only its findings file's structure), so
+#      these must say a zero-finding last pass may close
 #      early (the field read "floor NOT met 2/3" after a legal early close as a hook defect).
 #      Gate B also names the small-change close (0.38.0), with its condition; Gate A does not.
 belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: this project's review policy's closure ordering."
