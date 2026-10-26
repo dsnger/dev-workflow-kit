@@ -314,6 +314,19 @@ outt=$(report T "$SCRIPT"); st=$?
 printf '%s\n' "$outt" | grep -q '^[0-9a-f]\{12\}  cycle uuuuuuuu; Gate B (passes 1, pass 1111' &&
   pass "per-pass key not matching its pass: unparsed, no crash" || fail "mismatched per-pass key"
 
+# The field writes ", " between pass numbers and counts, and a bare model of several words
+# (kit-044 and sfx-time-tracking-dashboard, 2026-10-26); both forms read as the compact one.
+newrepo F; printf '%s\n' "$LEDGER_HEAD" > "$work/F/docs/hardening-log.md"
+# shellcheck disable=SC2016  # $CODEX_HOME is record text, not expanded here
+(cd "$work/F" && commit 'f\n\ncycle ffffffff; Gate-A spec (passes 1, 2, 3, 4, gpt-6-astra): Findings 14, 7, 3, 3. Blockers 0, 0, 0, 0. Majors 6, 3, 1, 0. Declined 1, 1, 0, 0.\ncycle gggggggg; Gate B (passes 1, 2, gpt-6-astra per $CODEX_HOME/config.toml): Findings 4, 0. Blockers 0, 0. Majors 1, 0. Declined 0, 0.\ncycle hhhhhhhh; Gate B (passes 1,  2, codex): Findings 4,0. Blockers 0,0. Majors 1,0.\n')
+outf=$(report F "$SCRIPT"); st=$?
+[ "$st" -eq 0 ] && printf '%s\n' "$outf" | grep -q '^ffffffff  Gate-A spec  passes 1,2,3,4 .*findings 14,7,3,3 ' &&
+  pass "spaced field curve: parsed as the compact form" || fail "spaced field curve (exit $st)"
+printf '%s\n' "$outf" | grep -q '^gggggggg  Gate B  passes 1,2 .*majors 1,0 ' &&
+  pass "bare model of several words: parsed" || fail "bare model of several words"
+printf '%s\n' "$outf" | grep -q '^[0-9a-f]\{12\}  cycle hhhhhhhh; Gate B (passes 1,  2' &&
+  pass "double space after a comma: still unparsed" || fail "double space after a comma"
+
 # Two conflict groups whose first records share a commit stay contiguous (group, then nonce).
 newrepo O; printf '%s\n' "$LEDGER_HEAD" > "$work/O/docs/hardening-log.md"
 (

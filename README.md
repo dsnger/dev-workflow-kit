@@ -69,6 +69,7 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | PR bot comments | `/dev-workflow:process-pr-review <pr-number>` | [guide](docs/getting-started.md#pr-bot-comments) |
 | Recurring finding | `/dev-workflow:harden-finding` | [guide](docs/getting-started.md#a-finding-that-keeps-coming-back) |
 | Discuss an idea | `/dev-workflow:sparring <question>`, in a new chat | [guide](docs/getting-started.md#discuss-an-idea-first) |
+| Gate A says "not counted" | Name the pass file in the Codex prompt as `Findings file: <path>` and let Codex write it; a reply alone is no pass | [reference](docs/reference.md#hook-messages) |
 | Old worktrees pile up | `sh scripts/worktree-cleanup.sh <repo>` from a kit checkout; `--remove` deletes only merged, clean worktrees without a live session. Run it yourself or from the orchestrator, never from a session inside one of them | [reference](docs/reference.md#reports) |
 | Update the plugin | `claude plugin marketplace update dev-workflow-kit`, then `claude plugin update dev-workflow@dev-workflow-kit` | [setup step 10](docs/setup.md#10-update-the-plugin-later) |
 

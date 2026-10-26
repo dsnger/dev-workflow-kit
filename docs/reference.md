@@ -517,6 +517,32 @@ run it again without `sessionId`: the count stays one short until you do, which 
 reminder will show. The hook reads `sessionId` with `jq` only: without `jq` every call counts, as
 before 0.40.0, so a re-fetch there still shows as an extra pass.
 
+**Gate A call not counted** (`ℹ Codex Gate A: not counted — <cause>`). Since 0.45.0 the hook counts an
+`mcp__codex__exec` call as a Gate A pass only when its `instruction` labels one findings file,
+`Findings file: <path>`, and that file is complete: its last line is `END OF FINDINGS (<n> total)`, `<n>` body
+lines each start with a severity (`BLOCKER | `, `MAJOR | `, `MINOR | `, `NIT | `), or the one body line is
+`NO FINDINGS`. The field case: kit 0.44's Gate A `k044ga7q` asked for the findings in the reply, the server
+cut the reply off, and the hook counted 5 calls for 4 passes. The check reads the file's structure only, not
+the six fields of a finding line, not which run wrote the file, and not what it reviewed: a complete file left
+from an earlier call is credited again, which is why the rules have you delete a partial target before a re-run.
+Causes, each with its check and fix:
+- `names no findings file` — the instruction has no `Findings file: <path>` line (a reply-only call). Add one,
+  with a relative path, and have Codex write it.
+- `names two findings files` — two different labelled paths. Label only this pass's file; name earlier
+  passes' files without the label.
+- `findings file elsewhere` — an absolute path outside this checkout's `.context/codex-reviews/`. Name this
+  checkout's path, or a relative one.
+- `findings file missing` — no regular file at the path, or a symbolic link. Check that Codex wrote it in this
+  checkout; replace a link with the file.
+- `findings file incomplete` — a cut-off or malformed file: no terminator, a count that differs from the body
+  lines, or a body line without a severity. Delete it and re-run the pass with Codex writing it.
+- `findings file unreadable` — `awk` failed. Check that `printf 'x\n' | awk '{print}'` prints `x`.
+
+Without `jq` the instruction is read by the hook's fallback reader: a path character written as a `\u` escape
+becomes `?`, so that path does not match; write the path in plain ASCII, or install `jq`. A Codex server whose
+exec tool takes its prompt under another key than `instruction` never counts: install the pinned server
+(`/dev-workflow:workflow-init` 2.8). The retry budget stays one per pass: repair the cause first.
+
 **No readable result** (`⚠ Gate call returned no readable result`). Two causes produce
 this shape, and the tool name cannot separate them: a hooks-API payload change, or a
 third-party tool returning empty or non-text content. Such a tool reaches the gates through
@@ -569,7 +595,8 @@ fingerprint could not be written or read back; or a non-WIP commit cleared it (s
 the cycle stayed open. It also appears on a spec or plan commit whose command is more than
 `git commit` and its options (a `$(cat <<'EOF' …)` message, a chained `git add`), because
 only a plain command is offered the docs-only note. The fingerprint is Gate B's alone: Gate A
-passes (`mcp__codex__exec`) are counted by call, a resumed session excepted where `jq` is installed, and never record one.
+passes (`mcp__codex__exec`) are counted per call that left its labelled findings file complete, a resumed session
+excepted where `jq` is installed, and never record one.
 
 **Cannot confirm reviewed content** (`⚠ Codex Gate B: cannot confirm reviewed content`).
 Usually the working tree or the index changed since the review. A closing commit that stages
@@ -669,6 +696,9 @@ All of these are read-only unless stated.
 - `python3 scripts/ledger-metrics.py` prints a report over the hardening ledger and the
   review-cycle records in commit bodies: which fingerprints recur, how rungs were
   followed, and each cycle's recorded curve beside the `fic2` baseline. It writes nothing.
+  A curve's lists may separate their items with `,` or `, `, and a bare model may be several words
+  (`gpt-6-astra per $CODEX_HOME/config.toml`), as field records write them (0.45.0); `loop-usefulness.py` and
+  `spec-delta.py` read curves through the same parser.
 - `python3 scripts/run-analytics.py` reads the Claude Code transcripts and Codex session
   logs on this machine and reports how many gate calls each review cycle and story took,
   how long they ran and how many tokens they used, including effort no closed cycle

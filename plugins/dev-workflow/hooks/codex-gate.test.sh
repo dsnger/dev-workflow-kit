@@ -81,8 +81,17 @@ git commit -qm init >/dev/null 2>&1
 # --- payload builders -------------------------------------------------------------
 # `printf` and `cat` only, never `jq`: the suite has to run where jq does not, and a
 # jq-built payload would make the driver the thing under test instead of the hook.
+# 0.45: a Gate A call counts only when its instruction labels a complete findings file, so every
+# builder that makes a countable exec call writes PASSF and names it (mk_pass runs in the test repo;
+# a section that turned .context into a file just leaves the write failing).
+PASSF=.context/codex-reviews/gate-a-spec-suite001-pass-1.md
+EXEC_INSTR="Findings file: $PASSF"
+mk_pass() { mkdir -p .context/codex-reviews 2>/dev/null && printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$PASSF" 2>/dev/null; }
+exec_input() { # $1 = tool name -> the tool_input object; a mapped exec tool gets the label too
+  if [ "$1" != mcp__codex__review ]; then mk_pass; printf '{"instruction":"%s"}' "$EXEC_INSTR"; else printf '{}'; fi
+}
 payload() { # $1 = tool name, $2 = a tool_response ARRAY
-  printf '{"hook_event_name":"PostToolUse","tool_name":"%s","tool_input":{},"tool_response":%s}' "$1" "$2"
+  printf '{"hook_event_name":"PostToolUse","tool_name":"%s","tool_input":%s,"tool_response":%s}' "$1" "$(exec_input "$1")" "$2"
 }
 resp() { printf '[{"type":"text","text":"%s"}]' "$1"; }   # $1 = ESCAPED text bytes
 resp_from() { cat "$FIXTURES/$1.response.json"; }
@@ -91,7 +100,11 @@ unrec() { resp 'not an envelope this hook knows'; }
 # Retarget a whole captured fixture to another tool name. `sed` with no /g replaces the
 # FIRST match on the line, and every fixture carries its top-level "tool_name" before
 # "tool_response", so no response byte is touched.
-payload_from() { sed "s|\"tool_name\":\"[^\"]*\"|\"tool_name\":\"$2\"|" "$FIXTURES/$1.json"; }
+payload_from() {
+  [ "$2" = mcp__codex__exec ] && mk_pass
+  sed -e "s|\"tool_name\":\"[^\"]*\"|\"tool_name\":\"$2\"|" \
+      -e "s|\"instruction\":\"probe: reply with ok\"|\"instruction\":\"$EXEC_INSTR\"|" "$FIXTURES/$1.json"
+}
 
 # --- runners. Named for what they are: a SILENT runner behind a message assertion
 # --- makes that assertion vacuous, so the capturing ones say so.
@@ -1658,7 +1671,7 @@ reset_all
 out=$(commitpre)
 ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
-expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The fingerprint is Gate B's (mcp__codex__review) alone; Gate A (mcp__codex__exec) passes are counted by call and never record one. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next Gate B pass the ordering permits record a fingerprint."
+expected_ctx="Codex gate state: no fingerprint is recorded for this cycle. The hook cannot tell why; causes: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. The fingerprint is Gate B's (mcp__codex__review) alone; Gate A (mcp__codex__exec) passes are counted per call that left its labelled findings file complete, and never record one. What this cycle does next, the floor it owes included, is this project's review policy's closure ordering's, read there entire, and this reminder decides none of it. If this repeats, check that .context/ and the state file inside it are readable and writable; if the file exists but is unreadable or empty, delete it — which restores no passes, and lets the next Gate B pass the ordering permits record a fingerprint."
 expected_msg="⚠ Codex Gate B: no recorded fingerprint"
 [ "$ctx" = "$expected_ctx" ] && pass "empty-state additionalContext matches exactly" || fail "empty-state additionalContext matches exactly"
 [ "$msg" = "$expected_msg" ] && pass "empty-state systemMessage matches exactly" || fail "empty-state systemMessage matches exactly"
@@ -1670,7 +1683,7 @@ reset_all; rev; rev; rev
 #      Gate B also names the small-change close (0.38.0), with its condition; Gate A does not.
 belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: this project's review policy's closure ordering."
 belowB_msg="⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass with no Blocker or Major"
-belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, counted as calls. The hook reads no findings: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
+belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
 belowA_msg="⚠ Codex Gate A below floor (1/3): a zero-finding last pass may close early"
 commitp='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
 skillp='{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'
@@ -1906,7 +1919,7 @@ reset_all
 # The corpus is driven through the EXEC tool: it routes identically and skips tree_hash,
 # which the classification rows do not test and which dominates the runtime.
 cpay() { # $1 = the tool_response VALUE -> a routable gate payload
-  printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{},"tool_response":%s}' "$1"
+  printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":%s,"tool_response":%s}' "$(exec_input mcp__codex__exec)" "$1"
 }
 ctext() { cpay "[{\"type\":\"text\",\"text\":\"$1\"}]"; }   # $1 = ESCAPED text bytes
 
@@ -1915,7 +1928,7 @@ ctext() { cpay "[{\"type\":\"text\",\"text\":\"$1\"}]"; }   # $1 = ESCAPED text 
 # counted read as correctly discarded, which is the false ✓ direction. No cross-test
 # global state: every call resets first.
 class_of() { # $1 = a full hook payload
-  reset_all
+  reset_all; mk_pass
   _o=$(run "$1")
   _n=$(( $(cat "$count" 2>/dev/null || printf 0) + $(cat "$countA" 2>/dev/null || printf 0) ))
   case "$_o" in
@@ -2004,7 +2017,7 @@ cls_text "unicode-escaped space" '\u0020' unrecognized
 
 # 36a/29-31. locating: decoys in both directions, and block selection.
 cls_pay "tool_input decoy quotes the key BEFORE the real field" \
-  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{"instruction":"see \"tool_response\" docs"},"tool_response":[{"type":"text","text":"{\"success\": true}"}]}' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{"instruction":"see \"tool_response\" docs. Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md"},"tool_response":[{"type":"text","text":"{\"success\": true}"}]}' \
   success
 cls_resp "non-object element skipped" '["x",{"type":"text","text":"{\"success\": true}"}]' success
 # BLOCK SELECTION: an `element [0]` implementation passes every no-result and capture row
@@ -2014,10 +2027,10 @@ cls_resp "non-text block skipped, classified from the text block" \
 
 # 36a/32-33. duplicate depth-1 keys — last-wins would classify an ambiguous payload.
 cls_pay "duplicate depth-1 key" \
-  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_response":[{"type":"text","text":"{\"success\": true}"}],"tool_response":[{"type":"text","text":"{\"success\": false}"}]}' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{"instruction":"Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md"},"tool_response":[{"type":"text","text":"{\"success\": true}"}],"tool_response":[{"type":"text","text":"{\"success\": false}"}]}' \
   unrecognized
 cls_pay "duplicate depth-1 key, reversed" \
-  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_response":[{"type":"text","text":"{\"success\": false}"}],"tool_response":[{"type":"text","text":"{\"success\": true}"}]}' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{"instruction":"Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md"},"tool_response":[{"type":"text","text":"{\"success\": false}"}],"tool_response":[{"type":"text","text":"{\"success\": true}"}]}' \
   unrecognized
 
 # 36a/34-37. duplicate classification-relevant members. The PRECEDING-element rows pin a
@@ -2038,7 +2051,7 @@ cls_resp "duplicate text in a PRECEDING non-text element" \
 # return a byte-position heuristic to life.
 shallow=$(awk 'BEGIN{s="";for(i=0;i<8;i++)s=s "[";for(i=0;i<8;i++)s=s "]";print s}')
 cls_pay "ordinary nesting is unaffected" \
-  "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"mcp__codex__exec\",\"junk\":$shallow,\"tool_response\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true}\"}]}" \
+  "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"mcp__codex__exec\",\"tool_input\":{\"instruction\":\"Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md\"},\"junk\":$shallow,\"tool_response\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true}\"}]}" \
   success
 cls_resp "response quotes the key AFTER the real field" \
   '[{"type":"text","text":"{\"success\": true} plus a later mention of \\\"tool_response\\\""}]' success
@@ -2064,12 +2077,13 @@ cls_pay "P9-6 escaped type value reads as no-result" \
 # 36a/41-42. the length ceiling, and a pretty-printed payload.
 big=$(awk 'BEGIN{s="";while(length(s)<1100000)s=s "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";print s}')
 cls_pay "payload past the ceiling" \
-  "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"mcp__codex__exec\",\"pad\":\"$big\",\"tool_response\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true}\"}]}" \
+  "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"mcp__codex__exec\",\"tool_input\":{\"instruction\":\"Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md\"},\"pad\":\"$big\",\"tool_response\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true}\"}]}" \
   unrecognized
 unset big
 cls_pay "pretty-printed payload" '{
   "hook_event_name": "PostToolUse",
   "tool_name": "mcp__codex__exec",
+  "tool_input": { "instruction": "Findings file: .context/codex-reviews/gate-a-spec-suite001-pass-1.md" },
   "tool_response": [
     { "type": "text", "text": "{\"success\": true}" }
   ]
@@ -2188,7 +2202,7 @@ disc_payload() { # $1 = class, $2 = tool name
     backgrounded) _tr=$(resp_from shape3-backgrounding-notice) ;;
     unrecognized) _tr=$(unrec) ;;
   esac
-  printf '{"hook_event_name":"PostToolUse","tool_name":"%s","tool_input":{},"tool_response":%s}' "$2" "$_tr"
+  printf '{"hook_event_name":"PostToolUse","tool_name":"%s","tool_input":%s,"tool_response":%s}' "$2" "$(exec_input "$2")" "$_tr"
 }
 run_as() { # $1 = jq|nojq, $2 = payload  (silent: these rows assert state, not messages)
   case "$1" in
@@ -2509,13 +2523,14 @@ for pair in "absent:$awk_absent:absolute" "nonzero:$awk_fail:prefix" "partial:$a
     && pass "awk $shape: discloses the uncertainty" || fail "awk $shape: discloses the uncertainty"
   reset_all
   printf '%s' "$(disc_payload failure mcp__codex__exec)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK" >/dev/null
-  [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "awk $shape: exec counts (fail-open)" \
-                                         || fail "awk $shape: exec counts (fail-open)"
+  # 0.45: the findings-file check needs awk, so a broken awk leaves the call uncounted (the safe side)
+  [ "$(cat "$countA" 2>/dev/null || echo 0)" = 0 ] && pass "awk $shape: exec not counted (findings file unreadable)" \
+                                                   || fail "awk $shape: exec not counted (findings file unreadable)"
 done
 reset_all
 # 39a, jq-free. Without jq the Gate-B request reader needs awk, so a broken awk makes the
 # request unreadable: no credit and no fingerprint write (spec 2026-10-09 §3.2, plan Task 2).
-# Gate A does not read the request, so its fail-open count is unchanged.
+# Gate A's findings-file check needs awk too, so a broken awk leaves its call uncounted (0.45).
 awk_absent_nojq=$(mk_path noawknojq cat grep sed head tr git mkdir rm mv cp mktemp shasum sha1sum cksum)
 for pair in "absent:$awk_absent_nojq:absolute" "nonzero:$awk_fail:prefix" "partial:$awk_partial:prefix"; do
   shape=${pair%%:*}; rest=${pair#*:}; d=${rest%:*}; mode=${rest##*:}
@@ -2538,8 +2553,8 @@ for pair in "absent:$awk_absent_nojq:absolute" "nonzero:$awk_fail:prefix" "parti
     || fail "awk $shape, no jq: says the request could not be read"
   reset_all
   printf '%s' "$(disc_payload failure mcp__codex__exec)" | PATH="$faultpath" "$HOOK_SH_BIN" "$HOOK" >/dev/null
-  [ "$(cat "$countA" 2>/dev/null)" = 1 ] && pass "awk $shape, no jq: exec counts (fail-open)" \
-                                         || fail "awk $shape, no jq: exec counts (fail-open)"
+  [ "$(cat "$countA" 2>/dev/null || echo 0)" = 0 ] && pass "awk $shape, no jq: exec not counted (findings file unreadable)" \
+                                                   || fail "awk $shape, no jq: exec not counted (findings file unreadable)"
 done
 reset_all
 
@@ -2799,7 +2814,7 @@ run '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command"
 # ...and a LEGITIMATE in-namespace mapping is untouched by the new check.
 reset_all
 printf 'execTool=mcp__codex__gateA\n' > "$toolsf"
-run '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__gateA","tool_input":{},"tool_response":[{"type":"text","text":"{\"success\": true}"}]}' >/dev/null
+run "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"mcp__codex__gateA\",\"tool_input\":$(exec_input mcp__codex__gateA),\"tool_response\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true}\"}]}" >/dev/null
 [ -f "$countA" ] && pass "in-namespace mapping still counts" || fail "in-namespace mapping still counts"
 reset_all
 
@@ -3458,7 +3473,7 @@ rm -f "$reviews"/gate-*
 printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"
 out=$(compact)
 printf '%s' "$out" | grep -q 'nonce' && fail "44d: legacy bare slot -> no nonce segment" || pass "44d: legacy bare slot -> no nonce segment"
-reset_all; rm -f "$reviews"/gate-*; execp
+reset_all; rm -f "$reviews"/gate-*; execp; rm -f "$reviews"/gate-*
 l2=$(printf '%s\n' "$(compact)" | sed -n 2p)
 [ "$l2" = 'Gate cycle: Gate A passes 1/3' ] && pass "44d: Gate A count alone -> only that segment" || fail "44d: Gate A count alone -> only that segment (got [$l2])"
 
@@ -3654,37 +3669,38 @@ done
 # Read with jq only; without jq every call counts, as before 0.40.
 resumedA_ctx="Claude via Claude Code — gate hook. <state>This mcp__codex__exec call carries a sessionId in its input, so it resumes a Codex session and is not counted as a Gate A pass.</state> <next>A call that fetches the rest of a truncated reply belongs to the pass it completes. If this call was a pass of its own, run it again without sessionId, because a pass reviews the artifact as it stands, not as an earlier session saw it.</next>"
 resumedA_msg="ℹ Codex Gate A: resumed session not counted as a pass"
-exec47() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{%s},"tool_response":%s}' "$1" "$2"; }
+I47="\"instruction\":\"$EXEC_INSTR\""
+exec47() { mk_pass; printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{%s},"tool_response":%s}' "$1" "$2"; }
 nA() { cat "$countA" 2>/dev/null || printf '0'; }
 # The detection cases need jq on this host; the jq-free case at the end runs everywhere.
 if command -v jq >/dev/null 2>&1; then
 reset_all; execp
-out=$(run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+out=$(run "$(exec47 "$I47,\"sessionId\":\"abc\"" "$(resp_success)")")
 [ "$(nA)" = 1 ] && pass "47: resumed exec not counted" || fail "47: resumed exec not counted (count $(nA))"
 exact_pair "47: resumed exec note" "$out" "$resumedA_ctx" "$resumedA_msg"
 reset_all
-run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(unrec)")" >/dev/null
+run "$(exec47 "$I47,\"sessionId\":\"abc\"" "$(unrec)")" >/dev/null
 [ "$(nA)" = 0 ] && pass "47: resumed unrecognized exec not counted" || fail "47: resumed unrecognized exec not counted (count $(nA))"
 reset_all
-run "$(exec47 '"instruction":"x","sessionId":""' "$(resp_success)")" >/dev/null
+run "$(exec47 "$I47,\"sessionId\":\"\"" "$(resp_success)")" >/dev/null
 [ "$(nA)" = 1 ] && pass "47: empty sessionId counts" || fail "47: empty sessionId counts (count $(nA))"
 reset_all
-out=$(run "$(exec47 '"instruction":"x","sessionId":"abc"' "$(resp_from shape1-fast-fail)")")
+out=$(run "$(exec47 "$I47,\"sessionId\":\"abc\"" "$(resp_from shape1-fast-fail)")")
 [ "$(nA)" = 0 ] && printf '%s' "$out" | grep -qF 'not counted as a gate pass' && ! printf '%s' "$out" | grep -qF 'resumed session' \
   && pass "47: resumed failure takes the discard note" || fail "47: resumed failure takes the discard note [$out]"
 # A response that names sessionId does not answer for the input: escaped inside the text (every
 # real envelope), or as a structured key; nor does a pretty-printed payload change that.
 reset_all
-run "$(exec47 '"instruction":"x"' "$(resp_success)")" >/dev/null
-run "$(exec47 '"instruction":"x"' '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
-run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n "instruction":"x",\n "sessionId":"abc"\n},\n"tool_response":%s}' "$(resp_success)")" >/dev/null
+run "$(exec47 "$I47" "$(resp_success)")" >/dev/null
+run "$(exec47 "$I47" '[{"type":"text","text":"{\"success\": true}","sessionId":"x"}]')" >/dev/null
+run "$(printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{\n %s,\n "sessionId":"abc"\n},\n"tool_response":%s}' "$I47" "$(resp_success)")" >/dev/null
 [ "$(nA)" = 2 ] && pass "47: response-only sessionId counts; multiline input sessionId does not" || fail "47: response-only sessionId counts; multiline input sessionId does not (count $(nA))"
 else
   skip "47: sessionId detection cases — no jq on this host; the jq-free case below still runs"
 fi
 # Without jq the hook does not read sessionId: the resumed call counts, as before 0.40.
 reset_all
-out=$(nojq_run "$(exec47 '"instruction":"more","sessionId":"abc"' "$(resp_success)")")
+out=$(nojq_run "$(exec47 "$I47,\"sessionId\":\"abc\"" "$(resp_success)")")
 [ "$(nA)" = 1 ] && ! printf '%s' "$out" | grep -qF 'resumed session' && pass "47 nojq: resumed exec counts, no note" \
   || fail "47 nojq: resumed exec counts, no note (count $(nA)) [$out]"
 
@@ -3714,6 +3730,80 @@ for r in run nojq_run; do
     || fail "48 $r: empty closing commit, message in .context/ -> ✓ [$out]"
   rm -f .context/msg
 done
+
+# 49. Gate A counts only a call whose instruction labels one complete findings file (kit-044
+# k044ga7q: a call that asked for the findings in the reply, cut off by the server, was counted).
+ex49() { printf '{"hook_event_name":"PostToolUse","tool_name":"mcp__codex__exec","tool_input":{"instruction":"%s"},"tool_response":%s}' "$1" "$(resp_success)"; }
+f49=.context/codex-reviews/gate-a-spec-cyc49abc-pass-2.md
+old49=.context/codex-reviews/gate-a-spec-old49xyz-pass-9.md
+put49() { mkdir -p .context/codex-reviews; printf '%b' "$2" > "$1"; }   # $1 = path, $2 = text with \n escapes
+two49='MAJOR | high | a | b | c | d\nMINOR | low | e | f | g | h\nEND OF FINDINGS (2 total)\n'
+noted49() { printf '%s' "$1" | grep -qF "not counted as a Gate A pass: $2" && printf '%s' "$1" | grep -qF "ℹ Codex Gate A: not counted — $3"; }
+for r in run nojq_run; do
+  reset_all; rm -f "$f49" "$old49"
+  out=$($r "$(ex49 'Review the spec; reply with the findings in your answer.')")
+  [ "$(nA)" = 0 ] && noted49 "$out" 'its instruction names no findings file' 'names no findings file' \
+    && pass "49 $r: reply-only call (kit-044 shape) not counted, note names the cause" || fail "49 $r: reply-only call [$out]"
+  reset_all
+  out=$($r "$(ex49 "Findings file: $f49")")
+  [ "$(nA)" = 0 ] && noted49 "$out" 'the findings file it names is missing' 'findings file missing' \
+    && pass "49 $r: named file missing -> not counted" || fail "49 $r: named file missing [$out]"
+  reset_all; put49 "$f49" 'MAJOR | high | a | b | c | d\nMINOR | low | e | f'
+  out=$($r "$(ex49 "Findings file: $f49")")
+  [ "$(nA)" = 0 ] && noted49 "$out" 'the findings file it names is incomplete' 'findings file incomplete' \
+    && pass "49 $r: no terminator (cut off) -> not counted" || fail "49 $r: no terminator [$out]"
+  reset_all; put49 "$f49" 'MAJOR | high | a | b | c | d\nEND OF FINDINGS (2 total)\n'
+  $r "$(ex49 "Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: count mismatch -> not counted" || fail "49 $r: count mismatch"
+  reset_all; put49 "$f49" 'MAJOR | high | a | b | c | d\nsome prose\nEND OF FINDINGS (2 total)\n'
+  $r "$(ex49 "Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: prose body line -> not counted" || fail "49 $r: prose body line"
+  reset_all; put49 "$f49" 'NO FINDINGS\nNO FINDINGS\nEND OF FINDINGS (0 total)\n'
+  $r "$(ex49 "Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: zero total with two body lines -> not counted" || fail "49 $r: zero total, two lines"
+  reset_all; put49 "$f49" "$two49"
+  out=$($r "$(ex49 "Review it. Findings file: $f49 (write it).")")
+  [ "$(nA)" = 1 ] && ! printf '%s' "$out" | grep -qF 'not counted' \
+    && pass "49 $r: complete file with two findings -> counted" || fail "49 $r: complete file [$out]"
+  reset_all; put49 "$f49" 'NO FINDINGS\nEND OF FINDINGS (0 total)\n'
+  $r "$(ex49 "Findings file: \`$f49\`")" >/dev/null
+  [ "$(nA)" = 1 ] && pass "49 $r: NO FINDINGS file, label in backticks -> counted" || fail "49 $r: NO FINDINGS file"
+  reset_all; put49 "$f49" "$two49"
+  $r "$(ex49 "Findings file: $(git rev-parse --show-toplevel)/$f49")" >/dev/null
+  [ "$(nA)" = 1 ] && pass "49 $r: this checkout's absolute path -> counted" || fail "49 $r: absolute path here"
+  reset_all
+  out=$($r "$(ex49 "Findings file: /elsewhere/repo/$f49")")
+  [ "$(nA)" = 0 ] && noted49 "$out" "the findings file it names is outside this checkout" 'findings file elsewhere' \
+    && pass "49 $r: absolute path elsewhere, complete namesake here -> not counted" || fail "49 $r: path elsewhere [$out]"
+  reset_all; rm -f "$f49"; put49 "$old49" "$two49"
+  $r "$(ex49 "Earlier cycle: $old49. Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: unlabelled old cycle's complete file beside a missing target -> not counted" \
+    || fail "49 $r: unlabelled old file"
+  reset_all; put49 "$f49" "$two49"
+  out=$($r "$(ex49 "Findings file: $f49 Findings file: $old49")")
+  [ "$(nA)" = 0 ] && noted49 "$out" 'its instruction names two different findings files' 'names two findings files' \
+    && pass "49 $r: two different labelled files -> not counted" || fail "49 $r: two labels [$out]"
+  reset_all; put49 "$f49" "$two49"
+  $r "$(ex49 "Findings file: $f49 and again Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 1 ] && pass "49 $r: the same label twice -> counted" || fail "49 $r: same label twice"
+  reset_all; rm -f "$f49"; put49 .context/codex-reviews/real49.md "$two49"; ln -s real49.md "$f49"
+  $r "$(ex49 "Findings file: $f49")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: symbolic link to a complete file -> not counted" || fail "49 $r: symlink"
+  rm -f "$f49" .context/codex-reviews/real49.md
+  reset_all; put49 "$f49" "$two49"
+  $r "$(ex49 "Findings file: .context/codex-reviews/gate-a-spec-cyc49abc-pass-2-dispositions.md")" >/dev/null
+  [ "$(nA)" = 0 ] && pass "49 $r: a dispositions path is no findings file" || fail "49 $r: dispositions path"
+done
+# A path with a \u escape: jq decodes it and the call counts; the jq-free reader turns it into ? and does not.
+reset_all; put49 "$f49" "$two49"
+esc49=$(printf '%s' "$f49" | sed 's/codex-reviews/codex\\u002dreviews/')
+nojq_run "$(ex49 "Findings file: $esc49")" >/dev/null
+[ "$(nA)" = 0 ] && pass "49 nojq_run: a \\u-escaped path -> not counted (the safe side)" || fail "49 nojq_run: escaped path"
+if command -v jq >/dev/null 2>&1; then
+  reset_all; run "$(ex49 "Findings file: $esc49")" >/dev/null
+  [ "$(nA)" = 1 ] && pass "49 run: a \\u-escaped path decoded by jq -> counted" || fail "49 run: escaped path with jq"
+fi
+rm -f "$f49" "$old49"
 
 reset_all
 echo "---"
