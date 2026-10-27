@@ -123,6 +123,9 @@ pending_file="$state_dir/codex-gate.pendingBranch" # one single-branch call awai
 legacy_count="$state_dir/codex-gate.passCount"     # pre-0.21.0 names: retired, never read
 legacy_fresh="$state_dir/codex-gate.freshCount"
 countA_file="$state_dir/codex-gate.passCountA"    # Gate A (exec) passes since last plan execution
+mode_file="$repo_root/.claude/codex-gate.mode"    # committed gate mode: lean | strict | classic
+modeA_file="$state_dir/codex-gate.modeA"          # the mode read at Gate A's first counted pass
+modeB_file="$state_dir/codex-gate.modeB"          # the same for Gate B
 # Diagnostic markers. These are NOT gate-pass state: they dedupe one-time disclosures,
 # and every write is best-effort. `bgAdvice` is independent of the other two;
 # `unverified` means the uncertainty disclosure was shown, `unverifiedPending` that it is
@@ -191,8 +194,9 @@ policy=$(gate_citation) || policy="this project's review policy"
 # behind it (unlike Gate B, which at least compares a content fingerprint — though
 # that proves the current fingerprint matches the recorded one, not that Codex read
 # those bytes).
-# Per-project override: .context/codex-gate.floor holding a positive integer.
-floor=3
+# The default numbers come from the gate mode (below); this per-project override,
+# .context/codex-gate.floor holding a positive integer, sets the floor of both gates.
+floor=''
 if [ -f "$floor_file" ]; then
   f=$(cat "$floor_file" 2>/dev/null | tr -d '[:space:]')
   # Positive integer only; anything else (0, -1, "three", empty) keeps the default,
@@ -207,8 +211,8 @@ if [ -f "$floor_file" ]; then
   esac
 fi
 
-# §5 PASS CAP: the closure ordering's pass-cap stop is a count — the floor plus two, and
-# from a cap answer onward that many more — so the hook reports it the way it reports
+# §5 PASS CAP: the closure ordering's pass-cap stop is a count — the mode's cap per gate
+# (classic: the floor plus two), and from a cap answer onward that many more — so the hook reports it the way it reports
 # the floor. Reaching it changes nothing here (invariant 1): the message asks for the
 # answer (the human's when a Blocker remains, the agent's otherwise), and it goes in .context/codex-gate.cap-extra as a positive integer, which raises
 # the cap for the current cycle until the commit reset clears it with the pass counter.
@@ -226,12 +230,8 @@ pos_int() { # prints $1 as a decimal when it is a positive integer of at most ni
   case "$_p" in '' | ??????????*) return 1 ;; esac
   printf '%s' "$_p"
 }
-read_int_file() { pos_int "$(tr '\n\r' '  ' < "$1" 2>/dev/null | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"; }
-case "$floor" in ??????????*) cap=$floor ;; *) cap=$((floor + 2)) ;; esac
-if [ -f "$cap_file" ] && c=$(read_int_file "$cap_file"); then cap="$c"; fi
-if [ -f "$capextra_file" ] && c=$(read_int_file "$capextra_file"); then
-  case "$cap" in ??????????*) ;; *) cap=$((cap + c)) ;; esac
-fi
+trim_file() { tr '\n\r' '  ' < "$1" 2>/dev/null | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
+read_int_file() { pos_int "$(trim_file "$1")"; }
 
 # Which Codex MCP tools back the gates. The pinned mcp-codex-dev server (written by
 # /workflow-init) exposes exec + review, which map 1:1 onto Gate A (reviews TEXT) and
@@ -281,6 +281,75 @@ read_count() {
   echo "${_c:-0}"
 }
 bump_count() { n=$(read_count "$1"); { printf '%s' "$((n + 1))" > "$1"; } 2>/dev/null || true; }
+
+# GATE MODE (0.46). The committed .claude/codex-gate.mode sets each gate's default floor and
+# cap. No file, or one that is not exactly a known word once its edges are trimmed, is
+# classic: the 0.45 numbers, so a project that never chose a mode reminds as before.
+read_mode() { # prints the mode word held in $1, or fails
+  [ -f "$1" ] || return 1          # a FIFO would block the read
+  _w=$(trim_file "$1")
+  case "$_w" in lean | strict | classic) printf '%s' "$_w" ;; *) return 1 ;; esac
+}
+mode_nums() { # $1 = mode -> nfA ncA nfB ncB (floor and cap per gate)
+  case "$1" in
+    lean) nfA=2 ncA=2 nfB=1 ncB=3 ;;
+    strict) nfA=2 ncA=2 nfB=1 ncB=5 ;;
+    *) nfA=3 ncA=5 nfB=3 ncB=5 ;;
+  esac
+}
+mode_bad=0
+if ! mode=$(read_mode "$mode_file"); then
+  mode=classic
+  if [ -e "$mode_file" ] || [ -L "$mode_file" ]; then mode_bad=1; fi
+fi
+mode_nums "$mode"; floorA=$nfA capA=$ncA floorB=$nfB capB=$ncB
+mtA="mode $mode" mtB="mode $mode"
+cmA=$mode cmB=$mode   # the cycle's mode per gate: the recorded one while the counter is positive
+# The file can change while a cycle is open. Each gate's first counted pass records the mode
+# (modeA/modeB, cleared with that gate's counter); while the counter is positive the higher
+# floor and the lower cap of the recorded and the current mode apply, so a change mid-cycle
+# makes the reminders stricter, never laxer (invariant 2). A positive counter with no usable
+# record, a cycle begun under 0.45 or a failed write, counts as a recorded classic.
+# Gate A's count is the live one, else the closed one plan execution reads.
+cA=$(read_count "$countA_file"); [ -f "$countA_file" ] || cA=$(read_count "$countA_file.closed")
+if [ "$cA" != 0 ]; then
+  rA=$(read_mode "$modeA_file") || rA=classic
+  cmA=$rA
+  if [ "$rA" != "$mode" ]; then
+    mode_nums "$rA"
+    if [ "$nfA" -gt "$floorA" ]; then floorA=$nfA; fi
+    if [ "$ncA" -lt "$capA" ]; then capA=$ncA; fi
+    mtA="mode $mode, cycle begun under $rA: the higher floor and lower cap of the two"
+  fi
+fi
+if [ "$(read_count "$count_file")" != 0 ]; then
+  rB=$(read_mode "$modeB_file") || rB=classic
+  cmB=$rB
+  if [ "$rB" != "$mode" ]; then
+    mode_nums "$rB"
+    if [ "$nfB" -gt "$floorB" ]; then floorB=$nfB; fi
+    if [ "$ncB" -lt "$capB" ]; then capB=$ncB; fi
+    mtB="mode $mode, cycle begun under $rB: the higher floor and lower cap of the two"
+  fi
+fi
+# The override files keep overriding both gates exactly as before 0.46: a floor file sets
+# the floor and, unless a cap file is set, the cap at that floor plus two.
+ovr=''
+if [ -n "$floor" ]; then
+  floorA=$floor floorB=$floor ovr=1
+  case "$floor" in ??????????*) capA=$floor ;; *) capA=$((floor + 2)) ;; esac
+  capB=$capA
+fi
+if [ -f "$cap_file" ] && c=$(read_int_file "$cap_file"); then capA="$c" capB="$c" ovr=1; fi
+if [ -n "$ovr" ]; then
+  mtA="$mtA, overridden by a .context/ floor or cap file" mtB="$mtB, overridden by a .context/ floor or cap file"
+fi
+if [ -f "$capextra_file" ] && c=$(read_int_file "$capextra_file"); then
+  case "$capA" in ??????????*) ;; *) capA=$((capA + c)) ;; esac
+  case "$capB" in ??????????*) ;; *) capB=$((capB + c)) ;; esac
+fi
+# Records the mode at a gate's first counted pass. $1 = that gate's count file, $2 = its mode file.
+remember_mode() { [ "$(read_count "$1")" = 0 ] && { printf '%s\n' "$mode" > "$2"; } 2>/dev/null; return 0; }
 
 # Fingerprint used for the Gate-B comparison, computed at hook invocation: the diff of
 # tracked files against HEAD (staged + unstaged), a tree id for the EFFECTIVE INDEX, and
@@ -863,6 +932,7 @@ credit_pass() {
     _m='⚠ Codex Gate B: fingerprint could not be stored; .context/ or its state file is not writable.'
     note "$_m" "$_m"
   fi
+  remember_mode "$count_file" "$modeB_file"
   bump_count "$count_file"
 }
 
@@ -1059,16 +1129,34 @@ note_front() { # $1 = additionalContext body, $2 = systemMessage body
 # has to know where the answer goes. The composed document stays one line because `emit`
 # escapes the break (jq does, and the fallback does since this message exists).
 cap_check() { # $1 = gate letter, $2 = that gate's count file
+  mode_note
+  case "$1" in A) _cap=$capA _mt=$mtA _cm=$cmA ;; *) _cap=$capB _mt=$mtB _cm=$cmB ;; esac
   _n=$(read_count "$2")
   case "$_n" in
     '' | *[!0-9]*) return 0 ;;          # not a count: nothing to compare
     ???????????????????*) ;;            # nineteen digits or more: past any cap this hook
                                         # can hold, and past what `test` can compare
-    *) [ "$_n" -ge "$cap" ] || return 0 ;;
+    *) [ "$_n" -ge "$_cap" ] || return 0 ;;
   esac
-  _m="⚠ Codex Gate $1: pass cap reached ($_n/$cap). STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
-   Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap)."
+  # Target model: Claude via Claude Code. Under lean and strict the cap closes the cycle
+  # unless a finding the human must judge is open (spec 0.46 §4); classic keeps its text.
+  if [ "$_cm" != classic ]; then
+    _m="⚠ Codex Gate $1: pass cap reached ($_n/$_cap). STOP: an open Blocker, Security-class or violated-AC finding, or a cut to an approved commitment, goes to the human; otherwise close the cycle, each open finding a todos.md row.
+   Passes the human allows go in .context/codex-gate.cap-extra as an integer. Numbers from $_mt."
+    note "$_m" "$_m"; return 0
+  fi
+  _m="⚠ Codex Gate $1: pass cap reached ($_n/$_cap). STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
+   Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap). Numbers from $_mt."
   note "$_m" "$_m"
+}
+# A present but unusable mode file is said beside every gate number the hook reports; cap_check
+# runs at each of those points (gate calls, commit attempts, plan execution), once per run.
+mode_said=0
+mode_note() {
+  [ "$mode_bad" = 1 ] && [ "$mode_said" = 0 ] || return 0
+  mode_said=1
+  # Target model: Claude via Claude Code.
+  note "Codex gate mode: .claude/codex-gate.mode is present but unusable (empty, unreadable, or not exactly one of lean, strict, classic), so the current file counts as classic. An open cycle keeps the mode it began with; the numbers reported beside this note are the ones in force. Say so when you report gate status, and fix the file in your next commit." "⚠ .claude/codex-gate.mode is unusable: the file counts as classic"
 }
 
 # --- THE DIAGNOSTIC INTERFACE -------------------------------------------------------
@@ -1449,7 +1537,7 @@ is_docs_only() {
 # leaves blobs and trees in the object database exactly as every commit check does — the
 # effective index and the worktree are untouched. Line 1 names the rules file
 # /workflow-init scaffolds.
-compact_count() { # $1 = label, $2 = count file. Sets `unknown` or `atcap`; `?` where the
+compact_count() { # $1 = label, $2 = count file, $3 = floor, $4 = cap. Sets `unknown` or `atcap`; `?` where the
                   # file exists but no number can be read (an unreadable count may hide a
                   # pending stop, so the open stop then reads `unknown`, never `none`).
   # Present-but-not-regular (a FIFO, a directory) is unknown and never read: `cat` on a
@@ -1459,9 +1547,9 @@ compact_count() { # $1 = label, $2 = count file. Sets `unknown` or `atcap`; `?` 
   case "$c" in
     '' | *[!0-9]*) c='?'; unknown=1 ;;
     ???????????????????*) atcap=1 ;;      # nineteen digits or more: past any cap, as in cap_check
-    *) [ "$c" -ge "$cap" ] && atcap=1 ;;
+    *) [ "$c" -ge "$4" ] && atcap=1 ;;
   esac
-  seg="${seg:+$seg · }$1 passes $c/$floor"
+  seg="${seg:+$seg · }$1 passes $c/$3"
 }
 compact_lines() {
   [ -f "$off_file" ] && return 0
@@ -1476,18 +1564,20 @@ compact_lines() {
   # why this is `ls` and not a glob: POSIX `test` has no `-nt`. Listed from INSIDE the
   # directory so only basenames are split: the checkout path may contain spaces, a usable
   # slot name cannot, and a name that does split yields pieces the `-f` test rejects.
-  rdir="$state_dir/codex-reviews"
-  # shellcheck disable=SC2012,SC2045  # basenames only; see above
-  for f in $(cd "$rdir" 2>/dev/null && ls -td gate-*-pass-*.md 2>/dev/null); do
-    [ -f "$rdir/$f" ] || continue
+  # The archive counts too (0.46): a close interrupted after its files moved there but before
+  # its commit landed is still the open cycle. Paths are listed relative to .context/, so the
+  # checkout path is never split; a name with a space splits into pieces the `-f` test rejects.
+  # shellcheck disable=SC2012,SC2045  # relative paths only; see above
+  for f in $(cd "$state_dir" 2>/dev/null && ls -td codex-reviews/gate-*-pass-*.md archive/codex-reviews/*/gate-*-pass-*.md 2>/dev/null); do
+    [ -f "$state_dir/$f" ] || continue
     n=${f%-pass-*}; n=${n##*-}
     case "$n" in
       *[!a-z0-9]* | ?????????????????*) continue ;;
       ????????*) seg="nonce $n"; break ;;
     esac
   done
-  compact_count 'Gate A' "$countA_file"
-  compact_count 'Gate B' "$count_file"
+  compact_count 'Gate A' "$countA_file" "$floorA" "$capA"
+  compact_count 'Gate B' "$count_file" "$floorB" "$capB"
   if [ -e "$state_file" ] || [ -L "$state_file" ]; then
     # Read exactly as the commit check reads it, so the two can never disagree about the
     # same bytes; `unavailable` on either side is never fresh. Not read at all when it is
@@ -1560,6 +1650,7 @@ case "$event" in
           else
             [ "$cls" = unrecognized ] && note_unverified
             mkdir -p "$state_dir" 2>/dev/null
+            remember_mode "$countA_file" "$modeA_file"
             bump_count "$countA_file"
           fi ;;
         esac
@@ -1596,7 +1687,7 @@ case "$event" in
         # shortcut: a commit sent off with a shell `&` that lands after the call returns
         # leaves HEAD unchanged at PostToolUse and keeps the counters; no field case yet.
         if is_commit "$cmd" && head_moved && ! is_wip_commit_post "$cmd"; then
-          rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" "$capextra_file"
+          rm -f "$state_file" "$count_file" "$fresh_file" "$pending_file" "$capextra_file" "$modeB_file"
           retire_legacy quiet
           # The closing act's commit precedes plan execution, which still reads the closed
           # count for its floor check; the cap check reads only the live one
@@ -1613,14 +1704,14 @@ case "$event" in
           # `intake` or `ticket`: their change-record, `list` and `T-<n>` forms run inside
           # an open cycle, where a reset would hide a pending cap stop.
           superpowers:executing-plans | superpowers:subagent-driven-development \
-            | superpowers:brainstorming) rm -f "$countA_file" "$countA_file.closed" "$countA_file.spec" ;;
+            | superpowers:brainstorming) rm -f "$countA_file" "$countA_file.closed" "$countA_file.spec" "$modeA_file" ;;
           # writing-plans opens the plan's Gate-A cycle and sets the earlier one's count
           # aside, so plan execution can tell "no Gate A on this plan" from "below floor"
           superpowers:writing-plans)
             rm -f "$countA_file.spec"
             if [ -f "$countA_file" ]; then mv -f "$countA_file" "$countA_file.spec" 2>/dev/null
             elif [ -f "$countA_file.closed" ]; then mv -f "$countA_file.closed" "$countA_file.spec" 2>/dev/null; fi
-            rm -f "$countA_file" "$countA_file.closed" ;;
+            rm -f "$countA_file" "$countA_file.closed" "$modeA_file" ;;
         esac
         ;;
     esac
@@ -1644,7 +1735,7 @@ case "$event" in
           has_all_flag "$cmd" && files=$(printf '%s\n%s\n' "$files" "$(git -C "$repo_root" diff --name-only 2>/dev/null)")
           files=$(printf '%s\n' "$files" | sed '/^$/d')
           if names_no_paths "$cmd" && is_docs_only "$files"; then
-            note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
+            note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) where $policy requires one; the gate mode decides which specs do." "ℹ Codex Gate B N/A (docs-only commit)"
           else
             retire_legacy quiet   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
@@ -1677,8 +1768,13 @@ case "$event" in
               # changed, and under a failed state write the content may be exactly what
               # was reviewed.
               note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually the working tree or the index changed since the review. Next: a fresh Gate-B pass, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, other causes and checks: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
-            elif [ "$passes" -lt "$floor" ]; then
-              note "Codex Gate B below floor: $passes/$floor mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: $policy's closure ordering." "⚠ Codex Gate B below floor ($passes/$floor): may close after a zero-finding pass, or a small change's pass with no Blocker or Major"
+            elif [ "$passes" -lt "$floorB" ]; then
+              # Target model: Claude via Claude Code. lean/strict: no early-close advice (spec 0.46 §3).
+              if [ "$cmB" != classic ]; then
+                note "Codex Gate B below floor: $passes/$floorB mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. Follow $policy's closure ordering. Numbers from $mtB." "⚠ Codex Gate B below floor ($passes/$floorB) · $mtB"
+              else
+              note "Codex Gate B below floor: $passes/$floorB mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: $policy's closure ordering. Numbers from $mtB." "⚠ Codex Gate B below floor ($passes/$floorB): may close after a zero-finding pass, or a small change's pass with no Blocker or Major · $mtB"
+              fi
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.
@@ -1687,7 +1783,8 @@ case "$event" in
               # establish that Codex read these bytes (spec §7, and the review-range row
               # in todos.md). The stronger phrasing was here and was removed; do not
               # restore it as a clarity improvement.
-              note "Codex Gate B: $passes/$floor pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them." "✓ Codex Gate B hook checks passed ($passes/$floor cycle, $fresh on current fingerprint)"
+              # Target model: Claude via Claude Code.
+              note "Codex Gate B: $passes/$floorB pass(es) this cycle, of which $fresh cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per $policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them. Numbers from $mtB." "✓ Codex Gate B hook checks passed ($passes/$floorB cycle, $fresh on current fingerprint) · $mtB"
             fi
             # A half pass is never part of the count above; say so beside whichever
             # message that chain printed (spec 2026-10-09 §3.4). Existence is the test.
@@ -1727,16 +1824,29 @@ case "$event" in
             # so the floor is not reported as missed; the reminder still fires, naming both cases.
             if [ ! -f "$countA_file" ] && [ ! -f "$countA_file.closed" ] && [ -f "$countA_file.spec" ]; then
               passesS=$(read_count "$countA_file.spec")
-              note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floor). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floor pass(es), counted as calls that left a complete findings file, with no check of what was reviewed." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floor)"
-            elif [ "$passesA" -lt "$floor" ]; then
-              note "Codex Gate A below floor: $passesA/$floor mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass." "⚠ Codex Gate A below floor ($passesA/$floor): a zero-finding last pass may close early"
+              # Target model: Claude via Claude Code.
+              note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floorA). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floorA pass(es), counted as calls that left a complete findings file, with no check of what was reviewed. Numbers from $mtA." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floorA) · $mtA"
+            elif [ "$passesA" -lt "$floorA" ]; then
+              # Target model: Claude via Claude Code. lean/strict: Gate A is two passes (spec 0.46 §3).
+              if [ "$cmA" != classic ]; then
+                note "Codex Gate A below floor: $passesA/$floorA mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: in this mode a Gate A that runs is exactly two passes, full then verify; a spec below the threshold needs none (see the threshold note). Otherwise follow $policy's closure ordering. Numbers from $mtA." "⚠ Codex Gate A below floor ($passesA/$floorA): two passes when Gate A runs · $mtA"
+              else
+              note "Codex Gate A below floor: $passesA/$floorA mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass. Numbers from $mtA." "⚠ Codex Gate A below floor ($passesA/$floorA): a zero-finding last pass may close early · $mtA"
+              fi
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
               # mcp__codex__exec calls that left a complete findings file, bound to no artifact. Hashing the artifact would
               # be wrong — a spec is SUPPOSED to change between passes — so the hook
               # cannot verify what was reviewed, and must not imply that it did.
-              note "Codex Gate A: $passesA/$floor mcp__codex__exec pass(es) — floor met by COUNT ONLY; the hook cannot verify what was reviewed or that findings were addressed. Proceed only once this cycle has closed under $policy's closure ordering." "✓ Codex Gate A floor met ($passesA/$floor passes, count only)"
+              # Target model: Claude via Claude Code.
+              note "Codex Gate A: $passesA/$floorA mcp__codex__exec pass(es) — floor met by COUNT ONLY; the hook cannot verify what was reviewed or that findings were addressed. Proceed only once this cycle has closed under $policy's closure ordering. Numbers from $mtA." "✓ Codex Gate A floor met ($passesA/$floorA passes, count only) · $mtA"
             fi
+            # Target model: Claude via Claude Code. The spec threshold of the mode in force, so a
+            # standard spec that skipped Gate A under lean or strict reads as expected (spec 0.46 §2).
+            case "$mode" in
+              lean | strict) note "Codex Gate A threshold, mode $mode (.claude/codex-gate.mode): a spec needs Gate A only at risk high or security not none, and a plan only at risk high, so a spec at risk standard with security none, or a plan below risk high, is expected to have none." "ℹ Codex Gate A, mode $mode: a spec needs it only at risk high or security not none; a plan only at risk high" ;;
+              *) note "Codex Gate A threshold, mode classic: every spec needs Gate A, and a plan only at risk high." "ℹ Codex Gate A, mode classic: every spec needs it; a plan only at risk high" ;;
+            esac
             cap_check A "$countA_file"
             ;;
         esac

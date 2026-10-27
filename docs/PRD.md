@@ -35,7 +35,7 @@ a copy that can go stale.
 
 | Feature | Status | Authoritative doc |
 |---|---|---|
-| Review gates (Gate A on every spec and high-risk plans, Gate B on non-docs-only diffs) | shipped | [`.claude/review-gates.md`](../.claude/review-gates.md) |
+| Review gates (Gate A on specs as the gate mode decides and on high-risk plans, Gate B on non-docs-only diffs) | shipped | [`.claude/review-gates.md`](../.claude/review-gates.md) |
 | Hardening ledger | shipped | [`harden-finding` skill](../plugins/dev-workflow/skills/harden-finding/SKILL.md), [`hardening-log.md`](hardening-log.md) |
 | Intake (story capture, amendment route) | shipped | [`intake` skill](../plugins/dev-workflow/skills/intake/SKILL.md) |
 | Tickets (bugs and improvements inside approved commitments) | shipped | [`ticket` skill](../plugins/dev-workflow/skills/ticket/SKILL.md) |

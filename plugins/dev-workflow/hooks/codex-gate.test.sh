@@ -72,6 +72,9 @@ offf=".context/codex-gate.off"
 bgadvf=".context/codex-gate.bgAdvice"
 unverf=".context/codex-gate.unverified"
 pendf=".context/codex-gate.unverifiedPending"
+modef=".claude/codex-gate.mode"           # committed gate mode (0.46, section 50)
+modeAf=".context/codex-gate.modeA"        # the mode recorded at each gate's first counted pass
+modeBf=".context/codex-gate.modeB"
 
 # A HEAD commit must exist so `git diff HEAD` (the tree-hash input) is meaningful.
 printf 'v1\n' > app.ts
@@ -166,14 +169,14 @@ SH
   printf '%s' "$_sd"
 }
 
-reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$countA.spec" "$pendb" "$old_count" "$old_fresh"; }
+reset_gate_state() { rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$countA.spec" "$pendb" "$old_count" "$old_fresh" "$modeAf" "$modeBf"; }
 # Full reset INCLUDING the opt-out marker and the three diagnostic markers. A section
 # that wants the gate off must set the marker after calling this.
 reset_all() {
   rm -f "$state" "$count" "$fresh" "$countA" "$countA.closed" "$countA.spec" "$floorf" "$toolsf" "$notedf" \
         "$bgadvf" "$unverf" "$pendf" "$offf" .context/codex-gate.wipBase.* \
         "$pendb" "$old_count" "$old_fresh" .context/codex-gate.pendingClaim.* \
-        "$capf" "$capxf"
+        "$capf" "$capxf" "$modef" "$modeAf" "$modeBf"
 }
 
 # 0. THE jq-FREE PATH IS USABLE. Asserted before anything depends on it: if tree_hash
@@ -1636,6 +1639,12 @@ json_field() { # $1 = json text, $2 = key -> prints the string value. No jq requ
 # The count note every non-WIP commit check adds while the cycle has a Gate-B count (0.43.0)
 cnote_ctx() { printf ' — Gate-B hook count before this commit: %s credited pass(es). A commit that lands and is not kept as WIP clears it, so take the count for any comparison with your cycle line from this message: afterwards it may be gone.' "$1"; }
 cnote_msg() { printf ' ℹ Gate-B hook count before this commit: %s (a commit that lands may clear it)' "$1"; }
+# 0.46: each floor note ends with the mode its numbers come from, and plan execution adds the
+# Gate A threshold note of that mode (section 50 covers the other modes)
+mode_ctx=' Numbers from mode classic.'
+mode_msg=' · mode classic'
+thr_ctx=' — Codex Gate A threshold, mode classic: every spec needs Gate A, and a plan only at risk high.'
+thr_msg=' ℹ Codex Gate A, mode classic: every spec needs it; a plan only at risk high'
 
 # 29a. STALE branch: 1 recorded pass this cycle, default floor 3, no CLAUDE.md (so the
 #      generic policy phrase), a change made through the Edit tool.
@@ -1663,8 +1672,8 @@ ctx=$(json_field "$out" additionalContext)
 msg=$(json_field "$out" systemMessage)
 expected_ctx="Codex Gate B: 3/3 pass(es) this cycle, of which 3 cover the CURRENT content fingerprint (unchanged since that review). The floor counts the cycle; only the fresh pass(es) carry the same fingerprint as what you are committing. Per this project's review policy, commit only if your final pass was clean and every other closure condition holds, both as it defines them."
 expected_msg="✓ Codex Gate B hook checks passed (3/3 cycle, 3 on current fingerprint)"
-[ "$ctx" = "$expected_ctx$(cnote_ctx 3)" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-checks-passed additionalContext matches exactly"
-[ "$msg" = "$expected_msg$(cnote_msg 3)" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-passed systemMessage matches exactly"
+[ "$ctx" = "$expected_ctx$mode_ctx$(cnote_ctx 3)" ] && pass "hook-checks-passed additionalContext matches exactly" || fail "hook-checks-passed additionalContext matches exactly"
+[ "$msg" = "$expected_msg$mode_msg$(cnote_msg 3)" ] && pass "hook-checks-passed systemMessage matches exactly" || fail "hook-checks-passed systemMessage matches exactly"
 
 # 29c. EMPTY-STATE branch: no fingerprint recorded this cycle, default floor 3.
 reset_all
@@ -1682,10 +1691,10 @@ reset_all; rev; rev; rev
 #      these must say a zero-finding last pass may close
 #      early (the field read "floor NOT met 2/3" after a legal early close as a hook defect).
 #      Gate B also names the small-change close (0.38.0), with its condition; Gate A does not.
-belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: this project's review policy's closure ordering."
-belowB_msg="⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass with no Blocker or Major"
-belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass."
-belowA_msg="⚠ Codex Gate A below floor (1/3): a zero-finding last pass may close early"
+belowB_ctx="Codex Gate B below floor: 1/3 mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: this project's review policy's closure ordering.$mode_ctx"
+belowB_msg="⚠ Codex Gate B below floor (1/3): may close after a zero-finding pass, or a small change's pass with no Blocker or Major$mode_msg"
+belowA_ctx="Codex Gate A below floor: 1/3 mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow this project's review policy's closure ordering, normally another pass.$mode_ctx$thr_ctx"
+belowA_msg="⚠ Codex Gate A below floor (1/3): a zero-finding last pass may close early$mode_msg$thr_msg"
 commitp='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
 skillp='{"hook_event_name":"PreToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}'
 exact_pair() { # $1 = label, $2 = output, $3 = expected ctx, $4 = expected msg
@@ -3298,11 +3307,12 @@ two_lines() { # $1 = label, $2 = captured output, $3 = max additionalContext len
 reset_all; rev
 # the count note (0.43.0) is a message of its own beside the reminder, so its length is added
 cn=$(cnote_ctx 1)
-two_lines "Gate B below floor" "$(commitpre)" $((260 + ${#cn}))
+# 0.46 adds the mode sentence to each, and plan execution the threshold note beside it
+two_lines "Gate B below floor" "$(commitpre)" $((260 + ${#mode_ctx} + ${#cn}))
 reset_all; execp
-two_lines "Gate A below floor" "$(skillpre)" 260
+two_lines "Gate A below floor" "$(skillpre)" $((260 + ${#mode_ctx} + ${#thr_ctx}))
 reset_all; execp; execp; execp
-two_lines "Gate A floor met" "$(skillpre)" 260
+two_lines "Gate A floor met" "$(skillpre)" $((260 + ${#mode_ctx} + ${#thr_ctx}))
 reset_all; rev; rev; rev; rev; rev
 two_lines "Gate B cap reached" "$(commitpre)" 1000
 reset_all; execp; execp; execp; execp; execp
@@ -3465,6 +3475,12 @@ printf '1 | fixed | x\n' > "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.
 touch -t 202601040000 "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
 printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: a newer dispositions file supplies its own slot's nonce" || fail "44d: a newer dispositions file supplies its own slot's nonce"
 rm -f "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
+# 0.46: a close interrupted after its files moved to the archive is still the newest cycle.
+arch="$reviews/../archive/codex-reviews/arch1234ab"; mkdir -p "$arch"
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$arch/gate-b-quality-arch1234ab-pass-1.md"
+touch -t 202601050000 "$arch/gate-b-quality-arch1234ab-pass-1.md"
+printf '%s' "$(compact)" | grep -q 'nonce arch1234ab' && pass "44d: an archived newer slot supplies the nonce" || fail "44d: an archived newer slot supplies the nonce"
+rm -rf "$reviews/../archive"
 rm -f "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
 mkdir -p "$reviews/gate-b-spec-newdir0000-pass-9.md"
 printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"
@@ -3716,6 +3732,8 @@ for r in run nojq_run; do
   out=$($r "$(pre48 'git commit -F .context/msg')")
   printf '%s' "$out" | grep -qF 'Codex Gate B N/A (docs-only commit)' && pass "48 $r: staged todos.md + plain -F -> docs-only" \
     || fail "48 $r: staged todos.md + plain -F -> docs-only [$out]"
+  printf '%s' "$out" | grep -qF 'the gate mode decides which specs do' && pass "48 $r: docs-only note defers Gate A to the gate mode" \
+    || fail "48 $r: docs-only note defers Gate A to the gate mode [$out]"
   out=$($r "$(pre48 'git add todos.md && git commit -F .context/msg')")
   printf '%s' "$out" | grep -qF 'cannot confirm reviewed content' && pass "48 $r: chained form -> cannot confirm" \
     || fail "48 $r: chained form -> cannot confirm [$out]"
@@ -3816,6 +3834,109 @@ if command -v jq >/dev/null 2>&1; then
   [ "$(nA)" = 1 ] && pass "49 run: a \\u-escaped path decoded by jq -> counted" || fail "49 run: escaped path with jq"
 fi
 rm -f "$f49" "$old49"
+
+# 50. GATE MODE (0.46). The committed .claude/codex-gate.mode sets each gate's default floor
+#     and cap: lean A 2/2 B 1/3, strict A 2/2 B 1/5, classic / no file / unusable file 3/5
+#     both. The mode file is untracked worktree content, so every case writes it BEFORE its
+#     first pass: written after one, it would move the fingerprint the commit check compares.
+setmode() { mkdir -p .claude && printf '%s' "$1" > "$modef"; }
+has50() { # $1 = label, $2 = output, $3.. = fixed strings that must all appear
+  _l=$1; _o=$2; shift 2
+  for _s in "$@"; do
+    printf '%s' "$_o" | grep -qF -- "$_s" || { fail "$_l (missing [$_s])"; return; }
+  done
+  pass "$_l"
+}
+reset_all; rev
+has50 "mode: no file -> Gate B below-floor note at 1/3" "$(commitpre)" 'below floor (1/3)' 'mode classic'
+reset_all; execp
+has50 "mode: no file -> Gate A floor 3" "$(skillpre)" 'below floor (1/3)'
+reset_all; setmode lean; rev
+has50 "mode: lean -> B floor 1 met after one pass" "$(commitpre)" 'hook checks passed (1/1 cycle' 'mode lean'
+rev; out=$(revout)
+has50 "mode: lean -> B cap note at 3" "$out" 'pass cap reached (3/3)' 'Numbers from mode lean.'
+reset_all; setmode lean; execp
+has50 "mode: lean -> A floor 2" "$(skillpre)" 'below floor (1/2)'
+out=$(execout)
+has50 "mode: lean -> A cap note at 2" "$out" 'Gate A: pass cap reached (2/2)'
+reset_all; setmode strict; rev; rev; rev; rev
+[ "$(ncap "$(revout)")" = 1 ] && pass "mode: strict -> B cap 5" || fail "mode: strict -> B cap 5"
+reset_all; setmode strict; rev
+has50 "mode: strict -> B floor 1" "$(commitpre)" 'hook checks passed (1/1 cycle' 'mode strict'
+reset_all; setmode classic; rev; rev
+has50 "mode: classic -> B floor 3" "$(commitpre)" 'below floor (2/3)' 'mode classic'
+rev; rev; out=$(revout)
+has50 "mode: classic -> B cap 5" "$out" 'pass cap reached (5/5)'
+for bad in leen '' 'lean strict' LEAN; do
+  reset_all; setmode "$bad"; rev
+  has50 "mode: unusable word [$bad] -> classic numbers plus a note naming the file" "$(commitpre)" \
+    'below floor (1/3)' '.claude/codex-gate.mode is present but unusable' '⚠ .claude/codex-gate.mode is unusable'
+done
+reset_all; mkdir -p "$modef"; rev
+has50 "mode: a directory at the mode path -> classic plus the note" "$(commitpre)" 'below floor (1/3)' 'codex-gate.mode is unusable'
+rmdir "$modef"
+# An open cycle begun under lean keeps lean's numbers when the file turns unusable mid-cycle.
+reset_all; setmode lean; printf '2' > "$countA"; printf 'lean' > "$modeAf"; setmode leen
+has50 "mode: unusable file mid-cycle -> note keeps the cycle's mode" "$(skillpre)" \
+  'the current file counts as classic' 'An open cycle keeps the mode it began with' 'cycle begun under lean'
+reset_all; setmode lean; rev
+[ "$(ncap "$(commitpre)")" = 0 ] && ! printf '%s' "$(commitpre)" | grep -qF 'is unusable' \
+  && pass "mode: a usable file -> no unusable note" || fail "mode: a usable file -> no unusable note"
+for ws in ' lean' 'lean\n' 'lean\r\n' '  lean \r\n\n'; do
+  reset_all; mkdir -p .claude; printf '%b' "$ws" > "$modef"; rev
+  has50 "mode: whitespace/CRLF around lean [$ws] -> lean" "$(commitpre)" 'hook checks passed (1/1 cycle' 'mode lean'
+done
+# Mid-cycle: the first pass records classic; switched to lean, the B floor stays 3. The second
+# pass after the switch keeps the fingerprint current, so the commit check reaches the floor.
+reset_all; setmode classic; rev
+[ "$(cat "$modeBf" 2>/dev/null)" = classic ] && pass "mode: first Gate-B pass records the mode" || fail "mode: first Gate-B pass records the mode"
+setmode lean; rev
+[ "$(cat "$modeBf" 2>/dev/null)" = classic ] && pass "mode: a later pass keeps the recorded mode" || fail "mode: a later pass keeps the recorded mode"
+has50 "mode: classic->lean mid-cycle -> B floor stays 3 and a note says the modes differ" "$(commitpre)" \
+  'below floor (2/3)' 'mode lean, cycle begun under classic'
+out=$(revout)
+has50 "mode: classic->lean mid-cycle -> B cap is the lower of the two, 3" "$out" 'pass cap reached (3/3)'
+commitpost
+[ ! -e "$modeBf" ] && pass "mode: the commit reset clears the recorded Gate-B mode" || fail "mode: the commit reset clears the recorded Gate-B mode"
+reset_all; setmode lean; execp
+[ "$(cat "$modeAf" 2>/dev/null)" = lean ] && pass "mode: first Gate-A pass records the mode" || fail "mode: first Gate-A pass records the mode"
+run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:writing-plans"}}' >/dev/null
+[ ! -e "$modeAf" ] && pass "mode: writing-plans clears the recorded Gate-A mode" || fail "mode: writing-plans clears the recorded Gate-A mode"
+execp; run '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:executing-plans"}}' >/dev/null
+[ ! -e "$modeAf" ] && pass "mode: plan execution clears the recorded Gate-A mode" || fail "mode: plan execution clears the recorded Gate-A mode"
+# A positive counter with no recorded mode (a cycle begun under 0.45) counts as classic.
+reset_all; setmode lean; printf '1' > "$count"; rev
+[ ! -e "$modeBf" ] || fail "setup: a pass on a positive legacy counter recorded a mode"
+has50 "mode: legacy counter without modeB -> classic" "$(commitpre)" 'below floor (2/3)' 'cycle begun under classic'
+reset_all; setmode lean; printf '1' > "$countA"
+has50 "mode: legacy Gate-A counter without modeA -> classic" "$(skillpre)" 'below floor (1/3)'
+reset_all; setmode lean; printf '2' > "$floorf"; rev
+has50 "mode: floor file overrides lean" "$(commitpre)" 'below floor (1/2)' 'overridden by a .context/ floor or cap file'
+rev; rev; out=$(revout)
+has50 "mode: floor file 2 -> cap 4 on both gates" "$out" 'pass cap reached (4/4)'
+reset_all; setmode lean
+has50 "mode: Gate A plan-execution note names the spec threshold and the mode" "$(skillpre)" \
+  'Codex Gate A threshold, mode lean' 'a spec needs Gate A only at risk high or security not none' \
+  'a spec at risk standard with security none, or a plan below risk high, is expected to have none'
+reset_all; setmode strict
+has50 "mode: Gate A plan-execution note under strict" "$(skillpre)" 'mode strict' 'only at risk high or security not none'
+reset_all
+has50 "mode: Gate A plan-execution note under classic" "$(skillpre)" 'mode classic: every spec needs Gate A'
+reset_all; setmode lean; execp
+one_doc "mode: plan execution with the threshold note" "$(skillpre)"
+# The cycle's mode words the cap and below-floor advice; classic keeps the 0.45 text.
+reset_all; setmode lean; rev; rev; out=$(revout)
+has50 "mode: lean cap message routes to the human or closes the cycle" "$out" \
+  'STOP: an open Blocker, Security-class or violated-AC finding, or a cut to an approved commitment, goes to the human; otherwise close the cycle, each open finding a todos.md row.' \
+  'Passes the human allows go in .context/codex-gate.cap-extra as an integer.'
+! printf '%s' "$out" | grep -qF 'delete the mechanism' && pass "mode: lean cap message drops 'delete the mechanism'" || fail "mode: lean cap message drops 'delete the mechanism'"
+reset_all; setmode lean; printf '3' > "$floorf"; rev; out=$(commitpre)
+has50 "mode: lean Gate B below floor" "$out" 'below floor (1/3) · mode lean'
+! printf '%s' "$out" | grep -qF 'small change' && pass "mode: lean Gate B below floor lacks 'small change'" || fail "mode: lean Gate B below floor lacks 'small change'"
+reset_all; setmode lean; execp
+has50 "mode: lean Gate A below floor says two passes" "$(skillpre)" 'below floor (1/2): two passes when Gate A runs'
+reset_all; setmode classic; rev; rev; rev; rev; out=$(revout)
+has50 "mode: classic cap message unchanged" "$out" "⚠ Codex Gate B: pass cap reached (5/5). $cap_line1" "$cap_line2"
 
 reset_all
 echo "---"

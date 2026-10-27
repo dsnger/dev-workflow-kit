@@ -73,7 +73,7 @@ Follow in order. Each step names why it exists.
      `battery+check` / `battery+check+verification`, plus `+abuse-path` when and only
      when security is `high`.
    - **Checkpoints** — the human stops this story opts in to, from `spec` (the story
-     draft, and the spec once its Gate A closes), `plan` (the plan, before building) and
+     draft, and the spec once its Gate A closes, or once committed when Gate A is skipped), `plan` (the plan, before building) and
      `merge` (before the squash-merge). Propose `none`, the default, unless risk is `high`
      *and* the change touches a security guarantee (security `high`) or irreversible data
      (the irreversibility or data-loss trigger); then propose `spec, plan, merge`. Why: a
@@ -383,10 +383,10 @@ Check that `superpowers:brainstorming` is actually available to you before namin
 > Next: `superpowers:brainstorming` with `docs/superpowers/stories/<file>` as the
 > input document.
 
-Then run it in this session. Its design approval is the spec's closed Gate A, and you
+Then run it in this session. Its design approval is the spec's approval as the gate rules define it, and you
 answer its questions yourself with your recommendation, recorded under "Decisions" in the
 spec — unless the story's checkpoints include `spec`, or the question is one that always
-stops (a gate-cap Blocker, a change to an approved commitment, a destructive or
+stops (a finding the gate rules send to the human at a pass cap, a change to an approved commitment, a destructive or
 irreversible action outside the branch, missing access or licence). Do not design a
 solution inside intake — intake captures WHAT and WHY; brainstorming decides HOW.
 

@@ -26,26 +26,33 @@ block. What the gates compare, and what each hook message means:
    you approve the draft).
 2. Claude continues with `superpowers:brainstorming`, which writes the spec: settled
    decisions with reasons, not a wish list. Claude answers its questions itself and
-   records them under "Decisions" in the spec; the closed Gate A is the design approval. For a third-party library, Claude looks the
+   records them under "Decisions" in the spec; the spec's approval is the design approval: its closed Gate A, or, where the gate mode skips Gate A (risk standard, security none), its commit (with checkpoint `spec`, your approval of it). For a third-party library, Claude looks the
    API up in Context7 for the version you pin and names the lookup; when Context7 is
    unavailable or that version is not indexed, the library's own material for that
    version stands in.
-3. Gate A starts (Codex reads the spec text), with the profile from the story.
+3. Gate A starts (Codex reads the spec text), with the profile from the story. In the
+   default mode `lean` it runs only for a spec at risk `high` or with security relevance;
+   otherwise the spec says `**Gate A:** skipped` and planning starts at its commit (with checkpoint `spec`, at your approval). The mode
+   is one word in `.claude/codex-gate.mode` (`lean`, `strict`, or `classic` for the rules
+   before 0.46; [reference](reference.md#gate-modes)).
    You see Codex findings in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`
    (Claude's verdicts beside it in `…-pass-<n>-dispositions.md`),
    one per line, severity `BLOCKER | MAJOR | MINOR | NIT`. Blockers and Majors get
-   fixed and the review runs again. Minors and Nits are collected, not iterated.
-   A review normally takes three rounds; a round with no findings may close earlier.
-   From round 2 on, Codex marks each earlier Blocker and Major `fixed`, `not fixed` or
-   `no longer applies`.
-   Hook lines like `⚠ Codex Gate A below floor (1/3)` are the round counter, not an
+   fixed and the review runs again. Minors and Nits are collected, not iterated, unless
+   they are about security or a broken acceptance criterion.
+   In `lean` and `strict`, Gate A is exactly two rounds: a full review, then a round that
+   checks the fixes. In `classic` it takes at least three rounds; one with no findings may
+   close earlier. From round 2 on, Codex marks each earlier blocking finding `fixed`,
+   `not fixed` or `no longer applies`.
+   Hook lines like `⚠ Codex Gate A below floor (1/2)` are the round counter, not an
    error. Claude judges disputed findings; a dismissed finding needs a one-line reason.
-4. If you see `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker, or a cut
-   to an approved commitment, goes to the human`, the review hit its round limit. In
-   those two cases you answer `close`,
-   or one of: delete the mechanism the findings keep returning to, cut scope, continue.
-   Each of those three names how many more rounds it allows, at least one. Otherwise
-   Claude picks one of them itself and records why.
+4. If you see `⚠ Codex Gate A: pass cap reached`, the review hit its round limit. In
+   `lean` and `strict`, a remaining Blocker, security finding or broken acceptance
+   criterion, or a cut to an approved commitment, comes to you; you may allow more
+   rounds. Anything else becomes a `todos.md` row and the review closes. In `classic`,
+   only a remaining Blocker or a cut to an approved commitment comes to you; otherwise
+   Claude closes, deletes the mechanism the findings keep returning to, cuts scope or
+   continues, and records why.
 5. The review ends with one commit that records it (the closing act). Then
    `superpowers:writing-plans` writes the plan: outcomes, affected parts and test
    situations per step, code left to implementation. Gate A runs on the plan only when
@@ -54,9 +61,10 @@ block. What the gates compare, and what each hook message means:
    `AGENTS.md` must be green; the one exception, a load flake in an untouched test, is in
    the [reference](reference.md#the-review-gates). CI runs the same command later.
 7. Gate B starts (Codex reads the diff). Claude commits `WIP: <subject>`, then runs two
-   Codex calls per round, `spec` and `quality`, on the same base and head. Same round
-   limit and stop as in steps 3 and 4. From round 2 on, Codex marks each earlier
-   Blocker and Major `fixed`, `not fixed` or `no longer applies`. With the Ponytail
+   Codex calls per round, `spec` and `quality`, on the same base and head. Its round
+   limit depends on the mode: `lean` up to 3 rounds, closing at the first round with no
+   open blocking finding; `strict` up to 5; `classic` as in steps 3 and 4. From round 2
+   on, Codex marks each earlier blocking finding `fixed`, `not fixed` or `no longer applies`. With the Ponytail
    plugin installed, `ponytail-review` runs once before the first round.
    When the hook's checks pass, a commit attempt shows a line like `✓ Codex Gate B hook
    checks passed (3/3 cycle, 1 on current fingerprint)`: what the hook counted, not

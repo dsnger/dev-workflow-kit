@@ -2160,3 +2160,17 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   (API or auth). Fix: list them briefly with a check each, or point to a troubleshooting section in
   `docs/reference.md`; mind check 4e/4g sizes. *Trigger: the next edit of that rule, or a field case where
   a session misread the cause.*
+
+## From kit 0.46.0 lean gates (2026-10-27) — backlog only, nothing implemented here
+- [ ] **Move the pass files this repository already tracks into the archive** (spec
+  `docs/superpowers/specs/2026-10-27-kit-046-lean-gates-design.md` D-8). 0.46 archives a cycle's files at its
+  close; the 726 files under `.context/codex-reviews/` from earlier cycles stay where they are. Fix: one
+  `git mv` per nonce into `.context/archive/codex-reviews/<nonce>/`, in its own PR, checking first that no
+  report reads them from the old path. *Trigger: the next cleanup round, or a reader that needs only open
+  cycles there.*
+- [ ] **Measure the lean modes after five cycles each** (story `docs/superpowers/stories/2026-10-26-kit-046-lean-gates-story.md`
+  §1). Compare passes per cycle and late Blockers/Majors in `lean` projects and in this repository's
+  `strict` with the 2026-09-09 → 2026-10-25 baseline (`.context/sparring/20261026-1125-kit-lean-gates-analyse.md`
+  in the main checkout); a late Security or acceptance-criterion finding sent to `todos.md` is the risk to
+  watch. *Trigger: at least five closed cycles under 0.46 in each group compared (`lean` projects, and this
+  repository's `strict`).*

@@ -22,6 +22,43 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.46.0
+
+Lean gates (story `docs/superpowers/stories/2026-10-26-kit-046-lean-gates-story.md`, design
+`docs/superpowers/specs/2026-10-27-kit-046-lean-gates-design.md`). Minor: new gate rules, a new setting file, the
+hook reads it. A project initialized earlier keeps the 0.45 rules (`classic`) until it runs `/workflow-init`
+again and accepts the new rules, which writes `lean`.
+
+- **Gate modes.** `.claude/codex-gate.mode` holds `lean`, `strict` or `classic`; no file or an unknown word is
+  `classic`, the rules before 0.46. `lean`: Gate A only for a spec at risk `high` or with security relevance,
+  and for a plan at risk `high` as before; exactly two passes (full, then verify); Gate B closes at the first pass with no open blocking finding, from pass
+  2 checks only the fixes (`baseSha` = the head last reviewed), cap 3. `strict`: the same Gate A, Gate B in full
+  passes up to 5 (this repository). Blocking = Blocker, Major, or a Security-class or violated-AC finding of any
+  severity; a new ordinary Major in a `lean` verify pass is collected. At the cap, an open Blocker, Security or AC
+  finding, or a cut to an approved commitment, goes to the human; the rest become `todos.md` rows. Measured
+  2026-09-09 → 2026-10-25 over three projects: passes 1 and 2 found about 80 % of Blockers and Majors.
+- **Approval without Gate A.** A spec with `**Gate A:** skipped` is approved when committed (with checkpoint
+  `spec`, when the human approves); `CLAUDE.md` §4, `intake` and the docs say "approved" instead of "Gate A
+  closed".
+- **Hook.** Reads the mode and keeps separate floor and cap per gate (`lean` A 2/2, B 1/3; `strict` A 2/2, B 1/5;
+  `classic` 3/5); remembers the mode at a gate's first pass and takes the stricter numbers if the file changes
+  mid-cycle; the `.context/codex-gate.floor`/`.cap` files still override its reminders.
+- **One source of green** (`CLAUDE.md` §4, not in `classic`): the quality command runs until green, at most 5
+  rounds; a crashing, missing or timed-out tool is red; still red is a stop. Gate B is told the battery
+  evidence and not to report what that run shows.
+- **UI app run** (`CLAUDE.md` §4 Plan, not in `classic`): each UI acceptance criterion gets a real app run with
+  recorded evidence.
+- **Prose hardening needs a reason.** `harden-finding` writes a `1 prose` row only with the reason neither lint
+  nor a test can decide the finding; the hardening-log row is also the learning record (symptom and cause;
+  change, location and evidence).
+- **Less filing.** At a cycle's close its pass files move to `.context/archive/codex-reviews/<nonce>/`; after a
+  compaction the hook also looks there for the open cycle's nonce, so a close interrupted after the move keeps it.
+- **Branch protection.** `/workflow-init`'s checklist recommends protecting the default branch.
+- **Moved.** "Library APIs (Context7)" and "Ponytail (optional)" move from the gate rules to `CLAUDE.md` §4
+  (template and this repo), to keep the rules within 10,000 bytes.
+- **Readers** (repo scripts, not shipped): `ledger-metrics.py`'s floor-1 evidence labels say the record does not
+  show whether a floor 1 came from the old level rule or a 0.46 mode.
+
 ## 0.45.0
 
 Field cases from 2026-10-21 to 2026-10-26 (story

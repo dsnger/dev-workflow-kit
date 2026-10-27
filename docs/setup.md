@@ -10,7 +10,8 @@ The whole setup at a glance, one column per step:
 
 **No code yet?** Start with `git init` and one empty commit (step 1), then do steps 2 to 5.
 Leave steps 6 and 7 for later: there is no stack yet to write a quality command for. Your
-first `/dev-workflow:intake` and its spec decide the stack. After the spec's Gate A, do
+first `/dev-workflow:intake` and its spec decide the stack. Once the spec is approved (its Gate A closed, or committed when the gate mode skips Gate A;
+with checkpoint `spec`, your approval), do
 step 6, then step 7 for the setup and the quality command together. The story commit in
 between stages only the story file, so the setup files wait for step 7.
 

@@ -99,6 +99,10 @@ Columns: `date` (YYYY-MM-DD), `fingerprint` (canonical class), `finding` (short,
 escape `\|`, one line), `source` (gate-a|gate-b|bot|manual),
 `severity` (blocker|major|minor|nit), `rung` (e.g. `2 lint`, `4 test`, `1 prose`,
 `P std`, `pending`), `ref` (rule name / test path / AGENTS.md section / prior row).
+Unless the gate mode is `classic`, a row is also the learning record: `finding` names the symptom and its cause, `ref` the change,
+its location and the evidence — the cycle nonce for a row a gate cycle owed, else the source (a
+PR comment, a manual note). A `1 prose` row's `ref` also says why neither lint nor a test can
+decide the finding.
 
 | date | fingerprint | finding | source | severity | rung | ref |
 |------|-------------|---------|--------|----------|------|-----|

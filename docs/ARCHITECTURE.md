@@ -18,6 +18,7 @@ MANIFEST.md                       # inventory of source-files/, the frozen extra
 AGENTS.md                         # invariants, binding boundaries, conventions, § Commands
 CLAUDE.md                         # discipline rules + pointer to the review gates
 .claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
+.claude/codex-gate.mode           # the gate mode, one word (`strict` here; read by the rules and the hook)
 todos.md                          # backlog; `pending` ledger rows point here by ref
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned (no Context7: no library dependencies)
@@ -141,7 +142,7 @@ untracked ignored paths are excluded by design (a *tracked* file still counts ev
 matches `.gitignore`). An unstaged edit-then-undo still matches, because it restores
 the fingerprint — which says the content is unchanged since the review, not that Codex
 read it: the hook compares a fingerprint of disk while the reviewer reads a git range
-(the hook's own hard-floor comment, above `floor=3`, says the same). A false ✓ is the
+(the hook's own hard-floor comment says the same). A false ✓ is the
 dangerous direction,
 so the check is tied to the effective index plus the included worktree content as of
 the hook's invocation — a superset of any one commit's payload, chosen so the gate errs

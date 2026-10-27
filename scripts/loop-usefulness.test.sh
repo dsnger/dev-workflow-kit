@@ -576,5 +576,22 @@ printf '%s\n' "$outfs" | grep -q '^fieldsp1  Gate-A spec  ' &&
   pass "spaced field curve with a model of several words: determinable" ||
   { fail "spaced field curve"; printf '%s\n' "$outfs" | grep fieldsp1 | sed 's/^/    /'; }
 
+# A 0.46 lean/strict cycle records floor 1 with a (level 1) set; it must read floor 1, not unknown.
+rm -rf "${work:?}/lean"; mkdir -p "$work/lean/scripts"; cp "$SCRIPT" "$LEDGER" "$work/lean/scripts/"
+(
+  cd "$work/lean" || exit 1
+  gitc init -q --template= --object-format=sha1 . && gitc config gc.auto 0
+  printf '.context/\n' > .gitignore
+  rc docs/base.md 'base\n'
+  rc docs/x.md "h\n\n$(prov hist0003 3)\n$(curve hist0003 'Gate B' 1-3 '2,1,0' '0,0,0' '1,0,0')\n"
+  rc docs/x.md "l\n\ncycle lean0001; floor 1 per {docs/s.md (level 1)}; hook reminder threshold absent\n$(curve lean0001 'Gate B' 1 '0' '0' '0')\n"
+) || fail "lean fixture not built"
+outln=$(run "$work/lean")
+printf '%s\n' "$outln" | grep -A2 '^lean0001  Gate B  ' | grep -q 'floor 1, stories {docs/s.md (level 1)}' &&
+  printf '%s\n' "$outln" | grep -A2 '^hist0003  Gate B  ' | grep -q 'floor 3, stories' &&
+  printf '%s\n' "$outln" | grep -q 'passes 1 against floor 1;' &&
+  pass "0.46 floor-1 record next to a historical one: floor 1 shown, not unknown" ||
+  { fail "0.46 floor-1 record"; printf '%s\n' "$outln" | sed 's/^/    /'; }
+
 printf '\n%d passed, %d failed\n' "$pass_n" "$fail_n"
 [ "$fail_n" -eq 0 ]

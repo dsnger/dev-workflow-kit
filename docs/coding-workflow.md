@@ -95,14 +95,13 @@ a wish list.
 **3. Gate A on the spec.** An independent reviewer — a different model than the
 author — reads the spec text and checks it for contradictions and internal
 inconsistencies, missing requirements, unhandled state/edge/error/empty/concurrent
-paths, and risks to the project's core invariants. It is run as a **loop with a
-hard floor**: a minimum number of passes, re-running one broad review prompt each
-time — over the revised artifact where a finding required a repair, over the unchanged
-one where none did. A finding's severity decides what must be repaired, not on its own
-whether another pass is owed: the review policy's closure ordering decides that. A cycle
-closes on an eligible pass — clean at or above the floor, or one with zero findings — only
-when every other closure condition holds, and accepting even a minor finding into the
-assigned work costs a further pass. Catching a
+paths, and risks to the project's core invariants. How often it runs depends on the
+project's **gate mode** (`.claude/codex-gate.mode`, see [the reference](reference.md#gate-modes)).
+In `lean`, the default for new projects, and in `strict`, only a spec at risk `high` or with
+security relevance gets Gate A, and then exactly two passes: a full review, then a pass that
+checks the repairs. In `classic`, the rules before 0.46, every spec gets a loop with a floor of
+three passes and a cap of five. Measured over three projects, passes 1 and 2 found about 80 %
+of all Blockers and Majors, and the expensive part was a tail of 10 to 65 passes. Catching a
 flaw in the spec is far cheaper than catching it after it has been baked into the
 plan and the code.
 
@@ -152,8 +151,13 @@ final head covers the rest.
 **8. Gate B on the code.** Before the change is committed, the independent
 reviewer reads the actual *diff* and checks it against the invariants file. It is
 re-run after every fix, because each fix changes the diff and invalidates the
-prior review, and it closes when the review policy's closure ordering says so — never
-on a clean pass alone. A small change (the full definition is in
+prior review, and it closes when the review policy's closure ordering says so. In `lean` it
+closes at the first pass with no open blocking finding (a Blocker, a Major, or a security or
+broken-acceptance-criterion finding), from pass 2 checks only the fixes, and stops at three
+passes; what is left then goes to the human when it is a Blocker, a security finding or a broken
+acceptance criterion, and to `todos.md` otherwise. `strict` reviews every pass in full, up to
+five; this repository uses it, because its product is prose and its Gate B found 28 % of
+Blockers and Majors in pass 4 or later. In `classic` a small change (the full definition is in
 [the reference](reference.md#the-review-gates), under "Small changes in Gate B") closes at its first
 pass with no Blocker or Major; any other change keeps the floor of three passes, unless a pass
 has zero findings. Trivial changes may skip it, on terms that depend on the story: an

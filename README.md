@@ -70,6 +70,7 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | Recurring finding | `/dev-workflow:harden-finding` | [guide](docs/getting-started.md#a-finding-that-keeps-coming-back) |
 | Discuss an idea | `/dev-workflow:sparring <question>`, in a new chat | [guide](docs/getting-started.md#discuss-an-idea-first) |
 | Gate A says "not counted" | Name the pass file in the Codex prompt as `Findings file: <path>` and let Codex write it; a reply alone is no pass | [reference](docs/reference.md#hook-messages) |
+| Reviews should run longer, or as before 0.46 | Put `strict` or `classic` into `.claude/codex-gate.mode` (default `lean`; no file means `classic`) and commit it | [reference](docs/reference.md#gate-modes) |
 | Old worktrees pile up | `sh scripts/worktree-cleanup.sh <repo>` from a kit checkout; `--remove` deletes only merged, clean worktrees without a live session. Run it yourself or from the orchestrator, never from a session inside one of them | [reference](docs/reference.md#reports) |
 | Update the plugin | `claude plugin marketplace update dev-workflow-kit`, then `claude plugin update dev-workflow@dev-workflow-kit` | [setup step 10](docs/setup.md#10-update-the-plugin-later) |
 
