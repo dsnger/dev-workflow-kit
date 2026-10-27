@@ -587,6 +587,15 @@ record (a cycle begun under 0.45) counts as `classic`. When `codex-gate.floor` o
 reminder adds `overridden by a .context/ floor or cap file`: those files override the numbers of both gates,
 as before 0.46.
 
+The advice in three reminders follows the mode of the gate's cycle (the recorded one while its counter is
+positive, else the current one); under `classic` they keep their 0.45 text. Under `lean` and `strict`:
+the pass-cap reminder reads *STOP: an open Blocker, Security-class or violated-AC finding, or a cut to an
+approved commitment, goes to the human; otherwise close the cycle, each open finding a todos.md row*, and
+asks for passes the human allows in `.context/codex-gate.cap-extra`; the Gate B below-floor reminder
+(`⚠ Codex Gate B below floor (p/f) · mode <word>`) drops the early-close advice; the Gate A below-floor
+reminder (`⚠ Codex Gate A below floor (p/f): two passes when Gate A runs · mode <word>`) says a Gate A that
+runs is exactly two passes, full then verify, and that a spec below the threshold needs none.
+
 **Mode file unusable** (`⚠ .claude/codex-gate.mode is unusable: classic numbers apply`). The file is present
 but empty, unreadable, a directory, or not exactly one of the three words. The hook uses the `classic`
 numbers, says so beside each gate number it reports (gate calls, commit attempts, plan execution), and asks

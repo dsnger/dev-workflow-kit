@@ -304,6 +304,7 @@ if ! mode=$(read_mode "$mode_file"); then
 fi
 mode_nums "$mode"; floorA=$nfA capA=$ncA floorB=$nfB capB=$ncB
 mtA="mode $mode" mtB="mode $mode"
+cmA=$mode cmB=$mode   # the cycle's mode per gate: the recorded one while the counter is positive
 # The file can change while a cycle is open. Each gate's first counted pass records the mode
 # (modeA/modeB, cleared with that gate's counter); while the counter is positive the higher
 # floor and the lower cap of the recorded and the current mode apply, so a change mid-cycle
@@ -313,6 +314,7 @@ mtA="mode $mode" mtB="mode $mode"
 cA=$(read_count "$countA_file"); [ -f "$countA_file" ] || cA=$(read_count "$countA_file.closed")
 if [ "$cA" != 0 ]; then
   rA=$(read_mode "$modeA_file") || rA=classic
+  cmA=$rA
   if [ "$rA" != "$mode" ]; then
     mode_nums "$rA"
     if [ "$nfA" -gt "$floorA" ]; then floorA=$nfA; fi
@@ -322,6 +324,7 @@ if [ "$cA" != 0 ]; then
 fi
 if [ "$(read_count "$count_file")" != 0 ]; then
   rB=$(read_mode "$modeB_file") || rB=classic
+  cmB=$rB
   if [ "$rB" != "$mode" ]; then
     mode_nums "$rB"
     if [ "$nfB" -gt "$floorB" ]; then floorB=$nfB; fi
@@ -1127,7 +1130,7 @@ note_front() { # $1 = additionalContext body, $2 = systemMessage body
 # escapes the break (jq does, and the fallback does since this message exists).
 cap_check() { # $1 = gate letter, $2 = that gate's count file
   mode_note
-  case "$1" in A) _cap=$capA _mt=$mtA ;; *) _cap=$capB _mt=$mtB ;; esac
+  case "$1" in A) _cap=$capA _mt=$mtA _cm=$cmA ;; *) _cap=$capB _mt=$mtB _cm=$cmB ;; esac
   _n=$(read_count "$2")
   case "$_n" in
     '' | *[!0-9]*) return 0 ;;          # not a count: nothing to compare
@@ -1135,7 +1138,13 @@ cap_check() { # $1 = gate letter, $2 = that gate's count file
                                         # can hold, and past what `test` can compare
     *) [ "$_n" -ge "$_cap" ] || return 0 ;;
   esac
-  # Target model: Claude via Claude Code.
+  # Target model: Claude via Claude Code. Under lean and strict the cap closes the cycle
+  # unless a finding the human must judge is open (spec 0.46 §4); classic keeps its text.
+  if [ "$_cm" != classic ]; then
+    _m="⚠ Codex Gate $1: pass cap reached ($_n/$_cap). STOP: an open Blocker, Security-class or violated-AC finding, or a cut to an approved commitment, goes to the human; otherwise close the cycle, each open finding a todos.md row.
+   Passes the human allows go in .context/codex-gate.cap-extra as an integer. Numbers from $_mt."
+    note "$_m" "$_m"; return 0
+  fi
   _m="⚠ Codex Gate $1: pass cap reached ($_n/$_cap). STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human; otherwise choose and record why: delete the mechanism, cut scope, or allow N more passes.
    Record the answer as an integer in .context/codex-gate.cap-extra (passes allowed beyond the cap). Numbers from $_mt."
   note "$_m" "$_m"
@@ -1758,8 +1767,12 @@ case "$event" in
               # was reviewed.
               note "Codex gate state: the hook cannot confirm that the content you are about to commit is the content mcp__codex__review last saw ($passes recorded pass(es) this cycle). Usually the working tree or the index changed since the review. Next: a fresh Gate-B pass, and when this cycle may run one is $policy's closure ordering's, read there entire. If a fresh pass leaves this unchanged, other causes and checks: https://github.com/dsnger/dev-workflow-kit/blob/main/docs/reference.md#hook-messages. Per $policy you MUST re-review after every fix." "⚠ Codex Gate B: cannot confirm reviewed content"
             elif [ "$passes" -lt "$floorB" ]; then
-              # Target model: Claude via Claude Code.
+              # Target model: Claude via Claude Code. lean/strict: no early-close advice (spec 0.46 §3).
+              if [ "$cmB" != classic ]; then
+                note "Codex Gate B below floor: $passes/$floorB mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. Follow $policy's closure ordering. Numbers from $mtB." "⚠ Codex Gate B below floor ($passes/$floorB) · $mtB"
+              else
               note "Codex Gate B below floor: $passes/$floorB mcp__codex__review pass(es) since the last commit. The hook reads no findings or size. A zero-finding pass may close early; a small change's pass with no Blocker/Major closes. Else: $policy's closure ordering. Numbers from $mtB." "⚠ Codex Gate B below floor ($passes/$floorB): may close after a zero-finding pass, or a small change's pass with no Blocker or Major · $mtB"
+              fi
             else
               # Distinguish the two counts (Finding 9): the cycle total includes passes
               # made BEFORE later edits, so they carry a different fingerprint.
@@ -1812,8 +1825,12 @@ case "$event" in
               # Target model: Claude via Claude Code.
               note "Codex Gate A: no mcp__codex__exec pass since writing-plans, so this plan has had no Gate A. Per $policy a plan needs Gate A only when its recorded risk is high: for a standard-risk plan this is expected; for a high-risk plan its Gate A floor is NOT met (0/$floorA). The Gate-A cycle before writing-plans, normally the spec's, recorded $passesS/$floorA pass(es), counted as calls that left a complete findings file, with no check of what was reviewed. Numbers from $mtA." "⚠ Codex Gate A: none on this plan (needed at risk high; before it $passesS/$floorA) · $mtA"
             elif [ "$passesA" -lt "$floorA" ]; then
-              # Target model: Claude via Claude Code.
+              # Target model: Claude via Claude Code. lean/strict: Gate A is two passes (spec 0.46 §3).
+              if [ "$cmA" != classic ]; then
+                note "Codex Gate A below floor: $passesA/$floorA mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: in this mode a Gate A that runs is exactly two passes, full then verify; a spec below the threshold needs none (see the threshold note). Otherwise follow $policy's closure ordering. Numbers from $mtA." "⚠ Codex Gate A below floor ($passesA/$floorA): two passes when Gate A runs · $mtA"
+              else
               note "Codex Gate A below floor: $passesA/$floorA mcp__codex__exec pass(es) on this spec/plan, each a complete findings file the hook does not weigh: a zero-finding last pass may close early; otherwise follow $policy's closure ordering, normally another pass. Numbers from $mtA." "⚠ Codex Gate A below floor ($passesA/$floorA): a zero-finding last pass may close early · $mtA"
+              fi
             else
               # Deliberately weaker wording than Gate B (Finding 12): countA counts
               # mcp__codex__exec calls that left a complete findings file, bound to no artifact. Hashing the artifact would

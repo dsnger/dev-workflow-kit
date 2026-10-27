@@ -3911,6 +3911,19 @@ reset_all
 has50 "mode: Gate A plan-execution note under classic" "$(skillpre)" 'mode classic: every spec needs Gate A'
 reset_all; setmode lean; execp
 one_doc "mode: plan execution with the threshold note" "$(skillpre)"
+# The cycle's mode words the cap and below-floor advice; classic keeps the 0.45 text.
+reset_all; setmode lean; rev; rev; out=$(revout)
+has50 "mode: lean cap message routes to the human or closes the cycle" "$out" \
+  'STOP: an open Blocker, Security-class or violated-AC finding, or a cut to an approved commitment, goes to the human; otherwise close the cycle, each open finding a todos.md row.' \
+  'Passes the human allows go in .context/codex-gate.cap-extra as an integer.'
+! printf '%s' "$out" | grep -qF 'delete the mechanism' && pass "mode: lean cap message drops 'delete the mechanism'" || fail "mode: lean cap message drops 'delete the mechanism'"
+reset_all; setmode lean; printf '3' > "$floorf"; rev; out=$(commitpre)
+has50 "mode: lean Gate B below floor" "$out" 'below floor (1/3) · mode lean'
+! printf '%s' "$out" | grep -qF 'small change' && pass "mode: lean Gate B below floor lacks 'small change'" || fail "mode: lean Gate B below floor lacks 'small change'"
+reset_all; setmode lean; execp
+has50 "mode: lean Gate A below floor says two passes" "$(skillpre)" 'below floor (1/2): two passes when Gate A runs'
+reset_all; setmode classic; rev; rev; rev; rev; out=$(revout)
+has50 "mode: classic cap message unchanged" "$out" "⚠ Codex Gate B: pass cap reached (5/5). $cap_line1" "$cap_line2"
 
 reset_all
 echo "---"
