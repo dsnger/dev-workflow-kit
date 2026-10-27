@@ -407,7 +407,7 @@ still count). The design note is
 
 **Closing act.** A pass that closes the cycle under its mode (above), or a `classic` cap answer
 of `close`, runs the closing act. Outside `classic` it first moves the cycle's pass files to
-`.context/archive/codex-reviews/<nonce>/`, overwriting nothing; a resumed cycle looks there too. The
+`.context/archive/codex-reviews/<nonce>/`, overwriting nothing (a file already there: stop and compare); a resumed cycle looks there too. The
 closing act is one commit carrying the cycle's record lines, the
 ledger-check records, and a `todos.md` row per finding dispositioned `accepted, not
 repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subject. Since
@@ -416,7 +416,7 @@ repaired`, so no follow-up is lost. For Gate B that commit takes a non-WIP subje
 stages only `todos.md` (see [Hook messages](#hook-messages)). An empty commit stages nothing, so it
 gets the ordinary Gate-B check instead, with the messages listed under Hook messages.
 Planning starts once the spec is approved (after Gate A's closing act, or at its commit when the gate mode
-skips Gate A); Gate A on a plan (risk `high` only) ends with its own closing act. A spec change after
+skips Gate A; with checkpoint `spec`, at your approval); Gate A on a plan (risk `high` only) ends with its own closing act. A spec change after
 approval goes through `intake`'s amendment route.
 
 **Gate B shape.** Claude makes a plain `git commit -m 'WIP: <subject>'`, a Bash call of its own (gives Codex a
@@ -598,10 +598,11 @@ asks for passes the human allows in `.context/codex-gate.cap-extra`; the Gate B 
 reminder (`⚠ Codex Gate A below floor (p/f): two passes when Gate A runs · mode <word>`) says a Gate A that
 runs is exactly two passes, full then verify, and that a spec below the threshold needs none.
 
-**Mode file unusable** (`⚠ .claude/codex-gate.mode is unusable: classic numbers apply`). The file is present
-but empty, unreadable, a directory, or not exactly one of the three words. The hook uses the `classic`
-numbers, says so beside each gate number it reports (gate calls, commit attempts, plan execution), and asks
-the session to fix the file in its next commit.
+**Mode file unusable** (`⚠ .claude/codex-gate.mode is unusable: the file counts as classic`). The file is
+present but empty, unreadable, a directory, or not exactly one of the three words. The file then counts as
+`classic`; an open cycle keeps the mode it began with, so the numbers beside the note may combine both (the
+higher floor and the lower cap). The hook says so beside each gate number it reports (gate calls, commit
+attempts, plan execution), and asks the session to fix the file in its next commit.
 
 **Gate A threshold** (`ℹ Codex Gate A, mode <word>: …`). At plan execution, beside the Gate A floor
 reminder: under `lean` and `strict` a spec needs Gate A only at risk `high` or security not `none`, and a

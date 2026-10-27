@@ -59,9 +59,10 @@ block. What the gates compare, and what each hook message means:
    `AGENTS.md` must be green; the one exception, a load flake in an untouched test, is in
    the [reference](reference.md#the-review-gates). CI runs the same command later.
 7. Gate B starts (Codex reads the diff). Claude commits `WIP: <subject>`, then runs two
-   Codex calls per round, `spec` and `quality`, on the same base and head. Same round
-   limit and stop as in steps 3 and 4. From round 2 on, Codex marks each earlier
-   Blocker and Major `fixed`, `not fixed` or `no longer applies`. With the Ponytail
+   Codex calls per round, `spec` and `quality`, on the same base and head. Its round
+   limit depends on the mode: `lean` up to 3 rounds, closing at the first round with no
+   open blocking finding; `strict` up to 5; `classic` as in steps 3 and 4. From round 2
+   on, Codex marks each earlier blocking finding `fixed`, `not fixed` or `no longer applies`. With the Ponytail
    plugin installed, `ponytail-review` runs once before the first round.
    When the hook's checks pass, a commit attempt shows a line like `✓ Codex Gate B hook
    checks passed (3/3 cycle, 1 on current fingerprint)`: what the hook counted, not

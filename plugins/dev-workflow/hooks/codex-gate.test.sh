@@ -3869,6 +3869,10 @@ done
 reset_all; mkdir -p "$modef"; rev
 has50 "mode: a directory at the mode path -> classic plus the note" "$(commitpre)" 'below floor (1/3)' 'codex-gate.mode is unusable'
 rmdir "$modef"
+# An open cycle begun under lean keeps lean's numbers when the file turns unusable mid-cycle.
+reset_all; setmode lean; printf '2' > "$countA"; printf 'lean' > "$modeAf"; setmode leen
+has50 "mode: unusable file mid-cycle -> note keeps the cycle's mode" "$(skillpre)" \
+  'the current file counts as classic' 'An open cycle keeps the mode it began with' 'cycle begun under lean'
 reset_all; setmode lean; rev
 [ "$(ncap "$(commitpre)")" = 0 ] && ! printf '%s' "$(commitpre)" | grep -qF 'is unusable' \
   && pass "mode: a usable file -> no unusable note" || fail "mode: a usable file -> no unusable note"

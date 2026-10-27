@@ -1156,7 +1156,7 @@ mode_note() {
   [ "$mode_bad" = 1 ] && [ "$mode_said" = 0 ] || return 0
   mode_said=1
   # Target model: Claude via Claude Code.
-  note "Codex gate mode: .claude/codex-gate.mode is present but unusable (empty, unreadable, or not exactly one of lean, strict, classic), so the classic numbers and rules apply. Say so when you report gate status, and fix the file in your next commit." "⚠ .claude/codex-gate.mode is unusable: classic numbers apply"
+  note "Codex gate mode: .claude/codex-gate.mode is present but unusable (empty, unreadable, or not exactly one of lean, strict, classic), so the current file counts as classic. An open cycle keeps the mode it began with; the numbers reported beside this note are the ones in force. Say so when you report gate status, and fix the file in your next commit." "⚠ .claude/codex-gate.mode is unusable: the file counts as classic"
 }
 
 # --- THE DIAGNOSTIC INTERFACE -------------------------------------------------------

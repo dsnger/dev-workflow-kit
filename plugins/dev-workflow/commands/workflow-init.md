@@ -615,7 +615,7 @@ hook remind less than those rules owe.
 ````markdown
 # Cross-Model Review (Codex) — TWO MANDATORY GATES
 
-Mode: `.claude/codex-gate.mode` holds `lean`, `strict` or `classic`; missing/unknown: `classic` (say so, fix it next commit). A cycle keeps its pass-1 mode; a change names both in the closing body.
+Mode: `.claude/codex-gate.mode` holds `lean`, `strict` or `classic`; missing/unknown: `classic` (say so; fix it). A cycle keeps its pass-1 mode; a change names both in the closing body.
 Gate A (`mcp__codex__exec`) reviews a spec in `classic` always, else only at risk `high` or security not `none`; a plan only at risk `high`. A spec carries `**Gate A:** runs | skipped — <profile line>`.
 A spec is approved when its Gate A closes, or if skipped once committed (checkpoint `spec`: once the human approves); then it changes only by `intake`'s amendment route.
 Gate B (`mcp__codex__review`) reviews every code diff once the quality command is green; only docs-only commits may skip it.
@@ -678,7 +678,7 @@ A timeout in an untouched test that passes alone is recorded with its evidence (
 
 ## Closing act
 
-A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4); a finding fitting neither owes no line. Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/`, overwriting nothing; its learnings are the owed `harden-finding` rows.
+A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4); a finding fitting neither owes no line. Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/` (if one exists: stop, compare); its learnings are the owed `harden-finding` rows.
 cycle <NONCE>; floor <the gate's floor> per <story paths with levels, or none>; hook reminder threshold <absent|positive integer|unusable>
 cycle <NONCE>; <Gate-A spec|Gate-A plan|Gate B> (passes <ascending valid pass numbers>, <model>): Findings <per-pass counts>. Blockers <per-pass counts>. Majors <per-pass counts>. Declined <per-pass counts>.
 Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.

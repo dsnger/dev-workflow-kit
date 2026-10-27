@@ -162,7 +162,7 @@ access"; source: `gate-b`; severity: `major`.
 4. **Apply** → add a test for `orders.create` with a caller who has org membership but lacks project ACL → asserting `Forbidden: no access to this project`.
 5. **Verify** → the project's test command → pass; then the full quality command (code changed) → green.
 6. **Log** → re-read the log; if no `acl-bypass` row appeared meanwhile, append:
-   `| 2026-07-12 | acl-bypass | orders.create writable without project-ACL check | gate-b | major | 4 test | src/orders/orders.test.ts |`
+   `| 2026-07-12 | acl-bypass | orders.create writable without project-ACL check: the handler skipped the project-ACL helper | gate-b | major | 4 test | test added in src/orders/orders.test.ts for orders.create; cycle k7q2m9xa |`
 
 ## Stop and ask
 
