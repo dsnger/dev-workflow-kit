@@ -1,0 +1,2 @@
+MINOR | high | docs/reference.md:717 | The opting-out instructions still state that Gate A is not skippable for a spec, although design section 2 and AC-4 require standard-risk, security-none specs to skip it in lean and strict | Readers following this section can run the spec review that the new threshold removes; this is a surviving sibling of the earlier documentation-consistency finding | Qualify the statement by mode and threshold or refer to the Gate modes section
+END OF FINDINGS (1 total)

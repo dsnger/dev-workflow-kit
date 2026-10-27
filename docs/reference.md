@@ -714,7 +714,8 @@ that matches your intent:
    stays silent there; the skills and commands remain callable by name.
 2. **One docs-only change.** The hook warns, it never blocks, and a commit whose every
    staged path is explanatory Markdown under `docs/`, or `README.md`, `MANIFEST.md`,
-   `todos.md`, skips Gate B. Any other diff takes it. Gate A is not skippable for a spec.
+   `todos.md`, skips Gate B. Any other diff takes it. Which specs need Gate A is the gate mode's
+   decision ([Gate modes](#gate-modes)); a docs-only commit does not skip it.
 3. **Pause a project.** `touch .context/codex-gate.off` (delete to re-enable; the
    counters keep their semantics while off, which is not evidence that a review
    happened).
