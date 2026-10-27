@@ -27,6 +27,8 @@ _unrelated-seo-work/
 .context/*
 !.context/codex-gate.on
 !.context/codex-reviews/
+# 0.46 archives a closed cycle's pass files here; tracked like codex-reviews/ above.
+!.context/archive/
 
 # Local drafts and reading notes — working material, not repo content. `docs/field-reports/`
 # is deliberately NOT here: field reports are tracked, because a field-intake round cites

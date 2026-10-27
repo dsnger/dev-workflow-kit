@@ -201,9 +201,9 @@ printf '%s\n' "$oute" | grep -qx 'no cycle records' && pass "no records prints '
 printf '%s\n' "$oute" | grep -qx '  no profiled cycles with a curve' && pass "comparison empty state" || fail "comparison empty state"
 expect "checkpoint: both evidence lists empty" "$(printf '%s\n' "$oute" | sed -n '/^== First checkpoint/,/^$/p' | sed '$d')" <<'CHECKPOINT'
 == First checkpoint: evidence (the reader decides)
-provenance lines whose set licenses floor 1:
+provenance lines whose set licenses floor 1 (pre-0.46 level rule):
   none
-provenance lines recording floor 1:
+provenance lines recording floor 1 (pre-0.46 level rule, or a 0.46 lean/strict mode; the record does not say which):
   none
 CHECKPOINT
 
@@ -284,11 +284,11 @@ fic2 baseline (docs/field-reports/2026-08-26-fic2-cycle-evidence.md, passes 1-5;
 3. No demotion figure is derivable. That would need one finding classified under both rules, and nothing records that.
 
 == First checkpoint: evidence (the reader decides)
-provenance lines whose set licenses floor 1:
+provenance lines whose set licenses floor 1 (pre-0.46 level rule):
   cccccccc  recorded floor 1  commit 4364bb042d4d
   iiiiiiii  recorded floor 3  commit 85b7cc11dd38
   nnnnnnnn  recorded floor 3  commit 77b3167bb0fd
-provenance lines recording floor 1:
+provenance lines recording floor 1 (pre-0.46 level rule, or a 0.46 lean/strict mode; the record does not say which):
   cccccccc  floor 1  set licenses it  commit 4364bb042d4d
   llllllll  floor 1  set does not license it  commit 13f09168f5c1
   rrrrrrrr  floor 1  set does not license it  commit 4b1693862af7
@@ -505,6 +505,27 @@ printf '%s\n' "$out" | sed -n '/^== Git: unparsed/,/^$/p' | grep -q 'cycle qqqqq
 set -- "$work"/WROTE.*
 if [ -e "$1" ]; then fail "no-write: a run changed its fixture ($*)"
 else pass "no-write: no run changed its fixture"; fi
+
+# ---- 9. 0.46 lean/strict floor-1 record next to a historical one -------------------------
+newrepo L; printf '%s\n' "$LEDGER_HEAD" > "$work/L/docs/hardening-log.md"
+(
+  cd "$work/L" || exit 1
+  commit 'historical\n\ncycle hist0003; floor 3 per {docs/s.md (level 1)}; hook reminder threshold absent\ncycle hist0003; Gate B (passes 1-3, codex): Findings 2,1,0. Blockers 0,0,0. Majors 1,0,0.\n'
+  commit 'lean\n\ncycle lean0001; floor 1 per {docs/s.md (level 1)}; hook reminder threshold absent\ncycle lean0001; Gate B (passes 1, codex): Findings 0. Blockers 0. Majors 0.\n'
+)
+outl=$(report L "$SCRIPT"); st=$?
+[ "$st" -eq 0 ] && pass "0.46 floor-1 fixture: exit 0" || fail "0.46 floor-1 fixture: exit $st"
+printf '%s\n' "$outl" | grep -qx 'hist0003  Gate B  passes 1-3  floor 3  set {docs/s.md (level 1)}  findings 2,1,0 (? 0)  blockers 0,0,0 (? 0)  majors 1,0,0 (? 0)' &&
+  printf '%s\n' "$outl" | grep -qx 'lean0001  Gate B  passes 1  floor 1  set {docs/s.md (level 1)}  findings 0 (? 0)  blockers 0 (? 0)  majors 0 (? 0)' &&
+  pass "0.46 floor-1 record and historical floor-3 record both parse as cycles" ||
+  { fail "0.46 floor-1 cycles"; printf '%s\n' "$outl" | grep -E 'hist0003|lean0001' | sed 's/^/    /'; }
+expect "0.46 floor-1 checkpoint labels" "$(printf '%s\n' "$outl" | sed -n '/^== First checkpoint/,/^$/p' | sed '$d' | sed -E 's/commit [0-9a-f]{12}/commit H/')" <<'CHECKPOINT'
+== First checkpoint: evidence (the reader decides)
+provenance lines whose set licenses floor 1 (pre-0.46 level rule):
+  none
+provenance lines recording floor 1 (pre-0.46 level rule, or a 0.46 lean/strict mode; the record does not say which):
+  lean0001  floor 1  set does not license it  commit H
+CHECKPOINT
 
 printf '\n%d passed, %d failed\n' "$pass_n" "$fail_n"
 [ "$fail_n" -eq 0 ]

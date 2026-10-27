@@ -569,9 +569,9 @@ def git_sections(commits, absence):
     out.append(FIC2)
     out += list(CAVEATS)
     out += ["", "== First checkpoint: evidence (the reader decides)",
-            "provenance lines whose set licenses floor 1:"]
+            "provenance lines whose set licenses floor 1 (pre-0.46 level rule):"]
     emit([(k, "  " + v) for k, v in lic], "  none" + absence)
-    out.append("provenance lines recording floor 1:")
+    out.append("provenance lines recording floor 1 (pre-0.46 level rule, or a 0.46 lean/strict mode; the record does not say which):")
     emit([(k, "  " + v) for k, v in f1], "  none" + absence)
     return out
 

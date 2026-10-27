@@ -71,7 +71,10 @@ project's actual config files and commands from `AGENTS.md § Commands`.
    try the project's lint and test setup on it; if that still settles nothing, leave
    `docs/hardening-log.md` unchanged, add a `todos.md` row naming the finding as *rung
    undetermined*, and end this run there, so the obligation stays open instead of being
-   discharged by a guess.
+   discharged by a guess. When it is settled that neither lint nor a test can decide it, the
+   rung is `1 prose` (an instruction in a rule file), and the row's `ref` says why neither
+   can; write no prose row without that reason. Why: in the dev-workflow-kit's own ledger, prose fixes
+   recurred 13 times in 14, tests 10 in 15.
 5. **Apply** — implement at the chosen rung. Prefer existing rules/config over new
    dependencies; a new lint plugin obeys the project's dependency-freshness policy
    (`AGENTS.md`) — never lower it. If the plugin is too new to pass, log `pending`
@@ -81,7 +84,9 @@ project's actual config files and commands from `AGENTS.md § Commands`.
    ripple into dead-code/duplication checks). Report the real command + result; claim
    green only with a tool result to point at.
 7. **Log** — re-read the log again, then append one row (below) if no matching-
-   fingerprint row appeared meanwhile. Rung 0 is not logged — the log is a ledger of
+   fingerprint row appeared meanwhile. The row is also the learning record: `finding`
+   names the symptom and its cause; `ref` names the change, its location and the evidence —
+   the cycle nonce for a row a gate cycle owed, else the source (a PR comment, a manual note). Rung 0 is not logged — the log is a ledger of
    hardenings.
 
 **Prerequisite-blocked hardening:** if the fitting rung can't land without breaking
