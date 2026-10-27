@@ -604,7 +604,8 @@ hook treats it as a prompt, and an edit to it fires full Gate B.
 "Ponytail (optional)"; the `CLAUDE.md` template's §4 does. When this run writes the new
 `.claude/review-gates.md` but leaves `CLAUDE.md` without those two paragraphs (its update declined, or
 skipped), show the two paragraphs from the template and ask to insert them after its "Context, by task"
-paragraph, by Rule 2. Declined: keep the project's previous `.claude/review-gates.md` too, so neither duty is
+paragraph, or at the end of its §4 when it has none, by Rule 2; the same diff points any reference to the
+gate rules' "Library APIs" section at the inserted paragraph. Declined: keep the project's previous `.claude/review-gates.md` too, so neither duty is
 lost, and report `kept (CLAUDE.md lacks the moved duties)`. Why: accepting one file without the other would
 drop both duties silently.
 
