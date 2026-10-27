@@ -600,6 +600,14 @@ hook treats it as a prompt, and an edit to it fires full Gate B.
 > the same reason as for the `CLAUDE.md` template above: its executing model is whatever
 > the project runs. This note sits outside the fence so it never scaffolds.
 
+**Two duties moved to `CLAUDE.md` (0.46).** These rules no longer carry "Library APIs (Context7)" and
+"Ponytail (optional)"; the `CLAUDE.md` template's §4 does. When this run writes the new
+`.claude/review-gates.md` but leaves `CLAUDE.md` without those two paragraphs (its update declined, or
+skipped), show the two paragraphs from the template and ask to insert them after its "Context, by task"
+paragraph, by Rule 2. Declined: keep the project's previous `.claude/review-gates.md` too, so neither duty is
+lost, and report `kept (CLAUDE.md lacks the moved duties)`. Why: accepting one file without the other would
+drop both duties silently.
+
 **The gate mode, `.claude/codex-gate.mode`.** One word the gate rules and the hook read:
 `lean` (the default written here), `strict` (Gate B reviews every pass in full, up to 5), or
 `classic` (the rules before 0.46); a missing file or an unknown word counts as `classic`. After

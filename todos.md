@@ -2172,4 +2172,5 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   §1). Compare passes per cycle and late Blockers/Majors in `lean` projects and in this repository's
   `strict` with the 2026-09-09 → 2026-10-25 baseline (`.context/sparring/20261026-1125-kit-lean-gates-analyse.md`
   in the main checkout); a late Security or acceptance-criterion finding sent to `todos.md` is the risk to
-  watch. *Trigger: five closed cycles under 0.46 in any project.*
+  watch. *Trigger: at least five closed cycles under 0.46 in each group compared (`lean` projects, and this
+  repository's `strict`).*

@@ -46,11 +46,13 @@ block. What the gates compare, and what each hook message means:
    `not fixed` or `no longer applies`.
    Hook lines like `⚠ Codex Gate A below floor (1/2)` are the round counter, not an
    error. Claude judges disputed findings; a dismissed finding needs a one-line reason.
-4. If you see `⚠ Codex Gate A: pass cap reached`, the review hit its round limit. A
-   remaining Blocker, security finding or broken acceptance criterion, or a cut to an
-   approved commitment, comes to you; you may allow more rounds. Anything else becomes a
-   `todos.md` row and the review closes. (In `classic`, Claude may instead delete the
-   mechanism the findings keep returning to, cut scope or continue, and records why.)
+4. If you see `⚠ Codex Gate A: pass cap reached`, the review hit its round limit. In
+   `lean` and `strict`, a remaining Blocker, security finding or broken acceptance
+   criterion, or a cut to an approved commitment, comes to you; you may allow more
+   rounds. Anything else becomes a `todos.md` row and the review closes. In `classic`,
+   only a remaining Blocker or a cut to an approved commitment comes to you; otherwise
+   Claude closes, deletes the mechanism the findings keep returning to, cuts scope or
+   continues, and records why.
 5. The review ends with one commit that records it (the closing act). Then
    `superpowers:writing-plans` writes the plan: outcomes, affected parts and test
    situations per step, code left to implementation. Gate A runs on the plan only when

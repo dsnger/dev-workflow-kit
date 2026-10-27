@@ -3475,6 +3475,12 @@ printf '1 | fixed | x\n' > "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.
 touch -t 202601040000 "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
 printf '%s' "$(compact)" | grep -q 'nonce zz99zz99zz' && pass "44d: a newer dispositions file supplies its own slot's nonce" || fail "44d: a newer dispositions file supplies its own slot's nonce"
 rm -f "$reviews/gate-b-spec-zz99zz99zz-pass-2-dispositions.md"
+# 0.46: a close interrupted after its files moved to the archive is still the newest cycle.
+arch="$reviews/../archive/codex-reviews/arch1234ab"; mkdir -p "$arch"
+printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$arch/gate-b-quality-arch1234ab-pass-1.md"
+touch -t 202601050000 "$arch/gate-b-quality-arch1234ab-pass-1.md"
+printf '%s' "$(compact)" | grep -q 'nonce arch1234ab' && pass "44d: an archived newer slot supplies the nonce" || fail "44d: an archived newer slot supplies the nonce"
+rm -rf "$reviews/../archive"
 rm -f "$reviews/gate-a-plan-aa11aa11aa-pass-1.md"
 mkdir -p "$reviews/gate-b-spec-newdir0000-pass-9.md"
 printf 'NO FINDINGS\nEND OF FINDINGS (0 total)\n' > "$reviews/gate-b-spec-pass-1.md"

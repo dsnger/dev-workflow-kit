@@ -1564,10 +1564,12 @@ compact_lines() {
   # why this is `ls` and not a glob: POSIX `test` has no `-nt`. Listed from INSIDE the
   # directory so only basenames are split: the checkout path may contain spaces, a usable
   # slot name cannot, and a name that does split yields pieces the `-f` test rejects.
-  rdir="$state_dir/codex-reviews"
-  # shellcheck disable=SC2012,SC2045  # basenames only; see above
-  for f in $(cd "$rdir" 2>/dev/null && ls -td gate-*-pass-*.md 2>/dev/null); do
-    [ -f "$rdir/$f" ] || continue
+  # The archive counts too (0.46): a close interrupted after its files moved there but before
+  # its commit landed is still the open cycle. Paths are listed relative to .context/, so the
+  # checkout path is never split; a name with a space splits into pieces the `-f` test rejects.
+  # shellcheck disable=SC2012,SC2045  # relative paths only; see above
+  for f in $(cd "$state_dir" 2>/dev/null && ls -td codex-reviews/gate-*-pass-*.md archive/codex-reviews/*/gate-*-pass-*.md 2>/dev/null); do
+    [ -f "$state_dir/$f" ] || continue
     n=${f%-pass-*}; n=${n##*-}
     case "$n" in
       *[!a-z0-9]* | ?????????????????*) continue ;;

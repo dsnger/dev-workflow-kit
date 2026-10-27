@@ -31,7 +31,7 @@ again and accepts the new rules, which writes `lean`.
 
 - **Gate modes.** `.claude/codex-gate.mode` holds `lean`, `strict` or `classic`; no file or an unknown word is
   `classic`, the rules before 0.46. `lean`: Gate A only for a spec at risk `high` or with security relevance,
-  exactly two passes (full, then verify); Gate B closes at the first pass with no open blocking finding, from pass
+  and for a plan at risk `high` as before; exactly two passes (full, then verify); Gate B closes at the first pass with no open blocking finding, from pass
   2 checks only the fixes (`baseSha` = the head last reviewed), cap 3. `strict`: the same Gate A, Gate B in full
   passes up to 5 (this repository). Blocking = Blocker, Major, or a Security-class or violated-AC finding of any
   severity; a new ordinary Major in a `lean` verify pass is collected. At the cap, an open Blocker, Security or AC
@@ -51,7 +51,8 @@ again and accepts the new rules, which writes `lean`.
 - **Prose hardening needs a reason.** `harden-finding` writes a `1 prose` row only with the reason neither lint
   nor a test can decide the finding; the hardening-log row is also the learning record (symptom and cause;
   change, location and evidence).
-- **Less filing.** At a cycle's close its pass files move to `.context/archive/codex-reviews/<nonce>/`.
+- **Less filing.** At a cycle's close its pass files move to `.context/archive/codex-reviews/<nonce>/`; after a
+  compaction the hook also looks there for the open cycle's nonce, so a close interrupted after the move keeps it.
 - **Branch protection.** `/workflow-init`'s checklist recommends protecting the default branch.
 - **Moved.** "Library APIs (Context7)" and "Ponytail (optional)" move from the gate rules to `CLAUDE.md` §4
   (template and this repo), to keep the rules within 10,000 bytes.
