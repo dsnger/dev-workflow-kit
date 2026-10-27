@@ -1733,7 +1733,7 @@ case "$event" in
           has_all_flag "$cmd" && files=$(printf '%s\n%s\n' "$files" "$(git -C "$repo_root" diff --name-only 2>/dev/null)")
           files=$(printf '%s\n' "$files" | sed '/^$/d')
           if names_no_paths "$cmd" && is_docs_only "$files"; then
-            note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) instead." "ℹ Codex Gate B N/A (docs-only commit)"
+            note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) where $policy requires one; the gate mode decides which specs do." "ℹ Codex Gate B N/A (docs-only commit)"
           else
             retire_legacy quiet   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
@@ -1842,7 +1842,7 @@ case "$event" in
             # Target model: Claude via Claude Code. The spec threshold of the mode in force, so a
             # standard spec that skipped Gate A under lean or strict reads as expected (spec 0.46 §2).
             case "$mode" in
-              lean | strict) note "Codex Gate A threshold, mode $mode (.claude/codex-gate.mode): a spec needs Gate A only at risk high or security not none, and a plan only at risk high, so a standard-risk spec or plan without one is expected." "ℹ Codex Gate A, mode $mode: a spec needs it only at risk high or security not none; a plan only at risk high" ;;
+              lean | strict) note "Codex Gate A threshold, mode $mode (.claude/codex-gate.mode): a spec needs Gate A only at risk high or security not none, and a plan only at risk high, so a spec at risk standard with security none, or a plan below risk high, is expected to have none." "ℹ Codex Gate A, mode $mode: a spec needs it only at risk high or security not none; a plan only at risk high" ;;
               *) note "Codex Gate A threshold, mode classic: every spec needs Gate A, and a plan only at risk high." "ℹ Codex Gate A, mode classic: every spec needs it; a plan only at risk high" ;;
             esac
             cap_check A "$countA_file"

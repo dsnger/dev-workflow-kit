@@ -3726,6 +3726,8 @@ for r in run nojq_run; do
   out=$($r "$(pre48 'git commit -F .context/msg')")
   printf '%s' "$out" | grep -qF 'Codex Gate B N/A (docs-only commit)' && pass "48 $r: staged todos.md + plain -F -> docs-only" \
     || fail "48 $r: staged todos.md + plain -F -> docs-only [$out]"
+  printf '%s' "$out" | grep -qF 'the gate mode decides which specs do' && pass "48 $r: docs-only note defers Gate A to the gate mode" \
+    || fail "48 $r: docs-only note defers Gate A to the gate mode [$out]"
   out=$($r "$(pre48 'git add todos.md && git commit -F .context/msg')")
   printf '%s' "$out" | grep -qF 'cannot confirm reviewed content' && pass "48 $r: chained form -> cannot confirm" \
     || fail "48 $r: chained form -> cannot confirm [$out]"
@@ -3904,7 +3906,8 @@ rev; rev; out=$(revout)
 has50 "mode: floor file 2 -> cap 4 on both gates" "$out" 'pass cap reached (4/4)'
 reset_all; setmode lean
 has50 "mode: Gate A plan-execution note names the spec threshold and the mode" "$(skillpre)" \
-  'Codex Gate A threshold, mode lean' 'a spec needs Gate A only at risk high or security not none'
+  'Codex Gate A threshold, mode lean' 'a spec needs Gate A only at risk high or security not none' \
+  'a spec at risk standard with security none, or a plan below risk high, is expected to have none'
 reset_all; setmode strict
 has50 "mode: Gate A plan-execution note under strict" "$(skillpre)" 'mode strict' 'only at risk high or security not none'
 reset_all

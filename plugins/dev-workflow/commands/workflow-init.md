@@ -531,7 +531,7 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **Local choices.** Decide locally within approved commitments. A change to an approved commitment about product behaviour, a shared contract, a security guarantee or scope goes through the decision and amendment route; implementing approved behaviour does not. Record each decision the plan left open, with what you chose, in a `Deviations` list in the handover, so the next reader sees what review did not settle; when unsure, take the conservative option. Why: review settled the commitments, not every line that realises them.
 
-**Autonomous run.** By default the work runs from intake to merge without a human stop: intake → spec → Gate A (as the gate mode decides) → plan (Gate A when its risk is `high`) → build → Gate B → pull request → `/dev-workflow:process-pr-review` → squash-merge → handover. A closed gate is the approval. The story header's `**Checkpoints:**` line, set once at intake, opts in to human stops: `spec` (the story draft, and the spec once approved, before planning), `plan` (the plan, before building), `merge` (before the squash-merge); `none`, the default, and a story without the line set none. These stop whatever that line says: a finding the gate rules send to the human at a pass cap; the quality command still red after 5 rounds (not in `classic`); a change to an approved commitment (the amendment route); a destructive or irreversible action outside the branch; missing access or licence; the plan's actions outside the repository, asked for together once its Gate A closes, or once it is written when it gets none. Why that one: an approval knowable at plan time and asked mid-build stalls the run for hours. Decide every other question yourself, take your own recommendation, and record it under "Decisions" in the spec, or in the pull request body when there is no spec; in a run, §1's "ask" and "stop" mean exactly this, and only these stops and a set checkpoint wait for the human. Where a superpowers skill asks the human, `brainstorming`'s design approval is the spec's approval as `.claude/review-gates.md` defines it and `writing-plans`' execution choice is subagent-driven development in this session. Why: a stop with nothing left for a human to decide only delays the merge, and the gates already reviewed what it would approve.
+**Autonomous run.** By default the work runs from intake to merge without a human stop: intake → spec → Gate A (as the gate mode decides) → plan (Gate A when its risk is `high`) → build → Gate B → pull request → `/dev-workflow:process-pr-review` → squash-merge → handover. A closed gate is the approval. The story header's `**Checkpoints:**` line, set once at intake, opts in to human stops: `spec` (the story draft, and the spec once its Gate A closes, or once committed when Gate A is skipped, before planning), `plan` (the plan, before building), `merge` (before the squash-merge); `none`, the default, and a story without the line set none. These stop whatever that line says: a finding the gate rules send to the human at a pass cap; the quality command still red after 5 rounds (not in `classic`); a change to an approved commitment (the amendment route); a destructive or irreversible action outside the branch; missing access or licence; the plan's actions outside the repository, asked for together once its Gate A closes, or once it is written when it gets none. Why that one: an approval knowable at plan time and asked mid-build stalls the run for hours. Decide every other question yourself, take your own recommendation, and record it under "Decisions" in the spec, or in the pull request body when there is no spec; in a run, §1's "ask" and "stop" mean exactly this, and only these stops and a set checkpoint wait for the human. Where a superpowers skill asks the human, `brainstorming`'s design approval is the spec's approval as `.claude/review-gates.md` defines it and `writing-plans`' execution choice is subagent-driven development in this session. Why: a stop with nothing left for a human to decide only delays the merge, and the gates already reviewed what it would approve.
 
 **Waiting on external work.** Before waiting on a run outside this session — a CI run, a deploy, a remote job — confirm it exists for its trigger (the push, or the manual start): its id seen and a status read. Queued, in progress or waiting for approval: wait. Already finished: read its result. When no run appears within 5 minutes of the trigger, its status cannot be read, or the wait passes its limit — twice the run's usual duration, or 60 minutes when that is unknown, counted from the trigger and never restarted — stop waiting and treat it as a failed check: find the cause (for a run that never appeared, often an invalid workflow file) and report the id or its absence, the last status and the time waited. Why: a session waited 15 hours on a CI run that GitHub never started, because its workflow file was invalid.
 
@@ -621,7 +621,7 @@ A spec is approved when its Gate A closes, or if skipped once committed (checkpo
 Gate B (`mcp__codex__review`) reviews every code diff once the quality command is green; only docs-only commits may skip it.
 Docs-only: every staged path is explanatory Markdown under `docs/`, or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`, `AGENTS.md` and paths under `.claude/`, `plugins/`, `skills/` or `commands/` at any depth are prompts needing Gate B, as are mixed commits.
 
-Before deciding on Gate A or a small-change close, take one profile line, `risk standard|high; security none|standard|high; evidence <mode>`, from the cited story; with none, derive it as intake does and record why.
+Before deciding Gate A or a small-change close, take one profile line, `risk standard|high; security none|standard|high; evidence <mode>`, from the cited story; with none, derive it as intake does and record why.
 Evidence modes: `battery`, `battery+check`, or `battery+check+verification`, with `+abuse-path` for security `high`.
 Map a free-text value to the nearest closed values, the stricter where two fit, and record mapping and quote.
 
@@ -634,7 +634,7 @@ Ask also: of a spec, whether its commitments are coherent, sufficiently decided 
 Report missing code or tests only where their absence has a concrete consequence, and name it; review code a plan includes like other content.
 A spec or plan that uses a library API without a named Context7 lookup (or CLAUDE.md's fallback) for the pinned version is a finding.
 Append the intent + artifact text + which invariants it touches.
-Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; Codex never filters: told to report only high severity, a model drops real ones.
+Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; Codex never filters: told to report only high severity, models drop real ones.
 
 Both gates, from pass 2 on: list each slot's earlier blocking findings with their verdict and reason; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
 Each `not fixed` becomes a finding line, except a `declined` or `accepted, not repaired` one Codex can back with no new evidence, so none drops unchecked and none settled is re-argued.
@@ -654,8 +654,8 @@ Same coverage rule as Gate A: put "report every finding with severity and confid
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
 **Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
-Codex forms 2–4 hypotheses of what could be wrong from the acceptance criteria and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so it cannot steer.
-In the `spec` call, Codex maps each acceptance criterion to the test asserting it, or `none`, the same way, and reports a test that cannot fail as a finding.
+Codex forms 2–4 hypotheses of what could be wrong from the ACs and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so it cannot steer.
+In the `spec` call, Codex maps each AC to the test asserting it, or `none`, the same way; a test that cannot fail is a finding.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
@@ -663,18 +663,18 @@ In the `spec` call, Codex maps each acceptance criterion to the test asserting i
 > The last line reads exactly `END OF FINDINGS (<n> total)`, `<n>` the number of finding lines.
 > A **clean findings file** is the single body line `NO FINDINGS` with `END OF FINDINGS (0 total)`.
 
-Choose a fresh cycle nonce of 8–16 lowercase letters or digits; write passes to `.context/codex-reviews/gate-<a|b>-<spec|plan|quality>-<nonce>-pass-<n>.md` (Gate A: spec or plan, Codex writing the prompt's `Findings file: <path>`; a reply alone is no pass; Gate B: spec and quality), a pass's dispositions to `…-pass-<n>-dispositions.md`.
+Choose a fresh cycle nonce, 8–16 lowercase letters or digits; write passes to `.context/codex-reviews/gate-<a|b>-<spec|plan|quality>-<nonce>-pass-<n>.md` (Gate A: spec or plan, Codex writing the prompt's `Findings file: <path>`; a reply alone is no pass; Gate B: spec and quality), a pass's dispositions to `…-pass-<n>-dispositions.md`.
 For the provenance line, write a story set as `{docs/story.md (level 1)}` (standard = 1, high = 2), or `none` without a cited story; use `<quoted>` for paths needing quotes.
   <quoted>    := a double-quoted string, non-empty, whose only escapes are \" and \\ ;
 
 Floor/cap, valid passes: `lean` A 2/2, B 1/3; `strict` A 2/2, B 1/5; `classic` 3/5. Stop before a further pass at the cap, or at the count plus extra passes last authorized.
 `lean`/`strict`: blocking is a Blocker, a Major, or a Security-class or violated-AC (`AC-<n>`) finding of any severity; repair, rerun. Gate A pass 2 and `lean` Gate B from pass 2 verify each earlier blocking finding and what its fix touched (no repair: full reread; Gate B `baseSha` is the head last reviewed, unknown: full), collecting a new ordinary Major. `strict` Gate B passes are full.
-Close at the first pass at the floor with no open blocking finding. At the cap a cut to an approved commitment, or an open Blocker, Security-class or violated-AC finding, goes to the human; else close, each open finding a `todos.md` row.
+Close at the first pass at or above the floor with no open blocking finding. At the cap a cut to an approved commitment, or an open Blocker, Security-class or violated-AC finding, goes to the human; else close, each open finding a `todos.md` row.
 `classic`: blocking is a Blocker or Major; a pass with zero findings may close early, and Gate B on a small change closes at its first pass with no Blocker or Major.
 Small change: risk `standard`, security `none`; ≤197 lines added+deleted outside files only tests use (`git diff --numstat` from a base before the whole change; binary, unmeasured or no such base: not small); no prompt path, migration, shared contract or path an AGENTS.md invariant names; the closing commit and any PR body say `small change: <n> lines, <base>..<head>`.
-`classic` cap: a Blocker or a cut to an approved commitment goes to the human; else choose and record why: delete the mechanism findings keep returning to, cut scope, or continue N ≥ 1 passes.
-Collect other findings; never iterate on them; a closing pass's stay unrepaired (`classic`: a small change's), since a later fix is unreviewed.
-A timeout in an untouched test that passes alone is recorded with that evidence (the load, the solo run); the PR head's required CI check is then the battery evidence, without a stop. A red CI stops.
+`classic` cap: a Blocker or a cut to an approved commitment goes to the human; else choose and record why: delete the mechanism findings keep returning to, cut scope, or continue; each names N ≥ 1 more passes and resumes the loop on the artifact as left.
+Collect other findings; never iterate on them; a closing pass's stay unrepaired (`classic`: a small change's), as a later fix is unreviewed.
+A timeout in an untouched test that passes alone is recorded with its evidence (load, solo run); the PR head's required CI check is then the battery evidence, without a stop. A red CI stops.
 
 ## Closing act
 
@@ -776,7 +776,7 @@ Columns: `date` (YYYY-MM-DD), `fingerprint` (canonical class), `finding` (short,
 escape `\|`, one line), `source` (gate-a|gate-b|bot|manual),
 `severity` (blocker|major|minor|nit), `rung` (e.g. `2 lint`, `4 test`, `1 prose`,
 `P std`, `pending`), `ref` (rule name / test path / AGENTS.md section / prior row).
-A row is also the learning record: `finding` names the symptom and its cause, `ref` the change,
+Unless the gate mode is `classic`, a row is also the learning record: `finding` names the symptom and its cause, `ref` the change,
 its location and the evidence — the cycle nonce for a row a gate cycle owed, else the source (a
 PR comment, a manual note). A `1 prose` row's `ref` also says why neither lint nor a test can
 decide the finding.
@@ -2121,8 +2121,9 @@ Remaining — stack-specific, yours to decide:
    merging": two PRs can each be green alone and red together. Limit: it does
    not re-run CI on a moving base by itself; GitHub makes you update the branch,
    and the update's CI run is what checks the combination. Protect the default
-   branch too: no direct push, a pull request required. The gate hook only
-   reminds; this setting is what stops a change that skipped the gates. This
+   branch too: no direct push, a pull request required. That stops a change
+   that skipped the pull request and its required checks; whether Gate A and
+   Gate B ran stays unchecked by any setting, since the hook only reminds. This
    command sets none of it.
 
 5. Codex — the reviewer behind BOTH gates. Three parts, all required:

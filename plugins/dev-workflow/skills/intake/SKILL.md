@@ -73,7 +73,7 @@ Follow in order. Each step names why it exists.
      `battery+check` / `battery+check+verification`, plus `+abuse-path` when and only
      when security is `high`.
    - **Checkpoints** — the human stops this story opts in to, from `spec` (the story
-     draft, and the spec once approved as the gate rules define it), `plan` (the plan, before building) and
+     draft, and the spec once its Gate A closes, or once committed when Gate A is skipped), `plan` (the plan, before building) and
      `merge` (before the squash-merge). Propose `none`, the default, unless risk is `high`
      *and* the change touches a security guarantee (security `high`) or irreversible data
      (the irreversibility or data-loss trigger); then propose `spec, plan, merge`. Why: a

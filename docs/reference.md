@@ -357,7 +357,7 @@ at security `high` `+abuse-path`: a named abuse scenario and evidence that the c
 rejects or contains it.
 
 **Passes.** The prompt asks Codex to report every finding with severity and confidence;
-Claude filters to Blockers and Majors for repair and reads the rest. Findings land in
+Claude filters to blocking findings for repair (the gate mode defines them, above) and reads the rest. Findings land in
 `.context/codex-reviews/gate-a-<spec|plan>-<nonce>-pass-<n>.md` (Gate A) one per line, severity
 `BLOCKER | MAJOR | MINOR | NIT`. Claude's verdict on each finding goes beside it, in
 `…-pass-<n>-dispositions.md`. Findings that are not blocking are collected, never iterated.
@@ -365,7 +365,7 @@ Floor and cap come from the gate mode (above). In `classic` the floor is three v
 cycle, a pass with zero findings may close early, and the cap is the floor plus two (see
 **Small changes in Gate B** below for the one exception), where a remaining Blocker or a cut to
 an approved commitment goes to you and the agent decides the rest. From pass 2 on, each pass of
-either gate lists the earlier passes' Blockers and Majors, each with its verdict and reason,
+either gate lists the earlier passes' blocking findings, each with its verdict and reason,
 and Codex marks each `fixed | not fixed | no longer applies`, a `not fixed` counting as a
 finding again unless you declined it or accepted it unrepaired and Codex brings no new
 evidence. One cause at several places is reported once, as a class
@@ -374,7 +374,9 @@ maps each acceptance criterion to the test asserting it, or `none`, and reports 
 that cannot fail. Codex is advisory: Claude arbitrates disputed findings, and a dismissed
 finding needs a one-line reason.
 
-**Cap stop.** `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker, or a cut
+**Cap stop.** In `lean` and `strict`, an open Blocker, Security-class or violated-AC finding, or a cut to an
+approved commitment, goes to you and you may allow more passes; otherwise the cycle closes with a `todos.md` row
+per open finding. In `classic`: `⚠ Codex Gate A: pass cap reached (5/5). STOP: a remaining Blocker, or a cut
 to an approved commitment, goes to the human` (same for Gate B). Then you answer; otherwise Claude does and
 records why. The answer is `close`, or one of delete the mechanism the findings keep
 returning to / cut scope / continue, each naming how many further passes it allows (at
@@ -696,7 +698,7 @@ writes; `/workflow-init` 2.18 ignores those and leaves these knobs trackable, ex
 |---|---|
 | `codex-gate.floor` | a positive integer; moves the hook's reminder threshold for both gates, over the gate mode's numbers. It does not change the floor the gate rules oblige (in `classic` three valid passes; a zero-finding pass may close earlier, and in Gate B so does a small change's pass with no Blocker or Major). |
 | `codex-gate.cap` | a positive integer of at most nine digits (anything else is ignored); the pass count at which the hook starts printing its pass-cap reminder ("STOP: a remaining Blocker, or a cut to an approved commitment, goes to the human") on every gate call and commit attempt. Default: the gate mode's cap per gate, or, with `codex-gate.floor` set, that floor plus two. A reminder only: nothing is blocked, and whether your review policy has a pass-cap rule is that policy's business. |
-| `codex-gate.cap-extra` | a positive integer of at most nine digits (anything else is ignored), written after the cap answer (yours or Claude's): the total allowance beyond the base cap for the current cycle, not an increment. A second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
+| `codex-gate.cap-extra` | a positive integer of at most nine digits (anything else is ignored), written after the cap answer (yours; in `classic` also Claude's): the total allowance beyond the base cap for the current cycle, not an increment. A second answer of "two more" at a cap of 7 is written as `4`, not `2`. The commit that clears the pass counter clears it too. |
 | `codex-gate.modeA`, `codex-gate.modeB` | state, not knobs: the gate mode the hook recorded at that gate's first counted pass, cleared with that gate's pass counter (see [Gate mode](#hook-messages)). |
 | `codex-gate.off` | silences the reminders; classification and state tracking keep running, so re-enabling lands on counters carrying the same semantics as gate-on, which is not the same as evidence that a review happened. |
 | `codex-gate.tools` | `execTool=<name>` and/or `reviewTool=<name>`: counts a Codex server whose tools aren't named `exec`/`review`, and only worth it if that server really does separate text-review from diff-review; aiming both gates at one general-purpose tool moves the counters while neither gate means what it says. Each mapped name must itself lie in `mcp__codex__*`: the hook's `hooks.json` matcher is `^(Bash\|Skill\|mcp__codex__.*)$`, so an out-of-namespace name is either never delivered (the mapping looks applied and does nothing) or, for the reserved names `Bash`/`Skill`, hijacks a lifecycle event; the hook refuses both. Register the server as `codex` to place its tools there. Unparseable, out-of-namespace and reserved (`Bash`/`Skill`) lines are ignored, and the gate keeps its default `exec`/`review` name. A typo inside the namespace, `mcp__codex__exce`, is still honoured: the hook does not check that a mapped tool exists, so the gate now counts that name and nothing else. Whether it ever counts depends on whether a tool by that name is actually invoked; for a typo, normally never. |

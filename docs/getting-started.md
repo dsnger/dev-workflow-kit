@@ -26,13 +26,13 @@ block. What the gates compare, and what each hook message means:
    you approve the draft).
 2. Claude continues with `superpowers:brainstorming`, which writes the spec: settled
    decisions with reasons, not a wish list. Claude answers its questions itself and
-   records them under "Decisions" in the spec; the spec's approval is the design approval: its closed Gate A, or, where the gate mode skips Gate A (risk standard, security none), its commit. For a third-party library, Claude looks the
+   records them under "Decisions" in the spec; the spec's approval is the design approval: its closed Gate A, or, where the gate mode skips Gate A (risk standard, security none), its commit (with checkpoint `spec`, your approval of it). For a third-party library, Claude looks the
    API up in Context7 for the version you pin and names the lookup; when Context7 is
    unavailable or that version is not indexed, the library's own material for that
    version stands in.
 3. Gate A starts (Codex reads the spec text), with the profile from the story. In the
    default mode `lean` it runs only for a spec at risk `high` or with security relevance;
-   otherwise the spec says `**Gate A:** skipped` and planning starts at its commit. The mode
+   otherwise the spec says `**Gate A:** skipped` and planning starts at its commit (with checkpoint `spec`, at your approval). The mode
    is one word in `.claude/codex-gate.mode` (`lean`, `strict`, or `classic` for the rules
    before 0.46; [reference](reference.md#gate-modes)).
    You see Codex findings in `.context/codex-reviews/gate-a-spec-<nonce>-pass-<n>.md`
