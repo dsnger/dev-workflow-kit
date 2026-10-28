@@ -33,7 +33,9 @@ on the right bot.
 required check makes the PR unmergeable regardless of review outcomes, and the
 failure is itself a finding to process. If it is red, fix the failing step **before**
 processing bot comments. If it is still running, note it and proceed — re-verify at
-the end.
+the end. A project whose battery runs locally and reports the check as a commit status
+(`AGENTS.md § Commands` names the reporter) shows it in `gh pr checks` too, and then there
+is no run to wait for.
 
 ## Step 2 — Wait for the findings bots
 
@@ -87,7 +89,7 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 
    If no tracked claims remain, spawn nothing: report that the PR drew no defect claims,
    name each bot that did not review the head (Step 2), answer any thread that needs an
-   answer, and continue to the final CI and merge checks.
+   answer, and continue to the final check and merge steps (item 6, Step 4).
 
    Unless step 0 said otherwise, delegate each remaining claim to a
    `dev-workflow:finding-triage` subagent with fresh context, in **batches of 4**. Pass
@@ -201,16 +203,17 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
    costs one repeated check and nothing more, since no ledger row exists for it to miscount.
 6. Report grounded (CLAUDE.md §4): per claim — verdict + reason + action + the tool
    result that verifies it. If code changed: the project's quality command
-   (`AGENTS.md § Commands`) green locally **and** the CI quality check green on the
-   final pushed head (`gh pr checks` after the run completes, within CLAUDE.md §4's limit for waiting on
-   external work). CI is the enforced
-   authority; the local run is the fast pre-check. Two exceptions. A local timeout in a test
+   (`AGENTS.md § Commands`) green locally **and** the required quality check green on the
+   final pushed head (`gh pr checks`): from CI once its run completes, within CLAUDE.md §4's limit for
+   waiting on external work, or from the local reporter the project's `AGENTS.md § Commands` names, which
+   posts the local run's result as that check. The required check is the enforced
+   authority; a local run that is not reported is the fast pre-check. Two exceptions. A local timeout in a test
    the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
-   (Gate-B prompt): record it, and the green CI check on the head stands in. And when the
+   (Gate-B prompt): record it, and the green required check on the head stands in (with a local reporter, a rerun through it). And when the
    quality command passed in full on a commit you can name (its SHA, from that run's output or
    record), that commit is an ancestor of the final head, and every path changed between them is
    docs-only as `.claude/review-gates.md` defines it: rerun only the stages of the quality
-   command that read those paths, and name the stages and that SHA in the report; the green CI
+   command that read those paths, and name the stages and that SHA in the report; the green required
    check on the final head stands for the rest. Why: rerunning a long battery for a few lines of
    prose spends the time on stages that never read them. No named commit, one that is not an
    ancestor (a rebase), or a stage whose inputs you cannot tell: run the full command.
@@ -236,7 +239,7 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 
    verification
      quality command   green locally (AGENTS.md § Commands, run verbatim)
-     CI on final head  green — the authority; the local run is the fast pre-check
+     required check on final head  green — the authority (CI, or the local reporter's status)
    ```
 
    Both claims sit on one thread and share one reply, and each ends at exactly one
@@ -249,8 +252,8 @@ Squash-merge once all of these hold: a last read of both channels of every bot (
 filtered as Step 3 item 1 forms the tracked set, adds no claim — a new one goes through
 Step 3 first; every tracked
 claim has a verdict, a terminal disposition and a reply; no item-4 question is unanswered;
-the required CI check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
-`headRefOid` equal to the head this run checked CI and claims on. A different head means
+the required check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
+`headRefOid` equal to the head this run checked and claims on. A different head means
 commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other,
 with a squash body you write:
 `gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
@@ -286,5 +289,5 @@ and write the unit's handover.
 Every tracked claim has a verdict, every thread has a reply, and each claim ends in
 exactly one of: a fix, a documented dismissal, a valid-but-out-of-scope finding recorded
 in `todos.md`, or an escalation the user has answered. Fixes are committed
-per rule 3, CI checks are green on the final head, `mergeStateStatus` is CLEAN, and the PR
+per rule 3, the required check is green on the final head, `mergeStateStatus` is CLEAN, and the PR
 is squash-merged — or, under a `merge` checkpoint, ready to merge.

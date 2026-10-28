@@ -59,7 +59,7 @@ Close at the first pass at or above the floor with no open blocking finding. At 
 Small change: risk `standard`, security `none`; ≤197 lines added+deleted outside files only tests use (`git diff --numstat` from a base before the whole change; binary, unmeasured or no such base: not small); no prompt path, migration, shared contract or path an AGENTS.md invariant names; the closing commit and any PR body say `small change: <n> lines, <base>..<head>`.
 `classic` cap: a Blocker or a cut to an approved commitment goes to the human; else choose and record why: delete the mechanism findings keep returning to, cut scope, or continue; each names N ≥ 1 more passes and resumes the loop on the artifact as left.
 Collect other findings; never iterate on them; a closing pass's stay unrepaired (`classic`: a small change's), as a later fix is unreviewed.
-A timeout in an untouched test that passes alone is recorded with its evidence (load, solo run); the PR head's required CI check is then the battery evidence, without a stop. A red CI stops.
+A timeout in an untouched test that passes alone is recorded with its evidence (load, solo run); the PR head's required check is then the battery evidence, without a stop. A red check stops.
 
 ## Closing act
 

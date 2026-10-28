@@ -78,6 +78,10 @@ More: [why](docs/coding-workflow.md), [reference](docs/reference.md), [layout](d
 
 ## Contributing
 
-CI runs the battery in [`AGENTS.md`](AGENTS.md) § Commands. Prompts are reviewed
-against [`docs/prompt-standards.md`](docs/prompt-standards.md). Details:
+CI runs the battery in [`AGENTS.md`](AGENTS.md) § Commands. When the Actions budget is used
+up, or you choose local up front, disable the workflow, then per commit run
+`git fetch origin && sh scripts/local-ci.sh` on the Mac: it runs the same battery on that commit
+and posts the same required `quality` check. Switch before you push the commit you run locally: a
+`quality` check run that Actions already created on a commit stays on it and must pass too. Prompts
+are reviewed against [`docs/prompt-standards.md`](docs/prompt-standards.md). Details:
 [reference](docs/reference.md#contributing).

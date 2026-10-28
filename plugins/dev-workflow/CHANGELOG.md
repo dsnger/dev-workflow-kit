@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.47.0
+
+Local CI (story `docs/superpowers/stories/2026-10-28-kit-local-ci-story.md`, design
+`docs/superpowers/specs/2026-10-28-kit-local-ci-design.md`). Minor: two prompts change their wording for a
+required check that a local run reports; nothing new ships in the plugin.
+
+- **Gate rules.** The untouched-test sentence reads "the PR head's required check is then the battery
+  evidence" and "A red check stops." instead of "required CI check" and "A red CI stops.": the required check
+  may come from CI or from a local reporter that posts it as a commit status. Both copies change together
+  (`.claude/review-gates.md`, `/workflow-init` `### 2.1a`; checks 4i and 4j).
+- **`process-pr-review`.** Step 1 says that a locally reported check shows in `gh pr checks` with no run to
+  wait for; Step 3 item 6, its two exceptions and the report line, Step 4 and Done say "required check" with
+  its two producers (CI, or the local reporter the project's `AGENTS.md § Commands` names) where they said
+  "CI check". Every earlier condition stays (design §6).
+- The kit repository itself gains `scripts/local-ci.sh`, which runs its quality battery on one commit in a
+  temporary worktree and posts the result as the `quality` commit status, the opt-in path beside its Actions
+  job. Repository tooling under `scripts/`, not part of the plugin.
+
 ## 0.46.0
 
 Lean gates (story `docs/superpowers/stories/2026-10-26-kit-046-lean-gates-story.md`, design

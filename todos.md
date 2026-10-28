@@ -2174,3 +2174,32 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   in the main checkout); a late Security or acceptance-criterion finding sent to `todos.md` is the risk to
   watch. *Trigger: at least five closed cycles under 0.46 in each group compared (`lean` projects, and this
   repository's `strict`).*
+
+## From kit 0.47.0 local CI (2026-10-28) — backlog only, nothing implemented here
+
+- [ ] **`/workflow-init` templates and setup step 8 for a project that wants the local option.** The
+      scaffolded `ci.yml` template and `docs/setup.md` step 8 describe a project with a running CI only; a
+      project that loses Actions has no scaffolded reporter. *Trigger fired: decision D42 (Daniel, 2026-10-28
+      17:08, relayed by session sfx-wp-plugin-skills-ae, not read from Daniel directly): the next kit version
+      (0.48.0) builds this through `/workflow-init`, because the private SFX repos have no Actions minutes left
+      and only the public kit repo still gets CI.* Adopter facts relayed with it: `sfx-wp-plugin-skills`'s
+      quality row is `bin/quality.sh`; the SFX plugins' `quality.yml` runs `bash bin/quality.sh`; none is known
+      to pin `koalaman/shellcheck` in `ci.yml`, so the pin precondition of `scripts/local-ci.sh` needs a
+      project-neutral form there. (design `docs/superpowers/specs/2026-10-28-kit-local-ci-design.md` §5)
+- [ ] **The `claude` CLI version of the local run differs from the CI pin.** `scripts/local-ci.sh` runs the
+      installed `claude` (2.1.312 on 2026-10-28) where CI installs `@anthropic-ai/claude-code@2.1.207`; the
+      script names the version in the status description and checks nothing. *Trigger: `claude plugin
+      validate` disagreeing between the two versions.* (design §2)
+- [ ] **Bounded cancellation of a running battery.** A signal to `scripts/local-ci.sh` is handled after the
+      quality command returns; the remaining stages run first (design D-19). *Trigger: a run that had to be
+      killed by hand.*
+- [ ] **`scripts/local-ci.sh`: the printed recovery command with an apostrophe in `TMPDIR`.** The line
+      `run: git worktree remove --force '<path>'` single-quotes the path, so a `TMPDIR` holding an apostrophe
+      gives a shell syntax error when pasted; suite case 19 runs its own command instead of the printed one.
+      *Trigger: a `TMPDIR` with an apostrophe.* (Gate B cycle lcib1028gate, spec pass 1, finding 1 — accepted,
+      not repaired)
+- [ ] **`scripts/local-ci.sh`: cleanup after a partial `git worktree add`.** When `git worktree add` registers
+      the worktree and then fails (a failing `post-checkout` hook, an interruption during setup), cleanup
+      removes the directory and leaves the registration, shown as prunable by `git worktree list`; the suite's
+      `failadd` stub fails before git creates anything. *Trigger: a stale registration after a failed setup.*
+      (Gate B cycle lcib1028gate, quality pass 1, finding 1 — accepted, not repaired)

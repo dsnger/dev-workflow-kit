@@ -40,6 +40,9 @@ pinned.
    directory under the git common dir; with `--remove` removes only the worktrees and local
    branches its report marks removable, and writes `<main>/.context/archive-worktree-*`; never a
    remote branch). Run by the orchestrator or the human, never by the session in a worktree.
+4b. `scripts/local-ci.{sh,test.sh}` (reads; creates and removes one temporary worktree under a
+   `mktemp -d` directory; posts one commit status to GitHub; never fetches, pushes, prunes,
+   changes a ruleset, a workflow's state, a branch or a remote)
 5. the hook ships in the plugin, the checkers and the reports do not (the docs link checker's
    text ships only as `/workflow-init`'s `### 2.21` template, which check 4l keeps
    byte-identical to `scripts/check-doc-links.sh`)
@@ -249,14 +252,15 @@ Every command below was run in this session and observed to exit 0.
 
 | Role | Command |
 |---|---|
-| quality (the whole battery — what CI runs) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && shellcheck --shell=sh scripts/worktree-cleanup.sh && shellcheck --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && sh scripts/live-effort.test.sh && sh scripts/status-view.test.sh && sh scripts/check-doc-links.test.sh && sh scripts/worktree-cleanup.test.sh && sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/ && claude plugin validate . --strict` |
+| quality (the whole battery — what CI runs, and what `scripts/local-ci.sh` runs on the Mac when the Actions budget is used up or local is chosen) | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && shellcheck --shell=sh scripts/worktree-cleanup.sh && shellcheck --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh && shellcheck --shell=sh scripts/local-ci.sh && shellcheck --shell=sh --exclude=SC2015 scripts/local-ci.test.sh && HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh && sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh && sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh origin/main && sh scripts/ledger-metrics.test.sh && sh scripts/run-analytics.test.sh && sh scripts/loop-usefulness.test.sh && sh scripts/spec-delta.test.sh && sh scripts/live-effort.test.sh && sh scripts/status-view.test.sh && sh scripts/check-doc-links.test.sh && sh scripts/worktree-cleanup.test.sh && sh scripts/local-ci.test.sh && sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/ && claude plugin validate . --strict` |
 | typecheck | n/a — no typed sources (shell, six untyped Python reports, markdown) |
-| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && shellcheck --shell=sh scripts/worktree-cleanup.sh && shellcheck --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh` |
+| lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && shellcheck --shell=sh scripts/worktree-cleanup.sh && shellcheck --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh && shellcheck --shell=sh scripts/local-ci.sh && shellcheck --shell=sh --exclude=SC2015 scripts/local-ci.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
 | invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size, gate rules copies identical, doc-link checker copies identical) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | docs link check (relative Markdown links and their heading fragments resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/` |
-| invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh main` |
+| invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh origin/main` |
 | worktree cleanup report (by hand, not CI; `--remove` deletes, see Boundaries 4a) | `sh scripts/worktree-cleanup.sh <repo>` |
+| local CI (by hand, not CI: runs the quality row on one commit in a temporary worktree and posts the result as the `quality` commit status, see Boundaries 4b; the opt-in path beside the Actions job, used with the workflow disabled; needs a logged-in `gh`; about 35 minutes on this Mac) | `sh scripts/local-ci.sh [<commit>]` |
 | build | n/a — nothing is compiled or bundled |
 | prompt eval (by hand before a version bump, not in CI; costs about $2 per run; exits 1 while any case fails; on 0.36.0 all 7 cases passed and it exited 0) | `d=$(mktemp -d) && cp -R plugins/dev-workflow "$d/" && cp -R evals "$d/dev-workflow/evals" && claude plugin eval "$d/dev-workflow" --runs 1 --allow-tools Bash --no-publish --trust-plugin` — `--eval-dir` only accepts a path inside the plugin, so the suite is copied into a temporary plugin copy |
 
@@ -273,7 +277,11 @@ system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop
 `scripts/spec-delta.py`, `scripts/live-effort.py` and `scripts/status-view.py` also need git 2.36 or later and check for it.
 `scripts/worktree-cleanup.sh` uses `gh` and `lsof` when present, addressed by name like `git`: they are
 system tools, not pinned packages, and invariant 5's scope does not include them. Without them its
-squash-merge and session answers read `unknown`, which keeps the row; its suite stubs both.
+squash-merge and session answers read `unknown`, which keeps the row; its suite stubs both. `scripts/local-ci.sh` requires `gh` logged in and
+refuses to run with a shellcheck other than the version `ci.yml` pins; the `claude` CLI it does not
+check against the CI pin — it runs the installed one (2.1.312 on 2026-10-28, against the pinned
+2.1.207) and records that version in the status description. Its suite stubs `gh`, `shellcheck`,
+`claude` and the battery.
 
 **The `--exclude=SC2015` on the test file** is a single-code exclusion, not a blanket
 disable: every other shellcheck rule still applies to that file. Its hits are all
@@ -281,15 +289,18 @@ disable: every other shellcheck rule still applies to that file. Its hits are al
 mode is a broken stdout — which runs `fail` as well, producing a spurious FAIL rather
 than a false pass. Revisit if `pass`/`fail` ever gain logic that can legitimately fail.
 
-**`check-version-bump.sh main` has a precondition**, unlike everything else in the
+**`check-version-bump.sh origin/main` has a precondition**, unlike everything else in the
 battery: it compares *commits*, so run it once the work is committed (the Gate-B WIP
-commit is the natural point) and against a current base ref; with plugin edits still
-uncommitted it reports clean, uselessly. CI passes the PR's own base ref instead of `main`.
+commit is the natural point) and after `git fetch origin`, so the base is current; with plugin
+edits still uncommitted it reports clean, uselessly. The base is `origin/main`, not the local
+`main`: that one moves only when pulled in the main checkout, and from a merge-base behind the
+branch point the diff carries another commit's bump, which hides a missing one. CI passes the
+PR's own base ref instead.
 It is in the quality row because that row claims to be what CI runs.
 
 CI runs the parts as separate steps for readable failures; the chained form above
 is the single command a human runs. One difference is deliberate: CI's version-bump
-step is `pull_request`-only, while the local battery always runs it (on `main`, where
+step is `pull_request`-only, while the local battery always runs it (with HEAD at `origin/main`, where
 the merge-base is HEAD, it passes trivially).
 
 **Check 4i caps the gate rules at 10,000 bytes**, measured in two texts: `.claude/review-gates.md`
