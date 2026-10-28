@@ -748,7 +748,8 @@ checker itself does not. That is sufficient here because main accepts changes on
 through a PR: a branch ruleset (`protect-main.`, active since 2026-07-19) requires a pull
 request and a green `quality` check — from the job, or from `scripts/local-ci.sh`, any source since
 2026-10-28 — and the version-bump check runs inside that job and inside the local battery (against
-`origin/main`), so there is no push path into main that skips it. Main is protected: a PR with a
+`origin/main`). The ruleset requires the green check and does not verify that either runner produced
+it: a status posted by hand (see the local path below) runs no version-bump check. Main is protected: a PR with a
 green `quality` check is the only way in, admins included; the ruleset lists no bypass
 actors. The single command that runs the whole battery locally is in
 [`AGENTS.md`](../AGENTS.md) under "Commands".
