@@ -761,7 +761,8 @@ repository root (`origin/main` for a merge commit). The script runs the quality 
 [`AGENTS.md`](../AGENTS.md) § Commands on that commit in a temporary worktree it removes afterwards
 and posts the result as the `quality` commit status; `gh workflow enable ci.yml` switches back.
 Differences to the job: the local shellcheck binary (the script refuses a version other than the
-`ci.yml` pin), the local `claude` CLI instead of the npm-pinned one, and macOS's `/bin/sh` and awk
+`ci.yml` pin), the local `claude` CLI instead of the npm-pinned one (the script checks no version there;
+it records the one it ran in the status description), and macOS's `/bin/sh` and awk
 instead of ubuntu-24.04's. Two consequences: anyone with write access can post a `quality` status by
 hand, so the author of each status is worth a look in the merge box; and the script runs that
 commit's own scripts on the Mac, so run it only on commits you have read, never on a fork's head.

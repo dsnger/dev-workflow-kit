@@ -260,6 +260,7 @@ Every command below was run in this session and observed to exit 0.
 | docs link check (relative Markdown links and their heading fragments resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh origin/main` |
 | worktree cleanup report (by hand, not CI; `--remove` deletes, see Boundaries 4a) | `sh scripts/worktree-cleanup.sh <repo>` |
+| local CI (by hand, not CI: runs the quality row on one commit in a temporary worktree and posts the result as the `quality` commit status, see Boundaries 4b; the opt-in path beside the Actions job, used with the workflow disabled; needs a logged-in `gh`; about 35 minutes on this Mac) | `sh scripts/local-ci.sh [<commit>]` |
 | build | n/a — nothing is compiled or bundled |
 | prompt eval (by hand before a version bump, not in CI; costs about $2 per run; exits 1 while any case fails; on 0.36.0 all 7 cases passed and it exited 0) | `d=$(mktemp -d) && cp -R plugins/dev-workflow "$d/" && cp -R evals "$d/dev-workflow/evals" && claude plugin eval "$d/dev-workflow" --runs 1 --allow-tools Bash --no-publish --trust-plugin` — `--eval-dir` only accepts a path inside the plugin, so the suite is copied into a temporary plugin copy |
 
@@ -277,8 +278,10 @@ system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop
 `scripts/worktree-cleanup.sh` uses `gh` and `lsof` when present, addressed by name like `git`: they are
 system tools, not pinned packages, and invariant 5's scope does not include them. Without them its
 squash-merge and session answers read `unknown`, which keeps the row; its suite stubs both. `scripts/local-ci.sh` requires `gh` logged in and
-refuses to run with a shellcheck other than the version `ci.yml` pins; its suite stubs `gh`,
-`shellcheck`, `claude` and the battery.
+refuses to run with a shellcheck other than the version `ci.yml` pins; the `claude` CLI it does not
+check against the CI pin — it runs the installed one (2.1.312 on 2026-10-28, against the pinned
+2.1.207) and records that version in the status description. Its suite stubs `gh`, `shellcheck`,
+`claude` and the battery.
 
 **The `--exclude=SC2015` on the test file** is a single-code exclusion, not a blanket
 disable: every other shellcheck rule still applies to that file. Its hits are all
