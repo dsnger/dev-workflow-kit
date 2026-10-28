@@ -53,6 +53,8 @@ esac
 exec "$REAL_GIT" "$@"
 EOF
 chmod +x "$work/stub/gh" "$work/stub/shellcheck" "$work/stub/claude" "$work/stub/git"
+# No stub, no run: with a logged-in gh on PATH a missing stub would make a real, authenticated call.
+for s in gh shellcheck claude git; do [ -x "$work/stub/$s" ] || { echo "stub $s missing; abort" >&2; exit 1; }; done
 # PATHs without gh or without claude: the other stubs plus links to the tools the script, the
 # stubs and the battery need.
 cp -R "$work/stub" "$work/nogh" && rm "$work/nogh/gh"
@@ -307,7 +309,7 @@ git -C "$work/r" worktree add -q --detach "$work/stale" HEAD && rm -rf "$work/st
 : > "$work/git.failrm"; run
 p=$(sed -n 1p "$work/battery.ran" 2>/dev/null)
 rc_is 0 && posted success green "$sha" && [ -d "$p" ] &&
-  grep -qxF "local-ci: could not remove $p; run: git worktree remove --force $p" "$work/err" &&
+  grep -qxF "local-ci: could not remove $p; run: git worktree remove --force '$p'" "$work/err" &&
   pass "19 failing removal after a green run: exit 0, posted, stderr names the path and the command" || fail "19 ($(diag))"
 rm -f "$work/git.failrm"
 git -C "$work/r" worktree remove --force "$p" && [ "$(wts)" = "$(printf '%s\n' "$work/r" "$work/stale")" ] &&

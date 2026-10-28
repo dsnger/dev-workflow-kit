@@ -64,7 +64,7 @@ git rev-parse --show-toplevel >/dev/null 2>&1 ||
 sha=$(git rev-parse --verify -q "$rev^{commit}" 2>/dev/null) ||
   refuse "$rev does not name a commit here; pass a commit, branch or tag of this repository"
 url=$(git remote get-url origin 2>/dev/null)
-slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | sed 's/\.git$//')
+slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | LC_ALL=C sed 's/\.git$//')
 [ -n "$slug" ] ||
   refuse 'origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
 command -v gh >/dev/null 2>&1 ||
@@ -79,7 +79,7 @@ pin=$(git show "$sha:.github/workflows/ci.yml" 2>/dev/null | LC_ALL=C awk '
       s = substr(s, RSTART + RLENGTH) } }
   END { if (n == 1) print v; exit (n != 1) }') ||
   refuse ".github/workflows/ci.yml at $sha does not pin exactly one shellcheck version; pin one koalaman/shellcheck:v<version>"
-have=$(shellcheck --version 2>/dev/null | sed -n 's/^version: //p')
+have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
 [ "$have" = "$pin" ] ||
   refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
 # The quality row's last cell, the text between its backticks; the label may hold backticks or \|.
@@ -96,14 +96,14 @@ cmd=$(git show "$sha:AGENTS.md" 2>/dev/null | LC_ALL=C awk '
 # Only a version-shaped first word goes into the public description, never a path or a name.
 cv=$(claude --version 2>/dev/null | LC_ALL=C awk 'NR == 1 && $1 ~ /^[0-9][0-9A-Za-z.+-]*$/ { print $1 }')
 
-tmp=''
+tmp='' added=''
 # Remove the worktree (that path only, never a prune) and the directory; a failed removal keeps
 # both and names the command that finishes it. The exit status stays the run's.
 # shellcheck disable=SC2329  # run by the EXIT trap; every path below ends in exit, which hides that
 cleanup() {
   [ -n "$tmp" ] || return
-  if [ -d "$tmp/wt" ] && ! git worktree remove --force "$tmp/wt" >/dev/null 2>&1; then
-    printf 'local-ci: could not remove %s; run: git worktree remove --force %s\n' "$tmp/wt" "$tmp/wt" >&2
+  if [ -n "$added" ] && ! git worktree remove --force "$tmp/wt" >/dev/null 2>&1; then
+    printf "local-ci: could not remove %s; run: git worktree remove --force '%s'\n" "$tmp/wt" "$tmp/wt" >&2
   else
     rm -rf "$tmp"
   fi
@@ -113,6 +113,7 @@ trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
 # An explicit template: macOS's bare `mktemp -d` ignores TMPDIR.
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/local-ci.XXXXXX") || refuse 'could not create a temporary directory; check TMPDIR'
 git worktree add --quiet --detach "$tmp/wt" "$sha" || refuse "could not add a worktree of $sha; see the git error above"
+added=1
 
 (cd "$tmp/wt" && sh -c "$cmd")
 st=$?

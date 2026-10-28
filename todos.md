@@ -2179,8 +2179,13 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 
 - [ ] **`/workflow-init` templates and setup step 8 for a project that wants the local option.** The
       scaffolded `ci.yml` template and `docs/setup.md` step 8 describe a project with a running CI only; a
-      project that loses Actions has no scaffolded reporter. *Trigger: a second project loses Actions or
-      chooses local.* (design `docs/superpowers/specs/2026-10-28-kit-local-ci-design.md` §5)
+      project that loses Actions has no scaffolded reporter. *Trigger fired: decision D42 (Daniel, 2026-10-28
+      17:08, relayed by session sfx-wp-plugin-skills-ae, not read from Daniel directly): the next kit version
+      (0.48.0) builds this through `/workflow-init`, because the private SFX repos have no Actions minutes left
+      and only the public kit repo still gets CI.* Adopter facts relayed with it: `sfx-wp-plugin-skills`'s
+      quality row is `bin/quality.sh`; the SFX plugins' `quality.yml` runs `bash bin/quality.sh`; none is known
+      to pin `koalaman/shellcheck` in `ci.yml`, so the pin precondition of `scripts/local-ci.sh` needs a
+      project-neutral form there. (design `docs/superpowers/specs/2026-10-28-kit-local-ci-design.md` §5)
 - [ ] **The `claude` CLI version of the local run differs from the CI pin.** `scripts/local-ci.sh` runs the
       installed `claude` (2.1.312 on 2026-10-28) where CI installs `@anthropic-ai/claude-code@2.1.207`; the
       script names the version in the status description and checks nothing. *Trigger: `claude plugin
