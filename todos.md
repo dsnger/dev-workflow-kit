@@ -2193,3 +2193,13 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **Bounded cancellation of a running battery.** A signal to `scripts/local-ci.sh` is handled after the
       quality command returns; the remaining stages run first (design D-19). *Trigger: a run that had to be
       killed by hand.*
+- [ ] **`scripts/local-ci.sh`: the printed recovery command with an apostrophe in `TMPDIR`.** The line
+      `run: git worktree remove --force '<path>'` single-quotes the path, so a `TMPDIR` holding an apostrophe
+      gives a shell syntax error when pasted; suite case 19 runs its own command instead of the printed one.
+      *Trigger: a `TMPDIR` with an apostrophe.* (Gate B cycle lcib1028gate, spec pass 1, finding 1 — accepted,
+      not repaired)
+- [ ] **`scripts/local-ci.sh`: cleanup after a partial `git worktree add`.** When `git worktree add` registers
+      the worktree and then fails (a failing `post-checkout` hook, an interruption during setup), cleanup
+      removes the directory and leaves the registration, shown as prunable by `git worktree list`; the suite's
+      `failadd` stub fails before git creates anything. *Trigger: a stale registration after a failed setup.*
+      (Gate B cycle lcib1028gate, quality pass 1, finding 1 — accepted, not repaired)
