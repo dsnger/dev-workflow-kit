@@ -2174,3 +2174,17 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
   in the main checkout); a late Security or acceptance-criterion finding sent to `todos.md` is the risk to
   watch. *Trigger: at least five closed cycles under 0.46 in each group compared (`lean` projects, and this
   repository's `strict`).*
+
+## From kit 0.47.0 local CI (2026-10-28) — backlog only, nothing implemented here
+
+- [ ] **`/workflow-init` templates and setup step 8 for a project that wants the local option.** The
+      scaffolded `ci.yml` template and `docs/setup.md` step 8 describe a project with a running CI only; a
+      project that loses Actions has no scaffolded reporter. *Trigger: a second project loses Actions or
+      chooses local.* (design `docs/superpowers/specs/2026-10-28-kit-local-ci-design.md` §5)
+- [ ] **The `claude` CLI version of the local run differs from the CI pin.** `scripts/local-ci.sh` runs the
+      installed `claude` (2.1.312 on 2026-10-28) where CI installs `@anthropic-ai/claude-code@2.1.207`; the
+      script names the version in the status description and checks nothing. *Trigger: `claude plugin
+      validate` disagreeing between the two versions.* (design §2)
+- [ ] **Bounded cancellation of a running battery.** A signal to `scripts/local-ci.sh` is handled after the
+      quality command returns; the remaining stages run first (design D-19). *Trigger: a run that had to be
+      killed by hand.*

@@ -44,6 +44,8 @@ scripts/status-view.py            # generated HTML status view, one-shot or watc
 scripts/status-view.test.sh       # its regression suite — fixture home + repos, mutants
 scripts/worktree-cleanup.sh       # worktree and branch report; --remove deletes merged, clean, idle ones
 scripts/worktree-cleanup.test.sh  # its regression suite — fixture repos, stub gh and lsof
+scripts/local-ci.sh               # runs the quality row on one commit in a temporary worktree, posts the quality status
+scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git
 evals/<case>/{prompt.md,graders/*.md} # `claude plugin eval` suite, run by hand before a version bump; outside the plugin so it does not ship
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
@@ -83,7 +85,8 @@ plus six Python reports with their suites: `scripts/ledger-metrics.{py,test.sh}`
 `scripts/loop-usefulness.{py,test.sh}`, `scripts/spec-delta.{py,test.sh}`,
 `scripts/live-effort.{py,test.sh}`, `scripts/run-analytics.{py,test.sh}` and
 `scripts/status-view.{py,test.sh}`, plus one shell report with its suite,
-`scripts/worktree-cleanup.{sh,test.sh}`. JSON and YAML files are configuration read by their tools
+`scripts/worktree-cleanup.{sh,test.sh}`, and one shell runner with its suite, `scripts/local-ci.{sh,test.sh}`
+(the local path of the battery, posted to GitHub as the `quality` status). JSON and YAML files are configuration read by their tools
 (Claude Code, the MCP client, CI). Everything else is text read by a model. What each report may
 write, and which of these ship in the plugin, is binding and stated once, in
 [`AGENTS.md` § Boundaries (binding)](../AGENTS.md#boundaries-binding).

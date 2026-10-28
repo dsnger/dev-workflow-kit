@@ -338,9 +338,9 @@ or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`, `AGENTS.md` and anything
 gate, as does a mixed commit. The hook's own docs-only note is a path heuristic and does
 not establish that eligibility. The battery is always owed, with two exceptions. A timeout in a test the diff did
 not touch that passes when run alone is recorded with that evidence, and the green
-required CI check on the PR head then stands as the battery evidence. And when the battery passed
+required check on the PR head then stands as the battery evidence. And when the battery passed
 in full on a named commit and every path changed since then is docs-only, `process-pr-review`
-reruns only the stages that read those paths; that full run plus the required CI check on the final
+reruns only the stages that read those paths; that full run plus the required check on the final
 head is the battery evidence (since 0.41.0). The rules have no
 exemption for the commit that adds the scaffolded prompt files; setup step 7 runs Gate B
 on it.
@@ -731,7 +731,7 @@ officially without gates beats one that has them and ignores them.
 ## Contributing
 
 CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs four checks on every
-PR and push to main: `shellcheck --shell=sh` over the four shell executables and every
+PR and push to main: `shellcheck --shell=sh` over the six shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](../scripts/check-invariants.sh) (invariants 5 and 6, plus
 six prompt-conformance checks and three size budgets) plus both checkers' regression
@@ -746,11 +746,25 @@ A fifth check runs on pull requests only:
 needs a base branch to diff against. Its suite runs unconditionally with the others; the
 checker itself does not. That is sufficient here because main accepts changes only
 through a PR: a branch ruleset (`protect-main.`, active since 2026-07-19) requires a pull
-request and a green `quality` check, and the version-bump step runs inside that `quality`
-job, so there is no push path into main that skips it. Main is protected: a PR with a
+request and a green `quality` check — from the job, or from `scripts/local-ci.sh`, any source since
+2026-10-28 — and the version-bump check runs inside that job and inside the local battery (against
+`origin/main`), so there is no push path into main that skips it. Main is protected: a PR with a
 green `quality` check is the only way in, admins included; the ruleset lists no bypass
 actors. The single command that runs the whole battery locally is in
 [`AGENTS.md`](../AGENTS.md) under "Commands".
+
+**The local path.** When the Actions budget is used up, or you choose local up front, the same
+battery runs on the Mac: `gh workflow disable ci.yml` first, so no Actions check run competes with the
+local result (GitHub counts a check run and a commit status of the same required name together, and
+both must pass); then, per commit, `git fetch origin` and `sh scripts/local-ci.sh [<commit>]` from the
+repository root (`origin/main` for a merge commit). The script runs the quality row of
+[`AGENTS.md`](../AGENTS.md) § Commands on that commit in a temporary worktree it removes afterwards
+and posts the result as the `quality` commit status; `gh workflow enable ci.yml` switches back.
+Differences to the job: the local shellcheck binary (the script refuses a version other than the
+`ci.yml` pin), the local `claude` CLI instead of the npm-pinned one, and macOS's `/bin/sh` and awk
+instead of ubuntu-24.04's. Two consequences: anyone with write access can post a `quality` status by
+hand, so the author of each status is worth a look in the merge box; and the script runs that
+commit's own scripts on the Mac, so run it only on commits you have read, never on a fork's head.
 
 Everything else here is a prompt, and prompts have no typechecker. They are reviewed
 against [`prompt-standards.md`](prompt-standards.md), this repo's own standard and the
