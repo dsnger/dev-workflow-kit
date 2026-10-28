@@ -81,6 +81,7 @@ satisfy the same required check.
 
 ## 5. Open questions
 - Are Actions on this public repository blocked right now? GitHub's billing docs, as recalled and not verified here, do not bill standard-runner minutes in public repositories, so the used-up budget may concern private repositories only. The first push of this pull request shows it (AC-9); the local path is built either way (orchestrator, 2026-10-28 09:19).
+  Observed 2026-10-28 08:51Z: GitHub started Actions run 40659778216 for this pull request's first push, and it completed with conclusion `success` at 08:55:42Z (spec §8).
 - Does the posted status carry a `target_url`? A local run has no public log to link.
 - What may the status description name besides the result (the shellcheck version, the user, the host)? "No secrets" is settled; the rest is open.
 
