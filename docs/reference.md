@@ -757,8 +757,10 @@ actors. The single command that runs the whole battery locally is in
 **The local path.** When the Actions budget is used up, or you choose local up front, the same
 battery runs on the Mac: `gh workflow disable ci.yml` first, so no Actions check run competes with the
 local result (GitHub counts a check run and a commit status of the same required name together, and
-both must pass); then, per commit, `git fetch origin` and `sh scripts/local-ci.sh [<commit>]` from the
-repository root (`origin/main` for a merge commit). The script runs the quality row of
+both must pass). Disabling stops new runs only: a run in progress finishes, and a `quality` check run
+Actions already created on a commit (it reports on the PR head commit) stays there and must pass too,
+so switch before you push the commit you will run locally. Then, per commit, `git fetch origin` and
+`sh scripts/local-ci.sh [<commit>]` from the repository root (`origin/main` for a merge commit). The script runs the quality row of
 [`AGENTS.md`](../AGENTS.md) § Commands on that commit in a temporary worktree it removes afterwards
 and posts the result as the `quality` commit status; `gh workflow enable ci.yml` switches back.
 Differences to the job: the local shellcheck binary (the script refuses a version other than the
