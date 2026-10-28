@@ -17,8 +17,10 @@ verified; the last ten runs were green, the latest on 2026-10-27 12:10.
 A maintainer runs one command on the Mac against a committed state of the repository. It runs the quality command
 from `AGENTS.md § Commands`, and GitHub shows the result as a `quality` commit status on that exact commit, so that,
 once the ruleset accepts the check from this source, a pull request merges on a locally produced green and the merge
-commit on `main` carries the same status. The Actions workflow stays in the repository and can be started by hand or
-switched back on, but costs nothing by default. The repository's own instructions (CLAUDE.md §4, the gate rules,
+commit on `main` carries the same status. ~~The Actions workflow stays in the repository and can be started by hand or
+switched back on, but costs nothing by default.~~ Changed 2026-10-28 (change record under §3): the Actions
+workflow keeps running as the default path; the local run is an opt-in beside it, for when the budget is used up or
+local is chosen up front. The repository's own instructions (CLAUDE.md §4, the gate rules,
 `AGENTS.md`, README, docs) describe this path and read correctly for a check that a local run reports, with every
 earlier condition accounted for.
 
@@ -29,11 +31,38 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-3** A failed post is never silent and never wrong: when `gh` is missing, not authenticated, or the post fails, the output says so and the exit status is non-zero and distinct from a red battery; the script never posts a status for a commit other than the one the battery ran on, and never posts `success` for a run it did not observe passing.
 - [ ] **AC-4** The run refuses to start, and posts nothing, when the local `shellcheck` version differs from the version `ci.yml` pins (0.11.0 today). The docs state the remaining differences to the CI job: local binaries instead of the pinned image and the npm-installed `claude` CLI, and macOS tools instead of ubuntu-24.04's (`/bin/sh`, awk).
 - [ ] **AC-5** The script is POSIX `sh`, passes `shellcheck --shell=sh`, and has a regression suite with `gh` and the battery stubbed, so the suite runs no real battery and reaches no network. The script's lint and its suite are part of the quality command in `AGENTS.md § Commands`.
-- [ ] **AC-6** `ci.yml` keeps the `quality` job with its steps unchanged, but no push or pull request starts it; it runs only when started by hand (`workflow_dispatch`). The docs say how to start it by hand and how to switch the automatic triggers back on.
+- [ ] **AC-6** ~~`ci.yml` keeps the `quality` job with its steps unchanged, but no push or pull request starts it; it runs only when started by hand (`workflow_dispatch`). The docs say how to start it by hand and how to switch the automatic triggers back on.~~ — withdrawn 2026-10-28: Daniel keeps GitHub Actions as the default path (09:41); replaced by AC-11
 - [ ] **AC-7** The docs describe the local path: `AGENTS.md § Commands` has a row for the script that was run and observed; `AGENTS.md § Boundaries` states what the script writes; README § Contributing, `docs/ARCHITECTURE.md` (tree, components), `docs/TECH-STACK.md` and `docs/reference.md § Contributing` say what runs where now; `todos.md` has a row per follow-up, including the `/workflow-init` templates of other projects where relevant.
 - [ ] **AC-8** CLAUDE.md §4 "Waiting on external work" and the gate rules read correctly for a locally reported check: a check this session posts itself is not an external run to wait on, and the rules' battery-evidence and red-check sentences hold for both a CI-produced and a locally posted required check. Each earlier condition of a changed passage is listed as kept, moved or dropped (AGENTS.md Don'ts). Both gate-rule copies stay byte-identical (check 4j) and within 10,000 bytes (check 4i).
 - [ ] **AC-9** The plan lists the ruleset change as an action outside the repository for Daniel, with the exact `gh api` call that makes the required check `quality` accept a status from any source, and nothing in the repository changes the ruleset. The pull request body records whether GitHub Actions still started a run for this pull request, with the run id or its absence.
 - [ ] **AC-10** If any path under `plugins/` changes (for example the gate-rules template that check 4j keeps identical), the plugin version is bumped with a CHANGELOG entry (invariant 12); otherwise the version stays. The quality battery is green on the final head, and after the squash-merge the merge commit on `main` carries a green `quality` status posted by the script.
+- [ ] **AC-11** `ci.yml` keeps its automatic triggers and its `quality` job, the default path; the new script's lint and suite join its steps as they join the battery. The docs say when the local path is used instead (the Actions budget is used up, or local is chosen up front), how to run it, and that both paths produce the same required check `quality`.
+
+**Changed 2026-10-28 — change of direction.** Decided by Daniel, 2026-10-28 09:41, relayed by the session
+`dev-workflow-kit-26` and written into the brief (`.context/sparring/20261028-0922-kit-local-ci-prompt.md`, item 3) by
+the orchestrator: "Dann lass uns das als Option machen, als wenn das Budget verbraucht ist und/oder ich von vornherein
+sage: Wir machen es lokal. Dann soll es lokal möglich sein, ansonsten weiter über GitHub, sodass wir beide
+Möglichkeiten offen lassen." Baseline: `cd6ee29`. GitHub Actions stays the default path and keeps running; the local
+run with its posted status is an opt-in path for when the budget is used up or local is chosen up front; both paths
+satisfy the same required check.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-1 … AC-5 (the script, its status, its suite) | kept | none |
+| AC-6 (`ci.yml` runs by hand only) | dropped — per the decision: "ansonsten weiter über GitHub"; the job keeps its triggers | withdrawn |
+| AC-7 (the docs describe the local path) | kept; the path is described as the opt-in beside CI, which AC-11 adds | none |
+| AC-8 (instructions read correctly for a locally reported check) | kept; it already reads "for both a CI-produced and a locally posted required check" | none |
+| AC-9 (ruleset action outside the repository; the PR body records the Actions run) | kept; "a status from any source" covers both paths | none |
+| AC-10 (version bump if `plugins/` changes; green battery; status on the merge commit) | kept | none |
+| §2: "The Actions workflow stays in the repository and can be started by hand or switched back on, but costs nothing by default." | dropped — per the decision: "sodass wir beide Möglichkeiten offen lassen"; struck through in §2 | none |
+
+- **Added without an earlier condition:** AC-11: "`ci.yml` keeps its automatic triggers and its `quality` job, the default path; …" → per the decision: "als Option machen … ansonsten weiter über GitHub, sodass wir beide Möglichkeiten offen lassen".
+- **Unaccounted:** none.
+- **Intervening changes:** none; nothing changed the story since `cd6ee29`.
+- **Scope boundary:** in: the opt-in local path beside CI, parity of the CI steps with the battery, docs for both paths and when to use which; out: switching CI off or to manual start, a self-hosted runner.
+- **Open questions:** §5 question 1 → answered 2026-10-28 09:40 by Daniel through the orchestrator: Actions do not run for this repository now, the free allowance included; a run that never starts on the pull request is the expected observation (AC-9). Questions 2 and 3 → the spec (`docs/superpowers/specs/2026-10-28-kit-local-ci-design.md`, decisions D-5 and D-6).
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-28-kit-local-ci-design.md` → blocks the plan until updated (an uncommitted draft, rewritten for this change before its Gate A).
+- **Reviews already run:** none; no Gate A pass has this story or the spec as input yet, and the brainstorming builder check that runs on the earlier draft is answered against the rewritten spec.
 
 ## 4. Affected AGENTS.md invariants
 - `## Architecture` › `### Boundaries (binding)` — "4a. `scripts/worktree-cleanup.{sh,test.sh}` (reads; in both modes creates and removes its lock directory under the git common dir; …)" — each script's writes are listed here; the new script needs an item (a commit status on GitHub, a temporary worktree).
