@@ -54,6 +54,32 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-9** The `todos.md` rows "'Greptile reviews every push' is stated as its default" and
   "`docs/pr-review-bots.md`: two passages still give the CodeRabbit count for any bot" are closed.
 - [ ] **AC-10** Version 0.49.0; CHANGELOG, README and docs updated; the quality command green.
+- [ ] **AC-11** The gate rules let a release-only commit skip Gate B: one whose every change is a version value at a
+  site the project's `AGENTS.md` lists as a version site, or inside the `CHANGELOG.md` entry for that version; a
+  commit with any other change keeps Gate B, and a project that lists no version sites has no release-only skip.
+  The hook may still remind (invariant 2).
+
+**Changed 2026-10-29 — changed requirement.** Decided by Daniel, D85 (18:11), relayed by the orchestrator
+`dev-workflow-kit-26` and added as item 7 to `.context/sparring/20261029-1800-kit-049-learnings-prompt.md`.
+Baseline: `42a56b8`. A field case (sfx-bricks-api-builder release 1.14.0, PR #105) ran a Gate B pass on a commit
+that only bumped versions.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-1 … AC-10 | kept | none |
+
+- **Added without an earlier condition:** AC-11: "a release-only commit skips Gate B like docs-only" → per the
+  decision: "A commit whose diff changes only version fields and the CHANGELOG entry for that version skips Gate B,
+  like a docs-only commit; any other change in it keeps Gate B."
+- **Unaccounted:** none.
+- **Intervening changes:** none.
+- **Scope boundary:** in: the gate rules (both copies), version sites in `AGENTS.md` (this repository) and the
+  `/workflow-init` AGENTS.md walk, the docs that describe docs-only; out: the hook's docs-only matcher.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-29-kit-049-learnings-design.md` → updated in this change.
+- **Reviews already run:** Gate A cycle k049lrn1 (spec) → closed before this change; the added section is reviewed
+  at Gate B with the diff, per `.claude/review-gates.md` ("A spec is approved when its Gate A closes …; then it
+  changes only by `intake`'s amendment route"), which names no rerun of Gate A.
 
 ## 4. Affected AGENTS.md invariants
 - `## Key invariants` / Hook — "1. **The hook always exits 0.**"; "4. **POSIX `sh`, and `jq` is optional.**"

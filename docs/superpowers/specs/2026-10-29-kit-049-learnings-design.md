@@ -126,6 +126,34 @@ of each, diffed). The "older pointer" (0.16–0.23) rule is unchanged.
 ## 8. Version and docs (AC-10)
 0.49.0 in `plugin.json`, the 2.23 template, `.claude/dev-workflow-version`; CHANGELOG entry; README.
 
+## 8a. Release-only commits (AC-11, added by amendment)
+- **Rules** (`.claude/review-gates.md` and the byte-identical 2.1a template; check 4i's 10,000-byte cap holds by
+  trimming words elsewhere in the same file, no rule dropped): after the docs-only definition, one sentence —
+  release-only: every changed line is a version value at a site `AGENTS.md`'s **Version sites** line lists, or
+  lies inside that version's `CHANGELOG.md` entry; it skips Gate B like docs-only; anything else keeps it; no
+  Version sites line, no release-only skip.
+- **This repository's `AGENTS.md`:** a **Version sites** line: `plugins/dev-workflow/.claude-plugin/plugin.json`
+  `version`, the `### 2.23` template line in `workflow-init.md`, `.claude/dev-workflow-version`.
+- **`/workflow-init` Step 3** (AGENTS.md walk): asks for the project's version sites and writes the line, or none.
+- **Hook:** unchanged; its docs-only note stays path-based, so a release commit may still get a reminder.
+- **Docs:** `docs/reference.md` where docs-only is defined; CHANGELOG.
+
+**Changed 2026-10-29 — changed requirement.** Decided by Daniel, D85 (18:11), via orchestrator `dev-workflow-kit-26`.
+Baseline: `42a56b8`. The story change record (AC-11) carries the decision passage.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §1–§8, §9 decisions, §10 | kept | none |
+
+- **Added without an earlier condition:** §8a, "release-only … skips Gate B like docs-only" → per the decision
+  quoted in the story's change record.
+- **Unaccounted:** none.
+- **Intervening changes:** none.
+- **Scope boundary:** in: §8a; out: the hook's matcher.
+- **Open questions:** none.
+- **Dependent artifacts:** the story → updated in this change.
+- **Reviews already run:** Gate A k049lrn1 → closed before §8a; §8a is reviewed at Gate B, per the story's record.
+
 ## 9. Decisions
 - D1: one hook line at session start, not a check at commit time: the commit path is the gate's, and a session
   start is when a refresh can still be planned.
