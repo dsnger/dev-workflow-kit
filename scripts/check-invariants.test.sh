@@ -1616,6 +1616,8 @@ lv_case "4n: manifest bumped alone rejected"       1 "$VR" 'says 1.2.4' "sed 's/
 lv_case "4n: template differs rejected"            1 "$VR" "template says 1.2.2" "sed 's/^1\.2\.3\$/1.2.2/' $cmdf > t && mv t $cmdf"
 lv_case "4n: repo record differs rejected"         1 "$VR" '.claude/dev-workflow-version says 1.2.9' "printf '1.2.9\n' > .claude/dev-workflow-version"
 lv_case "4n: repo record missing rejected"         1 "$VR" 'says nothing' 'rm -f .claude/dev-workflow-version'
+lv_case "4n: repo record with a trailing blank line rejected" 1 "$VR" '(2 lines)' "printf '1.2.3\\n\\n' > .claude/dev-workflow-version"
+lv_case "4n: template with a trailing blank line rejected" 1 "$VR" '(2 lines)' "awk '{ print } \$0 == \"1.2.3\" { print \"\" }' $cmdf > t && mv t $cmdf"
 lv_case "4n: no 2.23 heading rejected"             1 "$VR" 'cannot be read' "sed 's/^### 2\.23 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
 lv_case "4n: non-x.y.z manifest version rejected"  1 "$VR" 'cannot be read' "sed 's/1\.2\.3/1.2/' plugins/dev-workflow/.claude-plugin/plugin.json > t && mv t plugins/dev-workflow/.claude-plugin/plugin.json"
 

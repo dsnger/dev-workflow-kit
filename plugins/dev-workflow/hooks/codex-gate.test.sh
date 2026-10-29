@@ -3400,8 +3400,9 @@ printf '%s' "$out" | grep -qF 'fingerprint and floor checks do not apply' && pas
 git reset -q >/dev/null 2>&1; rm -rf docs
 reset_all
 
-# 44. COMPACTION RE-INJECTION (story S4, 2026-10-12). hooks.json registers SessionStart with
-#     matcher `compact`; Claude Code adds a SessionStart hook's plain stdout to the model's
+# 44. COMPACTION RE-INJECTION (story S4, 2026-10-12). hooks.json registers SessionStart (since
+#     0.49 for every source; section 51 covers the other sources' version notice, and this
+#     section runs with an equal version record so that notice stays silent); Claude Code adds a SessionStart hook's plain stdout to the model's
 #     context, so the hook prints at most ten plain lines from state that exists and exits 0:
 #     line 1 always (the rules pointer); line 2 the cycle (nonce from the newest findings
 #     slot, both counts over the floor, the fingerprint freshness); line 3 the open stop.
@@ -3420,8 +3421,8 @@ mkdir -p .claude && printf '%s\n' "$PV" > "$recf"
 # 44a. no state -> exactly line 1, no JSON, exit 0. The opt-out marker silences this too
 #      (README and the degraded-mode setup promise silence while it exists), a repository
 #      that has not adopted the workflow hears nothing, and a SessionStart that is not a
-#      compaction prints nothing (the registration matches `compact` only; the branch
-#      checks `source` so a wider registration cannot announce a compaction that was not).
+#      compaction prints no compaction line (the branch checks `source`, so the registration
+#      for every source never announces a compaction that was not).
 reset_all; rm -f "$reviews"/gate-*
 out=$(compact); rc=$?
 [ "$rc" = 0 ] && pass "44a: compaction with no state exits 0" || fail "44a: compaction with no state exits 0 (got $rc)"

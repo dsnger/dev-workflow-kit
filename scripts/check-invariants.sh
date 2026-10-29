@@ -1199,12 +1199,14 @@ vr_out=$(fence_body 2.23 '````text'); vr_st=$?
 vr_tpl=$(printf '%s\n' "$vr_out" | sed '$d')
 vr_m=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$vr_man" 2>/dev/null)
 vr_r=$(cat "$vr_rec" 2>/dev/null)
+# One line each, as the hook reads the record: a trailing blank line would pass the string compare.
+vr_tl=$(printf '%s\n' "$vr_out" | sed '$d' | grep -c '') vr_rl=$(grep -c '' "$vr_rec" 2>/dev/null)
 if ! fence_ok "$vr_out" "$vr_st" || ! printf '%s\n' "$vr_m" | grep -qxE '[0-9]+\.[0-9]+\.[0-9]+'; then
   fail "kit version record: the '### 2.23' template of $dl_cmd or the version in $vr_man cannot be read." \
        "expected one '### 2.23' heading with one closed \`\`\`\`text fence, and one x.y.z \"version\""
-elif [ "$vr_tpl" != "$vr_m" ] || [ "$vr_r" != "$vr_m" ]; then
-  fail "kit version record: $vr_man says $vr_m, the '### 2.23' template says ${vr_tpl:-nothing}, $vr_rec says ${vr_r:-nothing}." \
-       "a version bump sets all three to the same x.y.z"
+elif [ "$vr_tpl" != "$vr_m" ] || [ "$vr_r" != "$vr_m" ] || [ "$vr_tl" != 1 ] || [ "$vr_rl" != 1 ]; then
+  fail "kit version record: $vr_man says $vr_m, the '### 2.23' template says ${vr_tpl:-nothing} ($vr_tl lines), $vr_rec says ${vr_r:-nothing} (${vr_rl:-0} lines)." \
+       "a version bump sets all three to the same x.y.z, each template and record one line"
 fi
 # --- END check 4n ---
 
