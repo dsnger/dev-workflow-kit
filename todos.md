@@ -2232,8 +2232,13 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [x] **No-bot line before the Wait-for step.** "None ran" must be judged after the Wait-for bots' completion
       signals, or a bot still reviewing is skipped. *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec
       pass 2, finding 3 — accepted, not repaired)
-- [ ] **0.50 field case: a records-only closing head re-runs the whole battery.** Kit 0.49's Gate B closing commit
+- [x] **0.50 field case: a records-only closing head re-runs the whole battery.** Done in 0.50: `local-ci.sh --from <green head>` carries the verdict (records only, or the same tree after a squash-merge). Kit 0.49's Gate B closing commit
       only added cycle lines and moved review archives, yet its new head needed a second ~39-minute local-ci run just
       to carry the `quality` status. 0.50 (proportional gates) should let a records-only head inherit the previous
       head's verdict, decided deterministically (same tree outside the record paths). Orchestrator
       `dev-workflow-kit-26`, 2026-10-29. *Trigger: the 0.50 proportional-gates story.*
+- [ ] **Final-head local-ci run has no per-stage limit.** `scripts/local-ci.sh` runs the quality row chained, with
+      signals handled after the running command returns, so a hung stage holds the run and a first red hides later
+      ones. Accepted for 0.50 as an exception (orchestrator `dev-workflow-kit-26`, 2026-10-29 21:54); a bounded stage
+      runner inside the script would change what posts the status. (Gate A cycle k050gap1, plan pass 2, finding 1 —
+      accepted, not repaired.) *Trigger: a final-head run that hangs or is rerun for a second red stage.*

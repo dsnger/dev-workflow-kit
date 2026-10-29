@@ -1,0 +1,1 @@
+1 | fixed | the sites list reaches awk through ENVIRON, never -v, so an entry is taken literally (both copies, 2.22); case release\nmetadata/v2 in both suites, fails on the previous classifier (checked)

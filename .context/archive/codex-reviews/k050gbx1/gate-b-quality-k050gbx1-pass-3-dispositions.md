@@ -1,0 +1,1 @@
+1 | fixed | class regenerated (version strings), so the mechanism shrank: jq itself checks both versions against the anchored token regex (\A…\z) and the shell token loop is gone; \u0000 case in both suites, fails on the previous classifier (checked)

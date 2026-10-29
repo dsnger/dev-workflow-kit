@@ -45,7 +45,7 @@ the end. A project whose battery runs locally and reports the check as a commit 
 (`AGENTS.md § Commands` names the reporter) shows it in `gh pr checks` too, and then there
 is no run to wait for. A target branch that requires no check (`CLAUDE.md` §4 "Waiting on external
 work" says how to read that) has no required check to be green: the quality command passing on the final
-head, recorded in the PR body as that rule says, stands in for it here and in Step 3 item 6, Step 4 and
+head (or `scripts/local-ci.sh`'s light or inherited lane on it), recorded in the PR body as that rule says, stands in for it here and in Step 3 item 6, Step 4 and
 Done. A required check that nothing will produce stops the run as that rule says.
 
 ## Step 2 — Wait for the findings bots
@@ -230,8 +230,12 @@ review.
    final pushed head (`gh pr checks`): from CI once its run completes, within CLAUDE.md §4's limit for
    waiting on external work, or from the local reporter the project's `AGENTS.md § Commands` names, which
    posts the local run's result as that check. The required check is the enforced
-   authority; a local run that is not reported is the fast pre-check. With no required check (Step 1), the
-   full quality command on the final head, recorded in the PR body, is the evidence, and neither exception
+   authority; a local run that is not reported is the fast pre-check. A status the local reporter
+   posts from its light or inherited lane (`scripts/local-ci.sh`'s header defines both) stands for the
+   quality command on that head: it ran what its lane owes, or carried a verdict from a green head with
+   the same tree or with only record paths changed. With no required check (Step 1), the
+   full quality command on the final head, or a light or inherited lane result of `scripts/local-ci.sh` on
+   it, recorded in the PR body, is the evidence, and neither exception
    below applies, since both lean on a required check for the rest. Two exceptions. A local timeout in a test
    the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
    (Gate-B prompt): record it, and the green required check on the head stands in (with a local reporter, a rerun through it). And when the
@@ -263,7 +267,8 @@ review.
        reply        posted to thread #3 (same reply covers both claims)
 
    verification
-     quality command   green locally (AGENTS.md § Commands, run verbatim)
+     quality command   green locally (AGENTS.md § Commands, run verbatim;
+                       or the local-ci lane line, e.g. "inherited green from <sha12>: records only")
      required check on final head  green — the authority (CI, or the local reporter's status)
                                    (none required: "quality command green on <sha>, run id: none, <reason>,
                                    exit 0, <duration>", as recorded in the PR body)
@@ -331,5 +336,5 @@ Every tracked claim has a verdict, every thread has a reply, and each claim ends
 exactly one of: a fix, a documented dismissal, a valid-but-out-of-scope finding recorded
 in `todos.md`, or an escalation the user has answered. Fixes are committed
 per rule 3, the required check is green on the final head (none required: the quality command's record on
-it), `mergeStateStatus` is CLEAN (or UNSTABLE as Step 4 allows), and the PR
+it, or a local-ci lane's), `mergeStateStatus` is CLEAN (or UNSTABLE as Step 4 allows), and the PR
 is squash-merged — or, under a `merge` checkpoint, ready to merge.

@@ -656,6 +656,81 @@ rm -f README.md docs/plan.md; rmdir docs 2>/dev/null
 git add -A >/dev/null 2>&1; git commit -qm cleanup >/dev/null 2>&1
 reset_all
 
+# 14c. Release-only commit (0.50, spec docs/superpowers/specs/2026-10-29-kit-050-proportional-gates-design.md
+#      §2-§3, §6): the classifier cases a commit can carry, with the hook's expectation.
+reset_all
+printf '0.1.0\n' > VERSION; printf '0.1.0\n' > app.version; printf 'shellcheck 0.1.0\n' > tools.cfg
+printf '[project]\nversion = "0.1.0"\n' > pyproject.toml; mkdir -p .claude docs; printf '0.1.0\n' > .claude/ver
+printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": "1.0.0"\n  }\n}\n' > package.json
+printf '{\n"name": "c",\n"version": "0.1.0",\n"repositories": [{\n"package": {\n"name": "p",\n"version": "0.1.0"\n}\n}]\n}\n' > composer.json
+printf '# Changelog\n' > CHANGELOG.md; printf 'doc\n' > docs/a.md
+# shellcheck disable=SC2016  # backticks are the line's Markdown, not a substitution
+printf '**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a` `release metadata/version` `release\\nmetadata/v2`\n' > AGENTS.md
+mkdir -p metadata; printf '0.1.0\n' > metadata/version; printf '0.1.0\n' > metadata/v2
+git add -A >/dev/null 2>&1; git commit -qm 'release base' >/dev/null 2>&1
+bump() { sed -i.bak 's/0\.1\.0/0.1.1/' VERSION && sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1"/' package.json &&
+  printf -- '- 0.1.1\n' >> CHANGELOG.md && rm -f VERSION.bak package.json.bak; }
+undo() { git reset -q --hard >/dev/null 2>&1; rm -rf commands agents plugins/x .claude/CHANGELOG.md rel-extra.ts; }
+# rel_case <yes|no> <name> [<command>]: stage everything, ask the PreToolUse hook about the command
+# (default `git commit -m x`), check for the release note, and undo.
+rel_case() {
+  git add -A >/dev/null 2>&1
+  out=$(run "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"${3:-git commit -m x}\"}}")
+  if [ "$1" = yes ]; then
+    printf '%s' "$out" | grep -q 'release-only: version + changelog, no review' && ! printf '%s' "$out" | grep -q 'Codex gate state:' &&
+      pass "release-only: $2 -> N/A note" || fail "release-only: $2 -> N/A note ($out)"
+  else
+    printf '%s' "$out" | grep -q 'Release-only commit' && fail "release-only: $2 must fire" ||
+      { printf '%s' "$out" | grep -q 'Gate B' && pass "release-only: $2 -> Gate B fires" || fail "release-only: $2 -> Gate B fires ($out)"; }
+  fi
+  undo
+}
+bump; rel_case yes 'VERSION, package.json version, CHANGELOG'
+printf '0.1.1\n' > metadata/version; printf '0.1.1\n' > VERSION; rel_case no 'a site declared with a blank authorizes no part of it'
+sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1\\nx"/' package.json; rm -f package.json.bak
+rel_case no 'a manifest version holding a newline'
+sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1\\u0000"/' package.json; rm -f package.json.bak
+rel_case no 'a manifest version holding \\u0000'
+printf '0.1.1\n' > metadata/v2; printf '0.1.1\n' > VERSION; rel_case no 'a site declared as release\\nmetadata/v2 is taken literally'
+sed -i.bak 's/0\.1\.0/0.1.1/' VERSION; sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.2"/' package.json; rm -f VERSION.bak package.json.bak
+rel_case no 'two different version pairs'
+mkdir -p 'a b' b; printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > 'a b/package.json'
+printf '{\n  "version": "0.1.0"\n}\n' > a; printf '{\n  "name": "t",\n  "version": "0.1.0"\n}\n' > b/package.json
+git add -A >/dev/null 2>&1; git commit -qm 'space base' >/dev/null 2>&1
+for f in a b/package.json 'a b/package.json'; do sed -i.bak 's/0\.1\.0/0.1.1/' "$f"; rm -f "$f.bak"; done
+sed -i.bak 's/1\.0\.0/1.0.1/' 'a b/package.json'; rm -f 'a b/package.json.bak'
+rel_case no "a dependency change in 'a b/package.json' whose split halves are valid release files"
+git rm -q -r 'a b' a b >/dev/null 2>&1; git commit -qm 'space cleanup' >/dev/null 2>&1
+bump; sed -i.bak 's/"1\.0\.0"/"1.0.1"/' package.json; rm -f package.json.bak; rel_case no 'version plus one dependency'
+bump; printf 'code\n' > rel-extra.ts; rel_case no 'version plus one code file'
+printf 'more\n' >> docs/a.md; git add -A >/dev/null 2>&1; out=$(commitpre)
+printf '%s' "$out" | grep -q 'docs-only commit' && pass "release-only: docs only keeps the docs-only note" || fail "release-only: docs only ($out)"; undo
+printf 'more\n' >> docs/a.md; printf 'code\n' > rel-extra.ts; rel_case no 'docs plus one code file'
+bump; sed -i.bak 's/"1\.0\.0"/"0.1.1"/' package.json; rm -f package.json.bak; rel_case no 'a nested version beside the release'
+sed -i.bak '7s/0\.1\.0/0.1.1/' composer.json; sed -i.bak 's/0\.1\.0/0.1.1/' VERSION; rm -f composer.json.bak VERSION.bak
+rel_case no 'a nested-only composer version at column zero beside a same-number VERSION bump'
+printf '0.1.1\n' > app.version; printf '0.1.1\n' > VERSION; rel_case yes 'a listed bare-version site'
+printf 'shellcheck 0.1.1\n' > tools.cfg; printf '0.1.1\n' > VERSION; rel_case no 'a listed site with a same-number tool pin'
+sed -i.bak 's/0\.1\.0/0.1.1/' pyproject.toml; rm -f pyproject.toml.bak; rel_case no 'a TOML site line (unrecognised form)'
+printf '0.1.1\n' > .claude/ver; printf '0.1.1\n' > VERSION; rel_case no 'a listed site under an instruction path'
+for d in commands agents .claude plugins/x; do mkdir -p "$d"; printf -- '- x\n' > "$d/CHANGELOG.md"; rel_case no "a changelog under $d/"; done
+bump; git update-index --add --cacheinfo "160000,$(git rev-parse HEAD),docs/sub.md" >/dev/null 2>&1
+out=$(commitpre); printf '%s' "$out" | grep -q 'Release-only commit' && fail "release-only: a gitlink must fire" || pass "release-only: a gitlink fires"
+git rm -q --cached docs/sub.md >/dev/null 2>&1; undo
+for c in 'diff.noprefix true' 'diff.ignoreSubmodules all' 'diff.fake.textconv true'; do git config "${c% *}" "${c#* }"; done
+echo '*.json diff=fake' > .git/info/attributes
+bump; rel_case yes 'noprefix, ignoreSubmodules=all and a textconv driver configured'
+bump; sed -i.bak 's/"1\.0\.0"/"1.0.1"/' package.json; rm -f package.json.bak; rel_case no 'the same config with a dependency'
+git config --unset diff.noprefix; git config --unset diff.ignoreSubmodules; git config --unset diff.fake.textconv; rm -f .git/info/attributes
+bump; git add -A >/dev/null 2>&1
+out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}')
+printf '%s' "$out" | grep -q 'Release-only commit' && fail "release-only: no jq must fire on a manifest" || pass "release-only: no jq fires on a manifest"; undo
+bump; rel_case no '--amend is never offered the note' 'git commit --amend --no-edit'
+bump; rel_case no '-a is never offered the note' 'git commit -am x'
+git rm -q -r metadata VERSION app.version tools.cfg pyproject.toml .claude/ver package.json composer.json CHANGELOG.md AGENTS.md docs >/dev/null 2>&1
+git commit -qm 'release cleanup' >/dev/null 2>&1
+reset_all
+
 # 15. Gate A floor: exec bumps its own counter; plan-execution skill enforces + resets
 rm -f "$countA"
 execp
