@@ -31,6 +31,15 @@ cat > "$work/stub/gh" <<'EOF'
 } >> "$STUB_DIR/gh.args"
 case $1 in
   auth) exit "$(cat "$STUB_DIR/gh.auth.rc" 2>/dev/null || echo 0)" ;;
+esac
+# A status read (an api call with --jq and no --method, 0.50): $STUB_DIR/gh.status as the body,
+# filtered by that --jq with the real jq; exits with $STUB_DIR/gh.status.rc when present.
+case " $* " in *" --method "*) ;; *" --jq "*)
+  f=; for a in "$@"; do [ "$f" = 1 ] && { f=$a; break; }; [ "$a" = --jq ] && f=1; done
+  rc=$(cat "$STUB_DIR/gh.status.rc" 2>/dev/null || echo 0); [ "$rc" = 0 ] || exit "$rc"
+  "$REAL_JQ" -r "$f" "$STUB_DIR/gh.status"; exit ;;
+esac
+case $1 in
   api) echo '{"stub":"body"}'; rc=$(cat "$STUB_DIR/gh.rc" 2>/dev/null || echo 0)
        [ "$rc" = 0 ] || echo 'gh: stub failure (HTTP 422)' >&2
        exit "$rc" ;;
@@ -49,6 +58,7 @@ cat > "$work/stub/git" <<'EOF'
 case " $* " in
   *" worktree add "*) [ -f "$STUB_DIR/git.failadd" ] && { echo 'stub: worktree add failed' >&2; exit 128; } ;;
   *" worktree remove "*) [ -f "$STUB_DIR/git.failrm" ] && { echo 'stub: worktree remove failed' >&2; exit 128; } ;;
+  *" diff --name-only "*) [ -f "$STUB_DIR/git.faildiff" ] && { echo 'stub: diff failed' >&2; exit 128; } ;;
 esac
 exec "$REAL_GIT" "$@"
 EOF
@@ -59,11 +69,12 @@ for s in gh shellcheck claude git; do [ -x "$work/stub/$s" ] || { echo "stub $s 
 # stubs and the battery need.
 cp -R "$work/stub" "$work/nogh" && rm "$work/nogh/gh"
 cp -R "$work/stub" "$work/noclaude" && rm "$work/noclaude/claude"
-for t in sh "$LOCAL_CI_SH" env sed awk mktemp rm cat ls; do
+for t in sh "$LOCAL_CI_SH" env sed awk mktemp rm cat ls grep tail; do
   [ -e "$work/tools/$t" ] || { p=$(command -v "$t") && ln -s "$p" "$work/tools/$t"; }
 done
 REAL_GIT=$(command -v git)
-export STUB_DIR="$work" REAL_GIT
+REAL_JQ=$(command -v jq) || { echo 'jq missing; the 0.50 lane cases need it; abort' >&2; exit 1; }
+export STUB_DIR="$work" REAL_GIT REAL_JQ
 
 # The fixture's battery: records where and at which commit it ran, under which LC_ALL, and the
 # worktree's file names; passes output through; exits with the committed exit.code.
@@ -78,7 +89,7 @@ EOF
 # row's label), ci.yml (one shellcheck pin), battery.sh and exit.code 0; runs start in r.
 fixture() {
   rm -rf "$work/o.git" "$work/r" "$work/other" "$work/lane" "$work/stale" "$work/tmp" "$work/tmp dir" \
-    "$work"/gh.* "$work"/git.* "$work/claude.out"
+    "$work"/gh.* "$work"/git.* "$work/claude.out" "$work/light.ran"
   mkdir -p "$work/tmp"; echo 0.11.0 > "$work/shellcheck.v"
   cwd=$work/r; path=$work/stub:$PATH
   git init -q --bare -b main "$work/o.git"
@@ -118,11 +129,13 @@ wts() { git -C "$work/r" worktree list --porcelain | sed -n 's/^worktree //p'; }
 # clean: the clone is the only worktree and the temporary directory holds nothing.
 clean() { [ "$(wts)" = "$work/r" ] && [ -z "$(ls -A "$work/tmp")" ]; }
 ran_at() { [ "$(sed -n 2p "$work/battery.ran" 2>/dev/null)" = "$1" ]; }
-not_posted() { ! grep -qx api "$work/gh.args" 2>/dev/null; }
+not_posted() { ! grep -qx -- --method "$work/gh.args" 2>/dev/null; }
+# last_api: the arguments of the last gh api call (a post follows any status read).
+last_api() { awk '/^api$/ { b = "" } { b = b $0 "\n" } END { printf "%s", b }' "$work/gh.args" 2>/dev/null | grep -v '^env '; }
 auth_call() { [ "$(sed -n 1,4p "$work/gh.args" 2>/dev/null)" = "$(printf '%s\n' auth status --hostname github.com)" ]; }
 # called <state> <word> <sha> [<claude version>]: exactly one api call, argument for argument.
 called() {
-  [ "$(sed -n '/^api$/,$p' "$work/gh.args" 2>/dev/null | grep -v '^env ')" = "$(printf '%s\n' api \
+  [ "$(last_api)" = "$(printf '%s\n' api \
     --hostname github.com --method POST -H 'X-GitHub-Api-Version: 2026-03-10' "repos/acme/widgets/statuses/$3" \
     -f "state=$1" -f context=quality -f "description=battery $2: local run, ${SCP-shellcheck 0.11.0, }claude ${4:-9.9.9}")" ]
 }
@@ -218,9 +231,9 @@ refused "9 two quality rows: exit 64" "local-ci: AGENTS.md at $(sha_of HEAD) $RO
 echo '| quality (fixture) | sh ./battery.sh |' | put AGENTS.md; run
 refused "9 a quality row whose last cell is not in backticks: exit 64" "local-ci: AGENTS.md at $(sha_of HEAD) $ROW_MSG"
 fixture; run HEAD extra
-refused "9 a second argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [<commit>]'
+refused "9 a second argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
 run --help
-refused "9 an option-like argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [<commit>]'
+refused "9 an option-like argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
 run nosuchref
 refused "9 a name that is no commit: exit 64" \
   'local-ci: nosuchref does not name a commit here; pass a commit, branch or tag of this repository'
@@ -357,6 +370,119 @@ finished 0 success green "$(sha_of HEAD)" && [ "$in_tmp" = y ] && [ -z "$(ls -A 
 fixture; runenv LC_ALL=POSIX
 finished 0 success green "$(sha_of HEAD)" && [ "$(sed -n 3p "$work/battery.ran" 2>/dev/null)" = LC_ALL=POSIX ] &&
   pass "the battery runs under the caller's LC_ALL, not the script's C" || fail "locale ($(cat "$work/battery.ran" 2>/dev/null))"
+
+
+# --- 23-40: lanes (0.50, spec docs/superpowers/specs/2026-10-29-kit-050-proportional-gates-design.md §4, §6) ---
+# lanefix: the fixture plus a light row (light.sh records its run, exits with light.code), root
+# release files at 0.1.0, a Version sites line naming app.version, tools.cfg and pyproject.toml,
+# all pushed, so origin/main is the lane base of every later commit.
+lanefix() {
+  fixture
+  # shellcheck disable=SC2016  # the fixture's script text, expanded when it runs
+  printf 'echo light-ran > "$STUB_DIR/light.ran"\nexit "$(cat light.code)"\n' > "$work/r/light.sh"; echo "${LIGHT_RC:-0}" > "$work/r/light.code"
+  cat >> "$work/r/AGENTS.md" <<'EOF'
+| quality-light (fixture) | `sh ./light.sh` |
+
+**Version sites:** `app.version` `tools.cfg` `pyproject.toml`
+EOF
+  echo 0.1.0 > "$work/r/VERSION"; echo 0.1.0 > "$work/r/app.version"; echo 'shellcheck 0.1.0' > "$work/r/tools.cfg"
+  printf '[project]\nversion = "0.1.0"\n' > "$work/r/pyproject.toml"
+  printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": "1.0.0"\n  }\n}\n' > "$work/r/package.json"
+  printf '{\n"name": "c",\n"version": "0.1.0",\n"repositories": [{\n"package": {\n"name": "p",\n"version": "0.1.0"\n}\n}]\n}\n' > "$work/r/composer.json"
+  echo '# Changelog' > "$work/r/CHANGELOG.md"; mkdir -p "$work/r/docs"; echo doc > "$work/r/docs/a.md"
+  ( cd "$work/r" && git add -A && git commit -q -m lanes && git push -q origin main 2>/dev/null )
+  rm -f "$work/light.ran"
+}
+# edit <commit message> <shell>: run the shell in the clone, then commit everything.
+edit() { ( cd "$work/r" && sh -c "$2" && git add -A && git commit -q -m "$1" ); rm -f "$work/light.ran"; }
+bump() { echo 'sed -i.bak "s/0\.1\.0/0.1.1/" VERSION && rm -f VERSION.bak && sed -i.bak "s/\"version\": \"0\.1\.0\"/\"version\": \"0.1.1\"/" package.json && rm -f package.json.bak && echo "- 0.1.1" >> CHANGELOG.md'; }
+light_ran() { [ -e "$work/light.ran" ]; }
+# lane_is <light|full> <name>: which command ran, and what was posted.
+lane_is() {
+  if [ "$1" = light ]; then
+    if rc_is 0 && light_ran && [ ! -e "$work/battery.ran" ] && clean &&
+       [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=success on $(sha_of HEAD): light lane green: docs/release only, local run, shellcheck 0.11.0, claude 9.9.9" ]
+    then pass "$2: light lane"; else fail "$2: expected light ($(diag))"; fi
+  else
+    if finished 0 success green "$(sha_of HEAD)" && ! light_ran; then pass "$2: full lane"; else fail "$2: expected full ($(diag))"; fi
+  fi
+}
+green_status() { printf '{"total_count": 1, "statuses": [{"context": "quality", "state": "%s"}]}\n' "${1:-success}" > "$work/gh.status"; }
+# inherited <how> <from sha> <name>: exit 0, nothing ran, the status read named the full SHA, the post
+# names <how> and the first 12 characters of <from>.
+inherited() {
+  f12=$(printf %.12s "$2")
+  if rc_is 0 && [ ! -e "$work/battery.ran" ] && ! light_ran && clean &&
+     grep -qxF "repos/acme/widgets/commits/$2/status?per_page=100" "$work/gh.args" &&
+     grep -qxF "description=inherited green from $f12: $1" "$work/gh.args" &&
+     [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=success on $(sha_of HEAD): inherited green from $f12: $1" ]
+  then pass "$3"; else fail "$3 ($(diag))"; fi
+}
+
+lanefix; edit docs 'echo more >> docs/a.md'; run; lane_is light "23 docs only"
+lanefix; edit 'docs+code' 'echo more >> docs/a.md; echo x >> battery.sh'; run; lane_is full "24 docs plus one code file"
+lanefix; edit release "$(bump)"; run; lane_is light "25 release-only (VERSION, package.json version, CHANGELOG)"
+lanefix; edit 'release+dep' "$(bump); sed -i.bak 's/\"1.0.0\"/\"1.0.1\"/' package.json; rm -f package.json.bak"; run
+lane_is full "26 version plus one dependency"
+lanefix; edit nested "sed -i.bak '7s/0.1.0/0.1.1/' composer.json; rm -f composer.json.bak; sed -i.bak s/0.1.0/0.1.1/ VERSION; rm -f VERSION.bak"; run
+lane_is full "27 a nested-only composer version, keys at column zero, beside a same-number VERSION bump"
+lanefix; edit site 'echo 0.1.1 > app.version; echo 0.1.1 > VERSION'; run; lane_is light "28 a listed bare-version site"
+lanefix; edit pin 'echo "shellcheck 0.1.1" > tools.cfg; echo 0.1.1 > VERSION'; run; lane_is full "28 a listed site line with a same-number tool pin"
+lanefix; edit toml "sed -i.bak 's/0.1.0/0.1.1/' pyproject.toml; rm -f pyproject.toml.bak"; run; lane_is full "28 a TOML site line (unrecognised form)"
+for d in commands agents .claude plugins/x; do
+  lanefix; edit "cl $d" "mkdir -p $d && echo '- x' > $d/CHANGELOG.md"; run; lane_is full "29 a changelog under $d/"
+done
+lanefix; edit agentmd 'mkdir -p agents && echo a > agents/x.md'; run; lane_is full "29 agents/x.md is no doc"
+lanefix; edit png "printf '\\211PNG\\r\\n\\032\\n\\000\\000\\001' > docs/i.png"; run; lane_is light "30 a binary PNG under docs/"
+lanefix; git -C "$work/r" update-index --add --cacheinfo "160000,$(sha_of HEAD),docs/sub.md"; git -C "$work/r" commit -q -m gl; run
+lane_is full "31 a gitlink named like a doc"
+lanefix; for c in 'diff.noprefix true' 'diff.ignoreSubmodules all' 'diff.fake.textconv true'; do git -C "$work/r" config "${c% *}" "${c#* }"; done
+echo '*.json diff=fake' > "$work/r/.git/info/attributes"
+edit release "$(bump)"; run; lane_is light "32 noprefix, ignoreSubmodules=all and a textconv driver configured: release still light"
+edit 'dep' "sed -i.bak 's/\"1.0.0\"/\"1.0.1\"/' package.json; rm -f package.json.bak"; run
+lane_is full "32 ... and a dependency still full"
+git -C "$work/r" update-index --add --cacheinfo "160000,$(sha_of HEAD),docs/sub.md"; git -C "$work/r" commit -q -m gl; run
+lane_is full "32 ... and a gitlink still full"
+lanefix; edit docs 'echo more >> docs/a.md'; path=$work/stub:$work/tools; run; path=$work/stub:$PATH
+lane_is light "33 no jq: docs only stays light"
+edit release "$(bump)"; path=$work/stub:$work/tools; run; path=$work/stub:$PATH
+lane_is full "33 no jq: a manifest bump takes the full lane"
+fixture; echo more >> "$work/r/AGENTS.md"; edit docs 'mkdir -p docs; echo d > docs/b.md'; run
+finished 0 success green "$(sha_of HEAD)" && pass "34 no light row: docs only takes the full lane" || fail "34 ($(diag))"
+LIGHT_RC=1 lanefix; edit docs 'echo more >> docs/a.md'; run
+rc_is 1 && light_ran && [ ! -e "$work/battery.ran" ] && clean &&
+  [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=failure on $(sha_of HEAD): light lane red: docs/release only, local run, shellcheck 0.11.0, claude 9.9.9" ] &&
+  pass "35 light row red: failure posted, exit 1" || fail "35 ($(diag))"
+
+lanefix; g=$(sha_of HEAD); git -C "$work/r" commit -q --allow-empty -m same; green_status; run --from "$g"
+inherited 'same tree' "$g" "36 --from a green head with the same tree: inherited, nothing ran"
+lanefix; g=$(sha_of HEAD); edit records 'mkdir -p .context/archive && echo r > .context/archive/x.md && echo "- [x] row" > todos.md'
+green_status; run --from main~1
+inherited 'records only' "$g" "37 records only since --from (a ref, resolved once): inherited, nothing ran"
+lanefix; g=$(sha_of HEAD); git -C "$work/r" update-index --add --cacheinfo "160000,$g,sub"; git -C "$work/r" commit -q -m gl
+git -C "$work/r" config diff.ignoreSubmodules all; green_status; run --from "$g"
+lane_is full "38 a differing gitlink with diff.ignoreSubmodules=all is not inherited"
+lanefix; edit docs 'echo d >> docs/a.md'; g=$(sha_of HEAD)
+git -C "$work/r" checkout -q -b base-moved main~1; edit code 'echo x >> battery.sh'; git -C "$work/r" push -q -f origin base-moved:main 2>/dev/null
+git -C "$work/r" checkout -q main; git -C "$work/r" rebase -q base-moved 2>/dev/null; green_status; run --from "$g"
+lane_is full "39 base-only update: --from the old green head after a rebase onto changed code"
+for st in failure none; do
+  lanefix; g=$(sha_of HEAD); edit docs 'echo d >> docs/a.md'
+  if [ "$st" = none ]; then echo '{"total_count": 1, "statuses": [{"context": "other", "state": "success"}]}' > "$work/gh.status"
+  else green_status failure; fi
+  run --from "$g"
+  refused "40 --from with quality $st: exit 64" "local-ci: --from $g has no success quality status ($st); run the battery on it first"
+done
+echo '{"total_count": 101, "statuses": []}' > "$work/gh.status"; run --from "$g"
+refused "40 --from with more than 100 contexts: exit 64" "local-ci: --from $g has no success quality status (too many contexts); run the battery on it first"
+green_status; echo 1 > "$work/gh.status.rc"; run --from "$g"
+refused "40 --from whose status read fails: exit 64" "local-ci: --from $g has no success quality status (a failed read); run the battery on it first"
+rm -f "$work/gh.status.rc"; run --from nosuchref
+refused "40 --from naming no commit: exit 64" "local-ci: --from nosuchref does not name a commit here; pass the green head's SHA"
+: > "$work/git.faildiff"; run --from "$g"
+refused "40 a failed records diff: exit 64, after git's own error" "$(printf 'stub: diff failed\nlocal-ci: could not list the paths changed since %s; see the git error above' "$g")"
+rm -f "$work/git.faildiff"; run --from
+refused "40 --from without a value: usage" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

@@ -45,7 +45,7 @@ scripts/status-view.py            # generated HTML status view, one-shot or watc
 scripts/status-view.test.sh       # its regression suite — fixture home + repos, mutants
 scripts/worktree-cleanup.sh       # worktree and branch report; --remove deletes merged, clean, idle ones
 scripts/worktree-cleanup.test.sh  # its regression suite — fixture repos, stub gh and lsof
-scripts/local-ci.sh               # runs the quality row on one commit in a temporary worktree, posts the quality status; = workflow-init 2.22 (check 4m)
+scripts/local-ci.sh               # runs the quality (or quality-light) row on one commit in a temporary worktree, or carries a --from green; posts the quality status; = workflow-init 2.22 (check 4m)
 scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git
 evals/<case>/{prompt.md,graders/*.md} # `claude plugin eval` suite, run by hand before a version bump; outside the plugin so it does not ship
 plugins/dev-workflow/

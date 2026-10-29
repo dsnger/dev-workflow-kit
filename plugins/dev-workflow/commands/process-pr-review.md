@@ -230,7 +230,10 @@ review.
    final pushed head (`gh pr checks`): from CI once its run completes, within CLAUDE.md §4's limit for
    waiting on external work, or from the local reporter the project's `AGENTS.md § Commands` names, which
    posts the local run's result as that check. The required check is the enforced
-   authority; a local run that is not reported is the fast pre-check. With no required check (Step 1), the
+   authority; a local run that is not reported is the fast pre-check. A status the local reporter
+   posts from its light or inherited lane (`scripts/local-ci.sh`'s header defines both) stands for the
+   quality command on that head: it ran what its lane owes, or carried a verdict from a green head with
+   the same tree or with only record paths changed. With no required check (Step 1), the
    full quality command on the final head, recorded in the PR body, is the evidence, and neither exception
    below applies, since both lean on a required check for the rest. Two exceptions. A local timeout in a test
    the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`

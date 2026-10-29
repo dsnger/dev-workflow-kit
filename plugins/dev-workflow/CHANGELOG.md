@@ -22,6 +22,27 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.50.0
+
+Proportional gates (story `docs/superpowers/stories/2026-10-29-kit-050-proportional-gates-story.md`, design
+`docs/superpowers/specs/2026-10-29-kit-050-proportional-gates-design.md`; decisions D85, D86). Minor: a new hook
+note, new `local-ci.sh` lanes and two optional `AGENTS.md` lines. Gate effort scales with the change.
+
+- **Release-only commits skip Gate B.** The hook classifies a plain `git commit`'s staged diff
+  deterministically: only `CHANGELOG*`, a `package.json`/`composer.json` top-level `version` (compared with `jq`;
+  no `jq`: no note), and one version line in `VERSION` or a file on the new optional `**Version sites:**` line of
+  `AGENTS.md`, one old and one new version across them, plus docs-only paths. It prints
+  `release-only: version + changelog, no review`, which the PR body quotes. Instruction paths are never
+  release-only (D86); `--amend` and `-a` never get the note; anything unrecognised fires as before
+  (invariant 2). The gate rules (and `### 2.1a`) say so; docs-only is unchanged.
+- **`scripts/local-ci.sh` lanes** (header is the contract; `### 2.22` identical, check 4m): `--from <green head>`
+  carries that head's green to a commit with the same tree (a squash-merge) or with only `.context/` and
+  `todos.md` changed (a closing commit), with no run; a docs- or release-only change runs the new optional
+  `quality-light` row of `AGENTS.md` instead of the full one. Every lane posts `quality`, so rulesets stay as
+  they are. `/workflow-init` Step 3 offers both optional lines.
+- **Green consumers** (`CLAUDE.md` §4 and its template, `process-pr-review` Step 3 item 6, `docs/reference.md`)
+  accept a light or inherited lane as the green for the commit it posts on.
+
 ## 0.49.0
 
 Learnings from the 0.48 project refresh (story `docs/superpowers/stories/2026-10-29-kit-049-learnings-story.md`,

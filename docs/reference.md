@@ -314,6 +314,10 @@ it started with.
 The binding rules are `.claude/review-gates.md` in your project (CLAUDE.md §5). This
 section explains what you see.
 
+**Gate effort scales with the change: a 1-line docs or release PR costs almost nothing** (since 0.50).
+A docs-only commit skips Gate B, a release-only commit skips it too, and `scripts/local-ci.sh` runs a
+light battery for both, or carries an earlier green verdict without a run (see the local path below).
+
 ### Gate modes
 
 Since 0.46.0 a project picks how long its review loops run, in the committed one-word file
@@ -343,7 +347,17 @@ battery passes. Docs-only means every staged path is explanatory Markdown under 
 or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`, `AGENTS.md` and anything under
 `.claude/`, `plugins/`, `skills/` or `commands/` at any depth are prompts and take the
 gate, as does a mixed commit. The hook's own docs-only note is a path heuristic and does
-not establish that eligibility. The battery is always owed, with two exceptions. A timeout in a test the diff did
+not establish that eligibility.
+
+**Release-only** (since 0.50) is decided by the hook, deterministically, on the staged diff of a plain
+`git commit` (never `--amend` or `-a`): every file is a docs-only path, a `CHANGELOG*`, a
+`package.json`/`composer.json` whose only change is its top-level `version` (compared with `jq`; no `jq`:
+not release-only), or a `VERSION` file or a file on the project's `**Version sites:**` line in `AGENTS.md`
+whose only change is one line holding just a version or `"version": "<version>"`; one old and one new
+version across them. Instruction paths (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `plugins/`, `skills/`,
+`commands/`, `agents/`, `hooks/`) are never release-only, so this repository's own releases always take
+Gate B. A commit that passes gets the note `release-only: version + changelog, no review`, quoted in the
+PR body; anything else, or anything the check does not recognise, takes Gate B as before. The battery is always owed, with two exceptions. A timeout in a test the diff did
 not touch that passes when run alone is recorded with that evidence, and the green
 required check on the PR head then stands as the battery evidence. And when the battery passed
 in full on a named commit and every path changed since then is docs-only, `process-pr-review`
@@ -775,9 +789,16 @@ local result (GitHub counts a check run and a commit status of the same required
 both must pass). Disabling stops new runs only: a run in progress finishes, and a `quality` check run
 Actions already created on a commit (it reports on the PR head commit) stays there and must pass too,
 so switch before you push the commit you will run locally. Then, per commit, `git fetch origin` and
-`sh scripts/local-ci.sh [<commit>]` from the repository root (`origin/main` for a merge commit). The script runs the quality row of
+`sh scripts/local-ci.sh [<commit>]` from the repository root (after a squash-merge: `git fetch origin`,
+then `--from <the PR's final head> <merge sha>`). The script runs the quality row of
 [`AGENTS.md`](../AGENTS.md) § Commands on that commit in a temporary worktree it removes afterwards
 and posts the result as the `quality` commit status; `gh workflow enable ci.yml` switches back.
+**Lanes** (since 0.50; the script's header is the contract): with `--from <a green head>`, a commit with
+that head's tree (a squash-merge) or with only `.context/` and `todos.md` changed (a closing commit) gets
+`inherited green from <head>` and nothing runs; a docs- or release-only change since the lane base
+(`--from`, else the merge-base with `origin/main`) runs the `quality-light` row of `AGENTS.md` instead
+(this repository: invariant checks, version bump, doc links, plugin validation; 29 s on this Mac); everything
+else runs the full row. The context is `quality` in every lane, so the ruleset stays as it is.
 Differences to the job: the local shellcheck binary (the script refuses a version other than the
 `ci.yml` pin), the local `claude` CLI instead of the npm-pinned one (the script checks no version there;
 it records the one it ran in the status description), and macOS's `/bin/sh` and awk

@@ -1525,6 +1525,87 @@ is_docs_only() {
   return 0
 }
 
+# --- RELEASE-ONLY CHECK (0.50; scripts/local-ci.sh carries the same program, spec §2) --------------------
+# release_only <docs mode: hook|light> <base> [<new>]: true when the diff base..new (no new: the
+# index) names at least one file and every file is docs (by mode), a changelog, a manifest whose
+# only change is its top-level "version", or a VERSION / AGENTS.md "Version sites" file whose only
+# change is one version line; one old version and one new version across them. Anything the check
+# does not recognise, any failure, no jq for a manifest: false.
+release_only() {
+  _m=$1 _b=$2 _n=${3-}
+  _sites=$(git cat-file blob "$_b:AGENTS.md" 2>/dev/null | LC_ALL=C awk 'index($0, "**Version sites:**") == 1 {
+    s = substr($0, 19); while (match(s, /`[^`]+`/)) { printf "%s ", substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH) } }')
+  if [ -n "$_n" ]; then set -- "$_b" "$_n"; else set -- --cached "$_b"; fi
+  _out=$(git -c core.quotePath=true -c diff.noprefix=false diff --no-color --no-ext-diff --no-textconv \
+    --no-renames --no-relative --ignore-submodules=none --submodule=short --src-prefix=a/ --dst-prefix=b/ -U0 \
+    "$@" 2>/dev/null) || return 1
+  _out=$(printf '%s\n' "$_out" | LC_ALL=C awk -v mode="$_m" -v sites="$_sites" '
+    function prompt(p) { return p ~ /(^|\/)(CLAUDE|AGENTS)\.md$/ || p ~ /(^|\/)(\.claude|plugins|skills|commands|agents|hooks)\// }
+    function docs(p) {
+      if (prompt(p)) return 0
+      if (mode == "hook") return p ~ /^docs\/.*\.md$/ || p ~ /^(README|MANIFEST|todos)\.md$/ || p ~ /^\.context\//
+      return p ~ /\.(md|txt)$/ || p ~ /^docs\/.*\.(png|jpg|jpeg|gif|svg|webp)$/ }
+    # vline <line>: the line with its version token replaced by X when it is a version form, else "".
+    function vline(l,   s) {
+      s = l; sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s)
+      if (s ~ /^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$/ || s ~ /^"version"[ \t]*:[ \t]*"[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?",?$/) {
+        match(l, /[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?/); tok = substr(l, RSTART, RLENGTH)
+        return substr(l, 1, RSTART - 1) "X" substr(l, RSTART + RLENGTH) }
+      return "" }
+    function same(v, t) { if (v == "") { return t } else if (v != t) { bad = 1 } return v }
+    function finish(   a, b, ta) {
+      if (path == "" || kind != "V") return
+      if (hunks != 1 || nrem != 1 || nadd != 1) { bad = 1; return }
+      a = vline(rem); ta = tok; b = vline(add)
+      if (a == "" || b == "" || a != b) { bad = 1; return }
+      old = same(old, ta); new = same(new, tok) }
+    BEGIN { n = split(sites, S, " "); for (i = 1; i <= n; i++) site[S[i]] = 1 }
+    /^diff --git / {
+      finish(); state = "h"; hunks = nrem = nadd = 0; kind = ""; path = ""
+      l = substr($0, 12); L = length(l)
+      if ((L - 1) % 2) { bad = 1; next }
+      h = (L - 1) / 2; a = substr(l, 1, h); b = substr(l, h + 2)
+      if (substr(a, 1, 2) != "a/" || substr(b, 1, 2) != "b/" || substr(a, 3) != substr(b, 3)) { bad = 1; next }
+      path = substr(a, 3); files++; base = path; sub(/.*\//, "", base)
+      if (docs(path)) kind = "D"
+      else if (prompt(path)) bad = 1
+      else if (base ~ /^CHANGELOG/) kind = "C"
+      else if (base == "package.json" || base == "composer.json") { kind = "R"; print "R " path }
+      else if (base == "VERSION" || (path in site)) kind = "V"
+      else bad = 1
+      next }
+    state == "h" && /^(old mode|new mode|similarity|rename|copy) / { bad = 1; next }
+    state == "h" && /^(new file mode|deleted file mode) / { if (kind == "R" || $0 ~ /160000/) bad = 1; next }
+    state == "h" && /^index / { if ($0 ~ /160000/) bad = 1; next }
+    state == "h" && /^Binary files / { if (!(mode == "light" && kind == "D" && path ~ /^docs\/.*\.(png|jpg|jpeg|gif|svg|webp)$/)) bad = 1; next }
+    state == "h" && /^(---|\+\+\+) / { next }
+    /^@@ / { state = "u"; hunks++; next }
+    state == "u" && /^-/ { nrem++; rem = substr($0, 2); next }
+    state == "u" && /^\+/ { nadd++; add = substr($0, 2); next }
+    state == "u" && /^\\/ { next }
+    { bad = 1 }
+    END { finish(); if (bad || !files) print "NO"; else print "OK " old " " new }')
+  _last=$(printf '%s\n' "$_out" | sed '$!d')
+  case $_last in OK*) ;; *) return 1 ;; esac
+  _old=${_last#OK }; _new=${_old#* }; _old=${_old%% *}
+  for _p in $(printf '%s\n' "$_out" | sed -n 's/^R //p'); do
+    command -v jq >/dev/null 2>&1 || return 1
+    _o=$(git cat-file blob "$_b:$_p" 2>/dev/null | jq -c -s 'if length == 1 and (.[0] | type) == "object" then .[0] else error("") end' 2>/dev/null) &&
+      _w=$(git cat-file blob "$_n:$_p" 2>/dev/null | jq -c -s 'if length == 1 and (.[0] | type) == "object" then .[0] else error("") end' 2>/dev/null) &&
+      _v=$(jq -n -r --argjson o "$_o" --argjson n "$_w" '
+        if ($o | del(.version)) == ($n | del(.version)) and ($o.version | type) == "string" and ($n.version | type) == "string"
+        then "\($o.version) \($n.version)" else "NO" end' 2>/dev/null) || return 1
+    _vo=${_v%% *} _vn=${_v#* }
+    for _t in "$_vo" "$_vn"; do
+      printf '%s\n' "$_t" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' || return 1
+    done
+    [ -z "$_old" ] || [ "$_old" = "$_vo" ] || return 1
+    [ -z "$_new" ] || [ "$_new" = "$_vn" ] || return 1
+    _old=$_vo _new=$_vn
+  done
+  [ "$_old" != "$_new" ] || [ -z "$_old" ]
+}
+
 # --- STALE-COPY NOTICE (0.49) ------------------------------------------------------
 # On every SessionStart: compare the installed plugin's version (this hook's own manifest)
 # with the project's .claude/dev-workflow-version, which /workflow-init 2.23 writes. Only a
@@ -1765,6 +1846,12 @@ case "$event" in
           files=$(printf '%s\n' "$files" | sed '/^$/d')
           if names_no_paths "$cmd" && is_docs_only "$files"; then
             note "Docs-only commit — no code is staged, so Codex Gate B's fingerprint and floor checks do not apply here (mcp__codex__review reviews a code diff). If this commit includes a spec or plan, confirm it went through Gate A (mcp__codex__exec) where $policy requires one; the gate mode decides which specs do." "ℹ Codex Gate B N/A (docs-only commit)"
+          # Release-only (0.50): the staged diff alone, so an amend (relative to the old commit's
+          # parent) or -a (unstaged edits swept in) is never offered the note.
+          elif names_no_paths "$cmd" && ! has_all_flag "$cmd" &&
+            ! printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])--amend([[:space:]]|$)' &&
+            (cd "$repo_root" && git rev-parse -q --verify HEAD >/dev/null && release_only hook HEAD); then
+            note "Release-only commit — release-only: version + changelog, no review. Gate B (mcp__codex__review) may be skipped for it per $policy; record that line in the PR body. Any other change in the commit takes Gate B." "ℹ Codex Gate B N/A (release-only commit)"
           else
             retire_legacy quiet   # best effort; nothing is credited here
             passes=$(read_count "$count_file")
