@@ -2232,3 +2232,8 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [x] **No-bot line before the Wait-for step.** "None ran" must be judged after the Wait-for bots' completion
       signals, or a bot still reviewing is skipped. *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec
       pass 2, finding 3 — accepted, not repaired)
+- [ ] **0.50 field case: a records-only closing head re-runs the whole battery.** Kit 0.49's Gate B closing commit
+      only added cycle lines and moved review archives, yet its new head needed a second ~39-minute local-ci run just
+      to carry the `quality` status. 0.50 (proportional gates) should let a records-only head inherit the previous
+      head's verdict, decided deterministically (same tree outside the record paths). Orchestrator
+      `dev-workflow-kit-26`, 2026-10-29. *Trigger: the 0.50 proportional-gates story.*
