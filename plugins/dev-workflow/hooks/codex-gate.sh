@@ -1567,6 +1567,7 @@ release_only() {
       h = (L - 1) / 2; a = substr(l, 1, h); b = substr(l, h + 2)
       if (substr(a, 1, 2) != "a/" || substr(b, 1, 2) != "b/" || substr(a, 3) != substr(b, 3)) { bad = 1; next }
       path = substr(a, 3); files++; base = path; sub(/.*\//, "", base)
+      if (path ~ /[ \t*?[]/) { bad = 1; next }  # a blank or glob character: the shell loop below would split it
       if (docs(path)) kind = "D"
       else if (prompt(path)) bad = 1
       else if (base ~ /^CHANGELOG/) kind = "C"

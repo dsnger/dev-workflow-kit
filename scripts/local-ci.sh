@@ -24,7 +24,8 @@
 #               version or "version": "<version>"; one old and one new version across them. Runs that row
 #               instead of the quality row; posts "light lane green|red: docs/release only, local run, ...".
 #   full        otherwise: the quality row, as below. A project narrows the light lane only by its row:
-#               without one, every change takes the full lane. Anything the check does not recognise: full.
+#               without one, every change that does not inherit takes the full lane. Anything the check
+#               does not recognise: full.
 #   With --from, its status is read once (precondition 6); the lanes compare that resolved SHA only.
 #
 # PRECONDITIONS, in this order; a failure prints one line, exits 64 and posts nothing:
@@ -184,6 +185,7 @@ release_only() {
       h = (L - 1) / 2; a = substr(l, 1, h); b = substr(l, h + 2)
       if (substr(a, 1, 2) != "a/" || substr(b, 1, 2) != "b/" || substr(a, 3) != substr(b, 3)) { bad = 1; next }
       path = substr(a, 3); files++; base = path; sub(/.*\//, "", base)
+      if (path ~ /[ \t*?[]/) { bad = 1; next }  # a blank or glob character: the shell loop below would split it
       if (docs(path)) kind = "D"
       else if (prompt(path)) bad = 1
       else if (base ~ /^CHANGELOG/) kind = "C"

@@ -2063,7 +2063,7 @@ Tell the user, in the report:
 - **The quality row** (and the `quality-light` row, if they add one) must be one command in backticks
   as the row's last cell, and it runs in a fresh worktree of the commit: if it needs installed
   dependencies, it installs them itself first (for example a frozen-lockfile install), as the CI job does.
-- **Lanes:** without a `quality-light` row every change runs the full row; after a squash-merge,
+- **Lanes:** without a `quality-light` row every change that does not inherit runs the full row; after a squash-merge,
   `git fetch origin`, then `sh scripts/local-ci.sh --from <the PR's final head> <merge sha>` carries the
   green in seconds.
 - **Switching** is theirs: `gh workflow disable <the workflow that posts quality>` before pushing the
@@ -2101,7 +2101,8 @@ Tell the user, in the report:
 #               version or "version": "<version>"; one old and one new version across them. Runs that row
 #               instead of the quality row; posts "light lane green|red: docs/release only, local run, ...".
 #   full        otherwise: the quality row, as below. A project narrows the light lane only by its row:
-#               without one, every change takes the full lane. Anything the check does not recognise: full.
+#               without one, every change that does not inherit takes the full lane. Anything the check
+#               does not recognise: full.
 #   With --from, its status is read once (precondition 6); the lanes compare that resolved SHA only.
 #
 # PRECONDITIONS, in this order; a failure prints one line, exits 64 and posts nothing:
@@ -2261,6 +2262,7 @@ release_only() {
       h = (L - 1) / 2; a = substr(l, 1, h); b = substr(l, h + 2)
       if (substr(a, 1, 2) != "a/" || substr(b, 1, 2) != "b/" || substr(a, 3) != substr(b, 3)) { bad = 1; next }
       path = substr(a, 3); files++; base = path; sub(/.*\//, "", base)
+      if (path ~ /[ \t*?[]/) { bad = 1; next }  # a blank or glob character: the shell loop below would split it
       if (docs(path)) kind = "D"
       else if (prompt(path)) bad = 1
       else if (base ~ /^CHANGELOG/) kind = "C"

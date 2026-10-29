@@ -665,7 +665,7 @@ printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": 
 printf '{\n"name": "c",\n"version": "0.1.0",\n"repositories": [{\n"package": {\n"name": "p",\n"version": "0.1.0"\n}\n}]\n}\n' > composer.json
 printf '# Changelog\n' > CHANGELOG.md; printf 'doc\n' > docs/a.md
 # shellcheck disable=SC2016  # backticks are the line's Markdown, not a substitution
-printf '**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver`\n' > AGENTS.md
+printf '**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a`\n' > AGENTS.md
 git add -A >/dev/null 2>&1; git commit -qm 'release base' >/dev/null 2>&1
 bump() { sed -i.bak 's/0\.1\.0/0.1.1/' VERSION && sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1"/' package.json &&
   printf -- '- 0.1.1\n' >> CHANGELOG.md && rm -f VERSION.bak package.json.bak; }
@@ -685,6 +685,15 @@ rel_case() {
   undo
 }
 bump; rel_case yes 'VERSION, package.json version, CHANGELOG'
+sed -i.bak 's/0\.1\.0/0.1.1/' VERSION; sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.2"/' package.json; rm -f VERSION.bak package.json.bak
+rel_case no 'two different version pairs'
+mkdir -p 'a b' b; printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > 'a b/package.json'
+printf '{\n  "version": "0.1.0"\n}\n' > a; printf '{\n  "name": "t",\n  "version": "0.1.0"\n}\n' > b/package.json
+git add -A >/dev/null 2>&1; git commit -qm 'space base' >/dev/null 2>&1
+for f in a b/package.json 'a b/package.json'; do sed -i.bak 's/0\.1\.0/0.1.1/' "$f"; rm -f "$f.bak"; done
+sed -i.bak 's/1\.0\.0/1.0.1/' 'a b/package.json'; rm -f 'a b/package.json.bak'
+rel_case no "a dependency change in 'a b/package.json' whose split halves are valid release files"
+git rm -q -r 'a b' a b >/dev/null 2>&1; git commit -qm 'space cleanup' >/dev/null 2>&1
 bump; sed -i.bak 's/"1\.0\.0"/"1.0.1"/' package.json; rm -f package.json.bak; rel_case no 'version plus one dependency'
 bump; printf 'code\n' > rel-extra.ts; rel_case no 'version plus one code file'
 printf 'more\n' >> docs/a.md; git add -A >/dev/null 2>&1; out=$(commitpre)

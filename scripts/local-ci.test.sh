@@ -37,6 +37,7 @@ esac
 case " $* " in *" --method "*) ;; *" --jq "*)
   f=; for a in "$@"; do [ "$f" = 1 ] && { f=$a; break; }; [ "$a" = --jq ] && f=1; done
   rc=$(cat "$STUB_DIR/gh.status.rc" 2>/dev/null || echo 0); [ "$rc" = 0 ] || exit "$rc"
+  [ -f "$STUB_DIR/gh.onread" ] && sh "$STUB_DIR/gh.onread"
   "$REAL_JQ" -r "$f" "$STUB_DIR/gh.status"; exit ;;
 esac
 case $1 in
@@ -383,10 +384,13 @@ lanefix() {
   cat >> "$work/r/AGENTS.md" <<'EOF'
 | quality-light (fixture) | `sh ./light.sh` |
 
-**Version sites:** `app.version` `tools.cfg` `pyproject.toml`
+**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a`
 EOF
   echo 0.1.0 > "$work/r/VERSION"; echo 0.1.0 > "$work/r/app.version"; echo 'shellcheck 0.1.0' > "$work/r/tools.cfg"
-  printf '[project]\nversion = "0.1.0"\n' > "$work/r/pyproject.toml"
+  printf '[project]\nversion = "0.1.0"\n' > "$work/r/pyproject.toml"; mkdir -p "$work/r/.claude" "$work/r/a b"
+  echo 0.1.0 > "$work/r/.claude/ver"; mkdir -p "$work/r/b"
+  printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > "$work/r/a b/package.json"
+  printf '{\n  "version": "0.1.0"\n}\n' > "$work/r/a"; printf '{\n  "name": "t",\n  "version": "0.1.0"\n}\n' > "$work/r/b/package.json"
   printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": "1.0.0"\n  }\n}\n' > "$work/r/package.json"
   printf '{\n"name": "c",\n"version": "0.1.0",\n"repositories": [{\n"package": {\n"name": "p",\n"version": "0.1.0"\n}\n}]\n}\n' > "$work/r/composer.json"
   echo '# Changelog' > "$work/r/CHANGELOG.md"; mkdir -p "$work/r/docs"; echo doc > "$work/r/docs/a.md"
@@ -432,6 +436,13 @@ lanefix; edit toml "sed -i.bak 's/0.1.0/0.1.1/' pyproject.toml; rm -f pyproject.
 for d in commands agents .claude plugins/x; do
   lanefix; edit "cl $d" "mkdir -p $d && echo '- x' > $d/CHANGELOG.md"; run; lane_is full "29 a changelog under $d/"
 done
+lanefix; edit split "sed -i.bak 's/0\.1\.0/0.1.1/' VERSION && sed -i.bak 's/\"version\": \"0\.1\.0\"/\"version\": \"0.1.2\"/' package.json && rm -f VERSION.bak package.json.bak"; run
+lane_is full "28 two different version pairs (VERSION 0.1.1, package.json 0.1.2)"
+lanefix; edit instsite 'echo 0.1.1 > .claude/ver; echo 0.1.1 > VERSION'; run; lane_is full "29 a listed site under an instruction path"
+lanefix
+( cd "$work/r" && for f in a b/package.json 'a b/package.json'; do sed -i.bak 's/0\.1\.0/0.1.1/' "$f" && rm -f "$f.bak"; done &&
+  sed -i.bak 's/1\.0\.0/1.0.1/' 'a b/package.json' && rm -f 'a b/package.json.bak' && git add -A && git commit -q -m space ); run
+lane_is full "29 a dependency change in 'a b/package.json' whose split halves (a, b/package.json) are valid release files: refused"
 lanefix; edit agentmd 'mkdir -p agents && echo a > agents/x.md'; run; lane_is full "29 agents/x.md is no doc"
 lanefix; edit png "printf '\\211PNG\\r\\n\\032\\n\\000\\000\\001' > docs/i.png"; run; lane_is light "30 a binary PNG under docs/"
 lanefix; git -C "$work/r" update-index --add --cacheinfo "160000,$(sha_of HEAD),docs/sub.md"; git -C "$work/r" commit -q -m gl; run
@@ -447,7 +458,7 @@ lanefix; edit docs 'echo more >> docs/a.md'; path=$work/stub:$work/tools; run; p
 lane_is light "33 no jq: docs only stays light"
 edit release "$(bump)"; path=$work/stub:$work/tools; run; path=$work/stub:$PATH
 lane_is full "33 no jq: a manifest bump takes the full lane"
-fixture; echo more >> "$work/r/AGENTS.md"; edit docs 'mkdir -p docs; echo d > docs/b.md'; run
+fixture; edit docs 'mkdir -p docs; echo d > docs/b.md'; run
 finished 0 success green "$(sha_of HEAD)" && pass "34 no light row: docs only takes the full lane" || fail "34 ($(diag))"
 LIGHT_RC=1 lanefix; edit docs 'echo more >> docs/a.md'; run
 rc_is 1 && light_ran && [ ! -e "$work/battery.ran" ] && clean &&
@@ -457,8 +468,9 @@ rc_is 1 && light_ran && [ ! -e "$work/battery.ran" ] && clean &&
 lanefix; g=$(sha_of HEAD); git -C "$work/r" commit -q --allow-empty -m same; green_status; run --from "$g"
 inherited 'same tree' "$g" "36 --from a green head with the same tree: inherited, nothing ran"
 lanefix; g=$(sha_of HEAD); edit records 'mkdir -p .context/archive && echo r > .context/archive/x.md && echo "- [x] row" > todos.md'
-green_status; run --from main~1
-inherited 'records only' "$g" "37 records only since --from (a ref, resolved once): inherited, nothing ran"
+git -C "$work/r" branch -f green "$g"; echo "git -C '$work/r' branch -f green HEAD" > "$work/gh.onread"
+green_status; run --from green
+inherited 'records only' "$g" "37 records only since --from a branch the status read moves: the SHA resolved first is used"
 lanefix; g=$(sha_of HEAD); git -C "$work/r" update-index --add --cacheinfo "160000,$g,sub"; git -C "$work/r" commit -q -m gl
 git -C "$work/r" config diff.ignoreSubmodules all; green_status; run --from "$g"
 lane_is full "38 a differing gitlink with diff.ignoreSubmodules=all is not inherited"

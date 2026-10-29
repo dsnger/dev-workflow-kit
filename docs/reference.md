@@ -357,7 +357,7 @@ whose only change is one line holding just a version or `"version": "<version>"`
 version across them. Instruction paths (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `plugins/`, `skills/`,
 `commands/`, `agents/`, `hooks/`) are never release-only, so this repository's own releases always take
 Gate B. A commit that passes gets the note `release-only: version + changelog, no review`, quoted in the
-PR body; anything else, or anything the check does not recognise, takes Gate B as before. The battery is always owed, with two exceptions. A timeout in a test the diff did
+PR body; anything else, or anything the check does not recognise, takes Gate B as before. The battery is always owed outside `scripts/local-ci.sh`'s light and inherited lanes (the local path, below), with two further exceptions. A timeout in a test the diff did
 not touch that passes when run alone is recorded with that evidence, and the green
 required check on the PR head then stands as the battery evidence. And when the battery passed
 in full on a named commit and every path changed since then is docs-only, `process-pr-review`
@@ -813,7 +813,7 @@ status description has no shellcheck part. The quality row runs in a fresh workt
 needs installed dependencies installs them itself first. A required check restricted to one app's
 source cannot be met by a status posted with `gh`; lifting that restriction, and any other ruleset,
 protection or workflow change, is the human's. A branch that requires no check at all needs neither:
-the quality command on the final head is the green, recorded in the PR body (`CLAUDE.md` §4, "Waiting
+the quality command on the final head (or a `local-ci.sh` light or inherited lane on it) is the green, recorded in the PR body (`CLAUDE.md` §4, "Waiting
 on external work").
 
 Everything else here is a prompt, and prompts have no typechecker. They are reviewed
