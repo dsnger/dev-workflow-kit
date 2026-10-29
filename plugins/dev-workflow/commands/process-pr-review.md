@@ -43,7 +43,10 @@ failure is itself a finding to process. If it is red, fix the failing step **bef
 processing bot comments. If it is still running, note it and proceed — re-verify at
 the end. A project whose battery runs locally and reports the check as a commit status
 (`AGENTS.md § Commands` names the reporter) shows it in `gh pr checks` too, and then there
-is no run to wait for.
+is no run to wait for. A target branch that requires no check (`CLAUDE.md` §4 "Waiting on external
+work" says how to read that) has no required check to be green: the quality command passing on the final
+head, recorded in the PR body as that rule says, stands in for it here and in Step 3 item 6, Step 4 and
+Done. A required check that nothing will produce stops the run as that rule says.
 
 ## Step 2 — Wait for the findings bots
 
@@ -69,6 +72,12 @@ Step 4's check (its value checks and patch-id command) with the reviewed head in
 checked one; anything but equal ids means it does not count. A bot on for this PR that did not run is reported by name —
 `<bot>: no review on <sha>` — and never counted as clean. Why: a bot that is rate-limited or
 skipping the PR posts nothing, which looks exactly like a clean review.
+
+**No bot ran.** After the **Wait for** bots have given their completion signals, when no bot is on for
+this PR, or none on for it reviewed, write one line, `PR bots: none ran on <sha>`, beside any
+`<bot>: no review on <sha>` lines, and wait for nothing more. This is a normal state, not a fault:
+Gate B was the review. Step 3 item 1's route for an empty claim set still runs (answer any thread that
+needs it, item 6), then Step 4.
 
 Read what each bot posted if it ran; the only review this command starts is Gate B for a
 fix (Step 3 item 3). Why: every bot request is a paid run, and Gate B is the workflow's
@@ -221,7 +230,9 @@ review.
    final pushed head (`gh pr checks`): from CI once its run completes, within CLAUDE.md §4's limit for
    waiting on external work, or from the local reporter the project's `AGENTS.md § Commands` names, which
    posts the local run's result as that check. The required check is the enforced
-   authority; a local run that is not reported is the fast pre-check. Two exceptions. A local timeout in a test
+   authority; a local run that is not reported is the fast pre-check. With no required check (Step 1), the
+   full quality command on the final head, recorded in the PR body, is the evidence, and neither exception
+   below applies, since both lean on a required check for the rest. Two exceptions. A local timeout in a test
    the diff did not touch that passes alone takes the load-flake rule in `.claude/review-gates.md`
    (Gate-B prompt): record it, and the green required check on the head stands in (with a local reporter, a rerun through it). And when the
    quality command passed in full on a commit you can name (its SHA, from that run's output or
@@ -254,6 +265,8 @@ review.
    verification
      quality command   green locally (AGENTS.md § Commands, run verbatim)
      required check on final head  green — the authority (CI, or the local reporter's status)
+                                   (none required: "quality command green on <sha>, run id: none, <reason>,
+                                   exit 0, <duration>", as recorded in the PR body)
    ```
 
    Both claims sit on one thread and share one reply, and each ends at exactly one
@@ -266,8 +279,10 @@ Squash-merge once all of these hold: a last read of both channels of every bot o
 filtered as Step 3 item 1 forms the tracked set, adds no claim — a new one goes through
 Step 3 first; every tracked
 claim has a verdict, a terminal disposition and a reply; no item-4 question is unanswered;
-the required check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
-`headRefOid` equal to the head this run checked and claims on. A different head means
+the required check is green on the head (none required: Step 1's record on it); and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
+`headRefOid` equal to the head this run checked and claims on. With no required check, `UNSTABLE` counts as
+`CLEAN` when Step 1's record is green on that head: it means only that a check nobody requires is not
+passing; name each such check and its state in the report. A different head means
 commits arrived meanwhile: run Steps 1-3 again on it first. **A base update alone starts no
 review.** Take `baseRefName` from `gh pr view <n> --json baseRefName`; before filling it or a
 `<sha>` into the command below, check that the name matches `^[A-Za-z0-9._/-]+$` and each
@@ -315,5 +330,6 @@ and write the unit's handover.
 Every tracked claim has a verdict, every thread has a reply, and each claim ends in
 exactly one of: a fix, a documented dismissal, a valid-but-out-of-scope finding recorded
 in `todos.md`, or an escalation the user has answered. Fixes are committed
-per rule 3, the required check is green on the final head, `mergeStateStatus` is CLEAN, and the PR
+per rule 3, the required check is green on the final head (none required: the quality command's record on
+it), `mergeStateStatus` is CLEAN (or UNSTABLE as Step 4 allows), and the PR
 is squash-merged — or, under a `merge` checkpoint, ready to merge.

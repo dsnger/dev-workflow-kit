@@ -3411,6 +3411,11 @@ nlines() { printf '%s\n' "$1" | grep -c ''; }
 line1='dev-workflow: context was compacted. Binding rules file: .claude/review-gates.md (read it before gate work).'
 reviews=.context/codex-reviews
 mkdir -p "$reviews"
+# 0.49: every SessionStart also runs the stale-copy notice (section 51); a record equal to the
+# plugin's version keeps it silent, so this section's line counts stay as they were.
+PV=$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([0-9.]*\)".*/\1/p' "$(dirname "$HOOK")/../.claude-plugin/plugin.json")
+recf=.claude/dev-workflow-version
+mkdir -p .claude && printf '%s\n' "$PV" > "$recf"
 
 # 44a. no state -> exactly line 1, no JSON, exit 0. The opt-out marker silences this too
 #      (README and the degraded-mode setup promise silence while it exists), a repository
@@ -3937,6 +3942,57 @@ reset_all; setmode lean; execp
 has50 "mode: lean Gate A below floor says two passes" "$(skillpre)" 'below floor (1/2): two passes when Gate A runs'
 reset_all; setmode classic; rev; rev; rev; rev; out=$(revout)
 has50 "mode: classic cap message unchanged" "$out" "⚠ Codex Gate B: pass cap reached (5/5). $cap_line1" "$cap_line2"
+
+# 51. STALE-COPY NOTICE (0.49). Every SessionStart compares the plugin's version with the
+#     project's .claude/dev-workflow-version; only a one-line x.y.z record counts, and its
+#     text never reaches the output otherwise. Exit 0 on every path.
+reset_all
+start() { run "{\"hook_event_name\":\"SessionStart\",\"source\":\"$1\",\"session_id\":\"s\",\"cwd\":\".\"}"; }
+has51() { # $1 = label, $2 = output, $3.. = fragments that must all appear
+  l=$1; o=$2; shift 2
+  for f in "$@"; do case "$o" in *"$f"*) ;; *) fail "$l (missing [$f] in [$o])"; return ;; esac; done
+  pass "$l"
+}
+older='Tell the user; /dev-workflow:workflow-init refreshes the project files.'
+for src in startup resume clear fork; do
+  printf '%s\n' "$PV" > "$recf"
+  out=$(start "$src"); rc=$?
+  [ "$rc" = 0 ] && [ -z "$out" ] && pass "51a: $src, record equal -> nothing" || fail "51a: $src, record equal -> nothing (rc $rc, got [$out])"
+done
+rm -f "$recf"
+out=$(start startup); rc=$?
+[ "$rc" = 0 ] && pass "51b: missing record exits 0" || fail "51b: missing record exits 0 (got $rc)"
+has51 "51b: missing record -> refresh line" "$out" "recorded kit no version (no record); the installed plugin is $PV." "$older"
+case "$out" in *'context was compacted'*) fail "51b: startup announces no compaction" ;; *) pass "51b: startup announces no compaction" ;; esac
+printf '0.0.1\n' > "$recf"
+has51 "51c: older record -> refresh line naming both" "$(start startup)" "recorded kit 0.0.1; the installed plugin is $PV." "$older"
+printf '999.0.0\n' > "$recf"
+has51 "51d: newer record -> update-the-plugin line" "$(start resume)" "recorded kit 999.0.0;" 'The installed plugin is older than the recorded kit version: tell the user to update the plugin before running /dev-workflow:workflow-init.'
+for bad in '0.49.0; rm -rf x' "$PV
+$PV" 'v1' ''; do
+  printf '%s' "$bad" > "$recf"
+  out=$(start startup); rc=$?
+  { [ "$rc" = 0 ] && case "$out" in *'recorded kit an unreadable record;'*) ! printf '%s' "$out" | grep -qF 'rm -rf' ;; *) false ;; esac; } \
+    && pass "51e: malformed record [$bad] -> unreadable line, text not echoed" || fail "51e: malformed record [$bad] -> unreadable line (rc $rc, got [$out])"
+done
+printf '%s' "$PV" > "$recf"
+out=$(start startup)
+[ -z "$out" ] && pass "51e: record without a trailing newline still counts" || fail "51e: record without a trailing newline still counts (got [$out])"
+rm -f "$recf"; : > "$offf"
+out=$(start startup); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "51f: opt-out marker -> nothing" || fail "51f: opt-out marker -> nothing (rc $rc, got [$out])"
+rm -f "$offf"
+mv .context/codex-gate.on "$sandbox/on.bak"
+out=$(start startup); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "51g: non-adopted repository -> nothing" || fail "51g: non-adopted repository -> nothing (rc $rc, got [$out])"
+mv "$sandbox/on.bak" .context/codex-gate.on
+mkdir -p "$sandbox/bare51/hooks"; cp "$HOOK" "$sandbox/bare51/hooks/codex-gate.sh"
+out=$(printf '%s' '{"hook_event_name":"SessionStart","source":"startup","session_id":"s","cwd":"."}' | "$HOOK_SH_BIN" "$sandbox/bare51/hooks/codex-gate.sh"); rc=$?
+[ "$rc" = 0 ] && [ -z "$out" ] && pass "51h: no plugin.json beside the hook -> nothing" || fail "51h: no plugin.json beside the hook -> nothing (rc $rc, got [$out])"
+rm -rf "$sandbox/bare51"
+m=$(grep -c '"matcher": "startup|resume|clear|compact|fork"' "$(dirname "$HOOK")/hooks.json")
+[ "$m" = 1 ] && pass "51i: hooks.json registers SessionStart for all five sources" || fail "51i: hooks.json registers SessionStart for all five sources (got $m)"
+printf '%s\n' "$PV" > "$recf"
 
 reset_all
 echo "---"

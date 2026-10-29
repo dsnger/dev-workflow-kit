@@ -243,9 +243,11 @@ CI run is what checks the combination.
 summary, both, or `inconsistent`), sorted into the three routing lists
 `/process-pr-review` reads: wait for, process opportunistically, ignore. A list entry may
 say `only with label <name>` and `once per PR`; a bot that is off sits under ignore and is
-not reported. Greptile is off by default: it reviews every push unless its own settings
-(`labels: ["greptile"]`, `autoReview: ["open"]`, set by you in Greptile) limit it to one
-review of a labelled PR. `/process-pr-review` asks no bot for a review, and a head that only
+not reported. Greptile is off in the kit by default. Turned on, it runs on request
+(`autoReview: []`, set by you in Greptile; a comment `@greptileai` starts one review) or on a label
+(`labels: ["greptile"]`, `autoReview: ["open"]`). Greptile's own default, `["open"]`, reviews each PR
+once when it opens; per-push review comes only from adding `push` or `rebase`. With no bot on, or
+none that ran, `/process-pr-review` says `PR bots: none ran on <sha>` and goes on. `/process-pr-review` asks no bot for a review, and a head that only
 brings the base in (same `git patch-id --verbatim` of the PR diff) needs none. CodeRabbit
 auto-reviews only PRs whose base is the default branch unless its configuration lists
 the other base under `reviews.auto_review.base_branches`.
@@ -492,6 +494,14 @@ compared hook state-file names, not passes.
 
 The hook's messages say what happened and what to do next. The possible causes behind eight
 of them live here.
+
+**Kit files older than the plugin** (`dev-workflow: the last /workflow-init run here recorded kit …;
+the installed plugin is …`). At every session start (since 0.49) the hook compares the installed
+plugin's version with `.claude/dev-workflow-version`, which `/workflow-init` writes on each run. A
+missing, unreadable or different record prints this one line; a record newer than the plugin asks you
+to update the plugin first. The record says which kit ran `/workflow-init` last, not that every file
+was accepted. Nothing is said in a project that has not adopted the workflow, with the opt-out marker,
+or when the plugin's own version cannot be read.
 
 **Codex call failed** (`⚠ Codex call failed — not counted as a gate pass`). The Codex server
 answered with `success: false`. When the error message is empty (seen 2026-10-23: three times,
@@ -774,6 +784,16 @@ it records the one it ran in the status description), and macOS's `/bin/sh` and 
 instead of ubuntu-24.04's. Two consequences: anyone with write access can post a `quality` status by
 hand, so the author of each status is worth a look in the merge box; and the script runs that
 commit's own scripts on the Mac, so run it only on commits you have read, never on a fork's head.
+
+**The local path in a project** (since 0.49). `/workflow-init` 2.22 offers the same script, byte for
+byte (check 4m), defaulting to yes when the default branch requires a `quality` check with no source
+restriction. In a project without this repository's shellcheck pin the parity check is skipped and the
+status description has no shellcheck part. The quality row runs in a fresh worktree, so a command that
+needs installed dependencies installs them itself first. A required check restricted to one app's
+source cannot be met by a status posted with `gh`; lifting that restriction, and any other ruleset,
+protection or workflow change, is the human's. A branch that requires no check at all needs neither:
+the quality command on the final head is the green, recorded in the PR body (`CLAUDE.md` §4, "Waiting
+on external work").
 
 Everything else here is a prompt, and prompts have no typechecker. They are reviewed
 against [`prompt-standards.md`](prompt-standards.md), this repo's own standard and the

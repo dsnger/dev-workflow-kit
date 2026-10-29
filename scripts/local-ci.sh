@@ -1,7 +1,8 @@
 #!/bin/sh
 # Local CI: run the quality battery of one commit in a temporary detached worktree and post the
 # result to GitHub as that commit's `quality` status.
-# Spec: docs/superpowers/specs/2026-10-28-kit-local-ci-design.md §2.
+# From the dev-workflow kit, which ships it to projects as `/workflow-init` 2.22 (the same bytes);
+# its regression suite is the kit's scripts/local-ci.test.sh.
 #
 # Usage: sh scripts/local-ci.sh [<commit>]
 #   <commit>  any commit-ish (default HEAD) of the repository containing the current directory
@@ -11,8 +12,9 @@
 #   2. origin's URL names a github.com repository (https://, ssh://git@ or git@ form); owner and
 #      repository come from it alone, never from GH_REPO or GH_HOST
 #   3. gh is on PATH and `gh auth status --hostname github.com` succeeds
-#   4. that commit's .github/workflows/ci.yml pins one shellcheck version (every
-#      koalaman/shellcheck:v<version> agrees), and it is the `version:` of `shellcheck --version`
+#   4. when that commit's .github/workflows/ci.yml names koalaman/shellcheck:v<version>, every
+#      such pin agrees, and it is the `version:` of `shellcheck --version`; a commit without that
+#      file or without a pin skips this check
 #   5. that commit's AGENTS.md has exactly one line starting with "| quality ", whose last cell is
 #      one command in backticks; that text runs verbatim under `sh -c`
 #
@@ -21,8 +23,8 @@
 # directory under TMPDIR (default /tmp; uncommitted changes never reach it); runs the quality
 # command there in the foreground, output passed through; posts state success (exit 0) or failure
 # (any other status), context quality and the description
-# "battery green|red: local run, shellcheck <v>, claude <v>" (claude "unknown" when its version
-# cannot be read) with `gh api`, REST API version 2026-03-10; prints the SHA, state and
+# "battery green|red: local run, shellcheck <v>, claude <v>" (the shellcheck part only with a
+# pin; claude "unknown" when its version cannot be read) with `gh api`, REST API version 2026-03-10; prints the SHA, state and
 # description in one line. On every exit it removes the worktree (`git worktree remove --force`
 # of that path only, never a prune) and the directory; a failed removal keeps both and prints the
 # command that finishes it. Its own parsing runs under LC_ALL=C; the battery keeps the caller's
@@ -46,7 +48,7 @@
 # shortcut: a quality command containing `|` is not supported (its cell starts after the row's
 # last `|`), move such a pipeline into a script if one is ever needed.
 #
-# POSIX sh plus git and gh. Regression suite: scripts/local-ci.test.sh.
+# POSIX sh plus git and gh.
 set -u
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
   GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CEILING_DIRECTORIES
@@ -71,17 +73,20 @@ command -v gh >/dev/null 2>&1 ||
   refuse 'gh is not on PATH; install the GitHub CLI, then run gh auth login --hostname github.com'
 gh auth status --hostname github.com >/dev/null 2>&1 ||
   refuse 'gh auth status --hostname github.com failed; run it to see why, then gh auth login --hostname github.com'
-# The distinct versions of every koalaman/shellcheck:v<version>; exactly one passes (printed).
+# The distinct versions of every koalaman/shellcheck:v<version>: none skips the check (empty pin),
+# one passes (printed), more refuse.
 pin=$(git show "$sha:.github/workflows/ci.yml" 2>/dev/null | LC_ALL=C awk '
   { s = $0
     while (match(s, /koalaman\/shellcheck:v[A-Za-z0-9_.-]+/)) {
       v = substr(s, RSTART + 21, RLENGTH - 21); if (!(v in seen)) { seen[v] = 1; n++ }
       s = substr(s, RSTART + RLENGTH) } }
-  END { if (n == 1) print v; exit (n != 1) }') ||
-  refuse ".github/workflows/ci.yml at $sha does not pin exactly one shellcheck version; pin one koalaman/shellcheck:v<version>"
-have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
-[ "$have" = "$pin" ] ||
-  refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
+  END { if (n == 1) print v; exit (n > 1) }') ||
+  refuse ".github/workflows/ci.yml at $sha pins more than one shellcheck version; pin one koalaman/shellcheck:v<version>"
+if [ -n "$pin" ]; then
+  have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
+  [ "$have" = "$pin" ] ||
+    refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
+fi
 # The quality row's last cell, the text between its backticks; the label may hold backticks or \|.
 cmd=$(git show "$sha:AGENTS.md" 2>/dev/null | LC_ALL=C awk '
   index($0, "| quality ") == 1 { n++; row = $0 }
@@ -119,7 +124,7 @@ added=1
 st=$?
 
 if [ "$st" -eq 0 ]; then state=success; desc='battery green'; else state=failure; desc='battery red'; fi
-desc="$desc: local run, shellcheck $pin, claude ${cv:-unknown}"
+desc="$desc: local run,${pin:+ shellcheck $pin,} claude ${cv:-unknown}"
 if gh api --hostname github.com --method POST -H "X-GitHub-Api-Version: 2026-03-10" "repos/$slug/statuses/$sha" \
   -f state="$state" -f context=quality -f description="$desc" >/dev/null; then
   printf 'local-ci: posted quality=%s on %s: %s\n' "$state" "$sha" "$desc"

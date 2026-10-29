@@ -42,10 +42,12 @@ pinned.
    remote branch). Run by the orchestrator or the human, never by the session in a worktree.
 4b. `scripts/local-ci.{sh,test.sh}` (reads; creates and removes one temporary worktree under a
    `mktemp -d` directory; posts one commit status to GitHub; never fetches, pushes, prunes,
-   changes a ruleset, a workflow's state, a branch or a remote)
+   changes a ruleset, a workflow's state, a branch or a remote). Since 0.49 the same bytes ship as
+   `/workflow-init`'s `### 2.22` template, which check 4m keeps identical.
 5. the hook ships in the plugin, the checkers and the reports do not (the docs link checker's
    text ships only as `/workflow-init`'s `### 2.21` template, which check 4l keeps
-   byte-identical to `scripts/check-doc-links.sh`)
+   byte-identical to `scripts/check-doc-links.sh`; `scripts/local-ci.sh` likewise as `### 2.22`,
+   kept by check 4m)
 6. The plugin depends on superpowers (skills it hands off to) and on a Codex MCP server
    exposing both `exec` and `review` (the gates key on those two tool names). Initialized
    projects that have third-party dependencies also depend on the Context7 MCP server, which
@@ -256,7 +258,7 @@ Every command below was run in this session and observed to exit 0.
 | typecheck | n/a — no typed sources (shell, six untyped Python reports, markdown) |
 | lint | `shellcheck --shell=sh plugins/dev-workflow/hooks/codex-gate.sh && shellcheck --shell=sh --exclude=SC2015 plugins/dev-workflow/hooks/codex-gate.test.sh && shellcheck --shell=sh scripts/check-invariants.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-invariants.test.sh && shellcheck --shell=sh scripts/check-version-bump.sh && shellcheck --shell=sh scripts/check-version-bump.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/ledger-metrics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/run-analytics.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/loop-usefulness.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/spec-delta.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/live-effort.test.sh && shellcheck --shell=sh --exclude=SC2015 scripts/status-view.test.sh && shellcheck --shell=sh scripts/check-doc-links.sh && shellcheck --shell=sh --exclude=SC2015 scripts/check-doc-links.test.sh && shellcheck --shell=sh scripts/worktree-cleanup.sh && shellcheck --shell=sh --exclude=SC2015 scripts/worktree-cleanup.test.sh && shellcheck --shell=sh scripts/local-ci.sh && shellcheck --shell=sh --exclude=SC2015 scripts/local-ci.test.sh` |
 | test | `HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh && HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh` — two runs; `HOOK_SH` selects the shell the HOOK runs under, and without it a dash invocation only exercises the harness |
-| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size, gate rules copies identical, doc-link checker copies identical) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
+| invariant checks (5 pinning, 6 manifest, prompt conformance, template size, repo instruction size, gate rules size, gate rules copies identical, doc-link checker copies identical, local CI runner copies identical, kit version record) | `sh scripts/check-invariants.test.sh && sh scripts/check-invariants.sh` |
 | docs link check (relative Markdown links and their heading fragments resolve) | `sh scripts/check-doc-links.test.sh && sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/` |
 | invariant check (12 version bump) | `sh scripts/check-version-bump.test.sh && sh scripts/check-version-bump.sh origin/main` |
 | worktree cleanup report (by hand, not CI; `--remove` deletes, see Boundaries 4a) | `sh scripts/worktree-cleanup.sh <repo>` |
@@ -278,7 +280,8 @@ system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop
 `scripts/worktree-cleanup.sh` uses `gh` and `lsof` when present, addressed by name like `git`: they are
 system tools, not pinned packages, and invariant 5's scope does not include them. Without them its
 squash-merge and session answers read `unknown`, which keeps the row; its suite stubs both. `scripts/local-ci.sh` requires `gh` logged in and
-refuses to run with a shellcheck other than the version `ci.yml` pins; the `claude` CLI it does not
+refuses to run with a shellcheck other than the version `ci.yml` pins (a commit without that pin skips
+this check); the `claude` CLI it does not
 check against the CI pin — it runs the installed one (2.1.312 on 2026-10-28, against the pinned
 2.1.207) and records that version in the status description. Its suite stubs `gh`, `shellcheck`,
 `claude` and the battery.
@@ -308,7 +311,10 @@ and the fenced `### 2.1a` template in `workflow-init.md`. Without a cap the rule
 sentence ([history](docs/ARCHITECTURE.md#incidents-behind-the-agentsmd-rules)). It measures size only.
 **Check 4j** fails when those two texts are not byte-identical; it compares bytes only, not
 whether either copy is right. **Check 4l** does the same for `scripts/check-doc-links.sh` and the
-fenced `### 2.21` template in `workflow-init.md`.
+fenced `### 2.21` template in `workflow-init.md`; **check 4m** for `scripts/local-ci.sh` and `### 2.22`.
+**Check 4n** fails unless the dev-workflow manifest's `version`, the fenced `### 2.23` template and this
+repository's `.claude/dev-workflow-version` are the same x.y.z; it compares strings, not whether the bump
+was right.
 
 **Check 4g measures exactly two files.** It fails when this repository's `CLAUDE.md` plus
 `AGENTS.md` exceed 150,000 characters, a budget set for this repository after `main` went past

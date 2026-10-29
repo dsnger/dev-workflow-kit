@@ -67,7 +67,9 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | New feature | `/dev-workflow:intake <idea or transcript>` | [guide](docs/getting-started.md#new-feature) |
 | Bug or small fix | `/dev-workflow:ticket <text or evidence>` | [guide](docs/getting-started.md#bug-or-small-fix) |
 | PR bot comments | `/dev-workflow:process-pr-review <pr-number>` | [guide](docs/getting-started.md#pr-bot-comments) |
-| Run Greptile on some PRs only (off by default) | List it as `only with label greptile, once per PR` in `docs/pr-review-bots.md`, set its label filter in Greptile, label the PR | [reference](docs/reference.md#pr-review-bots) |
+| Run Greptile on some PRs only (off by default) | On request: `autoReview: []` in Greptile, `once per PR` in `docs/pr-review-bots.md`, comment `@greptileai`. Or by label: `only with label greptile, once per PR`, its label filter in Greptile, label the PR | [reference](docs/reference.md#pr-review-bots) |
+| Actions cannot run the required check | `/dev-workflow:workflow-init` offers `scripts/local-ci.sh` (2.22); disable the workflow, then `sh scripts/local-ci.sh <sha>` per head. Ruleset changes stay yours | [reference](docs/reference.md#contributing) |
+| A session says the kit files are older | Run `/dev-workflow:workflow-init` to refresh them (it records the kit version in `.claude/dev-workflow-version`) | [reference](docs/reference.md#hook-messages) |
 | Recurring finding | `/dev-workflow:harden-finding` | [guide](docs/getting-started.md#a-finding-that-keeps-coming-back) |
 | Discuss an idea | `/dev-workflow:sparring <question>`, in a new chat | [guide](docs/getting-started.md#discuss-an-idea-first) |
 | Gate A says "not counted" | Name the pass file in the Codex prompt as `Findings file: <path>` and let Codex write it; a reply alone is no pass | [reference](docs/reference.md#hook-messages) |

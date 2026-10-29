@@ -161,13 +161,22 @@ If not: open the failing step. The quality step runs the same command as step 6;
 steps before it are CI setup (toolchain, dependencies) and fail for CI-only reasons. Why
 "up to date" matters: [reference, CI](reference.md#ci-and-branch-protection).
 
+No Actions minutes left, or Actions off? If `/workflow-init` wrote `scripts/local-ci.sh` (it asks),
+disable the workflow before you push, then run `sh scripts/local-ci.sh <sha>` per head: it runs the
+quality command on this machine and posts the `quality` status. A `quality` check restricted to one
+app's source, and every ruleset change, are yours to settle first. A branch that requires no check
+needs neither: the quality command's result goes into the PR body. Details:
+[reference, the local path in a project](reference.md#contributing).
+
 ## 9. PR review bots
 
 Optional. Do: if you enabled review bots on the repository (CodeRabbit, Greptile, ...),
 open `docs/pr-review-bots.md` (written in step 4) and fill its three lists: wait for,
-process opportunistically, ignore. Note where each bot posts. Greptile is off by default,
-because it reviews every push; to run it, set `labels: ["greptile"]` and
-`autoReview: ["open"]` in Greptile yourself, and label a PR `greptile` for one review.
+process opportunistically, ignore. Note where each bot posts. Greptile is off in the kit by
+default. To run it on request, set `autoReview: []` in Greptile yourself and comment
+`@greptileai` on a PR for one review; for the label path, set `labels: ["greptile"]` and
+`autoReview: ["open"]` and label a PR `greptile`. Greptile's own default reviews each PR once when
+it opens; per-push review comes only from adding `push` or `rebase` to `autoReview`.
 
 You see: `/dev-workflow:process-pr-review` reads those lists, waits only for the bots
 under "wait for", reads the others if they ran, and asks no bot for a review.

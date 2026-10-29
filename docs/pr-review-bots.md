@@ -10,7 +10,7 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
-| CodeRabbit | yes | **inline** | Posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. Observed on #1 and #18 (profile CHILL). **Plan: Free** (per Daniel); the "Pro Plus" recorded here earlier was observed on PR #1 only and no longer describes the account — the review-limit behaviour below is what a Free plan produces. **Routed opportunistically since #18** — five consecutive unreviewed heads (#12, #13, #15, #16, #17), then a genuine review. Two quirks that look like signals and are not: **its status check goes green whether or not a review happened**, so a green check never proves the final head was reviewed (the per-head count is the arbiter); and **`@coderabbitai review` is a no-op while automatic reviews are active** — the bot says so itself ("This command is applicable only when automatic reviews are paused", #17), which is why #14's re-trigger produced nothing. |
+| CodeRabbit | **no** (removed by Daniel 2026-10-29: free quota used up; record below from when it was on) | **inline** | Posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. Observed on #1 and #18 (profile CHILL). **Plan: Free** (per Daniel); the "Pro Plus" recorded here earlier was observed on PR #1 only and no longer describes the account — the review-limit behaviour below is what a Free plan produces. **Routed opportunistically since #18** — five consecutive unreviewed heads (#12, #13, #15, #16, #17), then a genuine review. Two quirks that look like signals and are not: **its status check goes green whether or not a review happened**, so a green check never proves the final head was reviewed (the per-head count is the arbiter); and **`@coderabbitai review` is a no-op while automatic reviews are active** — the bot says so itself ("This command is applicable only when automatic reviews are paused", #17), which is why #14's re-trigger produced nothing. |
 | Greptile | **no** (off since kit 0.48.0, 2026-10-29: it reviewed every push of every PR and cost over 700 USD in a few days; Daniel) | was **summary always; inline usually** | Record from when it was on. Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
@@ -18,11 +18,14 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 
 - **Wait for (block on it):** *none.* CodeRabbit sat here until #18 and no longer does —
   grounds below.
-- **Process opportunistically (never block):** CodeRabbit. Read whatever it has posted
-  when the pass begins, in both channels. If it posts later, handle it as a follow-up.
-- **Ignore:** Greptile — off since kit 0.48.0; turning it back on means the label path
-  (`only with label greptile, once per PR`, with `labels: ["greptile"]` and
-  `autoReview: ["open"]` set in Greptile by Daniel). Cursor Bugbot — disabled for this
+- **Process opportunistically (never block):** *none.* CodeRabbit sat here from #18 until
+  it was removed on 2026-10-29. With no bot on, `/dev-workflow:process-pr-review` writes
+  `PR bots: none ran on <sha>` and goes on; Gate B is the review.
+- **Ignore:** CodeRabbit — removed 2026-10-29 (Daniel); turning it back on means routing it
+  opportunistically again, with the count below as the check. Greptile — off since kit 0.48.0; turning it back on means the on-request
+  path (`once per PR`, `autoReview: []` set in Greptile, a review on an `@greptileai` comment;
+  Daniel's choice for his projects) or the label path (`only with label greptile, once per
+  PR`, with `labels: ["greptile"]` and `autoReview: ["open"]`), both set in Greptile by Daniel. Cursor Bugbot — disabled for this
   account, and it says so itself.
 
 **Why CodeRabbit moved.** It has a status check, so blocking on it always *terminated* —
@@ -36,7 +39,7 @@ place by a signal that exists and does not mean what it appears to mean.
 
 **What the routing change does *not* touch: the count itself.** The query below and what
 it measures are exactly as #17 left them, and the count remains the arbiter of whether a
-head was reviewed — for **any** bot, opportunistic or not. What the change does scope is
+CodeRabbit head was reviewed, opportunistic or not. What the change does scope is
 the *consequence* the file used to attach to a `0`: from kit 0.32.0 a `0` blocks no merge,
 for any bot, and the merge-exception clause is retired. Both facts are stated where the
 query lives, below.
@@ -143,8 +146,8 @@ a review of that head.
 **Then the two facts separate, and only the first still binds.**
 
 1. **The count is the arbiter of whether a head was reviewed**, read with the two
-   exceptions above. It applies to **any** bot on for the PR — it is the diagnostic, and being routed opportunistically does not
-   make a bot's review record less readable or the answer less true.
+   exceptions above, for CodeRabbit, as the query above is scoped — it is the diagnostic, and being routed
+   opportunistically does not make its review record less readable or the answer less true.
 2. **An absent review blocks no merge, for any bot.** A bot that is off is not reported at
    all (kit 0.48.0). From kit 0.32.0
    `/dev-workflow:process-pr-review` Step 4 reports it as `<bot>: no review on <sha>`,

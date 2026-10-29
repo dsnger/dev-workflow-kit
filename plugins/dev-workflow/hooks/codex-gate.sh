@@ -1525,10 +1525,39 @@ is_docs_only() {
   return 0
 }
 
+# --- STALE-COPY NOTICE (0.49) ------------------------------------------------------
+# On every SessionStart: compare the installed plugin's version (this hook's own manifest)
+# with the project's .claude/dev-workflow-version, which /workflow-init 2.23 writes. Only a
+# record of exactly one x.y.z line counts, so no file content reaches the context. An
+# unreadable plugin version says nothing: a guess would name a wrong version.
+version_line() {
+  [ -f "$off_file" ] && return 0
+  pv=$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)".*/\1/p' \
+    "$(dirname "$0")/../.claude-plugin/plugin.json" 2>/dev/null | head -n1)
+  [ -n "$pv" ] || return 0
+  rf="$repo_root/.claude/dev-workflow-version"
+  if [ ! -e "$rf" ] && [ ! -L "$rf" ]; then rv=''; rd='no version (no record)'
+  elif [ -f "$rf" ] && [ "$(grep -c '' "$rf" 2>/dev/null)" = 1 ] &&
+    rv=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' "$rf" 2>/dev/null) && [ -n "$rv" ]; then rd="$rv"
+  else rv=''; rd='an unreadable record'
+  fi
+  [ "$rv" = "$pv" ] && return 0
+  # newer = 1 when the record is a higher x.y.z than the plugin's.
+  newer=$(printf '%s %s\n' "${rv:-0.0.0}" "$pv" | awk '{ split($1, a, "."); split($2, b, ".")
+    for (i = 1; i <= 3; i++) if (a[i] + 0 != b[i] + 0) { print (a[i] + 0 > b[i] + 0); exit }
+    print 0 }')
+  printf 'dev-workflow: the last /workflow-init run here recorded kit %s; the installed plugin is %s. ' "$rd" "$pv"
+  if [ "$newer" = 1 ]; then
+    printf '%s\n' 'The installed plugin is older than the recorded kit version: tell the user to update the plugin before running /dev-workflow:workflow-init.'
+  else
+    printf '%s\n' 'Tell the user; /dev-workflow:workflow-init refreshes the project files.'
+  fi
+}
+
 # --- COMPACTION RE-INJECTION ------------------------------------------------------
-# hooks.json registers SessionStart with the matcher `compact` only, and this checks
-# `source` as well, so a wider registration cannot announce a compaction that did not
-# happen. Claude Code adds a SessionStart hook's PLAIN stdout to the model's context
+# hooks.json registers SessionStart for every source (startup, resume, clear, compact, fork)
+# since 0.49 for the stale-copy notice above, and this checks `source` itself, so only a
+# compaction is announced as one. Claude Code adds a SessionStart hook's PLAIN stdout to the model's context
 # (https://code.claude.com/docs/en/hooks, exit code 0), so this prints text rather than
 # the JSON document the tool events use, and `routed` stays 0 so no buffered note is
 # flushed after it. The opt-out marker silences it like every other output. At most
@@ -1609,7 +1638,7 @@ compact_lines() {
 # how an untrusted event name reached the fallback emitter.
 routed=0
 case "$event" in
-  SessionStart) compact_lines ;;
+  SessionStart) version_line; compact_lines ;;
   PostToolUse)
     routed=1
     case "$tool" in

@@ -19,6 +19,7 @@ AGENTS.md                         # invariants, binding boundaries, conventions,
 CLAUDE.md                         # discipline rules + pointer to the review gates
 .claude/review-gates.md           # the two review gates (CLAUDE.md §5, moved out for size)
 .claude/codex-gate.mode           # the gate mode, one word (`strict` here; read by the rules and the hook)
+.claude/dev-workflow-version      # the kit version /workflow-init last recorded (= plugin version, check 4n); the hook compares it at session start
 todos.md                          # backlog; `pending` ledger rows point here by ref
 .gitattributes                    # union merge for the append-only ledger
 .mcp.json                         # the Codex reviewer, pinned (no Context7: no library dependencies)
@@ -44,7 +45,7 @@ scripts/status-view.py            # generated HTML status view, one-shot or watc
 scripts/status-view.test.sh       # its regression suite — fixture home + repos, mutants
 scripts/worktree-cleanup.sh       # worktree and branch report; --remove deletes merged, clean, idle ones
 scripts/worktree-cleanup.test.sh  # its regression suite — fixture repos, stub gh and lsof
-scripts/local-ci.sh               # runs the quality row on one commit in a temporary worktree, posts the quality status
+scripts/local-ci.sh               # runs the quality row on one commit in a temporary worktree, posts the quality status; = workflow-init 2.22 (check 4m)
 scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git
 evals/<case>/{prompt.md,graders/*.md} # `claude plugin eval` suite, run by hand before a version bump; outside the plugin so it does not ship
 plugins/dev-workflow/
@@ -102,7 +103,7 @@ the convention-loaded file was a duplicate-hooks error that stopped the whole pl
 ## Boundaries and dependency direction
 
 The plugin is the only thing that ships; the scripts above are this repository's own tooling
-(the docs link checker reaches projects only as the text of `/workflow-init`'s 2.21 template),
+(the docs link checker reaches projects only as the text of `/workflow-init`'s 2.21 template, the local CI runner as 2.22),
 and `examples/` ships as reference material without being loaded or scaffolded
 ([invariant 7](../AGENTS.md#key-invariants)). Outward, the plugin hands off to superpowers skills
 and calls a Codex MCP server, and `/workflow-init` adds a pinned Context7 server to an initialized

@@ -2206,7 +2206,7 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 
 ## From kit 0.48.0 Greptile optional (2026-10-29)
 
-- [ ] **"Greptile reviews every push" is stated as its default.** `/workflow-init` 2.5 (question and template
+- [x] **"Greptile reviews every push" is stated as its default.** `/workflow-init` 2.5 (question and template
       row), `docs/setup.md` step 9 and `docs/reference.md` § PR review bots say Greptile reviews every push
       unless told otherwise; Greptile's `greptile.json` reference gives `autoReview` the default `["open"]`,
       so per-push review was this account's configuration, not the product default. Reword as a configurable
@@ -2215,7 +2215,7 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **Part 2 of the Greptile order waits on sfx-factory #106/#107.** Factory-review skill, runnable tests,
       risk lens, Semgrep (`.context/sparring/20261029-1145-greptile-optional-review-prompt.md` items 2 and 3).
       *Trigger: both merged in sfx-factory.*
-- [ ] **`docs/pr-review-bots.md`: two passages still give the CodeRabbit count for any bot.** The "What the
+- [x] **`docs/pr-review-bots.md`: two passages still give the CodeRabbit count for any bot.** The "What the
       routing change does not touch" paragraph and fact 1 under "Then the two facts separate" say the count is
       the arbiter for any bot, while the query paragraph now scopes it to CodeRabbit. Scope both the same way.
       *Trigger: the next edit of that file.* (Gate B cycle cr48fix1, spec and quality pass 1, finding 1 —
@@ -2223,12 +2223,12 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 
 ## From kit 0.49.0 learnings (2026-10-29)
 
-- [ ] **Stale-copy notice: the newer-record line overclaims.** Spec §2's "the installed plugin is older than this
+- [x] **Stale-copy notice: the newer-record line overclaims.** Spec §2's "the installed plugin is older than this
       project's files" should read "older than the kit version the last `/workflow-init` run recorded".
       *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec pass 2, finding 1 — accepted, not repaired)
-- [ ] **No required check: `mergeStateStatus` UNSTABLE is undecided.** With no required check, an optional red status
+- [x] **No required check: `mergeStateStatus` UNSTABLE is undecided.** With no required check, an optional red status
       leaves `UNSTABLE`, not `CLEAN`; `process-pr-review` Step 4 and Done need one policy for it. *Trigger: the build
       of this story.* (Gate A cycle k049lrn1, spec pass 2, finding 2 — accepted, not repaired)
-- [ ] **No-bot line before the Wait-for step.** "None ran" must be judged after the Wait-for bots' completion
+- [x] **No-bot line before the Wait-for step.** "None ran" must be judged after the Wait-for bots' completion
       signals, or a bot still reviewing is skipped. *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec
       pass 2, finding 3 — accepted, not repaired)
