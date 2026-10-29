@@ -108,8 +108,9 @@ itself goes through `intake` instead.
    fresh-context `finding-triage` subagent (on a PR that edits instruction files Claude
    checks them itself and says so); a reply on every thread; accepted regressions fixed
    (substantial ones through Gate B again); valid but out-of-scope findings recorded in
-   `todos.md`; and a bot that is on for the PR named when it left no review on the current
-   head.
+   `todos.md`; and a bot that is on for the PR named when it left no review that covers the
+   current head (a `once per PR` bot's earlier review, or one from before a base update that
+   left the PR diff unchanged, covers it).
 3. You answer: every `escalate-to-user` verdict, and every accepted finding that
    contradicts a settled decision.
 4. It squash-merges the PR itself once CI is green, every claim has a reply and the PR

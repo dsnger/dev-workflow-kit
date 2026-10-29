@@ -93,7 +93,10 @@ them merges unreviewed heads.**
 Verify the second before merging — a deterministic boolean, so it is read rather than
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
 is diagnostic for every bot on for the PR (a bot that is off, such as Greptile here since kit
-0.48.0, is not checked): its answer goes into the report and blocks no merge:
+0.48.0, is not checked). A `0` for the live head is then read through the two exceptions in
+`/dev-workflow:process-pr-review` Steps 2 and 4: a `once per PR` bot's review of an earlier
+head of this PR, and a review of a head whose PR diff is unchanged after a base update, count
+for the live head. Its answer goes into the report and blocks no merge:
 
 ```sh
 head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
@@ -138,8 +141,8 @@ a review of that head.
 
 **Then the two facts separate, and only the first still binds.**
 
-1. **The count is the arbiter of whether a head was reviewed.** Unchanged, and it applies
-   to **any** bot on for the PR — it is the diagnostic, and being routed opportunistically does not
+1. **The count is the arbiter of whether a head was reviewed**, read with the two
+   exceptions above. It applies to **any** bot on for the PR — it is the diagnostic, and being routed opportunistically does not
    make a bot's review record less readable or the answer less true.
 2. **An absent review blocks no merge, for any bot.** A bot that is off is not reported at
    all (kit 0.48.0). From kit 0.32.0
