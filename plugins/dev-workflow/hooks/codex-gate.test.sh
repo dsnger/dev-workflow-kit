@@ -665,7 +665,8 @@ printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": 
 printf '{\n"name": "c",\n"version": "0.1.0",\n"repositories": [{\n"package": {\n"name": "p",\n"version": "0.1.0"\n}\n}]\n}\n' > composer.json
 printf '# Changelog\n' > CHANGELOG.md; printf 'doc\n' > docs/a.md
 # shellcheck disable=SC2016  # backticks are the line's Markdown, not a substitution
-printf '**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a`\n' > AGENTS.md
+printf '**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a` `release metadata/version`\n' > AGENTS.md
+mkdir -p metadata; printf '0.1.0\n' > metadata/version
 git add -A >/dev/null 2>&1; git commit -qm 'release base' >/dev/null 2>&1
 bump() { sed -i.bak 's/0\.1\.0/0.1.1/' VERSION && sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1"/' package.json &&
   printf -- '- 0.1.1\n' >> CHANGELOG.md && rm -f VERSION.bak package.json.bak; }
@@ -685,6 +686,7 @@ rel_case() {
   undo
 }
 bump; rel_case yes 'VERSION, package.json version, CHANGELOG'
+printf '0.1.1\n' > metadata/version; printf '0.1.1\n' > VERSION; rel_case no 'a site declared with a blank authorizes no part of it'
 sed -i.bak 's/0\.1\.0/0.1.1/' VERSION; sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.2"/' package.json; rm -f VERSION.bak package.json.bak
 rel_case no 'two different version pairs'
 mkdir -p 'a b' b; printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > 'a b/package.json'
@@ -720,7 +722,7 @@ out=$(nojq_run '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":
 printf '%s' "$out" | grep -q 'Release-only commit' && fail "release-only: no jq must fire on a manifest" || pass "release-only: no jq fires on a manifest"; undo
 bump; rel_case no '--amend is never offered the note' 'git commit --amend --no-edit'
 bump; rel_case no '-a is never offered the note' 'git commit -am x'
-git rm -q -r VERSION app.version tools.cfg pyproject.toml .claude/ver package.json composer.json CHANGELOG.md AGENTS.md docs >/dev/null 2>&1
+git rm -q -r metadata VERSION app.version tools.cfg pyproject.toml .claude/ver package.json composer.json CHANGELOG.md AGENTS.md docs >/dev/null 2>&1
 git commit -qm 'release cleanup' >/dev/null 2>&1
 reset_all
 

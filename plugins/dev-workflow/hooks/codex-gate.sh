@@ -1534,7 +1534,8 @@ is_docs_only() {
 release_only() {
   _m=$1 _b=$2 _n=${3-}
   _sites=$(git cat-file blob "$_b:AGENTS.md" 2>/dev/null | LC_ALL=C awk 'index($0, "**Version sites:**") == 1 {
-    s = substr($0, 19); while (match(s, /`[^`]+`/)) { printf "%s ", substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH) } }')
+    s = substr($0, 19); while (match(s, /`[^`]+`/)) { v = substr(s, RSTART + 1, RLENGTH - 2)
+    if (v !~ /[ \t]/) printf "%s ", v; s = substr(s, RSTART + RLENGTH) } }')  # a path with a blank is never a site
   if [ -n "$_n" ]; then set -- "$_b" "$_n"; else set -- --cached "$_b"; fi
   _out=$(git -c core.quotePath=true -c diff.noprefix=false diff --no-color --no-ext-diff --no-textconv \
     --no-renames --no-relative --ignore-submodules=none --submodule=short --src-prefix=a/ --dst-prefix=b/ -U0 \

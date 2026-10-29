@@ -342,7 +342,7 @@ runs `strict`: its product is prose, and its Gate B found 28 % of Blockers and M
 or later. The design is `docs/superpowers/specs/2026-10-27-kit-046-lean-gates-design.md`.
 
 **Gate A** sends the text of a spec (which ones: the mode decides, above), and of a plan whose
-recorded risk is `high`, to Codex `exec`. **Gate B** sends every non-docs-only diff to Codex `review` after the
+recorded risk is `high`, to Codex `exec`. **Gate B** sends every diff that is neither docs-only nor release-only (below) to Codex `review` after the
 battery passes. Docs-only means every staged path is explanatory Markdown under `docs/`,
 or `README.md`, `MANIFEST.md`, `todos.md`; `CLAUDE.md`, `AGENTS.md` and anything under
 `.claude/`, `plugins/`, `skills/` or `commands/` at any depth are prompts and take the

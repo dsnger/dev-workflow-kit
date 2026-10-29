@@ -384,11 +384,11 @@ lanefix() {
   cat >> "$work/r/AGENTS.md" <<'EOF'
 | quality-light (fixture) | `sh ./light.sh` |
 
-**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a`
+**Version sites:** `app.version` `tools.cfg` `pyproject.toml` `.claude/ver` `a` `release metadata/version`
 EOF
   echo 0.1.0 > "$work/r/VERSION"; echo 0.1.0 > "$work/r/app.version"; echo 'shellcheck 0.1.0' > "$work/r/tools.cfg"
   printf '[project]\nversion = "0.1.0"\n' > "$work/r/pyproject.toml"; mkdir -p "$work/r/.claude" "$work/r/a b"
-  echo 0.1.0 > "$work/r/.claude/ver"; mkdir -p "$work/r/b"
+  echo 0.1.0 > "$work/r/.claude/ver"; mkdir -p "$work/r/b" "$work/r/metadata"; echo 0.1.0 > "$work/r/metadata/version"
   printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > "$work/r/a b/package.json"
   printf '{\n  "version": "0.1.0"\n}\n' > "$work/r/a"; printf '{\n  "name": "t",\n  "version": "0.1.0"\n}\n' > "$work/r/b/package.json"
   printf '{\n  "name": "w",\n  "version": "0.1.0",\n  "dependencies": {\n    "a": "1.0.0"\n  }\n}\n' > "$work/r/package.json"
@@ -443,6 +443,8 @@ lanefix
 ( cd "$work/r" && for f in a b/package.json 'a b/package.json'; do sed -i.bak 's/0\.1\.0/0.1.1/' "$f" && rm -f "$f.bak"; done &&
   sed -i.bak 's/1\.0\.0/1.0.1/' 'a b/package.json' && rm -f 'a b/package.json.bak' && git add -A && git commit -q -m space ); run
 lane_is full "29 a dependency change in 'a b/package.json' whose split halves (a, b/package.json) are valid release files: refused"
+lanefix; edit unlisted 'echo 0.1.1 > metadata/version; echo 0.1.1 > VERSION'; run
+lane_is full "29 a site declared with a blank (release metadata/version) authorizes no part of it (metadata/version)"
 lanefix; edit agentmd 'mkdir -p agents && echo a > agents/x.md'; run; lane_is full "29 agents/x.md is no doc"
 lanefix; edit png "printf '\\211PNG\\r\\n\\032\\n\\000\\000\\001' > docs/i.png"; run; lane_is light "30 a binary PNG under docs/"
 lanefix; git -C "$work/r" update-index --add --cacheinfo "160000,$(sha_of HEAD),docs/sub.md"; git -C "$work/r" commit -q -m gl; run
