@@ -1,0 +1,1 @@
+1 | fixed | pr-review-bots.md query paragraph and fact 1 read a 0 through the once-per-PR and unchanged-diff exceptions; getting-started and reference summaries say "no review that covers the current head" with both exceptions
