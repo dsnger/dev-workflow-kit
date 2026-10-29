@@ -687,6 +687,8 @@ rel_case() {
 }
 bump; rel_case yes 'VERSION, package.json version, CHANGELOG'
 printf '0.1.1\n' > metadata/version; printf '0.1.1\n' > VERSION; rel_case no 'a site declared with a blank authorizes no part of it'
+sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.1\\nx"/' package.json; rm -f package.json.bak
+rel_case no 'a manifest version holding a newline'
 sed -i.bak 's/0\.1\.0/0.1.1/' VERSION; sed -i.bak 's/"version": "0\.1\.0"/"version": "0.1.2"/' package.json; rm -f VERSION.bak package.json.bak
 rel_case no 'two different version pairs'
 mkdir -p 'a b' b; printf '{\n  "name": "s",\n  "version": "0.1.0",\n  "dependencies": { "z": "1.0.0" }\n}\n' > 'a b/package.json'

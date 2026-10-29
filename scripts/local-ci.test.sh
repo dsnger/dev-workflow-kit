@@ -445,6 +445,8 @@ lanefix
 lane_is full "29 a dependency change in 'a b/package.json' whose split halves (a, b/package.json) are valid release files: refused"
 lanefix; edit unlisted 'echo 0.1.1 > metadata/version; echo 0.1.1 > VERSION'; run
 lane_is full "29 a site declared with a blank (release metadata/version) authorizes no part of it (metadata/version)"
+lanefix; edit nlver "sed -i.bak 's/\"version\": \"0\\.1\\.0\"/\"version\": \"0.1.1\\\\nx\"/' package.json && rm -f package.json.bak"; run
+lane_is full "29 a manifest version holding a newline (\"0.1.1\\nx\") is no version"
 lanefix; edit agentmd 'mkdir -p agents && echo a > agents/x.md'; run; lane_is full "29 agents/x.md is no doc"
 lanefix; edit png "printf '\\211PNG\\r\\n\\032\\n\\000\\000\\001' > docs/i.png"; run; lane_is light "30 a binary PNG under docs/"
 lanefix; git -C "$work/r" update-index --add --cacheinfo "160000,$(sha_of HEAD),docs/sub.md"; git -C "$work/r" commit -q -m gl; run

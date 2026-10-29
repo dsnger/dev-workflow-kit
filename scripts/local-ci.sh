@@ -214,6 +214,7 @@ release_only() {
       _w=$(git cat-file blob "$_n:$_p" 2>/dev/null | jq -c -s 'if length == 1 and (.[0] | type) == "object" then .[0] else error("") end' 2>/dev/null) &&
       _v=$(jq -n -r --argjson o "$_o" --argjson n "$_w" '
         if ($o | del(.version)) == ($n | del(.version)) and ($o.version | type) == "string" and ($n.version | type) == "string"
+          and ([$o.version, $n.version] | all(test("[\\n\\r ]") | not))
         then "\($o.version) \($n.version)" else "NO" end' 2>/dev/null) || return 1
     _vo=${_v%% *} _vn=${_v#* }
     for _t in "$_vo" "$_vn"; do
