@@ -64,8 +64,9 @@ nothing, check that it actually reviewed the current head (`once per PR`: any he
 PR): a review record whose `commit_id` is that SHA (`gh api --paginate
 repos/<owner>/<repo>/pulls/<n>/reviews`), or the proof its row in `docs/pr-review-bots.md`
 names. A green status check alone is no proof: some bots pass it without reviewing. A review
-of an earlier head counts for the current one when only the base moved between them (Step 4's
-patch-id check). A bot on for this PR that did not run is reported by name —
+of an earlier head counts for the current one when only the base moved between them: run
+Step 4's check (its value checks and patch-id command) with the reviewed head in place of the
+checked one; anything but equal ids means it does not count. A bot on for this PR that did not run is reported by name —
 `<bot>: no review on <sha>` — and never counted as clean. Why: a bot that is rate-limited or
 skipping the PR posts nothing, which looks exactly like a clean review.
 

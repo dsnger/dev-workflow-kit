@@ -92,7 +92,8 @@ them merges unreviewed heads.**
 
 Verify the second before merging — a deterministic boolean, so it is read rather than
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
-is diagnostic for every bot on for the PR (a bot that is off, such as Greptile here since kit
+is the diagnostic for CodeRabbit, whose login it selects; another bot on for the PR uses its
+own login and the proof its row names (a bot that is off, such as Greptile here since kit
 0.48.0, is not checked). A `0` for the live head is then read through the two exceptions in
 `/dev-workflow:process-pr-review` Steps 2 and 4: a `once per PR` bot's review of an earlier
 head of this PR, and a review of a head whose PR diff is unchanged after a base update, count

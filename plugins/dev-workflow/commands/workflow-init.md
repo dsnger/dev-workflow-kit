@@ -976,7 +976,9 @@ so a column may honestly read `inconsistent`. Record what was observed and when.
 
 Ask whether this project wants Greptile, **default no**: it reviews every push of every pull
 request unless told otherwise, and one account spent over 700 USD in a few days that way.
-- **No** (or no answer): a `Greptile | no` row, and Greptile under **Ignore** as off.
+- **No** (or no answer): a `Greptile | no` row, and Greptile under **Ignore** as off. Tell the
+  user this changes only the kit's routing: if Greptile is installed on the repository, it keeps
+  reviewing, and billing, until they turn its automatic reviews off in Greptile.
 - **Yes**: Greptile under **Process opportunistically** as `only with label greptile, once per
   PR`. Tell the user what they set themselves, in Greptile's dashboard or a `greptile.json` they
   commit: `"labels": ["greptile"]` (review only PRs with that label) and `"autoReview": ["open"]`
