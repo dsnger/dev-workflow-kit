@@ -50,7 +50,9 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-8** Tests cover: release-only; version plus one dependency; docs only; docs plus one code file; a
   base-only update.
 - [ ] **AC-9** The PR body gives duration and model calls of a release-only and a docs-only PR, before and
-  after.
+  after. (clarified 2026-10-29: "before" is 0.49's path — one full battery, measured on 0.49's heads, plus the
+  rule-owed Gate B calls, labelled as such; "after" is measured on fixtures. Orchestrator dev-workflow-kit-26,
+  21:47.)
 - [ ] **AC-10** Released as 0.50.0 with CHANGELOG, README and docs updated.
 
 ## 4. Affected AGENTS.md invariants
