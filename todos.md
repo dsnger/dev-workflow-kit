@@ -2203,3 +2203,15 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       removes the directory and leaves the registration, shown as prunable by `git worktree list`; the suite's
       `failadd` stub fails before git creates anything. *Trigger: a stale registration after a failed setup.*
       (Gate B cycle lcib1028gate, quality pass 1, finding 1 — accepted, not repaired)
+
+## From kit 0.48.0 Greptile optional (2026-10-29)
+
+- [ ] **"Greptile reviews every push" is stated as its default.** `/workflow-init` 2.5 (question and template
+      row), `docs/setup.md` step 9 and `docs/reference.md` § PR review bots say Greptile reviews every push
+      unless told otherwise; Greptile's `greptile.json` reference gives `autoReview` the default `["open"]`,
+      so per-push review was this account's configuration, not the product default. Reword as a configurable
+      risk and keep the explicit label and open-only settings. *Trigger: the next edit of 2.5.* (Gate B cycle
+      gr48optl, quality pass 2, finding 1 — accepted, not repaired)
+- [ ] **Part 2 of the Greptile order waits on sfx-factory #106/#107.** Factory-review skill, runnable tests,
+      risk lens, Semgrep (`.context/sparring/20261029-1145-greptile-optional-review-prompt.md` items 2 and 3).
+      *Trigger: both merged in sfx-factory.*
