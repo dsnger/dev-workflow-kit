@@ -69,8 +69,9 @@ patch-id check). A bot on for this PR that did not run is reported by name —
 `<bot>: no review on <sha>` — and never counted as clean. Why: a bot that is rate-limited or
 skipping the PR posts nothing, which looks exactly like a clean review.
 
-Ask no bot for a review: read what a bot posted if it ran. Why: every request is a paid run,
-and Gate B is the workflow's review.
+Read what each bot posted if it ran; the only review this command starts is Gate B for a
+fix (Step 3 item 3). Why: every bot request is a paid run, and Gate B is the workflow's
+review.
 
 ## Step 3 — Process
 

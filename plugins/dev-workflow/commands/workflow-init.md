@@ -982,8 +982,8 @@ request unless told otherwise, and one account spent over 700 USD in a few days 
   commit: `"labels": ["greptile"]` (review only PRs with that label) and `"autoReview": ["open"]`
   (review when the PR opens, not on a push or rebase); then they add the label `greptile` to a
   PR that should get one review. Whether a label added after the PR opened starts a review is
-  not known; if none appears, one `@greptileai` comment on the PR starts it. Write no Greptile
-  setting and no `greptile.json` yourself: its settings and billing are the user's.
+  not known; if none appears, one `@greptileai` comment on the PR starts it. Leave every
+  Greptile setting and any `greptile.json` to the user: its settings and billing are theirs.
 
 Warn the user that CodeRabbit reviews automatically only pull requests whose base is the
 default branch, unless its configuration includes the other base
