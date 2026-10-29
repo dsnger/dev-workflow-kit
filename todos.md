@@ -2215,3 +2215,8 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **Part 2 of the Greptile order waits on sfx-factory #106/#107.** Factory-review skill, runnable tests,
       risk lens, Semgrep (`.context/sparring/20261029-1145-greptile-optional-review-prompt.md` items 2 and 3).
       *Trigger: both merged in sfx-factory.*
+- [ ] **`docs/pr-review-bots.md`: two passages still give the CodeRabbit count for any bot.** The "What the
+      routing change does not touch" paragraph and fact 1 under "Then the two facts separate" say the count is
+      the arbiter for any bot, while the query paragraph now scopes it to CodeRabbit. Scope both the same way.
+      *Trigger: the next edit of that file.* (Gate B cycle cr48fix1, spec and quality pass 1, finding 1 —
+      accepted, not repaired)

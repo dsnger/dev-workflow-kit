@@ -1,0 +1,2 @@
+MINOR | high | docs/pr-review-bots.md:37-39,145-147 | Requested fix 1 is incomplete: these passages still call the query/count the arbiter for any bot, contradicting the CodeRabbit-only scope now stated at lines 95-97. | A reader can still apply the CodeRabbit-filtered count to another enabled bot, or require a review-record count where that bot uses another proof, and incorrectly report no review. | Restrict both remaining claims to CodeRabbit and refer other enabled bots to their own login and row-specific proof.
+END OF FINDINGS (1 total)
