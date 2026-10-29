@@ -2220,3 +2220,15 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       the arbiter for any bot, while the query paragraph now scopes it to CodeRabbit. Scope both the same way.
       *Trigger: the next edit of that file.* (Gate B cycle cr48fix1, spec and quality pass 1, finding 1 —
       accepted, not repaired)
+
+## From kit 0.49.0 learnings (2026-10-29)
+
+- [ ] **Stale-copy notice: the newer-record line overclaims.** Spec §2's "the installed plugin is older than this
+      project's files" should read "older than the kit version the last `/workflow-init` run recorded".
+      *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec pass 2, finding 1 — accepted, not repaired)
+- [ ] **No required check: `mergeStateStatus` UNSTABLE is undecided.** With no required check, an optional red status
+      leaves `UNSTABLE`, not `CLEAN`; `process-pr-review` Step 4 and Done need one policy for it. *Trigger: the build
+      of this story.* (Gate A cycle k049lrn1, spec pass 2, finding 2 — accepted, not repaired)
+- [ ] **No-bot line before the Wait-for step.** "None ran" must be judged after the Wait-for bots' completion
+      signals, or a bot still reviewing is skipped. *Trigger: the build of this story.* (Gate A cycle k049lrn1, spec
+      pass 2, finding 3 — accepted, not repaired)

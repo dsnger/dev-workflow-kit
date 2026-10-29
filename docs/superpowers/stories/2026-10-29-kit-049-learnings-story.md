@@ -60,7 +60,7 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - `## Key invariants` / Prompts and scaffolding — "8. **`/workflow-init`'s templates stay inline** in the command
   body."; "9. **`/workflow-init` never overwrites silently.**"; "11. **Prompt changes pass
   `docs/prompt-standards.md`**"
-- `## Key invariants` / Packaging — "12. **A plugin change requires a version bump.**"; "7. **The manifest never
+- `## Key invariants` / Packaging — "12. **A plugin change requires a version bump.**"; "6. **The manifest never
   re-declares convention-loaded components.**" (a hooks.json change is convention-loaded)
 - `### Boundaries (binding)` — "4b. `scripts/local-ci.{sh,test.sh}` (reads; creates and removes one temporary
   worktree …; posts one commit status to GitHub …)"; "5. the hook ships in the plugin, the checkers and the reports
