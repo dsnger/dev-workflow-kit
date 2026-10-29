@@ -158,7 +158,7 @@ release_only() {
   _out=$(git -c core.quotePath=true -c diff.noprefix=false diff --no-color --no-ext-diff --no-textconv \
     --no-renames --no-relative --ignore-submodules=none --submodule=short --src-prefix=a/ --dst-prefix=b/ -U0 \
     "$@" 2>/dev/null) || return 1
-  _out=$(printf '%s\n' "$_out" | LC_ALL=C awk -v mode="$_m" -v sites="$_sites" '
+  _out=$(printf '%s\n' "$_out" | sites=$_sites LC_ALL=C awk -v mode="$_m" '
     function prompt(p) { return p ~ /(^|\/)(CLAUDE|AGENTS)\.md$/ || p ~ /(^|\/)(\.claude|plugins|skills|commands|agents|hooks)\// }
     function docs(p) {
       if (prompt(p)) return 0
@@ -178,7 +178,7 @@ release_only() {
       a = vline(rem); ta = tok; b = vline(add)
       if (a == "" || b == "" || a != b) { bad = 1; return }
       old = same(old, ta); new = same(new, tok) }
-    BEGIN { n = split(sites, S, " "); for (i = 1; i <= n; i++) site[S[i]] = 1 }
+    BEGIN { n = split(ENVIRON["sites"], S, " "); for (i = 1; i <= n; i++) site[S[i]] = 1 }
     /^diff --git / {
       finish(); state = "h"; hunks = nrem = nadd = 0; kind = ""; path = ""
       l = substr($0, 12); L = length(l)
@@ -214,12 +214,10 @@ release_only() {
       _w=$(git cat-file blob "$_n:$_p" 2>/dev/null | jq -c -s 'if length == 1 and (.[0] | type) == "object" then .[0] else error("") end' 2>/dev/null) &&
       _v=$(jq -n -r --argjson o "$_o" --argjson n "$_w" '
         if ($o | del(.version)) == ($n | del(.version)) and ($o.version | type) == "string" and ($n.version | type) == "string"
-          and ([$o.version, $n.version] | all(test("[\\n\\r ]") | not))
+          and ([$o.version, $n.version] | all(test("\\A[0-9]+[.][0-9]+[.][0-9]+(-[0-9A-Za-z.]+)?\\z")))
         then "\($o.version) \($n.version)" else "NO" end' 2>/dev/null) || return 1
     _vo=${_v%% *} _vn=${_v#* }
-    for _t in "$_vo" "$_vn"; do
-      printf '%s\n' "$_t" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' || return 1
-    done
+    [ "$_v" != NO ] || return 1
     [ -z "$_old" ] || [ "$_old" = "$_vo" ] || return 1
     [ -z "$_new" ] || [ "$_new" = "$_vn" ] || return 1
     _old=$_vo _new=$_vn
