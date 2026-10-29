@@ -13,7 +13,7 @@ the spec's Gate A closed as cycle k049lrn1).
    AC-3, AC-8 read in the text.
 5. 2.1 Rule 2 pointer form (§6); 2.5 Greptile (§5); this repo's `docs/pr-review-bots.md` (§7) → verify: AC-6 by
    `grep -rni 'every push' plugins/ docs/setup.md docs/reference.md docs/getting-started.md README.md`; AC-7 text.
-6. Release-only (§8a): rules file + 2.1a (check 4i/4j), AGENTS.md Version sites, Step 3 → verify: check-invariants.
+6. ~~Release-only (§8a)~~ — moved to 0.50 with item 8 (story AC-11 withdrawn).
 7. Docs (reference, setup, getting-started, README, ARCHITECTURE, TECH-STACK, AGENTS boundaries/checks), CHANGELOG,
    version 0.49.0, `todos.md` rows closed (AC-9 + the three k049lrn1 rows) → verify: doc-link check.
 8. Quality command → Gate B (strict, floor 1, cap 5) → PR → `/dev-workflow:process-pr-review` → squash-merge.

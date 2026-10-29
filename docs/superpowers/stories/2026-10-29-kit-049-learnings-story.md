@@ -54,10 +54,7 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
 - [ ] **AC-9** The `todos.md` rows "'Greptile reviews every push' is stated as its default" and
   "`docs/pr-review-bots.md`: two passages still give the CodeRabbit count for any bot" are closed.
 - [ ] **AC-10** Version 0.49.0; CHANGELOG, README and docs updated; the quality command green.
-- [ ] **AC-11** The gate rules let a release-only commit skip Gate B: one whose every change is a version value at a
-  site the project's `AGENTS.md` lists as a version site, or inside the `CHANGELOG.md` entry for that version; a
-  commit with any other change keeps Gate B, and a project that lists no version sites has no release-only skip.
-  The hook may still remind (invariant 2).
+- [ ] **AC-11** ~~The gate rules let a release-only commit skip Gate B: one whose every change is a version value at a site the project's `AGENTS.md` lists as a version site, or inside the `CHANGELOG.md` entry for that version; a commit with any other change keeps Gate B, and a project that lists no version sites has no release-only skip. The hook may still remind (invariant 2).~~ — withdrawn 2026-10-29: moved to the 0.50 proportional-gates story (split check)
 
 **Changed 2026-10-29 — changed requirement.** Decided by Daniel, D85 (18:11), relayed by the orchestrator
 `dev-workflow-kit-26` and added as item 7 to `.context/sparring/20261029-1800-kit-049-learnings-prompt.md`.
@@ -99,3 +96,21 @@ that only bumped versions.
 
 ## 6. Suggested size
 story — six small learnings from one refresh, one spec → plan → PR, ordered by D83 as one 0.49.
+
+**Changed 2026-10-29 — change of direction.** Decided by this session's splitting check, which the orchestrator
+`dev-workflow-kit-26` delegated with item 8 ("If this makes 0.49 too large by the splitting check, split it into its
+own PR after 0.49", brief item 8, Daniel 18:17). Baseline: `bc18fda`. Item 8 redefines item 7's release-only check
+as a deterministic one, so both move together.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-1 … AC-10 | kept | none |
+| AC-11 | moved → the 0.50 proportional-gates story | withdrawn |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** none.
+- **Scope boundary:** in: AC-1 … AC-10; out: release-only and proportional gates (0.50).
+- **Open questions:** D86 (docs-only and Gate B) → the 0.50 story.
+- **Dependent artifacts:** the spec → updated in this change; the plan → updated in this change.
+- **Reviews already run:** none on AC-11.

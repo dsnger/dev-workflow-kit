@@ -126,7 +126,7 @@ of each, diffed). The "older pointer" (0.16–0.23) rule is unchanged.
 ## 8. Version and docs (AC-10)
 0.49.0 in `plugin.json`, the 2.23 template, `.claude/dev-workflow-version`; CHANGELOG entry; README.
 
-## 8a. Release-only commits (AC-11, added by amendment)
+## 8a. Release-only commits (AC-11, added by amendment; withdrawn 2026-10-29, moved to 0.50 — see the story's second change record)
 - **Rules** (`.claude/review-gates.md` and the byte-identical 2.1a template; check 4i's 10,000-byte cap holds by
   trimming words elsewhere in the same file, no rule dropped): after the docs-only definition, one sentence —
   release-only: every changed line is a version value at a site `AGENTS.md`'s **Version sites** line lists, or
