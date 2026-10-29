@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, and the copy checks 4j and 4l, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4l -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l and 4m, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4n -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, then 4l
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, then 4n
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -1160,6 +1160,55 @@ elif ! printf '%s\n' "$dl_out" | sed '$d' | cmp -s - "$dl_file"; then
        "make them byte-identical; an initialized project gets the template, this repo runs the file"
 fi
 # --- END check 4l ---
+# fence_body <heading> <fence>: the body of the single <fence> fence inside `### <heading>` of
+# the command file, then a status line `@@STATUS <headings> <fences opened> <fences closed>`.
+fence_body() {
+  awk -v h="$1" -v f="$2" '
+    infence { if ($0 == "````") { infence = 0; closed += 1 } else print; next }
+    index($0, "### " h " ") == 1 { heads += 1; insec = 1; next }
+    insec && /^##/ { insec = 0; next }
+    insec && $0 == f { opened += 1; if (opened == 1) infence = 1; next }
+    END { printf "@@STATUS %d %d %d\n", heads + 0, opened + 0, closed + 0 }
+  ' "$dl_cmd" 2>/dev/null
+}
+fence_ok() { # $1 = fence_body output, $2 = its exit status: one heading, one closed fence
+  # shellcheck disable=SC2046  # word splitting is the point: four status fields
+  set -- $(printf '%s\n' "$1" | tail -n 1) "$2"
+  [ "$5" -eq 0 ] && [ "${2:-0}" -eq 1 ] && [ "${3:-0}" -eq 1 ] && [ "${4:-0}" -eq 1 ]
+}
+# --- BEGIN check 4m ---
+# The local CI runner and its `/workflow-init` template must be byte-identical, as in 4l:
+# `scripts/local-ci.sh` and the body of the ````sh fence inside `### 2.22`. Bytes only; the
+# runner's own suite is the guard for what it does. Fails closed as 4l does.
+lc_file=scripts/local-ci.sh
+lc_out=$(fence_body 2.22 '````sh'); lc_st=$?
+if [ ! -r "$lc_file" ] || ! fence_ok "$lc_out" "$lc_st"; then
+  fail "local CI runner copies: $lc_file or the '### 2.22' template of $dl_cmd cannot be read, so the two copies cannot be compared." \
+       "expected the script, one '### 2.22' heading and one closed \`\`\`\`sh fence in it"
+elif ! printf '%s\n' "$lc_out" | sed '$d' | cmp -s - "$lc_file"; then
+  fail "local CI runner copies: $lc_file differs from the '### 2.22' template in $dl_cmd." \
+       "make them byte-identical; an initialized project gets the template, this repo runs the file"
+fi
+# --- END check 4m ---
+# --- BEGIN check 4n ---
+# The kit version `/workflow-init` records (the ````text fence of `### 2.23`), this repo's own
+# record `.claude/dev-workflow-version` and the dev-workflow manifest's "version" must be one
+# x.y.z value. Compares strings only: not whether the bump was right (invariant 12's checker).
+vr_man=plugins/dev-workflow/.claude-plugin/plugin.json vr_rec=.claude/dev-workflow-version
+vr_out=$(fence_body 2.23 '````text'); vr_st=$?
+vr_tpl=$(printf '%s\n' "$vr_out" | sed '$d')
+vr_m=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$vr_man" 2>/dev/null)
+vr_r=$(cat "$vr_rec" 2>/dev/null)
+# One line each, as the hook reads the record: a trailing blank line would pass the string compare.
+vr_tl=$(printf '%s\n' "$vr_out" | sed '$d' | grep -c '') vr_rl=$(grep -c '' "$vr_rec" 2>/dev/null)
+if ! fence_ok "$vr_out" "$vr_st" || ! printf '%s\n' "$vr_m" | grep -qxE '[0-9]+\.[0-9]+\.[0-9]+'; then
+  fail "kit version record: the '### 2.23' template of $dl_cmd or the version in $vr_man cannot be read." \
+       "expected one '### 2.23' heading with one closed \`\`\`\`text fence, and one x.y.z \"version\""
+elif [ "$vr_tpl" != "$vr_m" ] || [ "$vr_r" != "$vr_m" ] || [ "$vr_tl" != 1 ] || [ "$vr_rl" != 1 ]; then
+  fail "kit version record: $vr_man says $vr_m, the '### 2.23' template says ${vr_tpl:-nothing} ($vr_tl lines), $vr_rec says ${vr_r:-nothing} (${vr_rl:-0} lines)." \
+       "a version bump sets all three to the same x.y.z, each template and record one line"
+fi
+# --- END check 4n ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

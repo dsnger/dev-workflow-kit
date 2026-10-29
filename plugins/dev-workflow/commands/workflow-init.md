@@ -287,9 +287,12 @@ definitions of the rules, or none — and the rules themselves stop on either.
 2. **Classify §5:**
    - **pointer form** — the body after the heading line is byte-identical to the pointer
      under §5 in the `CLAUDE.md` template below, optionally preceded by exactly the `INACTIVE` notice
-     from 2.13 and one blank line. The pointer written before 0.26.0 counts too: the same text
-     without the paragraph beginning `**Before you conclude that file is missing,**` and the blank
-     line after it. Rule 2 then shows that paragraph as the difference and recommends adding it;
+     from 2.13 and one blank line. A pointer from an earlier kit counts too: the same text without
+     the paragraph beginning `**Before you conclude that file is missing,**` (kit 0.24–0.25), without
+     the paragraph beginning `**Before the session's first Gate A or Gate B call,**` (0.26–0.43), or
+     without both, each missing paragraph taken with its adjacent blank line. Rule 2 then shows the
+     missing paragraphs as the difference and recommends adding them. Why: classified as **mixed**,
+     such a pointer stopped the run although replacing it is exactly the fix;
    - **older pointer** — the body after the heading line, with the same optional `INACTIVE`
      notice, is byte-identical to the pointer that 0.16.0–0.23.0 wrote, between these fence
      lines:
@@ -533,7 +536,7 @@ Where `superpowers:writing-plans` asks for code blocks in every code step, compl
 
 **Autonomous run.** By default the work runs from intake to merge without a human stop: intake → spec → Gate A (as the gate mode decides) → plan (Gate A when its risk is `high`) → build → Gate B → pull request → `/dev-workflow:process-pr-review` → squash-merge → handover. A closed gate is the approval. The story header's `**Checkpoints:**` line, set once at intake, opts in to human stops: `spec` (the story draft, and the spec once its Gate A closes, or once committed when Gate A is skipped, before planning), `plan` (the plan, before building), `merge` (before the squash-merge); `none`, the default, and a story without the line set none. These stop whatever that line says: a finding the gate rules send to the human at a pass cap; the quality command still red after 5 rounds (not in `classic`); a change to an approved commitment (the amendment route); a destructive or irreversible action outside the branch; missing access or licence; the plan's actions outside the repository, asked for together once its Gate A closes, or once it is written when it gets none. Why that one: an approval knowable at plan time and asked mid-build stalls the run for hours. Decide every other question yourself, take your own recommendation, and record it under "Decisions" in the spec, or in the pull request body when there is no spec; in a run, §1's "ask" and "stop" mean exactly this, and only these stops and a set checkpoint wait for the human. Where a superpowers skill asks the human, `brainstorming`'s design approval is the spec's approval as `.claude/review-gates.md` defines it and `writing-plans`' execution choice is subagent-driven development in this session. Why: a stop with nothing left for a human to decide only delays the merge, and the gates already reviewed what it would approve.
 
-**Waiting on external work.** Before waiting on a run outside this session — a CI run, a deploy, a remote job — confirm it exists for its trigger (the push, or the manual start): its id seen and a status read. Queued, in progress or waiting for approval: wait. Already finished: read its result. When no run appears within 5 minutes of the trigger, its status cannot be read, or the wait passes its limit — twice the run's usual duration, or 60 minutes when that is unknown, counted from the trigger and never restarted — stop waiting and treat it as a failed check: find the cause (for a run that never appeared, often an invalid workflow file) and report the id or its absence, the last status and the time waited. Why: a session waited 15 hours on a CI run that GitHub never started, because its workflow file was invalid.
+**Waiting on external work.** Before waiting on a run outside this session — a CI run, a deploy, a remote job — confirm it exists for its trigger (the push, or the manual start): its id seen and a status read. Queued, in progress or waiting for approval: wait. Already finished: read its result. For a pull request, first read which checks its target branch requires: `gh api repos/<owner>/<repo>/branches/<base> --jq '.protection.required_status_checks.checks[]?'` and every page of `gh api --paginate 'repos/<owner>/<repo>/rules/branches/<base>?per_page=100' --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[]'`, `<base>` checked against `^[A-Za-z0-9._/-]+$` first. None required, both read in full: a run that never appears is no failed check; the quality command (`AGENTS.md § Commands`) passing on the final head is the green, and the PR body records `run id: none`, the reason (for example the Actions budget), the SHA, the exit status and the duration. A required check that no run and no local reporter will produce (one restricted to another source counts), or a read that fails: stop and report the check and why nothing produces it. When no run appears within 5 minutes of the trigger, its status cannot be read, or the wait passes its limit — twice the run's usual duration, or 60 minutes when that is unknown, counted from the trigger and never restarted — stop waiting and treat it as a failed check: find the cause (for a run that never appeared, often an invalid workflow file) and report the id or its absence, the last status and the time waited. Why: a session waited 15 hours on a CI run that GitHub never started, because its workflow file was invalid.
 
 **One source of green.** Unless the gate mode is `classic` (`.claude/review-gates.md`), the quality command in `AGENTS.md § Commands` is the one source of green: run it, fix, rerun, at most 5 rounds. A crashing, missing or timed-out tool, or a run that cannot start, counts as red, except a timeout the gate rules' untouched-test rule covers. Why: one deterministic command decides green, so the gates review what it cannot instead of checking the same thing again.
 
@@ -974,12 +977,18 @@ review comments, the PR summary body, or both. Do not guess, and do not assume t
 answer is stable: a bot can post a summary on one PR and inline comments on the next,
 so a column may honestly read `inconsistent`. Record what was observed and when.
 
-Ask whether this project wants Greptile, **default no**: it reviews every push of every pull
-request unless told otherwise, and one account spent over 700 USD in a few days that way.
+Ask whether this project wants Greptile, **default no**. Per-push review is a Greptile setting
+(`autoReview` with `push` or `rebase`, or the legacy `"triggerOnUpdates": true`), not its default, which
+is `"autoReview": ["open"]`, one review when a PR opens; an account configured for per-push review spent
+over 700 USD in a few days. Three answers:
 - **No** (or no answer): a `Greptile | no` row, and Greptile under **Ignore** as off. Tell the
   user this changes only the kit's routing: if Greptile is installed on the repository, it keeps
   reviewing, and billing, until they turn its automatic reviews off in Greptile.
-- **Yes**: Greptile under **Process opportunistically** as `only with label greptile, once per
+- **On request**: Greptile under **Process opportunistically** as `once per PR`. Tell the user what
+  they set themselves, in Greptile's dashboard or a `greptile.json` they commit: `"autoReview": []`
+  (never review unasked; a manual trigger still works); then a comment `@greptileai` on a PR starts one
+  review. Leave every Greptile setting to the user.
+- **Label**: Greptile under **Process opportunistically** as `only with label greptile, once per
   PR`. Tell the user what they set themselves, in Greptile's dashboard or a `greptile.json` they
   commit: `"labels": ["greptile"]` (review only PRs with that label) and `"autoReview": ["open"]`
   (review when the PR opens, not on a push or rebase); then they add the label `greptile` to a
@@ -1009,7 +1018,7 @@ silently drops real findings.
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | <bot name> | yes/no | inline / summary / both / **inconsistent** | <where observed and when; how you know it has finished — a status check is not guaranteed> |
-| Greptile | <no, the default / yes: only on PRs labelled `greptile`, once per PR> | <as observed> | <off by default: it reviews every push unless its own settings say `labels: ["greptile"]` and `autoReview: ["open"]`> |
+| Greptile | <no, the default / on request: `@greptileai` comment, once per PR / label: only on PRs labelled `greptile`, once per PR> | <as observed> | <the kit's default is off; Greptile's own default reviews each PR once when it opens (`autoReview: ["open"]`); on request is `autoReview: []`; per-push review only if its settings add `push`/`rebase`> |
 
 **Routing — these lists are authoritative.** Ask the user; do not derive these from
 column 3, which records where findings appear rather than how to act on them. An entry
@@ -2031,6 +2040,184 @@ broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
 done)
 if [ -n "$broken" ]; then printf '%s\n' "$broken"; exit 1; fi
 printf 'doc links: ok\n'
+````
+
+### 2.22 `scripts/local-ci.sh` — the battery on this machine (asked)
+
+For a project whose pull requests need a green `quality` check while GitHub Actions cannot run it
+(budget used up, Actions off, or local chosen up front). The script runs the quality row of
+`AGENTS.md § Commands` on one commit in a temporary worktree it removes afterwards, and posts the
+result to GitHub as that commit's `quality` commit status.
+
+**Ask first, with a default from the branch rules.** Read which checks the default branch requires,
+as `CLAUDE.md` §4 "Waiting on external work" reads them (classic protection and every ruleset rule,
+all pages, each with its source id). Default **yes** when a check named `quality` is required with no
+source restriction; else **no**. When `quality` is restricted to one source (a non-null
+`integration_id` or `app_id`), say that a status posted by `gh` cannot satisfy it, and that lifting
+the restriction in the ruleset or branch protection is the user's decision, to make before any switch.
+On yes, Rules 1–2 apply as to any target; write the script byte for byte as below (the kit runs the
+same file, and its check 4m keeps the two identical).
+
+Tell the user, in the report:
+- **The quality row** must be one command in backticks as the row's last cell, and it runs in a fresh
+  worktree of the commit: if it needs installed dependencies, it installs them itself first (for
+  example a frozen-lockfile install), as the CI job does.
+- **Switching** is theirs: `gh workflow disable <the workflow that posts quality>` before pushing the
+  commit they will run locally, because a same-name Actions check run already on a commit must pass
+  too; then, per head, `git fetch origin` and `sh scripts/local-ci.sh <sha>` from the repository root;
+  `gh workflow enable <workflow>` switches back. It needs `gh` logged in for github.com. Any change to
+  a ruleset, a branch protection or a workflow's state is the user's, never this command's.
+- **Trust:** it runs that commit's own code on this machine, so run it only on commits they have read,
+  never on a fork's head; anyone with write access can post a `quality` status by hand.
+
+````sh
+#!/bin/sh
+# Local CI: run the quality battery of one commit in a temporary detached worktree and post the
+# result to GitHub as that commit's `quality` status.
+# From the dev-workflow kit, which ships it to projects as `/workflow-init` 2.22 (the same bytes);
+# its regression suite is the kit's scripts/local-ci.test.sh.
+#
+# Usage: sh scripts/local-ci.sh [<commit>]
+#   <commit>  any commit-ish (default HEAD) of the repository containing the current directory
+#
+# PRECONDITIONS, in this order; a failure prints one line, exits 64 and posts nothing:
+#   1. <commit> resolves to a commit; the script works on its full SHA from then on
+#   2. origin's URL names a github.com repository (https://, ssh://git@ or git@ form); owner and
+#      repository come from it alone, never from GH_REPO or GH_HOST
+#   3. gh is on PATH and `gh auth status --hostname github.com` succeeds
+#   4. when that commit's .github/workflows/ci.yml names koalaman/shellcheck:v<version>, every
+#      such pin agrees, and it is the `version:` of `shellcheck --version`; a commit without that
+#      file or without a pin skips this check
+#   5. that commit's AGENTS.md has exactly one line starting with "| quality ", whose last cell is
+#      one command in backticks; that text runs verbatim under `sh -c`
+#
+# WHAT IT DOES: unsets the repository-selecting GIT_* variables first, so an inherited GIT_DIR
+# cannot aim the run at another repository; adds a detached worktree of the SHA in a `mktemp -d`
+# directory under TMPDIR (default /tmp; uncommitted changes never reach it); runs the quality
+# command there in the foreground, output passed through; posts state success (exit 0) or failure
+# (any other status), context quality and the description
+# "battery green|red: local run, shellcheck <v>, claude <v>" (the shellcheck part only with a
+# pin; claude "unknown" when its version cannot be read) with `gh api`, REST API version 2026-03-10; prints the SHA, state and
+# description in one line. On every exit it removes the worktree (`git worktree remove --force`
+# of that path only, never a prune) and the directory; a failed removal keeps both and prints the
+# command that finishes it. Its own parsing runs under LC_ALL=C; the battery keeps the caller's
+# locale, as in a manual run.
+#
+# SIGNALS: HUP, INT or TERM is handled once the running command returns (nothing forwards it, so
+# a hung stage delays it); the worktree is then removed and the script exits 128+n without
+# posting. Ctrl-C in a terminal reaches the whole process group and stops the command at once. A
+# signal after the post was sent cannot undo it.
+#
+# WHAT IT DOES NOT: fetch (run `git fetch origin` first, so origin/main is current); push (an
+# unpushed SHA fails the post with GitHub's 422, exit 75); judge whether the commit's code is safe
+# to run; check claude's version against the CI pin; post pending, error or a target_url;
+# serialize parallel runs; enable or disable the Actions workflow; interrupt a running stage.
+#
+# EXIT: 0 green and posted; the battery's own status when red and posted; 75 when the battery ran
+# but the post failed, green or red; 64 on a usage error, a precondition or a setup failure
+# (nothing ran, nothing posted); 128+n after signal n.
+# shortcut: a battery stage that itself exits 64 or 75 reads like those outcomes by status alone
+# (the printed line tells them apart; no stage exits either today), split the codes if one does.
+# shortcut: a quality command containing `|` is not supported (its cell starts after the row's
+# last `|`), move such a pipeline into a script if one is ever needed.
+#
+# POSIX sh plus git and gh.
+set -u
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CEILING_DIRECTORIES
+
+usage() { printf 'usage: sh scripts/local-ci.sh [<commit>]\n' >&2; exit 64; }
+# refuse <condition; what to do>: one line on stderr and exit 64, before anything ran.
+refuse() { printf 'local-ci: %s\n' "$1" >&2; exit 64; }
+
+[ $# -le 1 ] || usage
+case ${1-} in -*) usage ;; esac
+rev=${1:-HEAD}
+
+git rev-parse --show-toplevel >/dev/null 2>&1 ||
+  refuse 'the current directory is not inside a git work tree; run it from the repository root'
+sha=$(git rev-parse --verify -q "$rev^{commit}" 2>/dev/null) ||
+  refuse "$rev does not name a commit here; pass a commit, branch or tag of this repository"
+url=$(git remote get-url origin 2>/dev/null)
+slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | LC_ALL=C sed 's/\.git$//')
+[ -n "$slug" ] ||
+  refuse 'origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
+command -v gh >/dev/null 2>&1 ||
+  refuse 'gh is not on PATH; install the GitHub CLI, then run gh auth login --hostname github.com'
+gh auth status --hostname github.com >/dev/null 2>&1 ||
+  refuse 'gh auth status --hostname github.com failed; run it to see why, then gh auth login --hostname github.com'
+# The distinct versions of every koalaman/shellcheck:v<version>: none skips the check (empty pin),
+# one passes (printed), more refuse.
+pin=$(git show "$sha:.github/workflows/ci.yml" 2>/dev/null | LC_ALL=C awk '
+  { s = $0
+    while (match(s, /koalaman\/shellcheck:v[A-Za-z0-9_.-]+/)) {
+      v = substr(s, RSTART + 21, RLENGTH - 21); if (!(v in seen)) { seen[v] = 1; n++ }
+      s = substr(s, RSTART + RLENGTH) } }
+  END { if (n == 1) print v; exit (n > 1) }') ||
+  refuse ".github/workflows/ci.yml at $sha pins more than one shellcheck version; pin one koalaman/shellcheck:v<version>"
+if [ -n "$pin" ]; then
+  have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
+  [ "$have" = "$pin" ] ||
+    refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
+fi
+# The quality row's last cell, the text between its backticks; the label may hold backticks or \|.
+cmd=$(git show "$sha:AGENTS.md" 2>/dev/null | LC_ALL=C awk '
+  index($0, "| quality ") == 1 { n++; row = $0 }
+  END {
+    if (n != 1) exit 1
+    sub(/[ \t]*[|][ \t]*$/, "", row)
+    cell = substr(row, match(row, /[|][^|]*$/) + 1)
+    gsub(/^[ \t]+|[ \t]+$/, "", cell)
+    if (cell !~ /^`[^`]*[^` \t][^`]*`$/) exit 1
+    print substr(cell, 2, length(cell) - 2) }') ||
+  refuse "AGENTS.md at $sha has no single quality row with one command in backticks as its last cell; keep exactly one \"| quality \" row"
+# Only a version-shaped first word goes into the public description, never a path or a name.
+cv=$(claude --version 2>/dev/null | LC_ALL=C awk 'NR == 1 && $1 ~ /^[0-9][0-9A-Za-z.+-]*$/ { print $1 }')
+
+tmp='' added=''
+# Remove the worktree (that path only, never a prune) and the directory; a failed removal keeps
+# both and names the command that finishes it. The exit status stays the run's.
+# shellcheck disable=SC2329  # run by the EXIT trap; every path below ends in exit, which hides that
+cleanup() {
+  [ -n "$tmp" ] || return
+  if [ -n "$added" ] && ! git worktree remove --force "$tmp/wt" >/dev/null 2>&1; then
+    printf "local-ci: could not remove %s; run: git worktree remove --force '%s'\n" "$tmp/wt" "$tmp/wt" >&2
+  else
+    rm -rf "$tmp"
+  fi
+}
+trap cleanup EXIT
+trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
+# An explicit template: macOS's bare `mktemp -d` ignores TMPDIR.
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/local-ci.XXXXXX") || refuse 'could not create a temporary directory; check TMPDIR'
+git worktree add --quiet --detach "$tmp/wt" "$sha" || refuse "could not add a worktree of $sha; see the git error above"
+added=1
+
+(cd "$tmp/wt" && sh -c "$cmd")
+st=$?
+
+if [ "$st" -eq 0 ]; then state=success; desc='battery green'; else state=failure; desc='battery red'; fi
+desc="$desc: local run,${pin:+ shellcheck $pin,} claude ${cv:-unknown}"
+if gh api --hostname github.com --method POST -H "X-GitHub-Api-Version: 2026-03-10" "repos/$slug/statuses/$sha" \
+  -f state="$state" -f context=quality -f description="$desc" >/dev/null; then
+  printf 'local-ci: posted quality=%s on %s: %s\n' "$state" "$sha" "$desc"
+  exit "$st"
+fi
+printf 'local-ci: post failed for quality=%s on %s; rerun after fixing gh\n' "$state" "$sha" >&2
+exit 75
+````
+
+### 2.23 `.claude/dev-workflow-version` — the kit version of this run
+
+Write it last, after every other target, as the one line in the fence below. Rules 1–2 apply: missing →
+write; identical → unchanged; different → show the recorded and the new version and recommend writing
+(this run is the refresh). The gate hook compares it with the installed plugin's version at every session
+start and tells the session when they differ, so a project left on older kit files is named. Say in the
+report that it records the kit version of the last `/workflow-init` run, not that every file was
+accepted. The kit's check 4n keeps the line equal to the plugin's version.
+
+````text
+0.49.0
 ````
 
 ## Step 3 — Walk the user through `AGENTS.md`

@@ -22,6 +22,35 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.49.0
+
+Learnings from the 0.48 project refresh (story `docs/superpowers/stories/2026-10-29-kit-049-learnings-story.md`,
+design `docs/superpowers/specs/2026-10-29-kit-049-learnings-design.md`). Minor: a new hook output and two new
+templates.
+
+- **Stale-copy notice.** `/workflow-init` 2.23 writes `.claude/dev-workflow-version`, the kit version of its run.
+  The hook now also runs at every session start (`startup`, `resume`, `clear`, `compact`, `fork`) and, in an adopted
+  project, prints one line when that record is missing, unreadable or differs from the installed plugin's
+  version: refresh with `/workflow-init`, or, when the record is newer, update the plugin first. It still
+  always exits 0. Check 4n keeps the template, this repository's record and the manifest at one version.
+- **No CI run is no red check.** `CLAUDE.md` §4 "Waiting on external work" (and its template) reads which checks
+  the target branch requires (classic protection and every ruleset rule, all pages, with source ids). None
+  required: the quality command on the final head is the green, recorded in the PR body (`run id: none`,
+  reason, SHA, exit, duration). A required check nothing will produce, or an unreadable answer: stop and
+  report. `process-pr-review` Steps 1, 3 (item 6) and 4 and Done read the same way; with no required check,
+  `UNSTABLE` counts as `CLEAN` when that record is green.
+- **Local CI in projects.** `/workflow-init` 2.22 offers `scripts/local-ci.sh`, byte-identical to the kit's
+  (check 4m); default yes when the default branch requires an unrestricted `quality` check. The script now skips
+  the shellcheck parity check when a commit's `ci.yml` has no pin, and drops the shellcheck part of the status
+  description then. Ruleset, protection and workflow changes stay the user's.
+- **Greptile text.** Greptile's own default is `autoReview: ["open"]`, one review when a PR opens; per-push
+  review is a setting. 2.5 adds the on-request path (`autoReview: []`, a review on an `@greptileai` comment)
+  beside the label path.
+- **`/workflow-init` 2.1.** A §5 pointer from kit 0.24–0.43 (without the "Before you conclude" paragraph, the
+  Codex-probe paragraph, or both) is pointer form and gets the replacement offered, instead of a "mixed" stop.
+- **No PR bots.** `process-pr-review` Step 2 writes `PR bots: none ran on <sha>` after the Wait-for step and
+  goes on; this repository's bot file routes CodeRabbit (removed 2026-10-29) under Ignore.
+
 ## 0.48.0
 
 Greptile optional (story `docs/superpowers/stories/2026-10-29-kit-greptile-optional-story.md`, design

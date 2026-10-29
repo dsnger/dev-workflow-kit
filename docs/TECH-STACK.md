@@ -10,7 +10,7 @@ appear in a second place (the prerequisites paragraph restates the CI pins of sh
 | Tool | Role | Where its version lives |
 |---|---|---|
 | POSIX `sh` and `dash` | run the hook and every shell suite; the battery runs the hook suite under both | addressed by name as system shells: [`AGENTS.md` § Commands](../AGENTS.md#commands), prerequisites paragraph |
-| shellcheck | lints the hook, the three checkers and every suite the battery lists | CI: the pinned image in [`ci.yml`](../.github/workflows/ci.yml); local: the prerequisites paragraph; `scripts/local-ci.sh` refuses a local version other than the `ci.yml` pin |
+| shellcheck | lints the hook, the three checkers and every suite the battery lists | CI: the pinned image in [`ci.yml`](../.github/workflows/ci.yml); local: the prerequisites paragraph; `scripts/local-ci.sh` refuses a local version other than the `ci.yml` pin (a commit without a pin, as in most projects, skips that check) |
 | `python3` | runs the six reports and their suites | minimum stated in the prerequisites paragraph |
 | git | used by the hook and the reports | minimum stated in the prerequisites paragraph |
 | `claude` CLI | `claude plugin validate` in the battery and CI | [`ci.yml`](../.github/workflows/ci.yml), the npm install step; restated in the prerequisites paragraph |

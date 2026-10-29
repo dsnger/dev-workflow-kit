@@ -69,6 +69,12 @@ $LR_LINES"
   printf '# A\n' > "$1/AGENTS.md"
   # 4l: identical to the `### 2.21` fence body tpl_sections writes.
   mkdir -p "$1/scripts"; printf 'x\n' > "$1/scripts/check-doc-links.sh"
+  # 4m: identical to the `### 2.22` fence body; 4n: the same x.y.z in the `### 2.23` fence,
+  # the repo's own record and the dev-workflow manifest.
+  printf 'y\n' > "$1/scripts/local-ci.sh"
+  printf '1.2.3\n' > "$1/.claude/dev-workflow-version"
+  mkdir -p "$1/plugins/dev-workflow/.claude-plugin"
+  printf '%s\n' '{"name": "dev-workflow", "version": "1.2.3"}' > "$1/plugins/dev-workflow/.claude-plugin/plugin.json"
 }
 # A valid `### 2.1` section: a heading and a small fenced CLAUDE.md template.
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
@@ -101,7 +107,7 @@ sd_section() {
 # section that closes the file (4k).
 # shellcheck disable=SC2016  # literal Markdown fence, not command substitution
 tpl_sections() {
-  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n\n%s\n\n%s\n' "$1" "$2" "${3:-}" "${4:-$(sd_section)}" "$DL_SECTION"
+  printf '%s\n\n### 2.1a review-gates\n\n````markdown\n%s\n````\n\n### 2.2 next\n\n%s\n\n%s\n\n%s\n\n%s\n' "$1" "$2" "${3:-}" "${4:-$(sd_section)}" "$LC_SECTION" "$DL_SECTION"
 }
 # 4l: a `### 2.21` section whose ````sh fence body is byte-identical to the fixture's
 # scripts/check-doc-links.sh, which init_prompt_fixtures writes as the single line `x`.
@@ -110,6 +116,20 @@ DL_SECTION='### 2.21 doc links
 
 ````sh
 x
+````'
+# 4m and 4n (written before `### 2.21`, which the 4l cases expect to close the file): a `### 2.22` fence equal to the fixture's scripts/local-ci.sh (`y`) and a `### 2.23`
+# fence holding the fixture's version.
+# shellcheck disable=SC2016  # literal Markdown fence, not command substitution
+LC_SECTION='### 2.22 local ci
+
+````sh
+y
+````
+
+### 2.23 version record
+
+````text
+1.2.3
 ````'
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
@@ -541,6 +561,8 @@ done
 #   4l -> 5    every `4l:` reject case (5); no accept case moved (measured 2026-10-23, when
 #              4l was added). The shared initializer and `tpl_sections` gained the script and
 #              the `### 2.21` section the same day; 4a-4k were not re-measured after it.
+#   4m, 4n     added 2026-10-29 (0.49) with their cases and the shared `fence_body`; NOT measured
+#              yet, and 4a-4l were not re-measured after the initializer gained their fixtures.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1563,6 +1585,41 @@ dl_case "4l: two fences in 2.21 rejected"                 1 x \
   "$(sd_cmd "$(sd_section)"; printf '\n````sh\nx\n````\n')" 'cannot be compared'
 dl_case "4l: unclosed fence rejected"                     1 x \
   "$(sd_cmd "$(sd_section)" | sed '$d')" 'cannot be compared'
+
+# --- Checks 4m (local CI runner copies) and 4n (kit version record) ----------------------
+LV='local CI runner copies:' VR='kit version record:'
+lv_case() { # $1 = name, $2 = 1|0 expect reject, $3 = diagnostic prefix, $4 = diagnostic a reject
+  #          must carry, then a shell snippet run inside the fixture before the checker
+  rm -rf "$work/r"; mkdir -p "$work/r/scripts" "$work/r/.github/workflows"
+  cp "$CHECKER" "$work/r/scripts/"
+  init_prompt_fixtures "$work/r"
+  printf '%s\n' "$PINNED" > "$work/r/.github/workflows/ci.yml"
+  ( cd "$work/r" && eval "$5" )
+  out=$( cd "$work/r" && sh scripts/check-invariants.sh 2>&1 ); st=$?
+  if [ "$2" -eq 1 ]; then
+    if [ "$st" -eq 0 ]; then fail "$1 (exited 0)"
+    elif ! printf '%s' "$out" | grep -qF -- "$3" || ! printf '%s' "$out" | grep -qF -- "$4"; then
+      fail "$1 (wrong diagnostic: $(printf '%s' "$out" | tr '\n' ' '))"
+    else pass "$1"; fi
+  else
+    if [ "$st" -eq 0 ]; then pass "$1"
+    else fail "$1 (exited $st: $(printf '%s' "$out" | tr '\n' ' '))"; fi
+  fi
+}
+cmdf=plugins/dev-workflow/commands/workflow-init.md
+lv_case "4m: identical copies accepted"            0 "$LV" '' ':'
+lv_case "4m: runner one line longer rejected"      1 "$LV" 'differs from the' "printf 'y\nz\n' > scripts/local-ci.sh"
+lv_case "4m: missing runner rejected"              1 "$LV" 'cannot be compared' 'rm -f scripts/local-ci.sh'
+lv_case "4m: no 2.22 heading rejected"             1 "$LV" 'cannot be compared' "sed 's/^### 2\.22 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
+lv_case "4n: three equal versions accepted"        0 "$VR" '' ':'
+lv_case "4n: manifest bumped alone rejected"       1 "$VR" 'says 1.2.4' "sed 's/1\.2\.3/1.2.4/' plugins/dev-workflow/.claude-plugin/plugin.json > t && mv t plugins/dev-workflow/.claude-plugin/plugin.json"
+lv_case "4n: template differs rejected"            1 "$VR" "template says 1.2.2" "sed 's/^1\.2\.3\$/1.2.2/' $cmdf > t && mv t $cmdf"
+lv_case "4n: repo record differs rejected"         1 "$VR" '.claude/dev-workflow-version says 1.2.9' "printf '1.2.9\n' > .claude/dev-workflow-version"
+lv_case "4n: repo record missing rejected"         1 "$VR" 'says nothing' 'rm -f .claude/dev-workflow-version'
+lv_case "4n: repo record with a trailing blank line rejected" 1 "$VR" '(2 lines)' "printf '1.2.3\\n\\n' > .claude/dev-workflow-version"
+lv_case "4n: template with a trailing blank line rejected" 1 "$VR" '(2 lines)' "awk '{ print } \$0 == \"1.2.3\" { print \"\" }' $cmdf > t && mv t $cmdf"
+lv_case "4n: no 2.23 heading rejected"             1 "$VR" 'cannot be read' "sed 's/^### 2\.23 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
+lv_case "4n: non-x.y.z manifest version rejected"  1 "$VR" 'cannot be read' "sed 's/1\.2\.3/1.2/' plugins/dev-workflow/.claude-plugin/plugin.json > t && mv t plugins/dev-workflow/.claude-plugin/plugin.json"
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

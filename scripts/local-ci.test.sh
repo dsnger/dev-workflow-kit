@@ -124,12 +124,12 @@ auth_call() { [ "$(sed -n 1,4p "$work/gh.args" 2>/dev/null)" = "$(printf '%s\n' 
 called() {
   [ "$(sed -n '/^api$/,$p' "$work/gh.args" 2>/dev/null | grep -v '^env ')" = "$(printf '%s\n' api \
     --hostname github.com --method POST -H 'X-GitHub-Api-Version: 2026-03-10' "repos/acme/widgets/statuses/$3" \
-    -f "state=$1" -f context=quality -f "description=battery $2: local run, shellcheck 0.11.0, claude ${4:-9.9.9}")" ]
+    -f "state=$1" -f context=quality -f "description=battery $2: local run, ${SCP-shellcheck 0.11.0, }claude ${4:-9.9.9}")" ]
 }
 # posted: called, and the last stdout line reports that post.
 posted() {
   called "$@" &&
-    [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=$1 on $3: battery $2: local run, shellcheck 0.11.0, claude ${4:-9.9.9}" ]
+    [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=$1 on $3: battery $2: local run, ${SCP-shellcheck 0.11.0, }claude ${4:-9.9.9}" ]
 }
 # finished <rc> <state> <word> <sha> [<claude version>]: exit <rc>, the battery ran at <sha>, that
 # post was made and reported, and nothing is left behind.
@@ -185,10 +185,19 @@ refused "7 shellcheck 0.10.0 against a 0.11.0 pin: exit 64, nothing ran" \
   'local-ci: local shellcheck is 0.10.0, ci.yml pins 0.11.0; install shellcheck 0.11.0'
 fixture; printf 'a: koalaman/shellcheck:v0.11.0\nb: koalaman/shellcheck:v0.10.0\n' | put .github/workflows/ci.yml; run
 refused "8 ci.yml pinning two versions: exit 64" \
-  "local-ci: .github/workflows/ci.yml at $(sha_of HEAD) does not pin exactly one shellcheck version; pin one koalaman/shellcheck:v<version>"
-echo 'no pin' | put .github/workflows/ci.yml; run
-refused "8 ci.yml without a pin: exit 64" \
-  "local-ci: .github/workflows/ci.yml at $(sha_of HEAD) does not pin exactly one shellcheck version; pin one koalaman/shellcheck:v<version>"
+  "local-ci: .github/workflows/ci.yml at $(sha_of HEAD) pins more than one shellcheck version; pin one koalaman/shellcheck:v<version>"
+# 0.49: a project without the kit's pin (no ci.yml, or one without a shellcheck pin) skips the
+# parity check, and the description drops the shellcheck part; a mismatched local shellcheck
+# proves the check did not run.
+echo 'no pin' | put .github/workflows/ci.yml; echo 0.10.0 > "$work/shellcheck.v"; run
+SCP=''; finished 0 success green "$(sha_of HEAD)" && pass "8 ci.yml without a pin: no parity check, no shellcheck part" ||
+  fail "8 ci.yml without a pin ($(diag))"
+fixture; git -C "$work/r" rm -q .github/workflows/ci.yml && git -C "$work/r" commit -q -m 'no ci'
+echo 0.10.0 > "$work/shellcheck.v"; run
+finished 0 success green "$(sha_of HEAD)" && pass "8 no ci.yml: no parity check, no shellcheck part" ||
+  fail "8 no ci.yml ($(diag))"
+unset SCP; echo 0.11.0 > "$work/shellcheck.v"
+fixture
 printf 'a: koalaman/shellcheck:v0.11.0 \\\nb: koalaman/shellcheck:v0.11.0\n' | put .github/workflows/ci.yml; run
 finished 0 success green "$(sha_of HEAD)" && pass "8 several pins of one version pass" || fail "8 one version twice ($(diag))"
 
