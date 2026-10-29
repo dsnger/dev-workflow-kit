@@ -30,7 +30,7 @@ Greptile optional (story `docs/superpowers/stories/2026-10-29-kit-greptile-optio
 - **`process-pr-review`.** Reads, waits for and reports only the bots on for this PR: a bot under Ignore (off)
   is not reported as `no review on <sha>`, and an entry may say `only with label <name>` and `once per PR` (a
   review of any head counts, and the report names it). It asks no bot for a review. Step 4: a new head whose PR
-  diff has the same `git patch-id --stable` as the checked head (a base update alone) starts no Gate B, and the
+  diff has the same `git patch-id --verbatim` as the checked head (a base update alone) starts no Gate B, and the
   checked head's reviews count for it.
 - **`/workflow-init` 2.5.** Asks whether Greptile is wanted, default no, and records the answer in the
   `docs/pr-review-bots.md` template; for yes it names the settings the user sets in Greptile

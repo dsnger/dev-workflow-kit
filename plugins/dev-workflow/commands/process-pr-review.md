@@ -19,7 +19,7 @@ honestly read `inconsistent`; that is an observation, never a routing instructio
 
 A bot is **on for this PR** unless it is under **Ignore** (a bot that is off sits there, its
 row reading `Enabled: no`) or its list entry says `only with label <name>` and the PR does not
-carry that label (`gh pr view --json labels`). A bot that is not on for this PR is not read,
+carry that label (`gh pr view <n> --json labels`, `<n>` the PR this run processes). A bot that is not on for this PR is not read,
 waited for or reported. An entry saying `once per PR` means the bot reviews one head of the PR,
 not every push: a review of any head of this PR counts, and the report names that head. Why:
 a bot that reviews every push can cost more than the work it reviews, so a project may run it
@@ -268,13 +268,18 @@ claim has a verdict, a terminal disposition and a reply; no item-4 question is u
 the required check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
 `headRefOid` equal to the head this run checked and claims on. A different head means
 commits arrived meanwhile: run Steps 1-3 again on it first. **A base update alone starts no
-review.** After `git fetch origin`, compute for the checked head and the new one
-`git diff "$(git merge-base origin/<baseRefName> <sha>)" <sha> | git patch-id --stable`
-(`baseRefName` from `gh pr view <n> --json baseRefName`). Equal, non-empty first fields mean
-the PR diff is unchanged: Step 3 starts no Gate B, every review of the checked head counts for
-the new one, and Step 1 and the last read still run. An empty output, a failed command or
-different ids: the diff changed, as before. Why: a branch update that only brings the base
-in changes no line anyone reviewed. Merge that head and no other,
+review.** Take `baseRefName` from `gh pr view <n> --json baseRefName`; before filling it or a
+`<sha>` into the command below, check that the name matches `^[A-Za-z0-9._/-]+$` and each
+`<sha>` matches `^[0-9a-f]{40}$`, because a branch name may legally hold shell syntax. When a
+value fails, run nothing and treat the diff as changed. After `git fetch origin`, compute for
+the checked head and the new one
+`git diff "$(git merge-base "origin/<baseRefName>" <sha>)" <sha> | git patch-id --verbatim`.
+Equal, non-empty first fields mean the PR diff is unchanged: the base update itself needs no
+Gate B, every review of the checked head counts for the new one, and Step 1 and the last read
+still run; a fix that a claim from them needs still follows Step 3 item 3. An empty output, a
+failed command or different ids: the diff changed, as before. `--verbatim`, not `--stable`:
+the stable id strips whitespace, so a changed indentation would read as unchanged. Why: a
+branch update that only brings the base in changes no line anyone reviewed. Merge that head and no other,
 with a squash body you write:
 `gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
 Write the body from the pull request's own commits, as GitHub lists them, so no local ref or

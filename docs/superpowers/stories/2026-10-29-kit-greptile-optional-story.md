@@ -22,8 +22,10 @@ base update with an unchanged PR diff starts no review the kit controls.
 - **AC-2** A bot that reviews once per PR has reviewed when it reviewed any head of the PR; the report names that
   head.
 - **AC-3** A head that differs from the head the claims were checked on only by a base update (the same
-  `git patch-id --stable` of the PR diff) starts no Gate B and no bot request, and an earlier head's review counts
-  for it.
+  `git patch-id --verbatim` of the PR diff) starts no Gate B and no bot request, and an earlier head's review counts
+  for it. _Narrowed 2026-10-29 at Gate B pass 1 (cycle gr48optl): `--stable` became `--verbatim`, because the stable
+  id strips whitespace and an indentation change read as unchanged; the base name and SHAs are checked before they
+  enter the command._
 - **AC-4** `/workflow-init` 2.5 asks whether Greptile is wanted, default no, and records the answer in the
   scaffolded `docs/pr-review-bots.md`; when yes, it tells the human what to set in Greptile (label `greptile`,
   review on open only) and writes no Greptile setting itself.

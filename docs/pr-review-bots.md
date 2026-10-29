@@ -84,13 +84,16 @@ them merges unreviewed heads.**
   a different thing.
 
   **Verification is per head, not per PR.** Every push moves the head and the previous
-  answer expires with it; a PR that takes three pushes takes three verifications. #16
+  answer expires with it (since kit 0.48.0 with two exceptions, both in
+  `/dev-workflow:process-pr-review`: a bot listed `once per PR`, and a head whose PR diff is
+  unchanged after a base update); a PR that takes three pushes takes three verifications. #16
   took exactly that, and its final push had to be dropped and re-landed separately
   because the new head went unreviewed past the point of waiting.
 
 Verify the second before merging — a deterministic boolean, so it is read rather than
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
-is diagnostic for every bot: its answer goes into the report and blocks no merge:
+is diagnostic for every bot on for the PR (a bot that is off, such as Greptile here since kit
+0.48.0, is not checked): its answer goes into the report and blocks no merge:
 
 ```sh
 head=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # the LIVE head, not local HEAD
@@ -136,9 +139,10 @@ a review of that head.
 **Then the two facts separate, and only the first still binds.**
 
 1. **The count is the arbiter of whether a head was reviewed.** Unchanged, and it applies
-   to **any** bot — it is the diagnostic, and being routed opportunistically does not
+   to **any** bot on for the PR — it is the diagnostic, and being routed opportunistically does not
    make a bot's review record less readable or the answer less true.
-2. **An absent review blocks no merge, for any bot.** From kit 0.32.0
+2. **An absent review blocks no merge, for any bot.** A bot that is off is not reported at
+   all (kit 0.48.0). From kit 0.32.0
    `/dev-workflow:process-pr-review` Step 4 reports it as `<bot>: no review on <sha>`,
    never counts it as clean, and merges; it needs no exception. Every head reaching a PR has already passed **Gate B**, the workflow's
    actual cross-model review; the PR bots are a supplementary third instance, and

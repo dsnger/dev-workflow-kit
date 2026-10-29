@@ -25,10 +25,14 @@ The three lists stay the authority. Two additions, both written in the routing l
   CodeRabbit re-trigger is optional prose in this repo's bot file only.
 - Missing: Step 4 says to run Steps 1–3 again on any new head, and Step 2 reports every bot with no review record on
   the live head, so a base update reads as "no review" and invites a re-trigger. Added: the patch-id rule (AC-3):
-  `git fetch origin`, then for each SHA `git diff "$(git merge-base origin/<baseRefName> <sha>)" <sha> | git
-  patch-id --stable`; equal non-empty first fields mean the PR diff is unchanged. Verified on a scratch repository:
-  a merge of the base gives the same id, a content change a new one. An empty diff, a failed command or a conflict
-  resolution that changed content counts as changed.
+  check `baseRefName` against `^[A-Za-z0-9._/-]+$` and each SHA against `^[0-9a-f]{40}$` (a failure: no command,
+  diff counts as changed), `git fetch origin`, then for each SHA `git diff "$(git merge-base "origin/<baseRefName>"
+  <sha>)" <sha> | git patch-id --verbatim`; equal non-empty first fields mean the PR diff is unchanged. Verified on a
+  scratch repository (git 2.52.0): a merge of the base gives the same id, a content change a new one, and an
+  indentation-only change a new one with `--verbatim` but the same one with `--stable` (Gate B pass 1, cycle
+  gr48optl, changed `--stable` to `--verbatim` and added the value check). An empty diff, a failed command or a
+  conflict resolution that changed content counts as changed. A fix a claim needs after the base update still
+  follows Step 3 item 3.
 
 ## 4. Changes
 1. `commands/process-pr-review.md` Step 2 and Step 4: off bots, qualifiers, patch-id rule; Step 3 item 1's

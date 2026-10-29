@@ -11,7 +11,7 @@ Everything that is true about the kit but not needed to get going. The step path
 | `dev-workflow:ticket` | skill. A bug or improvement that stays inside an approved commitment becomes a ticket file: evidence, the commitment it stays inside, and the brief a coding agent fixes from. `list` shows the ones waiting for triage, information or a start. A change to a commitment is handed to `intake`. |
 | `dev-workflow:harden-finding` | skill. Hardens one review finding with a lint rule (rung 2) or a test (rung 4) and logs it in the ledger. The rungs and the no-row cases are in the [skill file](../plugins/dev-workflow/skills/harden-finding/SKILL.md). |
 | `dev-workflow:sparring` | skill, invoked by name only, in a chat you open for advice. Investigates read-only, checks agent reports against the current files, and drafts bounded prompts for a coding agent to run elsewhere. It advises; it does not implement, commit, or run review gates. |
-| `/dev-workflow:process-pr-review` | command. Validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues, and names a bot that left no review on the current head (a green status check alone is no proof). |
+| `/dev-workflow:process-pr-review` | command. Validates PR bot comments against the code and your invariants, replies to each, fixes regressions, tracks pre-existing issues, and names a bot on for the PR that left no review on the current head (a green status check alone is no proof; a bot that is off is not named). |
 | `dev-workflow:finding-triage` | agent. Read-only, fresh context, judges whether one PR-bot claim is actually true of the code. Used by the PR processor; never counts as a review gate. |
 | `/dev-workflow:workflow-init` | command. Scaffolds the per-project files, then interviews you to write `AGENTS.md`. Re-run it after a kit update: it shows the diff per file, and for a `CLAUDE.md` §5 pointer or a `.claude/review-gates.md` from an older kit edition it recommends the current template. |
 | `/dev-workflow:claude-init` | command. Writes one `CLAUDE.md` of general working rules and nothing else: no review gates, no other files. An existing `CLAUDE.md` is never overwritten; you get a proposal instead. Creating the file needs an already-installed Python 3. |
@@ -246,7 +246,7 @@ say `only with label <name>` and `once per PR`; a bot that is off sits under ign
 not reported. Greptile is off by default: it reviews every push unless its own settings
 (`labels: ["greptile"]`, `autoReview: ["open"]`, set by you in Greptile) limit it to one
 review of a labelled PR. `/process-pr-review` asks no bot for a review, and a head that only
-brings the base in (same `git patch-id --stable` of the PR diff) needs none. CodeRabbit
+brings the base in (same `git patch-id --verbatim` of the PR diff) needs none. CodeRabbit
 auto-reviews only PRs whose base is the default branch unless its configuration lists
 the other base under `reviews.auto_review.base_branches`.
 
