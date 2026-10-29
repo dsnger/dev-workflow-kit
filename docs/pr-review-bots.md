@@ -11,17 +11,19 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | CodeRabbit | yes | **inline** | Posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. Observed on #1 and #18 (profile CHILL). **Plan: Free** (per Daniel); the "Pro Plus" recorded here earlier was observed on PR #1 only and no longer describes the account — the review-limit behaviour below is what a Free plan produces. **Routed opportunistically since #18** — five consecutive unreviewed heads (#12, #13, #15, #16, #17), then a genuine review. Two quirks that look like signals and are not: **its status check goes green whether or not a review happened**, so a green check never proves the final head was reviewed (the per-head count is the arbiter); and **`@coderabbitai review` is a no-op while automatic reviews are active** — the bot says so itself ("This command is applicable only when automatic reviews are paused", #17), which is why #14's re-trigger produced nothing. |
-| Greptile | yes | **summary always; inline usually** | Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
+| Greptile | **no** (off since kit 0.48.0, 2026-10-29: it reviewed every push of every PR and cost over 700 USD in a few days; Daniel) | was **summary always; inline usually** | Record from when it was on. Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
 **Routing — these lists are authoritative.**
 
 - **Wait for (block on it):** *none.* CodeRabbit sat here until #18 and no longer does —
   grounds below.
-- **Process opportunistically (never block):** CodeRabbit and Greptile. Read whatever
-  each has posted when the pass begins, in both channels. If one posts later, handle it
-  as a follow-up.
-- **Ignore:** Cursor Bugbot — disabled for this account, and it says so itself.
+- **Process opportunistically (never block):** CodeRabbit. Read whatever it has posted
+  when the pass begins, in both channels. If it posts later, handle it as a follow-up.
+- **Ignore:** Greptile — off since kit 0.48.0; turning it back on means the label path
+  (`only with label greptile, once per PR`, with `labels: ["greptile"]` and
+  `autoReview: ["open"]` set in Greptile by Daniel). Cursor Bugbot — disabled for this
+  account, and it says so itself.
 
 **Why CodeRabbit moved.** It has a status check, so blocking on it always *terminated* —
 what it stopped doing was delivering. Five consecutive heads went unreviewed (#12, #13,
@@ -150,7 +152,9 @@ a bot back does not revive it: **Wait for** changes only what Step 2 waits on. T
 history above and the #14 precedent are the record of the period when it was live — they
 document a real requirement under the routing of their time.
 
-**Optional, not a step: the re-trigger.** Before reporting a `0`, a re-trigger may be
+**Optional, not a step: the re-trigger.** Since kit 0.48.0
+`/dev-workflow:process-pr-review` asks no bot for a review, so it attempts none; what
+follows is the record of when one was allowed. Before reporting a `0`, a re-trigger may be
 attempted. It is not part of the
 verification above, which is why the procedure no longer contains it: `@coderabbitai
 review` is a **no-op while automatic reviews are active** (the bot's own message on #17),
@@ -170,7 +174,7 @@ body filter is bounded defensive filtering, not a check against something seen.
 "Greptile Review" entry for #4 and #5, while the check-runs and statuses APIs return no
 Greptile entry for any observed head. Two tools, two answers, so neither is proof.
 
-So: **process Greptile opportunistically, never block on it.** Begin the pass — nothing
+So, while it was on (before kit 0.48.0, and again on the label path): **process Greptile opportunistically, never block on it.** Begin the pass — nothing
 gates it now — and read whatever Greptile has posted at that moment via
 `gh pr view --json comments,reviews` plus `gh api .../pulls/N/comments`. If it posts
 later, process it as a follow-up. Waiting on it risks hanging forever; ignoring it drops

@@ -67,6 +67,7 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | New feature | `/dev-workflow:intake <idea or transcript>` | [guide](docs/getting-started.md#new-feature) |
 | Bug or small fix | `/dev-workflow:ticket <text or evidence>` | [guide](docs/getting-started.md#bug-or-small-fix) |
 | PR bot comments | `/dev-workflow:process-pr-review <pr-number>` | [guide](docs/getting-started.md#pr-bot-comments) |
+| Run Greptile on some PRs only (off by default) | List it as `only with label greptile, once per PR` in `docs/pr-review-bots.md`, set its label filter in Greptile, label the PR | [reference](docs/reference.md#pr-review-bots) |
 | Recurring finding | `/dev-workflow:harden-finding` | [guide](docs/getting-started.md#a-finding-that-keeps-coming-back) |
 | Discuss an idea | `/dev-workflow:sparring <question>`, in a new chat | [guide](docs/getting-started.md#discuss-an-idea-first) |
 | Gate A says "not counted" | Name the pass file in the Codex prompt as `Findings file: <path>` and let Codex write it; a reply alone is no pass | [reference](docs/reference.md#hook-messages) |

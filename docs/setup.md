@@ -165,10 +165,12 @@ steps before it are CI setup (toolchain, dependencies) and fail for CI-only reas
 
 Optional. Do: if you enabled review bots on the repository (CodeRabbit, Greptile, ...),
 open `docs/pr-review-bots.md` (written in step 4) and fill its three lists: wait for,
-process opportunistically, ignore. Note where each bot posts.
+process opportunistically, ignore. Note where each bot posts. Greptile is off by default,
+because it reviews every push; to run it, set `labels: ["greptile"]` and
+`autoReview: ["open"]` in Greptile yourself, and label a PR `greptile` for one review.
 
-You see: `/dev-workflow:process-pr-review` reads those lists and waits only for the bots
-under "wait for".
+You see: `/dev-workflow:process-pr-review` reads those lists, waits only for the bots
+under "wait for", reads the others if they ran, and asks no bot for a review.
 
 If not: with the file missing, the command processes what is visible on the PR and asks
 you to fill the file. CodeRabbit note: [reference, PR bots](reference.md#pr-review-bots).

@@ -241,7 +241,12 @@ CI run is what checks the combination.
 
 `docs/pr-review-bots.md` lists the bots you enabled and where each one posts (inline,
 summary, both, or `inconsistent`), sorted into the three routing lists
-`/process-pr-review` reads: wait for, process opportunistically, ignore. CodeRabbit
+`/process-pr-review` reads: wait for, process opportunistically, ignore. A list entry may
+say `only with label <name>` and `once per PR`; a bot that is off sits under ignore and is
+not reported. Greptile is off by default: it reviews every push unless its own settings
+(`labels: ["greptile"]`, `autoReview: ["open"]`, set by you in Greptile) limit it to one
+review of a labelled PR. `/process-pr-review` asks no bot for a review, and a head that only
+brings the base in (same `git patch-id --stable` of the PR diff) needs none. CodeRabbit
 auto-reviews only PRs whose base is the default branch unless its configuration lists
 the other base under `reviews.auto_review.base_branches`.
 

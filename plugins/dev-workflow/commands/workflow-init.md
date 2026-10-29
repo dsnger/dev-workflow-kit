@@ -974,6 +974,17 @@ review comments, the PR summary body, or both. Do not guess, and do not assume t
 answer is stable: a bot can post a summary on one PR and inline comments on the next,
 so a column may honestly read `inconsistent`. Record what was observed and when.
 
+Ask whether this project wants Greptile, **default no**: it reviews every push of every pull
+request unless told otherwise, and one account spent over 700 USD in a few days that way.
+- **No** (or no answer): a `Greptile | no` row, and Greptile under **Ignore** as off.
+- **Yes**: Greptile under **Process opportunistically** as `only with label greptile, once per
+  PR`. Tell the user what they set themselves, in Greptile's dashboard or a `greptile.json` they
+  commit: `"labels": ["greptile"]` (review only PRs with that label) and `"autoReview": ["open"]`
+  (review when the PR opens, not on a push or rebase); then they add the label `greptile` to a
+  PR that should get one review. Whether a label added after the PR opened starts a review is
+  not known; if none appears, one `@greptileai` comment on the PR starts it. Write no Greptile
+  setting and no `greptile.json` yourself: its settings and billing are the user's.
+
 Warn the user that CodeRabbit reviews automatically only pull requests whose base is the
 default branch, unless its configuration includes the other base
 (`reviews.auto_review.base_branches`); one project saw "Review skipped — auto reviews are
@@ -996,9 +1007,13 @@ silently drops real findings.
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | <bot name> | yes/no | inline / summary / both / **inconsistent** | <where observed and when; how you know it has finished — a status check is not guaranteed> |
+| Greptile | <no, the default / yes: only on PRs labelled `greptile`, once per PR> | <as observed> | <off by default: it reviews every push unless its own settings say `labels: ["greptile"]` and `autoReview: ["open"]`> |
 
 **Routing — these lists are authoritative.** Ask the user; do not derive these from
-column 3, which records where findings appear rather than how to act on them.
+column 3, which records where findings appear rather than how to act on them. An entry
+may carry `only with label <name>` (the bot is off on a PR without that label) and
+`once per PR` (a review of any head of the PR counts). A bot that is off goes under
+**Ignore**; `/dev-workflow:process-pr-review` neither reads nor reports it.
 
 - **Wait for (block on it):** <bots with a completion signal you can block on — usually
   a status check. Blocking on a *post* hangs when the bot finds nothing and posts
@@ -1007,8 +1022,9 @@ column 3, which records where findings appear rather than how to act on them.
   no reliable completion signal. Read what they have posted when the pass begins, both
   channels; handle later arrivals as a follow-up. This category exists because such bots
   are real: blocking on one hangs the loop, dropping it loses findings.>
-- **Ignore:** <bots you deliberately do not act on — e.g. one that only reports it is
-  disabled. Not "the summary-only bots": a summary can carry real findings.>
+- **Ignore:** <bots that are off, and bots you deliberately do not act on — e.g. one that
+  only reports it is disabled. Not "the summary-only bots": a summary can carry real
+  findings.>
 
 **Revisit when:** a bot's plan/tier changes (a Free→Pro upgrade can turn a
 summary-only bot into a findings bot), or a bot is enabled/disabled.

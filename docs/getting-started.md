@@ -100,7 +100,9 @@ itself goes through `intake` instead.
 
 ## PR bot comments
 
-1. Open the PR. Wait for the bots listed under "wait for" in `docs/pr-review-bots.md`.
+1. Open the PR. Wait for the bots listed under "wait for" in `docs/pr-review-bots.md`;
+   the others are read if they ran (Greptile is off unless the PR is labelled `greptile`
+   and the project turned it on).
 2. Type `/dev-workflow:process-pr-review <pr-number>`.
    You see: CI checked first; each bot claim validated against the code, usually by a
    fresh-context `finding-triage` subagent (on a PR that edits instruction files Claude

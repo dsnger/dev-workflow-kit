@@ -17,6 +17,14 @@ a completion signal you can block on), **process it opportunistically** (it prod
 real findings but nothing proves it has finished), or **ignore** it. A bot's channel can vary between PRs, so a row may
 honestly read `inconsistent`; that is an observation, never a routing instruction.
 
+A bot is **on for this PR** unless it is under **Ignore** (a bot that is off sits there, its
+row reading `Enabled: no`) or its list entry says `only with label <name>` and the PR does not
+carry that label (`gh pr view --json labels`). A bot that is not on for this PR is not read,
+waited for or reported. An entry saying `once per PR` means the bot reviews one head of the PR,
+not every push: a review of any head of this PR counts, and the report names that head. Why:
+a bot that reviews every push can cost more than the work it reviews, so a project may run it
+only where it asked for it.
+
 Getting this wrong is expensive in both directions: waiting on a channel a bot never
 uses hangs the loop forever, and treating a findings source as context silently drops
 real findings.
@@ -51,14 +59,18 @@ front.
 Do not route on the table's column: it records where findings have been observed and may
 be ambiguous, which is not an instruction.
 
-**No review is not no comments.** Before you conclude that a bot under **Wait for** or
-**Process opportunistically** found nothing, check that it actually reviewed the current
-head: a review record whose `commit_id` is that SHA (`gh api --paginate
+**No review is not no comments.** Before you conclude that a bot on for this PR found
+nothing, check that it actually reviewed the current head (`once per PR`: any head of this
+PR): a review record whose `commit_id` is that SHA (`gh api --paginate
 repos/<owner>/<repo>/pulls/<n>/reviews`), or the proof its row in `docs/pr-review-bots.md`
-names. A green status check alone is no proof: some bots pass it without reviewing. A bot
-that did not run is reported by name —
-`Greptile: no review on <sha>` — and never counted as clean. Why: a bot that is disabled,
-rate-limited or skipping the PR posts nothing, which looks exactly like a clean review.
+names. A green status check alone is no proof: some bots pass it without reviewing. A review
+of an earlier head counts for the current one when only the base moved between them (Step 4's
+patch-id check). A bot on for this PR that did not run is reported by name —
+`<bot>: no review on <sha>` — and never counted as clean. Why: a bot that is rate-limited or
+skipping the PR posts nothing, which looks exactly like a clean review.
+
+Ask no bot for a review: read what a bot posted if it ran. Why: every request is a paid run,
+and Gate B is the workflow's review.
 
 ## Step 3 — Process
 
@@ -88,7 +100,7 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
    claim can be required to reach a verdict.
 
    If no tracked claims remain, spawn nothing: report that the PR drew no defect claims,
-   name each bot that did not review the head (Step 2), answer any thread that needs an
+   name each bot on for this PR that did not review the head (Step 2), answer any thread that needs an
    answer, and continue to the final check and merge steps (item 6, Step 4).
 
    Unless step 0 said otherwise, delegate each remaining claim to a
@@ -248,13 +260,20 @@ rate-limited or skipping the PR posts nothing, which looks exactly like a clean 
 
 ## Step 4 — Merge
 
-Squash-merge once all of these hold: a last read of both channels of every bot (Step 2),
+Squash-merge once all of these hold: a last read of both channels of every bot on for this PR (Step 2),
 filtered as Step 3 item 1 forms the tracked set, adds no claim — a new one goes through
 Step 3 first; every tracked
 claim has a verdict, a terminal disposition and a reply; no item-4 question is unanswered;
 the required check is green on the head; and `gh pr view <n> --json mergeStateStatus,headRefOid` reads `CLEAN`, with a
 `headRefOid` equal to the head this run checked and claims on. A different head means
-commits arrived meanwhile: run Steps 1-3 again on it first. Merge that head and no other,
+commits arrived meanwhile: run Steps 1-3 again on it first. **A base update alone starts no
+review.** After `git fetch origin`, compute for the checked head and the new one
+`git diff "$(git merge-base origin/<baseRefName> <sha>)" <sha> | git patch-id --stable`
+(`baseRefName` from `gh pr view <n> --json baseRefName`). Equal, non-empty first fields mean
+the PR diff is unchanged: Step 3 starts no Gate B, every review of the checked head counts for
+the new one, and Step 1 and the last read still run. An empty output, a failed command or
+different ids: the diff changed, as before. Why: a branch update that only brings the base
+in changes no line anyone reviewed. Merge that head and no other,
 with a squash body you write:
 `gh pr merge <n> --squash --match-head-commit <headRefOid> --body-file .context/squash-body-<n>.md`.
 Write the body from the pull request's own commits, as GitHub lists them, so no local ref or
