@@ -38,6 +38,10 @@ driver runs it in all eight; the count is the number of such paths.
   `factory-review` skill (present in the user's Codex home) is reported as **tainted** and does not count toward
   the 4-of-6 target. A case with a call stopped by the 1200 s watchdog gets one rerun alone afterwards, recorded as
   such; nothing beyond that without the orchestrator.
+- **Amendment set after the run started (dev-workflow-kit-26, 2026-10-30 11:57), prompted by case #97's risk
+  call reading an installed superpowers skill, before any case was scored:** reads of Codex's own installed
+  skill or plugin files (`~/.codex/plugins`, `$CODEX_HOME/skills`) are benign and listed per case in
+  `report.md`; a `factory-review` read stays tainted; any other read outside the clone stays contaminated.
 
 ## Key defects
 
