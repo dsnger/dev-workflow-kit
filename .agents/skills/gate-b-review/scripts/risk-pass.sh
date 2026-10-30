@@ -73,15 +73,23 @@ num() { case $1 in ''|*[!0-9]*) return 1 ;; esac; }
 # The slot lock. A held lock whose runner or group is alive: busy. Both gone: an interrupted
 # attempt, taken over (its state line stays `start` without `done`).
 lock="$dir/gate-b-risk-$nonce-pass-$n.lock"
+# A takeover is serialized by a second lock, and the owner is read inside it: two runs that both
+# saw a dead owner cannot each remove the lock the other just made.
 if ! mkdir "$lock" 2>/dev/null; then
+  mkdir "$lock.takeover" 2>/dev/null ||
+    die "slot busy: another run is taking over $lock (remove $lock.takeover if no risk pass is running)" 4
   rp=$(cat "$lock/runner.pid" 2>/dev/null) || rp=
   gp=$(cat "$lock/group.pid" 2>/dev/null) || gp=
+  busy=
   if { num "$rp" && pid_alive "$rp"; } || { num "$gp" && group_alive "$gp"; }; then
-    die "slot busy: $lock is held by a live attempt" 4
+    busy="$lock is held by a live attempt"
+  elif [ -z "$rp" ]; then
+    busy="$lock has no runner record (an attempt may be starting)"
+  else
+    rm -rf "$lock"; mkdir "$lock" 2>/dev/null || busy="could not take over $lock"
   fi
-  [ -n "$rp" ] || die "slot busy: $lock has no runner record (an attempt may be starting)" 4
-  rm -rf "$lock"
-  mkdir "$lock" 2>/dev/null || die "slot busy: could not take over $lock" 4
+  rmdir "$lock.takeover"
+  [ -z "$busy" ] || die "slot busy: $busy" 4
 fi
 printf '%s\n' "$$" > "$lock/runner.pid"
 cpid=; wpid=; work=

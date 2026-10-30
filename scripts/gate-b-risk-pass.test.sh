@@ -87,6 +87,12 @@ mkdir -p "$work/ch"; printf '# c\nmodel = "cfg-model"\n[profiles.x]\nmodel = "ot
 CODEX_HOME="$work/ch" run 1 30
 grep -q '^MODEL: cfg-model (config.toml)$' "$e" && pass 'evidence: model from config.toml when the event log names none' || fail "config model: $(cat "$e" 2>/dev/null)"
 rm -f "$STUB_DIR/nomodel"
+# A takeover already in progress: busy, the dead lock left to that run.
+reset; mkdir "$d/gate-b-risk-$N-pass-1.lock" "$d/gate-b-risk-$N-pass-1.lock.takeover"
+echo 999999 > "$d/gate-b-risk-$N-pass-1.lock/runner.pid"
+run 1 30
+[ $rc -eq 4 ] && grep -q 'taking over' "$work/err" && [ "$(cat "$d/gate-b-risk-$N-pass-1.lock/runner.pid")" = 999999 ] && pass 'a takeover in progress: busy, exit 4, lock untouched' || fail "takeover rc=$rc"
+rm -rf "$d/gate-b-risk-$N-pass-1.lock.takeover"
 # A lock runner this process may not signal (EPERM) counts as alive.
 reset; mkdir "$d/gate-b-risk-$N-pass-1.lock"; echo 1 > "$d/gate-b-risk-$N-pass-1.lock/runner.pid"
 run 1 30

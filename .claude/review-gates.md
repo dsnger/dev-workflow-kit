@@ -34,7 +34,7 @@ In an open cycle the main session (the committer gets the note) makes each commi
 `additionalContext` names `.agents/skills/gate-b-review/SKILL.md`, which Codex follows (method, @AGENTS.md, finding rules).
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
-**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (`docs/reference.md`). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run the skill's `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
+**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.

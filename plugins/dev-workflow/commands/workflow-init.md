@@ -661,7 +661,7 @@ In an open cycle the main session (the committer gets the note) makes each commi
 `additionalContext` names `.agents/skills/gate-b-review/SKILL.md`, which Codex follows (method, @AGENTS.md, finding rules).
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
-**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (`docs/reference.md`). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run the skill's `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
+**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
@@ -2449,6 +2449,25 @@ only the findings file, and the human reads the evidence to see what you checked
 - Report one cause seen at several places once, as a class listing every place.
 - Write only the two files the call names, because the gate compares the checkout before and after.
 
+## Risk pass
+This section is for the main session, which decides and starts the risk pass; the gate rules point here because
+a project has no other copy of these conditions.
+- *Due* when the cycle's diff (`<cycle base>..<head>`) touches one of four categories, judged from the diff's
+  content whatever the paths: (a) a script or tool the project runs (build, release, CI, hook, installer);
+  (b) security-relevant code (authentication, authorization, secrets, validation at a trust boundary,
+  sandboxing, cryptography); (c) a rule or gate file (instruction files, gate rules, review prompts, CI workflows);
+  (d) a schema or data migration. These paths always make it due: `scripts/*`, `bin/*`, `*.sh`, any `hooks/`
+  directory, `.github/workflows/*`, `CLAUDE.md`, `AGENTS.md`, `.claude/*`, `.agents/*`, `.mcp.json`, any
+  `plugins/`, `skills/`, `commands/` or `agents/` directory, a `migrations` or `migrate` path segment, and the
+  patterns in backticks on an `AGENTS.md` `**Risk paths:**` line (they only add). A cited story whose security is
+  not `none` also makes it due; a story saying `none` does not exempt security code found in the diff.
+- *Valid after a later change* when that change only repairs the risk pass's own findings or touches no risk
+  category, and the next `quality` pass verifies it. Any other later change in a risk category runs it again, as
+  one more pass under the cap.
+- *Run* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]`
+  as a background call, once the ordinary passes leave no open blocking finding; `<baseSha>` is the cycle base
+  the state file records. Its exit statuses are in the script's header.
+
 ## Output format
 The findings file, at the path the call names, in the format of `.claude/review-gates.md` (one finding per line,
 then the terminator), for example:
@@ -2718,15 +2737,23 @@ num() { case $1 in ''|*[!0-9]*) return 1 ;; esac; }
 # The slot lock. A held lock whose runner or group is alive: busy. Both gone: an interrupted
 # attempt, taken over (its state line stays `start` without `done`).
 lock="$dir/gate-b-risk-$nonce-pass-$n.lock"
+# A takeover is serialized by a second lock, and the owner is read inside it: two runs that both
+# saw a dead owner cannot each remove the lock the other just made.
 if ! mkdir "$lock" 2>/dev/null; then
+  mkdir "$lock.takeover" 2>/dev/null ||
+    die "slot busy: another run is taking over $lock (remove $lock.takeover if no risk pass is running)" 4
   rp=$(cat "$lock/runner.pid" 2>/dev/null) || rp=
   gp=$(cat "$lock/group.pid" 2>/dev/null) || gp=
+  busy=
   if { num "$rp" && pid_alive "$rp"; } || { num "$gp" && group_alive "$gp"; }; then
-    die "slot busy: $lock is held by a live attempt" 4
+    busy="$lock is held by a live attempt"
+  elif [ -z "$rp" ]; then
+    busy="$lock has no runner record (an attempt may be starting)"
+  else
+    rm -rf "$lock"; mkdir "$lock" 2>/dev/null || busy="could not take over $lock"
   fi
-  [ -n "$rp" ] || die "slot busy: $lock has no runner record (an attempt may be starting)" 4
-  rm -rf "$lock"
-  mkdir "$lock" 2>/dev/null || die "slot busy: could not take over $lock" 4
+  rmdir "$lock.takeover"
+  [ -z "$busy" ] || die "slot busy: $busy" 4
 fi
 printf '%s\n' "$$" > "$lock/runner.pid"
 cpid=; wpid=; work=

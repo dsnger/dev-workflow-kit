@@ -546,7 +546,8 @@ processes are gone. A runner it may not signal (Codex's sandbox cannot signal a 
 alive, so its copy is kept.
 
 **The risk pass.** One extra Codex pass at high reasoning effort, through `codex exec` (no MCP tool takes an
-effort), run by `scripts/risk-pass.sh`.
+effort), run by `scripts/risk-pass.sh`. The skill's `## Risk pass` section carries the conditions below into every
+project, since an initialized project has no copy of this page.
 - *When it is due.* The cycle's diff (`<cycle base>..<head>`) touches one of four categories, judged from the
   diff's content whatever the paths: (a) a script or tool the project runs (build, release, CI, hook, installer);
   (b) security-relevant code (authentication, authorization, secrets, validation at a trust boundary,

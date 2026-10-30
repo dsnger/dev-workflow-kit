@@ -2254,3 +2254,15 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       180 s. *Trigger: kit 0.51 unit 3.*
 - [x] **0.51 replay: risk evidence always says `MODEL: unknown`.** Done in 0.51 unit 3: top-level `model` of `config.toml`. Codex 0.162.1's `--json` events name no model;
       read it from the configuration instead. *Trigger: kit 0.51 unit 3.*
+- [ ] **0.51 Gate B: no test of the risk pass's later-head rule.** Nothing exercises a repaired risk finding accepted
+      at close, or unrelated risky content after a done risk pass forcing another. (Gate B cycle k051gbb14a5b, pass 1,
+      spec finding 2 — accepted, not repaired.) *Trigger: the next change to the risk-pass closing rule.*
+- [ ] **0.51 Gate B: `run-tests.sh` forwards a child's exit 4 or 5 unchanged.** The skill reads 4 as "checkout
+      changed" and 5 as "no test ran", so a test that itself exits 4 or 5 is misreported. (Cycle k051gbb14a5b, pass 1,
+      quality finding 3 — accepted, not repaired.) *Trigger: a false "checkout changed" or "not run" in a review.*
+- [ ] **0.51 Gate B: the risk-pass suite reads a `pgrep` error as "Codex stopped".** In Codex's sandbox `pgrep`
+      cannot list processes and the assertion still passes. (Cycle k051gbb14a5b, pass 1, quality finding 4 —
+      accepted, not repaired.) *Trigger: the next edit of `scripts/gate-b-risk-pass.test.sh`.*
+- [ ] **0.51 Gate B: `ci.yml` lacks the 0.51 suites.** AGENTS.md says the quality row is what CI runs, but the
+      (disabled) Actions workflow has no lint or `sh`/`dash` runs of the two new runners and suites. (Cycle
+      k051gbb14a5b, pass 1, quality finding 5 — accepted, not repaired.) *Trigger: re-enabling `ci.yml`.*

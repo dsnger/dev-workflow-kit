@@ -59,6 +59,25 @@ only the findings file, and the human reads the evidence to see what you checked
 - Report one cause seen at several places once, as a class listing every place.
 - Write only the two files the call names, because the gate compares the checkout before and after.
 
+## Risk pass
+This section is for the main session, which decides and starts the risk pass; the gate rules point here because
+a project has no other copy of these conditions.
+- *Due* when the cycle's diff (`<cycle base>..<head>`) touches one of four categories, judged from the diff's
+  content whatever the paths: (a) a script or tool the project runs (build, release, CI, hook, installer);
+  (b) security-relevant code (authentication, authorization, secrets, validation at a trust boundary,
+  sandboxing, cryptography); (c) a rule or gate file (instruction files, gate rules, review prompts, CI workflows);
+  (d) a schema or data migration. These paths always make it due: `scripts/*`, `bin/*`, `*.sh`, any `hooks/`
+  directory, `.github/workflows/*`, `CLAUDE.md`, `AGENTS.md`, `.claude/*`, `.agents/*`, `.mcp.json`, any
+  `plugins/`, `skills/`, `commands/` or `agents/` directory, a `migrations` or `migrate` path segment, and the
+  patterns in backticks on an `AGENTS.md` `**Risk paths:**` line (they only add). A cited story whose security is
+  not `none` also makes it due; a story saying `none` does not exempt security code found in the diff.
+- *Valid after a later change* when that change only repairs the risk pass's own findings or touches no risk
+  category, and the next `quality` pass verifies it. Any other later change in a risk category runs it again, as
+  one more pass under the cap.
+- *Run* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]`
+  as a background call, once the ordinary passes leave no open blocking finding; `<baseSha>` is the cycle base
+  the state file records. Its exit statuses are in the script's header.
+
 ## Output format
 The findings file, at the path the call names, in the format of `.claude/review-gates.md` (one finding per line,
 then the terminator), for example:
