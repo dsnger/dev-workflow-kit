@@ -142,6 +142,25 @@ run 1 30
 [ $rc -eq 2 ] && grep -q 'is a symlink' "$work/err" && pass 'a symlinked .context/codex-reviews: exit 2' || fail "dir link rc=$rc"
 rm -f "$d"; mkdir -p "$d"
 
+# Swaps made while Codex runs (the stub's `before` hook plays the reviewer).
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'mv "%s" "%s"; ln -s "%s" "%s"\n' "$d" "$work/moved" "$work/moved" "$d" > "$STUB_DIR/before"
+run 1 30
+[ $rc -ne 0 ] && [ ! -f "$work/moved/gate-b-risk-$N-pass-1.md" ] && ! grep -q '^risk 1 \(done\|failed\)' "$work/moved/gate-b-cycle-$N.state" && pass 'the directory swapped for a symlink mid-run: nothing written through it' || fail "dir swap rc=$rc"
+rm -f "$d"; rm -rf "$work/moved"; mkdir -p "$d"
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'cp "%s" "%s"; rm -f "%s"; ln "%s" "%s"\n' "$state" "$work/outside" "$state" "$work/outside" "$state" > "$STUB_DIR/before"
+run 1 30
+[ $rc -ne 0 ] && ! grep -q '^risk 1 done' "$work/outside" && pass 'the state file replaced by a hard link mid-run: not appended to' || fail "hardlink rc=$rc $(cat "$work/outside")"
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+mkdir -p "$work/somedir"; ln -s "$work/somedir" "$(canon 1)"
+run 1 30
+[ $rc -eq 0 ] && [ -f "$(canon 1)" ] && [ ! -L "$(canon 1)" ] && [ -z "$(ls "$work/somedir")" ] && pass 'a symlink to a directory at the canonical path is replaced, the directory untouched' || fail "dir link rc=$rc"
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'mkfifo "%s"; mkfifo "%s.tmp"; rm -f "%s"; mv "%s.tmp" "%s"\n' "$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" > "$STUB_DIR/before"
+t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
+[ $dt -lt 20 ] && pass "FIFOs planted as evidence and event log: no hang (${dt}s, exit $rc)" || fail "fifo took ${dt}s"
+
 # Refusals before anything is written.
 reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30
 [ $rc -eq 6 ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass 'another Codex CLI version: exit 6' || fail "version rc=$rc"

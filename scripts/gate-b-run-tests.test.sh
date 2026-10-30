@@ -119,6 +119,10 @@ mkdir -p "$repo/.context/codex-reviews"
 run 30 sh -c 'echo forged > "$0/.context/codex-reviews/gate-b-quality-x-pass-1.md"' "$repo"
 [ $rc -eq 4 ] && pass 'a write to .context/codex-reviews/ (the gate records): exit 4' || fail "records rc=$rc"
 rm -f "$repo/.context/codex-reviews/gate-b-quality-x-pass-1.md"
+mkfifo "$repo/.context/codex-reviews/fifo"
+t0=$(date +%s); run 30 sh -c 'exit 0'; dt=$(( $(date +%s) - t0 ))
+[ $rc -eq 0 ] && [ $dt -lt 20 ] && pass 'a FIFO among the gate records does not block the fingerprint' || fail "fifo rc=$rc dt=$dt"
+rm -f "$repo/.context/codex-reviews/fifo"
 run 30 sh -c '[ -z "$(git remote)" ]'
 [ $rc -eq 0 ] && pass 'the copy has no remote' || fail "remote rc=$rc"
 

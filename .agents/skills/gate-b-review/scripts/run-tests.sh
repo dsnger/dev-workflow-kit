@@ -62,7 +62,8 @@ group_stop() {
 # git calls only, because the Codex sandbox keeps .git read-only: HEAD, the effective index as
 # `ls-files -s` lists it, `diff HEAD --binary` (tracked content and modes), and each untracked,
 # not-ignored path and everything under .context/codex-reviews/ with its lstat mode and the sha256
-# of its content (a symlink: of its target; a directory: of nothing).
+# of its content (a symlink: of its target; anything but a regular file: of nothing, so a FIFO
+# cannot block the read).
 fingerprint() {
   fp_dir=$(mktemp -d "${TMPDIR%/}/gate-b-fp.XXXXXX") || return 1
   # shellcheck disable=SC2016  # perl source
@@ -75,7 +76,7 @@ fingerprint() {
        { [ ! -d "$repo/.context/codex-reviews" ] ||
          ( cd "$repo" && find .context/codex-reviews -print0 ) >> "$fp_dir/untracked"; } &&
        ( cd "$repo" && perl -0 -MDigest::SHA -ne 'chomp; my @s = lstat($_) or exit 1;
-           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : -d _ ? 0 : $d->addfile($_);
+           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : -f _ ? $d->addfile($_) : 0;
            printf "%o %s %s\n", $s[2], $d->hexdigest, $_;' < "$fp_dir/untracked" )
      } > "$fp_dir/stream" 2>/dev/null; then
     git hash-object --stdin < "$fp_dir/stream"; st=$?

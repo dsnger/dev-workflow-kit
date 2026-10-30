@@ -567,8 +567,9 @@ effort), run by `scripts/risk-pass.sh`.
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
   `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
   the result. The script runs with your rights while Codex can write in the repository, so it never writes
-  through a symlink: a symlinked `.context/codex-reviews/` or state file is refused, an existing attempt file is
-  refused, and results are renamed into place. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
+  through a link Codex may have planted: the directories are checked again before every write, the state file is
+  appended to only as a regular file with one link (opened without following symlinks), an existing attempt file
+  is refused, results are renamed into place, and files that are not regular (a FIFO) are not read. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
   timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI other than `codex-cli 0.162.1`.
 - *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
   the floor, which stays the hook-counted `spec`+`quality` pair. When it is due and no pass is left under the
