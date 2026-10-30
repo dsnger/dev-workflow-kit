@@ -34,6 +34,10 @@ driver runs it in all eight; the count is the number of such paths.
   missing or unreadable log makes it unverified. Such a case is excluded and rerun once; still so, it is
   reported as such and counts as not found. The driver's `audit.txt` lists candidate commands; each flag is
   judged by reading it.
+- **Fixed before any result (dev-workflow-kit-26, 2026-10-30 11:30):** a case whose audit shows a read of the
+  `factory-review` skill (present in the user's Codex home) is reported as **tainted** and does not count toward
+  the 4-of-6 target. A case with a call stopped by the 1200 s watchdog gets one rerun alone afterwards, recorded as
+  such; nothing beyond that without the orchestrator.
 
 ## Key defects
 
