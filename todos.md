@@ -5,6 +5,12 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
+- [ ] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Gate A cycle k052hyb1 closed with pass-3 finding 1
+  (lock-path race, security-class MINOR) repaired in the spec after the last pass (spec
+  `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
+  chdir walk and its dev/ino match on the code, with a test that swaps a checked directory between check and
+  entry. *Trigger: kit 0.52 Gate B pass 1.*
+
 ### Policy: the self-hosting milestone is closed (2026-07-18)
 
 This repo now improves itself **reactively only**. A change starts because a finding
