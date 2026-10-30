@@ -21,6 +21,12 @@ Backlog of stories, follow-ups, and prerequisites referenced by
   `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
   chdir walk and its dev/ino match on the code, with a test that swaps a checked directory between check and
   entry. *Trigger: kit 0.52 Gate B pass 1.*
+- [ ] **Join the factory's FIFO ticket queue (`heavy.lock.queue`).** Kit 0.52's `scripts/local-ci.sh` takes the
+  shared heavy lock with a plain `flock`: mutual exclusion holds, but a kit run can overtake a factory step that
+  has waited longer, since sfx-factory's `kit.py` grants the lock in ticket order. 0.52 copies no queue logic
+  and calls nothing in `kit.py` (D84; orchestrator dev-workflow-kit-26, 2026-10-30). The factory's separate
+  `heavy.lock.e2e` stays out of scope. *Trigger: a factory step delayed by a kit run, or a factory-side
+  protocol the kit can join without copying code.*
 
 ### Policy: the self-hosting milestone is closed (2026-07-18)
 

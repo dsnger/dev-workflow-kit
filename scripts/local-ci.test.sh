@@ -592,7 +592,7 @@ finished 0 success green "$sha" && [ ! -e "$work/home/.cache" ] && [ "$(cat "$wo
   pass "45 no SFX_HEAVY_LOCK and no default directory: no lock, nothing created" || fail "45 ($(diag))"
 fixture; deflock; sha=$(sha_of HEAD); run
 f=$work/home/.cache/sfx-factory/heavy.lock
-finished 0 success green "$sha" && [ -f "$f" ] && [ "$(stat -f %Lp "$f" 2>/dev/null || stat -c %a "$f")" = 600 ] &&
+finished 0 success green "$sha" && [ -f "$f" ] && [ "$(perl -e 'printf "%o", (stat $ARGV[0])[2] & 07777' "$f")" = 600 ] &&
   [ -n "$(cat "$work/battery.held")" ] && [ "$(cat "$work/battery.held")" != unset ] && [ "$(sed -n 1p "$f")" = "$(cat "$work/battery.held")" ] &&
   pass "46 default directory present: the full battery ran under the lock (0600 file, note = holder pid = the battery's SFX_HEAVY_HELD)" || fail "46 ($(diag))"
 [ "$(ls -A "$work/home/.cache/sfx-factory")" = heavy.lock ] && pass "46 ... and nothing besides the lock file appeared (no queue)" || fail "46 other entries appeared"
@@ -642,10 +642,18 @@ fixture; runenv SFX_HEAVY_LOCK="$work/nosuch/locks/heavy.lock"
   pass "52 a missing lock directory: exit 64, nothing created" || fail "52 missing dir ($(diag))"
 
 # 53: a directory swapped between its check and its entry is refused (the test seam only sleeps).
-fixture; ovrlock; bgrun SFX_HEAVY_LOCK="$LK" LOCAL_CI_TEST_WALK_PAUSE=2
-sleep 1; mv "$work/lk/locks" "$work/lk/locks.old"; mkdir "$work/lk/locks"; chmod 700 "$work/lk/locks"
+fixture; ovrlock; bgrun SFX_HEAVY_LOCK="$LK" LOCAL_CI_TEST_WALK_PAUSE=3
+i=0; while ! grep -q 'test pause after checking locks' "$work/err" 2>/dev/null && [ "$i" -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+mv "$work/lk/locks" "$work/lk/locks.old"; mkdir "$work/lk/locks"; chmod 700 "$work/lk/locks"
 wait "$rpid"; echo $? > "$work/rc"
 lockrefused "53 a lock directory swapped between check and entry: exit 64" "locks under $work/lk changed while it was checked (heavy lock $LK)"
+
+# 53b: a symlinked grandparent is the trusted anchor (the factory reaches its lock the same way):
+# the run locks the file at the real path, waiting behind its holder there.
+fixture; ovrlock; ln -s lk "$work/lkl"; sha=$(sha_of HEAD); hold "$LK" 2; runenv SFX_HEAVY_LOCK="$work/lkl/locks/heavy.lock"
+finished 0 success green "$sha" && [ -e "$work/after.holder" ] && grep -q 'waiting for the heavy lock' "$work/err" &&
+  pass "53b an override through a symlinked grandparent waits on the same file and then runs" || fail "53b ($(diag))"
+wait "$hpid" 2>/dev/null; rm -f "$work/lkl"
 
 # 54: swapped after the walk, while the run waits: the run keeps the original inode. The first
 # holder lets go; the battery then runs, and only the original file is locked.

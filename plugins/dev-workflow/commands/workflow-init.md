@@ -2379,8 +2379,8 @@ fi
 # the lock goes. A refusal writes its line to the marker and exits 64. Limits: a SIGKILL of the
 # holder releases the lock with the group still running; it does not join the factory's FIFO
 # ticket queue, so a waiting run here can take the lock before a factory step that waited longer;
-# it never touches <lock>.queue. LOCAL_CI_TEST_WALK_PAUSE (digits, a test seam) only sleeps between
-# a directory's check and its entry.
+# it never touches <lock>.queue. LOCAL_CI_TEST_WALK_PAUSE (digits, a test seam) only says so on stderr
+# and sleeps between a directory's check and its entry.
 # shellcheck disable=SC2016  # perl source, not shell
 HOLD='use strict; use warnings;
 use Fcntl qw(O_RDWR O_CREAT O_NOFOLLOW O_NONBLOCK LOCK_EX LOCK_NB S_ISDIR S_ISREG);
@@ -2395,7 +2395,7 @@ for my $p (@parts) {
   my @l = lstat($p) or bail("the heavy lock directory $p under $anchor is missing: $!");
   S_ISDIR($l[2]) && $l[4] == $< && !($l[2] & 022)
     or bail("$p under $anchor must be a directory of this user without group or other write, not a link (heavy lock $lock)");
-  sleep $pause if $pause;
+  if ($pause) { print STDERR "local-ci: test pause after checking $p\n"; sleep $pause }
   chdir($p) or bail("cannot enter $p for the heavy lock $lock: $!");
   my @c = stat(".");
   $c[0] == $l[0] && $c[1] == $l[1] or bail("$p under $anchor changed while it was checked (heavy lock $lock)");
@@ -3080,7 +3080,8 @@ Tell the user, in the report: `sh scripts/ci-switch.sh` shows the state; `sh scr
 # annotations read, and a message matching "spending limit" or "payments have failed" (any case) is
 # a billing block: it prints the job, the message, the switch command and what else the switch
 # needs, exit 0. No such job or message: exit 1. A job with steps is never read, so a test whose
-# output mentions billing is no hit. A failed read: 64. It flips nothing.
+# output mentions billing is no hit. A failed read, or a selected job without a numeric check run id: 64.
+# It flips nothing.
 #
 # EXIT: 0 done (check: block found); 1 not switched (check: no block); 64 usage, precondition or
 # read failure; 75 the flip request failed and the state is not the target.
@@ -3133,7 +3134,7 @@ if [ "$mode" = check ]; then
     refuse "could not read the jobs of run $arg in $slug; check the run id"
   hit=''
   while IFS=$tab read -r name curl; do
-    [ -n "$curl" ] || continue
+    [ -n "$name$curl" ] || continue  # the one empty line of no selected job
     id=${curl##*/}
     case $id in ''|*[!0-9]*) refuse "job \"$name\" of run $arg has no check run id in $curl" ;; esac
     msgs=$(api --paginate "repos/$slug/check-runs/$id/annotations?per_page=100" --jq '.[].message' 2>/dev/null) ||

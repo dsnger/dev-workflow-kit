@@ -296,8 +296,8 @@ fi
 # the lock goes. A refusal writes its line to the marker and exits 64. Limits: a SIGKILL of the
 # holder releases the lock with the group still running; it does not join the factory's FIFO
 # ticket queue, so a waiting run here can take the lock before a factory step that waited longer;
-# it never touches <lock>.queue. LOCAL_CI_TEST_WALK_PAUSE (digits, a test seam) only sleeps between
-# a directory's check and its entry.
+# it never touches <lock>.queue. LOCAL_CI_TEST_WALK_PAUSE (digits, a test seam) only says so on stderr
+# and sleeps between a directory's check and its entry.
 # shellcheck disable=SC2016  # perl source, not shell
 HOLD='use strict; use warnings;
 use Fcntl qw(O_RDWR O_CREAT O_NOFOLLOW O_NONBLOCK LOCK_EX LOCK_NB S_ISDIR S_ISREG);
@@ -312,7 +312,7 @@ for my $p (@parts) {
   my @l = lstat($p) or bail("the heavy lock directory $p under $anchor is missing: $!");
   S_ISDIR($l[2]) && $l[4] == $< && !($l[2] & 022)
     or bail("$p under $anchor must be a directory of this user without group or other write, not a link (heavy lock $lock)");
-  sleep $pause if $pause;
+  if ($pause) { print STDERR "local-ci: test pause after checking $p\n"; sleep $pause }
   chdir($p) or bail("cannot enter $p for the heavy lock $lock: $!");
   my @c = stat(".");
   $c[0] == $l[0] && $c[1] == $l[1] or bail("$p under $anchor changed while it was checked (heavy lock $lock)");

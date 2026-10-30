@@ -196,6 +196,10 @@ fixture; jobs "$J_BLOCKED"; echo '[{"message": "The runner was lost"}]' > "$work
 rc_is 1 && [ "$(cat "$work/ann.read")" = 11 ] && pass "5 a never-started job without a billing message: no hit" || fail "5 other message ($(diag))"
 fixture; jobs '{"name": "q", "conclusion": "failure", "steps": [], "check_run_url": "https://api.github.com/repos/acme/widgets/check-runs/x"}'; go '' check 4245
 rc_is 64 && grep -q 'has no check run id' "$work/err" && pass "5 a check_run_url without a numeric tail: 64" || fail "5 url ($(diag))"
+for u in null '""'; do
+  fixture; jobs '{"name": "q", "conclusion": "failure", "steps": [], "check_run_url": '"$u"'}'; go '' check 4248
+  rc_is 64 && grep -q 'has no check run id' "$work/err" && pass "5 a never-started job with check_run_url $u: 64" || fail "5 url $u ($(diag))"
+done
 fixture; go '' check 4246
 rc_is 64 && grep -qx 'ci-switch: could not read the jobs of run 4246 in acme/widgets; check the run id' "$work/err" && pass "5 a failed jobs read: 64" || fail "5 read ($(diag))"
 fixture; jobs "$J_BLOCKED"; go '' check 4247

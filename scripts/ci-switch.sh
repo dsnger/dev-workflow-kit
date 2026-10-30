@@ -42,7 +42,8 @@
 # annotations read, and a message matching "spending limit" or "payments have failed" (any case) is
 # a billing block: it prints the job, the message, the switch command and what else the switch
 # needs, exit 0. No such job or message: exit 1. A job with steps is never read, so a test whose
-# output mentions billing is no hit. A failed read: 64. It flips nothing.
+# output mentions billing is no hit. A failed read, or a selected job without a numeric check run id: 64.
+# It flips nothing.
 #
 # EXIT: 0 done (check: block found); 1 not switched (check: no block); 64 usage, precondition or
 # read failure; 75 the flip request failed and the state is not the target.
@@ -95,7 +96,7 @@ if [ "$mode" = check ]; then
     refuse "could not read the jobs of run $arg in $slug; check the run id"
   hit=''
   while IFS=$tab read -r name curl; do
-    [ -n "$curl" ] || continue
+    [ -n "$name$curl" ] || continue  # the one empty line of no selected job
     id=${curl##*/}
     case $id in ''|*[!0-9]*) refuse "job \"$name\" of run $arg has no check run id in $curl" ;; esac
     msgs=$(api --paginate "repos/$slug/check-runs/$id/annotations?per_page=100" --jq '.[].message' 2>/dev/null) ||
