@@ -23,8 +23,9 @@
 #   a secret committed to tracked files, a process that leaves the group with its own setsid, and
 #   a KILL of this script itself (the next run reports such a copy; see stale_scan).
 # - The reviewed checkout is fingerprinted before and after (see fingerprint; `.context/`
-#   excluded). A difference exits 4. It detects, it does not prevent; ignored files, `.context/`
-#   and `.git/` beyond HEAD and the index are outside it.
+#   excluded except .context/codex-reviews/). A difference exits 4. It detects, it does not
+#   prevent; ignored files, the rest of `.context/` and `.git/` beyond HEAD and the index are
+#   outside it.
 set -u
 
 die() { printf 'run-tests.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
@@ -60,7 +61,8 @@ group_stop() {
 # Fingerprint of the reviewed checkout, as one hash; fails (status 1) when any part fails. Read-only
 # git calls only, because the Codex sandbox keeps .git read-only: HEAD, the effective index as
 # `ls-files -s` lists it, `diff HEAD --binary` (tracked content and modes), and each untracked,
-# not-ignored path with its lstat mode and the sha256 of its content (a symlink: of its target).
+# not-ignored path and everything under .context/codex-reviews/ with its lstat mode and the sha256
+# of its content (a symlink: of its target; a directory: of nothing).
 fingerprint() {
   fp_dir=$(mktemp -d "${TMPDIR%/}/gate-b-fp.XXXXXX") || return 1
   # shellcheck disable=SC2016  # perl source
@@ -69,8 +71,11 @@ fingerprint() {
        git --no-optional-locks -C "$repo" ls-files -s &&
        git --no-optional-locks -C "$repo" diff HEAD --binary -- . ':(exclude).context' &&
        git --no-optional-locks -C "$repo" ls-files -z -o --exclude-standard -- . ':(exclude).context' > "$fp_dir/untracked" &&
+       # The gate's own records are in: a test must not forge a findings or state file.
+       { [ ! -d "$repo/.context/codex-reviews" ] ||
+         ( cd "$repo" && find .context/codex-reviews -print0 ) >> "$fp_dir/untracked"; } &&
        ( cd "$repo" && perl -0 -MDigest::SHA -ne 'chomp; my @s = lstat($_) or exit 1;
-           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : $d->addfile($_);
+           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : -d _ ? 0 : $d->addfile($_);
            printf "%o %s %s\n", $s[2], $d->hexdigest, $_;' < "$fp_dir/untracked" )
      } > "$fp_dir/stream" 2>/dev/null; then
     git hash-object --stdin < "$fp_dir/stream"; st=$?
@@ -118,6 +123,7 @@ if ! git clone --quiet --no-local --no-checkout -- "$repo" "$tmp/src" 2>/dev/nul
    ! git -C "$tmp/src" checkout --quiet --detach "$head" 2>/dev/null; then
   die "could not make a copy at $head (is it reachable from a ref of $repo?)" 2
 fi
+git -C "$tmp/src" remote remove origin 2>/dev/null || :
 
 start=$(date +%s)
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's

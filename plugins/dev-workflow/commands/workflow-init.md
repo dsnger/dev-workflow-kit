@@ -2500,8 +2500,9 @@ macOS and most Linux systems) and refuses without it. Rules 1–2 apply; write i
 #   a secret committed to tracked files, a process that leaves the group with its own setsid, and
 #   a KILL of this script itself (the next run reports such a copy; see stale_scan).
 # - The reviewed checkout is fingerprinted before and after (see fingerprint; `.context/`
-#   excluded). A difference exits 4. It detects, it does not prevent; ignored files, `.context/`
-#   and `.git/` beyond HEAD and the index are outside it.
+#   excluded except .context/codex-reviews/). A difference exits 4. It detects, it does not
+#   prevent; ignored files, the rest of `.context/` and `.git/` beyond HEAD and the index are
+#   outside it.
 set -u
 
 die() { printf 'run-tests.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
@@ -2537,7 +2538,8 @@ group_stop() {
 # Fingerprint of the reviewed checkout, as one hash; fails (status 1) when any part fails. Read-only
 # git calls only, because the Codex sandbox keeps .git read-only: HEAD, the effective index as
 # `ls-files -s` lists it, `diff HEAD --binary` (tracked content and modes), and each untracked,
-# not-ignored path with its lstat mode and the sha256 of its content (a symlink: of its target).
+# not-ignored path and everything under .context/codex-reviews/ with its lstat mode and the sha256
+# of its content (a symlink: of its target; a directory: of nothing).
 fingerprint() {
   fp_dir=$(mktemp -d "${TMPDIR%/}/gate-b-fp.XXXXXX") || return 1
   # shellcheck disable=SC2016  # perl source
@@ -2546,8 +2548,11 @@ fingerprint() {
        git --no-optional-locks -C "$repo" ls-files -s &&
        git --no-optional-locks -C "$repo" diff HEAD --binary -- . ':(exclude).context' &&
        git --no-optional-locks -C "$repo" ls-files -z -o --exclude-standard -- . ':(exclude).context' > "$fp_dir/untracked" &&
+       # The gate's own records are in: a test must not forge a findings or state file.
+       { [ ! -d "$repo/.context/codex-reviews" ] ||
+         ( cd "$repo" && find .context/codex-reviews -print0 ) >> "$fp_dir/untracked"; } &&
        ( cd "$repo" && perl -0 -MDigest::SHA -ne 'chomp; my @s = lstat($_) or exit 1;
-           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : $d->addfile($_);
+           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : -d _ ? 0 : $d->addfile($_);
            printf "%o %s %s\n", $s[2], $d->hexdigest, $_;' < "$fp_dir/untracked" )
      } > "$fp_dir/stream" 2>/dev/null; then
     git hash-object --stdin < "$fp_dir/stream"; st=$?
@@ -2595,6 +2600,7 @@ if ! git clone --quiet --no-local --no-checkout -- "$repo" "$tmp/src" 2>/dev/nul
    ! git -C "$tmp/src" checkout --quiet --detach "$head" 2>/dev/null; then
   die "could not make a copy at $head (is it reachable from a ref of $repo?)" 2
 fi
+git -C "$tmp/src" remote remove origin 2>/dev/null || :
 
 start=$(date +%s)
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
@@ -2679,6 +2685,9 @@ git -C "$repo" cat-file -e "$base^{commit}" 2>/dev/null || usage "baseSha $base 
 git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
 dir="$repo/.context/codex-reviews"
 state="$dir/gate-b-cycle-$nonce.state"
+# Codex can write in the repository, and this script runs with the user's full rights: it never
+# writes through a symlink, so a planted link cannot redirect a write outside the workspace.
+for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a symlink; refusing to write through it"; done
 [ -f "$state" ] || usage "no cycle base: $state is missing (the main session writes it before pass 1)"
 recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
 [ "$recorded" = "$base" ] || usage "baseSha differs from the cycle base recorded in $state"
@@ -2728,6 +2737,9 @@ a=$(( $(grep -c "^risk $n start " "$state") + 1 ))
 pre="$dir/gate-b-risk-$nonce-pass-$n-attempt-$a"
 findings_rel=".context/codex-reviews/gate-b-risk-$nonce-pass-$n-attempt-$a.md"
 canon="$dir/gate-b-risk-$nonce-pass-$n.md"
+for x in "$pre.md" "$pre-evidence.md" "$pre-reply.md" "$pre.events.jsonl"; do
+  { [ -e "$x" ] || [ -L "$x" ]; } && die "attempt file $x already exists; refusing to reuse it" 1
+done
 printf 'risk %s start %s %s %s\n' "$n" "$a" "$head" "$(date +%s)" >> "$state"
 finish() { printf 'risk %s failed %s %s\n' "$n" "$a" "$1" >> "$state"; [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"; }
 
@@ -2765,8 +2777,12 @@ group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 
 model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$pre.events.jsonl" | head -n 1)
+# place <src> <dest>: a new file in <dest>'s directory, then a rename over <dest>, which replaces a
+# symlink there instead of following it.
+place() { t=$(mktemp "$dir/.risk-pass.XXXXXX") && cp "$1" "$t" && mv -f "$t" "$2"; }
+[ -L "$pre-evidence.md" ] && rm -f "$pre-evidence.md"
 { printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
-  cat "$pre-evidence.md" 2>/dev/null || :; } > "$work/evidence" && cp "$work/evidence" "$pre-evidence.md"
+  cat "$pre-evidence.md" 2>/dev/null || :; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
 [ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"
 [ "$rc" -eq 0 ] || { tail -n 20 "$work/stderr" >&2; finish 1 "codex exited $rc"; }
 
@@ -2791,10 +2807,14 @@ valid() {
       exit (k + 0 == NR - 1 ? 0 : 1)
     }' "$1"
 }
-[ -f "$pre.md" ] || finish 1 "no findings file $pre.md"
+{ [ -f "$pre.md" ] && [ ! -L "$pre.md" ]; } || finish 1 "no findings file $pre.md (or not a regular file)"
 valid "$pre.md" || finish 1 "findings file $pre.md is not in the gate rules' format"
 
-cp "$pre.md" "$canon" || finish 1 "could not write $canon"
+[ -L "$state" ] && die "$state became a symlink; refusing to write through it" 1
+# The copy is validated again, so a file changed after the first check cannot be promoted.
+if ! { cp "$pre.md" "$work/canon" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
+  finish 1 "could not write $canon"
+fi
 sum=$(perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$canon") || finish 1 'could not hash the canonical file'
 printf 'risk %s done %s %s %s\n' "$n" "$a" "$head" "$sum" >> "$state"
 printf 'risk pass %s attempt %s: %s\n' "$n" "$a" "$(tail -n 1 "$canon")"

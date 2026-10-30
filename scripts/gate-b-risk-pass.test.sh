@@ -125,6 +125,23 @@ printf 'risk 1 start 1 %s 1\n' "$H" >> "$state"
 run 1 30
 [ $rc -eq 0 ] && grep -q "^risk 1 done 2 $H " "$state" && pass 'an interrupted attempt is taken over: the run resumes as attempt 2' || fail "resume rc=$rc $(cat "$work/err")"
 
+# Symlinks planted by a reviewer are never written through.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'keep\n' > "$work/target"; ln -s "$work/target" "$(canon 1)"
+run 1 30
+[ $rc -eq 0 ] && [ ! -L "$(canon 1)" ] && [ "$(cat "$work/target")" = keep ] && pass 'a symlink at the canonical path is replaced, its target untouched' || fail "canon link rc=$rc"
+reset; ln -s "$work/target" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl"
+run 1 30
+[ $rc -eq 1 ] && [ "$(cat "$work/target")" = keep ] && grep -q 'already exists' "$work/err" && pass 'a planted attempt file: exit 1, its target untouched' || fail "attempt link rc=$rc"
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'printf "late\\n" > "%s.real"; ln -s "%s.real" "%s"\n' "$work/target" "$work/target" "$(att 1 1)" > "$STUB_DIR/before"
+echo none > "$STUB_DIR/mode"; run 1 30
+[ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && pass 'a findings file that is a symlink is not promoted' || fail "findings link rc=$rc"
+reset; mv "$d" "$work/real-reviews"; ln -s "$work/real-reviews" "$d"
+run 1 30
+[ $rc -eq 2 ] && grep -q 'is a symlink' "$work/err" && pass 'a symlinked .context/codex-reviews: exit 2' || fail "dir link rc=$rc"
+rm -f "$d"; mkdir -p "$d"
+
 # Refusals before anything is written.
 reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30
 [ $rc -eq 6 ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass 'another Codex CLI version: exit 6' || fail "version rc=$rc"

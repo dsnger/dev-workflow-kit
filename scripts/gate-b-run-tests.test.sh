@@ -115,6 +115,13 @@ chmod -x "$repo/untracked.env"
 run 30 sh -c 'echo z > "$0/ignored.txt"; mkdir -p "$0/.context"; echo z > "$0/.context/x"' "$repo"
 [ $rc -eq 0 ] && pass 'ignored files and .context/ are outside the fingerprint (stated limit)' || fail "ignored rc=$rc"
 
+mkdir -p "$repo/.context/codex-reviews"
+run 30 sh -c 'echo forged > "$0/.context/codex-reviews/gate-b-quality-x-pass-1.md"' "$repo"
+[ $rc -eq 4 ] && pass 'a write to .context/codex-reviews/ (the gate records): exit 4' || fail "records rc=$rc"
+rm -f "$repo/.context/codex-reviews/gate-b-quality-x-pass-1.md"
+run 30 sh -c '[ -z "$(git remote)" ]'
+[ $rc -eq 0 ] && pass 'the copy has no remote' || fail "remote rc=$rc"
+
 # No perl on PATH: exit 5, nothing run. The PATH holds only links to what the script needs.
 mkdir "$work/bin"
 for t in git sh "$RUN_TESTS_SH" cat date tail sed tr mktemp rm mkdir find dirname; do

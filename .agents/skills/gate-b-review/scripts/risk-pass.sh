@@ -46,6 +46,9 @@ git -C "$repo" cat-file -e "$base^{commit}" 2>/dev/null || usage "baseSha $base 
 git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
 dir="$repo/.context/codex-reviews"
 state="$dir/gate-b-cycle-$nonce.state"
+# Codex can write in the repository, and this script runs with the user's full rights: it never
+# writes through a symlink, so a planted link cannot redirect a write outside the workspace.
+for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a symlink; refusing to write through it"; done
 [ -f "$state" ] || usage "no cycle base: $state is missing (the main session writes it before pass 1)"
 recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
 [ "$recorded" = "$base" ] || usage "baseSha differs from the cycle base recorded in $state"
@@ -95,6 +98,9 @@ a=$(( $(grep -c "^risk $n start " "$state") + 1 ))
 pre="$dir/gate-b-risk-$nonce-pass-$n-attempt-$a"
 findings_rel=".context/codex-reviews/gate-b-risk-$nonce-pass-$n-attempt-$a.md"
 canon="$dir/gate-b-risk-$nonce-pass-$n.md"
+for x in "$pre.md" "$pre-evidence.md" "$pre-reply.md" "$pre.events.jsonl"; do
+  { [ -e "$x" ] || [ -L "$x" ]; } && die "attempt file $x already exists; refusing to reuse it" 1
+done
 printf 'risk %s start %s %s %s\n' "$n" "$a" "$head" "$(date +%s)" >> "$state"
 finish() { printf 'risk %s failed %s %s\n' "$n" "$a" "$1" >> "$state"; [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"; }
 
@@ -132,8 +138,12 @@ group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 
 model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$pre.events.jsonl" | head -n 1)
+# place <src> <dest>: a new file in <dest>'s directory, then a rename over <dest>, which replaces a
+# symlink there instead of following it.
+place() { t=$(mktemp "$dir/.risk-pass.XXXXXX") && cp "$1" "$t" && mv -f "$t" "$2"; }
+[ -L "$pre-evidence.md" ] && rm -f "$pre-evidence.md"
 { printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
-  cat "$pre-evidence.md" 2>/dev/null || :; } > "$work/evidence" && cp "$work/evidence" "$pre-evidence.md"
+  cat "$pre-evidence.md" 2>/dev/null || :; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
 [ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"
 [ "$rc" -eq 0 ] || { tail -n 20 "$work/stderr" >&2; finish 1 "codex exited $rc"; }
 
@@ -158,10 +168,14 @@ valid() {
       exit (k + 0 == NR - 1 ? 0 : 1)
     }' "$1"
 }
-[ -f "$pre.md" ] || finish 1 "no findings file $pre.md"
+{ [ -f "$pre.md" ] && [ ! -L "$pre.md" ]; } || finish 1 "no findings file $pre.md (or not a regular file)"
 valid "$pre.md" || finish 1 "findings file $pre.md is not in the gate rules' format"
 
-cp "$pre.md" "$canon" || finish 1 "could not write $canon"
+[ -L "$state" ] && die "$state became a symlink; refusing to write through it" 1
+# The copy is validated again, so a file changed after the first check cannot be promoted.
+if ! { cp "$pre.md" "$work/canon" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
+  finish 1 "could not write $canon"
+fi
 sum=$(perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$canon") || finish 1 'could not hash the canonical file'
 printf 'risk %s done %s %s %s\n' "$n" "$a" "$head" "$sum" >> "$state"
 printf 'risk pass %s attempt %s: %s\n' "$n" "$a" "$(tail -n 1 "$canon")"

@@ -530,10 +530,11 @@ reports the tests as not run. The script:
 - runs the command with only `PATH`, `HOME`, `TMPDIR` and `LANG=C` set, stdin from `/dev/null`, as its own process
   group (through `perl`; without `perl` it runs nothing, exit 5). After the time limit (600 s by default) the group
   gets `TERM`, then `KILL`. The copy is removed on every exit;
-- compares the reviewed checkout before and after: `HEAD`, the index, the diff against `HEAD`, and every untracked,
-  not-ignored file's content and mode. A difference exits 4, which Codex reports as a Blocker. This detects a
-  write, it does not prevent it. Ignored files, `.context/` and `.git/` beyond `HEAD` and the index are outside
-  the comparison.
+- compares the reviewed checkout before and after: `HEAD`, the index, the diff against `HEAD`, every untracked,
+  not-ignored file's content and mode, and everything under `.context/codex-reviews/` (so a test cannot forge a
+  findings or state file). A difference exits 4, which Codex reports as a Blocker. This detects a write, it does
+  not prevent it. Ignored files, the rest of `.context/` and `.git/` beyond `HEAD` and the index are outside the
+  comparison. The copy has no remote.
 
 **What it does not protect against.** Two limits, stated so nobody reads the list above as isolation. These are
 the axes checked against, and the list is not exhaustive. First, a test can read any file on your machine by
@@ -565,7 +566,9 @@ effort), run by `scripts/risk-pass.sh`.
   (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
   `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
-  the result. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
+  the result. The script runs with your rights while Codex can write in the repository, so it never writes
+  through a symlink: a symlinked `.context/codex-reviews/` or state file is refused, an existing attempt file is
+  refused, and results are renamed into place. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
   timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI other than `codex-cli 0.162.1`.
 - *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
   the floor, which stays the hook-counted `spec`+`quality` pair. When it is due and no pass is left under the
