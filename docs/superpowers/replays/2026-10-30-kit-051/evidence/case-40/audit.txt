@@ -1,0 +1,1 @@
+FLAG gate-b-risk-k051rp40-pass-2-attempt-1.events.jsonl:2:cat '/Users/daniel/.codex/plugins/cache/claude-plugins-official/superpowers/7.0.0/skills/using-superpowers/SKILL.md'"

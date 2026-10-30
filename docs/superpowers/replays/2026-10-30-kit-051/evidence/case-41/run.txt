@@ -1,0 +1,6 @@
+case 41 head 97471fb7cdf9ec3d3f29d4a5c8ed7d9d6367a0ba base 70bb54e99df52626e1edc70e65746093b3d23de9 cli codex-cli 0.162.1 model-config gpt-6-astra
+call spec exit 0 secs 149
+call quality exit 0 secs 277
+risk forced
+call risk exit 0 secs 337
+audit flags 1
