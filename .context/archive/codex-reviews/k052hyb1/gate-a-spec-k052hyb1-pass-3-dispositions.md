@@ -1,0 +1,1 @@
+1 | fixed | §4 trust boundary shrunk to the factory's own model: anchor ($HOME, or the override's grandparent) followed as the factory does; below it a chdir walk with lstat checks and a dev/ino match of stat('.'), then a relative O_NOFOLLOW open; the "only this user" claim removed; §6 tests adjusted

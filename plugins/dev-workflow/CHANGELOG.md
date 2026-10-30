@@ -22,6 +22,30 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.52.0
+
+Hybrid CI (story `docs/superpowers/stories/2026-10-30-kit-052-hybrid-ci-story.md`, design
+`docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md`). Minor: a new shipped script (`### 2.27`) and
+new `local-ci.sh` behaviour. Hosted Actions is the default; local is the fallback or an up-front choice.
+
+- **`scripts/ci-switch.sh`** (`/workflow-init` 2.27, check 4p): shows whether the quality workflow is hosted
+  (enabled) or local (disabled); `hosted|local "<reason>"` flips its enabled state only after a yes and logs
+  the switch in the main checkout's `.context/ci-switch.log`; `check <run-id>` reports a billing or
+  spending-limit block (a job GitHub never started, with that annotation) and the switch command, flipping
+  nothing. Never a ruleset, protection, billing or spending limit.
+- **Month reminder, no scheduler:** when the log's last switch went to local in an earlier UTC month,
+  `ci-switch.sh` and `local-ci.sh` print one line with the command back to hosted.
+- **`local-ci.sh --lane <base>`** prints `light` or `full` from the existing light-lane rule; the kit's own
+  Actions job uses it, so a docs- or release-only PR runs only the light row's checks there too (same job name,
+  no `paths-ignore`).
+- **Machine-wide heavy lock:** `local-ci.sh`'s full lane waits for `$SFX_HEAVY_LOCK`, else
+  `~/.cache/sfx-factory/heavy.lock` when that directory exists (none: no lock), held by `perl`; it stops the
+  battery's process group before it lets go (a SIGKILL of the holder itself excepted) and never touches the factory's ticket queue, so it can overtake
+  a factory step that waited longer.
+- **Kit CI runs the whole quality row again:** `.github/workflows/ci.yml` gains the two review-skill suites
+  0.51 added to the row (under `sh` and `dash`) and their shellcheck lines; new check 4q fails when the row and
+  the workflow name different scripts.
+
 ## 0.51.0
 
 A stronger Codex review (story `docs/superpowers/stories/2026-10-30-kit-051-codex-review-story.md`, design

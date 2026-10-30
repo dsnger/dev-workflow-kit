@@ -1,0 +1,2 @@
+1 | fixed | §4 trust boundary now checks the whole chain the factory walks (default: .cache and sfx-factory; override: lock dir and its parent) by lstat, ownership and no group/other write; the remaining descriptor-walk difference is stated as a limit; §6 tests a symlinked and a group-writable parent
+2 | fixed | §6 drops the hostile-inheritance case through go; suite-entry clearing is proven by the suite's own run inside the locked final battery, where a leaked marker would fail the lock cases

@@ -161,8 +161,10 @@ If not: open the failing step. The quality step runs the same command as step 6;
 steps before it are CI setup (toolchain, dependencies) and fail for CI-only reasons. Why
 "up to date" matters: [reference, CI](reference.md#ci-and-branch-protection).
 
-No Actions minutes left, or Actions off? If `/workflow-init` wrote `scripts/local-ci.sh` (it asks),
-disable the workflow before you push, then run `sh scripts/local-ci.sh <sha>` per head: it runs the
+Hosted Actions is the default; local is the fallback or an up-front choice. No Actions minutes left, or
+Actions off? If `/workflow-init` wrote `scripts/local-ci.sh` and `scripts/ci-switch.sh` (it asks),
+`sh scripts/ci-switch.sh local "<reason>"` before you push (`sh scripts/ci-switch.sh check <run-id>` tells
+whether billing blocked a red run), then run `sh scripts/local-ci.sh <sha>` per head: it runs the
 quality command on this machine and posts the `quality` status. A `quality` check restricted to one
 app's source, and every ruleset change, are yours to settle first. A branch that requires no check
 needs neither: the quality command's result goes into the PR body. Details:

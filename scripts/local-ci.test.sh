@@ -14,7 +14,14 @@ fail() { fail_n=$((fail_n + 1)); printf 'FAIL - %s\n' "$1"; }
 work=$(mktemp -d) || exit 1
 [ -n "$work" ] && [ -d "$work" ] || exit 1
 work=$(cd "$work" && pwd -P)
-trap 'chmod -R u+rwx "$work" 2>/dev/null; rm -rf "$work"' EXIT
+bg=''
+# shellcheck disable=SC2086  # $bg is a list of pids
+trap 'kill $bg 2>/dev/null; chmod -R u+rwx "$work" 2>/dev/null; rm -rf "$work"' EXIT
+# 0.52: no inherited heavy-lock setting reaches a run (this suite runs inside a locked battery, whose
+# SFX_HEAVY_HELD would skip every lock case), and HOME is the suite's own, so no run finds the real
+# machine-wide lock; each lock case sets its own values.
+unset SFX_HEAVY_LOCK SFX_HEAVY_HELD HEAVY_LOCK_WAIT_SECS LOCAL_CI_TEST_WALK_PAUSE
+HOME=$work/home; export HOME; mkdir -p "$HOME"
 trap 'exit 1' HUP INT TERM
 
 # Stubs. gh: appends each call's arguments, one per line, then one "env ..." line with GH_TOKEN,
@@ -79,7 +86,10 @@ export STUB_DIR="$work" REAL_GIT REAL_JQ
 
 # The fixture's battery: records where and at which commit it ran, under which LC_ALL, and the
 # worktree's file names; passes output through; exits with the committed exit.code.
+# 0.52: it also records the SFX_HEAVY_HELD it got, and whether a lock holder had finished first.
 cat > "$work/battery.src" <<'EOF'
+printf '%s' "${SFX_HEAVY_HELD-unset}" > "$STUB_DIR/battery.held"
+[ -e "$STUB_DIR/holder.done" ] && touch "$STUB_DIR/after.holder"
 printf '%s\n%s\nLC_ALL=%s\n' "$(pwd -P)" "$(git rev-parse HEAD)" "${LC_ALL-unset}" > "$STUB_DIR/battery.ran"
 ls -A > "$STUB_DIR/battery.ls"
 echo battery-stdout; echo battery-stderr >&2
@@ -90,7 +100,8 @@ EOF
 # row's label), ci.yml (one shellcheck pin), battery.sh and exit.code 0; runs start in r.
 fixture() {
   rm -rf "$work/o.git" "$work/r" "$work/other" "$work/lane" "$work/stale" "$work/tmp" "$work/tmp dir" \
-    "$work"/gh.* "$work"/git.* "$work/claude.out" "$work/light.ran"
+    "$work"/gh.* "$work"/git.* "$work/claude.out" "$work/light.ran" "$work/home/.cache" "$work/lk" \
+    "$work/held" "$work/holder.done" "$work/after.holder" "$work/battery.held" "$work/stage1" "$work/go" "$work/orphan.pid"
   mkdir -p "$work/tmp"; echo 0.11.0 > "$work/shellcheck.v"
   cwd=$work/r; path=$work/stub:$PATH
   git init -q --bare -b main "$work/o.git"
@@ -155,6 +166,7 @@ refused() {
      not_posted && clean; then pass "$1"; else fail "$1 ($(diag))"; fi
 }
 ROW_MSG='has no single quality row with one command in backticks as its last cell; keep exactly one "| quality " row'
+USAGE='usage: sh scripts/local-ci.sh [--from <green> | --lane <base>] [<commit>]'
 URL_MSG='local-ci: origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
 
 # --- 1: green battery ---
@@ -232,9 +244,9 @@ refused "9 two quality rows: exit 64" "local-ci: AGENTS.md at $(sha_of HEAD) $RO
 echo '| quality (fixture) | sh ./battery.sh |' | put AGENTS.md; run
 refused "9 a quality row whose last cell is not in backticks: exit 64" "local-ci: AGENTS.md at $(sha_of HEAD) $ROW_MSG"
 fixture; run HEAD extra
-refused "9 a second argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
+refused "9 a second argument: usage, exit 64" "$USAGE"
 run --help
-refused "9 an option-like argument: usage, exit 64" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
+refused "9 an option-like argument: usage, exit 64" "$USAGE"
 run nosuchref
 refused "9 a name that is no commit: exit 64" \
   'local-ci: nosuchref does not name a commit here; pass a commit, branch or tag of this repository'
@@ -472,6 +484,7 @@ LIGHT_RC=1 lanefix; edit docs 'echo more >> docs/a.md'; run
 rc_is 1 && light_ran && [ ! -e "$work/battery.ran" ] && clean &&
   [ "$(tail -n 1 "$work/out")" = "local-ci: posted quality=failure on $(sha_of HEAD): light lane red: docs/release only, local run, shellcheck 0.11.0, claude 9.9.9" ] &&
   pass "35 light row red: failure posted, exit 1" || fail "35 ($(diag))"
+unset LIGHT_RC  # a prefix assignment to a function call stays set in sh
 
 lanefix; g=$(sha_of HEAD); git -C "$work/r" commit -q --allow-empty -m same; green_status; run --from "$g"
 inherited 'same tree' "$g" "36 --from a green head with the same tree: inherited, nothing ran"
@@ -502,7 +515,200 @@ refused "40 --from naming no commit: exit 64" "local-ci: --from nosuchref does n
 : > "$work/git.faildiff"; run --from "$g"
 refused "40 a failed records diff: exit 64, after git's own error" "$(printf 'stub: diff failed\nlocal-ci: could not list the paths changed since %s; see the git error above' "$g")"
 rm -f "$work/git.faildiff"; run --from
-refused "40 --from without a value: usage" 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]'
+refused "40 --from without a value: usage" "$USAGE"
+
+# --- 41-44: --lane (0.52, spec docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md §3) ---
+# lane_out <expected> <name>: exit 0, exactly that word on stdout, no gh call, nothing ran or is left.
+lane_out() {
+  if rc_is 0 && [ "$(cat "$work/out")" = "$1" ] && [ ! -e "$work/gh.args" ] && [ ! -e "$work/battery.ran" ] &&
+     ! light_ran && clean; then pass "$2"; else fail "$2 ($(diag))"; fi
+}
+lanefix; edit docs 'echo more >> docs/a.md'; run --lane origin/main HEAD; lane_out light "41 --lane: docs only is light"
+lanefix; edit release "$(bump)"; run --lane origin/main; lane_out light "41 --lane: release-only is light (commit defaults to HEAD)"
+lanefix; edit code 'echo x >> battery.sh'; run --lane origin/main HEAD; lane_out full "41 --lane: a code change is full"
+fixture; edit docs 'mkdir -p docs && echo d > docs/a.md'; run --lane origin/main; lane_out full "42 --lane: no light row is full"
+# --lane needs no gh, no github origin and no shellcheck parity: all three are broken here.
+lanefix; edit docs 'echo more >> docs/a.md'; echo 0.10.0 > "$work/shellcheck.v"; git -C "$work/r" remote set-url origin "$work/o.git"
+path=$work/nogh:$work/tools; run --lane origin/main; path=$work/stub:$PATH
+lane_out light "42 --lane without gh, a github origin or shellcheck parity: still decided"
+lanefix; run --lane nosuchbase
+refused "43 --lane naming no commit: exit 64" 'local-ci: --lane nosuchbase does not name a commit here; pass the base branch or commit'
+run --lane origin/main --from x; refused "43 --lane with --from: usage" "$USAGE"
+run --from x --lane origin/main; refused "43 --from with --lane: usage" "$USAGE"
+run --lane; refused "43 --lane without a value: usage" "$USAGE"
+run --lane ''; refused "43 --lane with an empty value: usage" "$USAGE"
+# The Actions lane step itself, run here: its run: block from ci.yml, with BASE and GITHUB_OUTPUT as
+# the job gives them and the repository's own local-ci.sh at scripts/local-ci.sh.
+CI_YML="$(cd "$(dirname "$0")/.." && pwd)/.github/workflows/ci.yml"
+awk '/^      - name: / { inlane = 0 } /^        id: lane$/ { inlane = 1 }
+  inlane && /^        run: \|$/ { body = 1; next } inlane && body && /^          / { print substr($0, 11) }' "$CI_YML" > "$work/lane-step.sh"
+grep -q 'local-ci.sh --lane' "$work/lane-step.sh" && pass "44 ci.yml has a lane step calling local-ci.sh --lane" || fail "44 lane step not found in ci.yml"
+# step <base> <expected> <name>: runs the step in the clone; GITHUB_OUTPUT gets exactly lane=<expected>.
+step() {
+  mkdir -p "$work/r/scripts"; cp "$SCRIPT" "$work/r/scripts/local-ci.sh"
+  : > "$work/gho"
+  ( cd "$work/r" && env PATH="$work/stub:$PATH" BASE="$1" GITHUB_OUTPUT="$work/gho" sh "$work/lane-step.sh" ) > "$work/out" 2> "$work/err"
+  [ "$(cat "$work/gho")" = "lane=$2" ] && pass "$3" || fail "$3 (out: $(cat "$work/out"); gho: $(cat "$work/gho"))"
+}
+lanefix; edit docs 'echo more >> docs/a.md'; step origin/main light "44 the Actions lane step: docs only is light"
+lanefix; edit code 'echo x >> battery.sh'; step origin/main full "44 the Actions lane step: a code change is full"
+lanefix; edit docs 'echo more >> docs/a.md'; step 0000000000000000000000000000000000000000 full "44 the Actions lane step: an all-zero push base is full"
+lanefix; edit docs 'echo more >> docs/a.md'; step '' full "44 the Actions lane step: an empty base is full"
+# conds: the step names that carry the light-lane condition; exactly the four heavy ones.
+conds=$(awk '/^      - name: / { n = substr($0, 15) } /^        if: steps.lane.outputs.lane != .light.$/ { print n }' "$CI_YML")
+[ "$conds" = "$(printf '%s\n' 'Lint shell scripts (POSIX sh)' 'Hook state-machine tests (sh)' 'Hook state-machine tests (dash)' 'Checker and report suites')" ] &&
+  pass "44 exactly the lint, both hook-test and the suites steps skip in the light lane" || fail "44 conditioned steps: $conds"
+
+# --- 45-56: the heavy lock (0.52, spec docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md §4) ---
+LK=$work/lk/locks/heavy.lock
+deflock() { mkdir -p "$work/home/.cache/sfx-factory"; chmod 755 "$work/home/.cache"; chmod 700 "$work/home/.cache/sfx-factory"; }
+ovrlock() { mkdir -p "$work/lk/locks"; chmod 700 "$work/lk/locks"; }
+# hold <path> <seconds>: a background flock holder with a note, like another tool's; touches
+# holder.done just before it lets go; returns once it holds the lock.
+hold() {
+  rm -f "$work/held" "$work/holder.done"
+  perl -MFcntl=:flock -e 'open(my $f, ">>", $ARGV[0]) or die; flock($f, LOCK_EX) or die; truncate($f, 0);
+    syswrite($f, "4242\n/holder/dir\n"); open(my $h, ">", $ARGV[2]) and close $h; sleep $ARGV[1];
+    open(my $d, ">", $ARGV[3]) and close $d' "$1" "$2" "$work/held" "$work/holder.done" &
+  hpid=$!; bg="$bg $hpid"
+  i=0; while [ ! -e "$work/held" ] && [ "$i" -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+}
+# lockable <path>: another process can take the lock now.
+lockable() { perl -MFcntl=:flock -e 'open(my $f, ">>", $ARGV[0]) or exit 2; exit(flock($f, LOCK_EX | LOCK_NB) ? 0 : 1)' "$1"; }
+# bgrun [NAME=value]...: the script in the background, as go runs it; sets rpid.
+bgrun() {
+  rm -f "$work/gh.args" "$work/battery.ran" "$work/rc"
+  ( cd "$cwd" && exec env PATH="$path" TMPDIR="$work/tmp" "$@" "$LOCAL_CI_SH" "$SCRIPT" ) > "$work/out" 2> "$work/err" &
+  rpid=$!; bg="$bg $rpid"
+}
+# lockrefused <name> <line>: exit 64, that line last on stderr, nothing ran, posted or left behind.
+lockrefused() {
+  if rc_is 64 && [ "$(tail -n 1 "$work/err")" = "local-ci: $2" ] && [ ! -e "$work/battery.ran" ] && not_posted && clean
+  then pass "$1"; else fail "$1 ($(diag))"; fi
+}
+
+fixture; sha=$(sha_of HEAD); run
+finished 0 success green "$sha" && [ ! -e "$work/home/.cache" ] && [ "$(cat "$work/battery.held")" = unset ] &&
+  pass "45 no SFX_HEAVY_LOCK and no default directory: no lock, nothing created" || fail "45 ($(diag))"
+fixture; deflock; sha=$(sha_of HEAD); run
+f=$work/home/.cache/sfx-factory/heavy.lock
+finished 0 success green "$sha" && [ -f "$f" ] && [ "$(perl -e 'printf "%o", (stat $ARGV[0])[2] & 07777' "$f")" = 600 ] &&
+  [ -n "$(cat "$work/battery.held")" ] && [ "$(cat "$work/battery.held")" != unset ] && [ "$(sed -n 1p "$f")" = "$(cat "$work/battery.held")" ] &&
+  pass "46 default directory present: the full battery ran under the lock (0600 file, note = holder pid = the battery's SFX_HEAVY_HELD)" || fail "46 ($(diag))"
+[ "$(ls -A "$work/home/.cache/sfx-factory")" = heavy.lock ] && pass "46 ... and nothing besides the lock file appeared (no queue)" || fail "46 other entries appeared"
+lockable "$f" && pass "47 after the run another process takes the lock at once" || fail "47 lock still held after the run"
+
+fixture; ovrlock; sha=$(sha_of HEAD); hold "$LK" 3; runenv SFX_HEAVY_LOCK="$LK"
+finished 0 success green "$sha" && [ -e "$work/after.holder" ] &&
+  grep -qxF "local-ci: waiting for the heavy lock $LK (pid 4242 in /holder/dir)" "$work/err" &&
+  pass "48 another holder has it: the run waits, names the holder, and the battery starts only after it let go" || fail "48 ($(diag))"
+wait "$hpid" 2>/dev/null
+
+fixture; ovrlock; sha=$(sha_of HEAD); hold "$LK" 4; runenv SFX_HEAVY_LOCK="$LK" HEAVY_LOCK_WAIT_SECS=1
+lockrefused "49 a holder past HEAVY_LOCK_WAIT_SECS: exit 64, nothing posted" \
+  "waited 1 s for the heavy lock $LK; red rather than hang (HEAVY_LOCK_WAIT_SECS)"
+fixture; ovrlock; sha=$(sha_of HEAD); runenv SFX_HEAVY_LOCK="$LK" SFX_HEAVY_HELD=777
+finished 0 success green "$sha" && [ ! -e "$work/after.holder" ] && [ "$(cat "$work/battery.held")" = 777 ] &&
+  pass "50 SFX_HEAVY_HELD non-empty (inside a holder's step): no wait on a held lock" || fail "50 ($(diag))"
+wait "$hpid" 2>/dev/null
+fixture; ovrlock; sha=$(sha_of HEAD); runenv SFX_HEAVY_LOCK="$LK" SFX_HEAVY_HELD=
+finished 0 success green "$sha" && [ -f "$LK" ] && [ "$(cat "$work/battery.held")" != "" ] &&
+  pass "50 SFX_HEAVY_HELD empty: the lock is taken" || fail "50 empty ($(diag))"
+
+for w in '' abc 0 007 inf 1234567890; do
+  fixture; deflock; runenv HEAVY_LOCK_WAIT_SECS="$w"
+  lockrefused "51 HEAVY_LOCK_WAIT_SECS='$w': exit 64 before waiting" "HEAVY_LOCK_WAIT_SECS must be a whole number of seconds from 1, not '$w'"
+done
+fixture; runenv SFX_HEAVY_LOCK=rel/heavy.lock
+lockrefused "51 a relative SFX_HEAVY_LOCK: exit 64" "SFX_HEAVY_LOCK must be an absolute path to a file, not 'rel/heavy.lock'"
+
+# Trust boundary: each refused before anything ran.
+fixture; mkdir -p "$work/lk/real"; chmod 700 "$work/lk/real"; ln -s real "$work/lk/locks"; runenv SFX_HEAVY_LOCK="$LK"
+lockrefused "52 a symlinked lock directory: exit 64" "locks under $work/lk must be a directory of this user without group or other write, not a link (heavy lock $LK)"
+fixture; mkdir -p "$work/home/real/sfx-factory"; chmod 700 "$work/home/real/sfx-factory"; ln -s real "$work/home/.cache"; run
+lockrefused "52 a symlinked .cache on the default path: exit 64" "$(printf '%s' ".cache under $work/home must be a directory of this user without group or other write, not a link (heavy lock $work/home/.cache/sfx-factory/heavy.lock)")"
+rm -rf "$work/home/real"
+fixture; deflock; chmod 775 "$work/home/.cache"; run
+lockrefused "52 a group-writable .cache: exit 64" ".cache under $work/home must be a directory of this user without group or other write, not a link (heavy lock $work/home/.cache/sfx-factory/heavy.lock)"
+fixture; ovrlock; chmod 770 "$work/lk/locks"; runenv SFX_HEAVY_LOCK="$LK"
+lockrefused "52 a group-writable lock directory: exit 64" "locks under $work/lk must be a directory of this user without group or other write, not a link (heavy lock $LK)"
+fixture; ovrlock; : > "$LK"; chmod 660 "$LK"; runenv SFX_HEAVY_LOCK="$LK"
+lockrefused "52 an existing group-writable lock file: exit 64" "the heavy lock $LK must be a regular file of this user without group or other write"
+fixture; ovrlock; ln -s elsewhere "$LK"; runenv SFX_HEAVY_LOCK="$LK"
+[ "$(cat "$work/rc")" = 64 ] && [ ! -e "$work/battery.ran" ] && not_posted && clean &&
+  pass "52 a symlinked lock file: exit 64 (O_NOFOLLOW)" || fail "52 symlinked file ($(diag))"
+fixture; runenv SFX_HEAVY_LOCK="$work/nosuch/locks/heavy.lock"
+[ "$(cat "$work/rc")" = 64 ] && [ ! -e "$work/battery.ran" ] && not_posted && clean && [ ! -e "$work/nosuch" ] &&
+  pass "52 a missing lock directory: exit 64, nothing created" || fail "52 missing dir ($(diag))"
+
+# 53: a directory swapped between its check and its entry is refused (the test seam only sleeps).
+fixture; ovrlock; bgrun SFX_HEAVY_LOCK="$LK" LOCAL_CI_TEST_WALK_PAUSE=3
+i=0; while ! grep -q 'test pause after checking locks' "$work/err" 2>/dev/null && [ "$i" -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+mv "$work/lk/locks" "$work/lk/locks.old"; mkdir "$work/lk/locks"; chmod 700 "$work/lk/locks"
+wait "$rpid"; echo $? > "$work/rc"
+lockrefused "53 a lock directory swapped between check and entry: exit 64" "locks under $work/lk changed while it was checked (heavy lock $LK)"
+
+# 53b: a symlinked grandparent is the trusted anchor (the factory reaches its lock the same way):
+# the run locks the file at the real path, waiting behind its holder there.
+fixture; ovrlock; ln -s lk "$work/lkl"; sha=$(sha_of HEAD); hold "$LK" 2; runenv SFX_HEAVY_LOCK="$work/lkl/locks/heavy.lock"
+finished 0 success green "$sha" && [ -e "$work/after.holder" ] && grep -q 'waiting for the heavy lock' "$work/err" &&
+  pass "53b an override through a symlinked grandparent waits on the same file and then runs" || fail "53b ($(diag))"
+wait "$hpid" 2>/dev/null; rm -f "$work/lkl"
+
+# 54: swapped after the walk, while the run waits: the run keeps the original inode. The first
+# holder lets go; the battery then runs, and only the original file is locked.
+fixture; ovrlock; sha=$(sha_of HEAD)
+put battery.sh <<'EOF'
+touch "$STUB_DIR/stage1"
+i=0; while [ ! -e "$STUB_DIR/go" ] && [ "$i" -lt 200 ]; do sleep 0.1; i=$((i + 1)); done
+EOF
+sha=$(sha_of HEAD); hold "$LK" 3; bgrun SFX_HEAVY_LOCK="$LK"
+i=0; while ! grep -q 'waiting for the heavy lock' "$work/err" 2>/dev/null && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+mv "$work/lk/locks" "$work/lk/locks.old"; mkdir "$work/lk/locks"; chmod 700 "$work/lk/locks"
+wait "$hpid" 2>/dev/null
+i=0; while [ ! -e "$work/stage1" ] && [ "$i" -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+[ -e "$work/stage1" ] && ! lockable "$work/lk/locks.old/heavy.lock" && lockable "$LK" &&
+  pass "54 swapped after the walk: the run holds the original file, the new path stays free" || fail "54 ($(diag))"
+touch "$work/go"; wait "$rpid"; echo $? > "$work/rc"
+rc_is 0 && called success green "$sha" && clean && pass "54 ... and the run then finishes green" || fail "54 finish ($(diag))"
+
+# 55: TERM to the holder while the battery runs: the battery's group, a background child included,
+# is gone before the lock is free; the run posts red.
+fixture; deflock
+put battery.sh <<'EOF'
+sleep 30 & echo $! > "$STUB_DIR/orphan.pid"
+touch "$STUB_DIR/stage1"
+sleep 30
+EOF
+sha=$(sha_of HEAD); bgrun
+i=0; while [ ! -e "$work/stage1" ] && [ "$i" -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+f=$work/home/.cache/sfx-factory/heavy.lock; h=$(sed -n 1p "$f")
+kill -TERM "$h"
+i=0; while ! lockable "$f" && [ "$i" -lt 150 ]; do sleep 0.1; i=$((i + 1)); done
+o=$(cat "$work/orphan.pid" 2>/dev/null)
+lockable "$f" && [ -n "$o" ] && ! kill -0 "$o" 2>/dev/null &&
+  pass "55 TERM to the holder: the battery and its background child are stopped before the lock is free" || fail "55 (orphan ${o:-?})"
+wait "$rpid"; echo $? > "$work/rc"
+rc_is 143 && called failure red "$sha" && clean && pass "55 ... the run posts red and exits 143" || fail "55 post ($(diag))"
+
+# 56: the light lane takes no lock.
+lanefix; deflock; edit docs 'echo more >> docs/a.md'; run
+lane_is light "56 light lane with the lock directory present" && [ ! -e "$work/home/.cache/sfx-factory/heavy.lock" ] &&
+  pass "56 ... and no lock was taken" || fail "56 lock taken in the light lane"
+
+# --- 57: the month reminder from ci-switch.sh's log (0.52, spec §2.2) ---
+REM='ci-switch: a new month renews the Actions budget (last recorded switch to local: 2000-01); back to hosted: sh scripts/ci-switch.sh hosted "budget renewed"'
+fixture; mkdir -p "$work/r/.context"; printf '2000-01-31T23:00:00Z\thosted\tlocal\tci.yml\tbudget\n' > "$work/r/.context/ci-switch.log"
+sha=$(sha_of HEAD); run
+finished 0 success green "$sha" && [ "$(sed -n 1p "$work/err")" = "$REM" ] && pass "57 last switch to local in an earlier month: reminder, run goes on" || fail "57 ($(diag))"
+git -C "$work/r" worktree add -q --detach "$work/other" 2>/dev/null; cwd=$work/other; run
+grep -qxF "$REM" "$work/err" && pass "57 ... also from a linked worktree (the main worktree's log)" || fail "57 linked ($(diag))"
+git -C "$work/r" worktree remove --force "$work/other"; cwd=$work/r
+run --lane HEAD~0; [ ! -s "$work/err" ] && pass "57 --lane never prints it" || fail "57 lane ($(diag))"
+printf '%s-01T00:00:00Z\thosted\tlocal\tci.yml\tb\n' "$(date -u +%Y-%m)" > "$work/r/.context/ci-switch.log"; run
+[ "$(cat "$work/err")" = battery-stderr ] && pass "57 last switch to local this month: silent" || fail "57 this month ($(diag))"
+printf '2000-01-31T23:00:00Z\thosted\tlocal\tci.yml\tb\n2000-02-01T00:00:00Z\tlocal\thosted\tci.yml\tb\n' > "$work/r/.context/ci-switch.log"; run
+[ "$(cat "$work/err")" = battery-stderr ] && pass "57 last switch to hosted: silent" || fail "57 hosted ($(diag))"
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

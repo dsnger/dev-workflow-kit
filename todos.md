@@ -5,6 +5,38 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
+- [ ] **Kit 0.52 plan k052plan1 pass 2, finding 1: a swap test that cannot pass vacuously.** The
+  swap-after-walk case must release the first holder, wait until the kit battery runs, then show a contender
+  cannot lock the original file while the replacement stays lockable (plan
+  `docs/superpowers/plans/2026-10-30-kit-052-hybrid-ci.md` T2). *Trigger: kit 0.52 build, T2.*
+- [ ] **Kit 0.52 plan k052plan1 pass 2, finding 2: leftover suite temp dirs after a limit cut.** A KILL after
+  the 60-min limit skips the suites' EXIT traps; timed runs get a run-specific TMPDIR, checked and cleared
+  after the group stopped. *Trigger: a kit 0.52 full run cut at its limit.*
+- [ ] **Light lane for a project's `quality.yml`.** Kit 0.52 gave the kit's own `ci.yml` a light lane
+  through `local-ci.sh --lane`; `/workflow-init`'s `quality.yml` template still runs one lane, because the
+  light-row mapping per stack is not designed (spec `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md`
+  §7). *Trigger: a project whose docs-only PRs spend Actions minutes on its full battery.*
+- [x] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Done in Gate B cycle k052gateb1: pass 1 checked the walk on the code; cases 53, 53b and 54 cover it. Gate A cycle k052hyb1 closed with pass-3 finding 1
+  (lock-path race, security-class MINOR) repaired in the spec after the last pass (spec
+  `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
+  chdir walk and its dev/ino match on the code, with a test that swaps a checked directory between check and
+  entry. *Trigger: kit 0.52 Gate B pass 1.*
+- [ ] **Kit 0.52 Gate B collected Minors (cycle k052gateb1, archived under
+  `.context/archive/codex-reviews/k052gateb1/`).** (a) quality pass 2: `ci.yml`'s comment (lines 40-43) and
+  `docs/reference.md` (876-878) say hosted and local take the same lanes, but Actions classifies against its
+  event base while a local run can use `--from` or inherit green; say they share the classifier for the same
+  range. (b) risk pass 3: `ci-switch.sh` and `local-ci.sh` take `<main>` from the first line of
+  `git worktree list --porcelain`, so a main path holding a newline is cut short (read NUL-delimited or refuse).
+  (c) risk pass 3: `ci-switch.sh`'s state reread after the yes ignores a failed read and exits 1 with "changed to
+  unknown"; refuse 64 instead, with a fixture that fails only the second read. Each change goes into both inline
+  copies (2.22, 2.27). *Trigger: the next change to either script.*
+- [ ] **Join the factory's FIFO ticket queue (`heavy.lock.queue`).** Kit 0.52's `scripts/local-ci.sh` takes the
+  shared heavy lock with a plain `flock`: mutual exclusion holds, but a kit run can overtake a factory step that
+  has waited longer, since sfx-factory's `kit.py` grants the lock in ticket order. 0.52 copies no queue logic
+  and calls nothing in `kit.py` (D84; orchestrator dev-workflow-kit-26, 2026-10-30). The factory's separate
+  `heavy.lock.e2e` stays out of scope. *Trigger: a factory step delayed by a kit run, or a factory-side
+  protocol the kit can join without copying code.*
+
 ### Policy: the self-hosting milestone is closed (2026-07-18)
 
 This repo now improves itself **reactively only**. A change starts because a finding
@@ -2091,9 +2123,10 @@ Evidence for both rows: the S6e2 plan in the SFX time-tracking dashboard reposit
 ran one session from 06:40 to past 22:00 CEST, mostly on local runs: full e2e about 52 min, the screens
 compare about 45 min, several of each, two killed by macOS memory pressure and rerun.
 
-- [ ] **A machine-wide lock for heavy runs.** Parallel sessions on one Mac start heavy local runs at
+- [x] **A machine-wide lock for heavy runs.** Parallel sessions on one Mac start heavy local runs at
   the same time, and memory pressure kills them. A lock (one heavy run per machine) would turn a kill
-  and a rerun into a wait. *Trigger: the next heavy run killed by memory pressure.*
+  and a rerun into a wait. *Trigger: the next heavy run killed by memory pressure.* Done in 0.52:
+  `scripts/local-ci.sh`'s full lane takes the machine-wide heavy lock shared with sfx-factory.
 - [ ] **Move project e2e into CI.** The project had no e2e in CI, so every run was local and held a
   session for its whole duration. *Trigger: per project, when its plan lists a long run that CI could
   carry.*

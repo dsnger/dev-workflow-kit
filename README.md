@@ -68,7 +68,7 @@ You see: a story draft with acceptance criteria, a risk proposal and `Checkpoint
 | Bug or small fix | `/dev-workflow:ticket <text or evidence>` | [guide](docs/getting-started.md#bug-or-small-fix) |
 | PR bot comments | `/dev-workflow:process-pr-review <pr-number>` | [guide](docs/getting-started.md#pr-bot-comments) |
 | Run Greptile on some PRs only (off by default) | On request: `autoReview: []` in Greptile, `once per PR` in `docs/pr-review-bots.md`, comment `@greptileai`. Or by label: `only with label greptile, once per PR`, its label filter in Greptile, label the PR | [reference](docs/reference.md#pr-review-bots) |
-| Actions cannot run the required check | `/dev-workflow:workflow-init` offers `scripts/local-ci.sh` (2.22); disable the workflow, then `sh scripts/local-ci.sh <sha>` per head. Ruleset changes stay yours | [reference](docs/reference.md#contributing) |
+| Actions cannot run the required check | Hosted Actions is the default, local the fallback or an up-front choice. `/dev-workflow:workflow-init` offers `scripts/local-ci.sh` (2.22) and `scripts/ci-switch.sh` (2.27): `sh scripts/ci-switch.sh check <run-id>` says whether billing blocked a run, `sh scripts/ci-switch.sh local "<reason>"` switches after a yes, then `sh scripts/local-ci.sh <sha>` per head; a new month reminds you to switch back. Ruleset changes stay yours | [reference](docs/reference.md#contributing) |
 | A 1-line docs or release PR should cost almost nothing | Docs- and release-only commits skip Gate B; `local-ci.sh` runs your `quality-light` row for them, and `--from <green head>` carries green to a merge or closing commit | [reference](docs/reference.md#the-review-gates) |
 | Gate B should run tests and look deeper at risky changes | Since 0.51 `/workflow-init` writes the review skill (`.agents/skills/gate-b-review/`, 2.24–2.26) and the `workspace-write` sandbox key in `.mcp.json` (2.8). Codex then traces callers, may run targeted tests offline in a throwaway copy, and a change to scripts, security code, rules or migrations gets one high-effort risk pass (needs Codex CLI 0.162.1). Start a new session after the update | [reference](docs/reference.md#the-gate-b-review-skill-since-051) |
 | A session says the kit files are older | Run `/dev-workflow:workflow-init` to refresh them (it records the kit version in `.claude/dev-workflow-version`) | [reference](docs/reference.md#hook-messages) |
@@ -83,8 +83,9 @@ More: [why](docs/coding-workflow.md), [reference](docs/reference.md), [layout](d
 
 ## Contributing
 
-CI runs the battery in [`AGENTS.md`](AGENTS.md) § Commands. When the Actions budget is used
-up, or you choose local up front, disable the workflow, then per commit run
+CI runs the battery in [`AGENTS.md`](AGENTS.md) § Commands; hosted Actions is the default, local the
+fallback or an up-front choice, and `sh scripts/ci-switch.sh` shows which one is on. When the Actions budget
+is used up, or you choose local up front, `sh scripts/ci-switch.sh local "<reason>"`, then per commit run
 `git fetch origin && sh scripts/local-ci.sh` on the Mac: it runs the same battery on that commit
 and posts the same required `quality` check. Switch before you push the commit you run locally: a
 `quality` check run that Actions already created on a commit stays on it and must pass too. Prompts
