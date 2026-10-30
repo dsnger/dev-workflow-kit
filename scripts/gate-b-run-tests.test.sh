@@ -101,6 +101,11 @@ run 30 sh -c 'exit 0'
 perl -e 'kill 9, -$ARGV[0]' "$g"; sleep 1
 run 30 sh -c 'exit 0'
 [ ! -d "$d" ] && pass 'stale copy with runner and group gone: removed' || fail 'stale dead copy left'
+# A runner this process may not signal (EPERM, as Codex's sandbox sees a parallel review's runner) is alive.
+d="$TMPDIR/gate-b-review.eperm"; mkdir -p "$d"; echo 1 > "$d/runner.pid"
+run 30 sh -c 'exit 0'
+[ -d "$d" ] && pass 'stale scan: a runner it may not signal counts as alive, its copy is kept' || fail 'EPERM runner: copy removed'
+rm -rf "$d"
 
 # Checkout writes: by absolute path, staged-and-restored, executable bit of an untracked file.
 run 30 sh -c 'echo x >> "$0/a.txt"' "$repo"

@@ -32,7 +32,7 @@ prompt=$(cat)
 f=$(printf '%s\n' "$prompt" | sed -n 's/^Findings file: //p')
 printf '%s\n' "$prompt" > "$STUB_DIR/last-prompt"
 [ -f "$STUB_DIR/before" ] && sh "$STUB_DIR/before"
-printf '{"type":"thread.started","model":"stub-model"}\n'
+[ -f "$STUB_DIR/nomodel" ] || printf '{"type":"thread.started","model":"stub-model"}\n'
 case $(cat "$STUB_DIR/mode") in
   write) cp "$STUB_DIR/findings" "$f" ;;
   none) ;;
@@ -74,6 +74,23 @@ e="$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md"
 grep -q '^CLI: codex-cli 0.162.1$' "$e" && grep -q "^HEAD: $H$" "$e" && grep -q '^MODEL: stub-model$' "$e" && pass 'evidence: CLI version, head and model from the event log' || fail "evidence: $(cat "$e" 2>/dev/null)"
 grep -q 'branch `risk`' "$STUB_DIR/last-prompt" && grep -q "$B..$H" "$STUB_DIR/last-prompt" && pass 'the prompt names the risk branch and the range' || fail 'prompt'
 [ ! -d "$d/gate-b-risk-$N-pass-1.lock" ] && pass 'lock released after success' || fail 'lock left'
+
+# The live event log stays outside the reviewed checkout while Codex runs (run-tests.sh fingerprints
+# .context/codex-reviews/), and is placed beside the attempt afterwards.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; rm -f "$STUB_DIR/live"
+printf 'ls "%s" | grep -q events && touch "%s/live"; :\n' "$d" "$STUB_DIR" > "$STUB_DIR/before"
+run 1 30
+[ $rc -eq 0 ] && [ ! -e "$STUB_DIR/live" ] && grep -q stub-model "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" && pass 'event log: outside the checkout during the run, placed after' || fail "live log rc=$rc"
+# No model in the event log (Codex 0.162.1): the top-level `model` of $CODEX_HOME/config.toml.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; touch "$STUB_DIR/nomodel"
+mkdir -p "$work/ch"; printf '# c\nmodel = "cfg-model"\n[profiles.x]\nmodel = "other"\n' > "$work/ch/config.toml"
+CODEX_HOME="$work/ch" run 1 30
+grep -q '^MODEL: cfg-model (config.toml)$' "$e" && pass 'evidence: model from config.toml when the event log names none' || fail "config model: $(cat "$e" 2>/dev/null)"
+rm -f "$STUB_DIR/nomodel"
+# A lock runner this process may not signal (EPERM) counts as alive.
+reset; mkdir "$d/gate-b-risk-$N-pass-1.lock"; echo 1 > "$d/gate-b-risk-$N-pass-1.lock/runner.pid"
+run 1 30
+[ $rc -eq 4 ] && pass 'lock held by a runner it may not signal: busy, exit 4' || fail "EPERM lock rc=$rc"
 
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; run 1 30
 [ $rc -eq 0 ] && pass 'a clean findings file is valid' || fail "clean rc=$rc"

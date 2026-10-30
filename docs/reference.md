@@ -542,7 +542,8 @@ absolute path, as your quality command can. Second, a secret committed to the re
 the copy. The test is your project's own code, and the quality command already runs it with your full rights; the
 review adds no new trust in it. A process that leaves the group on purpose (its own `setsid`) escapes the time
 limit. If the runner itself is killed with `KILL`, the next run reports the copy it left and removes it once its
-processes are gone.
+processes are gone. A runner it may not signal (Codex's sandbox cannot signal a parallel review's runner) counts as
+alive, so its copy is kept.
 
 **The risk pass.** One extra Codex pass at high reasoning effort, through `codex exec` (no MCP tool takes an
 effort), run by `scripts/risk-pass.sh`.
@@ -563,7 +564,10 @@ effort), run by `scripts/risk-pass.sh`.
   pass under the cap.
 - *How it runs.* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n>
   [<seconds>]`, as a background Bash call (default limit 2400 s). Each attempt writes its own files
-  (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). Only the
+  (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). The event log is written to a temporary directory while Codex runs and placed beside the
+  attempt after it ends, because a targeted test compares `.context/codex-reviews/` before and after. The
+  evidence's `MODEL:` line is the model the event log names, else the top-level `model` of `config.toml` in
+  `$CODEX_HOME` (marked `(config.toml)`), else `unknown`. Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
   `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
   the result. The script runs with your rights while Codex can write in the repository, so it never writes

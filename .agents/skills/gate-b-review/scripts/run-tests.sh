@@ -45,10 +45,11 @@ repo=$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null) && [ -n "$repo" ] |
 git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
 command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
 
-# Process-group helpers in perl, so sh and dash behave alike.
-group_alive() { perl -e 'exit(kill(0, -$ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+# Process-group helpers in perl, so sh and dash behave alike. EPERM means the process exists: Codex's
+# sandbox may not signal a parallel review's runner, and reading that as gone deleted its live copy.
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
-pid_alive() { perl -e 'exit(kill(0, $ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 # TERM, up to 5 s, then KILL, then wait until the group is empty (KILL cannot be ignored).
 group_stop() {
   group_alive "$1" || return 0

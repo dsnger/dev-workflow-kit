@@ -48,6 +48,13 @@ sfx-factory). Minor: new `/workflow-init` templates, one `.mcp.json` key, new ga
 - **Check 4o** keeps the three files byte-identical to their templates. New suites
   `scripts/gate-b-run-tests.test.sh` and `scripts/gate-b-risk-pass.test.sh`, each run under `sh` and `dash` in
   the quality command.
+- **Proof replay** (`docs/superpowers/replays/2026-10-30-kit-051/report.md`): 8 historical PRs whose bot found a
+  defect the old Gate B missed; cases 1–6 found 4/6 lenient, 3/6 strict. Four defects it exposed are fixed: the
+  risk pass kept its live event log in `.context/codex-reviews/`, so every targeted test read "checkout changed"
+  (now written outside and placed after the run); a runner Codex's sandbox may not signal read as gone, so a
+  parallel review deleted another's live test copy (EPERM now counts as alive, in both scripts); the skill gave
+  no time limit guidance (now: twice the usual duration, else 1800 s); the evidence's `MODEL:` was always
+  `unknown` (now the top-level `model` of `config.toml` when the event log names none).
 
 ## 0.50.0
 

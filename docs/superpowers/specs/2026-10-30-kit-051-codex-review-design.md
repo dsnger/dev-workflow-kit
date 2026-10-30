@@ -147,8 +147,9 @@ are both gone is taken over); chooses the attempt number `<a>` (one more than th
 model_reasoning_effort="high" -C <repo> -o <reply file>` under the §5 supervisor and watchdog with a fixed prompt
 naming the skill's `risk` branch, the range and this attempt's own files — findings
 `.context/codex-reviews/gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, evidence and reply beside it, the `--json`
-event log to `…-attempt-<a>.events.jsonl`; and records `codex --version`, the head and the model the event log
-names (`unknown` when it names none) in the evidence file. The attempt's findings file is valid when Codex exited
+event log to `…-attempt-<a>.events.jsonl` (written outside the checkout during the run and placed there after it,
+unit 3 fix); and records `codex --version`, the head and the model the event log names, else the top-level `model`
+of `$CODEX_HOME/config.toml` (unit 3 fix; `unknown` when neither names one) in the evidence file. The attempt's findings file is valid when Codex exited
 0, every body line is a finding line of the gate rules' grammar (severity from the closed set) or the single clean
 line `NO FINDINGS`, and the terminator reads `END OF FINDINGS (<k> total)` with `<k>` the number of finding lines
 (0 for the clean file). Only then, still holding the lock, the script copies it to the slot's canonical file

@@ -2432,6 +2432,10 @@ only the findings file, and the human reads the evidence to see what you checked
    each one only through this skill's script, which makes a disposable copy with tracked files only, strips the
    environment, bounds the time and cleans up:
    `sh .agents/skills/gate-b-review/scripts/run-tests.sh "$PWD" <headSha> <seconds> -- <command> <args…>`
+   Set `<seconds>` to at least twice the command's usual duration where `AGENTS.md`, the suite's header or the
+   battery evidence states one, and to `1800` (the maximum) where nothing does, because a limit below the
+   suite's own duration proves nothing (a suite of about 9 minutes once got 180 s). A timeout (`exit timeout`,
+   exit 124) is a test that did not finish, not a failing test: write its `TESTS:` line with the limit you set.
    Its exit 4 (`checkout changed`) is a BLOCKER finding: a test wrote into the reviewed checkout. Its exit 5
    means no test ran (no supervisor); write that reason.
 5. **Write the output.** Two files, then one reply line.
@@ -2522,10 +2526,11 @@ repo=$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null) && [ -n "$repo" ] |
 git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
 command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
 
-# Process-group helpers in perl, so sh and dash behave alike.
-group_alive() { perl -e 'exit(kill(0, -$ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+# Process-group helpers in perl, so sh and dash behave alike. EPERM means the process exists: Codex's
+# sandbox may not signal a parallel review's runner, and reading that as gone deleted its live copy.
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
-pid_alive() { perl -e 'exit(kill(0, $ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 # TERM, up to 5 s, then KILL, then wait until the group is empty (KILL cannot be ignored).
 group_stop() {
   group_alive "$1" || return 0
@@ -2656,7 +2661,8 @@ user's machine outside this project. Rules 1–2 apply; write it byte for byte a
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
-# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log). Only
+# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log, kept in a temporary
+# directory while Codex runs, since run-tests.sh fingerprints this directory, and placed here after it ends). Only
 # while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
 # canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
 # `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
@@ -2696,9 +2702,10 @@ command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, n
 v=$(codex --version 2>/dev/null | head -n 1)
 [ "$v" = "$CODEX_PIN" ] || die "Codex CLI is '${v:-not found}', this script is verified on '$CODEX_PIN' only; installing that version is the user's step (see /workflow-init)" 6
 
-group_alive() { perl -e 'exit(kill(0, -$ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+# EPERM means the process exists (see run-tests.sh).
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
-pid_alive() { perl -e 'exit(kill(0, $ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_stop() {
   group_alive "$1" || return 0
   group_signal TERM "$1"; i=0
@@ -2791,7 +2798,7 @@ EOF
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
 ( cd "$repo" && exec perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- \
     codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" -o "$pre-reply.md" - ) \
-  < "$work/prompt" > "$pre.events.jsonl" 2> "$work/stderr" &
+  < "$work/prompt" > "$work/events" 2> "$work/stderr" &
 cpid=$!
 printf '%s\n' "$cpid" > "$lock/group.pid"
 perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
@@ -2802,7 +2809,16 @@ wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 
-model=; regular "$pre.events.jsonl" && model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$pre.events.jsonl" | head -n 1)
+place "$work/events" "$pre.events.jsonl" || printf 'risk-pass.sh: could not place the event log at %s\n' "$pre.events.jsonl" >&2
+model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$work/events" | head -n 1)
+# Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
+# uses unless a `profile` selects another.
+# shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
+cfg="${CODEX_HOME:-$HOME/.codex}/config.toml"
+if [ -z "$model" ] && regular "$cfg"; then
+  model=$(awk '/^[[:space:]]*\[/ { exit } /^[[:space:]]*model[[:space:]]*=[[:space:]]*"/ { sub(/^[^"]*"/, ""); sub(/".*/, ""); print; exit }' "$cfg")
+  [ -z "$model" ] || model="$model (config.toml)"
+fi
 { printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
   if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
 [ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"

@@ -16,7 +16,8 @@
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
-# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log). Only
+# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log, kept in a temporary
+# directory while Codex runs, since run-tests.sh fingerprints this directory, and placed here after it ends). Only
 # while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
 # canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
 # `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
@@ -56,9 +57,10 @@ command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, n
 v=$(codex --version 2>/dev/null | head -n 1)
 [ "$v" = "$CODEX_PIN" ] || die "Codex CLI is '${v:-not found}', this script is verified on '$CODEX_PIN' only; installing that version is the user's step (see /workflow-init)" 6
 
-group_alive() { perl -e 'exit(kill(0, -$ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+# EPERM means the process exists (see run-tests.sh).
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
-pid_alive() { perl -e 'exit(kill(0, $ARGV[0]) ? 0 : 1)' "$1" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
 group_stop() {
   group_alive "$1" || return 0
   group_signal TERM "$1"; i=0
@@ -151,7 +153,7 @@ EOF
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
 ( cd "$repo" && exec perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- \
     codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" -o "$pre-reply.md" - ) \
-  < "$work/prompt" > "$pre.events.jsonl" 2> "$work/stderr" &
+  < "$work/prompt" > "$work/events" 2> "$work/stderr" &
 cpid=$!
 printf '%s\n' "$cpid" > "$lock/group.pid"
 perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
@@ -162,7 +164,16 @@ wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 
-model=; regular "$pre.events.jsonl" && model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$pre.events.jsonl" | head -n 1)
+place "$work/events" "$pre.events.jsonl" || printf 'risk-pass.sh: could not place the event log at %s\n' "$pre.events.jsonl" >&2
+model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$work/events" | head -n 1)
+# Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
+# uses unless a `profile` selects another.
+# shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
+cfg="${CODEX_HOME:-$HOME/.codex}/config.toml"
+if [ -z "$model" ] && regular "$cfg"; then
+  model=$(awk '/^[[:space:]]*\[/ { exit } /^[[:space:]]*model[[:space:]]*=[[:space:]]*"/ { sub(/^[^"]*"/, ""); sub(/".*/, ""); print; exit }' "$cfg")
+  [ -z "$model" ] || model="$model (config.toml)"
+fi
 { printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
   if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
 [ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"

@@ -42,6 +42,10 @@ only the findings file, and the human reads the evidence to see what you checked
    each one only through this skill's script, which makes a disposable copy with tracked files only, strips the
    environment, bounds the time and cleans up:
    `sh .agents/skills/gate-b-review/scripts/run-tests.sh "$PWD" <headSha> <seconds> -- <command> <args…>`
+   Set `<seconds>` to at least twice the command's usual duration where `AGENTS.md`, the suite's header or the
+   battery evidence states one, and to `1800` (the maximum) where nothing does, because a limit below the
+   suite's own duration proves nothing (a suite of about 9 minutes once got 180 s). A timeout (`exit timeout`,
+   exit 124) is a test that did not finish, not a failing test: write its `TESTS:` line with the limit you set.
    Its exit 4 (`checkout changed`) is a BLOCKER finding: a test wrote into the reviewed checkout. Its exit 5
    means no test ran (no supervisor); write that reason.
 5. **Write the output.** Two files, then one reply line.
