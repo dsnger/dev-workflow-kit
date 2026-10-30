@@ -5,6 +5,13 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
+- [ ] **Kit 0.52 plan k052plan1 pass 2, finding 1: a swap test that cannot pass vacuously.** The
+  swap-after-walk case must release the first holder, wait until the kit battery runs, then show a contender
+  cannot lock the original file while the replacement stays lockable (plan
+  `docs/superpowers/plans/2026-10-30-kit-052-hybrid-ci.md` T2). *Trigger: kit 0.52 build, T2.*
+- [ ] **Kit 0.52 plan k052plan1 pass 2, finding 2: leftover suite temp dirs after a limit cut.** A KILL after
+  the 60-min limit skips the suites' EXIT traps; timed runs get a run-specific TMPDIR, checked and cleared
+  after the group stopped. *Trigger: a kit 0.52 full run cut at its limit.*
 - [ ] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Gate A cycle k052hyb1 closed with pass-3 finding 1
   (lock-path race, security-class MINOR) repaired in the spec after the last pass (spec
   `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
