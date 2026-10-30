@@ -16,11 +16,20 @@ Backlog of stories, follow-ups, and prerequisites referenced by
   through `local-ci.sh --lane`; `/workflow-init`'s `quality.yml` template still runs one lane, because the
   light-row mapping per stack is not designed (spec `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md`
   §7). *Trigger: a project whose docs-only PRs spend Actions minutes on its full battery.*
-- [ ] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Gate A cycle k052hyb1 closed with pass-3 finding 1
+- [x] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Done in Gate B cycle k052gateb1: pass 1 checked the walk on the code; cases 53, 53b and 54 cover it. Gate A cycle k052hyb1 closed with pass-3 finding 1
   (lock-path race, security-class MINOR) repaired in the spec after the last pass (spec
   `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
   chdir walk and its dev/ino match on the code, with a test that swaps a checked directory between check and
   entry. *Trigger: kit 0.52 Gate B pass 1.*
+- [ ] **Kit 0.52 Gate B collected Minors (cycle k052gateb1, archived under
+  `.context/archive/codex-reviews/k052gateb1/`).** (a) quality pass 2: `ci.yml`'s comment (lines 40-43) and
+  `docs/reference.md` (876-878) say hosted and local take the same lanes, but Actions classifies against its
+  event base while a local run can use `--from` or inherit green; say they share the classifier for the same
+  range. (b) risk pass 3: `ci-switch.sh` and `local-ci.sh` take `<main>` from the first line of
+  `git worktree list --porcelain`, so a main path holding a newline is cut short (read NUL-delimited or refuse).
+  (c) risk pass 3: `ci-switch.sh`'s state reread after the yes ignores a failed read and exits 1 with "changed to
+  unknown"; refuse 64 instead, with a fixture that fails only the second read. Each change goes into both inline
+  copies (2.22, 2.27). *Trigger: the next change to either script.*
 - [ ] **Join the factory's FIFO ticket queue (`heavy.lock.queue`).** Kit 0.52's `scripts/local-ci.sh` takes the
   shared heavy lock with a plain `flock`: mutual exclusion holds, but a kit run can overtake a factory step that
   has waited longer, since sfx-factory's `kit.py` grants the lock in ticket order. 0.52 copies no queue logic
