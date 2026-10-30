@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l and 4m, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4n -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l, 4m and 4o, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4o -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, then 4n
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4n, then 4o
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -1209,6 +1209,25 @@ elif [ "$vr_tpl" != "$vr_m" ] || [ "$vr_r" != "$vr_m" ] || [ "$vr_tl" != 1 ] || 
        "a version bump sets all three to the same x.y.z, each template and record one line"
 fi
 # --- END check 4n ---
+# --- BEGIN check 4o ---
+# The Gate B review skill's three files and their `/workflow-init` templates (0.51) must be
+# byte-identical, as in 4m: `.agents/skills/gate-b-review/SKILL.md` and the ````markdown fence of
+# `### 2.24`; its `scripts/run-tests.sh` and the ````sh fence of `### 2.25`; its
+# `scripts/risk-pass.sh` and the ````sh fence of `### 2.26`. Bytes only; the two suites
+# (scripts/gate-b-run-tests.test.sh, scripts/gate-b-risk-pass.test.sh) are the guard for what
+# the scripts do. Fails closed as 4m does.
+for gb in '2.24|````markdown|SKILL.md' '2.25|````sh|scripts/run-tests.sh' '2.26|````sh|scripts/risk-pass.sh'; do
+  gb_h=${gb%%|*}; gb_r=${gb#*|}; gb_f=${gb_r%%|*}; gb_file=.agents/skills/gate-b-review/${gb_r#*|}
+  gb_out=$(fence_body "$gb_h" "$gb_f"); gb_st=$?
+  if [ ! -r "$gb_file" ] || ! fence_ok "$gb_out" "$gb_st"; then
+    fail "review skill copies: $gb_file or the '### $gb_h' template of $dl_cmd cannot be read, so the two copies cannot be compared." \
+         "expected the file, one '### $gb_h' heading and one closed $gb_f fence in it"
+  elif ! printf '%s\n' "$gb_out" | sed '$d' | cmp -s - "$gb_file"; then
+    fail "review skill copies: $gb_file differs from the '### $gb_h' template in $dl_cmd." \
+         "make them byte-identical; an initialized project gets the template, this repo runs the file"
+  fi
+done
+# --- END check 4o ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

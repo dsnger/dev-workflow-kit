@@ -504,6 +504,82 @@ WIP, a review branch whose `headSha` is not a full SHA, an unpaired branch, a re
 withheld result), or `cause unknown`. Kit 0.40.1 reported "no" with no cause; its session had
 compared hook state-file names, not passes.
 
+### The Gate B review skill (since 0.51)
+
+Every Gate B call names `.agents/skills/gate-b-review/SKILL.md` in its `additionalContext`, and Codex follows it.
+Codex CLI 0.162.1 also discovers it by itself: it lists skills under a repository's `.agents/skills/` (checked on
+2026-10-30). The skill lives in the project (`/workflow-init` 2.24–2.26), so nothing is written under your home
+directory. The design is `docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md`.
+
+**What it asks of Codex.** By branch: `spec` maps every acceptance criterion to the code and the test that
+asserts it; `quality` checks the invariants the diff touches and the failure, error, empty and concurrent paths;
+`risk` goes deeper on edge cases and failure paths only. In every branch, Codex traces the callers and
+dependents of each changed symbol with `git grep` in the head tree. It uses a codebase-memory index only when it
+can show the index matches the head, and never indexes. Besides the findings file it writes
+`…-pass-<n>-evidence.md`: one `TESTS:` line per test command it ran, or the reason none ran, and one `CALLERS:`
+line per changed symbol.
+
+**Targeted tests.** Codex may run the test commands for the touched paths, never the whole battery, through
+`scripts/run-tests.sh`, and only when its sandbox is `workspace-write` with network restricted. `/workflow-init`
+2.8 sets that sandbox with `"CODEX_DEV_SANDBOX_MODE": "workspace-write"` in the `codex` server's `env`. The server
+reads the setting when it starts, so it applies from the next session start. A server config file's
+`tools.review.sandbox` overrides it, and a resumed call (`sessionId`) runs without a sandbox, so Codex then
+reports the tests as not run. The script:
+- makes a `git clone --no-local` copy at the head in `TMPDIR`: tracked files only, so no `.env` or other
+  untracked or ignored file. It never runs `git worktree add`;
+- runs the command with only `PATH`, `HOME`, `TMPDIR` and `LANG=C` set, stdin from `/dev/null`, as its own process
+  group (through `perl`; without `perl` it runs nothing, exit 5). After the time limit (600 s by default) the group
+  gets `TERM`, then `KILL`. The copy is removed on every exit;
+- compares the reviewed checkout before and after: `HEAD`, the index, the diff against `HEAD`, and every untracked,
+  not-ignored file's content and mode. A difference exits 4, which Codex reports as a Blocker. This detects a
+  write, it does not prevent it. Ignored files, `.context/` and `.git/` beyond `HEAD` and the index are outside
+  the comparison.
+
+**What it does not protect against.** Two limits, stated so nobody reads the list above as isolation. These are
+the axes checked against, and the list is not exhaustive. First, a test can read any file on your machine by
+absolute path, as your quality command can. Second, a secret committed to the repository's tracked files is in
+the copy. The test is your project's own code, and the quality command already runs it with your full rights; the
+review adds no new trust in it. A process that leaves the group on purpose (its own `setsid`) escapes the time
+limit. If the runner itself is killed with `KILL`, the next run reports the copy it left and removes it once its
+processes are gone.
+
+**The risk pass.** One extra Codex pass at high reasoning effort, through `codex exec` (no MCP tool takes an
+effort), run by `scripts/risk-pass.sh`.
+- *When it is due.* The cycle's diff (`<cycle base>..<head>`) touches one of four categories, judged from the
+  diff's content whatever the paths: (a) a script or tool the project runs (build, release, CI, hook, installer);
+  (b) security-relevant code (authentication, authorization, secrets, validation at a trust boundary,
+  sandboxing, cryptography); (c) a rule or gate file (instruction files, gate rules, review prompts, CI workflows);
+  (d) a schema or data migration. Some paths always make it due: `scripts/*`, `bin/*`, `*.sh`, any `hooks/`
+  directory, `.github/workflows/*`, `CLAUDE.md`, `AGENTS.md`, `.claude/*`, `.agents/*`, `.mcp.json`, any
+  `plugins/`, `skills/`, `commands/` or `agents/` directory, a `migrations` or `migrate` path segment. Your own
+  patterns go in backticks on an `AGENTS.md` `**Risk paths:**` line, and they only add. A story whose security
+  is not `none` also makes it due. A story saying `none` does not exempt security code found in the diff.
+- *Cycle base.* Before Gate B pass 1, Claude writes `.context/codex-reviews/gate-b-cycle-<nonce>.state` with the
+  line `base <pass 1's baseSha>`. It is never rewritten in the cycle.
+- *When it runs.* Once per cycle, after the ordinary passes leave no open blocking finding, and before closing.
+  A later change keeps it valid when it only repairs the risk pass's own findings or touches no risk category,
+  and the next `quality` pass verifies it. Any other later change in a risk category runs it again, as one more
+  pass under the cap.
+- *How it runs.* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n>
+  [<seconds>]`, as a background Bash call (default limit 2400 s). Each attempt writes its own files
+  (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). Only the
+  slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
+  `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
+  the result. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
+  timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI other than `codex-cli 0.162.1`.
+- *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
+  the floor, which stays the hook-counted `spec`+`quality` pair. When it is due and no pass is left under the
+  cap, the cycle goes to you, as an open Blocker at the cap does. The hook does not see the run.
+- *Follow-up.* Each blocking risk finding goes into the next `quality` call as an earlier finding, where Codex
+  marks it `fixed`, `not fixed` or `no longer applies`. The risk slot has its own dispositions file. At closing
+  the canonical file's sha256 must match the slot's last `done` line, and the closing commit's cycle line adds
+  `risk pass <n>: <count>`.
+
+**Codex CLI version.** The risk pass is verified on Codex CLI 0.162.1 only, so `risk-pass.sh` refuses any other
+version. Installing it is your step: `npm install -g @openai/codex@0.162.1`. `/workflow-init` lists it in its
+closing checklist (item 5) and does not run it. Ordinary Gate A and Gate B calls go through the MCP server as
+before.
+
 ## Hook messages
 
 The hook's messages say what happened and what to do next. The possible causes behind eight

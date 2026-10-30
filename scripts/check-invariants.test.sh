@@ -72,6 +72,11 @@ $LR_LINES"
   # 4m: identical to the `### 2.22` fence body; 4n: the same x.y.z in the `### 2.23` fence,
   # the repo's own record and the dev-workflow manifest.
   printf 'y\n' > "$1/scripts/local-ci.sh"
+  # 4o: identical to the `### 2.24`-`### 2.26` fence bodies.
+  mkdir -p "$1/.agents/skills/gate-b-review/scripts"
+  printf 'k1\n' > "$1/.agents/skills/gate-b-review/SKILL.md"
+  printf 'k2\n' > "$1/.agents/skills/gate-b-review/scripts/run-tests.sh"
+  printf 'k3\n' > "$1/.agents/skills/gate-b-review/scripts/risk-pass.sh"
   printf '1.2.3\n' > "$1/.claude/dev-workflow-version"
   mkdir -p "$1/plugins/dev-workflow/.claude-plugin"
   printf '%s\n' '{"name": "dev-workflow", "version": "1.2.3"}' > "$1/plugins/dev-workflow/.claude-plugin/plugin.json"
@@ -130,6 +135,24 @@ y
 
 ````text
 1.2.3
+````
+
+### 2.24 skill
+
+````markdown
+k1
+````
+
+### 2.25 run tests
+
+````sh
+k2
+````
+
+### 2.26 risk pass
+
+````sh
+k3
 ````'
 # The backticks are literal Markdown in the rule line, not command substitution.
 # shellcheck disable=SC2016
@@ -563,6 +586,8 @@ done
 #              the `### 2.21` section the same day; 4a-4k were not re-measured after it.
 #   4m, 4n     added 2026-10-29 (0.49) with their cases and the shared `fence_body`; NOT measured
 #              yet, and 4a-4l were not re-measured after the initializer gained their fixtures.
+#   4o         added 2026-10-30 (0.51) with its cases; NOT measured yet, nor 4a-4n after the
+#              initializer and `LC_SECTION` gained its fixtures.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1620,6 +1645,16 @@ lv_case "4n: repo record with a trailing blank line rejected" 1 "$VR" '(2 lines)
 lv_case "4n: template with a trailing blank line rejected" 1 "$VR" '(2 lines)' "awk '{ print } \$0 == \"1.2.3\" { print \"\" }' $cmdf > t && mv t $cmdf"
 lv_case "4n: no 2.23 heading rejected"             1 "$VR" 'cannot be read' "sed 's/^### 2\.23 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
 lv_case "4n: non-x.y.z manifest version rejected"  1 "$VR" 'cannot be read' "sed 's/1\.2\.3/1.2/' plugins/dev-workflow/.claude-plugin/plugin.json > t && mv t plugins/dev-workflow/.claude-plugin/plugin.json"
+
+# --- Check 4o (review skill copies) ------------------------------------------------------
+RS='review skill copies:'
+sk=.agents/skills/gate-b-review
+lv_case "4o: identical copies accepted"            0 "$RS" '' ':'
+lv_case "4o: SKILL.md differs rejected"            1 "$RS" "$sk/SKILL.md differs" "printf 'k1x\n' > $sk/SKILL.md"
+lv_case "4o: run-tests.sh differs rejected"        1 "$RS" "$sk/scripts/run-tests.sh differs" "printf 'k2\nz\n' > $sk/scripts/run-tests.sh"
+lv_case "4o: risk-pass.sh differs rejected"        1 "$RS" "$sk/scripts/risk-pass.sh differs" "printf 'k3x\n' > $sk/scripts/risk-pass.sh"
+lv_case "4o: missing script rejected"              1 "$RS" 'cannot be compared' "rm -f $sk/scripts/risk-pass.sh"
+lv_case "4o: no 2.25 heading rejected"             1 "$RS" 'cannot be compared' "sed 's/^### 2\.25 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
 
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else

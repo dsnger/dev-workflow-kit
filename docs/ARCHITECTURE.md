@@ -47,6 +47,11 @@ scripts/worktree-cleanup.sh       # worktree and branch report; --remove deletes
 scripts/worktree-cleanup.test.sh  # its regression suite — fixture repos, stub gh and lsof
 scripts/local-ci.sh               # runs the quality (or quality-light) row on one commit in a temporary worktree, or carries a --from green; posts the quality status; = workflow-init 2.22 (check 4m)
 scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git
+scripts/gate-b-run-tests.test.sh  # suite for the review skill's run-tests.sh — fixture repo, process groups, checkout fingerprint
+scripts/gate-b-risk-pass.test.sh  # suite for the review skill's risk-pass.sh — stub codex, state file, lock, findings grammar
+.agents/skills/gate-b-review/SKILL.md            # the Gate B review method Codex follows (since 0.51); = workflow-init 2.24 (check 4o)
+.agents/skills/gate-b-review/scripts/run-tests.sh # targeted tests in a disposable git clone; = workflow-init 2.25 (check 4o)
+.agents/skills/gate-b-review/scripts/risk-pass.sh # the high-effort risk pass through codex exec; = workflow-init 2.26 (check 4o)
 evals/<case>/{prompt.md,graders/*.md} # `claude plugin eval` suite, run by hand before a version bump; outside the plugin so it does not ship
 plugins/dev-workflow/
   .claude-plugin/plugin.json      # metadata only — no component keys (invariant 6)
@@ -87,7 +92,9 @@ plus six Python reports with their suites: `scripts/ledger-metrics.{py,test.sh}`
 `scripts/live-effort.{py,test.sh}`, `scripts/run-analytics.{py,test.sh}` and
 `scripts/status-view.{py,test.sh}`, plus one shell report with its suite,
 `scripts/worktree-cleanup.{sh,test.sh}`, and one shell runner with its suite, `scripts/local-ci.{sh,test.sh}`
-(the local path of the battery, posted to GitHub as the `quality` status). JSON and YAML files are configuration read by their tools
+(the local path of the battery, posted to GitHub as the `quality` status), plus the Gate B review skill's two
+scripts under `.agents/skills/gate-b-review/scripts/` with their suites `scripts/gate-b-run-tests.test.sh` and
+`scripts/gate-b-risk-pass.test.sh`. JSON and YAML files are configuration read by their tools
 (Claude Code, the MCP client, CI). Everything else is text read by a model. What each report may
 write, and which of these ship in the plugin, is binding and stated once, in
 [`AGENTS.md` § Boundaries (binding)](../AGENTS.md#boundaries-binding).
