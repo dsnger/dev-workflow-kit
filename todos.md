@@ -2266,3 +2266,24 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **0.51 Gate B: `ci.yml` lacks the 0.51 suites.** AGENTS.md says the quality row is what CI runs, but the
       (disabled) Actions workflow has no lint or `sh`/`dash` runs of the two new runners and suites. (Cycle
       k051gbb14a5b, pass 1, quality finding 5 — accepted, not repaired.) *Trigger: re-enabling `ci.yml`.*
+- [ ] **0.51 Gate B: no upgrade guard between the gate rules and the review skill.** `/workflow-init` lets a differing
+      `SKILL.md` or runner be declined while the new gate rules, which delegate to them, are accepted. (Cycle
+      k051gbb14a5b, pass 2, spec finding 1 — accepted, not repaired.) *Trigger: the next `/workflow-init` upgrade-path change.*
+- [ ] **0.51 Gate B: the risk-trigger category is not in the scaffolded closing procedure.** Spec §6 wants
+      `risk: <a|b|c|d|none>` in the closing cycle line; neither the skill nor the gate rules say so. (Cycle
+      k051gbb14a5b, pass 2, spec finding 2 — accepted, not repaired.) *Trigger: the next gate-rules edit with byte room.*
+- [ ] **0.51 Gate B: the replay driver leaves Codex running after a signal.** `replay.sh`'s trap deletes the clone
+      but does not stop its reviewer and watchdog groups. (Cycle k051gbb14a5b, pass 2, quality finding 1 — accepted,
+      not repaired.) *Trigger: the next replay run.*
+- [ ] **0.51 risk pass: a state file swapped for a FIFO hangs `risk-pass.sh`.** `append` opens before it checks the
+      type, so a FIFO blocks the final `done`/`failed` line with the slot lock held. (Cycle k051gbb14a5b, risk pass 3,
+      finding 2 — accepted, not repaired.) *Trigger: the next edit of `risk-pass.sh`.*
+- [ ] **0.51 risk pass: missing reviewer evidence does not fail an attempt.** A failed evidence placement or an
+      absent `TESTS:`/`CALLERS:` file still records `done`. (Cycle k051gbb14a5b, risk pass 3, finding 3 — accepted,
+      not repaired.) *Trigger: a risk pass closed without its evidence.*
+- [ ] **0.51 risk pass: an ownerless slot lock stays busy.** An interruption between the lock's `mkdir` and the trap
+      leaves a lock with no runner record, and every retry exits 4 until it is removed by hand. (Cycle k051gbb14a5b,
+      risk pass 3, finding 4 — accepted, not repaired.) *Trigger: a risk pass that reports busy with nothing running.*
+- [ ] **0.51 replay: the contamination audit skips missing or broken logs.** It lists only existing event logs and
+      trusts a jq count after a later jq failure. (Cycle k051gbb14a5b, risk pass 3, finding 6 — accepted, not
+      repaired.) *Trigger: the next replay run.*

@@ -2621,11 +2621,15 @@ fp_before=$(fingerprint) || die 'cannot fingerprint the reviewed checkout; nothi
 tmp=$(mktemp -d "${TMPDIR%/}/gate-b-review.XXXXXX") || die 'could not create a temporary directory; check TMPDIR' 2
 printf '%s\n' "$$" > "$tmp/runner.pid"
 mkdir "$tmp/home" "$tmp/tmp" || die 'could not prepare the copy' 2
-if ! git clone --quiet --no-local --no-checkout -- "$repo" "$tmp/src" 2>/dev/null ||
-   ! git -C "$tmp/src" checkout --quiet --detach "$head" 2>/dev/null; then
+# The copy is made without the caller's git environment (GIT_INDEX_FILE would redirect its checkout
+# into the caller's index) or configuration (a hooksPath would run tracked code before env -i), and
+# with hooks off. shortcut: setup has no time limit; a clone of a local repository is short.
+setup_git() { env -i PATH="$PATH" HOME="$tmp/home" LANG=C GIT_CONFIG_NOSYSTEM=1 git -c core.hooksPath=/dev/null "$@"; }
+if ! setup_git clone --quiet --no-local --no-checkout -- "$repo" "$tmp/src" </dev/null 2>/dev/null ||
+   ! setup_git -C "$tmp/src" checkout --quiet --detach "$head" </dev/null 2>/dev/null; then
   die "could not make a copy at $head (is it reachable from a ref of $repo?)" 2
 fi
-git -C "$tmp/src" remote remove origin 2>/dev/null || :
+setup_git -C "$tmp/src" remote remove origin 2>/dev/null || :
 
 start=$(date +%s)
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's

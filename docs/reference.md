@@ -526,7 +526,8 @@ reads the setting when it starts, so it applies from the next session start. A s
 `tools.review.sandbox` overrides it, and a resumed call (`sessionId`) runs without a sandbox, so Codex then
 reports the tests as not run. The script:
 - makes a `git clone --no-local` copy at the head in `TMPDIR`: tracked files only, so no `.env` or other
-  untracked or ignored file. It never runs `git worktree add`;
+  untracked or ignored file. The copy is made without your git environment or configuration and with hooks
+  off, so a hook path in your settings cannot run the reviewed code before the environment is stripped. It never runs `git worktree add`;
 - runs the command with only `PATH`, `HOME`, `TMPDIR` and `LANG=C` set, stdin from `/dev/null`, as its own process
   group (through `perl`; without `perl` it runs nothing, exit 5). After the time limit (600 s by default) the group
   gets `TERM`, then `KILL`. The copy is removed on every exit;

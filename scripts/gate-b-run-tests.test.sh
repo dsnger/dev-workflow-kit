@@ -56,6 +56,18 @@ run 30 sh -c 'env > env.out; cp env.out "$HOME/../env.copy"; [ -z "${GATE_B_SENT
 unset GATE_B_SENTINEL
 [ $rc -eq 0 ] && pass 'environment stripped: a sentinel variable is absent, LANG=C' || fail "env: rc=$rc"
 
+# Copy setup runs without the caller's git environment and configuration: a hooksPath from the
+# caller's global config must not run a tracked hook, and GIT_INDEX_FILE must not redirect the copy.
+mkdir -p "$work/gh"; printf '[core]\n\thooksPath = hooks\n' > "$work/gh/.gitconfig"
+mkdir -p "$repo/hooks"; printf '#!/bin/sh\ntouch "%s/hook-ran"\n' "$work" > "$repo/hooks/post-checkout"; chmod +x "$repo/hooks/post-checkout"
+git -C "$repo" add -f hooks; git -C "$repo" commit -qm hook; HH=$(git -C "$repo" rev-parse HEAD)
+cp "$repo/.git/index" "$work/alt-index"
+HOME="$work/gh" "$RUN_TESTS_SH" "$SCRIPT" "$repo" "$HH" 30 -- sh -c 'exit 0' </dev/null >"$out" 2>"$err"
+[ ! -e "$work/hook-ran" ] && pass 'copy setup: a hooksPath in the caller config runs no tracked hook' || fail 'copy setup ran a tracked hook'
+GIT_INDEX_FILE="$work/alt-index" "$RUN_TESTS_SH" "$SCRIPT" "$repo" "$H" 30 -- sh -c 'exit 0' </dev/null >"$out" 2>"$err"; rc=$?
+[ $rc -eq 0 ] && cmp -s "$repo/.git/index" "$work/alt-index" && pass 'copy setup: GIT_INDEX_FILE does not redirect the copy' || fail "GIT_INDEX_FILE rc=$rc $(cat "$err")"
+git -C "$repo" reset -q --hard "$H"; rm -f "$work/hook-ran" "$work/alt-index"
+
 run 30 sh -c '[ -f a.txt ] && [ ! -e untracked.env ] && [ "$(git rev-parse HEAD)" = "$0" ]' "$H"
 [ $rc -eq 0 ] && pass 'the copy holds tracked files at the head, not the untracked file' || fail "copy content: rc=$rc"
 
