@@ -30,9 +30,12 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
   such step is offered by `/workflow-init` and listed as a human action. Every version the change introduces is
   pinned exactly (invariant 5).
 - [ ] **AC-3** The reviewer may run targeted tests of the touched modules in a disposable copy of the repository,
-  offline, without secrets, with a time limit, cleaned up on every exit, and without `git worktree add`; the result
-  of each run (command, exit status, duration) or the concrete reason no test ran appears in the review's findings
-  or reply.
+  offline, without secrets from the environment, with only the repository's tracked files in the copy, with a time
+  limit, cleaned up on every exit, and without `git worktree add`; the result of each run (command, exit status,
+  duration) or the concrete reason no test ran appears in the review's findings, its reply, or the pass's evidence
+  file the reply names. A test can still read host files by absolute path, as the quality command can; the
+  documentation says so. (narrowed 2026-10-30: Daniel chose env-only secret removal over filesystem isolation, and
+  the evidence file was added as a result surface; change record below.)
 - [ ] **AC-4** The reviewer traces callers and dependents of every changed symbol. Agents never index with
   codebase-memory (D79); a current index is used where one exists, otherwise direct search, and the human refresh
   command is reported.
@@ -44,6 +47,25 @@ _IDs are permanent once the story is committed: never renumber or reuse one; a n
   fewer than 6 exist); the report gives found/not found per case (target at least 4/6), the duration and the
   Codex calls per review, and sits where a reader can set it beside sfx-factory's numbers.
 - [ ] **AC-7** Version 0.51.0; CHANGELOG, README and docs updated; the quality command is green.
+
+**Changed 2026-10-30 — gap found.** Decided by Daniel, in the orchestrator's decision band and in this session
+("D1: env-only. D2: ja, 2 Runden."). Baseline: 57a0184. Gate A pass 2 on the spec (cycle k051gas1, findings 1 and
+9) showed that "without secrets" read as full isolation would need a filesystem sandbox per platform, and that the
+design reports test results in an evidence file beside the findings file.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| AC-3 "without secrets" | kept — narrowed to secrets from the environment, plus only tracked files in the copy; host-file reads by absolute path stay possible and are documented | narrowed |
+| AC-3 "appears in the review's findings or reply" | kept — the pass's evidence file named in the reply added as a third surface | narrowed |
+| AC-3 every other condition (targeted, disposable copy, offline, time limit, cleanup, no `git worktree add`, command/exit/duration or reason) | kept | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** none since 57a0184 on this story.
+- **Scope boundary:** in: env-only secret removal, tracked-files-only copy, evidence file; out: filesystem isolation of test reads.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md` → updated in this change.
+- **Reviews already run:** Gate A cycle k051gas1 passes 1–2 → pass 3 reviews the amended story and spec, per `.claude/review-gates.md` (cap raised by 2, Daniel).
 
 ## 4. Affected AGENTS.md invariants
 - `## Key invariants` / Packaging — "5. **Every version pinned exactly.**"
