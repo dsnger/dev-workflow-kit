@@ -596,8 +596,8 @@ done
 #              yet, and 4a-4l were not re-measured after the initializer gained their fixtures.
 #   4o         added 2026-10-30 (0.51) with its cases; NOT measured yet, nor 4a-4n after the
 #              initializer and `LC_SECTION` gained its fixtures.
-#   4p         added 2026-10-30 (0.52) with its cases; NOT measured yet, and 4a-4o were not
-#              re-measured after the initializer gained its fixture.
+#   4p, 4q     added 2026-10-30 (0.52) with their cases; NOT measured yet, and 4a-4o were not
+#              re-measured after the initializer gained their fixtures.
 # 4c measured 13 before the placement and terminator fixtures existed, and that number was
 # briefly recorded here against a suite that no longer produced it. A measured block
 # carries only measured numbers: re-run, do not extrapolate.
@@ -1658,6 +1658,12 @@ lv_case "4p: identical copies accepted"            0 'CI switch copies:' '' ':'
 lv_case "4p: switch one line longer rejected"      1 'CI switch copies:' 'differs from the' "printf 'w\nz\n' > scripts/ci-switch.sh"
 lv_case "4p: missing switch rejected"              1 'CI switch copies:' 'cannot be compared' 'rm -f scripts/ci-switch.sh'
 lv_case "4p: no 2.27 heading rejected"             1 'CI switch copies:' 'cannot be compared' "sed 's/^### 2\.27 .*/### 2.29 other/' $cmdf > t && mv t $cmdf"
+QR='quality row and CI:'
+lv_case "4q: same scripts accepted"                0 "$QR" '' "printf '| quality (x) | \`sh scripts/a.test.sh && dash scripts/a.test.sh\` |\n' > AGENTS.md && printf '      run: sh scripts/a.test.sh\n' >> .github/workflows/ci.yml"
+lv_case "4q: suite missing from ci.yml rejected"   1 "$QR" 'only in AGENTS.md: scripts/b.test.sh' "printf '| quality (x) | \`sh scripts/a.test.sh && sh scripts/b.test.sh\` |\n' > AGENTS.md && printf '      run: sh scripts/a.test.sh\n' >> .github/workflows/ci.yml"
+lv_case "4q: suite only in ci.yml rejected"        1 "$QR" 'only in ci.yml: scripts/c.test.sh' "printf '| quality (x) | \`sh scripts/a.test.sh\` |\n' > AGENTS.md && printf '      run: sh scripts/a.test.sh && sh scripts/c.test.sh\n' >> .github/workflows/ci.yml"
+lv_case "4q: no quality row, a ci.yml script rejected" 1 "$QR" 'only in ci.yml: scripts/c.test.sh' "printf '      run: sh scripts/c.test.sh\n' >> .github/workflows/ci.yml"
+lv_case "4q: two quality rows rejected"            1 "$QR" 'more than one' "printf '| quality (x) | \`true\` |\n| quality (y) | \`true\` |\n' > AGENTS.md"
 lv_case "4n: non-x.y.z manifest version rejected"  1 "$VR" 'cannot be read' "sed 's/1\.2\.3/1.2/' plugins/dev-workflow/.claude-plugin/plugin.json > t && mv t plugins/dev-workflow/.claude-plugin/plugin.json"
 
 # --- Check 4o (review skill copies) ------------------------------------------------------

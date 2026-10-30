@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l, 4m, 4o and 4p, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4p -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l, 4m, 4o and 4p, the version check 4n and the CI-coverage check 4q, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4q -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4n, 4o, then 4p
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4n, 4o, 4p, then 4q
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -1242,6 +1242,23 @@ elif ! printf '%s\n' "$cs_out" | sed '$d' | cmp -s - "$cs_file"; then
        "make them byte-identical; an initialized project gets the template, this repo runs the file"
 fi
 # --- END check 4p ---
+# --- BEGIN check 4q ---
+# The quality row of AGENTS.md § Commands and .github/workflows/ci.yml must name the same set of
+# `.sh` paths (0.52): hosted CI is the default again, so a suite the row runs and the workflow
+# leaves out goes unchecked there (0.51's two review-skill suites did). It compares path sets
+# only: not how often or under which shell each runs, not the order, not the non-script steps.
+# No quality row is the empty set, so a workflow that names any script still fails.
+qr_row=$(grep '^| quality (' AGENTS.md 2>/dev/null)
+qr_q=$(printf '%s\n' "$qr_row" | grep -oE '[A-Za-z0-9_./-]+\.sh' | LC_ALL=C sort -u)
+qr_c=$(grep -oE '[A-Za-z0-9_./-]+\.sh' .github/workflows/ci.yml 2>/dev/null | LC_ALL=C sort -u)
+if [ "$(printf '%s\n' "$qr_row" | grep -c .)" -gt 1 ] || [ ! -r .github/workflows/ci.yml ]; then
+  fail "quality row and CI: AGENTS.md has more than one '| quality (' row, or .github/workflows/ci.yml cannot be read." \
+       "expected at most one quality row and a readable workflow"
+elif [ "$qr_q" != "$qr_c" ]; then
+  fail "quality row and CI: the scripts differ; only in AGENTS.md: $(printf '%s\n' "$qr_q" | grep -vxF "$qr_c" | tr '\n' ' ')only in ci.yml: $(printf '%s\n' "$qr_c" | grep -vxF "$qr_q" | tr '\n' ' ')" \
+       "run the same suites and lint in both; the row is what local-ci.sh runs, the workflow what Actions runs"
+fi
+# --- END check 4q ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

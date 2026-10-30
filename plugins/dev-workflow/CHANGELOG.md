@@ -42,6 +42,9 @@ new `local-ci.sh` behaviour. Hosted Actions is the default; local is the fallbac
   `~/.cache/sfx-factory/heavy.lock` when that directory exists (none: no lock), held by `perl`; it stops the
   battery's process group before it lets go (a SIGKILL of the holder itself excepted) and never touches the factory's ticket queue, so it can overtake
   a factory step that waited longer.
+- **Kit CI runs the whole quality row again:** `.github/workflows/ci.yml` gains the two review-skill suites
+  0.51 added to the row (under `sh` and `dash`) and their shellcheck lines; new check 4q fails when the row and
+  the workflow name different scripts.
 
 ## 0.51.0
 

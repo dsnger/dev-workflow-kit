@@ -242,3 +242,9 @@ no lock; reminder printed and silent as in ci-switch, and never printed by `--la
   under `$HOME`) is repaired in §4 after the last pass, unreviewed there. Gate B (strict) checks the anchored
   walk on the implementation, with a test that swaps a checked directory between its check and its entry; the
   lock code stays as small as the factory model allows.
+- Scope added after rebasing onto 0.51 (orchestrator, dev-workflow-kit-26, 2026-10-30 15:26): 0.51 put its two
+  review-skill suites into the AGENTS.md quality row but not into `ci.yml`, and this unit makes hosted CI the
+  default again, so `ci.yml` gains them (with their shellcheck lines) and check 4q fails when the quality row
+  and `ci.yml` name different `.sh` paths. The rebase also renumbered this unit's template and check: 0.51 took
+  `### 2.24` and check 4o, so the switch ships as `### 2.27`, kept by check 4p (Boundaries 4d); §2, §5 and §6
+  still say 2.24/4o.
