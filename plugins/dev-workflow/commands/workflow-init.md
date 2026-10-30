@@ -2044,12 +2044,14 @@ printf 'doc links: ok\n'
 ### 2.22 `scripts/local-ci.sh` — the battery on this machine (asked)
 
 For a project whose pull requests need a green `quality` check while GitHub Actions cannot run it
-(budget used up, Actions off, or local chosen up front). The script runs the quality row of
+(budget used up, Actions off, or local chosen up front; hosted Actions stays the default where it can run). The script runs the quality row of
 `AGENTS.md § Commands` on one commit in a temporary worktree it removes afterwards, and posts the
 result to GitHub as that commit's `quality` commit status. Since 0.50 it has lanes, defined in its
 header: a docs- or release-only change runs the optional `quality-light` row instead, and with
 `--from <green head>` a head with the same tree, or with only `.context/` and `todos.md` changed, carries
-that head's green without a run. Every lane posts `quality`.
+that head's green without a run. Every lane posts `quality`. Since 0.52 its full lane waits for an
+optional machine-wide heavy lock, it prints a month reminder from 2.27's switch log, and its `--lane` mode
+tells a CI job which lane a change takes (all in its header).
 
 **Ask first, with a default from the branch rules.** Read which checks the default branch requires,
 as `CLAUDE.md` §4 "Waiting on external work" reads them (classic protection and every ruleset rule,
@@ -2067,11 +2069,14 @@ Tell the user, in the report:
 - **Lanes:** without a `quality-light` row every change that does not inherit runs the full row; after a squash-merge,
   `git fetch origin`, then `sh scripts/local-ci.sh --from <the PR's final head> <merge sha>` carries the
   green in seconds.
-- **Switching** is theirs: `gh workflow disable <the workflow that posts quality>` before pushing the
-  commit they will run locally, because a same-name Actions check run already on a commit must pass
-  too; then, per head, `git fetch origin` and `sh scripts/local-ci.sh <sha>` from the repository root;
-  `gh workflow enable <workflow>` switches back. It needs `gh` logged in for github.com. Any change to
-  a ruleset, a branch protection or a workflow's state is the user's, never this command's.
+- **Switching** is theirs: `sh scripts/ci-switch.sh local "<reason>"` (2.27; without it,
+  `gh workflow disable <the workflow that posts quality>`) before pushing the commit they will run
+  locally, because a same-name Actions check run already on a commit must pass too; then, per head,
+  `git fetch origin` and `sh scripts/local-ci.sh <sha>` from the repository root;
+  `sh scripts/ci-switch.sh hosted "<reason>"` switches back. It needs `gh` logged in for github.com.
+  Any change to a ruleset, a branch protection or a workflow's state is the user's, never this command's.
+- **Heavy lock:** when `$SFX_HEAVY_LOCK` is set or `~/.cache/sfx-factory/` exists (another tool on the
+  machine serialising its heavy work there), the full lane waits for that lock; otherwise none is used.
 - **Trust:** it runs that commit's own code on this machine, so run it only on commits they have read,
   never on a fork's head; anyone with write access can post a `quality` status by hand.
 
@@ -2083,8 +2088,13 @@ Tell the user, in the report:
 # its regression suite is the kit's scripts/local-ci.test.sh.
 #
 # Usage: sh scripts/local-ci.sh [--from <green>] [<commit>]
+#        sh scripts/local-ci.sh --lane <base> [<commit>]
 #   <commit>  any commit-ish (default HEAD) of the repository containing the current directory
 #   <green>   a commit whose `quality` commit status is success (for example the PR's last checked head)
+#   --lane    (0.52) prints `light` or `full`: the lane the change <base>..<commit> takes by the light-lane
+#             rule below, with <base> as the lane base. Runs precondition 1 only and reads only the
+#             quality-light row (none: full); no gh, no lock, no reminder, no worktree, no post. Exit 0, or
+#             64 when <base> or <commit> does not resolve. The Actions job calls it to pick its lane.
 #
 # LANES (0.50; this header is the contract, the kit's docs point here). Every lane posts context
 # `quality`; the first that applies is taken:
@@ -2137,6 +2147,11 @@ Tell the user, in the report:
 # posting. Ctrl-C in a terminal reaches the whole process group and stops the command at once. A
 # signal after the post was sent cannot undo it.
 #
+# REMINDER (0.52): a run that posts (any lane, never --lane) prints one stderr line when
+# scripts/ci-switch.sh's log in the main worktree (.context/ci-switch.log) last recorded a switch to
+# local in an earlier UTC month: the Actions budget is renewed, and the command back to hosted. It
+# reads the log only, so a switch made outside that script is not seen.
+#
 # WHAT IT DOES NOT: fetch (run `git fetch origin` first, so origin/main and a merge commit are current); push (an
 # unpushed SHA fails the post with GitHub's 422, exit 75); judge whether the commit's code is safe
 # to run; check claude's version against the CI pin; post pending, error or a target_url;
@@ -2155,42 +2170,46 @@ set -u
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
   GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CEILING_DIRECTORIES
 
-usage() { printf 'usage: sh scripts/local-ci.sh [--from <green>] [<commit>]\n' >&2; exit 64; }
+usage() { printf 'usage: sh scripts/local-ci.sh [--from <green> | --lane <base>] [<commit>]\n' >&2; exit 64; }
 # refuse <condition; what to do>: one line on stderr and exit 64, before anything ran.
 refuse() { printf 'local-ci: %s\n' "$1" >&2; exit 64; }
 
-from=''
-if [ "${1-}" = --from ]; then [ $# -ge 2 ] || usage; from=$2; shift 2; fi
+from='' lbase=''
+if [ "${1-}" = --from ]; then [ $# -ge 2 ] || usage; from=$2; shift 2
+elif [ "${1-}" = --lane ]; then [ $# -ge 2 ] && [ -n "$2" ] || usage; lbase=$2; shift 2; fi
 [ $# -le 1 ] || usage
 case ${1-} in -*) usage ;; esac
-case $from in -*) usage ;; esac
+case $from$lbase in -*) usage ;; esac
 rev=${1:-HEAD}
 
 git rev-parse --show-toplevel >/dev/null 2>&1 ||
   refuse 'the current directory is not inside a git work tree; run it from the repository root'
 sha=$(git rev-parse --verify -q "$rev^{commit}" 2>/dev/null) ||
   refuse "$rev does not name a commit here; pass a commit, branch or tag of this repository"
-url=$(git remote get-url origin 2>/dev/null)
-slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | LC_ALL=C sed 's/\.git$//')
-[ -n "$slug" ] ||
-  refuse 'origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
-command -v gh >/dev/null 2>&1 ||
-  refuse 'gh is not on PATH; install the GitHub CLI, then run gh auth login --hostname github.com'
-gh auth status --hostname github.com >/dev/null 2>&1 ||
-  refuse 'gh auth status --hostname github.com failed; run it to see why, then gh auth login --hostname github.com'
-# The distinct versions of every koalaman/shellcheck:v<version>: none skips the check (empty pin),
-# one passes (printed), more refuse.
-pin=$(git show "$sha:.github/workflows/ci.yml" 2>/dev/null | LC_ALL=C awk '
-  { s = $0
-    while (match(s, /koalaman\/shellcheck:v[A-Za-z0-9_.-]+/)) {
-      v = substr(s, RSTART + 21, RLENGTH - 21); if (!(v in seen)) { seen[v] = 1; n++ }
-      s = substr(s, RSTART + RLENGTH) } }
-  END { if (n == 1) print v; exit (n > 1) }') ||
-  refuse ".github/workflows/ci.yml at $sha pins more than one shellcheck version; pin one koalaman/shellcheck:v<version>"
-if [ -n "$pin" ]; then
-  have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
-  [ "$have" = "$pin" ] ||
-    refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
+# --lane needs none of preconditions 2-4 and no quality row.
+if [ -z "$lbase" ]; then
+  url=$(git remote get-url origin 2>/dev/null)
+  slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | LC_ALL=C sed 's/\.git$//')
+  [ -n "$slug" ] ||
+    refuse 'origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
+  command -v gh >/dev/null 2>&1 ||
+    refuse 'gh is not on PATH; install the GitHub CLI, then run gh auth login --hostname github.com'
+  gh auth status --hostname github.com >/dev/null 2>&1 ||
+    refuse 'gh auth status --hostname github.com failed; run it to see why, then gh auth login --hostname github.com'
+  # The distinct versions of every koalaman/shellcheck:v<version>: none skips the check (empty pin),
+  # one passes (printed), more refuse.
+  pin=$(git show "$sha:.github/workflows/ci.yml" 2>/dev/null | LC_ALL=C awk '
+    { s = $0
+      while (match(s, /koalaman\/shellcheck:v[A-Za-z0-9_.-]+/)) {
+        v = substr(s, RSTART + 21, RLENGTH - 21); if (!(v in seen)) { seen[v] = 1; n++ }
+        s = substr(s, RSTART + RLENGTH) } }
+    END { if (n == 1) print v; exit (n > 1) }') ||
+    refuse ".github/workflows/ci.yml at $sha pins more than one shellcheck version; pin one koalaman/shellcheck:v<version>"
+  if [ -n "$pin" ]; then
+    have=$(shellcheck --version 2>/dev/null | LC_ALL=C sed -n 's/^version: //p')
+    [ "$have" = "$pin" ] ||
+      refuse "local shellcheck is ${have:-missing}, ci.yml pins $pin; install shellcheck $pin"
+  fi
 fi
 # row <label>: the last cell of AGENTS.md's one "| <label> " row at the commit, the text between its
 # backticks; the label may hold backticks or \|. No such single row: status 1.
@@ -2205,7 +2224,8 @@ row() {
     if (cell !~ /^`[^`]*[^` \t][^`]*`$/) exit 1
     print substr(cell, 2, length(cell) - 2) }'
 }
-cmd=$(row quality) ||
+cmd=''
+[ -n "$lbase" ] || cmd=$(row quality) ||
   refuse "AGENTS.md at $sha has no single quality row with one command in backticks as its last cell; keep exactly one \"| quality \" row"
 light=$(row quality-light) || light=''
 fsha=''
@@ -2303,6 +2323,19 @@ release_only() {
   [ "$_old" != "$_new" ] || [ -z "$_old" ]
 }
 
+if [ -n "$lbase" ]; then
+  lb=$(git rev-parse --verify -q "$lbase^{commit}" 2>/dev/null) ||
+    refuse "--lane $lbase does not name a commit here; pass the base branch or commit"
+  if [ -n "$light" ] && release_only light "$lb" "$sha"; then echo light; else echo full; fi
+  exit 0
+fi
+# The month reminder (0.52), from scripts/ci-switch.sh's log in the main worktree alone, a recorded
+# state (no workflow read): its last switch went to local in an earlier UTC month.
+rm_main=$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')
+rm_m=$(LC_ALL=C awk -F '\t' '$3 == "hosted" || $3 == "local" { l = $0 } END { print l }' "${rm_main:-.}/.context/ci-switch.log" 2>/dev/null |
+  LC_ALL=C awk -F '\t' '$3 == "local" && $1 ~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]/ { print substr($1, 1, 7) }')
+[ -z "$rm_m" ] || [ "$rm_m" = "$(date -u +%Y-%m)" ] ||
+  printf 'ci-switch: a new month renews the Actions budget (last recorded switch to local: %s); back to hosted: sh scripts/ci-switch.sh hosted "budget renewed"\n' "$rm_m" >&2
 lane=full
 if [ -n "$fsha" ]; then
   if [ "$(git rev-parse "$fsha^{tree}")" = "$(git rev-parse "$sha^{tree}")" ]; then lane=same
@@ -2316,6 +2349,96 @@ if [ "$lane" = full ] && [ -n "$light" ]; then
   lb=${fsha:-$(git merge-base "$sha" origin/main 2>/dev/null)}
   [ -n "$lb" ] && release_only light "$lb" "$sha" && lane=light
 fi
+
+# --- HEAVY LOCK (0.52, spec docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md §4) ---
+# The full lane's battery runs under an exclusive flock on the machine-wide heavy lock that other
+# tools on this machine may share (sfx-factory's protocol): $SFX_HEAVY_LOCK when set, else
+# $HOME/.cache/sfx-factory/heavy.lock when that directory exists, else no lock. SFX_HEAVY_HELD
+# non-empty means a holder's own step runs this, so it takes no lock (waiting would deadlock).
+hl=''
+if [ "$lane" = full ] && [ -z "${SFX_HEAVY_HELD-}" ]; then
+  if [ -n "${SFX_HEAVY_LOCK-}" ]; then hl=$SFX_HEAVY_LOCK
+  elif [ -d "${HOME-}/.cache/sfx-factory" ]; then hl=$HOME/.cache/sfx-factory/heavy.lock; fi
+fi
+hw=${HEAVY_LOCK_WAIT_SECS-7200}
+if [ -n "$hl" ]; then
+  case $hl in /*[!/]) ;; *) refuse "SFX_HEAVY_LOCK must be an absolute path to a file, not '$hl'" ;; esac
+  case $hw in ''|0*|*[!0-9]*) refuse "HEAVY_LOCK_WAIT_SECS must be a whole number of seconds from 1, not '$hw'" ;; esac
+  [ "${#hw}" -le 9 ] || refuse "HEAVY_LOCK_WAIT_SECS must be a whole number of seconds from 1, not '$hw'"
+  command -v perl >/dev/null 2>&1 || refuse "perl is not on PATH; the heavy lock $hl needs it"
+fi
+# The holder (macOS has no flock command). Arguments: lock path, wait seconds, refusal marker,
+# worktree, command, "override" when the path came from SFX_HEAVY_LOCK. It walks from an anchor the
+# factory also trusts ($HOME; for an override the lock's grandparent) into each directory below it
+# by chdir, each one checked by lstat (a directory of this user without group or other write) and
+# then matched by device and inode from inside, so a swapped entry is refused and a later rename
+# cannot redirect the open; opens the file relative to that, O_NOFOLLOW, mode 0600 when created;
+# waits once a second, printing who holds it at once and then once a minute; writes its note
+# (pid, directory, since); runs the command in a process group of its own with SFX_HEAVY_HELD set;
+# on HUP, INT or TERM, and at the end, stops that group (TERM, KILL after 5 s) before it exits and
+# the lock goes. A refusal writes its line to the marker and exits 64. Limits: a SIGKILL of the
+# holder releases the lock with the group still running; it does not join the factory's FIFO
+# ticket queue, so a waiting run here can take the lock before a factory step that waited longer;
+# it never touches <lock>.queue. LOCAL_CI_TEST_WALK_PAUSE (digits, a test seam) only sleeps between
+# a directory's check and its entry.
+# shellcheck disable=SC2016  # perl source, not shell
+HOLD='use strict; use warnings;
+use Fcntl qw(O_RDWR O_CREAT O_NOFOLLOW O_NONBLOCK LOCK_EX LOCK_NB S_ISDIR S_ISREG);
+use File::Basename qw(basename dirname); use POSIX qw(WNOHANG);
+my ($lock, $wait, $mark, $wt, $cmd, $how) = @ARGV;
+sub bail { if (open(my $m, ">", $mark)) { print $m "$_[0]\n"; close $m } exit 64 }
+my $pause = $ENV{LOCAL_CI_TEST_WALK_PAUSE} // "0"; $pause = 0 unless $pause =~ /\A[0-9]{1,2}\z/;
+my ($anchor, $file, @parts) = ($ENV{HOME}, "heavy.lock", ".cache", "sfx-factory");
+($anchor, $file, @parts) = (dirname(dirname($lock)), basename($lock), basename(dirname($lock))) if $how eq "override";
+chdir($anchor) or bail("cannot enter $anchor for the heavy lock $lock: $!");
+for my $p (@parts) {
+  my @l = lstat($p) or bail("the heavy lock directory $p under $anchor is missing: $!");
+  S_ISDIR($l[2]) && $l[4] == $< && !($l[2] & 022)
+    or bail("$p under $anchor must be a directory of this user without group or other write, not a link (heavy lock $lock)");
+  sleep $pause if $pause;
+  chdir($p) or bail("cannot enter $p for the heavy lock $lock: $!");
+  my @c = stat(".");
+  $c[0] == $l[0] && $c[1] == $l[1] or bail("$p under $anchor changed while it was checked (heavy lock $lock)");
+  $anchor .= "/$p";
+}
+sysopen(my $fh, $file, O_RDWR | O_CREAT | O_NOFOLLOW | O_NONBLOCK, 0600) or bail("cannot open the heavy lock $lock: $!");
+my @f = stat($fh);
+S_ISREG($f[2]) && $f[4] == $< && !($f[2] & 022) or bail("the heavy lock $lock must be a regular file of this user without group or other write");
+my ($t0, $said) = (time, undef);
+until (flock($fh, LOCK_EX | LOCK_NB)) {
+  bail("waited $wait s for the heavy lock $lock; red rather than hang (HEAVY_LOCK_WAIT_SECS)") if time - $t0 >= $wait;
+  if (!defined $said || time - $said >= 60) {
+    my $note = ""; sysseek($fh, 0, 0); sysread($fh, $note, 4096);
+    my @w = ((split /\n/, $note), "?", "?");
+    print STDERR "local-ci: waiting for the heavy lock $lock (pid $w[0] in $w[1])\n"; $said = time;
+  }
+  sleep 1;
+}
+my $note = "$$\n$wt\nlocal-ci since " . scalar(localtime) . "\n";
+sysseek($fh, 0, 0); syswrite($fh, $note); truncate($fh, length $note);
+my $got = 0;
+$SIG{$_->[0]} = do { my $n = $_->[1]; sub { $got ||= $n } } for [HUP => 1], [INT => 2], [TERM => 15];
+my $holder = $$;
+my $kid = fork; defined $kid or bail("could not start the battery: $!");
+if (!$kid) {
+  $SIG{$_} = "DEFAULT" for qw(HUP INT TERM);
+  setpgrp(0, 0); $ENV{SFX_HEAVY_HELD} = $holder;
+  chdir($wt) or POSIX::_exit(127);
+  exec("sh", "-c", $cmd) or POSIX::_exit(127);
+}
+setpgrp($kid, $kid);
+my ($st, $done) = (0, 0);
+sub stop { kill("TERM", -$kid); for (1 .. 50) { waitpid($kid, WNOHANG) == $kid and ($st, $done) = ($?, 1);
+  return if !kill(0, -$kid); select(undef, undef, undef, 0.1) } kill("KILL", -$kid);
+  for (1 .. 50) { waitpid($kid, WNOHANG) == $kid and ($st, $done) = ($?, 1); return if !kill(0, -$kid); select(undef, undef, undef, 0.1) } }
+until ($done) {
+  if (waitpid($kid, WNOHANG) == $kid) { ($st, $done) = ($?, 1); last }
+  if ($got) { stop(); last }
+  select(undef, undef, undef, 0.2);
+}
+stop() if kill(0, -$kid);
+exit(128 + $got) if $got;
+exit($st & 127 ? 128 + ($st & 127) : $st >> 8);'
 
 # post <state> <description>: the one status post; exits with the run's status, 75 when the post fails.
 post() {
@@ -2353,8 +2476,14 @@ tmp=$(mktemp -d "${TMPDIR:-/tmp}/local-ci.XXXXXX") || refuse 'could not create a
 git worktree add --quiet --detach "$tmp/wt" "$sha" || refuse "could not add a worktree of $sha; see the git error above"
 added=1
 
-(cd "$tmp/wt" && sh -c "$cmd")
-st=$?
+if [ -n "$hl" ]; then
+  perl -e "$HOLD" "$hl" "$hw" "$tmp/lock.refused" "$tmp/wt" "$cmd" "${SFX_HEAVY_LOCK:+override}"
+  st=$?
+  [ ! -e "$tmp/lock.refused" ] || refuse "$(cat "$tmp/lock.refused")"
+else
+  (cd "$tmp/wt" && sh -c "$cmd")
+  st=$?
+fi
 
 word=battery; [ "$lane" = light ] && word='light lane'
 if [ "$st" -eq 0 ]; then state=success; desc="$word green"; else state=failure; desc="$word red"; fi
@@ -2364,7 +2493,7 @@ post "$state" "$desc,${pin:+ shellcheck $pin,} claude ${cv:-unknown}"
 
 ### 2.23 `.claude/dev-workflow-version` — the kit version of this run
 
-Write it last, after every other target (2.24–2.26 included), as the one line in the fence below. Rules 1–2 apply: missing →
+Write it last, after every other target (2.24–2.27 included), as the one line in the fence below. Rules 1–2 apply: missing →
 write; identical → unchanged; different → show the recorded and the new version and recommend writing
 (this run is the refresh). The gate hook compares it with the installed plugin's version at every session
 start and tells the session when they differ, so a project left on older kit files is named. Say in the
@@ -2372,7 +2501,7 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.51.0
+0.52.0
 ````
 
 ### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
@@ -2888,6 +3017,185 @@ append "$state" "$(printf 'risk %s done %s %s %s' "$n" "$a" "$head" "$sum")
 " || die "could not record the result in $state" 1
 printf 'risk pass %s attempt %s: %s\n' "$n" "$a" "$(tail -n 1 "$canon")"
 exit 0
+````
+
+### 2.27 `scripts/ci-switch.sh` — hosted or local CI, one visible switch (asked)
+
+For the same projects as 2.22, asked together with it and with the same default; written only when 2.22's
+`scripts/local-ci.sh` is present after this run. Hosted GitHub Actions is the default, local the fallback
+when the Actions budget runs out or an up-front choice. The script shows which state the project's quality
+workflow is in (`quality.yml` or `ci.yml`, exactly one), flips it only after the user answers yes, logs each
+flip in the main worktree's `.context/ci-switch.log`, checks a failed run for a billing block
+(`check <run-id>`, it prints the switch command and flips nothing), and reminds when a new month renews the
+budget. It changes only the workflow's enabled state, with the user's own `gh`; never a ruleset, branch
+protection, billing or a spending limit. On yes, Rules 1–2 apply as to any target; write the script byte for
+byte as below (the kit runs the same file, and its check 4p keeps the two identical).
+
+Tell the user, in the report: `sh scripts/ci-switch.sh` shows the state; `sh scripts/ci-switch.sh local
+"<reason>"` and `... hosted "<reason>"` flip after a question; after a red run, `sh scripts/ci-switch.sh check
+<run-id>` says whether billing blocked it. The reminder counts calendar months in UTC.
+
+````sh
+#!/bin/sh
+# CI switch: show whether this repository's quality workflow runs on GitHub Actions (hosted, the
+# default) or is disabled so scripts/local-ci.sh posts the check (local, the fallback or an up-front
+# choice); flip it after a yes; check a failed run for a billing block; remind when a new month
+# renews the Actions budget.
+# From the dev-workflow kit, which ships it to projects as `/workflow-init` 2.27 (the same bytes);
+# its regression suite is the kit's scripts/ci-switch.test.sh.
+#
+# Usage: sh scripts/ci-switch.sh                         show the state
+#        sh scripts/ci-switch.sh hosted|local "<reason>"  flip, after a yes read from stdin
+#        sh scripts/ci-switch.sh check <run-id>           was this failed run blocked by billing?
+#
+# PRECONDITIONS (each failure: one line, exit 64): inside a git work tree; origin's URL names a
+# github.com repository (owner and repository come from it alone, never from GH_REPO or GH_HOST);
+# gh on PATH and `gh auth status --hostname github.com` succeeds; exactly one of
+# .github/workflows/quality.yml and .github/workflows/ci.yml exists in the work tree.
+#
+# STATE: GET repos/<o>/<r>/actions/workflows/<file> (REST API version 2026-03-10), field state:
+# active is hosted; disabled_manually and disabled_inactivity are local; anything else, empty or a
+# failed read refuses (64).
+#
+# FLIP: already in the target state: says so, exit 0, nothing logged. Otherwise it checks the log
+# can be appended (64 before asking if not), asks one question and reads one line; y or yes (any
+# case) goes on, anything else or end of input: "not switched", exit 1. It reads the state again
+# (changed meanwhile: not switched, exit 1), then PUTs .../enable (to hosted) or .../disable (to
+# local). A failed PUT is followed by one read: the target reached (a lost reply) is logged with
+# "(reply failed, state read back)", exit 0; else exit 75, nothing logged. Nothing else is ever
+# written to GitHub: no ruleset, branch protection, variable, billing or spending limit.
+#
+# LOG: <main>/.context/ci-switch.log, <main> the first entry of `git worktree list` (every worktree
+# of one clone shares it), untracked. One tab-separated line per flip: UTC time, from, to, workflow
+# file, reason (tabs and line breaks in it become spaces). An append that fails after the flip is
+# reported; the flip stands, exit 0. A change made outside this script (the web UI, another clone)
+# is not logged; two flips at the same moment are not serialised beyond the read after the yes.
+#
+# REMINDER: when the log's last switch went to local in an earlier calendar month (UTC) and GitHub
+# still reads local, one line on stderr names the command back to hosted. scripts/local-ci.sh
+# prints the same line from the log alone. A billing cycle that renews on another day is not seen.
+#
+# CHECK: GET .../actions/runs/<run-id>/jobs, every page; a job whose conclusion is failure and whose
+# steps are empty never started; its check run (the id ending its check_run_url) has its
+# annotations read, and a message matching "spending limit" or "payments have failed" (any case) is
+# a billing block: it prints the job, the message, the switch command and what else the switch
+# needs, exit 0. No such job or message: exit 1. A job with steps is never read, so a test whose
+# output mentions billing is no hit. A failed read: 64. It flips nothing.
+#
+# EXIT: 0 done (check: block found); 1 not switched (check: no block); 64 usage, precondition or
+# read failure; 75 the flip request failed and the state is not the target.
+#
+# POSIX sh plus git and gh (gh's own --jq).
+set -u
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CEILING_DIRECTORIES
+
+usage() { printf 'usage: sh scripts/ci-switch.sh [hosted|local "<reason>" | check <run-id>]\n' >&2; exit 64; }
+refuse() { printf 'ci-switch: %s\n' "$1" >&2; exit 64; }
+
+mode=show arg=''
+case $# in
+  0) ;;
+  2) case $1 in hosted|local|check) mode=$1 arg=$2 ;; *) usage ;; esac ;;
+  *) usage ;;
+esac
+if [ "$mode" = check ]; then
+  case $arg in ''|*[!0-9]*) usage ;; esac
+elif [ "$mode" != show ]; then
+  reason=$(printf '%s' "$arg" | tr '\t\r\n' '   ')
+  case $reason in *[![:space:]]*) ;; *) usage ;; esac
+fi
+
+top=$(git rev-parse --show-toplevel 2>/dev/null) ||
+  refuse 'the current directory is not inside a git work tree; run it from the repository root'
+url=$(git remote get-url origin 2>/dev/null)
+slug=$(printf '%s\n' "$url" | LC_ALL=C sed -n -E 's#^(https://|ssh://git@|git@)github\.com[:/]([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#\2/\3#p' | LC_ALL=C sed 's/\.git$//')
+[ -n "$slug" ] ||
+  refuse 'origin is missing or not a github.com repository URL; point origin at https://github.com/<owner>/<repo>.git'
+command -v gh >/dev/null 2>&1 ||
+  refuse 'gh is not on PATH; install the GitHub CLI, then run gh auth login --hostname github.com'
+gh auth status --hostname github.com >/dev/null 2>&1 ||
+  refuse 'gh auth status --hostname github.com failed; run it to see why, then gh auth login --hostname github.com'
+n=0 wf=''
+for f in quality.yml ci.yml; do [ -f "$top/.github/workflows/$f" ] && n=$((n + 1)) wf=$f; done
+[ "$n" -eq 1 ] ||
+  refuse "found $n of .github/workflows/quality.yml and .github/workflows/ci.yml in $top; exactly one names the quality workflow"
+
+api() { gh api --hostname github.com -H "X-GitHub-Api-Version: 2026-03-10" "$@"; }
+state() { api "repos/$slug/actions/workflows/$wf" --jq .state 2>/dev/null; }
+# side <state>: hosted or local; any other state: status 1.
+side() { case $1 in active) echo hosted ;; disabled_manually|disabled_inactivity) echo local ;; *) return 1 ;; esac; }
+
+if [ "$mode" = check ]; then
+  tab=$(printf '\t')
+  jobs=$(api --paginate "repos/$slug/actions/runs/$arg/jobs?per_page=100" \
+    --jq '.jobs[] | select(.conclusion == "failure" and (.steps | length) == 0) | [.name, .check_run_url] | @tsv' 2>/dev/null) ||
+    refuse "could not read the jobs of run $arg in $slug; check the run id"
+  hit=''
+  while IFS=$tab read -r name curl; do
+    [ -n "$curl" ] || continue
+    id=${curl##*/}
+    case $id in ''|*[!0-9]*) refuse "job \"$name\" of run $arg has no check run id in $curl" ;; esac
+    msgs=$(api --paginate "repos/$slug/check-runs/$id/annotations?per_page=100" --jq '.[].message' 2>/dev/null) ||
+      refuse "could not read the annotations of check run $id (run $arg)"
+    m=$(printf '%s\n' "$msgs" | grep -iE 'spending limit|payments have failed' | sed -n 1p)
+    [ -n "$m" ] || continue
+    printf 'ci-switch: run %s: job "%s" was not started: %s\n' "$arg" "$name" "$m"
+    hit=1
+  done <<EOF
+$jobs
+EOF
+  if [ -z "$hit" ]; then
+    printf 'ci-switch: run %s shows no billing block (no job GitHub never started with a billing annotation)\n' "$arg"
+    exit 1
+  fi
+  printf 'ci-switch: GitHub Actions is blocked by billing for %s; switch to local: sh scripts/ci-switch.sh local "Actions budget used up"\n' "$slug"
+  printf 'ci-switch: then push a new head and run sh scripts/local-ci.sh on it: a quality check run Actions already created on a commit stays there and must pass too; a required quality check restricted to one source cannot be met by local-ci.sh, and lifting that is yours\n'
+  exit 0
+fi
+
+cur=$(state)
+from=$(side "$cur") ||
+  refuse "the workflow $wf of $slug reads state '${cur:-none}', neither hosted nor local; look at it on GitHub"
+printf 'ci-switch: %s is %s (%s: %s)\n' "$slug" "$from" "$wf" "$cur"
+main=$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')
+log=${main:-$top}/.context/ci-switch.log
+
+if [ "$mode" = show ]; then
+  if [ "$from" = local ]; then
+    last=$(LC_ALL=C awk -F '\t' '$3 == "hosted" || $3 == "local" { l = $0 } END { print l }' "$log" 2>/dev/null)
+    m=$(printf '%s\n' "$last" | LC_ALL=C awk -F '\t' '$3 == "local" && $1 ~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]/ { print substr($1, 1, 7) }')
+    [ -z "$m" ] || [ "$m" = "$(date -u +%Y-%m)" ] ||
+      printf 'ci-switch: a new month renews the Actions budget (last recorded switch to local: %s); back to hosted: sh scripts/ci-switch.sh hosted "budget renewed"\n' "$m" >&2
+  fi
+  exit 0
+fi
+
+to=$mode
+if [ "$from" = "$to" ]; then printf 'ci-switch: already %s; nothing switched\n' "$to"; exit 0; fi
+if ! { mkdir -p "${log%/*}" && true >> "$log"; } 2>/dev/null; then
+  refuse "cannot write the switch log $log; fix that, then switch"
+fi
+printf 'Switch %s CI from %s to %s (%s; reason: %s)? [y/N] ' "$slug" "$from" "$to" "$wf" "$reason"
+ans=''
+read -r ans || ans=''
+case $ans in [yY]|[yY][eE][sS]) ;; *) printf 'ci-switch: not switched\n'; exit 1 ;; esac
+now=$(state)
+if [ "$now" != "$cur" ]; then printf 'ci-switch: the state changed to %s meanwhile; not switched\n' "${now:-unknown}"; exit 1; fi
+verb=enable; [ "$to" = local ] && verb=disable
+note=''
+if ! api --method PUT "repos/$slug/actions/workflows/$wf/$verb" >/dev/null; then
+  back=$(state); got=$(side "$back") || got=''
+  if [ "$got" != "$to" ]; then
+    printf 'ci-switch: the switch request failed; %s is still %s\n' "$slug" "${got:-unknown}" >&2
+    exit 75
+  fi
+  note=' (reply failed, state read back)'
+fi
+line=$(printf '%s\t%s\t%s\t%s\t%s%s' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$from" "$to" "$wf" "$reason" "$note")
+printf '%s\n' "$line" >> "$log" 2>/dev/null ||
+  printf 'ci-switch: switched, but the log line could not be written: %s\n' "$line" >&2
+printf 'ci-switch: %s switched from %s to %s%s\n' "$slug" "$from" "$to" "$note"
 ````
 
 ## Step 3 — Walk the user through `AGENTS.md`

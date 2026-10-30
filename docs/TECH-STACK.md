@@ -17,5 +17,6 @@ appear in a second place (the prerequisites paragraph restates the CI pins of sh
 | Node.js | runs the `claude` CLI in CI | [`ci.yml`](../.github/workflows/ci.yml), the `setup-node` step's `node-version` |
 | Codex MCP server | the reviewer at both gates | [`.mcp.json`](../.mcp.json) |
 | CI runner and actions | the CI job | [`ci.yml`](../.github/workflows/ci.yml): `runs-on` and each `uses:` ref |
-| `gh` | `scripts/local-ci.sh` posts the `quality` status with it; `scripts/worktree-cleanup.sh` asks it for merged PRs when present | addressed by name as a system tool: [`AGENTS.md` § Commands](../AGENTS.md#commands), prerequisites paragraph |
+| `gh` | `scripts/local-ci.sh` posts the `quality` status with it; `scripts/ci-switch.sh` reads and flips the workflow's state and reads a run's annotations; `scripts/worktree-cleanup.sh` asks it for merged PRs when present | addressed by name as a system tool: [`AGENTS.md` § Commands](../AGENTS.md#commands), prerequisites paragraph |
+| `perl` | holds the machine-wide heavy lock for `scripts/local-ci.sh`'s full lane (core `Fcntl`, `POSIX`, `File::Basename`), only when a lock is in use | addressed by name as a system tool: [`AGENTS.md` § Commands](../AGENTS.md#commands), prerequisites paragraph |
 | `jq` | optional; the hook falls back without it, and without it no manifest bump is release-only (hook note, `local-ci.sh` light lane) | not pinned ([`AGENTS.md` invariant 4](../AGENTS.md#key-invariants)) |

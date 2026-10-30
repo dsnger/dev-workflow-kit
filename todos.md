@@ -12,6 +12,10 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 - [ ] **Kit 0.52 plan k052plan1 pass 2, finding 2: leftover suite temp dirs after a limit cut.** A KILL after
   the 60-min limit skips the suites' EXIT traps; timed runs get a run-specific TMPDIR, checked and cleared
   after the group stopped. *Trigger: a kit 0.52 full run cut at its limit.*
+- [ ] **Light lane for a project's `quality.yml`.** Kit 0.52 gave the kit's own `ci.yml` a light lane
+  through `local-ci.sh --lane`; `/workflow-init`'s `quality.yml` template still runs one lane, because the
+  light-row mapping per stack is not designed (spec `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md`
+  §7). *Trigger: a project whose docs-only PRs spend Actions minutes on its full battery.*
 - [ ] **Kit 0.52 Gate B: verify the heavy-lock path walk.** Gate A cycle k052hyb1 closed with pass-3 finding 1
   (lock-path race, security-class MINOR) repaired in the spec after the last pass (spec
   `docs/superpowers/specs/2026-10-30-kit-052-hybrid-ci-design.md` §4, §7). Gate B must check the anchored
@@ -2104,9 +2108,10 @@ Evidence for both rows: the S6e2 plan in the SFX time-tracking dashboard reposit
 ran one session from 06:40 to past 22:00 CEST, mostly on local runs: full e2e about 52 min, the screens
 compare about 45 min, several of each, two killed by macOS memory pressure and rerun.
 
-- [ ] **A machine-wide lock for heavy runs.** Parallel sessions on one Mac start heavy local runs at
+- [x] **A machine-wide lock for heavy runs.** Parallel sessions on one Mac start heavy local runs at
   the same time, and memory pressure kills them. A lock (one heavy run per machine) would turn a kill
-  and a rerun into a wait. *Trigger: the next heavy run killed by memory pressure.*
+  and a rerun into a wait. *Trigger: the next heavy run killed by memory pressure.* Done in 0.52:
+  `scripts/local-ci.sh`'s full lane takes the machine-wide heavy lock shared with sfx-factory.
 - [ ] **Move project e2e into CI.** The project had no e2e in CI, so every run was local and held a
   session for its whole duration. *Trigger: per project, when its plan lists a long run that CI could
   carry.*

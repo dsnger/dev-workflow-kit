@@ -46,7 +46,9 @@ scripts/status-view.test.sh       # its regression suite — fixture home + repo
 scripts/worktree-cleanup.sh       # worktree and branch report; --remove deletes merged, clean, idle ones
 scripts/worktree-cleanup.test.sh  # its regression suite — fixture repos, stub gh and lsof
 scripts/local-ci.sh               # runs the quality (or quality-light) row on one commit in a temporary worktree, or carries a --from green; posts the quality status; = workflow-init 2.22 (check 4m)
-scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git
+scripts/local-ci.test.sh          # its regression suite — fixture repos, stub gh, shellcheck, claude, git; real heavy locks under its own HOME
+scripts/ci-switch.sh              # shows hosted or local CI, flips the quality workflow after a yes and logs it, checks a run for a billing block; = workflow-init 2.27 (check 4p)
+scripts/ci-switch.test.sh         # its regression suite — fixture repos, stub gh
 scripts/gate-b-run-tests.test.sh  # suite for the review skill's run-tests.sh — fixture repo, process groups, checkout fingerprint
 scripts/gate-b-risk-pass.test.sh  # suite for the review skill's risk-pass.sh — stub codex, state file, lock, findings grammar
 .agents/skills/gate-b-review/SKILL.md            # the Gate B review method Codex follows (since 0.51); = workflow-init 2.24 (check 4o)
@@ -91,8 +93,9 @@ plus six Python reports with their suites: `scripts/ledger-metrics.{py,test.sh}`
 `scripts/loop-usefulness.{py,test.sh}`, `scripts/spec-delta.{py,test.sh}`,
 `scripts/live-effort.{py,test.sh}`, `scripts/run-analytics.{py,test.sh}` and
 `scripts/status-view.{py,test.sh}`, plus one shell report with its suite,
-`scripts/worktree-cleanup.{sh,test.sh}`, and one shell runner with its suite, `scripts/local-ci.{sh,test.sh}`
-(the local path of the battery, posted to GitHub as the `quality` status), plus the Gate B review skill's two
+`scripts/worktree-cleanup.{sh,test.sh}`, one shell runner with its suite, `scripts/local-ci.{sh,test.sh}`
+(the local path of the battery, posted to GitHub as the `quality` status), the switch between the two
+paths with its suite, `scripts/ci-switch.{sh,test.sh}`, and the Gate B review skill's two
 scripts under `.agents/skills/gate-b-review/scripts/` with their suites `scripts/gate-b-run-tests.test.sh` and
 `scripts/gate-b-risk-pass.test.sh`. JSON and YAML files are configuration read by their tools
 (Claude Code, the MCP client, CI). Everything else is text read by a model. What each report may

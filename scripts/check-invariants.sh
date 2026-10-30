@@ -27,8 +27,8 @@
 # TESTED SPELLINGS ONLY: extend the fixtures before extending the regex.
 #
 # MUTATION RE-RUN PROCEDURE (manual; nothing automates it). The prompt-conformance checks
-# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l, 4m and 4o, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
-# `# --- END check 4a ---` markers -- and likewise for 4b-4o -- so a scratch
+# below (4a-4d, 4f, 4h and 4k), the size-budget checks 4e, 4g and 4i, the copy checks 4j, 4l, 4m, 4o and 4p, and the version check 4n, are bracketed by `# --- BEGIN check 4a ---` /
+# `# --- END check 4a ---` markers -- and likewise for 4b-4p -- so a scratch
 # copy can be neutered cleanly.
 # Substitute the marker for each check in turn; the procedure is otherwise identical:
 #
@@ -36,7 +36,7 @@
 #   [ -n "$TMP" ] && [ -d "$TMP" ] || exit 1   # else the copy below targets /repo
 #   trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 #   mkdir -p "$TMP/repo"; tar cf - --exclude=.git . | (cd "$TMP/repo" && tar xf -)
-#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4n, then 4o
+#   chk=4a   # then 4b, 4c, 4d, 4e, 4f, 4g, 4h, 4i, 4j, 4k, 4l, 4m, 4n, 4o, then 4p
 #   sed "/BEGIN check $chk/,/END check $chk/d" scripts/check-invariants.sh \
 #     > "$TMP/repo/scripts/check-invariants.sh"
 #   sh scripts/check-invariants.test.sh > "$TMP/before" 2>&1; base=$?
@@ -1228,6 +1228,20 @@ for gb in '2.24|````markdown|SKILL.md' '2.25|````sh|scripts/run-tests.sh' '2.26|
   fi
 done
 # --- END check 4o ---
+# --- BEGIN check 4p ---
+# The CI switch and its `/workflow-init` template must be byte-identical, as in 4m:
+# `scripts/ci-switch.sh` and the body of the ````sh fence inside `### 2.27`. Bytes only; the
+# switch's own suite is the guard for what it does. Fails closed as 4m does.
+cs_file=scripts/ci-switch.sh
+cs_out=$(fence_body 2.27 '````sh'); cs_st=$?
+if [ ! -r "$cs_file" ] || ! fence_ok "$cs_out" "$cs_st"; then
+  fail "CI switch copies: $cs_file or the '### 2.27' template of $dl_cmd cannot be read, so the two copies cannot be compared." \
+       "expected the script, one '### 2.27' heading and one closed \`\`\`\`sh fence in it"
+elif ! printf '%s\n' "$cs_out" | sed '$d' | cmp -s - "$cs_file"; then
+  fail "CI switch copies: $cs_file differs from the '### 2.27' template in $dl_cmd." \
+       "make them byte-identical; an initialized project gets the template, this repo runs the file"
+fi
+# --- END check 4p ---
 
 [ "$rc" -eq 0 ] && printf 'invariant checks: ok\n'
 exit "$rc"

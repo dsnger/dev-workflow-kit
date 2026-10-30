@@ -37,6 +37,21 @@ jobs:
           # merge-base. ~50 commits, so the full history costs nothing here.
           fetch-depth: 0
 
+      # The lane (0.52): a docs- or release-only change runs only the checks of AGENTS.md's
+      # quality-light row, decided by scripts/local-ci.sh's own light-lane rule, so this job and the
+      # local runner never disagree. Any failure of the decision is the full lane. BASE goes through
+      # env, never ${{ }} in the script: on a pull request HEAD is GitHub's merge commit, so
+      # origin/<base>..HEAD is the PR's change; on a push it is the commit before the push (all zeros
+      # for a new branch, which does not resolve, so full).
+      - name: Lane (light for a docs- or release-only change)
+        id: lane
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          lane=$(sh scripts/local-ci.sh --lane "$BASE" HEAD 2>/dev/null) && [ "$lane" = light ] || lane=full
+          echo "lane: $lane"
+          echo "lane=$lane" >> "$GITHUB_OUTPUT"
+
       # The hook, the three checkers, the six Python reports and their ten suites are
       # the only executables here,
       # so lint plus those suites are the only mechanical gates we have. Everything else
@@ -49,6 +64,7 @@ jobs:
       # requirement and not invariant 4's reach.
       # Pinned to an exact image tag — a moving linter makes the gate irreproducible.
       - name: Lint shell scripts (POSIX sh)
+        if: steps.lane.outputs.lane != 'light'
         run: |
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh plugins/dev-workflow/hooks/codex-gate.sh
@@ -106,6 +122,11 @@ jobs:
             --shell=sh scripts/local-ci.sh
           docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
             --shell=sh --exclude=SC2015 scripts/local-ci.test.sh
+          # The CI switch and its suite.
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh scripts/ci-switch.sh
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            --shell=sh --exclude=SC2015 scripts/ci-switch.test.sh
 
       # Two runs, because the hook has to be correct under both shells and the runner's
       # /bin/sh is dash while a contributor's may be bash. HOOK_SH selects the shell the
@@ -113,9 +134,11 @@ jobs:
       # harness under dash. Ubuntu also gives mawk here, where a developer machine gives
       # BWK or GNU awk — this step is the only place the locator meets a second awk.
       - name: Hook state-machine tests (sh)
+        if: steps.lane.outputs.lane != 'light'
         run: HOOK_SH=sh sh plugins/dev-workflow/hooks/codex-gate.test.sh
 
       - name: Hook state-machine tests (dash)
+        if: steps.lane.outputs.lane != 'light'
         run: HOOK_SH=dash dash plugins/dev-workflow/hooks/codex-gate.test.sh
 
       # Invariants 5 and 6 plus seven prompt-conformance checks, mechanically, and BOTH
@@ -126,10 +149,10 @@ jobs:
       # Each rule was prose first and each was violated anyway — a floating action ref
       # shipped in this very workflow, a duplicate hooks manifest key stopped the plugin
       # loading in 0.2.1, and the plugin shipped changes without a bump twice.
-      - name: Invariant checks (pinning, manifest, prompt conformance) + checker and report suites
+      - name: Checker and report suites
+        if: steps.lane.outputs.lane != 'light'
         run: |
           sh scripts/check-invariants.test.sh
-          sh scripts/check-invariants.sh
           sh scripts/check-version-bump.test.sh
           sh scripts/ledger-metrics.test.sh
           sh scripts/run-analytics.test.sh
@@ -140,6 +163,12 @@ jobs:
           sh scripts/check-doc-links.test.sh
           sh scripts/worktree-cleanup.test.sh
           sh scripts/local-ci.test.sh
+          sh scripts/ci-switch.test.sh
+
+      # Both lanes: these and the two steps below are AGENTS.md's quality-light row.
+      - name: Invariant checks (pinning, manifest, prompt conformance) + doc links
+        run: |
+          sh scripts/check-invariants.sh
           sh scripts/check-doc-links.sh source-files/ docs/history/ docs/superpowers/replays/
 
       # Invariant 12 itself needs a base to diff against, so it runs only on pull

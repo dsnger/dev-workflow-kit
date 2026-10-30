@@ -846,7 +846,8 @@ officially without gates beats one that has them and ignores them.
 ## Contributing
 
 CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs four checks on every
-PR and push to main: `shellcheck --shell=sh` over the six shell executables and every
+PR and push to main (a docs- or release-only change runs only the light lane's part, see "Hosted and local"
+below): `shellcheck --shell=sh` over the six shell executables and every
 shell test file, the hook's test suite,
 [`scripts/check-invariants.sh`](../scripts/check-invariants.sh) (invariants 5 and 6, plus
 six prompt-conformance checks and three size budgets) plus both checkers' regression
@@ -869,16 +870,37 @@ green `quality` check is the only way in, admins included; the ruleset lists no 
 actors. The single command that runs the whole battery locally is in
 [`AGENTS.md`](../AGENTS.md) under "Commands".
 
-**The local path.** When the Actions budget is used up, or you choose local up front, the same
-battery runs on the Mac: `gh workflow disable ci.yml` first, so no Actions check run competes with the
-local result (GitHub counts a check run and a commit status of the same required name together, and
-both must pass). Disabling stops new runs only: a run in progress finishes, and a `quality` check run
-Actions already created on a commit (it reports on the PR head commit) stays there and must pass too,
-so switch before you push the commit you will run locally. Then, per commit, `git fetch origin` and
-`sh scripts/local-ci.sh [<commit>]` from the repository root (after a squash-merge: `git fetch origin`,
+**Hosted and local.** Hosted Actions is the default: it is faster and needs nothing on the Mac. Local is
+the fallback when the monthly Actions budget is used up, or a choice made up front. `sh scripts/ci-switch.sh`
+shows which one is on (`hosted`: the workflow is enabled; `local`: it is disabled). Since 0.52 the `quality`
+job takes the same lanes as the local path: its first step asks `sh scripts/local-ci.sh --lane <base> HEAD`,
+and a docs- or release-only change then runs only what the `quality-light` row runs (invariant checks, doc
+links, the PR version-bump check, plugin validation); any doubt in that decision is the full job. The job
+keeps its name, no `paths-ignore`, no second required check.
+
+**The local path.** When a red run looks like the budget, `sh scripts/ci-switch.sh check <run-id>` reads it:
+a job GitHub never started, with a billing or spending-limit annotation, is named together with the switch
+command; nothing flips. `sh scripts/ci-switch.sh local "<reason>"` then asks before it disables the workflow
+(only its enabled state, with your `gh`; never a ruleset, protection, billing or spending limit) and logs the
+switch in the main checkout's `.context/ci-switch.log`. Disabling stops new runs only: a run in progress
+finishes, and a `quality` check run Actions already created on a commit (it reports on the PR head commit)
+stays there and must pass too (GitHub counts a check run and a commit status of the same required name
+together), so switch before you push the commit you will run locally. Then, per commit, `git fetch origin`
+and `sh scripts/local-ci.sh [<commit>]` from the repository root (after a squash-merge: `git fetch origin`,
 then `--from <the PR's final head> <merge sha>`). The script runs the quality row of
 [`AGENTS.md`](../AGENTS.md) § Commands on that commit in a temporary worktree it removes afterwards
-and posts the result as the `quality` commit status; `gh workflow enable ci.yml` switches back.
+and posts the result as the `quality` commit status; `sh scripts/ci-switch.sh hosted "<reason>"` switches
+back. **Month reminder:** when the log's last switch went to local in an earlier calendar month (UTC),
+`ci-switch.sh` (if GitHub also reads local) and `local-ci.sh` (from the log alone, so a switch made in the web
+UI is not seen) print one line: the budget is renewed, with the command back to hosted. Nothing flips by
+itself; there is no scheduler. A budget that renews on another day than the 1st is not seen.
+**Heavy lock** (since 0.52): the full lane waits for the machine-wide lock other tools on this Mac use for
+heavy work (`$SFX_HEAVY_LOCK`, else `~/.cache/sfx-factory/heavy.lock` when that directory exists; neither:
+no lock). It waits while another holder has it (at most `HEAVY_LOCK_WAIT_SECS`, default 7200, then exit 64
+with nothing posted), stops the battery's whole process group before it lets go, and never touches the
+factory's ticket queue: a kit run can therefore overtake a factory step that waited longer. Mutual exclusion
+holds; a SIGKILL of the holder itself releases the lock while the battery runs on. The battery starts no test
+server or database, so it holds no port.
 **Lanes** (since 0.50; the script's header is the contract): with `--from <a green head>`, a commit with
 that head's tree (a squash-merge) or with only `.context/` and `todos.md` changed (a closing commit) gets
 `inherited green from <head>` and nothing runs; a docs- or release-only change since the lane base
@@ -893,7 +915,7 @@ hand, so the author of each status is worth a look in the merge box; and the scr
 commit's own scripts on the Mac, so run it only on commits you have read, never on a fork's head.
 
 **The local path in a project** (since 0.49). `/workflow-init` 2.22 offers the same script, byte for
-byte (check 4m), defaulting to yes when the default branch requires a `quality` check with no source
+byte (check 4m), and since 0.52 2.27 the switch (check 4p), defaulting to yes when the default branch requires a `quality` check with no source
 restriction. In a project without this repository's shellcheck pin the parity check is skipped and the
 status description has no shellcheck part. The quality row runs in a fresh worktree, so a command that
 needs installed dependencies installs them itself first. A required check restricted to one app's
