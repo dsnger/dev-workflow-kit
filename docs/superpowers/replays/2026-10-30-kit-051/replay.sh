@@ -153,15 +153,21 @@ for p in $(git -C "$clone" diff --name-only "$base..$head"); do
 done
 printf 'risk %s\n' "$risk" >> "$co/run.txt"
 if [ "$risk" = forced ]; then
-  printf 'base %s\n' "$base" > "$clone/.context/codex-reviews/gate-b-cycle-$nonce.state"
+  st="$clone/.context/codex-reviews/gate-b-cycle-$nonce.state"
+  # Codex ran in the clone: a planted link must not redirect this write (noclobber after removing it).
+  { [ ! -L "$clone/.context" ] && [ ! -L "$clone/.context/codex-reviews" ] && rm -f "$st" &&
+    ( set -C; printf 'base %s\n' "$base" > "$st" ); } || die 'cannot write the cycle state file safely' 1
   t0=$(date +%s)
-  sh "$clone/.agents/skills/gate-b-review/scripts/risk-pass.sh" "$clone" "$base" "$head" "$nonce" 2 "$limit" \
+  # The trusted copy runs: Codex can write in the clone, and this script has the user's full rights.
+  diff -r "$kit/.agents/skills/gate-b-review" "$clone/.agents/skills/gate-b-review" > "$co/skill-diff.txt" 2>&1 ||
+    printf 'skill copy changed before the risk pass (see skill-diff.txt)\n' >> "$co/run.txt"
+  sh "$kit/.agents/skills/gate-b-review/scripts/risk-pass.sh" "$clone" "$base" "$head" "$nonce" 2 "$limit" \
     > "$co/risk.stdout" 2> "$co/risk.stderr"; c=$?
   printf 'call risk exit %s secs %s\n' "$c" "$(( $(date +%s) - t0 ))" >> "$co/run.txt"
   [ "$c" = 0 ] || rc=1
 fi
 
-mkdir "$co/codex-reviews" && cp "$clone/.context/codex-reviews/"*"$nonce"* "$co/codex-reviews/" || rc=1
+mkdir "$co/codex-reviews" && cp -P "$clone/.context/codex-reviews/"*"$nonce"* "$co/codex-reviews/" || rc=1
 git -C "$clone" status --porcelain --untracked-files=all > "$co/clone-status.txt"
 
 # Contamination audit (spec §8): every command each call ran, and the ones that reach outside the clone.
