@@ -19,7 +19,7 @@ Ask also: of a spec, whether its commitments are coherent, sufficiently decided 
 Report missing code or tests only where absence has a concrete consequence, and name it; review code a plan includes like other content.
 A spec or plan that uses a library API without a named Context7 lookup (or CLAUDE.md's fallback) for the pinned version is a finding.
 Append the intent + artifact text + which invariants it touches.
-Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; Codex never filters: told to report only high severity, models drop real ones.
+Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; told to report only high severity, models drop real ones.
 
 Both gates, from pass 2 on: list each slot's earlier blocking findings with verdict and reason; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
 Each `not fixed` becomes a finding line, except a `declined` or `accepted, not repaired` one Codex can back with no new evidence, so none drops unchecked and none settled is re-argued.
@@ -31,14 +31,10 @@ Both gates: Codex reports one cause seen at several places once, as a class list
 
 In an open cycle the main session (the committer gets the note) makes each commit before the closing act as a Bash call of only `git commit -m 'WIP: <subject>'`, plain subject; the hook keeps the pass count only across a commit it sees as WIP (a subject ending `(WIP)` is not). The closing commit takes a non-WIP subject: stage, then one plain `git commit -F .context/<msg>`, the form the hook's checks read (empty: `--allow-empty`).
 
-Check against @AGENTS.md.
-
-As at Gate A, put "report every finding with severity and confidence; write `NO FINDINGS` only when the branch found none" in `additionalContext`, same one-line format.
+`additionalContext` names `.agents/skills/gate-b-review/SKILL.md`, which Codex follows (method, @AGENTS.md, finding rules).
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
-**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
-Codex forms 2–4 hypotheses of what could be wrong from the ACs and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so it cannot steer.
-In the `spec` call, Codex maps each AC to the test asserting it, or `none`, the same way; a test that cannot fail is a finding.
+**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
@@ -61,7 +57,7 @@ A timeout in an untouched test that passes alone is recorded with its evidence (
 
 ## Closing act
 
-A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4); a finding fitting neither owes no line. Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/` (if one exists: stop, compare); its learnings are the owed `harden-finding` rows.
+A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4). Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/` (if one exists: stop, compare); its learnings are the owed `harden-finding` rows.
 cycle <NONCE>; floor <the gate's floor> per <story paths with levels, or none>; hook reminder threshold <absent|positive integer|unusable>
 cycle <NONCE>; <Gate-A spec|Gate-A plan|Gate B> (passes <ascending valid pass numbers>, <model>): Findings <per-pass counts>. Blockers <per-pass counts>. Majors <per-pass counts>. Declined <per-pass counts>.
 Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.

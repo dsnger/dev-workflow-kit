@@ -22,6 +22,40 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.51.0
+
+A stronger Codex review (story `docs/superpowers/stories/2026-10-30-kit-051-codex-review-story.md`, design
+`docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md`; D84: built by the kit, nothing copied from
+sfx-factory). Minor: new `/workflow-init` templates, one `.mcp.json` key, new gate-rule lines. Semgrep is kit 0.52.
+
+- **Gate B review skill** `.agents/skills/gate-b-review/SKILL.md` (`### 2.24`): the method Codex follows at every
+  Gate B call — per-branch checks, callers and dependents traced with `git grep` in the head tree, codebase-memory
+  only when its index provably matches the head (never indexing, D79), and an evidence file (`TESTS:`,
+  `CALLERS:`) beside the findings file. Codex CLI 0.162.1 discovers it under `.agents/skills/`; the gate rules
+  also name it in every call. The Codex-side instructions of the Gate-B prompt moved into it.
+- **Targeted tests** through `scripts/run-tests.sh` (`### 2.25`): a `git clone --no-local` copy with tracked
+  files only, the environment stripped, offline under the `workspace-write` sandbox, its own process group with
+  a time limit, the copy removed on every exit, and the reviewed checkout compared before and after (exit 4).
+  Host files stay readable by absolute path, as the quality command can read them (story AC-3, narrowed by
+  Daniel); `docs/reference.md` states both limits.
+- **Risk pass** through `scripts/risk-pass.sh` (`### 2.26`): one `codex exec` pass at high reasoning effort when
+  the cycle touches project scripts, security code, rule or gate files, or migrations; one pass toward the Gate B
+  cap of every mode, never the floor; per-attempt files promoted under a lock and bound by sha256 in
+  `gate-b-cycle-<nonce>.state`. It refuses any Codex CLI but 0.162.1; installing it is the user's step
+  (closing checklist item 5).
+- **`### 2.8`** adds `"CODEX_DEV_SANDBOX_MODE": "workspace-write"` to the `codex` server's `env` (a merge), so
+  both gates run in Codex's `workspace-write` sandbox from the next session start.
+- **Check 4o** keeps the three files byte-identical to their templates. New suites
+  `scripts/gate-b-run-tests.test.sh` and `scripts/gate-b-risk-pass.test.sh`, each run under `sh` and `dash` in
+  the quality command.
+- **Proof replay** (`docs/superpowers/replays/2026-10-30-kit-051/report.md`): 8 historical PRs whose bot found a
+  defect the old Gate B missed; cases 1–6 found 4/6 lenient, 3/6 strict. Four defects it exposed are fixed: the
+  risk pass kept its live event log in `.context/codex-reviews/`, so every targeted test read "checkout changed"
+  (now written outside and placed after the run); a runner Codex's sandbox may not signal read as gone, so a
+  parallel review deleted another's live test copy (EPERM now counts as alive, in both scripts); the skill gave
+  no time limit guidance (now: twice the usual duration, else 1800 s); the evidence's `MODEL:` was always
+  `unknown` (now the top-level `model` of `config.toml` when the event log names none).
+
 ## 0.50.0
 
 Proportional gates (story `docs/superpowers/stories/2026-10-29-kit-050-proportional-gates-story.md`, design

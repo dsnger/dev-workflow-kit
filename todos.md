@@ -2242,3 +2242,48 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       ones. Accepted for 0.50 as an exception (orchestrator `dev-workflow-kit-26`, 2026-10-29 21:54); a bounded stage
       runner inside the script would change what posts the status. (Gate A cycle k050gap1, plan pass 2, finding 1 —
       accepted, not repaired.) *Trigger: a final-head run that hangs or is rerun for a second red stage.*
+- [x] **0.51 replay: a risk pass's targeted tests always read "checkout changed".** Done in 0.51 unit 3: the live log is written outside and placed after the run. `risk-pass.sh` streams the live
+      attempt `.events.jsonl` into `.context/codex-reviews/`, which `run-tests.sh` fingerprints, so every targeted test
+      in a risk pass exits 4 and becomes a BLOCKER. 7 of 8 replay risk calls hit it; the `spec`/`quality` calls, whose logs sat
+      outside the clone, did not (`docs/superpowers/replays/2026-10-30-kit-051/report.md`). *Trigger: kit 0.51 unit 3,
+      before Gate B.*
+- [x] **0.51 replay: `run-tests.sh` loses its own output file.** Done in 0.51 unit 3. Cause (mechanism verified with `codex sandbox`, its role in the replay INFERRED from the two-at-a-time pairing): inside the sandbox `kill 0` on a parallel review's runner fails with EPERM, so the stale scan removed its live copy; EPERM now counts as alive. In replay cases #41 and #40 it reported the suite's
+      exit 1 and could not read its temporary output (`check-invariants.test.sh`); cause not found. *Trigger: kit 0.51
+      unit 3, before Gate B.*
+- [x] **0.51 replay: the skill gives no time guidance per suite.** Done in 0.51 unit 3: twice the usual duration, else 1800 s. In case #99 Codex gave the hook suite (about 9 min)
+      180 s. *Trigger: kit 0.51 unit 3.*
+- [x] **0.51 replay: risk evidence always says `MODEL: unknown`.** Done in 0.51 unit 3: top-level `model` of `config.toml`. Codex 0.162.1's `--json` events name no model;
+      read it from the configuration instead. *Trigger: kit 0.51 unit 3.*
+- [ ] **0.51 Gate B: no test of the risk pass's later-head rule.** Nothing exercises a repaired risk finding accepted
+      at close, or unrelated risky content after a done risk pass forcing another. (Gate B cycle k051gbb14a5b, pass 1,
+      spec finding 2 — accepted, not repaired.) *Trigger: the next change to the risk-pass closing rule.*
+- [ ] **0.51 Gate B: `run-tests.sh` forwards a child's exit 4 or 5 unchanged.** The skill reads 4 as "checkout
+      changed" and 5 as "no test ran", so a test that itself exits 4 or 5 is misreported. (Cycle k051gbb14a5b, pass 1,
+      quality finding 3 — accepted, not repaired.) *Trigger: a false "checkout changed" or "not run" in a review.*
+- [ ] **0.51 Gate B: the risk-pass suite reads a `pgrep` error as "Codex stopped".** In Codex's sandbox `pgrep`
+      cannot list processes and the assertion still passes. (Cycle k051gbb14a5b, pass 1, quality finding 4 —
+      accepted, not repaired.) *Trigger: the next edit of `scripts/gate-b-risk-pass.test.sh`.*
+- [ ] **0.51 Gate B: `ci.yml` lacks the 0.51 suites.** AGENTS.md says the quality row is what CI runs, but the
+      (disabled) Actions workflow has no lint or `sh`/`dash` runs of the two new runners and suites. (Cycle
+      k051gbb14a5b, pass 1, quality finding 5 — accepted, not repaired.) *Trigger: re-enabling `ci.yml`.*
+- [ ] **0.51 Gate B: no upgrade guard between the gate rules and the review skill.** `/workflow-init` lets a differing
+      `SKILL.md` or runner be declined while the new gate rules, which delegate to them, are accepted. (Cycle
+      k051gbb14a5b, pass 2, spec finding 1 — accepted, not repaired.) *Trigger: the next `/workflow-init` upgrade-path change.*
+- [ ] **0.51 Gate B: the risk-trigger category is not in the scaffolded closing procedure.** Spec §6 wants
+      `risk: <a|b|c|d|none>` in the closing cycle line; neither the skill nor the gate rules say so. (Cycle
+      k051gbb14a5b, pass 2, spec finding 2 — accepted, not repaired.) *Trigger: the next gate-rules edit with byte room.*
+- [ ] **0.51 Gate B: the replay driver leaves Codex running after a signal.** `replay.sh`'s trap deletes the clone
+      but does not stop its reviewer and watchdog groups. (Cycle k051gbb14a5b, pass 2, quality finding 1 — accepted,
+      not repaired.) *Trigger: the next replay run.*
+- [ ] **0.51 risk pass: a state file swapped for a FIFO hangs `risk-pass.sh`.** `append` opens before it checks the
+      type, so a FIFO blocks the final `done`/`failed` line with the slot lock held. (Cycle k051gbb14a5b, risk pass 3,
+      finding 2 — accepted, not repaired.) *Trigger: the next edit of `risk-pass.sh`.*
+- [ ] **0.51 risk pass: missing reviewer evidence does not fail an attempt.** A failed evidence placement or an
+      absent `TESTS:`/`CALLERS:` file still records `done`. (Cycle k051gbb14a5b, risk pass 3, finding 3 — accepted,
+      not repaired.) *Trigger: a risk pass closed without its evidence.*
+- [ ] **0.51 risk pass: an ownerless slot lock stays busy.** An interruption between the lock's `mkdir` and the trap
+      leaves a lock with no runner record, and every retry exits 4 until it is removed by hand. (Cycle k051gbb14a5b,
+      risk pass 3, finding 4 — accepted, not repaired.) *Trigger: a risk pass that reports busy with nothing running.*
+- [ ] **0.51 replay: the contamination audit skips missing or broken logs.** It lists only existing event logs and
+      trusts a jq count after a later jq failure. (Cycle k051gbb14a5b, risk pass 3, finding 6 — accepted, not
+      repaired.) *Trigger: the next replay run.*

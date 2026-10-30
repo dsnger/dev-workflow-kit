@@ -646,7 +646,7 @@ Ask also: of a spec, whether its commitments are coherent, sufficiently decided 
 Report missing code or tests only where absence has a concrete consequence, and name it; review code a plan includes like other content.
 A spec or plan that uses a library API without a named Context7 lookup (or CLAUDE.md's fallback) for the pinned version is a finding.
 Append the intent + artifact text + which invariants it touches.
-Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; Codex never filters: told to report only high severity, models drop real ones.
+Ask for **every** finding with severity and confidence — **you filter to blocking findings for repair and read every line**; told to report only high severity, models drop real ones.
 
 Both gates, from pass 2 on: list each slot's earlier blocking findings with verdict and reason; Codex marks each `fixed | not fixed | no longer applies` with its location, in its reply outside the finding lines.
 Each `not fixed` becomes a finding line, except a `declined` or `accepted, not repaired` one Codex can back with no new evidence, so none drops unchecked and none settled is re-argued.
@@ -658,14 +658,10 @@ Both gates: Codex reports one cause seen at several places once, as a class list
 
 In an open cycle the main session (the committer gets the note) makes each commit before the closing act as a Bash call of only `git commit -m 'WIP: <subject>'`, plain subject; the hook keeps the pass count only across a commit it sees as WIP (a subject ending `(WIP)` is not). The closing commit takes a non-WIP subject: stage, then one plain `git commit -F .context/<msg>`, the form the hook's checks read (empty: `--allow-empty`).
 
-Check against @AGENTS.md.
-
-As at Gate A, put "report every finding with severity and confidence; write `NO FINDINGS` only when the branch found none" in `additionalContext`, same one-line format.
+`additionalContext` names `.agents/skills/gate-b-review/SKILL.md`, which Codex follows (method, @AGENTS.md, finding rules).
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
-**Standing lens, every Gate-B call: "which existing statements does this diff falsify?"**
-Codex forms 2–4 hypotheses of what could be wrong from the ACs and the diff before reading `whatWasImplemented`, and checks that summary as claims, not context, so it cannot steer.
-In the `spec` call, Codex maps each AC to the test asserting it, or `none`, the same way; a test that cannot fail is a finding.
+**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
@@ -688,7 +684,7 @@ A timeout in an untouched test that passes alone is recorded with its evidence (
 
 ## Closing act
 
-A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4); a finding fitting neither owes no line. Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/` (if one exists: stop, compare); its learnings are the owed `harden-finding` rows.
+A `classic` cap answer may instead be `close`; then, as at any close, run the closing act: one final commit with the cycle lines, applicable ledger records below, and a `todos.md` row per finding dispositioned `accepted, not repaired`; check distinct fixed findings against the hardening ledger, owing only lint (rung 2) or test (rung 4). Unless `classic`, first move the cycle's `.context/codex-reviews/*-<nonce>-*` files to `.context/archive/codex-reviews/<nonce>/` (if one exists: stop, compare); its learnings are the owed `harden-finding` rows.
 cycle <NONCE>; floor <the gate's floor> per <story paths with levels, or none>; hook reminder threshold <absent|positive integer|unusable>
 cycle <NONCE>; <Gate-A spec|Gate-A plan|Gate B> (passes <ascending valid pass numbers>, <model>): Findings <per-pass counts>. Blockers <per-pass counts>. Majors <per-pass counts>. Declined <per-pass counts>.
 Every slot of a validated pass that holds a finding owes a dispositions file, written before the next pass runs; each of its lines is `<n> | <verdict> | <reason>`, and `<verdict>` is one of exactly: `fixed` | `accepted, not repaired` | `declined` — no other token.
@@ -1079,6 +1075,11 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 **Merge, don't rewrite.** Add only the `codex` and `context7` servers, each if absent;
 leave any other server untouched.
+An existing `codex` entry gets only the `env` key `CODEX_DEV_SANDBOX_MODE` added, with every other key left as
+it is; a different value already there is shown and asked about. The key runs Gate A and Gate B in Codex's
+`workspace-write` sandbox (0.51), the condition under which the review skill (2.24) runs targeted tests offline;
+Gate A writes only its findings file there. Tell the user it applies from the next session start (the server
+reads it when it starts), and that a server config file's `tools.review.sandbox` overrides it.
 
 ```json
 {
@@ -1087,7 +1088,7 @@ leave any other server untouched.
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "mcp-codex-dev@1.0.1"],
-      "env": {},
+      "env": { "CODEX_DEV_SANDBOX_MODE": "workspace-write" },
       "timeout": 2400000
     },
     "context7": {
@@ -2363,7 +2364,7 @@ post "$state" "$desc,${pin:+ shellcheck $pin,} claude ${cv:-unknown}"
 
 ### 2.23 `.claude/dev-workflow-version` — the kit version of this run
 
-Write it last, after every other target, as the one line in the fence below. Rules 1–2 apply: missing →
+Write it last, after every other target (2.24–2.26 included), as the one line in the fence below. Rules 1–2 apply: missing →
 write; identical → unchanged; different → show the recorded and the new version and recommend writing
 (this run is the refresh). The gate hook compares it with the installed plugin's version at every session
 start and tells the session when they differ, so a project left on older kit files is named. Say in the
@@ -2371,7 +2372,522 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.50.0
+0.51.0
+````
+
+### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
+
+The kit's review method for Codex at Gate B (0.51): what each branch checks, tracing callers and dependents,
+optional targeted tests, and where findings and evidence go. Codex CLI 0.162.1 discovers skills under the
+repository's `.agents/skills/` (verified), and the gate rules name the file in every Gate B call, so it also
+works where discovery does not. It lives in the project, so nothing is written under the home directory.
+Check `git check-ignore -v .agents/skills/gate-b-review/SKILL.md`: when a rule ignores `.agents/` (some tools
+add one to `.git/info/exclude`), say which and that the three files need `git add -f` to be committed; do not edit
+that rule, it is the user's.
+Rules 1–2 apply; write it byte for byte as below (the kit runs the same file, and its check 4o keeps the
+copies identical).
+
+````markdown
+---
+name: gate-b-review
+description: The kit's review method for a Gate B pass (spec, quality or risk branch) — what to check, how to trace callers, when and how to run targeted tests, and where to write findings and evidence. Use whenever a Gate B call names this skill.
+---
+
+# gate-b-review
+
+Written for Codex (OpenAI) via Codex CLI 0.162.1, running a Gate B call of the dev-workflow kit; the kit checks
+it against its `docs/prompt-standards.md` as part of `/workflow-init`'s template `### 2.24`.
+
+## Context
+You review one change, the git range `baseSha..headSha`, in one branch: `spec`, `quality` or `risk`. The call
+names the range, the branch, the cited story and spec, the battery evidence for this head, and the findings-file
+path. The project's `AGENTS.md` holds its invariants and § Commands; `.claude/review-gates.md` holds the findings
+format. A pass is done when the findings file is complete and the evidence file is written: the gate counts
+only the findings file, and the human reads the evidence to see what you checked.
+
+## Task, in order
+1. **Read the inputs.** The range (with `git diff baseSha..headSha` and `git show headSha:<path>`; the working
+   tree may differ from the head), the cited story and spec, `AGENTS.md` (check against it), and the battery
+   evidence the call names. Before reading the call's `whatWasImplemented`, form 2–4 hypotheses of what could be
+   wrong from the acceptance criteria and the diff, then check that summary as claims, not context, so it cannot
+   steer you.
+2. **Check, by branch.** In every branch, ask: which existing statements does this diff falsify?
+   - `spec`: map every acceptance criterion `AC-<n>` of the cited story to the code that realises it and the test
+     that asserts it, or `none`; a test that cannot fail is a finding.
+   - `quality`: the `AGENTS.md` invariants the diff touches; the failure, error, empty and concurrent paths of
+     every changed function, script or rule; statements elsewhere in the repository that the diff makes false.
+   - `risk`: only edge cases and failure paths, deeper than an ordinary pass — boundary and malformed inputs,
+     each external call, file or process failing, interruption at every step, two runs at once.
+3. **Trace callers and dependents.** For every changed symbol — function, variable, file path, heading or anchor,
+   config key, template section — find its users in the head tree with `git grep -n -e '<symbol>' <headSha>`,
+   and read each one that depends on the changed behaviour, because a change is only as correct as its callers'
+   assumptions. When the project has the codebase-memory integration and you can establish that its index
+   matches `headSha`, use the index; when you cannot, use direct search and name the refresh command recorded in
+   `todos.md` § Tooling revalidation, or say that none is recorded. Without the integration, say nothing about
+   it. Read the index only: indexing is the human's step (decision D79).
+4. **Run targeted tests (optional, your choice).** Pick the test commands `AGENTS.md` § Commands names for the
+   touched paths, or a test file named for a touched file, never the whole battery (the battery already ran).
+   Run them only when your permissions instructions say the sandbox is `workspace-write` with network access
+   restricted, because only then is the run offline; otherwise write each as not run with that reason. Run
+   each one only through this skill's script, which makes a disposable copy with tracked files only, strips the
+   environment, bounds the time and cleans up:
+   `sh .agents/skills/gate-b-review/scripts/run-tests.sh "$PWD" <headSha> <seconds> -- <command> <args…>`
+   Set `<seconds>` to at least twice the command's usual duration where `AGENTS.md`, the suite's header or the
+   battery evidence states one, and to `1800` (the maximum) where nothing does, because a limit below the
+   suite's own duration proves nothing (a suite of about 9 minutes once got 180 s). A timeout (`exit timeout`,
+   exit 124) is a test that did not finish, not a failing test: write its `TESTS:` line with the limit you set.
+   Its exit 4 (`checkout changed`) is a BLOCKER finding: a test wrote into the reviewed checkout. Its exit 5
+   means no test ran (no supervisor); write that reason.
+5. **Write the output.** Two files, then one reply line.
+
+## Rules
+- Report every finding with severity and confidence, because the main session filters, not you; write the
+  clean file (`NO FINDINGS`) only when the branch found none.
+- A failing targeted test is a finding, unless the battery evidence the call names already shows that failure
+  and the gate mode is not `classic` (the gate rules suppress duplicates there); record its `TESTS:` line either
+  way.
+- Report one cause seen at several places once, as a class listing every place.
+- Write only the two files the call names, because the gate compares the checkout before and after.
+
+## Risk pass
+This section is for the main session, which decides and starts the risk pass; the gate rules point here because
+a project has no other copy of these conditions.
+- *Due* when the cycle's diff (`<cycle base>..<head>`) touches one of four categories, judged from the diff's
+  content whatever the paths: (a) a script or tool the project runs (build, release, CI, hook, installer);
+  (b) security-relevant code (authentication, authorization, secrets, validation at a trust boundary,
+  sandboxing, cryptography); (c) a rule or gate file (instruction files, gate rules, review prompts, CI workflows);
+  (d) a schema or data migration. These paths always make it due: `scripts/*`, `bin/*`, `*.sh`, any `hooks/`
+  directory, `.github/workflows/*`, `CLAUDE.md`, `AGENTS.md`, `.claude/*`, `.agents/*`, `.mcp.json`, any
+  `plugins/`, `skills/`, `commands/` or `agents/` directory, a `migrations` or `migrate` path segment, and the
+  patterns in backticks on an `AGENTS.md` `**Risk paths:**` line (they only add). A cited story whose security is
+  not `none` also makes it due; a story saying `none` does not exempt security code found in the diff.
+- *Valid after a later change* when that change only repairs the risk pass's own findings or touches no risk
+  category, and the next `quality` pass verifies it. Any other later change in a risk category runs it again, as
+  one more pass under the cap.
+- *Run* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]`
+  as a background call, once the ordinary passes leave no open blocking finding; `<baseSha>` is the cycle base
+  the state file records. Its exit statuses are in the script's header.
+
+## Output format
+The findings file, at the path the call names, in the format of `.claude/review-gates.md` (one finding per line,
+then the terminator), for example:
+
+```
+MAJOR | high | scripts/x.sh:12 | an empty list exits 0 | a missing input reads as success | exit 1 when the list is empty
+END OF FINDINGS (1 total)
+```
+
+The evidence file beside it, named like the findings file with `-evidence.md` in place of `.md`: one `TESTS:` line
+per command, or one `TESTS: none — <reason>`, and one `CALLERS:` line per changed symbol:
+
+```
+TESTS: sh scripts/x.test.sh | exit 0 | 4s
+CALLERS: run_case — scripts/x.test.sh:40, scripts/y.sh:7 (both read its exit status)
+```
+
+The reply: one line with the counts per severity and the evidence file's path.
+````
+
+### 2.25 `.agents/skills/gate-b-review/scripts/run-tests.sh` — targeted tests in a disposable copy
+
+The script the skill runs every targeted test through: a `git clone --no-local` copy with tracked files only,
+the environment stripped, a time limit with the process group killed, the copy removed on every exit, and the
+reviewed checkout compared before and after. Its header states what it does not prevent (reading host files by
+absolute path, a secret committed to tracked files); say that in the report too. It needs `perl` (present on
+macOS and most Linux systems) and refuses without it. Rules 1–2 apply; write it byte for byte as below (check
+4o).
+
+````sh
+#!/bin/sh
+# run-tests.sh — runs one targeted test command for a Gate B reviewer in a disposable copy of the
+# repository (dev-workflow kit 0.51, spec docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md §5).
+#
+# Usage: run-tests.sh <repo> <headSha> <seconds> -- <command…>
+#   <repo>     a git work tree (the reviewed checkout)
+#   <headSha>  the reviewed head, 40 lowercase hex, reachable from a ref of <repo>
+#   <seconds>  time limit, 1-1800; empty means 600
+# Stdout: one line `<command> | exit <n> | <s>s` (`exit timeout` after a kill). The command's own
+# output goes to stderr, its last 200 lines only.
+# Exit: the command's status; 124 timeout; 2 bad arguments or no copy made; 4 checkout changed;
+# 5 no process supervisor (perl).
+#
+# What it guarantees and what it does not:
+# - The copy is `git clone --no-local --no-checkout` + a detached checkout of <headSha>: tracked
+#   files only, no alternates back to <repo>. Never `git worktree add`.
+# - The command runs under `env -i` with only PATH, HOME and TMPDIR (both inside the copy's
+#   directory) and LANG=C, stdin from /dev/null, as the leader of its own process group
+#   (perl setpgrp; `set -m` does nothing in a non-interactive dash). After <seconds> the group
+#   gets TERM, 5 s later KILL. On every exit both groups (command, watchdog) are killed and the
+#   copy is removed.
+# - Not prevented: reading host files by absolute path, network (the Codex sandbox decides that),
+#   a secret committed to tracked files, a process that leaves the group with its own setsid, and
+#   a KILL of this script itself (the next run reports such a copy; see stale_scan).
+# - The reviewed checkout is fingerprinted before and after (see fingerprint; `.context/`
+#   excluded except .context/codex-reviews/). A difference exits 4. It detects, it does not
+#   prevent; ignored files, the rest of `.context/` and `.git/` beyond HEAD and the index are
+#   outside it.
+set -u
+
+die() { printf 'run-tests.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
+usage() { die "$1 (usage: run-tests.sh <repo> <headSha> <seconds> -- <command…>)" 2; }
+
+[ $# -ge 5 ] || usage 'too few arguments'
+repo=$1; head=$2; secs=$3
+[ "$4" = -- ] || usage 'the fourth argument must be --'
+shift 4
+# Explicit character lists: in a bash locale a range such as a-z also matches capitals.
+case $head in *[!0123456789abcdef]*|'') usage 'headSha must be 40 lowercase hex' ;; esac
+[ ${#head} -eq 40 ] || usage 'headSha must be 40 lowercase hex'
+[ -n "$secs" ] || secs=600
+case $secs in *[!0-9]*) usage 'seconds must be an integer 1-1800' ;; esac
+[ ${#secs} -le 4 ] && [ "$secs" -ge 1 ] && [ "$secs" -le 1800 ] || usage 'seconds must be an integer 1-1800'
+repo=$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null) && [ -n "$repo" ] || usage 'repo is not a git work tree'
+git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
+command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
+
+# Process-group helpers in perl, so sh and dash behave alike. EPERM means the process exists: Codex's
+# sandbox may not signal a parallel review's runner, and reading that as gone deleted its live copy.
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
+group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
+# TERM, up to 5 s, then KILL, then wait until the group is empty (KILL cannot be ignored).
+group_stop() {
+  group_alive "$1" || return 0
+  group_signal TERM "$1"; i=0
+  while group_alive "$1" && [ $i -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  group_signal KILL "$1"
+  while group_alive "$1"; do sleep 0.1; done
+}
+
+# Fingerprint of the reviewed checkout, as one hash; fails (status 1) when any part fails. Read-only
+# git calls only, because the Codex sandbox keeps .git read-only: HEAD, the effective index as
+# `ls-files -s` lists it, `diff HEAD --binary` (tracked content and modes), and each untracked,
+# not-ignored path and everything under .context/codex-reviews/ with its lstat mode and the sha256
+# of its content (a symlink: of its target; anything but a regular file: of nothing, so a FIFO
+# cannot block the read).
+fingerprint() {
+  fp_dir=$(mktemp -d "${TMPDIR%/}/gate-b-fp.XXXXXX") || return 1
+  # shellcheck disable=SC2016  # perl source
+  if {
+       git --no-optional-locks -C "$repo" rev-parse HEAD &&
+       git --no-optional-locks -C "$repo" ls-files -s &&
+       git --no-optional-locks -C "$repo" diff HEAD --binary -- . ':(exclude).context' &&
+       git --no-optional-locks -C "$repo" ls-files -z -o --exclude-standard -- . ':(exclude).context' > "$fp_dir/untracked" &&
+       # The gate's own records are in: a test must not forge a findings or state file.
+       { [ ! -d "$repo/.context/codex-reviews" ] ||
+         ( cd "$repo" && find .context/codex-reviews -print0 ) >> "$fp_dir/untracked"; } &&
+       ( cd "$repo" && perl -0 -MDigest::SHA -ne 'chomp; my @s = lstat($_) or exit 1;
+           my $d = Digest::SHA->new(256); -l _ ? $d->add(readlink($_)) : -f _ ? $d->addfile($_) : 0;
+           printf "%o %s %s\n", $s[2], $d->hexdigest, $_;' < "$fp_dir/untracked" )
+     } > "$fp_dir/stream" 2>/dev/null; then
+    git hash-object --stdin < "$fp_dir/stream"; st=$?
+  else st=1; fi
+  rm -rf "$fp_dir"; return $st
+}
+
+# Earlier copies: runner and group both gone → removed; runner alive → another run, left alone;
+# runner gone but group alive → left in place and reported (we never kill a group we cannot prove
+# we own, and never delete beneath a live writer). A copy without runner.pid is left and reported.
+stale_scan() {
+  for d in "${TMPDIR%/}"/gate-b-review.*; do
+    [ -d "$d" ] || continue
+    rp=$(cat "$d/runner.pid" 2>/dev/null) || rp=
+    gp=$(cat "$d/group.pid" 2>/dev/null) || gp=
+    case $rp in ''|*[!0-9]*) printf 'run-tests.sh: stale copy %s has no runner record; left in place\n' "$d" >&2; continue ;; esac
+    pid_alive "$rp" && continue
+    case $gp in *[!0-9]*) gp= ;; esac
+    if [ -n "$gp" ] && group_alive "$gp"; then
+      printf 'run-tests.sh: stale copy %s with live process group %s; left in place\n' "$d" "$gp" >&2
+    else
+      rm -rf "$d"
+    fi
+  done
+}
+
+tmp=; cpid=; wpid=
+cleanup() {
+  [ -n "$wpid" ] && group_stop "$wpid"
+  [ -n "$cpid" ] && group_stop "$cpid"
+  [ -n "$tmp" ] && rm -rf "$tmp"
+  tmp=; cpid=; wpid=
+}
+trap cleanup EXIT
+trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
+
+TMPDIR=${TMPDIR:-/tmp}
+stale_scan
+fp_before=$(fingerprint) || die 'cannot fingerprint the reviewed checkout; nothing run' 2
+# An explicit template: macOS's bare `mktemp -d` ignores TMPDIR.
+tmp=$(mktemp -d "${TMPDIR%/}/gate-b-review.XXXXXX") || die 'could not create a temporary directory; check TMPDIR' 2
+printf '%s\n' "$$" > "$tmp/runner.pid"
+mkdir "$tmp/home" "$tmp/tmp" || die 'could not prepare the copy' 2
+# The copy is made without the caller's git environment (GIT_INDEX_FILE would redirect its checkout
+# into the caller's index) or configuration (a hooksPath would run tracked code before env -i), and
+# with hooks off. shortcut: setup has no time limit; a clone of a local repository is short.
+setup_git() { env -i PATH="$PATH" HOME="$tmp/home" LANG=C GIT_CONFIG_NOSYSTEM=1 git -c core.hooksPath=/dev/null "$@"; }
+if ! setup_git clone --quiet --no-local --no-checkout -- "$repo" "$tmp/src" </dev/null 2>/dev/null ||
+   ! setup_git -C "$tmp/src" checkout --quiet --detach "$head" </dev/null 2>/dev/null; then
+  die "could not make a copy at $head (is it reachable from a ref of $repo?)" 2
+fi
+setup_git -C "$tmp/src" remote remove origin 2>/dev/null || :
+
+start=$(date +%s)
+# shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
+( cd "$tmp/src" && exec env -i PATH="$PATH" HOME="$tmp/home" TMPDIR="$tmp/tmp" LANG=C \
+    perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- "$@" ) \
+  </dev/null >"$tmp/out" 2>&1 &
+cpid=$!
+printf '%s\n' "$cpid" > "$tmp/group.pid"
+# The watchdog: its own group too, so cleanup can stop it; it marks a timeout before signalling.
+perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
+         kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" "$tmp/timed-out" \
+  </dev/null >/dev/null 2>&1 &
+wpid=$!
+wait "$cpid"; rc=$?
+end=$(date +%s)
+[ -f "$tmp/timed-out" ] && rc=timeout
+tail -n 200 "$tmp/out" >&2
+cleanup
+fp_after=$(fingerprint) || fp_after=unavailable
+
+# A literal pipe in the command is escaped, so the report stays one `|`-separated line.
+printf '%s | exit %s | %ss\n' "$(printf '%s' "$*" | sed 's/|/\\|/g' | tr '\n' ' ')" "$rc" "$((end - start))"
+[ "$fp_after" = "$fp_before" ] || die 'checkout changed: the reviewed checkout differs from before the run' 4
+[ "$rc" = timeout ] && exit 124
+exit "$rc"
+````
+
+### 2.26 `.agents/skills/gate-b-review/scripts/risk-pass.sh` — the high-effort risk pass
+
+The script Gate B's risk pass runs through (`codex exec` at high reasoning effort; no MCP tool takes an effort).
+It refuses any Codex CLI but the version it pins, because its flags and keys were verified on that version only.
+When `codex --version` prints another version, list installing `codex-cli 0.162.1` as the user's own step in the
+closing checklist (item 5), with `npm install -g @openai/codex@0.162.1`; do not run it, since it changes the
+user's machine outside this project. Rules 1–2 apply; write it byte for byte as below (check 4o).
+
+````sh
+#!/bin/sh
+# risk-pass.sh — runs Gate B's one high-effort risk pass through `codex exec` (dev-workflow kit 0.51,
+# spec docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md §6). The main session runs it
+# as a background Bash call and waits for its exit; the hook does not see it.
+#
+# Usage: risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]
+#   <baseSha>  the cycle base: must equal the `base` line of
+#              <repo>/.context/codex-reviews/gate-b-cycle-<nonce>.state, which the main session
+#              writes before Gate B pass 1
+#   <headSha>  the head under review; both SHAs 40 lowercase hex
+#   <nonce>    the cycle nonce, 8-16 of [a-z0-9]; <n> the pass number, a positive integer
+#   <seconds>  time limit, 1-7200; empty or absent means 2400
+# Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed or its findings
+# file is invalid (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is
+# busy (a live earlier attempt); 5 no process supervisor (perl); 6 a Codex CLI other than the pin.
+#
+# Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
+# gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
+# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log, kept in a temporary
+# directory while Codex runs, since run-tests.sh fingerprints this directory, and placed here after it ends). Only
+# while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
+# canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
+# `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
+# earlier attempt can therefore write only its own attempt file. The closing act accepts the canonical
+# file only when its sha256 matches the slot's last `done` line (spec §6).
+set -u
+CODEX_PIN='codex-cli 0.162.1'
+
+die() { printf 'risk-pass.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
+usage() { die "$1 (usage: risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>])" 2; }
+# Explicit character lists: in a bash locale a range such as a-z also matches capitals.
+is_sha() { case $1 in *[!0123456789abcdef]*|'') return 1 ;; esac; [ ${#1} -eq 40 ]; }
+
+[ $# -ge 5 ] && [ $# -le 6 ] || usage 'wrong number of arguments'
+repo=$1; base=$2; head=$3; nonce=$4; n=$5; secs=${6-}
+is_sha "$base" || usage 'baseSha must be 40 lowercase hex'
+is_sha "$head" || usage 'headSha must be 40 lowercase hex'
+case $nonce in *[!abcdefghijklmnopqrstuvwxyz0123456789]*|'') usage 'nonce must be 8-16 of [a-z0-9]' ;; esac
+[ ${#nonce} -ge 8 ] && [ ${#nonce} -le 16 ] || usage 'nonce must be 8-16 of [a-z0-9]'
+case $n in *[!0-9]*|''|0*) usage 'n must be a positive integer' ;; esac
+[ ${#n} -le 3 ] || usage 'n must be a positive integer below 1000'
+[ -n "$secs" ] || secs=2400
+case $secs in *[!0-9]*) usage 'seconds must be an integer 1-7200' ;; esac
+[ ${#secs} -le 4 ] && [ "$secs" -ge 1 ] && [ "$secs" -le 7200 ] || usage 'seconds must be an integer 1-7200'
+repo=$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null) && [ -n "$repo" ] || usage 'repo is not a git work tree'
+git -C "$repo" cat-file -e "$base^{commit}" 2>/dev/null || usage "baseSha $base is not a commit in $repo"
+git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
+dir="$repo/.context/codex-reviews"
+state="$dir/gate-b-cycle-$nonce.state"
+# Codex can write in the repository, and this script runs with the user's full rights: it never
+# writes through a symlink, so a planted link cannot redirect a write outside the workspace.
+for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a symlink; refusing to write through it"; done
+[ -f "$state" ] || usage "no cycle base: $state is missing (the main session writes it before pass 1)"
+recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
+[ "$recorded" = "$base" ] || usage "baseSha differs from the cycle base recorded in $state"
+command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
+v=$(codex --version 2>/dev/null | head -n 1)
+[ "$v" = "$CODEX_PIN" ] || die "Codex CLI is '${v:-not found}', this script is verified on '$CODEX_PIN' only; installing that version is the user's step (see /workflow-init)" 6
+
+# EPERM means the process exists (see run-tests.sh).
+group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
+group_signal() { perl -e 'kill $ARGV[0], -$ARGV[1]' "$1" "$2" 2>/dev/null; }
+pid_alive() { perl -e 'exit((kill(0, $ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
+group_stop() {
+  group_alive "$1" || return 0
+  group_signal TERM "$1"; i=0
+  while group_alive "$1" && [ $i -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  group_signal KILL "$1"
+  while group_alive "$1"; do sleep 0.1; done
+}
+num() { case $1 in ''|*[!0-9]*) return 1 ;; esac; }
+
+# The slot lock. A held lock whose runner or group is alive: busy. Both gone: an interrupted
+# attempt, taken over (its state line stays `start` without `done`).
+lock="$dir/gate-b-risk-$nonce-pass-$n.lock"
+# A takeover is serialized by a second lock, and the owner is read inside it: two runs that both
+# saw a dead owner cannot each remove the lock the other just made.
+if ! mkdir "$lock" 2>/dev/null; then
+  mkdir "$lock.takeover" 2>/dev/null ||
+    die "slot busy: another run is taking over $lock (remove $lock.takeover if no risk pass is running)" 4
+  rp=$(cat "$lock/runner.pid" 2>/dev/null) || rp=
+  gp=$(cat "$lock/group.pid" 2>/dev/null) || gp=
+  busy=
+  if { num "$rp" && pid_alive "$rp"; } || { num "$gp" && group_alive "$gp"; }; then
+    busy="$lock is held by a live attempt"
+  elif [ -z "$rp" ]; then
+    busy="$lock has no runner record (an attempt may be starting)"
+  else
+    rm -rf "$lock"; mkdir "$lock" 2>/dev/null || busy="could not take over $lock"
+  fi
+  rmdir "$lock.takeover"
+  [ -z "$busy" ] || die "slot busy: $busy" 4
+fi
+printf '%s\n' "$$" > "$lock/runner.pid"
+cpid=; wpid=; work=
+# shellcheck disable=SC2329  # run by the EXIT trap
+cleanup() {
+  [ -n "$wpid" ] && group_stop "$wpid"
+  [ -n "$cpid" ] && group_stop "$cpid"
+  [ -n "$work" ] && rm -rf "$work"
+  rm -rf "$lock"
+  cpid=; wpid=; work=
+}
+trap cleanup EXIT
+trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
+
+a=$(( $(grep -c "^risk $n start " "$state") + 1 ))
+pre="$dir/gate-b-risk-$nonce-pass-$n-attempt-$a"
+findings_rel=".context/codex-reviews/gate-b-risk-$nonce-pass-$n-attempt-$a.md"
+canon="$dir/gate-b-risk-$nonce-pass-$n.md"
+for x in "$pre.md" "$pre-evidence.md" "$pre-reply.md" "$pre.events.jsonl"; do
+  { [ -e "$x" ] || [ -L "$x" ]; } && die "attempt file $x already exists; refusing to reuse it" 1
+done
+# Every write goes through these two, because the reviewer may have replaced a directory or file
+# with a symlink, a hard link or a FIFO while it ran: the directories are checked again before each
+# write, a file is appended to only when it opens without following a link and is a regular file
+# with one link, and a result is renamed into place (rename never follows or enters the target).
+# shortcut: a process that escaped the killed group could still race these checks; the group kill
+# is the main bound.
+dirs_ok() { [ ! -L "$repo/.context" ] && [ ! -L "$dir" ] && [ -d "$dir" ]; }
+# shellcheck disable=SC2016  # perl source
+append() {
+  dirs_ok && perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_WRONLY | O_APPEND | O_NOFOLLOW) or exit 1;
+    my @s = stat $f; exit 1 unless -f _ && $s[3] == 1; print $f $ARGV[1] or exit 1; close $f or exit 1' "$1" "$2"
+}
+# shellcheck disable=SC2016  # perl source
+place() {
+  dirs_ok || return 1
+  t=$(mktemp "$dir/.risk-pass.XXXXXX") || return 1
+  if cp "$1" "$t" && perl -e 'rename($ARGV[0], $ARGV[1]) or exit 1' "$t" "$2"; then return 0; fi
+  rm -f "$t"; return 1
+}
+regular() { [ -f "$1" ] && [ ! -L "$1" ]; }
+append "$state" "$(printf 'risk %s start %s %s %s' "$n" "$a" "$head" "$(date +%s)")
+" || die "could not record the start in $state (not a regular file with one link?)" 1
+finish() {
+  append "$state" "$(printf 'risk %s failed %s %s' "$n" "$a" "$1")
+" || printf 'risk-pass.sh: could not record the failure in %s\n' "$state" >&2
+  [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"
+}
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/gate-b-risk.XXXXXX") || finish 1 'could not create a temporary directory'
+cat > "$work/prompt" <<EOF
+You are the risk pass of Gate B, cycle $nonce, pass $n, attempt $a. Follow the skill at
+.agents/skills/gate-b-review/SKILL.md, branch \`risk\`: only edge cases and failure paths of the change, deeper
+than an ordinary pass — empty, error, concurrent, interrupted and boundary inputs; what happens when each
+external call, file or process fails; which existing statements the change makes false. Review the range
+$base..$head of this repository (read it with git; the working tree may differ). Check against AGENTS.md.
+Report every finding with severity and confidence; write NO FINDINGS only when you found none.
+Findings file: $findings_rel
+Write the findings file yourself, in exactly this format:
+One finding per line: \`SEVERITY | confidence | location | problem | consequence | suggested fix\`; escape a literal pipe as \`\\|\`.
+Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT.
+Every line before the terminator is one finding line — no blank lines, headings, prose or wrapped continuations.
+The last line reads exactly \`END OF FINDINGS (<n> total)\`, \`<n>\` the number of finding lines.
+A clean findings file is the single body line \`NO FINDINGS\` with \`END OF FINDINGS (0 total)\`.
+Write nothing else in the repository except that file and $(basename "$pre")-evidence.md beside it (its TESTS:
+and CALLERS: lines, as the skill says). Reply with one line: the counts per severity.
+EOF
+
+# shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
+( cd "$repo" && exec perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- \
+    codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" -o "$pre-reply.md" - ) \
+  < "$work/prompt" > "$work/events" 2> "$work/stderr" &
+cpid=$!
+printf '%s\n' "$cpid" > "$lock/group.pid"
+perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
+         kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" "$work/timed-out" \
+  </dev/null >/dev/null 2>&1 &
+wpid=$!
+wait "$cpid"; rc=$?
+group_stop "$wpid"; wpid=
+group_stop "$cpid"; cpid=
+
+place "$work/events" "$pre.events.jsonl" || printf 'risk-pass.sh: could not place the event log at %s\n' "$pre.events.jsonl" >&2
+model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$work/events" | head -n 1)
+# Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
+# uses unless a `profile` selects another.
+# shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
+cfg="${CODEX_HOME:-$HOME/.codex}/config.toml"
+if [ -z "$model" ] && regular "$cfg"; then
+  model=$(awk '/^[[:space:]]*\[/ { exit } /^[[:space:]]*model[[:space:]]*=[[:space:]]*"/ { sub(/^[^"]*"/, ""); sub(/".*/, ""); print; exit }' "$cfg")
+  [ -z "$model" ] || model="$model (config.toml)"
+fi
+{ printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
+  if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
+[ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"
+[ "$rc" -eq 0 ] || { tail -n 20 "$work/stderr" >&2; finish 1 "codex exited $rc"; }
+
+# The findings grammar of the gate rules: finding lines of six non-empty fields (an escaped pipe
+# is no separator) with a severity from the closed set, or the single clean line; then the
+# terminator counting the finding lines.
+valid() {
+  awk '
+    { line[NR] = $0 }
+    END {
+      if (NR < 2) exit 1
+      t = line[NR]
+      if (t !~ /^END OF FINDINGS \([0-9]+ total\)$/) exit 1
+      k = t; sub(/^END OF FINDINGS \(/, "", k); sub(/ total\)$/, "", k)
+      if (NR == 2 && line[1] == "NO FINDINGS") exit (k + 0 == 0 ? 0 : 1)
+      for (i = 1; i < NR; i++) {
+        l = line[i]; gsub(/\\\|/, "", l)
+        if (split(l, f, / \| /) != 6) exit 1
+        if (f[1] !~ /^(BLOCKER|MAJOR|MINOR|NIT)$/) exit 1
+        for (j = 2; j <= 6; j++) if (f[j] == "") exit 1
+      }
+      exit (k + 0 == NR - 1 ? 0 : 1)
+    }' "$1"
+}
+regular "$pre.md" || finish 1 "no findings file $pre.md (or not a regular file)"
+valid "$pre.md" || finish 1 "findings file $pre.md is not in the gate rules' format"
+
+# The copy is validated again, so a file changed after the first check cannot be promoted.
+if ! { cp "$pre.md" "$work/canon" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
+  finish 1 "could not write $canon"
+fi
+sum=$(perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$canon") || finish 1 'could not hash the canonical file'
+append "$state" "$(printf 'risk %s done %s %s %s' "$n" "$a" "$head" "$sum")
+" || die "could not record the result in $state" 1
+printf 'risk pass %s attempt %s: %s\n' "$n" "$a" "$(tail -n 1 "$canon")"
+exit 0
 ````
 
 ## Step 3 — Walk the user through `AGENTS.md`
@@ -2508,6 +3024,10 @@ Remaining — stack-specific, yours to decide:
        Codex MCP can occupy the same server name with a different tool surface;
      · the ~/.codex/config.toml block printed above (home directory; not written
        by this command), giving Codex the MCP servers it should reach.
+     · for Gate B's risk pass (2.26): Codex CLI 0.162.1 exactly — when `codex
+       --version` prints another version, install it yourself with
+       `npm install -g @openai/codex@0.162.1` (it changes your machine, so this
+       command does not run it); until then risk-pass.sh refuses with exit 6.
    Without all three, both gates are inoperative.
 
 6. Superpowers — BLOCKER if the preflight reported it missing. The workflow's
