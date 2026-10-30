@@ -2242,3 +2242,15 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       ones. Accepted for 0.50 as an exception (orchestrator `dev-workflow-kit-26`, 2026-10-29 21:54); a bounded stage
       runner inside the script would change what posts the status. (Gate A cycle k050gap1, plan pass 2, finding 1 —
       accepted, not repaired.) *Trigger: a final-head run that hangs or is rerun for a second red stage.*
+- [ ] **0.51 replay: a risk pass's targeted tests always read "checkout changed".** `risk-pass.sh` streams the live
+      attempt `.events.jsonl` into `.context/codex-reviews/`, which `run-tests.sh` fingerprints, so every targeted test
+      in a risk pass exits 4 and becomes a BLOCKER. 7 of 8 replay risk calls hit it; the `spec`/`quality` calls, whose logs sat
+      outside the clone, did not (`docs/superpowers/replays/2026-10-30-kit-051/report.md`). *Trigger: kit 0.51 unit 3,
+      before Gate B.*
+- [ ] **0.51 replay: `run-tests.sh` loses its own output file.** In replay cases #41 and #40 it reported the suite's
+      exit 1 and could not read its temporary output (`check-invariants.test.sh`); cause not found. *Trigger: kit 0.51
+      unit 3, before Gate B.*
+- [ ] **0.51 replay: the skill gives no time guidance per suite.** In case #99 Codex gave the hook suite (about 9 min)
+      180 s. *Trigger: kit 0.51 unit 3.*
+- [ ] **0.51 replay: risk evidence always says `MODEL: unknown`.** Codex 0.162.1's `--json` events name no model;
+      read it from the configuration instead. *Trigger: kit 0.51 unit 3.*
