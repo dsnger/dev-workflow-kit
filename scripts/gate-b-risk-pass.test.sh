@@ -228,6 +228,12 @@ printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\
 run 1 30
 [ $rc -eq 1 ] && [ -z "$(ls "$work/elsewhere")" ] && grep -q 'scratch directory was replaced' "$work/err" && pass 'the scratch directory replaced by a link: exit 1, nothing written through it' || fail "scratch dir swap rc=$rc $(ls "$work/elsewhere") $(cat "$work/err")"
 rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
+# The same swap with Codex still running at the timeout: the watchdog writes nothing through it either.
+reset; echo hang > "$STUB_DIR/mode"; mkdir -p "$work/elsewhere"
+printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\n' "$repo" "$work/elsewhere" > "$STUB_DIR/before"
+run 1 2
+[ $rc -ne 0 ] && [ -z "$(ls "$work/elsewhere")" ] && pass 'the scratch directory replaced while Codex runs into the timeout: nothing written through it' || fail "timeout swap rc=$rc $(ls "$work/elsewhere")"
+rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
 
 # Refusals before anything is written.
 reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30

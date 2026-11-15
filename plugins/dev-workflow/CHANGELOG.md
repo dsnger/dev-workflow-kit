@@ -28,13 +28,15 @@ Six template findings from a Gate B in sfx-bricks-child (cycle `k52lvd7n3q`) on 
 checked against the kit's own script and fixed with a failing test first. Minor, as the brief set it: the
 shipped scripts change behaviour (`### 2.21`, `### 2.25`, `### 2.26`; checks 4l and 4o keep the copies identical).
 
-- `risk-pass.sh`: its working files (event log, stderr, reply, evidence and canonical copy, timeout marker) move
+- `risk-pass.sh`: its working files (event log, stderr, reply, evidence and canonical copy) move
   from `TMPDIR`, which Codex's `workspace-write` sandbox can write, to a scratch directory in the repository's git
   directory, which it cannot (seen with `codex sandbox -P :workspace`). A link the reviewer planted there was
   followed by the unsandboxed script. Codex gets no `-o` path any more: the reply is the last agent message of
   its event log. Scratch files are created exclusively without following a link and read only as regular files
   without blocking, and the scratch directory must still be the same one once Codex has stopped, which also
-  covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can write; every result reaches `.context/codex-reviews/` the same way, then renamed.
+  covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can write. The
+  watchdog writes no timeout marker any more (it wrote one while Codex ran); a timeout is read from the elapsed
+  time. Every result reaches `.context/codex-reviews/` the same way, then renamed.
 - `risk-pass.sh`: the state file is opened without blocking, so a FIFO put in its place fails the append at once
   instead of hanging with the slot lock held.
 - `risk-pass.sh`: a pass needs the reviewer's evidence file with a `TESTS:` and a `CALLERS:` line, and a failed

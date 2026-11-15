@@ -575,7 +575,8 @@ project, since an initialized project has no copy of this page.
   event log. In a checkout inside `TMPDIR` or `/tmp` the sandbox can write that git directory too, so scratch
   files are created exclusively without following a link and read only as regular files without blocking, and
   the scratch directory must still be the same directory (device and inode) once Codex has stopped: a planted
-  link or FIFO, or a replaced directory, fails the attempt. The
+  link or FIFO, or a replaced directory, fails the attempt. Nothing of the script writes there while Codex runs: the time limit is read from
+  the elapsed time, not from a marker file. The
   evidence's `MODEL:` line is the model the event log names, else the top-level `model` of `config.toml` in
   `$CODEX_HOME` (marked `(config.toml)`), else `unknown`. Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends

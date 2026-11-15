@@ -2980,7 +2980,8 @@ finish() {
 # checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
 gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
 work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
-# Its identity (device and inode, by lstat), compared once Codex's group is stopped: a directory replaced by a
+# Its identity (device and inode, by lstat), compared once Codex's group is stopped (nothing of this script
+# writes there while Codex runs): a directory replaced by a
 # link, or a path component swapped, fails the attempt before anything is written there.
 wid() { perl -e 'my @s = lstat $ARGV[0] or exit 1; -d _ or exit 1; print "$s[0]:$s[1]"' "$1"; }
 work_id=$(wid "$work") || finish 1 'could not read the scratch directory'
@@ -3014,9 +3015,12 @@ EOF
     codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" - ) \
   < "$work/prompt" > "$work/events" 2> "$work/stderr" &
 cpid=$!
+t0=$(date +%s)
 printf '%s\n' "$cpid" > "$lock/group.pid"
-perl -e 'use Fcntl; setpgrp(0,0); sleep $ARGV[0]; sysopen(my $f, $ARGV[2], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW) and close $f;
-         kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" "$work/timed-out" \
+# The watchdog writes no file, since the scratch directory may be swapped while Codex runs: a timeout is
+# read from the elapsed time instead.
+# shortcut: a Codex run that ends by itself in its last second reads as a timeout (a retry, no wrong result).
+perl -e 'setpgrp(0,0); sleep $ARGV[0]; kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" \
   </dev/null >/dev/null 2>&1 &
 wpid=$!
 wait "$cpid"; rc=$?
@@ -3047,7 +3051,7 @@ if ev=$(printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:
          if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi) &&
    printf '%s\n' "$ev" | create "$work/evidence" && place "$work/evidence" "$pre-evidence.md"; then :
 else werr=${werr:-"could not write the evidence file $pre-evidence.md"}; fi
-regular "$work/timed-out" && finish 3 "timed out after ${secs}s"
+[ $(( $(date +%s) - t0 )) -ge "$secs" ] && finish 3 "timed out after ${secs}s"
 [ "$rc" -eq 0 ] || { sread "$work/stderr" | tail -n 20 >&2; finish 1 "codex exited $rc"; }
 [ -z "$werr" ] || finish 1 "$werr"
 # The skill makes the evidence part of a completed pass: at least one TESTS: and one CALLERS: line.
