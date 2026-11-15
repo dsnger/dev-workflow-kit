@@ -1,0 +1,1 @@
+1 | accepted, not repaired | closing pass at the Gate B cap (strict 5); a reliability Minor, not security-class: a valid result can be retried as a timeout when post-processing is slow. todos.md "Now" row

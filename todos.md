@@ -5,6 +5,12 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
+- [ ] **Kit 0.53 risk pass 5 Minor: the elapsed-time timeout is read after post-processing** (cycle k053tplfix,
+  archived under `.context/archive/codex-reviews/k053tplfix/`, accepted, not repaired at the cap).
+  `risk-pass.sh` samples the clock only after group cleanup, reply decoding and evidence placement, so a reviewer
+  that finished in time but whose post-processing is slow reads as a timeout (exit 3, a needless retry). Take the
+  time right after `wait` and decide on that interval; add a test that delays post-processing. *Trigger: the next
+  edit of `risk-pass.sh`.*
 - [ ] **Kit 0.52 plan k052plan1 pass 2, finding 1: a swap test that cannot pass vacuously.** The
   swap-after-walk case must release the first holder, wait until the kit battery runs, then show a contender
   cannot lock the original file while the replacement stays lockable (plan
