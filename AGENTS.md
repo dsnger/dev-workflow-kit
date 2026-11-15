@@ -54,7 +54,8 @@ pinned.
    never `git worktree add`; removes only earlier copies whose runner and process group are both gone) and
    `.agents/skills/gate-b-review/scripts/risk-pass.sh` and `scripts/gate-b-risk-pass.test.sh` (runs `codex
    exec`; writes only under `.context/codex-reviews/`: its attempt files, the canonical findings file, its lock
-   and lines appended to the cycle state file). Run by the Gate B reviewer and the main session. Since 0.51
+   and lines appended to the cycle state file; plus one `mktemp -d` scratch directory in the repository's git
+   directory, removed on exit, since 0.53 out of the Codex sandbox's reach). Run by the Gate B reviewer and the main session. Since 0.51
    they and the skill's `SKILL.md` ship as `/workflow-init`'s `### 2.24`–`### 2.26` templates, which check 4o
    keeps identical.
 4d. `scripts/ci-switch.{sh,test.sh}` (reads the workflow's state and a run's jobs and annotations; changes

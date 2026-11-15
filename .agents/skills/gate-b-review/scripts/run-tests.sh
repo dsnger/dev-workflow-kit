@@ -8,8 +8,8 @@
 #   <seconds>  time limit, 1-1800; empty means 600
 # Stdout: one line `<command> | exit <n> | <s>s` (`exit timeout` after a kill). The command's own
 # output goes to stderr, its last 200 lines only.
-# Exit: the command's status; 124 timeout; 2 bad arguments or no copy made; 4 checkout changed;
-# 5 no process supervisor (perl).
+# Exit: the command's status; 124 timeout; 2 bad arguments or no copy made; 4 checkout changed
+# (also after HUP, INT or TERM); 5 no process supervisor (perl).
 #
 # What it guarantees and what it does not:
 # - The copy is `git clone --no-local --no-checkout` + a detached checkout of <headSha>: tracked
@@ -18,7 +18,8 @@
 #   directory) and LANG=C, stdin from /dev/null, as the leader of its own process group
 #   (perl setpgrp; `set -m` does nothing in a non-interactive dash). After <seconds> the group
 #   gets TERM, 5 s later KILL. On every exit both groups (command, watchdog) are killed and the
-#   copy is removed.
+#   copy is removed. A signal (HUP, INT, TERM) takes the same final path as a normal end: stop, remove,
+#   then compare the checkout.
 # - Not prevented: reading host files by absolute path, network (the Codex sandbox decides that),
 #   a secret committed to tracked files, a process that leaves the group with its own setsid, and
 #   a KILL of this script itself (the next run reports such a copy; see stale_scan).
@@ -104,15 +105,27 @@ stale_scan() {
   done
 }
 
-tmp=; cpid=; wpid=
+tmp=; cpid=; wpid=; fp_before=
 cleanup() {
   [ -n "$wpid" ] && group_stop "$wpid"
   [ -n "$cpid" ] && group_stop "$cpid"
   [ -n "$tmp" ] && rm -rf "$tmp"
   tmp=; cpid=; wpid=
 }
+# The one final path, for a normal end and a signal alike: stop and remove, then compare the checkout
+# once it was fingerprinted; a difference exits 4, otherwise $1. Further signals are ignored here, so
+# the comparison runs once.
+finish() {
+  trap '' HUP INT TERM
+  cleanup
+  if [ -n "$fp_before" ]; then
+    fp_after=$(fingerprint) || fp_after=unavailable
+    [ "$fp_after" = "$fp_before" ] || die 'checkout changed: the reviewed checkout differs from before the run' 4
+  fi
+  exit "$1"
+}
 trap cleanup EXIT
-trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
+trap 'finish 129' HUP; trap 'finish 130' INT; trap 'finish 143' TERM
 
 TMPDIR=${TMPDIR:-/tmp}
 stale_scan
@@ -147,11 +160,7 @@ wait "$cpid"; rc=$?
 end=$(date +%s)
 [ -f "$tmp/timed-out" ] && rc=timeout
 tail -n 200 "$tmp/out" >&2
-cleanup
-fp_after=$(fingerprint) || fp_after=unavailable
-
 # A literal pipe in the command is escaped, so the report stays one `|`-separated line.
 printf '%s | exit %s | %ss\n' "$(printf '%s' "$*" | sed 's/|/\\|/g' | tr '\n' ' ')" "$rc" "$((end - start))"
-[ "$fp_after" = "$fp_before" ] || die 'checkout changed: the reviewed checkout differs from before the run' 4
-[ "$rc" = timeout ] && exit 124
-exit "$rc"
+[ "$rc" = timeout ] && finish 124
+finish "$rc"
