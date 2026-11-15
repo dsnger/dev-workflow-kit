@@ -29,7 +29,8 @@
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
-# A failing extraction step (awk, grep, sed) is reported for its file and makes the run red.
+# A failing link-extraction step (code stripping, link search, link parsing) is reported for its file and
+# makes the run red; a failure while reading a target's headings or decoding a fragment is not checked.
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
 set -u

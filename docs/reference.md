@@ -571,7 +571,10 @@ project, since an initialized project has no copy of this page.
   the reply and the script's other working files are written to a scratch directory inside the repository's git
   directory, which Codex's `workspace-write` sandbox cannot write (it can write `TMPDIR` and `/tmp`; since 0.53.0),
   and placed beside the attempt after Codex ends; the log also because a targeted test compares
-  `.context/codex-reviews/` before and after. A reviewed checkout inside `TMPDIR` or `/tmp` loses that protection. The
+  `.context/codex-reviews/` before and after. Codex gets no `-o` path: the reply is the last agent message of the
+  event log. In a checkout inside `TMPDIR` or `/tmp` the sandbox can write that git directory too, so scratch
+  files are created exclusively without following a link and read only as regular files without blocking: a
+  planted link or FIFO fails the attempt. The
   evidence's `MODEL:` line is the model the event log names, else the top-level `model` of `config.toml` in
   `$CODEX_HOME` (marked `(config.toml)`), else `unknown`. Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
@@ -863,7 +866,7 @@ shell test file, the hook's test suite,
 six prompt-conformance checks and three size budgets) plus both checkers' regression
 suites, [`scripts/check-doc-links.sh`](../scripts/check-doc-links.sh) (inline relative
 Markdown links in tracked files resolve, and a fragment on a Markdown target names a heading
-there; links inside code fences and one-line code spans, reference-style links and the other limits its header lists are not checked; a failing `awk`, `grep` or `sed` is reported for its file and makes the run red; `/workflow-init` 2.21 ships the same bytes to
+there; links inside code fences and one-line code spans, reference-style links and the other limits its header lists are not checked; a failure in a file's link extraction (code stripping, link search, link parsing) is reported for that file and makes the run red, while one in reading a target's headings or decoding a fragment is not checked; `/workflow-init` 2.21 ships the same bytes to
 projects, and check 4l keeps the two copies identical) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
 

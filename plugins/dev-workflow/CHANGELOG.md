@@ -31,8 +31,10 @@ shipped scripts change behaviour (`### 2.21`, `### 2.25`, `### 2.26`; checks 4l 
 - `risk-pass.sh`: its working files (event log, stderr, reply, evidence and canonical copy, timeout marker) move
   from `TMPDIR`, which Codex's `workspace-write` sandbox can write, to a scratch directory in the repository's git
   directory, which it cannot (seen with `codex sandbox -P :workspace`). A link the reviewer planted there was
-  followed by the unsandboxed script. Codex's `-o` reply goes there too, and every result reaches
-  `.context/codex-reviews/` through a new file created exclusively without following a link, then renamed.
+  followed by the unsandboxed script. Codex gets no `-o` path any more: the reply is the last agent message of
+  its event log. Scratch files are created exclusively without following a link and read only as regular files
+  without blocking, which also covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can
+  write; every result reaches `.context/codex-reviews/` the same way, then renamed.
 - `risk-pass.sh`: the state file is opened without blocking, so a FIFO put in its place fails the append at once
   instead of hanging with the slot lock held.
 - `risk-pass.sh`: a pass needs the reviewer's evidence file with a `TESTS:` and a `CALLERS:` line, and a failed
@@ -41,8 +43,9 @@ shipped scripts change behaviour (`### 2.21`, `### 2.25`, `### 2.26`; checks 4l 
   `docs/prompt-standards.md`, the prompt asks Codex to check against it.
 - `run-tests.sh`: `HUP`, `INT` and `TERM` take the same final path as a normal end, so a test that changed the
   checkout before the interrupt still exits 4.
-- `check-doc-links.sh`: a failing `awk`, `grep` or `sed` is reported for its file and makes the run red; it
-  printed `doc links: ok` before. `grep`'s exit 1 (no link) stays no error.
+- `check-doc-links.sh`: a failure in a file's link extraction (code stripping, link search, link parsing) is
+  reported for that file and makes the run red; it printed `doc links: ok` before. `grep`'s exit 1 (no link)
+  stays no error. A failure while reading a target's headings or decoding a fragment is still not checked.
 
 ## 0.52.0
 

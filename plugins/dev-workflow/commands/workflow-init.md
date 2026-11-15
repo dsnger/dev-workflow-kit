@@ -1925,7 +1925,8 @@ Why: anything else in that position is shell source, not a path.
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
-# A failing extraction step (awk, grep, sed) is reported for its file and makes the run red.
+# A failing link-extraction step (code stripping, link search, link parsing) is reported for its file and
+# makes the run red; a failure while reading a target's headings or decoding a fragment is not checked.
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
 set -u
@@ -2830,10 +2831,10 @@ user's machine outside this project. Rules 1–2 apply; write it byte for byte a
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
-# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log). The log, the reply
-# and every other file this script writes are first written in a scratch directory inside the repository's git
-# directory, which Codex's workspace-write sandbox cannot write (TMPDIR and /tmp it can), and placed here after
-# Codex ends; the log also because run-tests.sh fingerprints this directory. Only
+# …-attempt-<a>-reply.md (Codex's last message, taken from the event log) and …-attempt-<a>.events.jsonl (its
+# --json log). The log and every other file this script writes are first written in a scratch directory inside
+# the repository's git directory, which Codex's workspace-write sandbox cannot write (TMPDIR and /tmp it can),
+# and placed here after Codex ends; the log also because run-tests.sh fingerprints this directory. Only
 # while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
 # canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
 # `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
@@ -2941,11 +2942,25 @@ append() {
   dirs_ok && perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_WRONLY | O_APPEND | O_NOFOLLOW | O_NONBLOCK) or exit 1;
     my @s = stat $f; exit 1 unless -f _ && $s[3] == 1; print $f $ARGV[1] or exit 1; close $f or exit 1' "$1" "$2"
 }
-# place <scratch file> <target>: copies the scratch file (in $work, out of the reviewer's reach) to the target.
+# The scratch directory is out of the reviewer's reach unless the checkout itself lies in TMPDIR or /tmp,
+# so scratch files are also created exclusively without following a link (create) and read only as
+# regular files, opened without following a link or blocking (sread): a link or FIFO planted there fails
+# the attempt instead of redirecting a write or hanging a read.
+# shellcheck disable=SC2016  # perl source
+create() {
+  perl -e 'use Fcntl; sysopen(my $o, $ARGV[0], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600) or exit 1;
+    local $/; my $b = <STDIN>; $b = "" unless defined $b; print $o $b or exit 1; close $o or exit 1' "$1"
+}
+# shellcheck disable=SC2016  # perl source
+sread() {
+  perl -e 'use Fcntl; sysopen(my $i, $ARGV[0], O_RDONLY | O_NOFOLLOW | O_NONBLOCK) or exit 1; -f $i or exit 1;
+    local $/; my $b = <$i>; print $b if defined $b' "$1"
+}
+# place <scratch file> <target>: copies a scratch file to the target in $dir.
 # shellcheck disable=SC2016  # perl source
 place() {
-  dirs_ok && perl -e 'use Fcntl; my ($s, $d, $dir) = @ARGV; open(my $i, "<", $s) or exit 1;
-    my ($t, $o); for (1 .. 50) { $t = sprintf "%s/.risk-pass.%d.%d", $dir, $$, int rand 1e9;
+  dirs_ok && perl -e 'use Fcntl; my ($s, $d, $dir) = @ARGV; sysopen(my $i, $s, O_RDONLY | O_NOFOLLOW | O_NONBLOCK) or exit 1;
+    -f $i or exit 1; my ($t, $o); for (1 .. 50) { $t = sprintf "%s/.risk-pass.%d.%d", $dir, $$, int rand 1e9;
       last if sysopen($o, $t, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600); undef $o }
     defined $o or exit 1; local $/; my $b = <$i>; $b = "" unless defined $b;
     exit 0 if (print $o $b) && close($o) && rename($t, $d); unlink $t; exit 1' "$1" "$2" "$dir"
@@ -2960,9 +2975,8 @@ finish() {
 }
 
 # Scratch in the git directory: Codex 0.162.1's workspace-write sandbox keeps it read-only (seen with
-# `codex sandbox -P :workspace` on macOS, 2026-11-15), so the reviewer cannot plant a link there.
-# shortcut: a repository inside TMPDIR or /tmp has its git directory inside the sandbox's writable roots;
-# keep reviewed checkouts out of them.
+# `codex sandbox -P :workspace` on macOS, 2026-11-15). Codex writes nothing here itself (no -o), so a
+# checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
 gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
 work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
 # A range touching the gate rules' prompt paths (the hook's is_prompt_path pattern) is also checked
@@ -2992,11 +3006,11 @@ EOF
 
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
 ( cd "$repo" && exec perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- \
-    codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" -o "$work/reply" - ) \
+    codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" - ) \
   < "$work/prompt" > "$work/events" 2> "$work/stderr" &
 cpid=$!
 printf '%s\n' "$cpid" > "$lock/group.pid"
-perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
+perl -e 'use Fcntl; setpgrp(0,0); sleep $ARGV[0]; sysopen(my $f, $ARGV[2], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW) and close $f;
          kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" "$work/timed-out" \
   </dev/null >/dev/null 2>&1 &
 wpid=$!
@@ -3007,8 +3021,14 @@ group_stop "$cpid"; cpid=
 # A failed write fails the attempt, after the timeout and Codex's own failure are reported.
 werr=
 place "$work/events" "$pre.events.jsonl" || werr="could not place the event log at $pre.events.jsonl"
-[ ! -f "$work/reply" ] || place "$work/reply" "$pre-reply.md" || werr=${werr:-"could not place the reply at $pre-reply.md"}
-model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$work/events" | head -n 1)
+# The reply is the last agent message in the event log (Codex 0.162.1: item.completed, item type agent_message).
+# shellcheck disable=SC2016  # perl source
+reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($_) } or next;
+  $t = $e->{item}{text} if ($e->{type} // "") eq "item.completed" && ref $e->{item} eq "HASH"
+    && ($e->{item}{type} // "") eq "agent_message"; END { print "$t\n" if defined $t }')
+[ -z "$reply" ] || { printf '%s\n' "$reply" | create "$work/reply" && place "$work/reply" "$pre-reply.md"; } ||
+  werr=${werr:-"could not place the reply at $pre-reply.md"}
+model=$(sread "$work/events" | sed -n 's/.*"model":"\([^"]*\)".*/\1/p' | head -n 1)
 # Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
 # uses unless a `profile` selects another.
 # shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
@@ -3017,11 +3037,12 @@ if [ -z "$model" ] && regular "$cfg"; then
   model=$(awk '/^[[:space:]]*\[/ { exit } /^[[:space:]]*model[[:space:]]*=[[:space:]]*"/ { sub(/^[^"]*"/, ""); sub(/".*/, ""); print; exit }' "$cfg")
   [ -z "$model" ] || model="$model (config.toml)"
 fi
-{ printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc" &&
-  if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md" ||
-  werr=${werr:-"could not write the evidence file $pre-evidence.md"}
-[ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"
-[ "$rc" -eq 0 ] || { tail -n 20 "$work/stderr" >&2; finish 1 "codex exited $rc"; }
+if ev=$(printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc" &&
+         if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi) &&
+   printf '%s\n' "$ev" | create "$work/evidence" && place "$work/evidence" "$pre-evidence.md"; then :
+else werr=${werr:-"could not write the evidence file $pre-evidence.md"}; fi
+regular "$work/timed-out" && finish 3 "timed out after ${secs}s"
+[ "$rc" -eq 0 ] || { sread "$work/stderr" | tail -n 20 >&2; finish 1 "codex exited $rc"; }
 [ -z "$werr" ] || finish 1 "$werr"
 # The skill makes the evidence part of a completed pass: at least one TESTS: and one CALLERS: line.
 { grep -q '^TESTS:' "$work/evidence" && grep -q '^CALLERS:' "$work/evidence"; } ||
@@ -3052,7 +3073,7 @@ regular "$pre.md" || finish 1 "no findings file $pre.md (or not a regular file)"
 valid "$pre.md" || finish 1 "findings file $pre.md is not in the gate rules' format"
 
 # The copy is validated again, so a file changed after the first check cannot be promoted.
-if ! { cp "$pre.md" "$work/canon" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
+if ! { create "$work/canon" < "$pre.md" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
   finish 1 "could not write $canon"
 fi
 sum=$(perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$canon") || finish 1 'could not hash the canonical file'

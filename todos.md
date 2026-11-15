@@ -2308,12 +2308,12 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **0.51 Gate B: the replay driver leaves Codex running after a signal.** `replay.sh`'s trap deletes the clone
       but does not stop its reviewer and watchdog groups. (Cycle k051gbb14a5b, pass 2, quality finding 1 — accepted,
       not repaired.) *Trigger: the next replay run.*
-- [ ] **0.51 risk pass: a state file swapped for a FIFO hangs `risk-pass.sh`.** `append` opens before it checks the
-      type, so a FIFO blocks the final `done`/`failed` line with the slot lock held. (Cycle k051gbb14a5b, risk pass 3,
-      finding 2 — accepted, not repaired.) *Trigger: the next edit of `risk-pass.sh`.*
-- [ ] **0.51 risk pass: missing reviewer evidence does not fail an attempt.** A failed evidence placement or an
-      absent `TESTS:`/`CALLERS:` file still records `done`. (Cycle k051gbb14a5b, risk pass 3, finding 3 — accepted,
-      not repaired.) *Trigger: a risk pass closed without its evidence.*
+- [x] **0.51 risk pass: a state file swapped for a FIFO hangs `risk-pass.sh`.** Done in 0.53.0: `append` opens with
+      `O_NONBLOCK`; regression `state file swapped for a FIFO` in `scripts/gate-b-risk-pass.test.sh`. (Cycle
+      k051gbb14a5b, risk pass 3, finding 2.)
+- [x] **0.51 risk pass: missing reviewer evidence does not fail an attempt.** Done in 0.53.0: no `TESTS:` or
+      `CALLERS:` line, or a failed write, fails the attempt; regressions `no reviewer evidence` and `evidence without a
+      CALLERS: line` in `scripts/gate-b-risk-pass.test.sh`. (Cycle k051gbb14a5b, risk pass 3, finding 3.)
 - [ ] **0.51 risk pass: an ownerless slot lock stays busy.** An interruption between the lock's `mkdir` and the trap
       leaves a lock with no runner record, and every retry exits 4 until it is removed by hand. (Cycle k051gbb14a5b,
       risk pass 3, finding 4 — accepted, not repaired.) *Trigger: a risk pass that reports busy with nothing running.*

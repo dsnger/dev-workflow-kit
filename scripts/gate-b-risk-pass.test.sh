@@ -22,7 +22,7 @@ trap 'exit 1' HUP INT TERM
 # `Findings file:` path in it, runs $STUB_DIR/before when present, then acts on $STUB_DIR/mode:
 # write (copy $STUB_DIR/findings there, and $STUB_DIR/evidence beside it unless $STUB_DIR/noevidence
 # exists), none (write nothing), fail (exit 1), hang (sleep).
-# It prints one --json event naming a model and writes the -o file.
+# It prints one --json event naming a model, then the agent message the script takes as the reply.
 mkdir -p "$work/stub"
 cat > "$work/stub/codex" <<'EOF'
 #!/bin/sh
@@ -40,7 +40,8 @@ case $(cat "$STUB_DIR/mode") in
   fail) echo 'stub: failed' >&2; exit 1 ;;
   hang) sleep 30 ;;
 esac
-echo 'BLOCKER 0 | MAJOR 1' > "$o"
+printf '{"type":"item.completed","item":{"id":"i1","type":"agent_message","text":"BLOCKER 0 | MAJOR 1"}}\n'
+[ -z "$o" ] || echo 'stub: -o given' > "$o"
 EOF
 chmod +x "$work/stub/codex"
 STUB_DIR="$work/stub"; export STUB_DIR
@@ -190,16 +191,19 @@ t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
 [ $dt -lt 20 ] && pass "FIFOs planted as evidence and event log: no hang (${dt}s, exit $rc)" || fail "fifo took ${dt}s"
 
 # The parent's scratch files are outside the reviewer's reach: not in TMPDIR (Codex's workspace-write
-# sandbox can write there) but in the git directory. Links planted in any TMPDIR scratch directory and at
-# the reply path are not written through.
+# sandbox can write there) but in the git directory, and Codex is given no -o path.
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; mkdir -p "$work/tmp"; printf 'keep\n' > "$work/target"
-printf 'for w in "%s"/gate-b-risk.*; do [ -d "$w" ] && for x in evidence canon events reply; do rm -f "$w/$x"; ln -s "%s" "$w/$x"; done; done
-ls -d "%s"/.git/gate-b-risk.* > "%s/gitdir-scratch" 2>/dev/null
-ln -s "%s" "%s"; :\n' "$work/tmp" "$work/target" "$repo" "$STUB_DIR" "$work/target" "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" > "$STUB_DIR/before"
+printf 'ls -d "%s"/.git/gate-b-risk.* > "%s/gitdir-scratch" 2>/dev/null; ln -s "%s" "%s"; :\n' "$repo" "$STUB_DIR" "$work/target" "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" > "$STUB_DIR/before"
 otmp=${TMPDIR-}; TMPDIR="$work/tmp"; run 1 30; TMPDIR=$otmp
-[ "$(cat "$work/target")" = keep ] && [ ! -L "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" ] && pass 'links planted in TMPDIR scratch and at the reply path: not written through' || fail "scratch links rc=$rc target=$(cat "$work/target")"
-[ -s "$STUB_DIR/gitdir-scratch" ] && [ -z "$(ls -d "$repo"/.git/gate-b-risk.* 2>/dev/null)" ] && [ -z "$(ls "$work/tmp")" ] && pass 'scratch lives in the git directory during the run and is removed after' || fail "scratch location: $(cat "$STUB_DIR/gitdir-scratch" 2>/dev/null) / $(ls "$work/tmp")"
+[ $rc -eq 0 ] && [ "$(cat "$work/target")" = keep ] && [ ! -L "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" ] && pass 'a link planted at the reply path: replaced, its target untouched' || fail "reply link rc=$rc target=$(cat "$work/target")"
+[ -s "$STUB_DIR/gitdir-scratch" ] && [ -z "$(ls -d "$repo"/.git/gate-b-risk.* 2>/dev/null)" ] && [ -z "$(ls "$work/tmp")" ] && ! grep -q 'stub: -o' "$d"/*reply.md && pass 'scratch in the git directory during the run, removed after; no -o for Codex' || fail "scratch location: $(cat "$STUB_DIR/gitdir-scratch" 2>/dev/null) / $(ls "$work/tmp")"
 rm -rf "$work/tmp"
+# A checkout whose git directory the reviewer can write (one in TMPDIR or /tmp): links planted at every
+# scratch output and FIFOs at the scratch inputs fail the attempt; nothing is written through, nothing hangs.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'for w in "%s"/.git/gate-b-risk.*; do for x in evidence canon reply timed-out; do ln -s "%s" "$w/$x"; done; for x in events stderr; do rm -f "$w/$x"; mkfifo "$w/$x"; done; done\n' "$repo" "$work/target" > "$STUB_DIR/before"
+t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
+[ $rc -eq 1 ] && [ $dt -lt 15 ] && [ "$(cat "$work/target")" = keep ] && [ ! -f "$(canon 1)" ] && pass "links and FIFOs planted in the scratch directory: exit 1 in ${dt}s, target untouched" || fail "scratch plant rc=$rc dt=$dt target=$(cat "$work/target") $(cat "$work/err")"
 # The state file swapped for a FIFO with no reader: the append fails at once instead of blocking.
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
 printf 'rm -f "%s"; mkfifo "%s"\n' "$state" "$state" > "$STUB_DIR/before"
