@@ -33,8 +33,8 @@ shipped scripts change behaviour (`### 2.21`, `### 2.25`, `### 2.26`; checks 4l 
   directory, which it cannot (seen with `codex sandbox -P :workspace`). A link the reviewer planted there was
   followed by the unsandboxed script. Codex gets no `-o` path any more: the reply is the last agent message of
   its event log. Scratch files are created exclusively without following a link and read only as regular files
-  without blocking, which also covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can
-  write; every result reaches `.context/codex-reviews/` the same way, then renamed.
+  without blocking, and the scratch directory must still be the same one once Codex has stopped, which also
+  covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can write; every result reaches `.context/codex-reviews/` the same way, then renamed.
 - `risk-pass.sh`: the state file is opened without blocking, so a FIFO put in its place fails the append at once
   instead of hanging with the slot lock held.
 - `risk-pass.sh`: a pass needs the reviewer's evidence file with a `TESTS:` and a `CALLERS:` line, and a failed

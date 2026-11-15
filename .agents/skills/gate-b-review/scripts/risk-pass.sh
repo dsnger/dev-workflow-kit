@@ -19,8 +19,9 @@
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
 # …-attempt-<a>-reply.md (Codex's last message, taken from the event log) and …-attempt-<a>.events.jsonl (its
 # --json log). The log and every other file this script writes are first written in a scratch directory inside
-# the repository's git directory, which Codex's workspace-write sandbox cannot write (TMPDIR and /tmp it can),
-# and placed here after Codex ends; the log also because run-tests.sh fingerprints this directory. Only
+# the repository's git directory, which Codex's workspace-write sandbox cannot write (TMPDIR and /tmp it can;
+# for a checkout inside them it can write that git directory too, see create and sread), and placed here after
+# Codex ends; the log also because run-tests.sh fingerprints this directory. Only
 # while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
 # canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
 # `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
@@ -165,6 +166,10 @@ finish() {
 # checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
 gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
 work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
+# Its identity (device and inode, by lstat), compared once Codex's group is stopped: a directory replaced by a
+# link, or a path component swapped, fails the attempt before anything is written there.
+wid() { perl -e 'my @s = lstat $ARGV[0] or exit 1; -d _ or exit 1; print "$s[0]:$s[1]"' "$1"; }
+work_id=$(wid "$work") || finish 1 'could not read the scratch directory'
 # A range touching the gate rules' prompt paths (the hook's is_prompt_path pattern) is also checked
 # against the project's prompt standards, when it has them.
 standards=
@@ -203,6 +208,7 @@ wpid=$!
 wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
+[ "$(wid "$work")" = "$work_id" ] || { work=; finish 1 'the scratch directory was replaced while Codex ran; nothing written'; }
 
 # A failed write fails the attempt, after the timeout and Codex's own failure are reported.
 werr=

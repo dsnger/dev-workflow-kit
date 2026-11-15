@@ -1,0 +1,1 @@
+1 | fixed | the scratch directory identity (device:inode by lstat, must be a directory) is recorded at creation and compared once the Codex group is stopped, before any write there; replaced or swapped path fails the attempt; regression "the scratch directory replaced by a link" (red without the check, green with)

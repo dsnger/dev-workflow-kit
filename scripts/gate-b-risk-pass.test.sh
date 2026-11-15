@@ -222,6 +222,13 @@ git -C "$repo" add docs skills; git -C "$repo" commit -qm prompts; H2=$(git -C "
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; RH=$H2; run 1 30; RH=
 [ $rc -eq 0 ] && grep -q 'docs/prompt-standards.md' "$STUB_DIR/last-prompt" && pass 'a range touching a prompt path: the prompt cites docs/prompt-standards.md' || fail "prompt standards rc=$rc $(cat "$work/err")"
 
+# The scratch directory itself replaced by a link to another directory: exit 1, nothing written there.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; mkdir -p "$work/elsewhere"
+printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\n' "$repo" "$work/elsewhere" > "$STUB_DIR/before"
+run 1 30
+[ $rc -eq 1 ] && [ -z "$(ls "$work/elsewhere")" ] && grep -q 'scratch directory was replaced' "$work/err" && pass 'the scratch directory replaced by a link: exit 1, nothing written through it' || fail "scratch dir swap rc=$rc $(ls "$work/elsewhere") $(cat "$work/err")"
+rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
+
 # Refusals before anything is written.
 reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30
 [ $rc -eq 6 ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass 'another Codex CLI version: exit 6' || fail "version rc=$rc"

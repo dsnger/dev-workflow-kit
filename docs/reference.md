@@ -573,8 +573,9 @@ project, since an initialized project has no copy of this page.
   and placed beside the attempt after Codex ends; the log also because a targeted test compares
   `.context/codex-reviews/` before and after. Codex gets no `-o` path: the reply is the last agent message of the
   event log. In a checkout inside `TMPDIR` or `/tmp` the sandbox can write that git directory too, so scratch
-  files are created exclusively without following a link and read only as regular files without blocking: a
-  planted link or FIFO fails the attempt. The
+  files are created exclusively without following a link and read only as regular files without blocking, and
+  the scratch directory must still be the same directory (device and inode) once Codex has stopped: a planted
+  link or FIFO, or a replaced directory, fails the attempt. The
   evidence's `MODEL:` line is the model the event log names, else the top-level `model` of `config.toml` in
   `$CODEX_HOME` (marked `(config.toml)`), else `unknown`. Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
