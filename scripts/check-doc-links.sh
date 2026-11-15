@@ -29,6 +29,8 @@
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
+# A failing link-extraction step (code stripping, link search, link parsing) is reported for its file and
+# makes the run red; a failure while reading a target's headings or decoding a fragment is not checked.
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
 set -u
@@ -127,8 +129,14 @@ broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
   [ "$skip" -eq 0 ] || continue
   [ -r "$f" ] || { printf '%s: unreadable, links not checked\n' "$f"; continue; }
   d=$(dirname "$f")
-  # One record per link: `<line>:<target>`.
-  strip_code "$f" | grep -no '](\([^)( ]*\))' | sed 's/:](/:/; s/)$//' | while IFS= read -r m; do
+  # One record per link: `<line>:<target>`. Each step's failure is reported, so a crashing tool is red;
+  # grep's exit 1 only means the file has no link.
+  c=$(strip_code "$f") || { printf '%s: code stripping failed, links not checked\n' "$f"; continue; }
+  l=$(printf '%s\n' "$c" | grep -no '](\([^)( ]*\))'); st=$?
+  [ "$st" -le 1 ] || { printf '%s: link search failed (grep exit %s), links not checked\n' "$f" "$st"; continue; }
+  [ "$st" -eq 0 ] || continue
+  l=$(printf '%s\n' "$l" | sed 's/:](/:/; s/)$//') || { printf '%s: link parsing failed, links not checked\n' "$f"; continue; }
+  printf '%s\n' "$l" | while IFS= read -r m; do
     t=${m#*:}
     case "$t" in (''|*:*) continue ;; esac
     p=${t%%#*}

@@ -22,6 +22,33 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.53.0
+
+Six template findings from a Gate B in sfx-bricks-child (cycle `k52lvd7n3q`) on the 0.52 templates, each
+checked against the kit's own script and fixed with a failing test first. Minor, as the brief set it: the
+shipped scripts change behaviour (`### 2.21`, `### 2.25`, `### 2.26`; checks 4l and 4o keep the copies identical).
+
+- `risk-pass.sh`: its working files (event log, stderr, reply, evidence and canonical copy) move
+  from `TMPDIR`, which Codex's `workspace-write` sandbox can write, to a scratch directory in the repository's git
+  directory, which it cannot (seen with `codex sandbox -P :workspace`). A link the reviewer planted there was
+  followed by the unsandboxed script. Codex gets no `-o` path any more: the reply is the last agent message of
+  its event log. Scratch files are created exclusively without following a link and read only as regular files
+  without blocking, and the scratch directory must still be the same one once Codex has stopped, which also
+  covers a checkout in `TMPDIR` or `/tmp`, whose git directory the sandbox can write. The
+  watchdog writes no timeout marker any more (it wrote one while Codex ran); a timeout is read from the elapsed
+  time. Every result reaches `.context/codex-reviews/` the same way, then renamed.
+- `risk-pass.sh`: the state file is opened without blocking, so a FIFO put in its place fails the append at once
+  instead of hanging with the slot lock held.
+- `risk-pass.sh`: a pass needs the reviewer's evidence file with a `TESTS:` and a `CALLERS:` line, and a failed
+  write of the event log, reply or evidence fails the attempt; before, it was promoted as done.
+- `risk-pass.sh`: when the range touches a prompt path of the gate rules and the head has
+  `docs/prompt-standards.md`, the prompt asks Codex to check against it.
+- `run-tests.sh`: `HUP`, `INT` and `TERM` take the same final path as a normal end, so a test that changed the
+  checkout before the interrupt still exits 4.
+- `check-doc-links.sh`: a failure in a file's link extraction (code stripping, link search, link parsing) is
+  reported for that file and makes the run red; it printed `doc links: ok` before. `grep`'s exit 1 (no link)
+  stays no error. A failure while reading a target's headings or decoding a fragment is still not checked.
+
 ## 0.52.0
 
 Hybrid CI (story `docs/superpowers/stories/2026-10-30-kit-052-hybrid-ci-story.md`, design

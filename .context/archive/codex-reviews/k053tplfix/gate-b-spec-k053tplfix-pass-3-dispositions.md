@@ -1,0 +1,1 @@
+1 | fixed | the watchdog writes no file any more (mechanism removed): a timeout is read from the elapsed time; regression "the scratch directory replaced while Codex runs into the timeout" (red before, green after)

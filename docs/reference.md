@@ -533,7 +533,8 @@ reports the tests as not run. The script:
   gets `TERM`, then `KILL`. The copy is removed on every exit;
 - compares the reviewed checkout before and after: `HEAD`, the index, the diff against `HEAD`, every untracked,
   not-ignored file's content and mode, and everything under `.context/codex-reviews/` (so a test cannot forge a
-  findings or state file). A difference exits 4, which Codex reports as a Blocker. This detects a write, it does
+  findings or state file). A difference exits 4, which Codex reports as a Blocker, also when the run ends on
+  `HUP`, `INT` or `TERM` (since 0.53.0). This detects a write, it does
   not prevent it. Ignored files, the rest of `.context/` and `.git/` beyond `HEAD` and the index are outside the
   comparison. The copy has no remote.
 
@@ -566,16 +567,30 @@ project, since an initialized project has no copy of this page.
   pass under the cap.
 - *How it runs.* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n>
   [<seconds>]`, as a background Bash call (default limit 2400 s). Each attempt writes its own files
-  (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). The event log is written to a temporary directory while Codex runs and placed beside the
-  attempt after it ends, because a targeted test compares `.context/codex-reviews/` before and after. The
+  (`gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md`, `-evidence.md`, `-reply.md`, `.events.jsonl`). The event log,
+  the reply and the script's other working files are written to a scratch directory inside the repository's git
+  directory, which Codex's `workspace-write` sandbox cannot write (it can write `TMPDIR` and `/tmp`; since 0.53.0),
+  and placed beside the attempt after Codex ends; the log also because a targeted test compares
+  `.context/codex-reviews/` before and after. Codex gets no `-o` path: the reply is the last agent message of the
+  event log. In a checkout inside `TMPDIR` or `/tmp` the sandbox can write that git directory too, so scratch
+  files are created exclusively without following a link and read only as regular files without blocking, and
+  the scratch directory must still be the same directory (device and inode) once Codex has stopped: a planted
+  link or FIFO, or a replaced directory, fails the attempt. Nothing of the script writes there while Codex runs: the time limit is read from
+  the elapsed time, not from a marker file. The
   evidence's `MODEL:` line is the model the event log names, else the top-level `model` of `config.toml` in
   `$CODEX_HOME` (marked `(config.toml)`), else `unknown`. Only the
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
   `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
   the result. The script runs with your rights while Codex can write in the repository, so it never writes
   through a link Codex may have planted: the directories are checked again before every write, the state file is
-  appended to only as a regular file with one link (opened without following symlinks), an existing attempt file
-  is refused, results are renamed into place, and files that are not regular (a FIFO) are not read. Exit 1: Codex failed or the file breaks the findings format (one retry); 2 bad arguments; 3
+  appended to only as a regular file with one link (opened without following symlinks and without blocking, so a
+  FIFO fails at once), an existing attempt file is refused, results are written to a new file created exclusively
+  and renamed into place, and files that are not regular (a FIFO) are not read. These checks cover symlinks, hard
+  links and FIFOs; a process that escaped the killed group could still race them. A pass needs the reviewer's
+  evidence: an evidence file without a `TESTS:` or a `CALLERS:` line, or a result that cannot be written, fails
+  the attempt (since 0.53.0). When the range touches a prompt path of the gate rules and the head has
+  `docs/prompt-standards.md`, the prompt asks Codex to check against it too. Exit 1: Codex failed, the file breaks
+  the findings format, the evidence is missing, or a write failed (one retry); 2 bad arguments; 3
   timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI other than `codex-cli 0.162.1`.
 - *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
   the floor, which stays the hook-counted `spec`+`quality` pair. When it is due and no pass is left under the
@@ -853,7 +868,7 @@ shell test file, the hook's test suite,
 six prompt-conformance checks and three size budgets) plus both checkers' regression
 suites, [`scripts/check-doc-links.sh`](../scripts/check-doc-links.sh) (inline relative
 Markdown links in tracked files resolve, and a fragment on a Markdown target names a heading
-there; links inside code fences and one-line code spans, reference-style links and the other limits its header lists are not checked; `/workflow-init` 2.21 ships the same bytes to
+there; links inside code fences and one-line code spans, reference-style links and the other limits its header lists are not checked; a failure in a file's link extraction (code stripping, link search, link parsing) is reported for that file and makes the run red, while one in reading a target's headings or decoding a fragment is not checked; `/workflow-init` 2.21 ships the same bytes to
 projects, and check 4l keeps the two copies identical) and its suite, the six reports' suites, and
 `claude plugin validate . --strict`.
 

@@ -1925,6 +1925,8 @@ Why: anything else in that position is shell source, not a path.
 # containing a space or parenthesis (so a link with a title is skipped) or written in angle
 # brackets (`(<path>)`, reported broken).
 #
+# A failing link-extraction step (code stripping, link search, link parsing) is reported for its file and
+# makes the run red; a failure while reading a target's headings or decoding a fragment is not checked.
 # POSIX sh plus git, grep, sed and awk; no other dependency. Regression suite:
 # scripts/check-doc-links.test.sh in the kit repository.
 set -u
@@ -2023,8 +2025,14 @@ broken=$(printf '%s\n' "$files" | while IFS= read -r f; do
   [ "$skip" -eq 0 ] || continue
   [ -r "$f" ] || { printf '%s: unreadable, links not checked\n' "$f"; continue; }
   d=$(dirname "$f")
-  # One record per link: `<line>:<target>`.
-  strip_code "$f" | grep -no '](\([^)( ]*\))' | sed 's/:](/:/; s/)$//' | while IFS= read -r m; do
+  # One record per link: `<line>:<target>`. Each step's failure is reported, so a crashing tool is red;
+  # grep's exit 1 only means the file has no link.
+  c=$(strip_code "$f") || { printf '%s: code stripping failed, links not checked\n' "$f"; continue; }
+  l=$(printf '%s\n' "$c" | grep -no '](\([^)( ]*\))'); st=$?
+  [ "$st" -le 1 ] || { printf '%s: link search failed (grep exit %s), links not checked\n' "$f" "$st"; continue; }
+  [ "$st" -eq 0 ] || continue
+  l=$(printf '%s\n' "$l" | sed 's/:](/:/; s/)$//') || { printf '%s: link parsing failed, links not checked\n' "$f"; continue; }
+  printf '%s\n' "$l" | while IFS= read -r m; do
     t=${m#*:}
     case "$t" in (''|*:*) continue ;; esac
     p=${t%%#*}
@@ -2501,7 +2509,7 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.52.0
+0.53.0
 ````
 
 ### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
@@ -2637,8 +2645,8 @@ macOS and most Linux systems) and refuses without it. Rules 1–2 apply; write i
 #   <seconds>  time limit, 1-1800; empty means 600
 # Stdout: one line `<command> | exit <n> | <s>s` (`exit timeout` after a kill). The command's own
 # output goes to stderr, its last 200 lines only.
-# Exit: the command's status; 124 timeout; 2 bad arguments or no copy made; 4 checkout changed;
-# 5 no process supervisor (perl).
+# Exit: the command's status; 124 timeout; 2 bad arguments or no copy made; 4 checkout changed
+# (also after HUP, INT or TERM); 5 no process supervisor (perl).
 #
 # What it guarantees and what it does not:
 # - The copy is `git clone --no-local --no-checkout` + a detached checkout of <headSha>: tracked
@@ -2647,7 +2655,8 @@ macOS and most Linux systems) and refuses without it. Rules 1–2 apply; write i
 #   directory) and LANG=C, stdin from /dev/null, as the leader of its own process group
 #   (perl setpgrp; `set -m` does nothing in a non-interactive dash). After <seconds> the group
 #   gets TERM, 5 s later KILL. On every exit both groups (command, watchdog) are killed and the
-#   copy is removed.
+#   copy is removed. A signal (HUP, INT, TERM) takes the same final path as a normal end: stop, remove,
+#   then compare the checkout.
 # - Not prevented: reading host files by absolute path, network (the Codex sandbox decides that),
 #   a secret committed to tracked files, a process that leaves the group with its own setsid, and
 #   a KILL of this script itself (the next run reports such a copy; see stale_scan).
@@ -2733,15 +2742,27 @@ stale_scan() {
   done
 }
 
-tmp=; cpid=; wpid=
+tmp=; cpid=; wpid=; fp_before=
 cleanup() {
   [ -n "$wpid" ] && group_stop "$wpid"
   [ -n "$cpid" ] && group_stop "$cpid"
   [ -n "$tmp" ] && rm -rf "$tmp"
   tmp=; cpid=; wpid=
 }
+# The one final path, for a normal end and a signal alike: stop and remove, then compare the checkout
+# once it was fingerprinted; a difference exits 4, otherwise $1. Further signals are ignored here, so
+# the comparison runs once.
+finish() {
+  trap '' HUP INT TERM
+  cleanup
+  if [ -n "$fp_before" ]; then
+    fp_after=$(fingerprint) || fp_after=unavailable
+    [ "$fp_after" = "$fp_before" ] || die 'checkout changed: the reviewed checkout differs from before the run' 4
+  fi
+  exit "$1"
+}
 trap cleanup EXIT
-trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM
+trap 'finish 129' HUP; trap 'finish 130' INT; trap 'finish 143' TERM
 
 TMPDIR=${TMPDIR:-/tmp}
 stale_scan
@@ -2776,14 +2797,10 @@ wait "$cpid"; rc=$?
 end=$(date +%s)
 [ -f "$tmp/timed-out" ] && rc=timeout
 tail -n 200 "$tmp/out" >&2
-cleanup
-fp_after=$(fingerprint) || fp_after=unavailable
-
 # A literal pipe in the command is escaped, so the report stays one `|`-separated line.
 printf '%s | exit %s | %ss\n' "$(printf '%s' "$*" | sed 's/|/\\|/g' | tr '\n' ' ')" "$rc" "$((end - start))"
-[ "$fp_after" = "$fp_before" ] || die 'checkout changed: the reviewed checkout differs from before the run' 4
-[ "$rc" = timeout ] && exit 124
-exit "$rc"
+[ "$rc" = timeout ] && finish 124
+finish "$rc"
 ````
 
 ### 2.26 `.agents/skills/gate-b-review/scripts/risk-pass.sh` — the high-effort risk pass
@@ -2807,14 +2824,18 @@ user's machine outside this project. Rules 1–2 apply; write it byte for byte a
 #   <headSha>  the head under review; both SHAs 40 lowercase hex
 #   <nonce>    the cycle nonce, 8-16 of [a-z0-9]; <n> the pass number, a positive integer
 #   <seconds>  time limit, 1-7200; empty or absent means 2400
-# Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed or its findings
-# file is invalid (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is
-# busy (a live earlier attempt); 5 no process supervisor (perl); 6 a Codex CLI other than the pin.
+# Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed, its findings
+# file is invalid, its evidence file lacks a TESTS: or CALLERS: line, or a result could not be written
+# (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is busy (a live earlier
+# attempt); 5 no process supervisor (perl); 6 a Codex CLI other than the pin.
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
-# …-attempt-<a>-reply.md (Codex's last message) and …-attempt-<a>.events.jsonl (its --json log, kept in a temporary
-# directory while Codex runs, since run-tests.sh fingerprints this directory, and placed here after it ends). Only
+# …-attempt-<a>-reply.md (Codex's last message, taken from the event log) and …-attempt-<a>.events.jsonl (its
+# --json log). The log and every other file this script writes are first written in a scratch directory inside
+# the repository's git directory, which Codex's workspace-write sandbox cannot write (TMPDIR and /tmp it can;
+# for a checkout inside them it can write that git directory too, see create and sread), and placed here after
+# Codex ends; the log also because run-tests.sh fingerprints this directory. Only
 # while holding the slot lock (gate-b-risk-<nonce>-pass-<n>.lock) is a valid attempt copied to the
 # canonical gate-b-risk-<nonce>-pass-<n>.md, and the state file gains
 # `risk <n> done <a> <headSha> <sha256>`; otherwise `risk <n> failed <a> <exit>`. A late writer from an
@@ -2844,8 +2865,8 @@ git -C "$repo" cat-file -e "$base^{commit}" 2>/dev/null || usage "baseSha $base 
 git -C "$repo" cat-file -e "$head^{commit}" 2>/dev/null || usage "headSha $head is not a commit in $repo"
 dir="$repo/.context/codex-reviews"
 state="$dir/gate-b-cycle-$nonce.state"
-# Codex can write in the repository, and this script runs with the user's full rights: it never
-# writes through a symlink, so a planted link cannot redirect a write outside the workspace.
+# Codex can write in the repository and in TMPDIR, and this script runs with the user's full rights: it
+# never writes through a symlink, so a planted link cannot redirect a write outside the workspace.
 for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a symlink; refusing to write through it"; done
 [ -f "$state" ] || usage "no cycle base: $state is missing (the main session writes it before pass 1)"
 recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
@@ -2908,24 +2929,42 @@ canon="$dir/gate-b-risk-$nonce-pass-$n.md"
 for x in "$pre.md" "$pre-evidence.md" "$pre-reply.md" "$pre.events.jsonl"; do
   { [ -e "$x" ] || [ -L "$x" ]; } && die "attempt file $x already exists; refusing to reuse it" 1
 done
-# Every write goes through these two, because the reviewer may have replaced a directory or file
+# Every write here goes through these two, because the reviewer may have replaced a directory or file
 # with a symlink, a hard link or a FIFO while it ran: the directories are checked again before each
-# write, a file is appended to only when it opens without following a link and is a regular file
-# with one link, and a result is renamed into place (rename never follows or enters the target).
+# write, a file is appended to only when it opens without following a link and without blocking (a
+# FIFO with no reader fails at once) and is a regular file with one link, and a result is written to
+# a new file created exclusively without following a link, then renamed into place (rename never
+# follows or enters the target).
 # shortcut: a process that escaped the killed group could still race these checks; the group kill
 # is the main bound.
 dirs_ok() { [ ! -L "$repo/.context" ] && [ ! -L "$dir" ] && [ -d "$dir" ]; }
 # shellcheck disable=SC2016  # perl source
 append() {
-  dirs_ok && perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_WRONLY | O_APPEND | O_NOFOLLOW) or exit 1;
+  dirs_ok && perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_WRONLY | O_APPEND | O_NOFOLLOW | O_NONBLOCK) or exit 1;
     my @s = stat $f; exit 1 unless -f _ && $s[3] == 1; print $f $ARGV[1] or exit 1; close $f or exit 1' "$1" "$2"
 }
+# The scratch directory is out of the reviewer's reach unless the checkout itself lies in TMPDIR or /tmp,
+# so scratch files are also created exclusively without following a link (create) and read only as
+# regular files, opened without following a link or blocking (sread): a link or FIFO planted there fails
+# the attempt instead of redirecting a write or hanging a read.
+# shellcheck disable=SC2016  # perl source
+create() {
+  perl -e 'use Fcntl; sysopen(my $o, $ARGV[0], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600) or exit 1;
+    local $/; my $b = <STDIN>; $b = "" unless defined $b; print $o $b or exit 1; close $o or exit 1' "$1"
+}
+# shellcheck disable=SC2016  # perl source
+sread() {
+  perl -e 'use Fcntl; sysopen(my $i, $ARGV[0], O_RDONLY | O_NOFOLLOW | O_NONBLOCK) or exit 1; -f $i or exit 1;
+    local $/; my $b = <$i>; print $b if defined $b' "$1"
+}
+# place <scratch file> <target>: copies a scratch file to the target in $dir.
 # shellcheck disable=SC2016  # perl source
 place() {
-  dirs_ok || return 1
-  t=$(mktemp "$dir/.risk-pass.XXXXXX") || return 1
-  if cp "$1" "$t" && perl -e 'rename($ARGV[0], $ARGV[1]) or exit 1' "$t" "$2"; then return 0; fi
-  rm -f "$t"; return 1
+  dirs_ok && perl -e 'use Fcntl; my ($s, $d, $dir) = @ARGV; sysopen(my $i, $s, O_RDONLY | O_NOFOLLOW | O_NONBLOCK) or exit 1;
+    -f $i or exit 1; my ($t, $o); for (1 .. 50) { $t = sprintf "%s/.risk-pass.%d.%d", $dir, $$, int rand 1e9;
+      last if sysopen($o, $t, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600); undef $o }
+    defined $o or exit 1; local $/; my $b = <$i>; $b = "" unless defined $b;
+    exit 0 if (print $o $b) && close($o) && rename($t, $d); unlink $t; exit 1' "$1" "$2" "$dir"
 }
 regular() { [ -f "$1" ] && [ ! -L "$1" ]; }
 append "$state" "$(printf 'risk %s start %s %s %s' "$n" "$a" "$head" "$(date +%s)")
@@ -2936,13 +2975,29 @@ finish() {
   [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"
 }
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/gate-b-risk.XXXXXX") || finish 1 'could not create a temporary directory'
+# Scratch in the git directory: Codex 0.162.1's workspace-write sandbox keeps it read-only (seen with
+# `codex sandbox -P :workspace` on macOS, 2026-11-15). Codex writes nothing here itself (no -o), so a
+# checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
+gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
+work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
+# Its identity (device and inode, by lstat), compared once Codex's group is stopped (nothing of this script
+# writes there while Codex runs): a directory replaced by a
+# link, or a path component swapped, fails the attempt before anything is written there.
+wid() { perl -e 'my @s = lstat $ARGV[0] or exit 1; -d _ or exit 1; print "$s[0]:$s[1]"' "$1"; }
+work_id=$(wid "$work") || finish 1 'could not read the scratch directory'
+# A range touching the gate rules' prompt paths (the hook's is_prompt_path pattern) is also checked
+# against the project's prompt standards, when it has them.
+standards=
+if git -C "$repo" diff --name-only "$base" "$head" | grep -Eq '(^|/)(CLAUDE|AGENTS)\.md$|(^|/)(\.claude|plugins|skills|commands)/' &&
+   git -C "$repo" cat-file -e "$head:docs/prompt-standards.md" 2>/dev/null; then
+  standards=' The range touches prompt artifacts: check them against docs/prompt-standards.md too (read it at the head).'
+fi
 cat > "$work/prompt" <<EOF
 You are the risk pass of Gate B, cycle $nonce, pass $n, attempt $a. Follow the skill at
 .agents/skills/gate-b-review/SKILL.md, branch \`risk\`: only edge cases and failure paths of the change, deeper
 than an ordinary pass — empty, error, concurrent, interrupted and boundary inputs; what happens when each
 external call, file or process fails; which existing statements the change makes false. Review the range
-$base..$head of this repository (read it with git; the working tree may differ). Check against AGENTS.md.
+$base..$head of this repository (read it with git; the working tree may differ). Check against AGENTS.md.$standards
 Report every finding with severity and confidence; write NO FINDINGS only when you found none.
 Findings file: $findings_rel
 Write the findings file yourself, in exactly this format:
@@ -2957,20 +3012,33 @@ EOF
 
 # shellcheck disable=SC2016  # perl source: $ARGV and $! are perl's, not the shell's
 ( cd "$repo" && exec perl -e 'setpgrp(0,0) or die "setpgrp: $!\n"; exec { $ARGV[0] } @ARGV or die "exec $ARGV[0]: $!\n"' -- \
-    codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" -o "$pre-reply.md" - ) \
+    codex exec --json -s workspace-write -c 'model_reasoning_effort="high"' -C "$repo" - ) \
   < "$work/prompt" > "$work/events" 2> "$work/stderr" &
 cpid=$!
+t0=$(date +%s)
 printf '%s\n' "$cpid" > "$lock/group.pid"
-perl -e 'setpgrp(0,0); sleep $ARGV[0]; open(my $f, ">", $ARGV[2]); close $f;
-         kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" "$work/timed-out" \
+# The watchdog writes no file, since the scratch directory may be swapped while Codex runs: a timeout is
+# read from the elapsed time instead.
+# shortcut: a Codex run that ends by itself in its last second reads as a timeout (a retry, no wrong result).
+perl -e 'setpgrp(0,0); sleep $ARGV[0]; kill "TERM", -$ARGV[1]; sleep 5; kill "KILL", -$ARGV[1];' "$secs" "$cpid" \
   </dev/null >/dev/null 2>&1 &
 wpid=$!
 wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
+[ "$(wid "$work")" = "$work_id" ] || { work=; finish 1 'the scratch directory was replaced while Codex ran; nothing written'; }
 
-place "$work/events" "$pre.events.jsonl" || printf 'risk-pass.sh: could not place the event log at %s\n' "$pre.events.jsonl" >&2
-model=$(sed -n 's/.*"model":"\([^"]*\)".*/\1/p' "$work/events" | head -n 1)
+# A failed write fails the attempt, after the timeout and Codex's own failure are reported.
+werr=
+place "$work/events" "$pre.events.jsonl" || werr="could not place the event log at $pre.events.jsonl"
+# The reply is the last agent message in the event log (Codex 0.162.1: item.completed, item type agent_message).
+# shellcheck disable=SC2016  # perl source
+reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($_) } or next;
+  $t = $e->{item}{text} if ($e->{type} // "") eq "item.completed" && ref $e->{item} eq "HASH"
+    && ($e->{item}{type} // "") eq "agent_message"; END { print "$t\n" if defined $t }')
+[ -z "$reply" ] || { printf '%s\n' "$reply" | create "$work/reply" && place "$work/reply" "$pre-reply.md"; } ||
+  werr=${werr:-"could not place the reply at $pre-reply.md"}
+model=$(sread "$work/events" | sed -n 's/.*"model":"\([^"]*\)".*/\1/p' | head -n 1)
 # Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
 # uses unless a `profile` selects another.
 # shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
@@ -2979,10 +3047,16 @@ if [ -z "$model" ] && regular "$cfg"; then
   model=$(awk '/^[[:space:]]*\[/ { exit } /^[[:space:]]*model[[:space:]]*=[[:space:]]*"/ { sub(/^[^"]*"/, ""); sub(/".*/, ""); print; exit }' "$cfg")
   [ -z "$model" ] || model="$model (config.toml)"
 fi
-{ printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc"
-  if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi; } > "$work/evidence" && place "$work/evidence" "$pre-evidence.md"
-[ -f "$work/timed-out" ] && finish 3 "timed out after ${secs}s"
-[ "$rc" -eq 0 ] || { tail -n 20 "$work/stderr" >&2; finish 1 "codex exited $rc"; }
+if ev=$(printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:-unknown}" "$rc" &&
+         if regular "$pre-evidence.md"; then cat "$pre-evidence.md"; fi) &&
+   printf '%s\n' "$ev" | create "$work/evidence" && place "$work/evidence" "$pre-evidence.md"; then :
+else werr=${werr:-"could not write the evidence file $pre-evidence.md"}; fi
+[ $(( $(date +%s) - t0 )) -ge "$secs" ] && finish 3 "timed out after ${secs}s"
+[ "$rc" -eq 0 ] || { sread "$work/stderr" | tail -n 20 >&2; finish 1 "codex exited $rc"; }
+[ -z "$werr" ] || finish 1 "$werr"
+# The skill makes the evidence part of a completed pass: at least one TESTS: and one CALLERS: line.
+{ grep -q '^TESTS:' "$work/evidence" && grep -q '^CALLERS:' "$work/evidence"; } ||
+  finish 1 "the evidence file $pre-evidence.md has no TESTS: or no CALLERS: line"
 
 # The findings grammar of the gate rules: finding lines of six non-empty fields (an escaped pipe
 # is no separator) with a severity from the closed set, or the single clean line; then the
@@ -3009,7 +3083,7 @@ regular "$pre.md" || finish 1 "no findings file $pre.md (or not a regular file)"
 valid "$pre.md" || finish 1 "findings file $pre.md is not in the gate rules' format"
 
 # The copy is validated again, so a file changed after the first check cannot be promoted.
-if ! { cp "$pre.md" "$work/canon" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
+if ! { create "$work/canon" < "$pre.md" && valid "$work/canon" && place "$work/canon" "$canon"; }; then
   finish 1 "could not write $canon"
 fi
 sum=$(perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$canon") || finish 1 'could not hash the canonical file'

@@ -123,6 +123,17 @@ dl_case "untracked file not checked"                 0 README.md '' ''
 printf '[a](gone.md)\n' > "$work/r/untracked.md"
 out=$( cd "$work/r" && sh "$CHECKER" 2>&1 ) && pass "untracked file still not checked" || fail "untracked file checked: $out"
 
+# A crashing extractor (awk, grep) is red, never `doc links: ok`; grep's exit 1 (no link) is not an error.
+for t in awk grep; do
+  rm -rf "${work:?}/r" "${work:?}/bin"; mkdir -p "$work/r" "$work/bin"
+  printf '[a](nope.md)\n' > "$work/r/README.md"
+  ( cd "$work/r" && git init -q && git add -A )
+  printf '#!/bin/sh\nexit 2\n' > "$work/bin/$t"; chmod +x "$work/bin/$t"
+  out=$( cd "$work/r" && PATH="$work/bin:$PATH" sh "$CHECKER" 2>&1 ); st=$?
+  [ "$st" -ne 0 ] && ! printf '%s' "$out" | grep -q 'doc links: ok' && printf '%s' "$out" | grep -q 'links not checked' && pass "a crashing $t: red, links not checked" || fail "a crashing $t: exit $st: $out"
+done
+rm -rf "${work:?}/bin"
+
 printf '\n---\n'
 if [ "$fail_n" -eq 0 ]; then printf 'all passed (%s assertions)\n' "$pass_n"; else
   printf '%s passed, %s FAILED\n' "$pass_n" "$fail_n"; exit 1

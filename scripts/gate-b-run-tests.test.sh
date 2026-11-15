@@ -98,6 +98,11 @@ perl -e '$SIG{INT} = "DEFAULT"; exec @ARGV' "$RUN_TESTS_SH" "$SCRIPT" "$repo" "$
 r=$!; sleep 2; kill -INT $r; wait $r; rc=$?
 [ $rc -eq 130 ] && pass 'INT: exit 130' || fail "INT rc=$rc"
 [ "$(copies)" = 0 ] && pass 'copy removed after INT' || fail 'copy left after INT'
+# INT after the command wrote into the checkout: the post-run comparison still runs, exit 4.
+perl -e '$SIG{INT} = "DEFAULT"; exec @ARGV' "$RUN_TESTS_SH" "$SCRIPT" "$repo" "$H" 60 -- sh -c 'echo x >> "$0/a.txt"; sleep 60' "$repo" </dev/null >"$out" 2>"$err" &
+r=$!; sleep 2; kill -INT $r; wait $r; rc=$?
+[ $rc -eq 4 ] && grep -q 'checkout changed' "$err" && pass 'INT after a write to the checkout: exit 4, checkout changed' || fail "INT write rc=$rc $(cat "$err")"
+git -C "$repo" checkout -q -- a.txt
 
 # The runner killed with KILL while its command survives: the next run reports and keeps that
 # copy; once the group is gone, the next run removes it.

@@ -1,0 +1,1 @@
+1 | fixed | every scratch write is now an exclusive no-follow create and every scratch read a no-follow nonblocking regular-file open; Codex gets no -o (reply from the event log); timeout marker created exclusively and checked as a regular file; new test plants links and FIFOs at the real git-dir scratch

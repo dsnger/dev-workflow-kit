@@ -20,8 +20,9 @@ trap 'exit 1' HUP INT TERM
 
 # Stub codex. `--version` prints $STUB_DIR/version. `exec` reads the prompt on stdin, finds the
 # `Findings file:` path in it, runs $STUB_DIR/before when present, then acts on $STUB_DIR/mode:
-# write (copy $STUB_DIR/findings there), none (write nothing), fail (exit 1), hang (sleep).
-# It prints one --json event naming a model and writes the -o file.
+# write (copy $STUB_DIR/findings there, and $STUB_DIR/evidence beside it unless $STUB_DIR/noevidence
+# exists), none (write nothing), fail (exit 1), hang (sleep).
+# It prints one --json event naming a model, then the agent message the script takes as the reply.
 mkdir -p "$work/stub"
 cat > "$work/stub/codex" <<'EOF'
 #!/bin/sh
@@ -34,17 +35,19 @@ printf '%s\n' "$prompt" > "$STUB_DIR/last-prompt"
 [ -f "$STUB_DIR/before" ] && sh "$STUB_DIR/before"
 [ -f "$STUB_DIR/nomodel" ] || printf '{"type":"thread.started","model":"stub-model"}\n'
 case $(cat "$STUB_DIR/mode") in
-  write) cp "$STUB_DIR/findings" "$f" ;;
+  write) cp "$STUB_DIR/findings" "$f"; [ -f "$STUB_DIR/noevidence" ] || cp "$STUB_DIR/evidence" "${f%.md}-evidence.md" ;;
   none) ;;
   fail) echo 'stub: failed' >&2; exit 1 ;;
   hang) sleep 30 ;;
 esac
-echo 'BLOCKER 0 | MAJOR 1' > "$o"
+printf '{"type":"item.completed","item":{"id":"i1","type":"agent_message","text":"BLOCKER 0 | MAJOR 1"}}\n'
+[ -z "$o" ] || echo 'stub: -o given' > "$o"
 EOF
 chmod +x "$work/stub/codex"
 STUB_DIR="$work/stub"; export STUB_DIR
 PATH="$work/stub:$PATH"; export PATH
 echo 'codex-cli 0.162.1' > "$work/stub/version"
+printf 'TESTS: none — stub\nCALLERS: a — none\n' > "$work/stub/evidence"
 
 repo="$work/re po"
 mkdir -p "$repo"
@@ -61,8 +64,9 @@ state="$d/gate-b-cycle-$N.state"
 canon() { printf '%s/gate-b-risk-%s-pass-%s.md' "$d" "$N" "$1"; }
 att() { printf '%s/gate-b-risk-%s-pass-%s-attempt-%s.md' "$d" "$N" "$1" "$2"; }
 sha() { perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$1"; }
-reset() { rm -rf "$d"; mkdir -p "$d"; printf 'base %s\n' "$B" > "$state"; rm -f "$STUB_DIR/before"; }
-run() { "$RISK_PASS_SH" "$SCRIPT" "$repo" "$B" "$H" "$N" "$@" </dev/null >"$work/out" 2>"$work/err"; rc=$?; }
+reset() { rm -rf "$d"; mkdir -p "$d"; printf 'base %s\n' "$B" > "$state"; rm -f "$STUB_DIR/before" "$STUB_DIR/noevidence"; }
+# run [<n> [<seconds>]]: the range $B..${RH:-$H}; a run still going after 20 s is killed (rc 142).
+run() { perl -e 'alarm shift; exec @ARGV' 20 "$RISK_PASS_SH" "$SCRIPT" "$repo" "$B" "${RH:-$H}" "$N" "$@" </dev/null >"$work/out" 2>"$work/err"; rc=$?; }
 findings() { printf '%s\n' "$@" > "$STUB_DIR/findings"; echo write > "$STUB_DIR/mode"; }
 
 F1='MAJOR | high | a:1 | p | c | s'
@@ -71,8 +75,10 @@ run 1 30
 [ $rc -eq 0 ] && cmp -s "$(canon 1)" "$(att 1 1)" && pass 'a valid result: exit 0, promoted to the canonical file' || fail "valid rc=$rc $(cat "$work/err")"
 grep -q "^risk 1 start 1 $H [0-9]*$" "$state" && grep -q "^risk 1 done 1 $H $(sha "$(canon 1)")$" "$state" && pass 'state: start and done lines bind attempt, head and sha256' || fail "state: $(cat "$state")"
 e="$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md"
-grep -q '^CLI: codex-cli 0.162.1$' "$e" && grep -q "^HEAD: $H$" "$e" && grep -q '^MODEL: stub-model$' "$e" && pass 'evidence: CLI version, head and model from the event log' || fail "evidence: $(cat "$e" 2>/dev/null)"
+grep -q '^CLI: codex-cli 0.162.1$' "$e" && grep -q "^HEAD: $H$" "$e" && grep -q '^MODEL: stub-model$' "$e" && grep -q '^CALLERS: a' "$e" && pass 'evidence: CLI version, head, model from the event log, then the reviewer evidence' || fail "evidence: $(cat "$e" 2>/dev/null)"
 grep -q 'branch `risk`' "$STUB_DIR/last-prompt" && grep -q "$B..$H" "$STUB_DIR/last-prompt" && pass 'the prompt names the risk branch and the range' || fail 'prompt'
+! grep -q 'prompt-standards' "$STUB_DIR/last-prompt" && pass 'a range without prompt paths: the prompt cites no prompt standards' || fail 'prompt-standards cited for a non-prompt range'
+grep -q '^BLOCKER 0 | MAJOR 1$' "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" && pass 'the reply is placed beside the attempt' || fail 'reply not placed'
 [ ! -d "$d/gate-b-risk-$N-pass-1.lock" ] && pass 'lock released after success' || fail 'lock left'
 
 # The live event log stays outside the reviewed checkout while Codex runs (run-tests.sh fingerprints
@@ -180,9 +186,54 @@ mkdir -p "$work/somedir"; ln -s "$work/somedir" "$(canon 1)"
 run 1 30
 [ $rc -eq 0 ] && [ -f "$(canon 1)" ] && [ ! -L "$(canon 1)" ] && [ -z "$(ls "$work/somedir")" ] && pass 'a symlink to a directory at the canonical path is replaced, the directory untouched' || fail "dir link rc=$rc"
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
-printf 'mkfifo "%s"; mkfifo "%s.tmp"; rm -f "%s"; mv "%s.tmp" "%s"\n' "$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" > "$STUB_DIR/before"
+touch "$STUB_DIR/noevidence"; printf 'mkfifo "%s"; mkfifo "%s.tmp"; rm -f "%s"; mv "%s.tmp" "%s"\n' "$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" "$d/ev" "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" > "$STUB_DIR/before"
 t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
 [ $dt -lt 20 ] && pass "FIFOs planted as evidence and event log: no hang (${dt}s, exit $rc)" || fail "fifo took ${dt}s"
+
+# The parent's scratch files are outside the reviewer's reach: not in TMPDIR (Codex's workspace-write
+# sandbox can write there) but in the git directory, and Codex is given no -o path.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; mkdir -p "$work/tmp"; printf 'keep\n' > "$work/target"
+printf 'ls -d "%s"/.git/gate-b-risk.* > "%s/gitdir-scratch" 2>/dev/null; ln -s "%s" "%s"; :\n' "$repo" "$STUB_DIR" "$work/target" "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" > "$STUB_DIR/before"
+otmp=${TMPDIR-}; TMPDIR="$work/tmp"; run 1 30; TMPDIR=$otmp
+[ $rc -eq 0 ] && [ "$(cat "$work/target")" = keep ] && [ ! -L "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" ] && pass 'a link planted at the reply path: replaced, its target untouched' || fail "reply link rc=$rc target=$(cat "$work/target")"
+[ -s "$STUB_DIR/gitdir-scratch" ] && [ -z "$(ls -d "$repo"/.git/gate-b-risk.* 2>/dev/null)" ] && [ -z "$(ls "$work/tmp")" ] && ! grep -q 'stub: -o' "$d"/*reply.md && pass 'scratch in the git directory during the run, removed after; no -o for Codex' || fail "scratch location: $(cat "$STUB_DIR/gitdir-scratch" 2>/dev/null) / $(ls "$work/tmp")"
+rm -rf "$work/tmp"
+# A checkout whose git directory the reviewer can write (one in TMPDIR or /tmp): links planted at every
+# scratch output and FIFOs at the scratch inputs fail the attempt; nothing is written through, nothing hangs.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'for w in "%s"/.git/gate-b-risk.*; do for x in evidence canon reply timed-out; do ln -s "%s" "$w/$x"; done; for x in events stderr; do rm -f "$w/$x"; mkfifo "$w/$x"; done; done\n' "$repo" "$work/target" > "$STUB_DIR/before"
+t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
+[ $rc -eq 1 ] && [ $dt -lt 15 ] && [ "$(cat "$work/target")" = keep ] && [ ! -f "$(canon 1)" ] && pass "links and FIFOs planted in the scratch directory: exit 1 in ${dt}s, target untouched" || fail "scratch plant rc=$rc dt=$dt target=$(cat "$work/target") $(cat "$work/err")"
+# The state file swapped for a FIFO with no reader: the append fails at once instead of blocking.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+printf 'rm -f "%s"; mkfifo "%s"\n' "$state" "$state" > "$STUB_DIR/before"
+t0=$(date +%s); run 1 30; dt=$(( $(date +%s) - t0 ))
+[ $rc -eq 1 ] && [ $dt -lt 15 ] && pass "state file swapped for a FIFO: exit 1 in ${dt}s, no hang $(cat "$work/err")" || fail "state fifo rc=$rc dt=$dt $(cat "$work/err")"
+perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_RDONLY | O_NONBLOCK); sleep 1' "$state" 2>/dev/null
+# The reviewer's evidence is required: without it, or without a CALLERS: line, nothing is promoted.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; touch "$STUB_DIR/noevidence"; run 1 30
+[ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && grep -q '^risk 1 failed 1 1$' "$state" && grep -q 'evidence' "$work/err" && pass 'no reviewer evidence: exit 1, not promoted' || fail "no evidence rc=$rc $(cat "$work/err")"
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; printf 'TESTS: none — stub\n' > "$STUB_DIR/evidence"; run 1 30
+[ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && pass 'evidence without a CALLERS: line: exit 1, not promoted' || fail "no callers rc=$rc"
+printf 'TESTS: none — stub\nCALLERS: a — none\n' > "$STUB_DIR/evidence"
+# A range touching a prompt path cites the project's prompt standards.
+mkdir -p "$repo/docs" "$repo/skills"; echo s > "$repo/docs/prompt-standards.md"; echo p > "$repo/skills/x.md"
+git -C "$repo" add docs skills; git -C "$repo" commit -qm prompts; H2=$(git -C "$repo" rev-parse HEAD)
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; RH=$H2; run 1 30; RH=
+[ $rc -eq 0 ] && grep -q 'docs/prompt-standards.md' "$STUB_DIR/last-prompt" && pass 'a range touching a prompt path: the prompt cites docs/prompt-standards.md' || fail "prompt standards rc=$rc $(cat "$work/err")"
+
+# The scratch directory itself replaced by a link to another directory: exit 1, nothing written there.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; mkdir -p "$work/elsewhere"
+printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\n' "$repo" "$work/elsewhere" > "$STUB_DIR/before"
+run 1 30
+[ $rc -eq 1 ] && [ -z "$(ls "$work/elsewhere")" ] && grep -q 'scratch directory was replaced' "$work/err" && pass 'the scratch directory replaced by a link: exit 1, nothing written through it' || fail "scratch dir swap rc=$rc $(ls "$work/elsewhere") $(cat "$work/err")"
+rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
+# The same swap with Codex still running at the timeout: the watchdog writes nothing through it either.
+reset; echo hang > "$STUB_DIR/mode"; mkdir -p "$work/elsewhere"
+printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\n' "$repo" "$work/elsewhere" > "$STUB_DIR/before"
+run 1 2
+[ $rc -ne 0 ] && [ -z "$(ls "$work/elsewhere")" ] && pass 'the scratch directory replaced while Codex runs into the timeout: nothing written through it' || fail "timeout swap rc=$rc $(ls "$work/elsewhere")"
+rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
 
 # Refusals before anything is written.
 reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30
