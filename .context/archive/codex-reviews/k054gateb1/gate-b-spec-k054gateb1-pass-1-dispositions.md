@@ -1,0 +1,2 @@
+1 | fixed | workflow-init 2.26 intro now has three cases: a release line at or above 0.162.1 needs nothing, one below lists updating, a line of any other form or none lists the line and command -v codex; the closing checklist item says 'no plain codex-cli line'.
+2 | fixed | docs/reference.md names skill discovery as the fourth unchecked item, with the explicit skill path as the reason it changes nothing; AGENTS.md invariant 5 and the CHANGELOG name it too.

@@ -1,0 +1,1 @@
+1 | fixed | The header's 'fails the attempt' line and the create/sread comment are narrowed to what the script creates or reads (added or missing names, a file at a name it creates, a link or FIFO where it reads) and say that a same-name replacement of an unread file passes; the 2.26 copy is identical.

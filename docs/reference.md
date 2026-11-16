@@ -507,8 +507,8 @@ compared hook state-file names, not passes.
 ### The Gate B review skill (since 0.51)
 
 Every Gate B call names `.agents/skills/gate-b-review/SKILL.md` in its `additionalContext`, and Codex follows it.
-Codex CLI 0.162.1 also discovers it by itself: it lists skills under a repository's `.agents/skills/` (checked on
-2026-10-30). The skill lives in the project (`/workflow-init` 2.24–2.26), so nothing is written under your home
+The Codex CLI also discovers it by itself: it lists skills under a repository's `.agents/skills/` (checked on
+0.162.1 on 2026-10-30 and on 0.169.0 on 2026-11-16). The skill lives in the project (`/workflow-init` 2.24–2.26), so nothing is written under your home
 directory. The design is `docs/superpowers/specs/2026-10-30-kit-051-codex-review-design.md`.
 
 **What it asks of Codex.** By branch: `spec` maps every acceptance criterion to the code and the test that
@@ -590,8 +590,10 @@ project, since an initialized project has no copy of this page.
   evidence: an evidence file without a `TESTS:` or a `CALLERS:` line, or a result that cannot be written, fails
   the attempt (since 0.53.0). When the range touches a prompt path of the gate rules and the head has
   `docs/prompt-standards.md`, the prompt asks Codex to check against it too. Exit 1: Codex failed, the file breaks
-  the findings format, the evidence is missing, or a write failed (one retry); 2 bad arguments; 3
-  timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI other than `codex-cli 0.162.1`.
+  the findings format, the evidence is missing, the event log holds no agent message, the scratch directory
+  does not hold exactly the script's three files (both since 0.54.0), or a write failed (one retry); 2 bad
+  arguments; 3 timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI older than 0.162.1, or a version line it
+  cannot read.
 - *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
   the floor, which stays the hook-counted `spec`+`quality` pair. When it is due and no pass is left under the
   cap, the cycle goes to you, as an open Blocker at the cap does. The hook does not see the run.
@@ -600,10 +602,29 @@ project, since an initialized project has no copy of this page.
   the canonical file's sha256 must match the slot's last `done` line, and the closing commit's cycle line adds
   `risk pass <n>: <count>`.
 
-**Codex CLI version.** The risk pass is verified on Codex CLI 0.162.1 only, so `risk-pass.sh` refuses any other
-version. Installing it is your step: `npm install -g @openai/codex@0.162.1`. `/workflow-init` lists it in its
-closing checklist (item 5) and does not run it. Ordinary Gate A and Gate B calls go through the MCP server as
-before.
+**Codex CLI version (since 0.54.0).** The risk pass runs on the Codex CLI you have installed, in its current
+version; the kit pins none and never installs, updates or downgrades it. `risk-pass.sh` accepts a release line
+`codex-cli <x>.<y>.<z>` at or above 0.162.1 and refuses two things with exit 6, saying which: an older release
+(update the CLI) and a version line it cannot read, a pre-release build included (check which program
+`command -v codex` names). `/workflow-init` lists either in its closing checklist (item 5). The version line
+opens the evidence file the script completes for an attempt; a raw evidence file from an attempt that ended
+before that step (a signal, a replaced scratch directory) has no `CLI:` line.
+
+The sandbox, the event format, the effort key and skill discovery were seen to work on 0.162.1 and on 0.169.0
+(2026-11-16, macOS). On a later Codex an attempt fails when Codex rejects the script's flags, when its event log
+holds no agent message, or when the scratch directory does not hold exactly the script's three files. Four things
+are not checked at run time: a renamed `model_reasoning_effort` key (the pass would run at the default effort); a
+sandbox that lets the reviewer write the scratch directory while it adds no entry there; skill discovery (seen
+on 0.169.0; a Codex that stops listing skills changes nothing, because the prompt names the skill file); and
+whether the model follows the skill, which is an instruction on every version. That list names what was looked
+at and is not claimed complete.
+
+*When it does not finish.* The skill's § Risk pass has the route. Exit 2: the session corrects the call. Exit 4
+with `held by a live attempt`: it waits for that attempt; with any other message it reruns once after 60 seconds
+and then hands you the message. Exit 1 or 3: one rerun. Exit 5 or 6, or a second failure: it stops and reports to
+you. The cycle closes only on the slot's `done` line, an ordinary pass does not stand in for the risk pass, and
+the session changes neither the Codex CLI nor the script. Ordinary Gate A and Gate B calls go through the MCP
+server as before.
 
 ## Hook messages
 

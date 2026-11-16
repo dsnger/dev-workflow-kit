@@ -22,6 +22,36 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.54.0
+
+The risk pass runs on the Codex CLI you have installed. `risk-pass.sh` refused every Codex CLI but 0.162.1; once
+the global CLI updated (0.169.0 on 2026-11-16) every risk pass refused, and the rules named no route for that.
+Daniel's decision: no going back, the newest Codex runs. Minor: a shipped script and the gate rules change
+behaviour (`### 2.1a`, `### 2.24`, `### 2.26`; checks 4j and 4o keep the copies identical).
+
+- `risk-pass.sh`: a minimum instead of a pin. A release line `codex-cli <x>.<y>.<z>` at or above 0.162.1 runs;
+  an older release and a version line it cannot read (no `codex` on `PATH`, another program, a pre-release build)
+  are refused with exit 6 and two different messages, before anything is written. The kit installs, updates and
+  downgrades nothing; `/workflow-init` no longer prints an install command.
+- `risk-pass.sh`: two new run-time checks, each failing the attempt (exit 1, nothing promoted). Codex exited 0 but
+  the script extracts no agent-message text from its event log, or an empty last one. That catches a `--json`
+  format in which the script no longer finds the message, not every change of format. Once Codex
+  has stopped, the scratch directory in the git directory must hold exactly the script's three files: a new,
+  hidden or missing entry means the reviewer could write there.
+- Seen on Codex CLI 0.169.0 (macOS, 2026-11-16): `codex sandbox -P :workspace` refuses writes into the git
+  directory and its scratch directory and allows the work tree and `TMPDIR`; `codex exec --json` ends with an
+  `item.completed` agent message; `-c model_reasoning_effort="high"` sets the effort; skills under
+  `.agents/skills/` are listed. Not checked at run time, on any version: a renamed effort key, a sandbox that
+  lets the reviewer write the scratch directory while it adds no entry there, skill discovery (the prompt names
+  the skill file), whether the model follows the skill. `docs/reference.md` and the script's header carry the
+  list.
+- The review skill's § Risk pass names the route when the pass does not finish, by exit status: correct the call
+  (2); wait for a live attempt, or rerun once after 60 seconds and then ask the human (4); one rerun (1, 3);
+  stop and report (5, 6, a second failure). The gate rules send a risk pass that cannot run to the human. A
+  cycle still closes only on the slot's `done` line, and no ordinary pass stands in.
+- `AGENTS.md` invariant 5 states the unpinned Codex CLI as its fifth bounded exception, with what stands in.
+- Projects: run `/dev-workflow:workflow-init` to refresh the script, the skill and the gate rules.
+
 ## 0.53.0
 
 Six template findings from a Gate B in sfx-bricks-child (cycle `k52lvd7n3q`) on the 0.52 templates, each

@@ -5,7 +5,7 @@ description: The kit's review method for a Gate B pass (spec, quality or risk br
 
 # gate-b-review
 
-Written for Codex (OpenAI) via Codex CLI 0.162.1, running a Gate B call of the dev-workflow kit; the kit checks
+Written for Codex (OpenAI) via the Codex CLI (0.162.1 or later), running a Gate B call of the dev-workflow kit; the kit checks
 it against its `docs/prompt-standards.md` as part of `/workflow-init`'s template `### 2.24`.
 
 ## Context
@@ -77,6 +77,27 @@ a project has no other copy of these conditions.
 - *Run* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]`
   as a background call, once the ordinary passes leave no open blocking finding; `<baseSha>` is the cycle base
   the state file records. Its exit statuses are in the script's header.
+- *When it does not finish*, by its exit status (the script prints the reason on stderr):
+  - 2: the call is wrong (the arguments, or the state file's `base` line). Correct it and run again; no attempt
+    was recorded.
+  - 4 with `held by a live attempt`: an attempt is running in this slot. Wait for that run to exit and read its
+    result; start none, since two attempts would race for one slot. 4 with any other message (a takeover in
+    progress, a lock without a runner record, a takeover that failed) may be what an interrupted run left: run it
+    once more after 60 seconds, and when it is 4 again, hand the message, which names the lock path, to the human.
+    Leave the lock in place: from outside, a leftover looks the same as another session's attempt just starting.
+  - 1, 3 or a signal status (129, 130, 143): run it once more with the same `<n>`, since a timeout or a Codex
+    error may pass; the script numbers the attempt.
+  - 5 or 6, or a second failure in the same slot: stop, because another run would end the same way. This is
+    CLAUDE.md's missing-access stop: report the exit status, the script's message and the output of
+    `codex --version` to the human, and leave the cycle open. For example: `risk pass 3 did not run: exit 6 —
+    risk-pass.sh: Codex CLI is 'codex-cli 0.150.0', older than the minimum 'codex-cli 0.162.1'; updating the
+    Codex CLI is the user's step — codex --version: codex-cli 0.150.0`.
+    Exit 6 has two causes with different remedies: `older than the minimum` is cured by the user updating the
+    Codex CLI; `cannot read` means `codex --version` printed no release line (no `codex` on `PATH`, another
+    program of that name, a pre-release build), which the user resolves.
+  - In every case the cycle closes only on the slot's `done` line, and the risk pass stays the risk pass: an
+    ordinary pass covers other ground and does not stand in for it. The Codex CLI and the script stay as they
+    are, because the CLI belongs to the user's machine and a check edited to pass is no check.
 
 ## Output format
 The findings file, at the path the call names, in the format of `.claude/review-gates.md` (one finding per line,
