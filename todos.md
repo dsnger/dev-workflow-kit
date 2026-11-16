@@ -2351,3 +2351,59 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
       derived the limit from the queue). The kit's own waits (CLAUDE.md §4 "Waiting on external work": twice the
       usual duration, else 60 min) already scale; check any fixed limit in a template or script the same way.
       *Trigger: the next template or script that adds a fixed wait.*
+
+## From the 0.53/0.54 project refresh (2026-11-16) — backlog only, nothing implemented here
+
+Collected by the orchestrator from five project refreshes; each checked against kit 0.54.1 before it became a row.
+Skipped: the missing route for a refused risk pass (fixed in 0.54.0), `run-tests.sh` passing a test's exit 4/5
+through (already a row above), a project-only worktree defect, and the `risk-pass.sh` lock cleanup (fixed in 0.54.1).
+
+- [ ] **2.23 has no `git check-ignore` step.** A project `.claude/*` allow-list ignores `.claude/dev-workflow-version`
+      and the record never reaches the repository; 2.24 already checks this for its files. *Trigger: the next 2.23 edit.*
+- [ ] **The timeout route assumes a required check.** `.claude/review-gates.md` (and `### 2.1a`): "the PR head's
+      required check is then the battery evidence", but a project may require none. *Trigger: the next gate-rules
+      edit with byte room.*
+- [ ] **2.21 has no update path with living docs off.** It leaves `scripts/check-doc-links.sh` untouched when 2.20
+      wrote no `.claude/living-docs.md`, so a fix to the checker (0.53) never reaches such a project. *Trigger: the
+      next change to `scripts/check-doc-links.sh`.*
+- [ ] **2.18 misreads `.git/info/exclude`.** Item 4 reports the scratch block `already ignored` on a rule that lives
+      only in this clone's `.git/info/exclude`, and the settings check trips over an exclude `.context/` line.
+      *Trigger: the next 2.18 edit.*
+- [ ] **`lean`'s Gate B cap of 3 leaves no slot for the risk pass after a late change.** A kit update or a template
+      change mid-cycle uses an ordinary pass, and the risk pass, which counts toward the cap, then has none left.
+      *Trigger: a cycle that reaches the cap with the risk pass still due.*
+- [ ] **2.24's report says nothing about older project rules on pass validity.** A project `AGENTS.md` written for
+      the two-findings-file shape does not know the skill's evidence file; a note in 2.24's report would point at
+      it. *Trigger: the next 2.24 edit.*
+- [ ] **The 2.1 `CLAUDE.md` template names `scripts/local-ci.sh` unconditionally,** also where 2.22 was declined.
+      *Trigger: the next 2.1 edit.*
+- [ ] **2.8's sandbox key: two wording gaps.** It does not say that `CODEX_DEV_SANDBOX_MODE=workspace-write`
+      tightens the server's current profile (reported as `danger-full-access` with network; not checked here),
+      which a security review read as weakening; nor that in the session that adds the key Codex runs no targeted
+      tests until the restart. *Trigger: the next 2.8 edit.*
+- [ ] **`run-tests.sh`'s fingerprint: scope and noise.** It leaves out tracked files under `.context/` other than
+      `.context/codex-reviews/`, so a test editing one is not exit 4; its `git diff HEAD` runs without
+      `--no-ext-diff`/`--no-textconv`, so an external diff helper can hide an edit; and a concurrent review write
+      into `.context/codex-reviews/` gives exit 4, which the skill makes a false BLOCKER. *Trigger: the next
+      `fingerprint()` edit or a false "checkout changed".*
+- [ ] **The risk-pass prompt lacks two inputs.** It carries no earlier risk findings or dispositions, so a second
+      risk pass cannot give the pass-2 verdicts the gate rules ask for, and no battery evidence for the head, which
+      the skill expects every call to name. *Trigger: the next risk pass with a pass 2, or the next prompt edit.*
+- [ ] **The two runners: blocking reads, unbounded waits, unchecked reads.** `cat`/`tail` of lock records,
+      `stale_scan` and the out file can hang on a FIFO outside the time limit; `group_stop` waits after KILL with no
+      limit; the watchdog's `setpgrp` races an early `group_stop`; `create`/`sread`/`place` in `risk-pass.sh` treat
+      a read error as end of file, so an empty canonical file could be recorded `done`. *Trigger: the next edit of
+      `run-tests.sh` or `risk-pass.sh`.*
+- [ ] **The slot lock and pid records race.** A fresh `mkdir` of the lock and the owner's cleanup bypass the takeover
+      lock; `group.pid` is written only after the child starts, so a SIGKILL in that gap lets the next run take over
+      the lock or remove the copy. Related: the ownerless-lock row above. *Trigger: a risk pass or test run that
+      reports busy, or a lost copy.*
+- [ ] **The hook's pass count excludes risk passes,** so it never equals a cycle line that has one; which closing
+      warning then fires was not pinned down. *Trigger: the next close with a risk pass.*
+- [ ] **The gate hook warns "no fingerprint is recorded for this cycle" on a commit in another repository** (a
+      `cd` elsewhere, since `repo_root` comes from the hook's cwd); a report of the same on a plain push was not
+      reproduced. *Trigger: the next hook edit.*
+- [ ] **The always-on 2.18 block leaves out `.context/archive/`,** so archived review files show as untracked once
+      the scratch block is declined. *Trigger: the next 2.18 edit.*
+- [ ] **`/workflow-init` item 8 reports `unsupported` in every Orca worktree** (all are linked worktrees). By design
+      today; worth a line saying how to run it there. *Trigger: the next item 8 edit.*
