@@ -2326,3 +2326,18 @@ compare about 45 min, several of each, two killed by macOS memory pressure and r
 - [ ] **0.51 replay: the contamination audit skips missing or broken logs.** It lists only existing event logs and
       trusts a jq count after a later jq failure. (Cycle k051gbb14a5b, risk pass 3, finding 6 — accepted, not
       repaired.) *Trigger: the next replay run.*
+
+## From observing sfx-factory (2026-11-15) — backlog only, nothing implemented here
+
+- [ ] **Stacked pull requests: never delete the base branch in the merge.** `gh pr merge <n> --delete-branch` on
+      the bottom PR of a stack closed the PR above it instead of retargeting it (sfx-factory #359 → #360). Safe
+      order: merge without `--delete-branch`, retarget the next PR with
+      `gh api -X PATCH repos/<owner>/<repo>/pulls/<n> -f base=main`, read its file list again after a few seconds,
+      check `gh pr list --base <old-branch>` is empty, then delete the branch. Where the kit's merge step
+      (`/dev-workflow:process-pr-review`, the squash-merge in CLAUDE.md §4) could meet a stack, say so there.
+      *Trigger: the first kit project that merges a stack.*
+- [ ] **A fixed wait limit close to the usual duration makes a test flaky.** The factory lab's S13 waited a fixed
+      480 s for CI while one CI slot ran 6–8 jobs in a row; it failed on time alone (sfx-factory #380/#387 then
+      derived the limit from the queue). The kit's own waits (CLAUDE.md §4 "Waiting on external work": twice the
+      usual duration, else 60 min) already scale; check any fixed limit in a template or script the same way.
+      *Trigger: the next template or script that adds a fixed wait.*
