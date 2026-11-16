@@ -11,9 +11,22 @@
 #   <nonce>    the cycle nonce, 8-16 of [a-z0-9]; <n> the pass number, a positive integer
 #   <seconds>  time limit, 1-7200; empty or absent means 2400
 # Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed, its findings
-# file is invalid, its evidence file lacks a TESTS: or CALLERS: line, or a result could not be written
+# file is invalid, its evidence file lacks a TESTS: or CALLERS: line, its event log holds no agent
+# message, the scratch directory holds other entries than this script's, or a result could not be written
 # (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is busy (a live earlier
-# attempt); 5 no process supervisor (perl); 6 a Codex CLI other than the pin.
+# attempt, or a lock it cannot take over); 5 no process supervisor (perl); 6 a Codex CLI older than the
+# minimum, or a version line it cannot read. What the main session does on each: the skill's § Risk pass.
+#
+# The Codex CLI is the user's own install and is not pinned (0.54): any release at or above CODEX_MIN runs,
+# and its version line opens the evidence file this script completes. Seen on Codex CLI 0.162.1 and 0.169.0
+# (macOS, 2026-11-16). What a later Codex could change, as far as it was looked at (flags, event format,
+# scratch writes, sandbox reach, effort key, skill discovery; not claimed complete):
+#   fails the attempt: a flag or sandbox value Codex rejects (it exits non-zero); an event log without an
+#     `item.completed` agent message; a link, FIFO, pre-made file or new entry in the scratch directory.
+#   passes unseen: a renamed `model_reasoning_effort` key (ignored silently, the pass runs at the default
+#     effort; nothing in the --json output names the effort); a sandbox that lets the reviewer write the
+#     scratch directory while it adds no entry there (its checks below still hold, and `events` and
+#     `stderr` are the reviewer's own output); a Codex that no longer lists skills (the prompt names the file).
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
@@ -28,7 +41,7 @@
 # earlier attempt can therefore write only its own attempt file. The closing act accepts the canonical
 # file only when its sha256 matches the slot's last `done` line (spec §6).
 set -u
-CODEX_PIN='codex-cli 0.162.1'
+CODEX_MIN='0.162.1'
 
 die() { printf 'risk-pass.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
 usage() { die "$1 (usage: risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>])" 2; }
@@ -58,8 +71,21 @@ for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a syml
 recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
 [ "$recorded" = "$base" ] || usage "baseSha differs from the cycle base recorded in $state"
 command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
+# A release line is exactly `codex-cli <a>.<b>.<c>`, each part at most 6 digits; the parts compare as
+# numbers. Anything else, a pre-release suffix included, is unreadable, which is not the same as old.
+command -v codex >/dev/null 2>&1 || die "cannot read a Codex CLI version: no codex on PATH" 6
 v=$(codex --version 2>/dev/null | head -n 1)
-[ "$v" = "$CODEX_PIN" ] || die "Codex CLI is '${v:-not found}', this script is verified on '$CODEX_PIN' only; installing that version is the user's step (see /workflow-init)" 6
+printf '%s\n' "$v" | awk -v min="$CODEX_MIN" '
+  { if ($0 !~ /^codex-cli [0-9]+\.[0-9]+\.[0-9]+$/) exit 2
+    split(substr($0, 11), a, "."); split(min, m, ".")
+    for (i = 1; i <= 3; i++) if (length(a[i]) > 6) exit 2
+    for (i = 1; i <= 3; i++) { if (a[i] + 0 > m[i] + 0) exit 0; if (a[i] + 0 < m[i] + 0) exit 1 }
+    exit 0 }'
+case $? in
+  0) ;;
+  1) die "Codex CLI is '$v', older than the minimum 'codex-cli $CODEX_MIN'; updating the Codex CLI is the user's step" 6 ;;
+  *) die "cannot read a Codex CLI version from '$v', printed by $(command -v codex) (expected 'codex-cli <x>.<y>.<z>')" 6 ;;
+esac
 
 # EPERM means the process exists (see run-tests.sh).
 group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
@@ -161,9 +187,10 @@ finish() {
   [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"
 }
 
-# Scratch in the git directory: Codex 0.162.1's workspace-write sandbox keeps it read-only (seen with
-# `codex sandbox -P :workspace` on macOS, 2026-11-15). Codex writes nothing here itself (no -o), so a
-# checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
+# Scratch in the git directory: Codex's workspace-write sandbox keeps it read-only (seen with
+# `codex sandbox -P :workspace` on macOS: 0.162.1 on 2026-11-15, 0.169.0 on 2026-11-16; not probed at run
+# time). Codex writes nothing here itself (no -o), so a checkout in TMPDIR or /tmp, whose git directory the
+# sandbox can write, is covered by create, sread and the entries check after the run.
 gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
 work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
 # Its identity (device and inode, by lstat), compared once Codex's group is stopped (nothing of this script
@@ -213,11 +240,16 @@ wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 [ "$(wid "$work")" = "$work_id" ] || { work=; finish 1 'the scratch directory was replaced while Codex ran; nothing written'; }
+# Read before this script writes there itself: exactly its three files, or the reviewer could write there.
+# shellcheck disable=SC2016  # perl source
+entries=ok; perl -e 'opendir(my $d, $ARGV[0]) or exit 1; my @e = sort grep { !/^\.\.?$/ } readdir $d;
+  exit(join("/", @e) eq "events/prompt/stderr" ? 0 : 1)' "$work" || entries=
 
 # A failed write fails the attempt, after the timeout and Codex's own failure are reported.
 werr=
 place "$work/events" "$pre.events.jsonl" || werr="could not place the event log at $pre.events.jsonl"
-# The reply is the last agent message in the event log (Codex 0.162.1: item.completed, item type agent_message).
+# The reply is the last agent message in the event log (seen on Codex 0.162.1 and 0.169.0: item.completed,
+# item type agent_message); an attempt without one fails below.
 # shellcheck disable=SC2016  # perl source
 reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($_) } or next;
   $t = $e->{item}{text} if ($e->{type} // "") eq "item.completed" && ref $e->{item} eq "HASH"
@@ -225,7 +257,7 @@ reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($
 [ -z "$reply" ] || { printf '%s\n' "$reply" | create "$work/reply" && place "$work/reply" "$pre-reply.md"; } ||
   werr=${werr:-"could not place the reply at $pre-reply.md"}
 model=$(sread "$work/events" | sed -n 's/.*"model":"\([^"]*\)".*/\1/p' | head -n 1)
-# Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
+# Codex's events name no model (0.162.1, 0.169.0): then the top-level `model` key of its config, which this call
 # uses unless a `profile` selects another.
 # shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
 cfg="${CODEX_HOME:-$HOME/.codex}/config.toml"
@@ -239,7 +271,9 @@ if ev=$(printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:
 else werr=${werr:-"could not write the evidence file $pre-evidence.md"}; fi
 [ $(( $(date +%s) - t0 )) -ge "$secs" ] && finish 3 "timed out after ${secs}s"
 [ "$rc" -eq 0 ] || { sread "$work/stderr" | tail -n 20 >&2; finish 1 "codex exited $rc"; }
+[ -n "$entries" ] || finish 1 'the scratch directory did not hold exactly events, prompt and stderr once Codex had stopped (the reviewer could write there); nothing promoted'
 [ -z "$werr" ] || finish 1 "$werr"
+[ -n "$reply" ] || finish 1 "no agent message in the event log $pre.events.jsonl (has the format of codex exec --json changed?); nothing promoted"
 # The skill makes the evidence part of a completed pass: at least one TESTS: and one CALLERS: line.
 { grep -q '^TESTS:' "$work/evidence" && grep -q '^CALLERS:' "$work/evidence"; } ||
   finish 1 "the evidence file $pre-evidence.md has no TESTS: or no CALLERS: line"

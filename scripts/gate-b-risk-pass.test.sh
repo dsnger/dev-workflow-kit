@@ -22,7 +22,8 @@ trap 'exit 1' HUP INT TERM
 # `Findings file:` path in it, runs $STUB_DIR/before when present, then acts on $STUB_DIR/mode:
 # write (copy $STUB_DIR/findings there, and $STUB_DIR/evidence beside it unless $STUB_DIR/noevidence
 # exists), none (write nothing), fail (exit 1), hang (sleep).
-# It prints one --json event naming a model, then the agent message the script takes as the reply.
+# It prints one --json event naming a model, then the agent message the script takes as the reply: none
+# when $STUB_DIR/nomessage exists, and a second one with an empty text when $STUB_DIR/emptylast exists.
 mkdir -p "$work/stub"
 cat > "$work/stub/codex" <<'EOF'
 #!/bin/sh
@@ -40,13 +41,14 @@ case $(cat "$STUB_DIR/mode") in
   fail) echo 'stub: failed' >&2; exit 1 ;;
   hang) sleep 30 ;;
 esac
-printf '{"type":"item.completed","item":{"id":"i1","type":"agent_message","text":"BLOCKER 0 | MAJOR 1"}}\n'
+[ -f "$STUB_DIR/nomessage" ] || printf '{"type":"item.completed","item":{"id":"i1","type":"agent_message","text":"BLOCKER 0 | MAJOR 1"}}\n'
+[ -f "$STUB_DIR/emptylast" ] && printf '{"type":"item.completed","item":{"id":"i2","type":"agent_message","text":""}}\n'
 [ -z "$o" ] || echo 'stub: -o given' > "$o"
 EOF
 chmod +x "$work/stub/codex"
 STUB_DIR="$work/stub"; export STUB_DIR
 PATH="$work/stub:$PATH"; export PATH
-echo 'codex-cli 0.162.1' > "$work/stub/version"
+echo 'codex-cli 0.169.0' > "$work/stub/version"
 printf 'TESTS: none — stub\nCALLERS: a — none\n' > "$work/stub/evidence"
 
 repo="$work/re po"
@@ -64,7 +66,7 @@ state="$d/gate-b-cycle-$N.state"
 canon() { printf '%s/gate-b-risk-%s-pass-%s.md' "$d" "$N" "$1"; }
 att() { printf '%s/gate-b-risk-%s-pass-%s-attempt-%s.md' "$d" "$N" "$1" "$2"; }
 sha() { perl -MDigest::SHA -e 'print Digest::SHA->new(256)->addfile($ARGV[0])->hexdigest' "$1"; }
-reset() { rm -rf "$d"; mkdir -p "$d"; printf 'base %s\n' "$B" > "$state"; rm -f "$STUB_DIR/before" "$STUB_DIR/noevidence"; }
+reset() { rm -rf "$d"; mkdir -p "$d"; printf 'base %s\n' "$B" > "$state"; rm -f "$STUB_DIR/before" "$STUB_DIR/noevidence" "$STUB_DIR/nomessage" "$STUB_DIR/emptylast"; }
 # run [<n> [<seconds>]]: the range $B..${RH:-$H}; a run still going after 20 s is killed (rc 142).
 run() { perl -e 'alarm shift; exec @ARGV' 20 "$RISK_PASS_SH" "$SCRIPT" "$repo" "$B" "${RH:-$H}" "$N" "$@" </dev/null >"$work/out" 2>"$work/err"; rc=$?; }
 findings() { printf '%s\n' "$@" > "$STUB_DIR/findings"; echo write > "$STUB_DIR/mode"; }
@@ -75,7 +77,7 @@ run 1 30
 [ $rc -eq 0 ] && cmp -s "$(canon 1)" "$(att 1 1)" && pass 'a valid result: exit 0, promoted to the canonical file' || fail "valid rc=$rc $(cat "$work/err")"
 grep -q "^risk 1 start 1 $H [0-9]*$" "$state" && grep -q "^risk 1 done 1 $H $(sha "$(canon 1)")$" "$state" && pass 'state: start and done lines bind attempt, head and sha256' || fail "state: $(cat "$state")"
 e="$d/gate-b-risk-$N-pass-1-attempt-1-evidence.md"
-grep -q '^CLI: codex-cli 0.162.1$' "$e" && grep -q "^HEAD: $H$" "$e" && grep -q '^MODEL: stub-model$' "$e" && grep -q '^CALLERS: a' "$e" && pass 'evidence: CLI version, head, model from the event log, then the reviewer evidence' || fail "evidence: $(cat "$e" 2>/dev/null)"
+[ "$(head -n 1 "$e")" = 'CLI: codex-cli 0.169.0' ] && grep -q "^HEAD: $H$" "$e" && grep -q '^MODEL: stub-model$' "$e" && grep -q '^CALLERS: a' "$e" && pass 'evidence: the CLI version line first, head, model from the event log, then the reviewer evidence' || fail "evidence: $(cat "$e" 2>/dev/null)"
 grep -q 'branch `risk`' "$STUB_DIR/last-prompt" && grep -q "$B..$H" "$STUB_DIR/last-prompt" && pass 'the prompt names the risk branch and the range' || fail 'prompt'
 ! grep -q 'prompt-standards' "$STUB_DIR/last-prompt" && pass 'a range without prompt paths: the prompt cites no prompt standards' || fail 'prompt-standards cited for a non-prompt range'
 grep -q '^BLOCKER 0 | MAJOR 1$' "$d/gate-b-risk-$N-pass-1-attempt-1-reply.md" && pass 'the reply is placed beside the attempt' || fail 'reply not placed'
@@ -87,7 +89,7 @@ reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; rm -f "$STUB_DIR/live
 printf 'ls "%s" | grep -q events && touch "%s/live"; :\n' "$d" "$STUB_DIR" > "$STUB_DIR/before"
 run 1 30
 [ $rc -eq 0 ] && [ ! -e "$STUB_DIR/live" ] && grep -q stub-model "$d/gate-b-risk-$N-pass-1-attempt-1.events.jsonl" && pass 'event log: outside the checkout during the run, placed after' || fail "live log rc=$rc"
-# No model in the event log (Codex 0.162.1): the top-level `model` of $CODEX_HOME/config.toml.
+# No model in the event log (Codex 0.162.1 and 0.169.0): the top-level `model` of $CODEX_HOME/config.toml.
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; touch "$STUB_DIR/nomodel"
 mkdir -p "$work/ch"; printf '# c\nmodel = "cfg-model"\n[profiles.x]\nmodel = "other"\n' > "$work/ch/config.toml"
 CODEX_HOME="$work/ch" run 1 30
@@ -227,6 +229,7 @@ reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; mkdir -p "$work/elsew
 printf 'for w in "%s"/.git/gate-b-risk.*; do rm -rf "$w"; ln -s "%s" "$w"; done\n' "$repo" "$work/elsewhere" > "$STUB_DIR/before"
 run 1 30
 [ $rc -eq 1 ] && [ -z "$(ls "$work/elsewhere")" ] && grep -q 'scratch directory was replaced' "$work/err" && pass 'the scratch directory replaced by a link: exit 1, nothing written through it' || fail "scratch dir swap rc=$rc $(ls "$work/elsewhere") $(cat "$work/err")"
+grep -q '^TESTS:' "$e" && grep -q '^CALLERS:' "$e" && ! head -n 1 "$e" | grep -q '^CLI:' && pass 'an attempt ended before the evidence step leaves the raw evidence, which does not start with CLI:' || fail "raw evidence: $(cat "$e" 2>/dev/null)"
 rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
 # The same swap with Codex still running at the timeout: the watchdog writes nothing through it either.
 reset; echo hang > "$STUB_DIR/mode"; mkdir -p "$work/elsewhere"
@@ -235,10 +238,43 @@ run 1 2
 [ $rc -ne 0 ] && [ -z "$(ls "$work/elsewhere")" ] && pass 'the scratch directory replaced while Codex runs into the timeout: nothing written through it' || fail "timeout swap rc=$rc $(ls "$work/elsewhere")"
 rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
 
+# The reply is required (0.54): Codex exiting 0 with no agent message in its event log, or with an empty
+# last one, fails the attempt, so a changed --json format cannot pass.
+for sw in nomessage emptylast; do
+  reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; touch "$STUB_DIR/$sw"; run 1 30
+  [ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && grep -q '^risk 1 failed 1 1$' "$state" && grep -q 'event log' "$work/err" && pass "$sw: exit 1, not promoted, the message names the event log" || fail "$sw rc=$rc $(cat "$work/err")"
+done
+# Once Codex has stopped, the scratch directory must hold exactly events, prompt and stderr (0.54): a
+# further entry, a hidden one or a missing one fails the attempt.
+for plant in ': > "$w/extra"' ': > "$w/.x"' 'rm -f "$w/prompt"'; do
+  reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+  printf 'for w in "%s"/.git/gate-b-risk.*; do %s; done\n' "$repo" "$plant" > "$STUB_DIR/before"
+  run 1 30
+  [ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && grep -q '^risk 1 failed 1 1$' "$state" && grep -q 'scratch directory' "$work/err" && pass "scratch entries changed ($plant): exit 1, not promoted" || fail "scratch entries ($plant) rc=$rc $(cat "$work/err")"
+done
+
 # Refusals before anything is written.
-reset; echo 'codex-cli 0.163.0' > "$work/stub/version"; run 1 30
-[ $rc -eq 6 ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass 'another Codex CLI version: exit 6' || fail "version rc=$rc"
-echo 'codex-cli 0.162.1' > "$work/stub/version"
+# The Codex CLI version (0.54): a release line `codex-cli <a>.<b>.<c>` at or above the minimum runs; an
+# older one and a line that cannot be read are refused with different messages, nothing written.
+for ver in 'codex-cli 0.162.1' 'codex-cli 0.1000.0' 'codex-cli 1.0.0'; do
+  reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; printf '%s\n' "$ver" > "$work/stub/version"; run 1 30
+  [ $rc -eq 0 ] && pass "accepted: $ver" || fail "not accepted ($rc): $ver $(cat "$work/err")"
+done
+refused() {
+  reset; printf '%s\n' "$2" > "$work/stub/version"; run 1 30
+  [ $rc -eq 6 ] && grep -q "$1" "$work/err" && grep -qF "'$2'" "$work/err" && [ "$(ls -A "$d")" = "gate-b-cycle-$N.state" ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass "refused ($1): '$2'" || fail "not refused ($rc): '$2' $(cat "$work/err")"
+}
+refused 'older than the minimum' 'codex-cli 0.162.0'
+refused 'older than the minimum' 'codex-cli 0.99.9'
+refused 'cannot read' 'codex-cli 0.170.0-alpha.1'
+refused 'cannot read' 'codex 0.169.0'
+refused 'cannot read' 'codex-cli 0.169'
+refused 'cannot read' 'codex-cli 0.169.0.1'
+refused 'cannot read' ''
+refused 'cannot read' 'codex-cli 0.1234567.0'
+refused 'cannot read' 'codex-cli 1.1234567.0'
+refused 'cannot read' 'codex-cli 0.169.0 '
+echo 'codex-cli 0.169.0' > "$work/stub/version"
 rm -f "$state"; run 1 30
 [ $rc -eq 2 ] && grep -q 'no cycle base' "$work/err" && pass 'no state file: exit 2' || fail "nostate rc=$rc"
 printf 'base %s\n' "$H" > "$state"; run 1 30
@@ -251,6 +287,9 @@ done
 ln -sf "$work/stub/codex" "$work/bin/codex"
 PATH="$work/bin" "$RISK_PASS_SH" "$SCRIPT" "$repo" "$B" "$H" "$N" 1 30 </dev/null >/dev/null 2>"$work/err"; rc=$?
 [ $rc -eq 5 ] && grep -q 'no process supervisor' "$work/err" && pass 'no perl: exit 5' || fail "noperl rc=$rc"
+rm -f "$work/bin/codex"; ln -sf "$(command -v perl)" "$work/bin/perl"
+PATH="$work/bin" "$RISK_PASS_SH" "$SCRIPT" "$repo" "$B" "$H" "$N" 1 30 </dev/null >/dev/null 2>"$work/err"; rc=$?
+[ $rc -eq 6 ] && grep -q 'cannot read' "$work/err" && grep -q 'no codex on PATH' "$work/err" && [ "$(grep -c '^risk' "$state")" = 0 ] && pass 'no codex on PATH: exit 6, cannot read' || fail "nocodex rc=$rc $(cat "$work/err")"
 
 v() { "$RISK_PASS_SH" "$SCRIPT" "$@" </dev/null >/dev/null 2>"$work/err"; vrc=$?; [ $vrc -eq 2 ] && [ "$(grep -c '^risk' "$state")" = 0 ] && pass "rejected: $*" || fail "not rejected ($vrc): $*"; }
 v "$repo" "$B" "$H" "$N"
