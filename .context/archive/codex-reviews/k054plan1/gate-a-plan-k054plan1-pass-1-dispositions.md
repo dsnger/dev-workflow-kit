@@ -1,0 +1,5 @@
+1 | fixed | T1's outcome states both full contracts (no or empty last agent message; exactly the three entries, missing or extra, hidden included) and adds the cases: empty last message after a non-empty one, a hidden entry, a removed prompt.
+2 | fixed | T1's order is two red runs: the run-time-check cases with the stub at 0.162.1 (they reach Codex and wrongly succeed), then the version cases with the default at 0.169.0; the raw-evidence assertion first requires the file and its reviewer lines.
+3 | fixed | T2 gains one prompt review after T3 of every changed prompt artifact against all 12 items, with item 1's page check and its fallback, carried in the PR body.
+4 | fixed | T3 runs both prescribed greps repository-wide with their exclusions and reads the relevant hits against manifest and script.
+5 | fixed | Long runs: the lane a head takes is quoted from local-ci.sh's header; prompt and instruction-path repairs and merges with upstream changes take the full lane; expected runs are 2 full + 1 risk pass, and the boundary rule for a third is stated.

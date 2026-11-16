@@ -1,0 +1,2 @@
+1 | fixed | The story's third assumption now reads as the order does, "Codex discovers the review skill", shown on 0.169.0 in spec §2; following the method is stated as an instruction on every version (story AC-3, spec §3.2). Story §2's unconditional promise is narrowed in the same change record.
+2 | fixed | Story AC-2 narrowed to the evidence file the script completes; spec §3.1 tells the reviewer's raw file from the completed one by its first line, and §7 adds that assertion to the existing scratch-swap case.

@@ -5,11 +5,16 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
-- [ ] **Kit 0.54 plan k054plan1 pass 2, finding 1: the long-run budget's arithmetic.** The plan
+- [ ] **`local-ci.sh`'s full lane took 48m35s and 37m09s on 2026-11-16, not "about 35 minutes".** Kit 0.54's two
+  runs (heads `1c5a8ac`, `086e5b3`, nothing else heavy on the Mac for the second). `AGENTS.md` § Commands and the
+  script's header say about 35; CLAUDE.md §4 makes a plan list every run of 45 minutes or more with a limit per
+  stage, and a plan that copies "35" leaves this one out. Measure a few more runs, then correct the two texts.
+- [x] **Kit 0.54 plan k054plan1 pass 2, finding 1: the long-run budget's arithmetic.** *Done 2026-11-16: the
+  build ran two full runs and one risk pass (48 + 37 + 5 min); no third run, no boundary moved.* The plan
   (`docs/superpowers/plans/2026-11-16-kit-054-codex-current.md`, "Long runs") says a third full run *or* a
   risk-pass rerun passes the 2-hour unit limit; by its own estimates only the third full run does (125 min), one
   risk-pass rerun does not (110 min). Collected at the closing pass, not repaired in the plan; the build reads it
-  the corrected way. Close this row when 0.54 is merged.
+  the corrected way.
 - [ ] **Kit 0.53 risk pass 5 Minor: the elapsed-time timeout is read after post-processing** (cycle k053tplfix,
   archived under `.context/archive/codex-reviews/k053tplfix/`, accepted, not repaired at the cap).
   `risk-pass.sh` samples the clock only after group cleanup, reply decoding and evidence placement, so a reviewer
