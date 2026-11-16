@@ -238,8 +238,8 @@ run 1 2
 [ $rc -ne 0 ] && [ -z "$(ls "$work/elsewhere")" ] && pass 'the scratch directory replaced while Codex runs into the timeout: nothing written through it' || fail "timeout swap rc=$rc $(ls "$work/elsewhere")"
 rm -rf "$work/elsewhere"; rm -f "$repo"/.git/gate-b-risk.*
 
-# The reply is required (0.54): Codex exiting 0 with no agent message in its event log, or with an empty
-# last one, fails the attempt, so a changed --json format cannot pass.
+# The reply is required (0.54): Codex exiting 0 with no agent-message text the script can extract from its
+# event log, or with an empty last one, fails the attempt.
 for sw in nomessage emptylast; do
   reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'; touch "$STUB_DIR/$sw"; run 1 30
   [ $rc -eq 1 ] && [ ! -f "$(canon 1)" ] && grep -q '^risk 1 failed 1 1$' "$state" && grep -q 'event log' "$work/err" && pass "$sw: exit 1, not promoted, the message names the event log" || fail "$sw rc=$rc $(cat "$work/err")"

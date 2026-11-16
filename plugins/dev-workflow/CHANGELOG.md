@@ -34,7 +34,8 @@ behaviour (`### 2.1a`, `### 2.24`, `### 2.26`; checks 4j and 4o keep the copies 
   are refused with exit 6 and two different messages, before anything is written. The kit installs, updates and
   downgrades nothing; `/workflow-init` no longer prints an install command.
 - `risk-pass.sh`: two new run-time checks, each failing the attempt (exit 1, nothing promoted). Codex exited 0 but
-  its event log holds no agent message, or an empty last one: a changed `--json` format cannot pass. Once Codex
+  the script extracts no agent-message text from its event log, or an empty last one. That catches a `--json`
+  format in which the script no longer finds the message, not every change of format. Once Codex
   has stopped, the scratch directory in the git directory must hold exactly the script's three files: a new,
   hidden or missing entry means the reviewer could write there.
 - Seen on Codex CLI 0.169.0 (macOS, 2026-11-16): `codex sandbox -P :workspace` refuses writes into the git
