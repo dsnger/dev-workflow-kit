@@ -2829,9 +2829,10 @@ finish "$rc"
 The script Gate B's risk pass runs through (`codex exec` at high reasoning effort; no MCP tool takes an effort).
 It runs on the Codex CLI the user has installed, 0.162.1 or later, and refuses an older one or a version line it
 cannot read (exit 6), because below that version its flags and event format were never seen to work. Run
-`codex --version` once. When it prints `codex-cli <x>.<y>.<z>` below 0.162.1, list *updating the Codex CLI* as
-the user's own step in the closing checklist (item 5). When it prints anything else or nothing, list the line it
-printed and the output of `command -v codex` there instead, since that is no sign of an old CLI. Leave the CLI
+`codex --version` once. A line of exactly the form `codex-cli <x>.<y>.<z>` at or above 0.162.1 needs nothing. A
+line of that form below 0.162.1: list *updating the Codex CLI* as the user's own step in the closing checklist
+(item 5). A line of any other form (a pre-release suffix included) or no line: list the line it printed and the
+output of `command -v codex` there instead, since that is no sign of an old CLI. Leave the CLI
 as it is: installing or updating it changes the user's machine outside this project. Rules 1–2 apply; write it
 byte for byte as below (check 4o).
 
@@ -2860,7 +2861,9 @@ byte for byte as below (check 4o).
 # (macOS, 2026-11-16). What a later Codex could change, as far as it was looked at (flags, event format,
 # scratch writes, sandbox reach, effort key, skill discovery; not claimed complete):
 #   fails the attempt: a flag or sandbox value Codex rejects (it exits non-zero); an event log without an
-#     `item.completed` agent message; a link, FIFO, pre-made file, new or missing entry in the scratch directory.
+#     `item.completed` agent message; in the scratch directory an added or missing name, a file already at a
+#     name this script creates, and a link or FIFO where it reads (`events`; `stderr` after a failed Codex).
+#     A same-name replacement of a file it does not read (`prompt`; `stderr` after a successful Codex) passes.
 #   passes unseen: a renamed `model_reasoning_effort` key (ignored silently, the pass runs at the default
 #     effort; nothing in the --json output names the effort); a sandbox that lets the reviewer write the
 #     scratch directory while it adds no entry there (its checks below still hold, and `events` and
@@ -2995,8 +2998,8 @@ append() {
 }
 # The scratch directory is out of the reviewer's reach unless the checkout itself lies in TMPDIR or /tmp,
 # so scratch files are also created exclusively without following a link (create) and read only as
-# regular files, opened without following a link or blocking (sread): a link or FIFO planted there fails
-# the attempt instead of redirecting a write or hanging a read.
+# regular files, opened without following a link or blocking (sread): a link or FIFO planted at a file this
+# script creates or reads fails the attempt instead of redirecting a write or hanging a read.
 # shellcheck disable=SC2016  # perl source
 create() {
   perl -e 'use Fcntl; sysopen(my $o, $ARGV[0], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600) or exit 1;
@@ -3468,8 +3471,9 @@ Remaining — stack-specific, yours to decide:
      · for Gate B's risk pass (2.26): Codex CLI 0.162.1 or later — your own
        install, kept current by you. When `codex --version` prints an older
        version, update the Codex CLI yourself (it changes your machine, so
-       this command does not); when it prints no `codex-cli <x>.<y>.<z>` line,
-       check which program, if any, `command -v codex` names. Until then risk-pass.sh
+       this command does not); when it prints no plain `codex-cli <x>.<y>.<z>`
+       line (a pre-release build prints a longer one), check which program, if
+       any, `command -v codex` names. Until then risk-pass.sh
        refuses with exit 6 and says which of the two it is.
    Without all three, both gates are inoperative.
 

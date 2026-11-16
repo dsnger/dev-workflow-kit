@@ -41,8 +41,9 @@ behaviour (`### 2.1a`, `### 2.24`, `### 2.26`; checks 4j and 4o keep the copies 
   directory and its scratch directory and allows the work tree and `TMPDIR`; `codex exec --json` ends with an
   `item.completed` agent message; `-c model_reasoning_effort="high"` sets the effort; skills under
   `.agents/skills/` are listed. Not checked at run time, on any version: a renamed effort key, a sandbox that
-  lets the reviewer write the scratch directory while it adds no entry there, whether the model follows the
-  skill. `docs/reference.md` and the script's header carry the list.
+  lets the reviewer write the scratch directory while it adds no entry there, skill discovery (the prompt names
+  the skill file), whether the model follows the skill. `docs/reference.md` and the script's header carry the
+  list.
 - The review skill's § Risk pass names the route when the pass does not finish, by exit status: correct the call
   (2); wait for a live attempt, or rerun once after 60 seconds and then ask the human (4); one rerun (1, 3);
   stop and report (5, 6, a second failure). The gate rules send a risk pass that cannot run to the human. A

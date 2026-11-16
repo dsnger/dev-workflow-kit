@@ -612,10 +612,12 @@ before that step (a signal, a replaced scratch directory) has no `CLI:` line.
 
 The sandbox, the event format, the effort key and skill discovery were seen to work on 0.162.1 and on 0.169.0
 (2026-11-16, macOS). On a later Codex an attempt fails when Codex rejects the script's flags, when its event log
-holds no agent message, or when the scratch directory does not hold exactly the script's three files. Three things
-are not checked at run time: a renamed `model_reasoning_effort` key (the pass would run at the default effort), a
-sandbox that lets the reviewer write the scratch directory while it adds no entry there, and whether the model
-follows the skill. That list names what was looked at and is not claimed complete.
+holds no agent message, or when the scratch directory does not hold exactly the script's three files. Four things
+are not checked at run time: a renamed `model_reasoning_effort` key (the pass would run at the default effort); a
+sandbox that lets the reviewer write the scratch directory while it adds no entry there; skill discovery (seen
+on 0.169.0; a Codex that stops listing skills changes nothing, because the prompt names the skill file); and
+whether the model follows the skill, which is an instruction on every version. That list names what was looked
+at and is not claimed complete.
 
 *When it does not finish.* The skill's § Risk pass has the route. Exit 2: the session corrects the call. Exit 4
 with `held by a live attempt`: it waits for that attempt; with any other message it reruns once after 60 seconds

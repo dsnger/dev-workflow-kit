@@ -22,7 +22,9 @@
 # (macOS, 2026-11-16). What a later Codex could change, as far as it was looked at (flags, event format,
 # scratch writes, sandbox reach, effort key, skill discovery; not claimed complete):
 #   fails the attempt: a flag or sandbox value Codex rejects (it exits non-zero); an event log without an
-#     `item.completed` agent message; a link, FIFO, pre-made file, new or missing entry in the scratch directory.
+#     `item.completed` agent message; in the scratch directory an added or missing name, a file already at a
+#     name this script creates, and a link or FIFO where it reads (`events`; `stderr` after a failed Codex).
+#     A same-name replacement of a file it does not read (`prompt`; `stderr` after a successful Codex) passes.
 #   passes unseen: a renamed `model_reasoning_effort` key (ignored silently, the pass runs at the default
 #     effort; nothing in the --json output names the effort); a sandbox that lets the reviewer write the
 #     scratch directory while it adds no entry there (its checks below still hold, and `events` and
@@ -157,8 +159,8 @@ append() {
 }
 # The scratch directory is out of the reviewer's reach unless the checkout itself lies in TMPDIR or /tmp,
 # so scratch files are also created exclusively without following a link (create) and read only as
-# regular files, opened without following a link or blocking (sread): a link or FIFO planted there fails
-# the attempt instead of redirecting a write or hanging a read.
+# regular files, opened without following a link or blocking (sread): a link or FIFO planted at a file this
+# script creates or reads fails the attempt instead of redirecting a write or hanging a read.
 # shellcheck disable=SC2016  # perl source
 create() {
   perl -e 'use Fcntl; sysopen(my $o, $ARGV[0], O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600) or exit 1;

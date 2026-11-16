@@ -149,7 +149,7 @@ reader can judge whether it still holds.
    evidence file it completes, and fails an attempt when Codex rejects its flags, when the event log holds no
    agent message, or when the scratch directory does not hold exactly the script's three files. This is detection
    in the run, not a pin: a renamed effort key, a sandbox that lets the reviewer write the scratch directory
-   while it adds no entry there, and whether the model follows the skill are not checked (the script's header
+   while it adds no entry there, skill discovery and whether the model follows the skill are not checked (the script's header
    lists what was looked at, and does not claim that list is complete).
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
