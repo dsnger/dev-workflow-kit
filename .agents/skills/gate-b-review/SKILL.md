@@ -85,9 +85,13 @@ a project has no other copy of these conditions.
     progress, a lock without a runner record, a takeover that failed) may be what an interrupted run left: run it
     once more after 60 seconds, and when it is 4 again, hand the message, which names the lock path, to the human.
     Leave the lock in place: from outside, a leftover looks the same as another session's attempt just starting.
-  - 1, 3 or a signal status (129, 130, 143): run it once more with the same `<n>`; the script numbers the attempt.
-  - 5 or 6, or a second failure in the same slot: stop. This is CLAUDE.md's missing-access stop: report the exit
-    status, the script's message and the output of `codex --version` to the human, and leave the cycle open.
+  - 1, 3 or a signal status (129, 130, 143): run it once more with the same `<n>`, since a timeout or a Codex
+    error may pass; the script numbers the attempt.
+  - 5 or 6, or a second failure in the same slot: stop, because another run would end the same way. This is
+    CLAUDE.md's missing-access stop: report the exit status, the script's message and the output of
+    `codex --version` to the human, and leave the cycle open. For example: `risk pass 3 did not run: exit 6 —
+    risk-pass.sh: Codex CLI is 'codex-cli 0.150.0', older than the minimum 'codex-cli 0.162.1'; updating the
+    Codex CLI is the user's step — codex --version: codex-cli 0.150.0`.
     Exit 6 has two causes with different remedies: `older than the minimum` is cured by the user updating the
     Codex CLI; `cannot read` means `codex --version` printed no release line (no `codex` on `PATH`, another
     program of that name, a pre-release build), which the user resolves.

@@ -661,7 +661,7 @@ In an open cycle the main session (the committer gets the note) makes each commi
 `additionalContext` names `.agents/skills/gate-b-review/SKILL.md`, which Codex follows (method, @AGENTS.md, finding rules).
 Unless `classic`, it also names this head's battery evidence (local run, or pending PR CI under the timeout rule): no finding for failures that run shows; whether checks cover what they claim stays in scope.
 
-**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap, not the floor (none left: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
+**Risk pass:** due when the cycle diff touches project scripts, security code, rule/gate files or migrations, by content (skill § Risk pass). Before pass 1 write `.context/codex-reviews/gate-b-cycle-<nonce>.state` as `base <baseSha>`. Once nothing ordinary blocks, run `risk-pass.sh`: a pass toward the cap only (none left, or it cannot run: human). Its blocking findings join the next `quality` call; a later risky change beyond its repairs reruns it. Close needs its last `done` hash; the cycle line adds `risk pass <n>: <count>`.
 
 > One finding per line: `SEVERITY | confidence | location | problem | consequence | suggested fix`; escape a literal pipe as `\|`.
 > Severity is one of exactly: BLOCKER | MAJOR | MINOR | NIT — no other token.
@@ -2509,15 +2509,15 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.53.0
+0.54.0
 ````
 
 ### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
 
 The kit's review method for Codex at Gate B (0.51): what each branch checks, tracing callers and dependents,
-optional targeted tests, and where findings and evidence go. Codex CLI 0.162.1 discovers skills under the
-repository's `.agents/skills/` (verified), and the gate rules name the file in every Gate B call, so it also
-works where discovery does not. It lives in the project, so nothing is written under the home directory.
+optional targeted tests, and where findings and evidence go. The Codex CLI discovers skills under the
+repository's `.agents/skills/` (seen on 0.162.1 and 0.169.0), and the gate rules name the file in every Gate B
+call, so it also works where discovery does not. It lives in the project, so nothing is written under the home directory.
 Check `git check-ignore -v .agents/skills/gate-b-review/SKILL.md`: when a rule ignores `.agents/` (some tools
 add one to `.git/info/exclude`), say which and that the three files need `git add -f` to be committed; do not edit
 that rule, it is the user's.
@@ -2532,7 +2532,7 @@ description: The kit's review method for a Gate B pass (spec, quality or risk br
 
 # gate-b-review
 
-Written for Codex (OpenAI) via Codex CLI 0.162.1, running a Gate B call of the dev-workflow kit; the kit checks
+Written for Codex (OpenAI) via the Codex CLI (0.162.1 or later), running a Gate B call of the dev-workflow kit; the kit checks
 it against its `docs/prompt-standards.md` as part of `/workflow-init`'s template `### 2.24`.
 
 ## Context
@@ -2604,6 +2604,27 @@ a project has no other copy of these conditions.
 - *Run* `sh .agents/skills/gate-b-review/scripts/risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>]`
   as a background call, once the ordinary passes leave no open blocking finding; `<baseSha>` is the cycle base
   the state file records. Its exit statuses are in the script's header.
+- *When it does not finish*, by its exit status (the script prints the reason on stderr):
+  - 2: the call is wrong (the arguments, or the state file's `base` line). Correct it and run again; no attempt
+    was recorded.
+  - 4 with `held by a live attempt`: an attempt is running in this slot. Wait for that run to exit and read its
+    result; start none, since two attempts would race for one slot. 4 with any other message (a takeover in
+    progress, a lock without a runner record, a takeover that failed) may be what an interrupted run left: run it
+    once more after 60 seconds, and when it is 4 again, hand the message, which names the lock path, to the human.
+    Leave the lock in place: from outside, a leftover looks the same as another session's attempt just starting.
+  - 1, 3 or a signal status (129, 130, 143): run it once more with the same `<n>`, since a timeout or a Codex
+    error may pass; the script numbers the attempt.
+  - 5 or 6, or a second failure in the same slot: stop, because another run would end the same way. This is
+    CLAUDE.md's missing-access stop: report the exit status, the script's message and the output of
+    `codex --version` to the human, and leave the cycle open. For example: `risk pass 3 did not run: exit 6 —
+    risk-pass.sh: Codex CLI is 'codex-cli 0.150.0', older than the minimum 'codex-cli 0.162.1'; updating the
+    Codex CLI is the user's step — codex --version: codex-cli 0.150.0`.
+    Exit 6 has two causes with different remedies: `older than the minimum` is cured by the user updating the
+    Codex CLI; `cannot read` means `codex --version` printed no release line (no `codex` on `PATH`, another
+    program of that name, a pre-release build), which the user resolves.
+  - In every case the cycle closes only on the slot's `done` line, and the risk pass stays the risk pass: an
+    ordinary pass covers other ground and does not stand in for it. The Codex CLI and the script stay as they
+    are, because the CLI belongs to the user's machine and a check edited to pass is no check.
 
 ## Output format
 The findings file, at the path the call names, in the format of `.claude/review-gates.md` (one finding per line,
@@ -2806,10 +2827,13 @@ finish "$rc"
 ### 2.26 `.agents/skills/gate-b-review/scripts/risk-pass.sh` — the high-effort risk pass
 
 The script Gate B's risk pass runs through (`codex exec` at high reasoning effort; no MCP tool takes an effort).
-It refuses any Codex CLI but the version it pins, because its flags and keys were verified on that version only.
-When `codex --version` prints another version, list installing `codex-cli 0.162.1` as the user's own step in the
-closing checklist (item 5), with `npm install -g @openai/codex@0.162.1`; do not run it, since it changes the
-user's machine outside this project. Rules 1–2 apply; write it byte for byte as below (check 4o).
+It runs on the Codex CLI the user has installed, 0.162.1 or later, and refuses an older one or a version line it
+cannot read (exit 6), because below that version its flags and event format were never seen to work. Run
+`codex --version` once. When it prints `codex-cli <x>.<y>.<z>` below 0.162.1, list *updating the Codex CLI* as
+the user's own step in the closing checklist (item 5). When it prints anything else or nothing, list the line it
+printed and the output of `command -v codex` there instead, since that is no sign of an old CLI. Leave the CLI
+as it is: installing or updating it changes the user's machine outside this project. Rules 1–2 apply; write it
+byte for byte as below (check 4o).
 
 ````sh
 #!/bin/sh
@@ -2825,9 +2849,22 @@ user's machine outside this project. Rules 1–2 apply; write it byte for byte a
 #   <nonce>    the cycle nonce, 8-16 of [a-z0-9]; <n> the pass number, a positive integer
 #   <seconds>  time limit, 1-7200; empty or absent means 2400
 # Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed, its findings
-# file is invalid, its evidence file lacks a TESTS: or CALLERS: line, or a result could not be written
+# file is invalid, its evidence file lacks a TESTS: or CALLERS: line, its event log holds no agent
+# message, the scratch directory holds other entries than this script's, or a result could not be written
 # (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is busy (a live earlier
-# attempt); 5 no process supervisor (perl); 6 a Codex CLI other than the pin.
+# attempt, or a lock it cannot take over); 5 no process supervisor (perl); 6 a Codex CLI older than the
+# minimum, or a version line it cannot read. What the main session does on each: the skill's § Risk pass.
+#
+# The Codex CLI is the user's own install and is not pinned (0.54): any release at or above CODEX_MIN runs,
+# and its version line opens the evidence file this script completes. Seen on Codex CLI 0.162.1 and 0.169.0
+# (macOS, 2026-11-16). What a later Codex could change, as far as it was looked at (flags, event format,
+# scratch writes, sandbox reach, effort key, skill discovery; not claimed complete):
+#   fails the attempt: a flag or sandbox value Codex rejects (it exits non-zero); an event log without an
+#     `item.completed` agent message; a link, FIFO, pre-made file or new entry in the scratch directory.
+#   passes unseen: a renamed `model_reasoning_effort` key (ignored silently, the pass runs at the default
+#     effort; nothing in the --json output names the effort); a sandbox that lets the reviewer write the
+#     scratch directory while it adds no entry there (its checks below still hold, and `events` and
+#     `stderr` are the reviewer's own output); a Codex that no longer lists skills (the prompt names the file).
 #
 # Files, all under <repo>/.context/codex-reviews/: per attempt <a>,
 # gate-b-risk-<nonce>-pass-<n>-attempt-<a>.md (findings, written by Codex), …-attempt-<a>-evidence.md,
@@ -2842,7 +2879,7 @@ user's machine outside this project. Rules 1–2 apply; write it byte for byte a
 # earlier attempt can therefore write only its own attempt file. The closing act accepts the canonical
 # file only when its sha256 matches the slot's last `done` line (spec §6).
 set -u
-CODEX_PIN='codex-cli 0.162.1'
+CODEX_MIN='0.162.1'
 
 die() { printf 'risk-pass.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
 usage() { die "$1 (usage: risk-pass.sh <repo> <baseSha> <headSha> <nonce> <n> [<seconds>])" 2; }
@@ -2872,8 +2909,21 @@ for x in "$repo/.context" "$dir" "$state"; do [ -L "$x" ] && usage "$x is a syml
 recorded=$(sed -n 's/^base \([0-9a-f]\{40\}\)$/\1/p' "$state" | head -n 1)
 [ "$recorded" = "$base" ] || usage "baseSha differs from the cycle base recorded in $state"
 command -v perl >/dev/null 2>&1 || die 'no process supervisor: perl not found, nothing run' 5
+# A release line is exactly `codex-cli <a>.<b>.<c>`, each part at most 6 digits; the parts compare as
+# numbers. Anything else, a pre-release suffix included, is unreadable, which is not the same as old.
+command -v codex >/dev/null 2>&1 || die "cannot read a Codex CLI version: no codex on PATH" 6
 v=$(codex --version 2>/dev/null | head -n 1)
-[ "$v" = "$CODEX_PIN" ] || die "Codex CLI is '${v:-not found}', this script is verified on '$CODEX_PIN' only; installing that version is the user's step (see /workflow-init)" 6
+printf '%s\n' "$v" | awk -v min="$CODEX_MIN" '
+  { if ($0 !~ /^codex-cli [0-9]+\.[0-9]+\.[0-9]+$/) exit 2
+    split(substr($0, 11), a, "."); split(min, m, ".")
+    for (i = 1; i <= 3; i++) if (length(a[i]) > 6) exit 2
+    for (i = 1; i <= 3; i++) { if (a[i] + 0 > m[i] + 0) exit 0; if (a[i] + 0 < m[i] + 0) exit 1 }
+    exit 0 }'
+case $? in
+  0) ;;
+  1) die "Codex CLI is '$v', older than the minimum 'codex-cli $CODEX_MIN'; updating the Codex CLI is the user's step" 6 ;;
+  *) die "cannot read a Codex CLI version from '$v', printed by $(command -v codex) (expected 'codex-cli <x>.<y>.<z>')" 6 ;;
+esac
 
 # EPERM means the process exists (see run-tests.sh).
 group_alive() { perl -e 'exit((kill(0, -$ARGV[0]) || $!{EPERM}) ? 0 : 1)' "$1" 2>/dev/null; }
@@ -2975,9 +3025,10 @@ finish() {
   [ -n "${2-}" ] && printf 'risk-pass.sh: %s\n' "$2" >&2; exit "$1"
 }
 
-# Scratch in the git directory: Codex 0.162.1's workspace-write sandbox keeps it read-only (seen with
-# `codex sandbox -P :workspace` on macOS, 2026-11-15). Codex writes nothing here itself (no -o), so a
-# checkout in TMPDIR or /tmp, whose git directory the sandbox can write, is covered by create and sread.
+# Scratch in the git directory: Codex's workspace-write sandbox keeps it read-only (seen with
+# `codex sandbox -P :workspace` on macOS: 0.162.1 on 2026-11-15, 0.169.0 on 2026-11-16; not probed at run
+# time). Codex writes nothing here itself (no -o), so a checkout in TMPDIR or /tmp, whose git directory the
+# sandbox can write, is covered by create, sread and the entries check after the run.
 gitdir=$(git -C "$repo" rev-parse --absolute-git-dir) && [ -d "$gitdir" ] || finish 1 'could not find the git directory'
 work=$(mktemp -d "$gitdir/gate-b-risk.XXXXXX") || finish 1 'could not create a scratch directory in the git directory'
 # Its identity (device and inode, by lstat), compared once Codex's group is stopped (nothing of this script
@@ -3027,11 +3078,16 @@ wait "$cpid"; rc=$?
 group_stop "$wpid"; wpid=
 group_stop "$cpid"; cpid=
 [ "$(wid "$work")" = "$work_id" ] || { work=; finish 1 'the scratch directory was replaced while Codex ran; nothing written'; }
+# Read before this script writes there itself: exactly its three files, or the reviewer could write there.
+# shellcheck disable=SC2016  # perl source
+entries=ok; perl -e 'opendir(my $d, $ARGV[0]) or exit 1; my @e = sort grep { !/^\.\.?$/ } readdir $d;
+  exit(join("/", @e) eq "events/prompt/stderr" ? 0 : 1)' "$work" || entries=
 
 # A failed write fails the attempt, after the timeout and Codex's own failure are reported.
 werr=
 place "$work/events" "$pre.events.jsonl" || werr="could not place the event log at $pre.events.jsonl"
-# The reply is the last agent message in the event log (Codex 0.162.1: item.completed, item type agent_message).
+# The reply is the last agent message in the event log (seen on Codex 0.162.1 and 0.169.0: item.completed,
+# item type agent_message); an attempt without one fails below.
 # shellcheck disable=SC2016  # perl source
 reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($_) } or next;
   $t = $e->{item}{text} if ($e->{type} // "") eq "item.completed" && ref $e->{item} eq "HASH"
@@ -3039,7 +3095,7 @@ reply=$(sread "$work/events" | perl -MJSON::PP -ne 'my $e = eval { decode_json($
 [ -z "$reply" ] || { printf '%s\n' "$reply" | create "$work/reply" && place "$work/reply" "$pre-reply.md"; } ||
   werr=${werr:-"could not place the reply at $pre-reply.md"}
 model=$(sread "$work/events" | sed -n 's/.*"model":"\([^"]*\)".*/\1/p' | head -n 1)
-# Codex 0.162.1's events name no model: then the top-level `model` key of its config, which this call
+# Codex's events name no model (0.162.1, 0.169.0): then the top-level `model` key of its config, which this call
 # uses unless a `profile` selects another.
 # shortcut: a `profile` in config.toml is not followed; read it too if one is ever set for Gate B.
 cfg="${CODEX_HOME:-$HOME/.codex}/config.toml"
@@ -3053,7 +3109,9 @@ if ev=$(printf 'CLI: %s\nHEAD: %s\nMODEL: %s\nEXIT: %s\n' "$v" "$head" "${model:
 else werr=${werr:-"could not write the evidence file $pre-evidence.md"}; fi
 [ $(( $(date +%s) - t0 )) -ge "$secs" ] && finish 3 "timed out after ${secs}s"
 [ "$rc" -eq 0 ] || { sread "$work/stderr" | tail -n 20 >&2; finish 1 "codex exited $rc"; }
+[ -n "$entries" ] || finish 1 'the scratch directory did not hold exactly events, prompt and stderr once Codex had stopped (the reviewer could write there); nothing promoted'
 [ -z "$werr" ] || finish 1 "$werr"
+[ -n "$reply" ] || finish 1 "no agent message in the event log $pre.events.jsonl (has the format of codex exec --json changed?); nothing promoted"
 # The skill makes the evidence part of a completed pass: at least one TESTS: and one CALLERS: line.
 { grep -q '^TESTS:' "$work/evidence" && grep -q '^CALLERS:' "$work/evidence"; } ||
   finish 1 "the evidence file $pre-evidence.md has no TESTS: or no CALLERS: line"
@@ -3407,10 +3465,12 @@ Remaining — stack-specific, yours to decide:
        Codex MCP can occupy the same server name with a different tool surface;
      · the ~/.codex/config.toml block printed above (home directory; not written
        by this command), giving Codex the MCP servers it should reach.
-     · for Gate B's risk pass (2.26): Codex CLI 0.162.1 exactly — when `codex
-       --version` prints another version, install it yourself with
-       `npm install -g @openai/codex@0.162.1` (it changes your machine, so this
-       command does not run it); until then risk-pass.sh refuses with exit 6.
+     · for Gate B's risk pass (2.26): Codex CLI 0.162.1 or later — your own
+       install, kept current by you. When `codex --version` prints an older
+       version, update the Codex CLI yourself (it changes your machine, so
+       this command does not); when it prints no `codex-cli <x>.<y>.<z>` line,
+       check which program, if any, `command -v codex` names. Until then risk-pass.sh
+       refuses with exit 6 and says which of the two it is.
    Without all three, both gates are inoperative.
 
 6. Superpowers — BLOCKER if the preflight reported it missing. The workflow's

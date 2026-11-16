@@ -117,7 +117,7 @@ reader can judge whether it still holds.
    `scripts/check-invariants.sh` checks `uses:` refs, runners, `npx -y` and YAML
    `node-version:`; it does not check `npm install -g` or a `docker run` image, so review
    is the only guard there.
-   Four bounded exceptions, stated rather than silent: `source-files/` is a frozen
+   Five bounded exceptions, stated rather than silent: `source-files/` is a frozen
    extraction archive and is never edited (see MANIFEST.md); `runs-on` pins an Ubuntu
    *release* — GitHub still refreshes that image weekly, which only a container would
    fix, and this battery doesn't warrant one; and `claude plugin marketplace add
@@ -142,6 +142,15 @@ reader can judge whether it still holds.
    instance registers a git watcher, and one pull that renamed hundreds of files made about 27 instances
    re-index one repository at once (2026-10-25). `/workflow-init` 2.14 therefore recommends that the user
    turns it off and refreshes by hand (P5); the kit itself sets nothing.
+   The fifth is **the Codex CLI that `risk-pass.sh` runs** (Boundaries 4c), since 0.54 (Daniel, 2026-11-16:
+   Codex is installed globally and stays on its newest version). It is the user's own install and is not
+   pinned; the kit never installs, updates or downgrades it. **What stands in for a pin:** the script refuses a
+   release below 0.162.1 and a version line it cannot read (exit 6), writes the version line first in the
+   evidence file it completes, and fails an attempt when Codex rejects its flags, when the event log holds no
+   agent message, or when the scratch directory holds an entry the script did not put there. This is detection
+   in the run, not a pin: a renamed effort key, a sandbox that lets the reviewer write the scratch directory
+   while it adds no entry there, and whether the model follows the skill are not checked (the script's header
+   lists what was looked at, and does not claim that list is complete).
 6. **The manifest never re-declares convention-loaded components.** `skills/`,
    `commands/`, `agents/` and `hooks/hooks.json` load automatically; a manifest key for them is
    redundant at best and fatal for hooks (duplicate-hooks error → the plugin does not
@@ -298,7 +307,7 @@ tool. Without it the second run cannot start, and dropping that run is what let 
 **`python3`** 3.8 or later, addressed by name for the same reason as `dash`: it is the
 system interpreter, not a pinned tool. `scripts/run-analytics.py`, `scripts/loop-usefulness.py`,
 `scripts/spec-delta.py`, `scripts/live-effort.py` and `scripts/status-view.py` also need git 2.36 or later and check for it.
-The review skill's two scripts and their suites (Boundaries 4c) need **`perl`**, addressed by name like `dash`: run-tests.sh exits 5 without it. `risk-pass.sh` refuses any Codex CLI but `codex-cli 0.162.1` (exit 6); its suite stubs `codex`. `scripts/worktree-cleanup.sh` uses `gh` and `lsof` when present, addressed by name like `git`: they are
+The review skill's two scripts and their suites (Boundaries 4c) need **`perl`**, addressed by name like `dash`: run-tests.sh exits 5 without it. `risk-pass.sh` runs on the installed Codex CLI, a release at or above 0.162.1, and refuses an older one or a version line it cannot read (exit 6; invariant 5's fifth exception); its suite stubs `codex`. `scripts/worktree-cleanup.sh` uses `gh` and `lsof` when present, addressed by name like `git`: they are
 system tools, not pinned packages, and invariant 5's scope does not include them. Without them its
 squash-merge and session answers read `unknown`, which keeps the row; its suite stubs both. `scripts/local-ci.sh` requires `gh` logged in and
 refuses to run with a shellcheck other than the version `ci.yml` pins (a commit without that pin skips
