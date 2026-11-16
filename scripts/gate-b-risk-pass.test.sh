@@ -179,6 +179,14 @@ printf 'mv "%s" "%s"; ln -s "%s" "%s"\n' "$d" "$work/moved" "$work/moved" "$d" >
 run 1 30
 [ $rc -ne 0 ] && [ ! -f "$work/moved/gate-b-risk-$N-pass-1.md" ] && ! grep -q '^risk 1 \(done\|failed\)' "$work/moved/gate-b-cycle-$N.state" && pass 'the directory swapped for a symlink mid-run: nothing written through it' || fail "dir swap rc=$rc"
 rm -f "$d"; rm -rf "$work/moved"; mkdir -p "$d"
+# The same swap pointing at another directory that holds a same-named lock (0.54.1): the exit's cleanup
+# leaves that lock alone.
+reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
+mkdir -p "$work/other/gate-b-risk-$N-pass-1.lock"; touch "$work/other/gate-b-risk-$N-pass-1.lock/keep"
+printf 'mv "%s" "%s"; ln -s "%s" "%s"\n' "$d" "$work/moved" "$work/other" "$d" > "$STUB_DIR/before"
+run 1 30
+[ $rc -ne 0 ] && [ -f "$work/other/gate-b-risk-$N-pass-1.lock/keep" ] && pass 'the directory swapped for a symlink mid-run: the cleanup removes no lock through it' || fail "dir swap lock rc=$rc"
+rm -f "$d"; rm -rf "$work/moved" "$work/other"; mkdir -p "$d"
 reset; findings 'NO FINDINGS' 'END OF FINDINGS (0 total)'
 printf 'cp "%s" "%s"; rm -f "%s"; ln "%s" "%s"\n' "$state" "$work/outside" "$state" "$work/outside" "$state" > "$STUB_DIR/before"
 run 1 30

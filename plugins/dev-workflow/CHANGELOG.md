@@ -22,6 +22,22 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.54.1
+
+A security fix in `risk-pass.sh` (`### 2.26`; check 4o keeps the copy identical), found by a project's risk pass.
+
+- `risk-pass.sh`: on exit the script removed its slot lock with `rm -rf "$lock"` without checking the folders. A
+  reviewer that had swapped `.context/codex-reviews` (or `.context`) for a symlink while it ran could make the
+  script, which runs outside Codex's sandbox, delete a same-named lock in another directory. The exit now
+  removes the lock only while `.context` and `.context/codex-reviews` are no symlinks (the check every write
+  already made); otherwise the lock stays, and a later run refuses (exit 2) until the
+  folders are real again. The suite gains
+  that case. The check and the removal are two steps; a process that escaped the stopped group could still race
+  them, as the script's header says for its writes.
+- `run-tests.sh` was checked for the same pattern and is unchanged: it removes only its own copy and earlier
+  copies in `TMPDIR`, and the tests it runs have the same rights as the script (inside Codex's sandbox when the
+  reviewer runs it), so a swapped path there gives a test nothing it could not do directly.
+
 ## 0.54.0
 
 The risk pass runs on the Codex CLI you have installed. `risk-pass.sh` refused every Codex CLI but 0.162.1; once

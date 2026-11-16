@@ -2509,7 +2509,7 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.54.0
+0.54.1
 ````
 
 ### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
@@ -2963,13 +2963,16 @@ if ! mkdir "$lock" 2>/dev/null; then
   [ -z "$busy" ] || die "slot busy: $busy" 4
 fi
 printf '%s\n' "$$" > "$lock/runner.pid"
+# The folders still hold no link (the reviewer may swap them while it runs); checked before each write and
+# before the exit removes the lock, so neither follows a swapped folder.
+dirs_ok() { [ ! -L "$repo/.context" ] && [ ! -L "$dir" ] && [ -d "$dir" ]; }
 cpid=; wpid=; work=
 # shellcheck disable=SC2329  # run by the EXIT trap
 cleanup() {
   [ -n "$wpid" ] && group_stop "$wpid"
   [ -n "$cpid" ] && group_stop "$cpid"
   [ -n "$work" ] && rm -rf "$work"
-  rm -rf "$lock"
+  dirs_ok && rm -rf "$lock"
   cpid=; wpid=; work=
 }
 trap cleanup EXIT
@@ -2990,7 +2993,6 @@ done
 # follows or enters the target).
 # shortcut: a process that escaped the killed group could still race these checks; the group kill
 # is the main bound.
-dirs_ok() { [ ! -L "$repo/.context" ] && [ ! -L "$dir" ] && [ -d "$dir" ]; }
 # shellcheck disable=SC2016  # perl source
 append() {
   dirs_ok && perl -e 'use Fcntl; sysopen(my $f, $ARGV[0], O_WRONLY | O_APPEND | O_NOFOLLOW | O_NONBLOCK) or exit 1;
