@@ -5,6 +5,11 @@ Backlog of stories, follow-ups, and prerequisites referenced by
 
 ## Now
 
+- [ ] **Kit 0.54 plan k054plan1 pass 2, finding 1: the long-run budget's arithmetic.** The plan
+  (`docs/superpowers/plans/2026-11-16-kit-054-codex-current.md`, "Long runs") says a third full run *or* a
+  risk-pass rerun passes the 2-hour unit limit; by its own estimates only the third full run does (125 min), one
+  risk-pass rerun does not (110 min). Collected at the closing pass, not repaired in the plan; the build reads it
+  the corrected way. Close this row when 0.54 is merged.
 - [ ] **Kit 0.53 risk pass 5 Minor: the elapsed-time timeout is read after post-processing** (cycle k053tplfix,
   archived under `.context/archive/codex-reviews/k053tplfix/`, accepted, not repaired at the cap).
   `risk-pass.sh` samples the clock only after group cleanup, reply decoding and evidence placement, so a reviewer
