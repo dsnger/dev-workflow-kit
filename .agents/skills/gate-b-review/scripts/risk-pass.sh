@@ -12,7 +12,7 @@
 #   <seconds>  time limit, 1-7200; empty or absent means 2400
 # Exit: 0 a valid result promoted to the canonical findings file; 1 Codex failed, its findings
 # file is invalid, its evidence file lacks a TESTS: or CALLERS: line, its event log holds no agent
-# message, the scratch directory holds other entries than this script's, or a result could not be written
+# message, the scratch directory does not hold exactly this script's files, or a result could not be written
 # (one retry, as for any failed pass); 2 bad arguments; 3 timeout; 4 the slot is busy (a live earlier
 # attempt, or a lock it cannot take over); 5 no process supervisor (perl); 6 a Codex CLI older than the
 # minimum, or a version line it cannot read. What the main session does on each: the skill's § Risk pass.
@@ -22,7 +22,7 @@
 # (macOS, 2026-11-16). What a later Codex could change, as far as it was looked at (flags, event format,
 # scratch writes, sandbox reach, effort key, skill discovery; not claimed complete):
 #   fails the attempt: a flag or sandbox value Codex rejects (it exits non-zero); an event log without an
-#     `item.completed` agent message; a link, FIFO, pre-made file or new entry in the scratch directory.
+#     `item.completed` agent message; a link, FIFO, pre-made file, new or missing entry in the scratch directory.
 #   passes unseen: a renamed `model_reasoning_effort` key (ignored silently, the pass runs at the default
 #     effort; nothing in the --json output names the effort); a sandbox that lets the reviewer write the
 #     scratch directory while it adds no entry there (its checks below still hold, and `events` and

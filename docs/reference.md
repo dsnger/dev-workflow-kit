@@ -591,7 +591,7 @@ project, since an initialized project has no copy of this page.
   the attempt (since 0.53.0). When the range touches a prompt path of the gate rules and the head has
   `docs/prompt-standards.md`, the prompt asks Codex to check against it too. Exit 1: Codex failed, the file breaks
   the findings format, the evidence is missing, the event log holds no agent message, the scratch directory
-  holds an entry the script did not put there (both since 0.54.0), or a write failed (one retry); 2 bad
+  does not hold exactly the script's three files (both since 0.54.0), or a write failed (one retry); 2 bad
   arguments; 3 timeout; 4 the slot is busy; 5 no `perl`; 6 a Codex CLI older than 0.162.1, or a version line it
   cannot read.
 - *Counting.* It is one pass toward the Gate B cap of every mode (`lean` 3, `strict` 5, `classic` 5), never toward
@@ -612,7 +612,7 @@ before that step (a signal, a replaced scratch directory) has no `CLI:` line.
 
 The sandbox, the event format, the effort key and skill discovery were seen to work on 0.162.1 and on 0.169.0
 (2026-11-16, macOS). On a later Codex an attempt fails when Codex rejects the script's flags, when its event log
-holds no agent message, or when the scratch directory holds an entry the script did not put there. Three things
+holds no agent message, or when the scratch directory does not hold exactly the script's three files. Three things
 are not checked at run time: a renamed `model_reasoning_effort` key (the pass would run at the default effort), a
 sandbox that lets the reviewer write the scratch directory while it adds no entry there, and whether the model
 follows the skill. That list names what was looked at and is not claimed complete.

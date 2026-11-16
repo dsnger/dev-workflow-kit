@@ -147,7 +147,7 @@ reader can judge whether it still holds.
    pinned; the kit never installs, updates or downgrades it. **What stands in for a pin:** the script refuses a
    release below 0.162.1 and a version line it cannot read (exit 6), writes the version line first in the
    evidence file it completes, and fails an attempt when Codex rejects its flags, when the event log holds no
-   agent message, or when the scratch directory holds an entry the script did not put there. This is detection
+   agent message, or when the scratch directory does not hold exactly the script's three files. This is detection
    in the run, not a pin: a renamed effort key, a sandbox that lets the reviewer write the scratch directory
    while it adds no entry there, and whether the model follows the skill are not checked (the script's header
    lists what was looked at, and does not claim that list is complete).
