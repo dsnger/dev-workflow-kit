@@ -582,7 +582,7 @@ project, since an initialized project has no copy of this page.
   slot's lock holder copies a valid attempt to the canonical `gate-b-risk-<nonce>-pass-<n>.md` and appends
   `risk <n> done <a> <head> <sha256>` to the state file, so a late writer from an earlier attempt cannot replace
   the result. The script runs with your rights while Codex can write in the repository, so it never writes
-  through a link Codex may have planted: the directories are checked again before every write, the state file is
+  through a link Codex may have planted: the directories are checked again before every write and before the exit removes the slot lock (since 0.54.1), the state file is
   appended to only as a regular file with one link (opened without following symlinks and without blocking, so a
   FIFO fails at once), an existing attempt file is refused, results are written to a new file created exclusively
   and renamed into place, and files that are not regular (a FIFO) are not read. These checks cover symlinks, hard
