@@ -49,13 +49,16 @@ Greptile paid off here; small PHP fixes in Bricks Child are not reviewed.
 Step 2 gets a new paragraph **Request a review once per PR** for an entry marked `requested by the review loop`:
 1. **When.** The PR is not a draft (`isDraft` false; a draft: `Greptile: not requested yet — draft`, and the next
    run asks again, since nothing was spent); Step 1 read the required check green on the head (none required: Step
-   1's record; still running: decide once Step 1's re-verification reads it green); the head commit's subject does
+   1's record; still running: decide once Step 1's re-verification reads it green);
    and Gate B is closed on the head: take `C`, the last commit in the range whose body carries a Gate B cycle line
-   (`cycle <nonce>; Gate B (passes`); it is closed when either every commit after `C` is a non-merge commit and
-   `git diff --name-only C <head>` lists only docs-only paths (none: `C` is the head), or Step 4's patch-id check
-   finds the PR diff unchanged between `C` and the head (a base update). No `C`, or neither holds: `Greptile: not
-   requested yet — Gate B not closed on <sha12>`; a later run asks again. Order: the **Request when** rule (3) runs
-   first, so a docs- or release-only PR, which has no cycle line, is excluded with its own reason.
+   (`cycle <nonce>; Gate B (passes`), and `<mbC>` = `git merge-base "origin/<baseRefName>" C`. For every path in
+   `git diff --name-only <mb> <head>` or `git diff --name-only <mbC> C`, compare the PR diff at both heads with
+   `git diff <mb> <head> -- <path> | git patch-id --verbatim` against `git diff <mbC> C -- <path> | git patch-id
+   --verbatim`. Closed when every path whose ids differ is docs-only, a `CHANGELOG.md` or a version record changing
+   only version lines (rule 3). So a base merge (the PR diff is unchanged), a docs commit and a version bump after
+   `C` compose, and an unreviewed code change does not. No `C`, a failed command, or another differing path:
+   `Greptile: not requested yet — Gate B not closed on <sha12>`; a later run asks again. Order: the **Request when**
+   rule (3) runs first, so a docs- or release-only PR, which has no cycle line, is excluded with its own reason.
 2. **Already requested or reviewed?** Read, each with `gh api --paginate` and a zero exit, the issue comments
    (`repos/<owner>/<repo>/issues/<n>/comments`), the review records (`pulls/<n>/reviews`) and inline comments
    (`pulls/<n>/comments`). A read that fails: request nothing (`Greptile: not requested — PR comments unreadable`).
@@ -132,6 +135,9 @@ stop).
 - D8: no lock against two simultaneous sessions (§4 Concurrency scope); a duplicate is recorded, not prevented.
 - D9: the record stays in the PR body, as Daniel's order asks, with a re-read before the write; the remaining
   lost-update window between that read and `gh pr edit` is accepted and named, not claimed away (Gate A pass 2).
+- D11: Gate B closure is compared per path between the PR diff at the closing commit and at the head, so permitted
+  successors (base merge, docs, version bump) compose (Gate A pass 3; repaired after the cap on Daniel's answer,
+  reviewed at Gate B).
 - D10: the duplicate guard and the completion evidence are separate: any Greptile activity suppresses a request
   (AC-2); only a summary with `Last reviewed commit` counts as a review (D6).
 
