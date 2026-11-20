@@ -243,11 +243,15 @@ CI run is what checks the combination.
 summary, both, or `inconsistent`), sorted into the three routing lists
 `/process-pr-review` reads: wait for, process opportunistically, ignore. A list entry may
 say `only with label <name>` and `once per PR`; a bot that is off sits under ignore and is
-not reported. Greptile is off in the kit by default. Turned on, it runs on request
-(`autoReview: []`, set by you in Greptile; a comment `@greptileai` starts one review) or on a label
-(`labels: ["greptile"]`, `autoReview: ["open"]`). Greptile's own default, `["open"]`, reviews each PR
+not reported. Greptile is off in the kit by default. Turned on, the recommended mode when the app is
+installed is `once per PR, requested by the review loop` (0.55.0): `/process-pr-review` posts one bare
+`@greptileai` comment per PR, only where the bot file's **Request when** rules match (not a
+`chore/kit-*` refresh, not docs- or release-only, not a small change), never again after a push or a
+restart, waits at most 15 minutes for the summary comment and records the outcome in one `Greptile:`
+line in the PR body. You set `autoReview: []` in Greptile. The other modes: on request by hand
+(`autoReview: []`; you comment `@greptileai`) or on a label (`labels: ["greptile"]`, `autoReview: ["open"]`). Greptile's own default, `["open"]`, reviews each PR
 once when it opens; per-push review comes only from adding `push` or `rebase`. With no bot on, or
-none that ran, `/process-pr-review` says `PR bots: none ran on <sha>` and goes on. `/process-pr-review` asks no bot for a review, and a head that only
+none that ran, `/process-pr-review` says `PR bots: none ran on <sha>` and goes on. Apart from that one Greptile request, `/process-pr-review` asks no bot for a review, and a head that only
 brings the base in (same `git patch-id --verbatim` of the PR diff) needs none. CodeRabbit
 auto-reviews only PRs whose base is the default branch unless its configuration lists
 the other base under `reviews.auto_review.base_branches`.

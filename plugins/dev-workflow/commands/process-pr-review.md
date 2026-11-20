@@ -23,7 +23,9 @@ carry that label (`gh pr view <n> --json labels`, `<n>` the PR this run processe
 waited for or reported. An entry saying `once per PR` means the bot reviews one head of the PR,
 not every push: a review of any head of this PR counts, and the report names that head. Why:
 a bot that reviews every push can cost more than the work it reviews, so a project may run it
-only where it asked for it.
+only where it asked for it. An entry saying `requested by the review loop` (with `once per PR`;
+Greptile only) is requested by this command once per PR, as Step 2 says; it is on for this PR once
+requested or once it left a review artifact there.
 
 Getting this wrong is expensive in both directions: waiting on a channel a bot never
 uses hangs the loop forever, and treating a findings source as context silently drops
@@ -79,9 +81,64 @@ this PR, or none on for it reviewed, write one line, `PR bots: none ran on <sha>
 Gate B was the review. Step 3 item 1's route for an empty claim set still runs (answer any thread that
 needs it, item 6), then Step 4.
 
-Read what each bot posted if it ran; the only review this command starts is Gate B for a
-fix (Step 3 item 3). Why: every bot request is a paid run, and Gate B is the workflow's
-review.
+Read what each bot posted if it ran; the only reviews this command starts are Gate B for a
+fix (Step 3 item 3) and the one request below. Why: every bot request is a paid run, and Gate B
+is the workflow's review.
+
+**Request a review once per PR** — only for a Greptile entry marked `requested by the review loop`.
+Do these in order; the first that stops gives the record line (item 6).
+1. **Values.** `<n>` matches `^[0-9]+$` before any command uses it (else run nothing and report the
+   argument). From `gh pr view <n> --json baseRefName,headRefName,headRefOid,isDraft,body`, the two
+   names match `^[A-Za-z0-9._/-]+$` and the head `^[0-9a-f]{40}$`, or: `not requested — unsafe ref
+   name`. After `git fetch origin`, `<mb>` is `git merge-base "origin/<baseRefName>" <head>`; it
+   fails: `not requested — range unknown`. A draft: `not requested yet — draft` (nothing is spent; a
+   later run asks again).
+2. **Already requested or reviewed?** Read with `gh api --paginate`, each exiting 0, the issue
+   comments (`repos/<owner>/<repo>/issues/<n>/comments`), the review records (`pulls/<n>/reviews`)
+   and inline comments (`pulls/<n>/comments`); a failed read: `not requested — PR comments
+   unreadable`. An issue comment whose trimmed body starts with `@greptileai` or `@greptile` (by
+   anyone) is the request: its `created_at` is the request time; go to item 5. Else a **review
+   artifact** (item 5) means `reviewed <sha12> without a request`: read it, no wait, Step 3. Else any
+   `greptile-apps[bot]` comment or review record: `earlier Greptile activity, no review artifact`:
+   read it, request and wait for nothing. Else go on. Only GitHub is read, so a restarted session or a
+   later push gets the same answer, and a push never starts a second request.
+3. **Worth it?** Apply the **Request when** paragraph of `docs/pr-review-bots.md` over `<mb>..<head>`;
+   its first failing rule is the reason (`not requested — <reason>`). No such paragraph: `not
+   requested — no Request when rule in docs/pr-review-bots.md`. Then Gate B must be closed on the
+   head: `C` is the last commit in the range whose body holds `cycle <nonce>; Gate B (passes`, and
+   `<mbC>` is `git merge-base "origin/<baseRefName>" C`. For each path in `git diff --name-only <mb>
+   <head>` or `git diff --name-only <mbC> C`, compare `git diff <mb> <head> -- <path> | git patch-id
+   --verbatim` with `git diff <mbC> C -- <path> | git patch-id --verbatim`; every path whose ids differ
+   must be docs-only (`.claude/review-gates.md`), a `CHANGELOG.md` or a version record changing only
+   version lines (the bot file's rule 3). So a base merge, a docs commit and a version bump after `C`
+   pass, an unreviewed change does not. No `C`, a failed command or another path: `not requested yet —
+   Gate B not closed on <sha12>`. And Step 1 read the required check green on this head (none
+   required: its record; still running: decide when the re-verification reads it green).
+4. **Request,** once per run: `gh api repos/<owner>/<repo>/issues/<n>/comments -f body='@greptileai'
+   --jq .created_at`. The bare tag: Greptile answers extra text as a question, not a review. The
+   printed time is the request time. A failed or unclear result is never retried: read the issue
+   comments once more; a `@greptileai` comment by this `gh` user is the request, none is `request
+   undetermined`, and this paragraph ends. After a request, a request comment by someone else older
+   than yours records `duplicate request`: two sessions on one PR can both post, and nothing undoes it.
+5. **Wait,** at most 15 minutes from the request time, reading the issue comments every 2 minutes.
+   A **review artifact** is a `greptile-apps[bot]` issue comment whose body holds `Last reviewed
+   commit` (its summary footer, edited in place on a re-review) with `created_at` or `updated_at` at or
+   after the request time. When one is there, read it, the review records and inline comments, and go
+   on to Step 3. Any other Greptile reply is no review. Past the limit: `requested on <sha12> at
+   <time>; no review within 15 min`, and go on. A restarted session counts from the same request time,
+   so the limit never restarts. This wait is the one exception to "never block" for an
+   opportunistic bot, and it is not CLAUDE.md §4's waiting on external work: no check depends on it,
+   and this item sets its limit and outcome.
+6. **Record** one line, `Greptile: <state>`, the states named above or `requested on <sha12> at
+   <time>; reviewed <sha12 of the footer's commit link>`, in the report and in the PR body, between
+   `<!-- greptile-request -->` and `<!-- /greptile-request -->`: replace or append only that block,
+   re-read the body just before `gh pr edit <n> --body-file`, redo the edit once on the new body if it
+   changed, and post the line as a PR comment if it changed again or the edit failed. `gh pr edit` has
+   no conditional write, so an edit landing between that re-read and the write is still lost; that
+   one-command window is accepted.
+Not requested and no review artifact: the bot is not on for this PR, and it gets no
+`no review on <sha>` line. Why: Greptile is worth a paid run on some PRs, not on every push; one
+request per PR, decided from what GitHub shows, keeps the cost to that run even across restarts.
 
 ## Step 3 — Process
 
@@ -265,6 +322,8 @@ review.
        action       recorded in todos.md; not sent to item 4, not hardened
        verified     git diff -- todos.md shows the entry added
        reply        posted to thread #3 (same reply covers both claims)
+
+   Greptile: requested on a1b2c3d4e5f6 at 2026-11-20T19:02:11Z; reviewed a1b2c3d4e5f6
 
    verification
      quality command   green locally (AGENTS.md § Commands, run verbatim;

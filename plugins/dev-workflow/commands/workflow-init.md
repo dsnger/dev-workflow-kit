@@ -974,10 +974,19 @@ so a column may honestly read `inconsistent`. Record what was observed and when.
 Ask whether this project wants Greptile, **default no**. Per-push review is a Greptile setting
 (`autoReview` with `push` or `rebase`, or the legacy `"triggerOnUpdates": true`), not its default, which
 is `"autoReview": ["open"]`, one review when a PR opens; an account configured for per-push review spent
-over 700 USD in a few days. Three answers:
-- **No** (or no answer): a `Greptile | no` row, and Greptile under **Ignore** as off. Tell the
+over 700 USD in a few days. First ask whether the Greptile app is installed on the repository (a
+`greptile-apps[bot]` comment on one of its PRs also shows it). Four answers:
+- **No** (or no answer; the recommendation when it is not installed): a `Greptile | no` row, and
+  Greptile under **Ignore** as off. Tell the
   user this changes only the kit's routing: if Greptile is installed on the repository, it keeps
   reviewing, and billing, until they turn its automatic reviews off in Greptile.
+- **On request, by the review loop** (the recommendation when it is installed): Greptile under
+  **Process opportunistically** as `once per PR, requested by the review loop`, and the template's
+  **Request when** paragraph as written. `/dev-workflow:process-pr-review` then requests one review
+  per PR, only where that rule matches, and waits at most 15 minutes for it. Tell the user the one
+  thing they set themselves, in Greptile's dashboard or a `greptile.json` they commit: `"autoReview":
+  []`; and to leave Greptile's output at its default, a summary comment on the PR, which is how the
+  loop sees the review. They may edit the **Request when** rules. Write no Greptile setting.
 - **On request**: Greptile under **Process opportunistically** as `once per PR`. Tell the user what
   they set themselves, in Greptile's dashboard or a `greptile.json` they commit: `"autoReview": []`
   (never review unasked; a manual trigger still works); then a comment `@greptileai` on a PR starts one
@@ -1012,13 +1021,15 @@ silently drops real findings.
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | <bot name> | yes/no | inline / summary / both / **inconsistent** | <where observed and when; how you know it has finished — a status check is not guaranteed> |
-| Greptile | <no, the default / on request: `@greptileai` comment, once per PR / label: only on PRs labelled `greptile`, once per PR> | <as observed> | <the kit's default is off; Greptile's own default reviews each PR once when it opens (`autoReview: ["open"]`); on request is `autoReview: []`; per-push review only if its settings add `push`/`rebase`> |
+| Greptile | <no, the default / requested by the review loop, once per PR / on request: `@greptileai` comment, once per PR / label: only on PRs labelled `greptile`, once per PR> | <as observed> | <the kit's default is off; Greptile's own default reviews each PR once when it opens (`autoReview: ["open"]`); requested by the review loop and on request need `autoReview: []`, and the loop needs Greptile's default summary comment; per-push review only if its settings add `push`/`rebase`> |
 
 **Routing — these lists are authoritative.** Ask the user; do not derive these from
 column 3, which records where findings appear rather than how to act on them. An entry
 may carry `only with label <name>` (the bot is off on a PR without that label) and
-`once per PR` (a review of any head of the PR counts). A bot that is off goes under
-**Ignore**; `/dev-workflow:process-pr-review` neither reads nor reports it.
+`once per PR` (a review of any head of the PR counts), and Greptile may carry `requested by the
+review loop` (`/dev-workflow:process-pr-review` requests it once per PR where **Request when**
+below matches, and waits at most 15 minutes, the one bounded wait in this category). A bot that is
+off goes under **Ignore**; `/dev-workflow:process-pr-review` neither reads nor reports it.
 
 - **Wait for (block on it):** <bots with a completion signal you can block on — usually
   a status check. Blocking on a *post* hangs when the bot finds nothing and posts
@@ -1030,6 +1041,17 @@ may carry `only with label <name>` (the bot is off on a PR without that label) a
 - **Ignore:** <bots that are off, and bots you deliberately do not act on — e.g. one that
   only reports it is disabled. Not "the summary-only bots": a summary can carry real
   findings.>
+
+**Request when** (only with `requested by the review loop`; edit to suit this project). Request a
+Greptile review only when all four hold, over the PR's merge-base..head; the first that fails is the
+one-line reason in the PR body:
+1. The head branch does not start with `chore/kit-` (a kit refresh).
+2. Some changed path is not docs-only as `.claude/review-gates.md` defines it.
+3. Some such path is also not a `CHANGELOG.md`, and not a version record (the files on `AGENTS.md`'s
+   `**Version sites:**` line, a plugin manifest, `.claude/dev-workflow-version`, `VERSION`) whose
+   diff changes only lines holding the version. Unclear: it counts.
+4. The PR is not a small change as `.claude/review-gates.md` defines it (a cited story at risk `high`
+   or security above `none`, or any prompt path, is never small).
 
 **Revisit when:** a bot's plan/tier changes (a Free→Pro upgrade can turn a
 summary-only bot into a findings bot), or a bot is enabled/disabled.
@@ -2509,7 +2531,7 @@ report that it records the kit version of the last `/workflow-init` run, not tha
 accepted. The kit's check 4n keeps the line equal to the plugin's version.
 
 ````text
-0.54.1
+0.55.0
 ````
 
 ### 2.24 `.agents/skills/gate-b-review/SKILL.md` — the Gate B review method
