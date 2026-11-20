@@ -1,0 +1,2 @@
+1 | fixed | the closure mechanism the findings kept returning to (pass 1, 2, 3; Gate A 2, 3) is deleted, per the gate rules' shrink rule: closure is now a Gate B cycle line in the range plus a head commit that is not WIP; base commits are no longer judged at all
+2 | fixed | same deletion: no version-record exemption remains to misjudge. Residual accepted: a WIP commit followed by a non-WIP commit (for example a base merge) can request before that WIP's cycle closes; the cost is still the one review per PR

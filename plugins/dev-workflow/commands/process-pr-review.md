@@ -66,7 +66,7 @@ be ambiguous, which is not an instruction.
 
 **Request a review once per PR** — only for a Greptile entry marked `requested by the review loop`,
 and before the paragraphs below decide whether any bot ran. Do these in order; the first that stops
-gives the record line (item 6). Paths are read from git output and never put into a command.
+gives the record line (item 6).
 1. **Values.** `<n>` matches `^[0-9]+$` before any command uses it (else run nothing and report the
    argument). From `gh pr view <n> --json baseRefName,headRefName,headRefOid,isDraft,body`, the two
    names match `^[A-Za-z0-9._/-]+$` and the head `^[0-9a-f]{40}$`, or: `not requested — unsafe ref
@@ -85,13 +85,10 @@ gives the record line (item 6). Paths are read from git output and never put int
    later push gets the same answer, and a push never starts a second request.
 3. **Worth it?** Apply the **Request when** paragraph of `docs/pr-review-bots.md` over `<mb>..<head>`;
    its first failing rule is the reason (`not requested — <reason>`). No such paragraph: `not
-   requested — no Request when rule in docs/pr-review-bots.md`. Then Gate B must be closed on the
-   head: `C` is the last commit in the range whose body holds `cycle <nonce>; Gate B (passes`. List
-   the PR's own commits after it, `git rev-list --no-merges C..<head>` (a merge only brings the base
-   in), and each one's paths, `git diff-tree --no-commit-id --name-only -r <commit>` (each `<commit>`
-   checked against `^[0-9a-f]{40}$`). Closed when every such path is docs-only
-   (`.claude/review-gates.md`), a `CHANGELOG.md` or a version record (the bot file's rule 3, by name),
-   or there is no such commit. No `C`, a failed command or another path: `not requested yet —
+   requested — no Request when rule in docs/pr-review-bots.md`. Then Gate B must be closed: a commit body in the range holds
+   `cycle <nonce>; Gate B (passes`, and the head commit's subject does not start with `WIP:` (an open
+   cycle commits as WIP, `.claude/review-gates.md`). A later fix runs its own Gate B (Step 3 item 3) and
+   gets no second request. Neither holds: `not requested yet —
    Gate B not closed on <sha12>`. And Step 1 read the required check green on this head (none
    required: its record; still running: decide when the re-verification reads it green).
 4. **Request,** once per run: `gh api repos/<owner>/<repo>/issues/<n>/comments -f body='@greptileai'
