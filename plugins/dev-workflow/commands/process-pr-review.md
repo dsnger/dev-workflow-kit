@@ -88,7 +88,7 @@ gives the record line (item 6).
    requested — no Request when rule in docs/pr-review-bots.md`. Then Gate B must be closed: a commit body in the range holds
    `cycle <nonce>; Gate B (passes`, and the head commit's subject does not start with `WIP:` (an open
    cycle commits as WIP, `.claude/review-gates.md`). A later fix runs its own Gate B (Step 3 item 3) and
-   gets no second request. Neither holds: `not requested yet —
+   gets no second request. Otherwise: `not requested yet —
    Gate B not closed on <sha12>`. And Step 1 read the required check green on this head (none
    required: its record; still running: decide when the re-verification reads it green).
 4. **Request,** once per run: `gh api repos/<owner>/<repo>/issues/<n>/comments -f body='@greptileai'
