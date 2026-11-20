@@ -33,8 +33,11 @@ Request only when all four hold; the first that fails is the one-line reason:
 1. **Not a kit refresh:** the head branch does not start with `chore/kit-`.
 2. **Not docs-only:** some path in `git diff --name-only <mb> <head>` is not docs-only as `.claude/review-gates.md`
    defines it.
-3. **Not release-only:** the PR body does not quote the hook's `release-only:` note (`.claude/review-gates.md`
-   names that note as what marks a release-only change).
+3. **Not release-only:** some such path is also not a `CHANGELOG.md` and not a version record whose diff over the
+   range (`git diff <mb> <head> -- <path>`) changes only lines holding the version. Version records: the files on
+   the project's `AGENTS.md` `**Version sites:**` line, a plugin manifest, `.claude/dev-workflow-version`, `VERSION`.
+   Decided over the whole range, not by the hook's per-commit `release-only:` note, so a feature PR with a separate
+   bump commit still counts. Anything the reader cannot tell: counts as not release-only (a request).
 4. **Not a small change:** the PR is not a small change as `.claude/review-gates.md` defines it, measured over
    `<mb>..<head>` with `git diff --numstat` and the cited story's profile. A cited story at risk `high` or security
    above `none`, or any prompt path, is never small.
@@ -47,15 +50,21 @@ Step 2 gets a new paragraph **Request a review once per PR** for an entry marked
 1. **When.** The PR is not a draft (`isDraft` false; a draft: `Greptile: not requested yet — draft`, and the next
    run asks again, since nothing was spent); Step 1 read the required check green on the head (none required: Step
    1's record; still running: decide once Step 1's re-verification reads it green); the head commit's subject does
-   not start with `WIP:` (an open Gate B cycle commits as WIP, `.claude/review-gates.md`), and a commit body in the
-   range carries a Gate B cycle line (`cycle <nonce>; Gate B (passes`) unless rule 2 or 3 excludes the PR.
+   and Gate B is closed on the head: take `C`, the last commit in the range whose body carries a Gate B cycle line
+   (`cycle <nonce>; Gate B (passes`); it is closed when either every commit after `C` is a non-merge commit and
+   `git diff --name-only C <head>` lists only docs-only paths (none: `C` is the head), or Step 4's patch-id check
+   finds the PR diff unchanged between `C` and the head (a base update). No `C`, or neither holds: `Greptile: not
+   requested yet — Gate B not closed on <sha12>`; a later run asks again. Order: the **Request when** rule (3) runs
+   first, so a docs- or release-only PR, which has no cycle line, is excluded with its own reason.
 2. **Already requested or reviewed?** Read, each with `gh api --paginate` and a zero exit, the issue comments
    (`repos/<owner>/<repo>/issues/<n>/comments`), the review records (`pulls/<n>/reviews`) and inline comments
    (`pulls/<n>/comments`). A read that fails: request nothing (`Greptile: not requested — PR comments unreadable`).
    - An issue comment whose body, trimmed, starts with `@greptileai` or `@greptile` (a request, by anyone): requested;
      its `created_at` is the request time; go to 5 (it may still be inside the limit).
-   - No request, but a review artifact (6) or any `greptile-apps[bot]` review record or inline comment: reviewed
-     without a request; go to 5's "arrived" branch, no wait.
+   - No request, but a review artifact (5): reviewed without a request; go to 5's "arrived" branch, no wait.
+   - No request and no review artifact, but any `greptile-apps[bot]` issue comment, review record or inline comment
+     (an earlier automatic attempt, an error, an answer): request nothing and wait for nothing; read what is there
+     (`Greptile: earlier Greptile activity, no review artifact`).
    - Neither: go to 3.
    This reads only GitHub, so a restarted session or a later push gets the same answer (AC-2, AC-5).
 3. **Worth it?** Apply the bot file's **Request when** rule (§2, §3). No match: request nothing.
@@ -78,7 +87,9 @@ Step 2 gets a new paragraph **Request a review once per PR** for an entry marked
    requested[ yet] — <reason>`. The body keeps one such line between `<!-- greptile-request -->` and
    `<!-- /greptile-request -->`: read the body, replace or append that block only, re-read the body just before
    `gh pr edit <n> --body-file`, and when it changed since the first read, redo the edit once on the new body; a
-   second change or a failed edit posts the line as a PR comment instead, so no other text is overwritten.
+   second change or a failed edit posts the line as a PR comment instead. `gh pr edit` has no conditional write, so
+   an edit landing between that last read and the write is still lost; the window is one command long, and this is
+   accepted (D9).
 A Greptile entry with the mark that was not requested and has no review artifact is not on for this PR: no
 `no review on <sha>` line. The 0.48 sentence "the only review this command starts is Gate B for a fix" gains "and the
 one request this paragraph allows".
@@ -119,6 +130,10 @@ stop).
   never missing. A Greptile reply without that footer is no review.
 - D7: a draft PR waits: Greptile skips drafts by default, so a request there would spend the one attempt for nothing.
 - D8: no lock against two simultaneous sessions (§4 Concurrency scope); a duplicate is recorded, not prevented.
+- D9: the record stays in the PR body, as Daniel's order asks, with a re-read before the write; the remaining
+  lost-update window between that read and `gh pr edit` is accepted and named, not claimed away (Gate A pass 2).
+- D10: the duplicate guard and the completion evidence are separate: any Greptile activity suppresses a request
+  (AC-2); only a summary with `Last reviewed commit` counts as a review (D6).
 
 ## 8. Sources and impact boundary
 Greptile docs through Context7 (`/websites/greptile`, current docs, no version: a hosted service) on 2026-11-20:
