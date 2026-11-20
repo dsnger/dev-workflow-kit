@@ -974,8 +974,8 @@ so a column may honestly read `inconsistent`. Record what was observed and when.
 Ask whether this project wants Greptile, **default no**. Per-push review is a Greptile setting
 (`autoReview` with `push` or `rebase`, or the legacy `"triggerOnUpdates": true`), not its default, which
 is `"autoReview": ["open"]`, one review when a PR opens; an account configured for per-push review spent
-over 700 USD in a few days. First ask whether the Greptile app is installed on the repository (a
-`greptile-apps[bot]` comment on one of its PRs also shows it). Four answers:
+over 700 USD in a few days. First ask the user whether the Greptile app is installed on the repository
+now (an old `greptile-apps[bot]` comment shows only that it once was). Four answers:
 - **No** (or no answer; the recommendation when it is not installed): a `Greptile | no` row, and
   Greptile under **Ignore** as off. Tell the
   user this changes only the kit's routing: if Greptile is installed on the repository, it keeps

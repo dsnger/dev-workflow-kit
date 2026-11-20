@@ -182,9 +182,10 @@ one review per PR where the bot file's **Request when** rules match. To ask by h
 `autoReview: ["open"]` and label a PR `greptile`. Greptile's own default reviews each PR once when
 it opens; per-push review comes only from adding `push` or `rebase` to `autoReview`.
 
-You see: `/dev-workflow:process-pr-review` reads those lists, waits only for the bots
-under "wait for", reads the others if they ran, and asks no bot for a review except the one
-Greptile request of the requested mode.
+You see: `/dev-workflow:process-pr-review` reads those lists, waits for the bots under "wait
+for", reads the others if they ran, and asks no bot for a review, with one exception: in the
+requested mode it asks Greptile once per PR and waits at most 15 minutes for that review, then
+records the outcome and goes on.
 
 If not: with the file missing, the command processes what is visible on the PR and asks
 you to fill the file. CodeRabbit note: [reference, PR bots](reference.md#pr-review-bots).
