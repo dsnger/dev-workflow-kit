@@ -66,9 +66,7 @@ be ambiguous, which is not an instruction.
 
 **Request a review once per PR** — only for a Greptile entry marked `requested by the review loop`,
 and before the paragraphs below decide whether any bot ran. Do these in order; the first that stops
-gives the record line (item 6). Every `<path>` below comes from git output and goes into a command
-only single-quoted after `--`, with `git --literal-pathspecs`; a path holding a `'` or a line break is
-never put into a command and counts as neither docs-only nor version-only.
+gives the record line (item 6). Paths are read from git output and never put into a command.
 1. **Values.** `<n>` matches `^[0-9]+$` before any command uses it (else run nothing and report the
    argument). From `gh pr view <n> --json baseRefName,headRefName,headRefOid,isDraft,body`, the two
    names match `^[A-Za-z0-9._/-]+$` and the head `^[0-9a-f]{40}$`, or: `not requested — unsafe ref
@@ -88,14 +86,12 @@ never put into a command and counts as neither docs-only nor version-only.
 3. **Worth it?** Apply the **Request when** paragraph of `docs/pr-review-bots.md` over `<mb>..<head>`;
    its first failing rule is the reason (`not requested — <reason>`). No such paragraph: `not
    requested — no Request when rule in docs/pr-review-bots.md`. Then Gate B must be closed on the
-   head: `C` is the last commit in the range whose body holds `cycle <nonce>; Gate B (passes`, and
-   `<mbC>` is `git merge-base "origin/<baseRefName>" C`. For each path in `git diff --name-only <mb>
-   <head>` or `git diff --name-only <mbC> C`, compare `git --literal-pathspecs diff <mb> <head> -- '<path>' |
-   git patch-id --verbatim` with `git --literal-pathspecs diff <mbC> C -- '<path>' | git patch-id --verbatim`; every path whose ids differ
-   must be docs-only (`.claude/review-gates.md`), a `CHANGELOG.md`, or a version record (the bot file's
-   rule 3) changing only
-   lines holding the version from `C` to the head (`git --literal-pathspecs diff C <head> -- '<path>'`).
-   So a base merge, a docs commit and a version bump after `C` pass, an unreviewed change does not. No `C`, a failed command or another path: `not requested yet —
+   head: `C` is the last commit in the range whose body holds `cycle <nonce>; Gate B (passes`. List
+   the PR's own commits after it, `git rev-list --no-merges C..<head>` (a merge only brings the base
+   in), and each one's paths, `git diff-tree --no-commit-id --name-only -r <commit>` (each `<commit>`
+   checked against `^[0-9a-f]{40}$`). Closed when every such path is docs-only
+   (`.claude/review-gates.md`), a `CHANGELOG.md` or a version record (the bot file's rule 3, by name),
+   or there is no such commit. No `C`, a failed command or another path: `not requested yet —
    Gate B not closed on <sha12>`. And Step 1 read the required check green on this head (none
    required: its record; still running: decide when the re-verification reads it green).
 4. **Request,** once per run: `gh api repos/<owner>/<repo>/issues/<n>/comments -f body='@greptileai'

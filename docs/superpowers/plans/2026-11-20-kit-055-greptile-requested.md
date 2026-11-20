@@ -17,9 +17,9 @@ g55reqspec1, passes 1–3). **Story:** `docs/superpowers/stories/2026-11-20-kit-
 4. Docs: README row, `docs/setup.md` § 9, `docs/reference.md` § PR review bots, `docs/getting-started.md` PR bot
    step; CHANGELOG 0.55.0; manifest and `.claude/dev-workflow-version` 0.55.0. → verify: `grep -rn "asks no bot"`
    over live surfaces shows none left unqualified; check-doc-links green.
-5. Quality command, Gate B (two calls per pass, strict floor 1 cap 5), risk pass only if the diff touches project
-   scripts or rule/gate files (it touches neither: prompts and docs only), PR, `process-pr-review` from this
-   branch's text, squash-merge, handover.
+5. Quality command, Gate B (two calls per pass, strict floor 1 cap 5), the risk pass (due: the diff touches
+   `plugins/` and `.claude/`, and the story's security is `standard`; `.agents/skills/gate-b-review/SKILL.md` §
+   Risk pass), PR, `process-pr-review` from this branch's text, squash-merge, handover.
 
 ## Test situations
 - PR #<this one>: touches prompt paths, not small → the loop requests Greptile once, waits ≤15 min, processes or
