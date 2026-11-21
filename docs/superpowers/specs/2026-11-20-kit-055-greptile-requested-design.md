@@ -151,3 +151,23 @@ pagination, ascending id, `created_at`/`updated_at`), create issue comment (201 
 footer. Read: `process-pr-review.md`, `workflow-init.md` 2.5 and 2.23, `scripts/local-ci.sh` header § LANES,
 `.claude/review-gates.md`, this repo's bot file, the 0.48 story and design, README, setup, reference,
 getting-started. Not touched: the hook, the gate rules, CodeRabbit routing, other projects.
+
+## 9. Changes
+
+**Changed 2026-11-21 — gap found.** Decided by the gate rules' shrink rule ("When a finding class regenerates across
+passes, shrink the mechanism (platform parser, narrower scope, deletion)"), Gate B cycle g55gateb1 passes 1–3.
+Baseline: 6a54660.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §4 item 1 and D11: Gate B closure by a per-path patch-id comparison between the PR diff at `C` and at the head | dropped — "shrink the mechanism … deletion": the comparison drew new Majors in Gate A passes 2–3 and Gate B passes 1–3; replaced by "a commit body in the range holds a Gate B cycle line, and the head commit is not `WIP:`" | none |
+| §4 item 2 "not on for this PR" for earlier Greptile activity without an artifact | kept, except that Step 4's last read still reads Greptile (risk pass 5; fixed after the cap on Daniel's answer, 2026-11-21) | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** none.
+- **Scope boundary:** in: `process-pr-review` Step 2; out: everything else.
+- **Open questions:** none.
+- **Dependent artifacts:** `plugins/dev-workflow/commands/process-pr-review.md` → updated in this change.
+- **Reviews already run:** Gate B passes 1–4 (cycle g55gateb1) → pass 4 reviewed the shrunk rule clean; the risk-pass fix is unreviewed and recorded in `todos.md`, per `.claude/review-gates.md` (at the cap the human decides).
+- **Residual accepted:** a `WIP:` commit followed by a non-WIP commit (for example a base merge) can request before that cycle closes; the cost is still one review per PR.

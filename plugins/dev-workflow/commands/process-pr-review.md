@@ -114,8 +114,9 @@ gives the record line (item 6).
    changed, and post the line as a PR comment if it changed again or the edit failed. `gh pr edit` has
    no conditional write, so an edit landing between that re-read and the write is still lost; that
    one-command window is accepted.
-Not requested and no review artifact: the bot is not on for this PR, and it gets no
-`no review on <sha>` line. Why: Greptile is worth a paid run on some PRs, not on every push; one
+Not requested and no review artifact: the bot gets no `no review on <sha>` line, and it is on
+for this PR only for Step 4's last read, which reads its channels once more, so a summary that
+arrived while you read is processed (no new request, no new wait). Why: Greptile is worth a paid run on some PRs, not on every push; one
 request per PR, decided from what GitHub shows, keeps the cost to that run even across restarts.
 
 **No review is not no comments.** Before you conclude that a bot on for this PR found
