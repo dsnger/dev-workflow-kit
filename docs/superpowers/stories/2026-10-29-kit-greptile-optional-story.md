@@ -41,3 +41,26 @@ Invariant 3 (Gate B content fingerprint) is read, not changed: see the design §
 ## 5. Out of scope
 Part 2 (factory-review skill, runnable tests, risk lens, Semgrep) waits for sfx-factory #106/#107. D79: the rule
 that agents never index with codebase-memory stays. Greptile billing, app or dashboard settings are Daniel's.
+
+## 6. Changes
+
+**Changed 2026-11-20 — change of direction.** Decided by Daniel, order to session kit-055-greptile (2026-11-20).
+Baseline: b144f77. Daniel: "Das Kit ruft es selbst. Das würde ich aber nicht nur bei Bricks Child, sondern eben
+global jetzt im Kit noch mal festlegen." and "Also insbesondere pull-request-basiert, aber auch nur bei Dingen, wo es
+sich lohnt." The new mode lives in `docs/superpowers/stories/2026-11-20-kit-055-greptile-requested-story.md`.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §2 "The kit reads a bot's review when it ran and never asks for one" | moved → 0.55 story AC-1–AC-5: a bot entry marked `requested by the review loop` is requested once per PR; without the mark, kept | none |
+| AC-1, AC-2, AC-3, AC-4 | kept | none |
+| AC-5 "This repository's `docs/pr-review-bots.md` records Greptile as off" | dropped — "global jetzt im Kit noch mal festlegen"; replaced by 0.55 story AC-7 | withdrawn |
+| AC-6 "No rule … says to wait for or read Greptile before a merge without 'if it ran'" | kept, except the bounded wait of the requested mode (0.55 story AC-4), which blocks nothing | narrowed |
+| AC-7 (0.48.0, CHANGELOG, docs) | kept | none |
+
+- **Added without an earlier condition:** none here; the new criteria live in the 0.55 story.
+- **Unaccounted:** none.
+- **Intervening changes:** 0.49.0 (f3269ce) added the on-request answer (`autoReview: []`, a human `@greptileai` comment) and corrected Greptile's default to `["open"]` (`git log -S greptile 1bbf57e..b144f77 -- plugins/`) → kept; the 0.55 mode builds on that answer.
+- **Scope boundary:** in: the kit and this repository's bot file; out: other projects and Greptile's own settings.
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/superpowers/specs/2026-10-29-kit-greptile-optional-design.md` → open — permitted by the amendment route: a shipped design is history; `docs/superpowers/specs/2026-11-20-kit-055-greptile-requested-design.md` supersedes its §1 sentence "never something it waits for or asks for".
+- **Reviews already run:** cycle gr48optl (Gate B, 0.48) → stays valid for 0.48.0; the 0.55 change takes its own gates, per `.claude/review-gates.md` (Gate B reviews every code diff).

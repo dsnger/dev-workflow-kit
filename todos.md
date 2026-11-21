@@ -2407,3 +2407,17 @@ through (already a row above), a project-only worktree defect, and the `risk-pas
       the scratch block is declined. *Trigger: the next 2.18 edit.*
 - [ ] **`/workflow-init` item 8 reports `unsupported` in every Orca worktree** (all are linked worktrees). By design
       today; worth a line saying how to run it there. *Trigger: the next item 8 edit.*
+
+## From kit 0.55 (Greptile requested by the review loop) — backlog only
+
+- [ ] **Two sessions on one PR can both request Greptile** (Gate A g55reqspec1 pass 1 #1, accepted, not repaired:
+      no lock exists on GitHub that both could take; a duplicate is recorded). *Trigger: a `duplicate request` line
+      seen in a PR body.*
+- [ ] **The PR-body `Greptile:` line can overwrite an edit landing between re-read and `gh pr edit`** (Gate A
+      g55reqspec1 pass 2 #3, accepted, not repaired: `gh pr edit` has no conditional write). *Trigger: a lost PR
+      body edit, or a `gh` conditional write.*
+- [ ] **Review the risk-pass fix in `process-pr-review` Step 2** (Gate B g55gateb1 risk pass 5 #1: an entry seen
+      without an artifact stays on for Step 4's last read). Fixed after the cap on Daniel's answer, not reviewed by
+      Codex. *Trigger: the next `process-pr-review` Gate B.*
+- [ ] **A WIP commit followed by a base merge can request Greptile before that cycle closes** (accepted residual of
+      the shrunk closure rule, spec § 9). *Trigger: a Greptile request seen on a PR with an open cycle.*

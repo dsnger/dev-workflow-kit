@@ -22,6 +22,26 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.55.0
+
+The review loop requests Greptile once per PR, where it pays (story
+`docs/superpowers/stories/2026-11-20-kit-055-greptile-requested-story.md`, design
+`docs/superpowers/specs/2026-11-20-kit-055-greptile-requested-design.md`). Changes the 0.48.0 commitment that the kit
+asks no bot for a review, by the 0.48 story's change record (Daniel, 2026-11-20).
+
+- `process-pr-review` Step 2: a Greptile entry marked `requested by the review loop` gets one bare `@greptileai`
+  comment per PR, once the PR is ready (not a draft), the bot file's **Request when** rules match, Gate B is closed
+  on the head and the quality check is green. Any earlier request or Greptile comment on the PR means no new one, so
+  a push or a restarted session never asks twice. It waits at most 15 minutes from the request comment's GitHub time
+  for the summary comment (footer `Last reviewed commit`), then processes the findings; past the limit it records
+  that and goes on. Every outcome is one `Greptile:` line in the PR body.
+- `/workflow-init` 2.5: asks whether the Greptile app is installed; the new answer is the recommendation then, `no`
+  otherwise. The template carries the qualifier and a default **Request when** paragraph (not a `chore/kit-*`
+  refresh, not docs- or release-only, not a small change). The user sets only `autoReview: []`; the kit writes no
+  Greptile setting.
+- This repository turns Greptile on in that mode (`docs/pr-review-bots.md`). README, setup, reference and
+  getting-started describe it.
+
 ## 0.54.1
 
 A security fix in `risk-pass.sh` (`### 2.26`; check 4o keeps the copy identical), found by a project's risk pass.

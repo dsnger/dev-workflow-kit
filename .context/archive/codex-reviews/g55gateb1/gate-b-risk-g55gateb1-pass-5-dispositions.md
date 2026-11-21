@@ -1,0 +1,1 @@
+1 | fixed | Step 2 closing sentence: an entry seen without an artifact stays on for Step 4's last read, so a late summary is processed; fixed after the cap on Daniel's answer (2026-11-21, "Fix, close"), not re-reviewed

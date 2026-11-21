@@ -1,0 +1,1 @@
+1 | fixed | §4 item 1 and D11: per-path patch-id comparison between the PR diff at C and at the head; docs, version-only and base-merge successors compose, a code change defers. Repaired after the cap on Daniel's answer (2026-11-20, "Reparieren, Gate B prüft"); not re-reviewed at Gate A

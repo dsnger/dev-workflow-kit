@@ -11,22 +11,21 @@ uses hangs the loop, and treating a channel as context silently drops real findi
 | Bot | Enabled | Where findings appear | Notes (plan/tier limits, completion signal, quirks) |
 |---|---|---|---|
 | CodeRabbit | **no** (removed by Daniel 2026-10-29: free quota used up; record below from when it was on) | **inline** | Posts real inline review comments on the diff, each with severity and a committable suggestion, plus a walkthrough summary comment. Read the inline comments — the walkthrough is not a findings source. Observed on #1 and #18 (profile CHILL). **Plan: Free** (per Daniel); the "Pro Plus" recorded here earlier was observed on PR #1 only and no longer describes the account — the review-limit behaviour below is what a Free plan produces. **Routed opportunistically since #18** — five consecutive unreviewed heads (#12, #13, #15, #16, #17), then a genuine review. Two quirks that look like signals and are not: **its status check goes green whether or not a review happened**, so a green check never proves the final head was reviewed (the per-head count is the arbiter); and **`@coderabbitai review` is a no-op while automatic reviews are active** — the bot says so itself ("This command is applicable only when automatic reviews are paused", #17), which is why #14's re-trigger produced nothing. |
-| Greptile | **no** (off since kit 0.48.0, 2026-10-29: it reviewed every push of every PR and cost over 700 USD in a few days; Daniel) | was **summary always; inline usually** | Record from when it was on. Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
+| Greptile | **yes — requested by the review loop, once per PR** (since kit 0.55.0, 2026-11-20, Daniel: "Das Kit ruft es selbst"; off 0.48.0–0.54.1 after per-push reviews cost over 700 USD in a few days) | **summary always; inline usually** | Required, and Daniel's to set in Greptile: `"autoReview": []` and the default output, a summary comment (`statusCommentsEnabled` and `shouldUpdateDescription` left unset); the loop reads no other output channel. Observed, not verified: no Greptile comment on #102–#110, so automatic reviews read as off; whether the app is still installed shows at the first request. The review loop asks with a bare `@greptileai` comment where **Request when** below matches. Completion: the summary comment by `greptile-apps[bot]` with its `Last reviewed commit` footer, created or edited after the request. Record from when it was on before: Four PRs observed (#1, #2, #4, #5): a PR-level **summary comment every time**, with findings sometimes only inside it under "Comments Outside Diff". **Inline** comments on #2 (1), #4 (2), #5 (1) but **none on #1** — so inline is usual, not guaranteed. Read both channels; the summary is the one that has never been missing. **Completion signal: none you can block on.** `gh pr checks` displayed a "Greptile Review" entry for #4 and #5, but the check-runs and statuses APIs return no Greptile entry for any of those heads — the two tools disagree, so neither proves it has finished. Posts within ~4–11 min. |
 | Cursor Bugbot | no | n/a | Comments only to say it is disabled for this account. Ignore. |
 
 **Routing — these lists are authoritative.**
 
 - **Wait for (block on it):** *none.* CodeRabbit sat here until #18 and no longer does —
   grounds below.
-- **Process opportunistically (never block):** *none.* CodeRabbit sat here from #18 until
-  it was removed on 2026-10-29. With no bot on, `/dev-workflow:process-pr-review` writes
-  `PR bots: none ran on <sha>` and goes on; Gate B is the review.
+- **Process opportunistically (never block):** Greptile — `once per PR, requested by the review
+  loop` (kit 0.55.0): `/dev-workflow:process-pr-review` requests one review where **Request when**
+  matches and waits at most 15 minutes, the one bounded wait here; past it, it records that and goes
+  on. CodeRabbit sat here from #18 until it was removed on 2026-10-29. With no bot on,
+  `/dev-workflow:process-pr-review` writes `PR bots: none ran on <sha>` and goes on; Gate B is the review.
 - **Ignore:** CodeRabbit — removed 2026-10-29 (Daniel); turning it back on means routing it
-  opportunistically again, with the count below as the check. Greptile — off since kit 0.48.0; turning it back on means the on-request
-  path (`once per PR`, `autoReview: []` set in Greptile, a review on an `@greptileai` comment;
-  Daniel's choice for his projects) or the label path (`only with label greptile, once per
-  PR`, with `labels: ["greptile"]` and `autoReview: ["open"]`), both set in Greptile by Daniel. Cursor Bugbot — disabled for this
-  account, and it says so itself.
+  opportunistically again, with the count below as the check. Cursor Bugbot — disabled for this
+  account, and it says so itself. Greptile sat here from kit 0.48.0 to 0.54.1.
 
 **Why CodeRabbit moved.** It has a status check, so blocking on it always *terminated* —
 what it stopped doing was delivering. Five consecutive heads went unreviewed (#12, #13,
@@ -96,8 +95,8 @@ them merges unreviewed heads.**
 Verify the second before merging — a deterministic boolean, so it is read rather than
 eyeballed. Run it on every merge, including the ones where the check looks unambiguous; it
 is the diagnostic for CodeRabbit, whose login it selects; another bot on for the PR uses its
-own login and the proof its row names (a bot that is off, such as Greptile here since kit
-0.48.0, is not checked). A `0` for the live head is then read through the two exceptions in
+own login and the proof its row names (a bot that is off is not checked; Greptile's proof
+here is its summary footer, see its row). A `0` for the live head is then read through the two exceptions in
 `/dev-workflow:process-pr-review` Steps 2 and 4: a `once per PR` bot's review of an earlier
 head of this PR, and a review of a head whose PR diff is unchanged after a base update, count
 for the live head. Its answer goes into the report and blocks no merge:
@@ -164,8 +163,9 @@ history above and the #14 precedent are the record of the period when it was liv
 document a real requirement under the routing of their time.
 
 **Optional, not a step: the re-trigger.** Since kit 0.48.0
-`/dev-workflow:process-pr-review` asks no bot for a review, so it attempts none; what
-follows is the record of when one was allowed. Before reporting a `0`, a re-trigger may be
+`/dev-workflow:process-pr-review` asks no bot for a re-review, so it attempts none (its one
+request, since 0.55.0, is Greptile's first review of a PR); what follows is the record of when
+one was allowed. Before reporting a `0`, a re-trigger may be
 attempted. It is not part of the
 verification above, which is why the procedure no longer contains it: `@coderabbitai
 review` is a **no-op while automatic reviews are active** (the bot's own message on #17),
@@ -185,7 +185,7 @@ body filter is bounded defensive filtering, not a check against something seen.
 "Greptile Review" entry for #4 and #5, while the check-runs and statuses APIs return no
 Greptile entry for any observed head. Two tools, two answers, so neither is proof.
 
-So, while it was on (before kit 0.48.0, and again on the label path): **process Greptile opportunistically, never block on it.** Begin the pass — nothing
+So, while it was on (before kit 0.48.0, and again on the label path): **process Greptile opportunistically, never block on it.** (Since kit 0.55.0 the requested mode adds one bounded wait of 15 minutes after its own request.) Begin the pass — nothing
 gates it now — and read whatever Greptile has posted at that moment via
 `gh pr view --json comments,reviews` plus `gh api .../pulls/N/comments`. If it posts
 later, process it as a follow-up. Waiting on it risks hanging forever; ignoring it drops
@@ -194,6 +194,19 @@ real findings, since every observed PR carried some.
 **When querying, match the login exactly.** Issue comments are authored by
 `greptile-apps[bot]`; a filter on `greptile-apps` returns zero and looks like absence.
 That mistake is why an earlier version of this row claimed PR #1 had no summary.
+
+**Request when** (Greptile, `requested by the review loop`; the kit default). Request a Greptile
+review only when all four hold, over the PR's merge-base..head; the first that fails is the
+one-line reason in the PR body:
+1. The head branch does not start with `chore/kit-` (a kit refresh).
+2. Some changed path is not docs-only as `.claude/review-gates.md` defines it.
+3. Some such path is also not a `CHANGELOG.md`, and not a version record (the files on `AGENTS.md`'s
+   `**Version sites:**` line, a plugin manifest, `.claude/dev-workflow-version`, `VERSION`) whose
+   diff changes only lines holding the version. Unclear: it counts.
+4. The PR is not a small change as `.claude/review-gates.md` defines it (a cited story at risk `high`
+   or security above `none`, or any prompt path, is never small).
+Here every change to `plugins/`, `.claude/`, `CLAUDE.md` or `AGENTS.md` is a prompt path, so most kit
+PRs qualify; that matches where Greptile paid off.
 
 `/dev-workflow:process-pr-review` routes on **these lists**, not on the table's column.
 The column is descriptive — it records where a bot's findings have been observed, and

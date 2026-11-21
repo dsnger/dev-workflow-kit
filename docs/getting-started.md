@@ -101,8 +101,9 @@ itself goes through `intake` instead.
 ## PR bot comments
 
 1. Open the PR. Wait for the bots listed under "wait for" in `docs/pr-review-bots.md`;
-   the others are read if they ran (Greptile is off unless the project turned it on, then it
-   runs on an `@greptileai` comment or the `greptile` label). No bot at all is normal: Gate B
+   the others are read if they ran (Greptile is off unless the project turned it on; then the
+   review loop requests it once per PR where it pays, or it runs on an `@greptileai` comment or the
+   `greptile` label). No bot at all is normal: Gate B
    was the review.
 2. Type `/dev-workflow:process-pr-review <pr-number>`.
    You see: CI checked first; each bot claim validated against the code, usually by a

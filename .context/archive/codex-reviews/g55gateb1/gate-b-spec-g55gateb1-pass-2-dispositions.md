@@ -1,0 +1,1 @@
+1 | fixed | mechanism shrunk (the per-path class regenerated): closure now reads only the PR's own non-merge commits after C (git rev-list --no-merges C..head) and their path names, so a base merge brings in nothing to judge
