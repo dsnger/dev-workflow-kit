@@ -22,6 +22,24 @@ unambiguously, still fails. Deleting only a plugin's *manifest* while the direct
 keeps shipping fails too.
 AGENTS.md invariant 12 carries the complete list.
 
+## 0.55.1
+
+A release PR no longer requests Greptile (change record of 2026-11-22 in
+`docs/superpowers/specs/2026-11-20-kit-055-greptile-requested-design.md` § 9; Daniel, 2026-11-22). Seen in
+sfx-bricks-child#98, "Release v0.38.0": changelog, theme version and the regenerated `languages/sfxtheme.pot`
+(+770/-266) got a paid review, because rule 3 counted the `.pot` as code.
+
+- `/workflow-init` 2.5, **Request when** rule 3: a gettext translation catalogue (a `.pot` or `.po` file, or its
+  compiled `.mo`) joins `CHANGELOG.md` and the version records as release-only. Any change to a catalogue is meant,
+  a release's regeneration and a hand edit alike; another kind of file with such an ending (`.mo` is also source in
+  some languages) counts as before. A PR that changes code and a catalogue still requests. This repository's
+  `docs/pr-review-bots.md` carries the same rule.
+- Only this rule widens: the hook's `release-only:` note and the gate rules still know version and changelog alone,
+  so a release commit that regenerates a catalogue still takes Gate B.
+- **An initialized project keeps its own paragraph** until a refresh shows the diff (`/workflow-init` never
+  overwrites silently). A version file that is not on the project's `AGENTS.md` `**Version sites:**` line still
+  counts as code: sfx-bricks-child's `style.css` did, and that project has no such line.
+
 ## 0.55.0
 
 The review loop requests Greptile once per PR, where it pays (story

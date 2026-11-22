@@ -200,9 +200,10 @@ review only when all four hold, over the PR's merge-base..head; the first that f
 one-line reason in the PR body:
 1. The head branch does not start with `chore/kit-` (a kit refresh).
 2. Some changed path is not docs-only as `.claude/review-gates.md` defines it.
-3. Some such path is also not a `CHANGELOG.md`, and not a version record (the files on `AGENTS.md`'s
+3. Some such path is also none of these: a `CHANGELOG.md`; a version record (the files on `AGENTS.md`'s
    `**Version sites:**` line, a plugin manifest, `.claude/dev-workflow-version`, `VERSION`) whose
-   diff changes only lines holding the version. Unclear: it counts.
+   diff changes only lines holding the version; a gettext translation catalogue (a `.pot` or `.po`
+   file, or its compiled `.mo`; another kind of file with such an ending counts). Unclear: it counts.
 4. The PR is not a small change as `.claude/review-gates.md` defines it (a cited story at risk `high`
    or security above `none`, or any prompt path, is never small).
 Here every change to `plugins/`, `.claude/`, `CLAUDE.md` or `AGENTS.md` is a prompt path, so most kit

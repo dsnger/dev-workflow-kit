@@ -33,15 +33,18 @@ Request only when all four hold; the first that fails is the one-line reason:
 1. **Not a kit refresh:** the head branch does not start with `chore/kit-`.
 2. **Not docs-only:** some path in `git diff --name-only <mb> <head>` is not docs-only as `.claude/review-gates.md`
    defines it.
-3. **Not release-only:** some such path is also not a `CHANGELOG.md` and not a version record whose diff over the
-   range (`git diff <mb> <head> -- <path>`) changes only lines holding the version. Version records: the files on
+3. **Not release-only:** some such path is also none of these: a `CHANGELOG.md`; a version record whose diff over
+   the range (`git diff <mb> <head> -- <path>`) changes only lines holding the version; a gettext translation
+   catalogue (a `.pot` or `.po` file, or its compiled `.mo`; another kind of file with such an ending counts; since
+   0.55.1, § 9, a Greptile-only widening that the gate rules' release-only does not share). Version records: the files on
    the project's `AGENTS.md` `**Version sites:**` line, a plugin manifest, `.claude/dev-workflow-version`, `VERSION`.
    Decided over the whole range, not by the hook's per-commit `release-only:` note, so a feature PR with a separate
    bump commit still counts. Anything the reader cannot tell: counts as not release-only (a request).
 4. **Not a small change:** the PR is not a small change as `.claude/review-gates.md` defines it, measured over
    `<mb>..<head>` with `git diff --numstat` and the cited story's profile. A cited story at risk `high` or security
    above `none`, or any prompt path, is never small.
-Why this rule: it reuses definitions every initialized project already has, so it is checkable from the PR alone and
+Why this rule: it reuses definitions every initialized project already has (since 0.55.1 with one addition of its
+own, the catalogues in rule 3), so it is checkable from the PR alone and
 needs no CI configuration; this repository's prompts are never "small", which matches Daniel's observation that
 Greptile paid off here; small PHP fixes in Bricks Child are not reviewed.
 
@@ -58,7 +61,8 @@ Step 2 gets a new paragraph **Request a review once per PR** for an entry marked
    only version lines (rule 3). So a base merge (the PR diff is unchanged), a docs commit and a version bump after
    `C` compose, and an unreviewed code change does not. No `C`, a failed command, or another differing path:
    `Greptile: not requested yet — Gate B not closed on <sha12>`; a later run asks again. Order: the **Request when**
-   rule (3) runs first, so a docs- or release-only PR, which has no cycle line, is excluded with its own reason.
+   rule (3) runs first, so a docs- or release-only PR, which has no cycle line, is excluded with its own reason
+   (since 0.55.1 a release PR with a catalogue may carry a cycle line, D12; rule 3 excludes it all the same).
 2. **Already requested or reviewed?** Read, each with `gh api --paginate` and a zero exit, the issue comments
    (`repos/<owner>/<repo>/issues/<n>/comments`), the review records (`pulls/<n>/reviews`) and inline comments
    (`pulls/<n>/comments`). A read that fails: request nothing (`Greptile: not requested — PR comments unreadable`).
@@ -140,6 +144,19 @@ stop).
   reviewed at Gate B).
 - D10: the duplicate guard and the completion evidence are separate: any Greptile activity suppresses a request
   (AC-2); only a summary with `Last reviewed commit` counts as a review (D6).
+- D12 (0.55.1): gettext translation catalogues join rule 3's release-only: a `.pot` or `.po` file or its compiled
+  `.mo`, recognised as a catalogue, not by the ending alone (`.mo` is also Modelica and Motoko source; such a file,
+  and any file the reader cannot tell, counts, as rule 3's last sentence says). Every change to a catalogue is
+  excluded, a release's regeneration and a hand edit alike: the rule asks for no evidence of how the file came to
+  change, since none is in the PR. Accepted cost: a hand edit to a `.po` header's `Plural-Forms` expression, which
+  runs at runtime, gets no Greptile review when nothing else in the PR counts; Gate B still reviews it. Not a new
+  project list and not the head branch `release/*`: gettext's formats are the same in every stack that uses them,
+  so the rule names no project's vocabulary (AGENTS.md invariant 10), and a branch name says nothing about the
+  content, so a fix carried on a release branch would lose its request. A PR that changes code and a catalogue
+  still has a path that counts, so it requests as before. This widens D3 for this rule only: the hook and the gate
+  rules keep their release-only (version and changelog), so a release commit that regenerates a catalogue still
+  takes Gate B, and its PR carries a cycle line. Not solved here: a version file the project has not put on its
+  `**Version sites:**` line still counts; that is the project's line to write.
 
 ## 8. Sources and impact boundary
 Greptile docs through Context7 (`/websites/greptile`, current docs, no version: a hosted service) on 2026-11-20:
@@ -171,3 +188,37 @@ Baseline: 6a54660.
 - **Dependent artifacts:** `plugins/dev-workflow/commands/process-pr-review.md` → updated in this change.
 - **Reviews already run:** Gate B passes 1–4 (cycle g55gateb1) → pass 4 reviewed the shrunk rule clean; the risk-pass fix is unreviewed and recorded in `todos.md`, per `.claude/review-gates.md` (at the cap the human decides).
 - **Residual accepted:** a `WIP:` commit followed by a non-WIP commit (for example a base merge) can request before that cycle closes; the cost is still one review per PR.
+
+**Changed 2026-11-22 — gap found.** Decided by Daniel, order to session kit-0551-release (2026-11-22): "0.55.1 jetzt",
+on his rule of 2026-11-20 (story § 1: "aber auch nur bei Dingen, wo es sich lohnt"); release PRs are excluded
+(story AC-3). Baseline: 0f99f36. Evidence: dsnger/sfx-bricks-child#98 "Release v0.38.0" (kit 0.55.0), files
+`CHANGELOG.md` +3/-3, `languages/sfxtheme.pot` +770/-266, `style.css` +1/-1; its body records `Greptile: requested
+on c8f6cd0a930d … reviewed — 5/5, no findings`. Rule 3 counted the regenerated `.pot` as a path that is neither
+changelog nor version record. Plugin version: 0.55.1.
+
+| Earlier condition | Fate | AC operation |
+|---|---|---|
+| §3 rule 3: release-only is `CHANGELOG.md` and version records whose diff changes only version lines | kept, and widened by gettext translation catalogues (`.pot`, `.po`, compiled `.mo`; any change to one, D12) — story AC-3: "The kit default excludes docs-only and release-only PRs" | none |
+| D3: "the kit default reuses the docs-only, release-only and small-change definitions of `.claude/review-gates.md`" | kept for docs-only and small change; for release-only kept and widened in this rule only (D12) — Daniel: "0.55.1 jetzt"; the gate rules and the hook are unchanged | none |
+| §3 rule 3: "Anything the reader cannot tell: counts as not release-only (a request)" | kept | none |
+| §3 rules 1, 2, 4 and the range | kept | none |
+| Story AC-1–AC-8 | kept (AC-8's version is 0.55.0's; this change carries 0.55.1 at the same three sites) | none |
+
+- **Added without an earlier condition:** none.
+- **Unaccounted:** none.
+- **Intervening changes:** none (`git log 0f99f36..` is empty at the branch point).
+- **Scope boundary:** in: rule 3 in `docs/pr-review-bots.md` and in the `/workflow-init` 2.5 template, version
+  0.55.1, CHANGELOG and reference; out: `process-pr-review` (it applies the paragraph as written), the hook's
+  per-commit `release-only:` note (it still does not know catalogues, so such a release commit takes Gate B), the
+  gate rules, and every initialized project's own bot file and `**Version sites:**` line (the rollout's).
+- **Open questions:** none.
+- **Dependent artifacts:** `docs/pr-review-bots.md` → updated in this change;
+  `plugins/dev-workflow/commands/workflow-init.md` (template 2.5, 2.23) → updated in this change;
+  `plugins/dev-workflow/CHANGELOG.md`, `docs/reference.md` → updated in this change.
+- **Reviews already run:** Gate A and Gate B of 0.55.0 (cycles in the 0.55 PR #111) → they reviewed the earlier
+  rule; this change takes its own Gate A on this section and its own Gate B, per `.claude/review-gates.md` ("Gate A
+  … reviews a spec … only at risk `high` or security not `none`"; the story's security is `standard`).
+- **Sources and impact boundary:** read: this spec, the 0.55 story, both rule copies, `process-pr-review.md` Step 2,
+  `.claude/review-gates.md`, `.agents/skills/gate-b-review/SKILL.md` § Risk pass, sfx-bricks-child PRs #95–#98 and
+  its `AGENTS.md` and bot file through `gh` (read only). No third-party API is used. Not touched: the hook, the
+  gate rules, any project.

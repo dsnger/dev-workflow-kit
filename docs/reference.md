@@ -246,7 +246,8 @@ say `only with label <name>` and `once per PR`; a bot that is off sits under ign
 not reported. Greptile is off in the kit by default. Turned on, the recommended mode when the app is
 installed is `once per PR, requested by the review loop` (0.55.0): `/process-pr-review` posts one bare
 `@greptileai` comment per PR, only where the bot file's **Request when** rules match (not a
-`chore/kit-*` refresh, not docs- or release-only, not a small change), never again after a push or a
+`chore/kit-*` refresh, not docs- or release-only, where since 0.55.1 a gettext translation catalogue
+(`.pot`, `.po`, compiled `.mo`) counts as release-only for this rule alone, not a small change), never again after a push or a
 restart, waits at most 15 minutes for the summary comment and records the outcome in one `Greptile:`
 line in the PR body. You set `autoReview: []` in Greptile. The other modes: on request by hand
 (`autoReview: []`; you comment `@greptileai`) or on a label (`labels: ["greptile"]`, `autoReview: ["open"]`). Greptile's own default, `["open"]`, reviews each PR
