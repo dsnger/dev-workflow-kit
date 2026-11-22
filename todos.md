@@ -2448,4 +2448,3 @@ through (already a row above), a project-only worktree defect, and the `risk-pas
       rule, spec § 9 of the 0.55 design). A release commit that regenerates a `.pot` takes Gate B:
       sfx-bricks-child#98 ran cycle `r038rel4mk` on a release. *Trigger: Daniel asks for release commits with
       catalogues to skip Gate B.*
-
