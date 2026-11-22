@@ -2421,3 +2421,31 @@ through (already a row above), a project-only worktree defect, and the `risk-pas
       Codex. *Trigger: the next `process-pr-review` Gate B.*
 - [ ] **A WIP commit followed by a base merge can request Greptile before that cycle closes** (accepted residual of
       the shrunk closure rule, spec § 9). *Trigger: a Greptile request seen on a PR with an open cycle.*
+
+## From kit 0.55.1 (observing sfx-bricks-child on kit 0.55.0, 2026-11-22) — backlog only, nothing implemented here
+
+- [ ] **A session can run the old plugin against refreshed project files.** dsnger/sfx-bricks-child#95
+      (`fix/schema-followups`, 9 changed files, kit files already 0.55.0) has no `Greptile:` line in its body and
+      merged 2 minutes after it opened (2026-11-21T22:04:57Z → 22:06:55Z). Assumed, NOT checked: the session still
+      had plugin 0.54.1 loaded from before the update, so new project files met old commands. Check whether the
+      hook or a session start can compare the loaded plugin version with `.claude/dev-workflow-version` and say so.
+      *Trigger: the next PR after a refresh that lacks a record a new version requires.*
+- [ ] **No place records a known environment limit once.** The Codex risk pass repeatedly reports "FPM socket in
+      the Codex sandbox"; sfx-bricks-child#97's body: "the recurring "FPM socket in the Codex sandbox" finding
+      declined as an environment limit". Each cycle declines it again. *Trigger: the same environment finding
+      declined in a third cycle.*
+- [ ] **The pass cap stopped two cycles for an extra pass Daniel then allowed.** sfx-bricks-child#95, cycle
+      `sfu4kq2m` ("pass 4 an extra pass allowed by the owner"), and #97, cycle `mdrd5v2n8q` ("1 extra allowed by the
+      owner"), both `lean`. Check whether the `lean` Gate B cap of 3 is one short when a risk pass counts toward
+      it. *Trigger: a third such stop.*
+- [ ] **The Ponytail pre-review before Gate B pass 1 was left out.** sfx-bricks-child#96's body: "Ponytail
+      pre-review: not run (skipped before Gate B pass 1 — an omission, not a choice)". Nothing reminds the session
+      at that point. *Trigger: a second omission.*
+- [ ] **A build record says "effort unknown (not captured with stamps)".** sfx-bricks-child#95's docs line ends
+      with it. Find why the stamps were missing (same old-plugin session as the first row is possible, not
+      checked). *Trigger: the next record with that text.*
+- [ ] **The hook's `release-only:` note does not know translation catalogues** (0.55.1 widened only the Greptile
+      rule, spec § 9 of the 0.55 design). A release commit that regenerates a `.pot` takes Gate B:
+      sfx-bricks-child#98 ran cycle `r038rel4mk` on a release. *Trigger: Daniel asks for release commits with
+      catalogues to skip Gate B.*
+
